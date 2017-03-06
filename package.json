@@ -5,14 +5,6 @@
   "main": "why.js",
   "author": "Kai Tamkun",
   "license": "MIT",
-  "devDependencies": {
-    "babel-preset-2017": "0.0.0",
-    "babelify": "^7.3.0"
-  },
-  "dependencies": {},
-  "babel": {
-    "presets": [
-      "es2017"
-    ]
-  }
+  "devDependencies": {},
+  "dependencies": {}
 }
