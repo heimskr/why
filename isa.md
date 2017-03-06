@@ -17,26 +17,24 @@ The data section contains non-code program data. Execution is not expected to oc
 The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
 
 # Registers
-There are 64 registers. Their purposes and layout are pretty much stolen from MIPS:
+There are 128 registers. Their purposes are pretty much stolen from MIPS:
 
-| Number | Name         | Purpose                                     |
-|--------|--------------|---------------------------------------------|
-| 0      | `$0`         | Always contains zero.                       |
-| 1–4    | `$r0`–`$r3`  | Contains return values.                     |
-| 5–12   | `$a0`–`$a7`  | Contains arguments for subroutines.         |
-| 13–28  | `$t0`–`$tf`  | Temporary registers.                        |
-| 29–44  | `$s0`–`$sf`  | Saved registers.                            |
-| 45–52  | `$k0`–`$k7`  | Kernel registers.                           |
-| 53–55  | `$m0`–`$m2`  | Reserved for use by the assembler.          |
-| 56     | `$gp`        | Global area pointer (start of data segment) |
-| 57     | `$sp`        | Stack pointer.                              |
-| 58     | `$fp`        | Frame pointer.                              |
-| 59     | `$ra`        | Return address.                             |
-| 60–63  | `$f0`–`$f3`  | Floating point return values.               |
+| Number   | Name         | Purpose                                     |
+|----------|--------------|---------------------------------------------|
+| 0        | `$0`         | Always contains zero.                       |
+| 1        | `$gp`        | Global area pointer (start of data segment) |
+| 2        | `$sp`        | Stack pointer.                              |
+| 3        | `$fp`        | Frame pointer.                              |
+| 4        | `$ra`        | Return address.                             |
+| 5–20     | `$r0`–`$rf`  | Contains return values.                     |
+| 21–36    | `$a0`–`$af`  | Contains arguments for subroutines.         |
+| 37–63    | `$t0`–`$t1a` | Temporary registers.                        |
+| 64–90    | `$s0`–`$s1a` | Saved registers.                            |
+| 91–107   | `$k0`–`$k10` | Kernel registers.                           |
+| 108–123  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
+| 124–127  | `$f0`–`$f3`  | Floating point return values.               |
 
 <a name="hi-lo"></a>In addition, there are two extra registers (`HI` and `LO`), but they aren't directly accessible from code; the contents are accessed using the  [`mfhi`](#mfhi) and [`mflo`](#mflo) instructions.
-
-
 
 # Operations
 
@@ -181,3 +179,27 @@ Translates to <code>[lui](#lui) rd, u</code>  <code>[ori](#ori) rd, rd, l</code>
 
 Copies the value of `rs` into `rd`.  
 Translates to <code>[add](#add) rd, rs, $0</code>.
+
+# Instruction Format
+Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
+
+## R-Type
+R-type instructions perform computations with multiple registers.
+
+|       Range |  63–52 | 51–45 | 44–38 | 37–31 |  30–28 | 27–12 |   11–0   |
+|------------:|:------:|:-----:|:-----:|:-----:|:------:|:-----:|:--------:|
+| **Purpose** | Opcode |   rt  |   rs  |   rd  | Unused | Shift | Function |
+
+## I-Type
+R-type instructions perform computations with registers and an immediate value.
+
+|       Range |  63–52 |  51–46 | 45–39 | 38–32 |       31–0      |
+|------------:|:------:|:------:|:-----:|:-----:|:---------------:|
+| **Purpose** | Opcode | Unused |   rs  |   rd  | Immediate Value |
+
+## J-Type
+J-type instructions perform jumps to a given location in memory under certain circumstances.
+
+|   Range |  63–52 |  51–0  |
+|--------:|:------:|:------:|
+| Purpose | Opcode | Target |

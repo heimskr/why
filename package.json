@@ -1,0 +1,18 @@
+{
+  "name": "why.js",
+  "version": "0.0.0",
+  "description": "Replace JS with an esoteric machine language ¯\\_(ツ)_/¯",
+  "main": "why.js",
+  "author": "Kai Tamkun",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-preset-2017": "0.0.0",
+    "babelify": "^7.3.0"
+  },
+  "dependencies": {},
+  "babel": {
+    "presets": [
+      "es2017"
+    ]
+  }
+}
