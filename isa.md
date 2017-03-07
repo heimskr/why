@@ -186,8 +186,6 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 
 Loads an immediate value into the upper half the word at `rd`. The lower half is replaced with zeroes.
 
-###
-H
 ### <a name="mfhi"></a>Move From HI Register (I)
 > `mfhi rd`  
 > `%hi -> $rd`  
@@ -246,4 +244,4 @@ J-type instructions move the program counter by a given offset under certain cir
 
 |   Range |  63–52 (12) |  51–0 (52)  |
 |--------:|:-----------:|:-----------:|
-| Purpose | Opcode      | Offset      |H
+| Purpose | Opcode      | Offset      |
