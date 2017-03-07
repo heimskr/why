@@ -77,7 +77,7 @@ Computes the bitwise AND of `rs` and `rt` and stores the result in `rd`.
    
 Computes the bitwise NAND of `rs` and `rt` and stores the result in `rd`.
 
-### <a name="nor"></a>Bitwise NOR (AND)
+### <a name="nor"></a>Bitwise NOR
 > `nor rd, rs, rt`  
 > `$rs ~| $rt -> $rd`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
@@ -121,12 +121,14 @@ Computes the bitwise XOR of `rs` and `rt` and stores the result in `rd`.
 
 Adds the value in `rs` and a constant and stores the result in `rd`.
 
+### <a name="subi"></a> Subtraction Immediate
 > `subi rd, rs, imm`
 > `$rs - imm -> $rd`  
 > `000000000011` `------` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Subtracts a constant from the value in `rs` and stores the result in `rd`.
 
+### <a name="multi"></a> Multiplication Immediate
 > `multi rd, rs, imm`
 > `$rs * imm -> $rd`  
 > `000000000100` `------` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
@@ -186,8 +188,6 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 
 Loads an immediate value into the upper half the word at `rd`. The lower half is replaced with zeroes.
 
-###
-H
 ### <a name="mfhi"></a>Move From HI Register (I)
 > `mfhi rd`  
 > `%hi -> $rd`
@@ -246,4 +246,4 @@ J-type instructions move the program counter by a given offset under certain cir
 
 |   Range |  63–52 (12) |  51–0 (52)  |
 |--------:|:-----------:|:-----------:|
-| Purpose | Opcode      | Offset      |H
+| Purpose | Opcode      | Offset      |
