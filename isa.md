@@ -49,15 +49,15 @@ Adds the values in `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="sub"></a>Subtraction
 > `sub rd, rs, rt`  
-> `$rs - $rt -> $rd`
-> > `000000000000` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `$rs - $rt -> $rd`  
+> `000000000000` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`.
 
 ### <a name="mult"></a>Multiplication
 > `mult rs, rt`  
-> `$rs * $rt`
-> > `000000000000` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
+> `$rs * $rt`  
+> `000000000000` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
