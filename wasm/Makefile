@@ -14,6 +14,9 @@ test: $(COMPILED) $(EXAMPLE)
 tree: $(COMPILED) $(EXAMPLE)
 	$(TEST) $(EXAMPLE) -t
 
+trees: $(COMPILED) $(EXAMPLE)
+	$(TEST) $(EXAMPLE) -st
+
 atest: $(COMPILED) $(ALT)
 	$(TEST) $(ALT)
 

@@ -1,4 +1,15 @@
-<data>
-the_answer: 42
-str: "this is a string"
-pi: 3.1415926535897932384626433832795028841971693993751058209749445923
+#data
+the_answer: 42; // foo
+str "this is a string"
+pi 03.1415926535897 // 932384626433832795028841971693993751058209749445923
+negative_pi -03.1415926535897
+/* foo...
+// hi
+
+/ * * /
+*/
+
+dozen: 12.
+half: .5
+negative_quarter: -.25
+negative_three: -3

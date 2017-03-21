@@ -47,21 +47,37 @@ if (opt.dev) {
 // generate parser
 parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart)
 
+/*
+lines = `
+// foobar
+//  
+//
+
+// bar
+
+// bazbaz
+
+
+
+
+//
+`.trim().split("\n");//*/
+
 // join up the lines again
 let source = `\n${lines.join("\n")}\n`;
 
 try {
 	var trees = parser.feed(source).results
 } catch (e) {
-	console.error(chalk.red("Syntax error"), "on", chalk.white(`line ${getline(source, e.offset) - 1}`));
+	console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset) - 1}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length - 1}`) + ":");
 	if (opt.dev) {
-		console.log(e.message);
+		console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset) - 1; return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length - 1 + $2})` }));
 	};
 
 	process.exit(1);
 };
 
-const printTree = (tree) => prettyjson.render(tree);
+const printTree = (tree) => prettyjson.render(tree || "[null]");
 
 if (trees.length > 1 && opt.dev) {
 	trees.forEach((tree) => console.log(opt.simple? JSON.stringify(trees[tree], null, 4) : printTree(trees[tree]), "\n"));

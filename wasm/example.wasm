@@ -1,2 +1,23 @@
-.data theanswer 42;
-$t0 + $t1 -> $t2;
+#data
+#data
+
+
+theanswer 42       ;    
+
+ ;; ; ; ; ;;     			
+
+  ; /* yikes, this is
+   terrible formatting.
+*/ // wow.
+   ;
+
+    ; 
+    ;/* ¿edge cases? */; 
+    ;
+     ;;    
+     ;
+
+  what: 6.4
+
+// #code
+// $t0 + $t1 -> $t2;
