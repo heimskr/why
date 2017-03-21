@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "()<>. +-*/^\\!#='\",!{}:[]~$|&;",
+	chars: "()<>. +-*/^\\!#='\",{}:[]~$|&;",
 	words: "+ - / * ^ -> < > <= >= = == [ ]".split(" ")
 };
 
@@ -10,19 +10,32 @@ const colors = "1 3 2 6 4 5".split(" ");
 const color = (x, n) => `${1 < n? "\n    " : ""}\u001b[3${colors[n % colors.length]}m${x instanceof Array || typeof x == "object"? JSON.stringify(x) : x}\u001b[0m`;
 
 // const list = "float_1 float_2 int".split(/\s+/);
-const list = "op op_add op_or op_not op_nand statement".split(/\s+/);
+// const list = "op op_add op_or op_not op_nand statement".split(/\s+/);
+const list = "meta_section meta metakey".split(/\s+/);
 const whitelist = true, quiet = false;
 const intercept = (out, ...dbg) => { quiet || (!!whitelist ^ !!list.includes(dbg[0])) || console.log(...dbg.concat(JSON.stringify(out)).map(color), "\n"); return out };
 const _ = intercept;
 const __ = (out, ...dbg) => { console.log(...[out].concat(dbg).map(color), "\n"); return out };
 const flatten = (arr) => arr.filter((e) => e != null).reduce((flat, toFlatten) => flat.filter((e) => e != null).concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten), []);
 const filter = (arr, index=null, ...remove) => arr.filter((item) => !(remove.length? remove : [null]).includes(typeof index == "number" && 0 <= index? item[index] : item));
-const select = (arr, ...indices) => indices.map((i) => arr[i])
+const select = (arr, ...indices) => indices.map((i) => arr[i]);
+
+const compileObject = (entries) => {
+	let obj = { };
+	filter(entries).forEach((entry) => obj[entry[0]] = entry[1]);
+	return obj;
+};
+
+const compileData = (entries) => {
+	let obj = { };
+	filter(entries).forEach((entry) => obj[entry[1]] = select(entry, 0, 2));
+	return obj;
+};
 %}
 
 @builtin "string.ne"
 
-main			-> program									{% d => _(d[0], "main", "d[0]", d) %}
+main			-> program									{% d => _(compileObject(d[0]), "main", "compileObject(d[0])", d) %}
 program			-> newline:* section:*						{% d => _(filter(d[1], 0, null, "\n"), "program", `filter(d[1], 0, null, "\\n")`, d) %}
 
 lineend			-> (single newline | multi | newline) 		{% d => null %}
@@ -38,17 +51,26 @@ int				-> (int_hex | int_bin | int_dec)			{% d => _(d[0][0], "int", "", d) %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => _(parseFloat((d[0] || "") + d[1].join("")/**/ + d[2] + d[3].join("")), "float_1", "parseFloat(...)", d) %}
 				 | ("-":? ".") [0-9]:+						{% d => _(parseFloat(filter(d[0]).join("") + d[1].join("")), "float_1", "parseFloat(...)", d) %}
 
-section			-> (data_section | code_section)			{% d => _(d[0][0], "section", "d[0][0]", d) %}
+section			-> (data_section | code_section | meta_section)
+															{% d => _(d[0][0], "section", "d[0][0]", d) %}
 
-data_section	-> _ "#data" _ newline datadef:*			{% d => _(["data", filter(d[4])], "data_section", `["data", filter(d[4])]`, d) %}
-datadef			-> _ var (_ ":" _ | __) float  _ separator	{% d => _(["float",  d[1], d[3]], "datadef", `["float",  d[1], d[3]]`, d) %}
-				 | _ var (_ ":" _ | __) int    _ separator	{% d => _(["int",    d[1], d[3]], "datadef", `["int",    d[1], d[3]]`, d) %}
-				 | _ var (_ ":" _ | __) string _ separator	{% d => _(["string", d[1], d[3]], "datadef", `["string", d[1], d[3]]`, d) %}
+oper[X]			-> _ $X _
+
+meta_section	-> _ "#meta" _ separator meta:*				{% d => _(["meta", compileObject(d[4])], "meta_section", `["meta", filter(d[4])]`, d) %}
+meta			-> _ metakey (oper[":"] | oper["="]) string	{% d => _([d[1][0], d[3]], "meta", `[d[0], d[3]]`, d) %}
+				 | _ separator								{% d => null %}
+metakey			-> ("orcid" | "version" | "author")			{% d => d[0] %}
+
+data_section	-> _ "#data" _ separator datadef:*			{% d => _(["data", compileData(d[4])], "data_section", `["data", filter(d[4])]`, d) %}
+datadef			-> _ var (oper[":"]|__) float  _ separator	{% d => _(["float",  d[1], d[3]], "datadef", `["float",  d[1], d[3]]`, d) %}
+				 | _ var (oper[":"]|__) int    _ separator	{% d => _(["int",    d[1], d[3]], "datadef", `["int",    d[1], d[3]]`, d) %}
+				 | _ var (oper[":"]|__) string _ separator	{% d => _(["string", d[1], d[3]], "datadef", `["string", d[1], d[3]]`, d) %}
 				 | _ separator 								{% d => null %}
 
-code_section	-> _ "#code" _ newline statement:*			{% d => _(["code", filter(d[4])], "code_section", `["code", filter(d[4])]`, d) %}
+code_section	-> _ "#code" _ separator statement:*			{% d => _(["code", filter(d[4])], "code_section", `["code", filter(d[4])]`, d) %}
 statement		-> _ op _ separator							{% d => _(d[1][0], "statement", `d[1][0]`, d) %}
 				 | _ separator								{% d => null %}
+
 
 op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_addi | op_subi | op_multi | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
@@ -56,9 +78,7 @@ op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or 
 				 | op_sl | op_sle | op_seq | op_sge | op_sg
 				 | op_j | op_la | op_li | op_mv
 
-into			-> _ "->" _									{% d => null %}
-
-oper[X]			-> _ $X _
+into			-> oper["->"]								{% d => null %}
 
 op_add			-> reg oper["+"]  reg into reg				{% d => _([ "+", d[0], d[2], d[4]], "op_add",  "", d) %}
 op_sub			-> reg oper["-"]  reg into reg				{% d => _([ "-", d[0], d[2], d[4]], "op_sub",  "", d) %}
@@ -69,7 +89,7 @@ op_xor			-> reg oper["x"]  reg into reg				{% d => _([ "x", d[0], d[2], d[4]], "
 op_nand			-> reg oper["~&"] reg into reg				{% d => _(["~&", d[0], d[2], d[4]], "op_nand", "", d) %}
 op_nor			-> reg oper["~|"] reg into reg				{% d => _(["~|", d[0], d[2], d[4]], "op_nor",  "", d) %}
 op_xnor			-> reg oper["~x"] reg into reg				{% d => _(["~x", d[0], d[2], d[4]], "op_xnor", "", d) %}
-op_not			-> "~" _ reg _ "->" _ reg					{% d => _([ "~", d[0], d[3]      ], "op_not",  "", d) %}
+op_not			-> "~" _ reg into reg						{% d => _([ "~", d[0], d[3]      ], "op_not",  "", d) %}
 
 label			-> "&" var									{% d => d[1]    %}
 imm				-> (int | label)							{% d => d[0][0] %}
@@ -105,6 +125,7 @@ reg_arg			-> "$a" [0-9a-f]							{% d => _(["a", d[1]], "reg_arg",    `["a", d[1
 reg_return		-> "$r" [0-9a-f]							{% d => _(["r", d[1]], "reg_return", `["r", d[1]]`, d) %}
 reg				-> (reg_temp | reg_saved | reg_arg | reg_return)
 															{% d => _(["register", ...d[0][0]], "reg", "[,,]", d) %}
+
 
 var -> varchar:+ {%
 	(d, location, reject) => {

@@ -1,6 +1,16 @@
-#data
-#data
+#meta
+version: "-0.0"
+orcid: "0000-0001-7405-6654"
+author: "Kai Tamkun"
 
+
+#data // this one will be overwritten by the next data section
+ghost: "spooky!"
+skeletons: "spooky scary"
+will_this_be_overwritten?: "heck yeah"
+
+
+#data
 
 
 theanswer 42       ;    
@@ -9,20 +19,21 @@ theanswer 42       ;
 
   ; /* yikes, this is
    terrible formatting.
-*/ // wow.
+*/ // wow. yikes.
    ;
 
     ; 
     ;/* ¿edge cases? */; 
     ;
      ;;    
-     ;
+     ; /* what's */// up?
 
   what: 6.4
 
+str: "this one's a \"string\""
+
 #code
 $t0 + $t1 -> $t2; $ta + $t0-> $t1a
-
 $t0  | $t0 -> $t0
 $t0  & $t0 -> $t0
 $t0  x $t0 -> $t0
@@ -46,7 +57,6 @@ $t0 <= $t0 -> $t0
 $t0 == $t0 -> $t0
 $t0 >= $t0 -> $t0
 $t0 >  $t0 -> $t0
-
 $t11 ~| &theanswer -> $t4
 $a0&&theanswer->$r0
 : 0b1111;:42;:&theanswer; : &theanswer
