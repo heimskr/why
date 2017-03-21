@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "()<>. +-*/^\\!#='\",{}:[]~$|&;",
+	chars: " \":",
 	words: "+ - / * ^ -> < > <= >= = == [ ]".split(" ")
 };
 
@@ -46,7 +46,6 @@ string			-> dqstring									{% d => _(d[0], "dqstring", "d[0]", d) %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
 int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
 int_dec			-> "-":? [0-9]:+							{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
-#int			-> "-":? [0-9]:+							{% d => _(parseInt((d[0] || "") + d[1].join("")), "int", "parseInt(...)", d) %}
 int				-> (int_hex | int_bin | int_dec)			{% d => _(d[0][0], "int", "", d) %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => _(parseFloat((d[0] || "") + d[1].join("")/**/ + d[2] + d[3].join("")), "float_1", "parseFloat(...)", d) %}
 				 | ("-":? ".") [0-9]:+						{% d => _(parseFloat(filter(d[0]).join("") + d[1].join("")), "float_1", "parseFloat(...)", d) %}

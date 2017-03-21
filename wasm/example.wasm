@@ -13,7 +13,7 @@ will_this_be_overwritten?: "heck yeah"
 #data
 
 
-theanswer 42       ;    
+the~answer 42       ;    
 
  ;; ; ; ; ;;     			
 
@@ -28,9 +28,11 @@ theanswer 42       ;
      ;;    
      ; /* what's */// up?
 
-  what: 6.4
+  what?: 6.4
 
 str: "this one's a \"string\""
+
+{<[h(e/l\l)o]!>} "how are you?"
 
 #code
 $t0 + $t1 -> $t2; $ta + $t0-> $t1a
