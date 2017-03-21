@@ -322,7 +322,7 @@ If the value in `rs` is less than or equal to the value in `rt`, `rd` is set to 
 
 ### <a name="op-seq"></a>Set on Equal
 > `seq rd, rs, rt`  
-> `$rs = $rt -> $rd`  
+> `$rs == $rt -> $rd`  
 > `000000001111` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
 
 If the value in `rs` is equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.

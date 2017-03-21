@@ -20,30 +20,37 @@ theanswer 42       ;
 
   what: 6.4
 
-
-
-
-//*
 #code
 $t0 + $t1 -> $t2; $ta + $t0-> $t1a
 
-$t0 | $t0 -> $t0
-$t0 & $t0 -> $t0
-$t0 x $t0 -> $t0
+$t0  | $t0 -> $t0
+$t0  & $t0 -> $t0
+$t0  x $t0 -> $t0
 $t0 ~| $t0 -> $t0
 $t0 ~& $t0 -> $t0
 $t0 ~x $t0 -> $t0
+$t0  * $t0 -> $t0
+
 ~$t0 -> $t0
-$t0 * $t0 -> $t0
 $t0-$t0->$t0
 
-
-$t0 * 42 -> $t1
-$t0 - -0b11 -> $t2
+$t0 *     42 -> $t1
+$t0 -  -0b11 -> $t2
 $t0 & 0b1111 -> $t3
-$t11 ~| @theanswer -> $t4
 lui: 0x64 -> $t5
-// $t0 + $t1 -> $t2;
-//*/
+%hi -> $t6
+%lo -> $t7
 
+$t0 <  $t0 -> $t0
+$t0 <= $t0 -> $t0
+$t0 == $t0 -> $t0
+$t0 >= $t0 -> $t0
+$t0 >  $t0 -> $t0
 
+$t11 ~| &theanswer -> $t4
+$a0&&theanswer->$r0
+: 0b1111;:42;:&theanswer; : &theanswer
+
+&theanswer -> $s0
+42 -> $s0
+$t0 -> $s0

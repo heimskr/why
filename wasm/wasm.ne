@@ -22,21 +22,21 @@ const select = (arr, ...indices) => indices.map((i) => arr[i])
 
 @builtin "string.ne"
 
-main		-> program										{% d => _(d[0], "main", "d[0]", d) %}
-program		-> newline:* section:*							{% d => _(filter(d[1], 0, null, "\n"), "program", `filter(d[1], 0, null, "\\n")`, d) %}
+main			-> program									{% d => _(d[0], "main", "d[0]", d) %}
+program			-> newline:* section:*						{% d => _(filter(d[1], 0, null, "\n"), "program", `filter(d[1], 0, null, "\\n")`, d) %}
 
-lineend		-> (single newline | multi | newline) 			{% d => null %}
-separator	-> ";"											{% d => null %}
-			 | lineend										{% d => null %}
+lineend			-> (single newline | multi | newline) 		{% d => null %}
+separator		-> ";"										{% d => null %}
+				 | lineend									{% d => null %}
 
-string		-> dqstring										{% d => _(d[0], "dqstring", "d[0]", d) %}
-int_hex		-> "-":? "0x" [0-9a-fA-F]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
-int_bin		-> "-":? "0b" [01]:+							{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
-int_dec		-> "-":? [0-9]:+								{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
-#int		-> "-":? [0-9]:+								{% d => _(parseInt((d[0] || "") + d[1].join("")), "int", "parseInt(...)", d) %}
-int			-> int_hex | int_bin | int_dec					{% d => _(d[0], "int", "", d) %}
-float		-> "-":? [0-9]:+ "." [0-9]:*					{% d => _(parseFloat((d[0] || "") + d[1].join("")/**/ + d[2] + d[3].join("")), "float_1", "parseFloat(...)", d) %}
-			 | ("-":? ".") [0-9]:+							{% d => _(parseFloat(filter(d[0]).join("") + d[1].join("")), "float_1", "parseFloat(...)", d) %}
+string			-> dqstring									{% d => _(d[0], "dqstring", "d[0]", d) %}
+int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
+int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
+int_dec			-> "-":? [0-9]:+							{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
+#int			-> "-":? [0-9]:+							{% d => _(parseInt((d[0] || "") + d[1].join("")), "int", "parseInt(...)", d) %}
+int				-> (int_hex | int_bin | int_dec)			{% d => _(d[0][0], "int", "", d) %}
+float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => _(parseFloat((d[0] || "") + d[1].join("")/**/ + d[2] + d[3].join("")), "float_1", "parseFloat(...)", d) %}
+				 | ("-":? ".") [0-9]:+						{% d => _(parseFloat(filter(d[0]).join("") + d[1].join("")), "float_1", "parseFloat(...)", d) %}
 
 section			-> (data_section | code_section)			{% d => _(d[0][0], "section", "d[0][0]", d) %}
 
@@ -52,40 +52,59 @@ statement		-> _ op _ separator							{% d => _(d[1][0], "statement", `d[1][0]`, 
 
 op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_addi | op_subi | op_multi | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
-				 | op_lui
+				 | op_lui | op_mfhi | op_mflo
+				 | op_sl | op_sle | op_seq | op_sge | op_sg
+				 | op_j | op_la | op_li | op_mv
 
 into			-> _ "->" _									{% d => null %}
 
-op_add			-> reg (_  "+" _) reg into reg				{% d => _([ "+", ...select(d, 0, 2, 4)], "op_add",  "", d) %}
-op_sub			-> reg (_  "-" _) reg into reg				{% d => _([ "-", ...select(d, 0, 2, 4)], "op_sub",  "", d) %}
-op_mult			-> reg (_  "*" _) reg into reg				{% d => _([ "*", ...select(d, 0, 2, 4)], "op_mult", "", d) %}
-op_and			-> reg (_  "&" _) reg into reg				{% d => _([ "&", ...select(d, 0, 2, 4)], "op_and",  "", d) %}
-op_or			-> reg (_  "|" _) reg into reg				{% d => _([ "|", ...select(d, 0, 2, 4)], "op_or",   "", d) %}
-op_xor			-> reg (_  "x" _) reg into reg				{% d => _([ "x", ...select(d, 0, 2, 4)], "op_xor",  "", d) %}
-op_nand			-> reg (_ "~&" _) reg into reg				{% d => _(["~&", ...select(d, 0, 2, 4)], "op_nand", "", d) %}
-op_nor			-> reg (_ "~|" _) reg into reg				{% d => _(["~|", ...select(d, 0, 2, 4)], "op_nor",  "", d) %}
-op_xnor			-> reg (_ "~x" _) reg into reg				{% d => _(["~x", ...select(d, 0, 2, 4)], "op_xnor", "", d) %}
-op_not			-> "~" _ reg _ "->" _ reg					{% d => _([ "~", ...select(d, 1, 3   )], "op_not",  "", d) %}
+oper[X]			-> _ $X _
 
-imm				-> int										{% d => d[0] %}
-				 | "@" var									{% d => d[1] %}
-op_addi			-> reg (_  "+" _) imm into reg				{% d => _([ "_+", ...select(d, 0, 2, 4)], "op_addi",  "", d) %}
-op_subi			-> reg (_  "-" _) imm into reg				{% d => _([ "_-", ...select(d, 0, 2, 4)], "op_subi",  "", d) %}
-op_multi		-> reg (_  "*" _) imm into reg				{% d => _([ "_*", ...select(d, 0, 2, 4)], "op_multi", "", d) %}
-op_andi			-> reg (_  "&" _) imm into reg				{% d => _([ "_&", ...select(d, 0, 2, 4)], "op_andi",  "", d) %}
-op_ori			-> reg (_  "|" _) imm into reg				{% d => _([ "_|", ...select(d, 0, 2, 4)], "op_ori",   "", d) %}
-op_xori			-> reg (_  "x" _) imm into reg				{% d => _([ "_x", ...select(d, 0, 2, 4)], "op_xori",  "", d) %}
-op_nandi		-> reg (_ "~&" _) imm into reg				{% d => _(["_~&", ...select(d, 0, 2, 4)], "op_nandi", "", d) %}
-op_nori			-> reg (_ "~|" _) imm into reg				{% d => _(["_~|", ...select(d, 0, 2, 4)], "op_nori",  "", d) %}
-op_xnori		-> reg (_ "~x" _) imm into reg				{% d => _(["_~x", ...select(d, 0, 2, 4)], "op_xnori", "", d) %}
+op_add			-> reg oper["+"]  reg into reg				{% d => _([ "+", d[0], d[2], d[4]], "op_add",  "", d) %}
+op_sub			-> reg oper["-"]  reg into reg				{% d => _([ "-", d[0], d[2], d[4]], "op_sub",  "", d) %}
+op_mult			-> reg oper["*"]  reg into reg				{% d => _([ "*", d[0], d[2], d[4]], "op_mult", "", d) %}
+op_and			-> reg oper["&"]  reg into reg				{% d => _([ "&", d[0], d[2], d[4]], "op_and",  "", d) %}
+op_or			-> reg oper["|"]  reg into reg				{% d => _([ "|", d[0], d[2], d[4]], "op_or",   "", d) %}
+op_xor			-> reg oper["x"]  reg into reg				{% d => _([ "x", d[0], d[2], d[4]], "op_xor",  "", d) %}
+op_nand			-> reg oper["~&"] reg into reg				{% d => _(["~&", d[0], d[2], d[4]], "op_nand", "", d) %}
+op_nor			-> reg oper["~|"] reg into reg				{% d => _(["~|", d[0], d[2], d[4]], "op_nor",  "", d) %}
+op_xnor			-> reg oper["~x"] reg into reg				{% d => _(["~x", d[0], d[2], d[4]], "op_xnor", "", d) %}
+op_not			-> "~" _ reg _ "->" _ reg					{% d => _([ "~", d[0], d[3]      ], "op_not",  "", d) %}
 
-op_lui			-> ("lui" _ ":" _) imm into reg				{% d => _(["lui", d[1], d[3]], "op_lui", "", d) %}
+label			-> "&" var									{% d => d[1]    %}
+imm				-> (int | label)							{% d => d[0][0] %}
 
-reg_temp		-> "$t" ([0-9a-f] | "1" [0-9a])				{% d => _(["t", d[1].join("")], "reg_temp", `["t", d[1].join("")]`, d) %}
-reg				-> reg_temp									{% d => _(["register", d[0][0], d[0][1]], "reg", "[,,]", d) %}
+op_addi			-> reg oper["+"]  imm into reg				{% d => _([ "_+", d[0], d[2], d[4]], "op_addi",  "", d) %}
+op_subi			-> reg oper["-"]  imm into reg				{% d => _([ "_-", d[0], d[2], d[4]], "op_subi",  "", d) %}
+op_multi		-> reg oper["*"]  imm into reg				{% d => _([ "_*", d[0], d[2], d[4]], "op_multi", "", d) %}
+op_andi			-> reg oper["&"]  imm into reg				{% d => _([ "_&", d[0], d[2], d[4]], "op_andi",  "", d) %}
+op_ori			-> reg oper["|"]  imm into reg				{% d => _([ "_|", d[0], d[2], d[4]], "op_ori",   "", d) %}
+op_xori			-> reg oper["x"]  imm into reg				{% d => _([ "_x", d[0], d[2], d[4]], "op_xori",  "", d) %}
+op_nandi		-> reg oper["~&"] imm into reg				{% d => _(["_~&", d[0], d[2], d[4]], "op_nandi", "", d) %}
+op_nori			-> reg oper["~|"] imm into reg				{% d => _(["_~|", d[0], d[2], d[4]], "op_nori",  "", d) %}
+op_xnori		-> reg oper["~x"] imm into reg				{% d => _(["_~x", d[0], d[2], d[4]], "op_xnori", "", d) %}
 
+op_lui			-> ("lui" _ ":" _) imm into reg				{% d => _(["lui",  d[1], d[3]], "op_lui",  "", d) %}
+op_mfhi			-> "%hi" into reg							{% d => _(["mfhi", d[2]      ], "op_mfhi", "", d) %}
+op_mflo			-> "%lo" into reg							{% d => _(["mflo", d[2]      ], "op_mflo", "", d) %}
 
+op_sl			-> reg oper["<"]  reg into reg				{% d => _(["<",  d[0], d[2], d[4]], "op_sl",  "", d) %}
+op_sle			-> reg oper["<="] reg into reg				{% d => _(["<=", d[0], d[2], d[4]], "op_sle", "", d) %}
+op_seq			-> reg oper["=="] reg into reg				{% d => _(["==", d[0], d[2], d[4]], "op_seq", "", d) %}
+op_sge			-> reg oper[">"]  reg into reg				{% d => _([">",  d[0], d[2], d[4]], "op_sge", "", d) %}
+op_sg			-> reg oper[">="] reg into reg				{% d => _([">=", d[0], d[2], d[4]], "op_sg",  "", d) %}
 
+op_j			-> ":" _ imm								{% d => _(["jump", d[2]], "op_j", "", d) %}
+op_la			-> label into reg							{% d => _(["la", d[0], d[2]], "op_la", "", d) %}
+op_li			-> int   into reg							{% d => _(["li", d[0], d[2]], "op_li", "", d) %}
+op_mv			-> reg   into reg							{% d => _(["mv", d[0], d[2]], "op_mv", "", d) %}
+
+reg_temp		-> "$t" ([0-9a-f] | "1" [0-9a])				{% d => _(["t", d[1].join("")], "reg_temp",  `["t", d[1].join("")]`, d) %}
+reg_saved		-> "$s" ([0-9a-f] | "1" [0-9a])				{% d => _(["s", d[1].join("")], "reg_saved", `["s", d[1].join("")]`, d) %}
+reg_arg			-> "$a" [0-9a-f]							{% d => _(["a", d[1]], "reg_arg",    `["a", d[1]]`, d) %}
+reg_return		-> "$r" [0-9a-f]							{% d => _(["r", d[1]], "reg_return", `["r", d[1]]`, d) %}
+reg				-> (reg_temp | reg_saved | reg_arg | reg_return)
+															{% d => _(["register", ...d[0][0]], "reg", "[,,]", d) %}
 
 var -> varchar:+ {%
 	(d, location, reject) => {
