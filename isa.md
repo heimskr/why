@@ -97,10 +97,17 @@ The VM emulates a custom instruction set that may or may not actually be theoret
 Programs are divided into four sections: metadata, handler pointers, data and code. The code section consists of executable code. The exception handler pointer section, as its name suggests, contains pointers to functions in the code section to handle exceptions (such as overflows and division by zero).
 
 ## <a name="prog-meta"></a>Metadata Section
-The metadata section is a fixed-size (exact size TBD) block of data at the beginning of the program that contains the beginning addresses of the other sections.
+The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the handler pointer section, and is therefore equivalent to the size of the metadata section.
+
+* `0x00`: Address of the beginning of the [handler pointer section](#prog-ptrs).
+* `0x01`: Address of the beginning of the [data section](#prog-data).
+* `0x02`: Address of the beginning of the [code section](#prog-code).
+* `0x03`: Total size of the program.
+* `0x04`: Version number of the program.
+* `0x05`: ORCID of the author.
 
 ## <a name="prog-ptrs"></a>Handler Pointer Section
-As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero).
+As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero). Its size is exactly equal to 256 words, but this may change if more than that many exceptions are eventually defined (an exceedingly unlikely possibility).
 
 ## <a name="prog-data"></a>Data Section
 The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
@@ -120,13 +127,17 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | 4        | `$ra`        | Return address.                             |
 | 5–20     | `$r0`–`$rf`  | Contains return values.                     |
 | 21–36    | `$a0`–`$af`  | Contains arguments for subroutines.         |
-| 37–63    | `$t0`–`$t1a` | Temporary registers.                        |
-| 64–90    | `$s0`–`$s1a` | Saved registers.                            |
-| 91–107   | `$k0`–`$k10` | Kernel registers.                           |
-| 108–123  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
-| 124–127  | `$f0`–`$f3`  | Floating point return values.               |
+| 37–60    | `$t0`–`$t17` | Temporary registers.                        |
+| 61–84    | `$s0`–`$s17` | Saved registers.                            |
+| 85–101   | `$k0`–`$k10` | Kernel registers.                           |
+| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
+| 118–121  | `$f0`–`$f3`  | Floating point return values.               |
+| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.             |
 
 <a name="hi-lo"></a>In addition, there are two extra registers (`HI` and `LO`), but they aren't directly accessible from code; the contents are accessed using the  [`mfhi`](#mfhi) and [`mflo`](#mflo) instructions.
+
+# <a name="exceptions"></a>Exceptions
+Exceptions occur when invalid code is executed. For example, trying to divide by zero will cause a division by zero error. When an exception occurs, the VM will search for a handler in the [handler pointer section](#prog-ptrs) and, if one is found, jump to it. If no handler is found in the handler pointer section, code will continue, which may result in undefined behavior. For example, unhandled division by zero may or may not store a result in `rd`, and if it does, the value it stores isn't guaranteed to be defined. (Note that division isn't currently implemented because support for floating point numbers hasn't been implemented.)
 
 # <a name="operations"></a>Operations
 

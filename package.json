@@ -1,10 +1,15 @@
 {
-  "name": "why.js",
-  "version": "0.0.0",
-  "description": "Replace JS with an esoteric machine language ¯\\_(ツ)_/¯",
-  "main": "why.js",
-  "author": "Kai Tamkun",
-  "license": "MIT",
-  "devDependencies": {},
-  "dependencies": {}
+	"name": "why.js",
+	"version": "0.0.0",
+	"description": "Replace JS with an esoteric machine language ¯\\_(ツ)_/¯",
+	"main": "why.js",
+	"author": "Kai Tamkun",
+	"license": "MIT",
+	"devDependencies": {},
+	"dependencies": {
+		"chalk": "^1.1.3",
+		"get-line-from-pos": "^1.0.0",
+		"minimist": "^1.2.0",
+		"nearley": "^2.8.0"
+	}
 }
