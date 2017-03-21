@@ -13,3 +13,4 @@ dozen: 12.
 half: .5
 negative_quarter: -.25
 negative_three: -3
+hex: -0xdeadbeef
