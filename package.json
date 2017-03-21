@@ -10,6 +10,7 @@
 		"chalk": "^1.1.3",
 		"get-line-from-pos": "^1.0.0",
 		"minimist": "^1.2.0",
-		"nearley": "^2.8.0"
+		"nearley": "^2.8.0",
+		"prettyjson": "^1.2.1"
 	}
 }

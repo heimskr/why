@@ -20,5 +20,8 @@ atest: $(COMPILED) $(ALT)
 atree: $(COMPILED) $(ALT)
 	$(TEST) $(ALT) -t
 
+atrees: $(COMPILED) $(ALT)
+	$(TEST) $(ALT) -st
+
 clean:
 	rm -f $(COMPILED)

@@ -6,13 +6,14 @@ let fs = require("fs"),
 	gen = require("nearley/lib/generate.js"),
 	chalk = require("chalk"),
 	getline = require("get-line-from-pos"),
-	minimist = require("minimist");
+	minimist = require("minimist"),
+	prettyjson = require("prettyjson");
 
 const die = (...a) => { console.error(...a); process.exit(1) };
 
 const opt = minimist(process.argv.slice(2), {
-	alias: { t: "tree", d: "dev" },
-	boolean: ["tree", "dev"],
+	alias: { t: "tree", d: "dev", s: "simple" },
+	boolean: ["tree", "dev", "simple"],
 	default: { dev: true }
 }), filename = opt._[0];
 
@@ -60,12 +61,14 @@ try {
 	process.exit(1);
 };
 
+const printTree = (tree) => prettyjson.render(tree);
+
 if (trees.length > 1 && opt.dev) {
-	trees.forEach((tree) => console.log(JSON.stringify(trees[tree], null, 0), "\n"));
+	trees.forEach((tree) => console.log(opt.simple? JSON.stringify(trees[tree], null, 4) : printTree(trees[tree]), "\n"));
 	console.warn(chalk.yellow.italic(`^^^^^^^^^^^^^^^^^^^^^^\nAmbiguous grammar (${trees.length}).\n`));
 } else if (trees.length === 0) {
 	console.warn(chalk.yellow.italic("Nothing parsed."));
 	process.exit(1);
 } else if (opt.tree) {
-	console.log(JSON.stringify(trees[0], null, 2));
+	console.log(opt.simple? JSON.stringify(trees[0], null, 4) : printTree(trees[0]));
 };
