@@ -42,7 +42,6 @@
 						<li><a href="#op-andi">Bitwise AND Immediate</a> (<code>andi</code>)</li>
 						<li><a href="#op-nandi">Bitwise NAND Immediate</a> (<code>nandi</code>)</li>
 						<li><a href="#op-nori">Bitwise NOR Immediate</a> (<code>nori</code>)</li>
-						<li><a href="#op-noti">Bitwise NOT Immediate</a> (<code>noti</code>)</li>
 						<li><a href="#op-ori">Bitwise OR Immediate</a> (<code>ori</code>)</li>
 						<li><a href="#op-xnori">Bitwise XNOR Immediate</a> (<code>xnori</code>)</li>
 						<li><a href="#op-xori">Bitwise XOR Immediate</a> (<code>xori</code>)</li>
