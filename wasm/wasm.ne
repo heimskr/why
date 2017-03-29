@@ -2,16 +2,8 @@
 "use strict";
 
 const special = {
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
 	chars: "&*\t \":",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
-=======
->>>>>>> Stashed changes
-	chars: " \":",
-	words: "+ - / * ^ -> < > <= >= = == [ ]".split(" ")
->>>>>>> 5770fd2efa90f0c20acc6d39abf198fe28133fc0
 };
 
 const colors = "1 3 2 6 4 5".split(" ");
@@ -143,7 +135,7 @@ op_sg			-> reg oper[">="] reg into reg				{% d => _([">=", d[0], d[2], d[4]], "o
 op_j			-> ":" _ (imm | var)						{% d => _(["jump", d[2][0]], "op_j", "", d) %}
 op_jc			-> "?" _ (imm | var)						{% d => _(["jc", d[2][0]], "op_jc", "", d) %}
 op_jr			-> ":" _ reg								{% d => _(["jr", d[2][0]], "op_jr", "", d) %}
-op_la			-> var_ref into reg							{% d => _(["la", d[0], d[2]], "op_la", "", d) %}
+op_la			-> var_addr into reg						{% d => _(["la", d[0], d[2]], "op_la", "", d) %}
 op_li			-> int   into reg							{% d => _(["li", d[0], d[2]], "op_li", "", d) %}
 op_mv			-> reg   into reg							{% d => _(["mv", d[0], d[2]], "op_mv", "", d) %}
 op_ret			-> "ret"									{% d => _(["ret"], "op_ret", "", d) %}
