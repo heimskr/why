@@ -1,0 +1,19 @@
+#meta
+version: "0"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+
+#code
+@fibonacci // $a0 -> $r0
+[ $t0 $t1
+	0 -> $t0
+	1 -> $t1
+	0 -> $r0
+	@fibonacci_loop
+		$a0 == $0? fibonacci_loop_done; $a0--
+		$t0 + $t1 -> $r0
+		$t1 -> $t0
+		$r0 -> $t1
+		: fibonacci_loop
+	@fibonacci_loop_done
+] $t1 $t0; ret

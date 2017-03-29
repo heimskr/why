@@ -8,6 +8,8 @@ ALT			= example2.wasm
 $(COMPILED): $(SYNTAX)
 	$(COMPILE) $(SYNTAX) -o $(COMPILED)
 
+
+
 test: $(COMPILED) $(EXAMPLE)
 	$(TEST) $(EXAMPLE)
 
@@ -17,6 +19,8 @@ tree: $(COMPILED) $(EXAMPLE)
 trees: $(COMPILED) $(EXAMPLE)
 	$(TEST) $(EXAMPLE) -st
 
+
+
 atest: $(COMPILED) $(ALT)
 	$(TEST) $(ALT)
 
@@ -25,6 +29,19 @@ atree: $(COMPILED) $(ALT)
 
 atrees: $(COMPILED) $(ALT)
 	$(TEST) $(ALT) -st
+
+
+
+ftest: $(COMPILED) fibonacci.wasm
+	$(TEST) fibonacci.wasm
+
+ftree: $(COMPILED) fibonacci.wasm
+	$(TEST) fibonacci.wasm -t
+
+ftrees: $(COMPILED) fibonacci.wasm
+	$(TEST) fibonacci.wasm -st
+
+
 
 clean:
 	rm -f $(COMPILED)

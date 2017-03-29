@@ -1,6 +1,7 @@
 # Table of Contents
 <blockquote>
 	<ol>
+		<li><a href="#intro">Introduction</a>
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
@@ -63,9 +64,22 @@
 						<li><a href="#op-sg">Set on Greater Than</a> (<code>sg</code>)</li>
 					</ol>
 				</li>
-				<li><a href="#ops-jump">Jumps (J-Types)</a>
+				<li><a href="#ops-jump-j">Jumps (J-Types)</a>
 					<ol>
 						<li><a href="#op-j">Jump</a> (<code>j</code>)</li>
+						<li><a href="#op-jc">Jump Conditional</a> (<code>jc</code>)</li>
+					</ol>
+				</li>
+				<li><a href="#ops-jump-r">Jumps (R-Types)</a>
+					<ol>
+						<li><a href="#op-jr">Jump to Register</a> (<code>jr</code>)</li>
+					</ol>
+				</li>
+				<li><a href="#ops-mem-r">Memory (R-Types)</a>
+					<ol>
+						<li><a href="#op-c">Copy</a> (<code>c</code>)</li>
+						<li><a href="#op-l">Load</a> (<code>l</code>)</li>
+						<li><a href="#op-s">Store</a> (<code>s</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -73,6 +87,9 @@
 						<li><a href="#op-la">Load Address</a> (<code>la</code>)</li>
 						<li><a href="#op-li">Load Immediate</a> (<code>li</code>)</li>
 						<li><a href="#op-mv">Move</a> (<code>mv</code>)</li>
+						<li><a href="#op-ret">Return</a> (<code>ret</code>)</li>
+						<li><a href="#op-push">Push</a> (<code>push</code>)</li>
+						<li><a href="#op-pop">Pop</a> (<code>pop</code>)</li>
 					</ol>
 				</li>
 			</ol>
@@ -144,21 +161,21 @@ Exceptions occur when invalid code is executed. For example, trying to divide by
 
 ### <a name="op-add"></a>Addition
 > `add rd, rs, rt`  
-> `$rs + $rt -> $rd`  
+> `$rs + $rt -> $rd` or `$rd += $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
 
 Adds the values in `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-sub"></a>Subtraction
 > `sub rd, rs, rt`  
-> `$rs - $rt -> $rd`  
+> `$rs - $rt -> $rd` or `$rd -= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`.
 
 ### <a name="op-mult"></a>Multiplication
 > `mult rs, rt`  
-> `$rs * $rt`  
+> `$rs * $rt` or `$rd *= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
@@ -167,49 +184,49 @@ Multiplies the value in `rs` by the value in `rt` and stories the upper half in 
 
 ### <a name="op-and"></a>Bitwise AND
 > `and rd, rs, rt`  
-> `$rs & $rt -> $rd`  
+> `$rs & $rt -> $rd` or `$rd &= $rt`  
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
    
 Computes the bitwise AND of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nand"></a>Bitwise NAND
 > `nand rd, rs, rt`  
-> `$rs ~& $rt -> $rd`  
+> `$rs ~& $rt -> $rd` or `$rd ~&= $rt`  
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
    
 Computes the bitwise NAND of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nor"></a>Bitwise NOR
 > `nor rd, rs, rt`  
-> `$rs ~| $rt -> $rd`  
+> `$rs ~| $rt -> $rd` or `$rd ~|= $rt`  
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
    
 Computes the bitwise NOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-not"></a>Bitwise NOT
 > `not rd, rs`  
-> `~$rs -> $rd`  
+> `~$rs -> $rd`
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000003`
    
 Computes the bitwise NOT of `rs` and stores the result in `rd`.
 
 ### <a name="op-or"></a>Bitwise OR
 > `or rd, rs, rt`  
-> `$rs | $rt -> $rd`  
+> `$rs | $rt -> $rd` or `$rd |= $rt`  
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000004`
    
 Computes the bitwise OR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nxor"></a>Bitwise XNOR
 > `xnor rd, rs, rt`  
-> `$rs ~x $rt -> $rd`  
+> `$rs ~x $rt -> $rd` or `$rd ~x= $rt`  
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000005`
    
 Computes the bitwise XNOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-xor"></a>Bitwise XOR
 > `xor rd, rs, rt`  
-> `$rs x $rt -> $rd`  
+> `$rs x $rt -> $rd` or `$rd x= $rt`  
 > `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000006`
 
 Computes the bitwise XOR of `rs` and `rt` and stores the result in `rd`.
@@ -288,7 +305,7 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 > `lui: imm -> $rd`  
 > `000000001100` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Loads an immediate value into the upper half the word at `rd`. The lower half is replaced with zeroes.
+Loads an immediate value into the upper half of the word at `rd`. The lower half is replaced with zeroes.
 
 ### <a name="op-mfhi"></a>Move From HI Register
 > `mfhi rd`  
@@ -304,7 +321,7 @@ Copies the value of the [`HI`](#hi-lo) register into `rd`.
 
 Copies the value of the [`LO`](#hi-lo) register into `rd`.
 
-## <a name="ops-comp-r"></a>Comparisons (R-Type)
+## <a name="ops-comp-r"></a>Comparisons (R-Types)
 
 ### <a name="op-sl"></a>Set on Less Than
 > `sl rd, rs, rt`  
@@ -341,14 +358,53 @@ This is a pseudoinstruction; its translation is `sle rd, rt, rs`.
 If the value in `rs` is greather than the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.  
 This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
 
-## <a name="ops-jump"></a>Jumps (J-Types)
+## <a name="ops-jump-j"></a>Jumps (J-Types)
 
 ### <a name="op-j"></a>Jump
 > `j target`  
-> `: &var` or `: imm`  
-> `TODO`
+> `: label` or `: imm`  
+> `000000010000` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
+
+### <a name="op-jc"></a>Jump Conditional
+> `jc target, rs`  
+> `$rs? label` or `$rs? imm`  
+> `000000010001` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
+
+## <a name="ops-jump-r"></a>Jumps (R-Types)
+
+### <a name="op-jr"></a>Jump to Register
+> `jr rs`  
+> `: $rs`  
+> `000000010010` `0000000` `sssssss` `0000000` `000` `0000000000000000` `000000000000`
+
+Jumps to the address stored in `rs`.
+
+## <a name="ops-mem-r"></a>Memory (R-Types)
+
+### <a name="op-c"></a>Copy
+> `c rd, rs`  
+> `[$rs] -> [$rd]`  
+> `000000010011` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+
+Copies the value stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
+
+### <a name="op-l"></a>Load
+> `l rd, rs`  
+> `[$rs] -> $rd`
+> `000000010100` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+
+Loads the value stored at the memory address pointed to by `rs` into `rd`.
+
+### <a name="op-s"></a>Store
+> `s rd, rs`  
+> `$rs -> [$rd]`  
+> `000000010101` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+
+Stores the value of `rs` into the memory address pointed to by `rd`.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
@@ -356,21 +412,79 @@ Jumps to the address of a given label or directly to a given address.
 > `la rd, var`  
 > `&var -> $rd`
 
-Loads the address of a variable into `rd`. <!-- TODO: translation -->
+Loads the address of a variable into `rd`.
+
+Translation (given `u` is the upper half of the address of `var` and `l` is the lower half):  
+<code>[lui](#op-lui) rd, u</code>  
+<code>[ori](#op-ori) rd, rd, l</code>
 
 ### <a name="op-li"></a>Load Immediate
 > `li rd, imm`  
 > `imm -> $rd`
  
-Loads a constant into `rd`.  
-Translates to <code>[lui](#lui) rd, u</code>  <code>[ori](#ori) rd, rd, l</code>, where `u` is the upper half of `imm` and `l` is the lower half.
+Loads a constant or into `rd`.
+
+Translation (given `u` is the upper half of `imm` and `l` is the lower half):  
+<code>[lui](#op-lui) rd, u</code>  
+<code>[ori](#op-ori) rd, rd, l</code>
 
 ### <a name="op-mv"></a>Move
 > `mv rd, rs`  
 > `$rs -> $rd`
 
-Copies the value of `rs` into `rd`.  
-Translates to <code>[add](#add) rd, rs, $0</code>.
+Copies the value of `rs` into `rd`.
+
+Translation:  
+<code>[addi](#op-addi) rd, rs, 0</code>.
+
+### <a name="op-ret"></a>Return
+> `ret`
+
+Jumps to the return address.
+
+Translation:  
+<code>[jr](#op-jr) ra</code>.
+
+### <a name="op-push"></a>Push
+> `push rs`  
+> `[ $rs`
+
+Pushes the value of `rs` to the stack.
+
+Translation:  
+<code>[s](#op-s) sp, rs</code>  
+<code>[addi](#op-addi) sp, sp, 1</code>
+
+### <a name="op-pop"></a>Pop
+> `pop rs`  
+> `] $rd`
+
+Pops the value at the top of the stack and stores it in `rd`.
+
+Translation:  
+<code>[l](#op-l) rs, sp</code>  
+<code>[addi](#op-addi) sp, sp, -1</code>
+
+### <a name="op-jeq"></a>Jump if Equal
+> `jeq rd, rs, rt`  
+> `$rs == $rt? $rd`
+
+If the value in `rs` is equal to the value in `rt`, jumps to the address stored in `rd` (or to the address of `var`). (Modifies `m0`.)
+
+Translation:  
+<code>[seq](#op-seq) m0, rs, rt</code>  
+<code>[jc](#op-jc) rd, m0</code>
+
+> `jeq label, rs, rt`  
+> `$rs == $rt? label`
+
+If the value in `rs` is equal to the value in `rt`, jumps to `label`. (Modifies `m0` and `m1`.)
+
+Translation:  
+<code>[seq](#op-seq) m0, rs, rt</code>  
+<code>[la](#op-la) m1, &label</code>  
+<code>[jc](#op-jc) m1, m0</code>
+
 
 # <a name="format"></a>Instruction Format
 Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
@@ -378,9 +492,9 @@ Like much of this instruction set, the formatting for instructions is copied fro
 ## <a name="format-r"></a>R-Type Instructions
 R-type instructions perform computations with multiple registers.
 
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3) | 27–12 (16) | 11–0 (12)  |
-|------------:|:-----------:|:---------:|:---------:|:---------:|:---------:|:----------:|:----------:|
-| **Purpose** | Opcode      | rt        | rs        | rd        | Unused    | Shift      | Function   |
+| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3) | 27–12 (16) | 11–0 (12) |
+|------------:|:-----------:|:---------:|:---------:|:---------:|:---------:|:----------:|:---------:|
+| **Purpose** | Opcode      | rt        | rs        | rd        | Unused    | Shift      | Function  |
 
 ## <a name="format-i"></a>I-Type Instructions
 I-type instructions perform computations with registers and an immediate value.
@@ -392,6 +506,6 @@ I-type instructions perform computations with registers and an immediate value.
 ## <a name="format-j"></a>J-Type Instructions
 J-type instructions point the program counter to a given address under certain circumstances.
 
-|   Range | 63–52 (12)  | 51–32 (20) | 31–0 (32)   |
-|--------:|:-----------:|:----------:|:-----------:|
-| Purpose | Opcode      | Unused     | Address     |
+|   Range | 63–52 (12) | 51–45 (7) | 44–32 (13) | 31–0 (32) |
+|--------:|:----------:|:---------:|:----------:|:---------:|
+| Purpose | Opcode     | rs        | Unused     | Address   |

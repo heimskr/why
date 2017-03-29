@@ -2,8 +2,16 @@
 "use strict";
 
 const special = {
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+	chars: "&*\t \":",
+	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
+=======
+>>>>>>> Stashed changes
 	chars: " \":",
 	words: "+ - / * ^ -> < > <= >= = == [ ]".split(" ")
+>>>>>>> 5770fd2efa90f0c20acc6d39abf198fe28133fc0
 };
 
 const colors = "1 3 2 6 4 5".split(" ");
@@ -66,35 +74,54 @@ datadef			-> _ var (oper[":"]|__) float  _ separator	{% d => _(["float",  d[1], 
 				 | _ var (oper[":"]|__) string _ separator	{% d => _(["string", d[1], d[3]], "datadef", `["string", d[1], d[3]]`, d) %}
 				 | _ separator 								{% d => null %}
 
-code_section	-> _ "#code" _ separator statement:*			{% d => _(["code", filter(d[4])], "code_section", `["code", filter(d[4])]`, d) %}
-statement		-> _ op _ separator							{% d => _(d[1][0], "statement", `d[1][0]`, d) %}
+code_section	-> _ "#code" _ separator statement:*		{% d => _(["code", filter(d[4])], "code_section", `["code", filter(d[4])]`, d) %}
+statement		-> _ op _ separator							{% d => _([null, ...d[1][0]], "statement", `[null, d[1][0]]`, d) %}
+				 | _ label (_ lineend):* _ op _ separator	{% d => _([d[1], ...d[4][0]], "statement", `[d[1], d[3][0]]`, d) %}
 				 | _ separator								{% d => null %}
 
+label			-> "@" var									{% d => d[1] %}
 
 op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_addi | op_subi | op_multi | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
 				 | op_lui | op_mfhi | op_mflo
 				 | op_sl | op_sle | op_seq | op_sge | op_sg
-				 | op_j | op_la | op_li | op_mv
+				 | op_j | op_jc | op_jr
+				 | op_la | op_li | op_mv | op_ret | op_push | op_pop | op_jeq
+				 | op_c | op_l | op_s
+															{% d => d[0] %}
 
 into			-> oper["->"]								{% d => null %}
 
 op_add			-> reg oper["+"]  reg into reg				{% d => _([ "+", d[0], d[2], d[4]], "op_add",  "", d) %}
+				 | reg oper["+="] reg						{% d => -([ "+", d[0], d[0], d[2]], "op_add",  "", d) %}
 op_sub			-> reg oper["-"]  reg into reg				{% d => _([ "-", d[0], d[2], d[4]], "op_sub",  "", d) %}
+				 | reg oper["-="]  reg 						{% d => _([ "-", d[0], d[0], d[2]], "op_sub",  "", d) %}
 op_mult			-> reg oper["*"]  reg into reg				{% d => _([ "*", d[0], d[2], d[4]], "op_mult", "", d) %}
+				 | reg oper["*="]  reg 						{% d => _([ "*", d[0], d[0], d[2]], "op_mult", "", d) %}
 op_and			-> reg oper["&"]  reg into reg				{% d => _([ "&", d[0], d[2], d[4]], "op_and",  "", d) %}
+				 | reg oper["&="]  reg 						{% d => _([ "&", d[0], d[0], d[2]], "op_and",  "", d) %}
 op_or			-> reg oper["|"]  reg into reg				{% d => _([ "|", d[0], d[2], d[4]], "op_or",   "", d) %}
+				 | reg oper["|="]  reg 						{% d => _([ "|", d[0], d[0], d[2]], "op_or",   "", d) %}
 op_xor			-> reg oper["x"]  reg into reg				{% d => _([ "x", d[0], d[2], d[4]], "op_xor",  "", d) %}
+				 | reg oper["x="]  reg 						{% d => _([ "x", d[0], d[0], d[2]], "op_xor",  "", d) %}
 op_nand			-> reg oper["~&"] reg into reg				{% d => _(["~&", d[0], d[2], d[4]], "op_nand", "", d) %}
+				 | reg oper["~&="] reg 						{% d => _(["~&", d[0], d[0], d[2]], "op_nand", "", d) %}
 op_nor			-> reg oper["~|"] reg into reg				{% d => _(["~|", d[0], d[2], d[4]], "op_nor",  "", d) %}
+				 | reg oper["~|="] reg 						{% d => _(["~|", d[0], d[0], d[2]], "op_nor",  "", d) %}
 op_xnor			-> reg oper["~x"] reg into reg				{% d => _(["~x", d[0], d[2], d[4]], "op_xnor", "", d) %}
+				 | reg oper["~x="] reg 						{% d => _(["~x", d[0], d[0], d[2]], "op_xnor", "", d) %}
 op_not			-> "~" _ reg into reg						{% d => _([ "~", d[0], d[3]      ], "op_not",  "", d) %}
 
-label			-> "&" var									{% d => d[1]    %}
-imm				-> (int | label)							{% d => d[0][0] %}
+var_addr		-> "&" var									{% d => "&" + d[1]    %}
+var_val			-> "*" var									{% d => "*" + d[1]    %}
+imm				-> (int | var_val | var_addr)				{% d => d[0][0] %}
 
 op_addi			-> reg oper["+"]  imm into reg				{% d => _([ "_+", d[0], d[2], d[4]], "op_addi",  "", d) %}
+				 | reg oper["++"]							{% d => _([ "_+", d[0], 1,    d[0]], "op_addi",  "", d) %}
+				 | oper["++"] reg							{% d => _([ "_+", d[1], 1,    d[1]], "op_addi",  "", d) %}
 op_subi			-> reg oper["-"]  imm into reg				{% d => _([ "_-", d[0], d[2], d[4]], "op_subi",  "", d) %}
+				 | reg oper["--"]							{% d => _([ "_-", d[0], 1,    d[0]], "op_subi",  "", d) %}
+				 | oper["--"] reg							{% d => _([ "_-", d[1], 1,    d[1]], "op_subi",  "", d) %}
 op_multi		-> reg oper["*"]  imm into reg				{% d => _([ "_*", d[0], d[2], d[4]], "op_multi", "", d) %}
 op_andi			-> reg oper["&"]  imm into reg				{% d => _([ "_&", d[0], d[2], d[4]], "op_andi",  "", d) %}
 op_ori			-> reg oper["|"]  imm into reg				{% d => _([ "_|", d[0], d[2], d[4]], "op_ori",   "", d) %}
@@ -113,16 +140,28 @@ op_seq			-> reg oper["=="] reg into reg				{% d => _(["==", d[0], d[2], d[4]], "
 op_sge			-> reg oper[">"]  reg into reg				{% d => _([">",  d[0], d[2], d[4]], "op_sge", "", d) %}
 op_sg			-> reg oper[">="] reg into reg				{% d => _([">=", d[0], d[2], d[4]], "op_sg",  "", d) %}
 
-op_j			-> ":" _ imm								{% d => _(["jump", d[2]], "op_j", "", d) %}
-op_la			-> label into reg							{% d => _(["la", d[0], d[2]], "op_la", "", d) %}
+op_j			-> ":" _ (imm | var)						{% d => _(["jump", d[2][0]], "op_j", "", d) %}
+op_jc			-> "?" _ (imm | var)						{% d => _(["jc", d[2][0]], "op_jc", "", d) %}
+op_jr			-> ":" _ reg								{% d => _(["jr", d[2][0]], "op_jr", "", d) %}
+op_la			-> var_ref into reg							{% d => _(["la", d[0], d[2]], "op_la", "", d) %}
 op_li			-> int   into reg							{% d => _(["li", d[0], d[2]], "op_li", "", d) %}
 op_mv			-> reg   into reg							{% d => _(["mv", d[0], d[2]], "op_mv", "", d) %}
+op_ret			-> "ret"									{% d => _(["ret"], "op_ret", "", d) %}
+op_push			-> "[" (_ (reg)):+							{% d => _(["push", ...d[1].map(x => x[1][0])], "op_push", "", d) %}
+op_pop			-> "]" (_ (reg)):+							{% d => _(["pop", ...d[1].map(x => x[1][0])], "op_pop", "", d) %}
+op_jeq			-> reg oper["=="] reg oper["?"] reg			{% d => _(["jeq", d[0], d[2], d[4]], "op_jeq", "", d) %}
+				 | reg oper["=="] reg oper["?"] var			{% d => _(["jeq", d[0], d[2], ["label", d[4]]], "op_jeq", "", d) %}
+
+op_c			-> "[" _ reg _ "]" into "[" _ reg _ "]"		{% d => _(["c", d[2], d[8]], "op_c", "", d) %}
+op_l			-> "[" _ reg _ "]" into reg					{% d => _(["l", d[2], d[6]], "op_l", "", d) %}
+op_s			-> reg into "[" _ reg _ "]"					{% d => _(["s", d[0], d[4]], "op_s", "", d) %}
 
 reg_temp		-> "$t" ([0-9a-f] | "1" [0-9a])				{% d => _(["t", d[1].join("")], "reg_temp",  `["t", d[1].join("")]`, d) %}
 reg_saved		-> "$s" ([0-9a-f] | "1" [0-9a])				{% d => _(["s", d[1].join("")], "reg_saved", `["s", d[1].join("")]`, d) %}
 reg_arg			-> "$a" [0-9a-f]							{% d => _(["a", d[1]], "reg_arg",    `["a", d[1]]`, d) %}
 reg_return		-> "$r" [0-9a-f]							{% d => _(["r", d[1]], "reg_return", `["r", d[1]]`, d) %}
-reg				-> (reg_temp | reg_saved | reg_arg | reg_return)
+reg_zero		-> "$0"										{% d => _(["0"], "reg_zero", `["0"]`, d) %}
+reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero)
 															{% d => _(["register", ...d[0][0]], "reg", "[,,]", d) %}
 
 
