@@ -48,11 +48,15 @@
 						<li><a href="#op-xori">Bitwise XOR Immediate</a> (<code>xori</code>)</li>
 					</ol>
 				</li>
+				<li><a href="#ops-data-r">Data (R-Types)</a>
+					<ol>
+						<li><a href="#op-mfhi">Move From HI Register</a> (<code>mfhi</code>)</li>
+						<li><a href="#op-mflo">Move From LO Register</a> (<code>mflo</code>)</li>
+					</ol>
+				</li>
 				<li><a href="#ops-data-i">Data (I-Types)</a>
 					<ol>
 						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
-						<li><a href="#op-mfhi">Move From HI Register</a> (<code>mfhi</code>)</li>
-						<li><a href="#op-mflo">Move From LO Register</a> (<code>mflo</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-comp-r">Comparisons (R-Types)</a>
@@ -195,7 +199,7 @@ Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`
 ### <a name="op-mult"></a>Multiplication
 > `mult rs, rt`  
 > `$rs * $rt` or `$rd *= $rt`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
@@ -218,35 +222,35 @@ Computes the bitwise NAND of `rs` and `rt` and stores the result in `rd`.
 ### <a name="op-nor"></a>Bitwise NOR
 > `nor rd, rs, rt`  
 > `$rs ~| $rt -> $rd` or `$rd ~|= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
    
 Computes the bitwise NOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-not"></a>Bitwise NOT
 > `not rd, rs`  
 > `~$rs -> $rd`
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000003`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
    
 Computes the bitwise NOT of `rs` and stores the result in `rd`.
 
 ### <a name="op-or"></a>Bitwise OR
 > `or rd, rs, rt`  
 > `$rs | $rt -> $rd` or `$rd |= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000004`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
    
 Computes the bitwise OR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nxor"></a>Bitwise XNOR
 > `xnor rd, rs, rt`  
 > `$rs ~x $rt -> $rd` or `$rd ~x= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000005`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
    
 Computes the bitwise XNOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-xor"></a>Bitwise XOR
 > `xor rd, rs, rt`  
 > `$rs x $rt -> $rd` or `$rd x= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000006`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000110`
 
 Computes the bitwise XOR of `rs` and `rt` and stores the result in `rd`.
 
@@ -317,6 +321,22 @@ Computes the bitwise XNOR of `rs` and a constant and stores the result in `rd`.
 
 Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 
+## <a name="ops-data-r"></a>Data (R-Types)
+
+### <a name="op-mfhi"></a>Move From HI Register
+> `mfhi rd`  
+> `%hi -> $rd`  
+> `000000001101` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+
+Copies the value of the [`HI`](#hi-lo) register into `rd`.
+
+### <a name="op-mflo"></a>Move From LO Register
+> `mflo rd`  
+> `%lo -> $rd`  
+> `000000001110` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+
+Copies the value of the [`LO`](#hi-lo) register into `rd`.
+
 ## <a name="ops-data-i"></a>Data (I-Types)
 
 ### <a name="op-lui"></a>Load Upper Immediate
@@ -325,20 +345,6 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 > `000000001100` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Loads an immediate value into the upper half of the word at `rd`. The lower half is replaced with zeroes.
-
-### <a name="op-mfhi"></a>Move From HI Register
-> `mfhi rd`  
-> `%hi -> $rd`  
-> `000000001101` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
-
-Copies the value of the [`HI`](#hi-lo) register into `rd`.
-
-### <a name="op-mflo"></a>Move From LO Register
-> `mflo rd`  
-> `%lo -> $rd`  
-> `000000001110` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
-
-Copies the value of the [`LO`](#hi-lo) register into `rd`.
 
 ## <a name="ops-comp-r"></a>Comparisons (R-Types)
 
@@ -359,7 +365,7 @@ If the value in `rs` is less than or equal to the value in `rt`, `rd` is set to 
 ### <a name="op-seq"></a>Set on Equal
 > `seq rd, rs, rt`  
 > `$rs == $rt -> $rd`  
-> `000000001111` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000002`
+> `000000001111` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
 
 If the value in `rs` is equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -414,14 +420,14 @@ Copies the value stored at the memory address pointed to by `rs` into the memory
 ### <a name="op-l"></a>Load
 > `l rd, rs`  
 > `[$rs] -> $rd`  
-> `000000010100` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000010011` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Loads the value stored at the memory address pointed to by `rs` into `rd`.
 
 ### <a name="op-s"></a>Store
 > `s rd, rs`  
 > `$rs -> [$rd]`  
-> `000000010101` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000010011` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
 
 Stores the value of `rs` into the memory address pointed to by `rd`.
 
