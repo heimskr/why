@@ -1,0 +1,27 @@
+#meta
+name: "Handlers section example"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#handlers
+dbz: &division_by_0
+
+#data
+start_string: "About to attempt division by zero."
+error_string: "A division by zero exception was caught."
+end_string: "End of @main reached."
+
+#code
+@division_by_0
+[ $r
+	// to be implemented later: some kind of system interrupt to call alert() with &error_string
+] $r; ret
+
+@main
+1 -> $t0
+/* 
+alert(&start_string)
+$t0 /= 0 // not implemented yet!
+alert(&end_string)
+*/

@@ -119,14 +119,33 @@ The metadata section is a block of data at the beginning of the program that con
 * `0x01`: Address of the beginning of the [data section](#prog-data).
 * `0x02`: Address of the beginning of the [code section](#prog-code).
 * `0x03`: Total size of the program.
-* `0x04`: Version number of the program.
-* `0x05`: ORCID of the author.
+* `0x04`–`0x05`: ORCID of the author (represented with ASCII).
+* `0x06`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
+
+### Assembler syntax
+<pre>
+#meta
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+name: "Example"
+version: "4"
+</pre>
 
 ## <a name="prog-ptrs"></a>Handler Pointer Section
 As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero). Its size is exactly equal to 256 words, but this may change if more than that many exceptions are eventually defined (an exceedingly unlikely possibility).
 
 ## <a name="prog-data"></a>Data Section
 The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
+
+### Assembler syntax
+Variables and their values are declared (once again) with JSON-like markup:
+
+<pre>
+#data
+some_string: "this is an example."
+some_number: 42
+</pre>
 
 ## <a name="prog-code"></a>Code Section
 The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
@@ -137,10 +156,10 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | Number   | Name         | Purpose                                     |
 |----------|--------------|---------------------------------------------|
 | 0        | `$0`         | Always contains zero.                       |
-| 1        | `$gp`        | Global area pointer (start of data segment) |
-| 2        | `$sp`        | Stack pointer.                              |
-| 3        | `$fp`        | Frame pointer.                              |
-| 4        | `$ra`        | Return address.                             |
+| 1        | `$g`         | Global area pointer (start of data segment) |
+| 2        | `$s`         | Stack pointer.                              |
+| 3        | `$f`         | Frame pointer.                              |
+| 4        | `$r`         | Return address.                             |
 | 5–20     | `$r0`–`$rf`  | Contains return values.                     |
 | 21–36    | `$a0`–`$af`  | Contains arguments for subroutines.         |
 | 37–60    | `$t0`–`$t17` | Temporary registers.                        |
@@ -452,8 +471,8 @@ Translation:
 Pushes the value of `rs` to the stack.
 
 Translation:  
-<code>[s](#op-s) sp, rs</code>  
-<code>[addi](#op-addi) sp, sp, 1</code>
+<code>[s](#op-s) s, rs</code>  
+<code>[addi](#op-addi) s, s, 1</code>
 
 ### <a name="op-pop"></a>Pop
 > `pop rs`  
@@ -462,8 +481,8 @@ Translation:
 Pops the value at the top of the stack and stores it in `rd`.
 
 Translation:  
-<code>[l](#op-l) rs, sp</code>  
-<code>[addi](#op-addi) sp, sp, -1</code>
+<code>[l](#op-l) rs, s</code>  
+<code>[addi](#op-addi) s, s, -1</code>
 
 ### <a name="op-jeq"></a>Jump if Equal
 > `jeq rd, rs, rt`  

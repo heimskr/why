@@ -7,7 +7,8 @@ let fs = require("fs"),
 	chalk = require("chalk"),
 	getline = require("get-line-from-pos"),
 	minimist = require("minimist"),
-	prettyjson = require("prettyjson");
+	prettyjson = require("prettyjson"),
+	path = require("path");
 
 const die = (...a) => { console.error(...a); process.exit(1) };
 
@@ -21,21 +22,21 @@ if (!filename) {
 	die("Invalid filename.", { opt });
 };
 
-let grammar = "wasm", parser;
+let name = "wasm", grammar, parser;
 let lines = fs.readFileSync(filename, { encoding: "utf8" }).split("\n");
 
 if (opt.dev) {
 	let file = grammar;
-	grammar = fs.readFileSync(`${__dirname}/${grammar}.ne`, "utf8");
+	grammar = fs.readFileSync(path.join(__dirname, `${name}.ne`), "utf8");
 	parser = new nearley.Parser(nearleyg.ParserRules, nearleyg.ParserStart);
 	grammar = nearleyc(parser.feed(grammar).results[0], { });
-	fs.writeFileSync(`${__dirname}/${file}.js`, gen(grammar, "grammar"));
-	grammar = require(`${__dirname}/${file}.js`);
+	fs.writeFileSync(path.join(__dirname, `${name}.js`), gen(grammar, "grammar"));
+	grammar = require(path.join(__dirname, `${name}.js`));
 } else {
 	try {
 		grammar = require(`./${grammar}.js`);
 	} catch (e) {
-		console.error(`Couldn't read ${grammar}.ne.`);
+		console.error(`Couldn't read ${grammar}.js.`);
 		if (opt.dev) {
 			console.log(e);
 		};
@@ -46,22 +47,6 @@ if (opt.dev) {
 
 // generate parser
 parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart)
-
-/*
-lines = `
-// foobar
-//  
-//
-
-// bar
-
-// bazbaz
-
-
-
-
-//
-`.trim().split("\n");//*/
 
 // join up the lines again
 let source = `\n${lines.join("\n")}\n`;

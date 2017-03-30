@@ -8,38 +8,41 @@ ALT			= example2.wasm
 $(COMPILED): $(SYNTAX)
 	$(COMPILE) $(SYNTAX) -o $(COMPILED)
 
-
-
-test: $(COMPILED) $(EXAMPLE)
+test: $(EXAMPLE)
 	$(TEST) $(EXAMPLE)
 
-tree: $(COMPILED) $(EXAMPLE)
+tree: $(EXAMPLE)
 	$(TEST) $(EXAMPLE) -t
 
-trees: $(COMPILED) $(EXAMPLE)
+trees: $(EXAMPLE)
 	$(TEST) $(EXAMPLE) -st
 
 
 
-atest: $(COMPILED) $(ALT)
+atest: $(ALT)
 	$(TEST) $(ALT)
 
-atree: $(COMPILED) $(ALT)
+atree: $(ALT)
 	$(TEST) $(ALT) -t
 
-atrees: $(COMPILED) $(ALT)
+atrees: $(ALT)
 	$(TEST) $(ALT) -st
 
 
 
-ftest: $(COMPILED) fibonacci.wasm
+ftest: fibonacci.wasm
 	$(TEST) fibonacci.wasm
 
-ftree: $(COMPILED) fibonacci.wasm
+ftree: fibonacci.wasm
 	$(TEST) fibonacci.wasm -t
 
-ftrees: $(COMPILED) fibonacci.wasm
+ftrees: fibonacci.wasm
 	$(TEST) fibonacci.wasm -st
+
+
+
+fcompile: $(COMPILED) fibonacci.wasm
+	node wasmc.js fibonacci.wasm
 
 
 
