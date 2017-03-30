@@ -22,6 +22,7 @@ if (!filename) {
 	die("Invalid filename.", { opt });
 };
 
+
 let name = "wasm", grammar, parser;
 let lines = fs.readFileSync(filename, { encoding: "utf8" }).split("\n");
 
@@ -51,8 +52,9 @@ parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart)
 // join up the lines again
 let source = `\n${lines.join("\n")}\n`;
 
+let trees;
 try {
-	var trees = parser.feed(source).results
+	trees = parser.feed(source).results
 } catch (e) {
 	console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset) - 1}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length - 1}`) + ":");
 	if (opt.dev) {
