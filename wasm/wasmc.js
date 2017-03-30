@@ -14,6 +14,8 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
+const EXCEPTIONS = ["dbz"];
+
 class Wasmc {
 	static die(...a) { console.error(...a); process.exit(1) };
 
@@ -30,6 +32,11 @@ class Wasmc {
 	// Given any string, str2longs nullpads and chunks it and returns an array of Longs.
 	static str2longs(str) {
 		return _.chunk(Wasmc.nullpad(str).split(""), 8).map(Wasmc.chunk2long);
+	};
+
+	// Given an array of longs, returns an array containing the 16-length zero-padded hex representations.
+	static longs2strs(longs) {
+		return longs.map((l) => l.toString(16).padStart(16, "0"));
 	};
 	
 	constructor(opt, filename) {
@@ -70,7 +77,7 @@ class Wasmc {
 
 		if (trees.length > 1) {
 			trees.forEach((tree) => console.log(JSON.stringify(trees[tree], null, 4)));
-			console.error(chalk.red.italic(`^^^^^^^^^^^^^^^^^^^^^^\nAmbiguous grammar (${trees.length}).\n`));
+			console.error(chalk.red.italic(`\nAmbiguous grammar (${trees.length}).\n`));
 			process.exit(1);
 		} else if (trees.length === 0) {
 			console.warn(chalk.red.italic("Nothing parsed."));
@@ -87,18 +94,32 @@ class Wasmc {
 			parsed.metadata = { };
 		};
 
+		if (typeof parsed.data == "undefined") {
+			parsed.data = { };
+		};
+
 		return parsed;
 	};
 
 	compile() {
 		let parsed = this.parse();
 
-		let handlers = [], data = [], code = [];
 		let meta = this.metaPreliminary(parsed);
+		let { data, offsets: data_offsets, offset } = this.getData(parsed, meta);
+		meta[2] = Long.fromInt(offset);
+		let handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
+		let code = [];
 
 		const out = meta.concat(handlers).concat(data).concat(code);
 
-		console.log({out: out.map(x => typeof x != "undefined"? x.toString(16).padStart(16, "0") : "0".repeat(16))});
+		console.log({
+			meta: Wasmc.longs2strs(meta),
+			handlers: Wasmc.longs2strs(handlers),
+			data: Wasmc.longs2strs(data),
+			code: Wasmc.longs2strs(code),
+			out: Wasmc.longs2strs(out),
+			data_offsets
+		});
 	};
 
 	metaPreliminary(parsed) {
@@ -112,14 +133,39 @@ class Wasmc {
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
 		[meta[4], meta[5]] = [orcid.substr(0, 8), orcid.substr(8)].map((half) => Wasmc.chunk2long(half.split("")));
 
+		// Append the name-version-author string.
 		meta = meta.concat(Wasmc.str2longs(`${name}\0${version}\0${author}\0`));
 		
 		// The beginning of the handler pointer section comes right after the end of the meta section.
 		meta[0] = Long.fromInt(meta.length, true);
+		// The handlers section is exactly as large as the set of exceptions; the data section begins
+		// at the sum of the lengths of the meta section and the handlers section.
+		meta[1] = Long.fromInt(meta.length + EXCEPTIONS.length);
 
 		this.log({parsed, meta, version, author});
 
 		return meta;
+	};
+
+	getData(parsed, meta) {
+		let data = [], offsets = {};
+		let offset = meta[1].toInt();
+		_(parsed.data).forEach(([type, value], key) => {
+			let pieces;
+			if (type.match(/^(in|floa)t$/)) {
+				pieces = [Long.fromValue(value)];
+			} else if (type == "string") {
+				pieces = Wasmc.str2longs(value);
+			} else {
+				Wasmc.die(`Error: unknown data type "${type}" for "${key}".`);
+			};
+
+			offsets[key] = offset;
+			offset += pieces.length;
+			data = data.concat(pieces);
+		});
+
+		return { data, offsets, offset };
 	};
 
 	log(...args) {
@@ -134,7 +180,7 @@ class Wasmc {
 const opt = minimist(process.argv.slice(2), {
 	alias: { b: "binary", d: "debug" },
 	boolean: ["binary", "debug"],
-	default: { binary: false, debug: true }
+	default: { binary: false, debug: false }
 }), filename = opt._[0];
 
 if (!filename) {
