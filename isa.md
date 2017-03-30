@@ -326,14 +326,14 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 ### <a name="op-mfhi"></a>Move From HI Register
 > `mfhi rd`  
 > `%hi -> $rd`  
-> `000000001101` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001100` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
 
 Copies the value of the [`HI`](#hi-lo) register into `rd`.
 
 ### <a name="op-mflo"></a>Move From LO Register
 > `mflo rd`  
 > `%lo -> $rd`  
-> `000000001110` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001101` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
 
 Copies the value of the [`LO`](#hi-lo) register into `rd`.
 
@@ -342,7 +342,7 @@ Copies the value of the [`LO`](#hi-lo) register into `rd`.
 ### <a name="op-lui"></a>Load Upper Immediate
 > `lui rd, imm`  
 > `lui: imm -> $rd`  
-> `000000001100` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001110` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Loads an immediate value into the upper half of the word at `rd`. The lower half is replaced with zeroes.
 
