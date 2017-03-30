@@ -93,53 +93,54 @@ op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or 
 
 into			-> oper["->"]								{% d => null %}
 
-op_add			-> reg oper["+"]  reg into reg				{% d => _([ "+", d[0], d[2], d[4]], "op_add",  "", d) %}
-				 | reg oper["+="] reg						{% d => -([ "+", d[0], d[0], d[2]], "op_add",  "", d) %}
-op_sub			-> reg oper["-"]  reg into reg				{% d => _([ "-", d[0], d[2], d[4]], "op_sub",  "", d) %}
-				 | reg oper["-="]  reg 						{% d => _([ "-", d[0], d[0], d[2]], "op_sub",  "", d) %}
-op_mult			-> reg oper["*"]  reg into reg				{% d => _([ "*", d[0], d[2], d[4]], "op_mult", "", d) %}
-				 | reg oper["*="]  reg 						{% d => _([ "*", d[0], d[0], d[2]], "op_mult", "", d) %}
-op_and			-> reg oper["&"]  reg into reg				{% d => _([ "&", d[0], d[2], d[4]], "op_and",  "", d) %}
-				 | reg oper["&="]  reg 						{% d => _([ "&", d[0], d[0], d[2]], "op_and",  "", d) %}
-op_or			-> reg oper["|"]  reg into reg				{% d => _([ "|", d[0], d[2], d[4]], "op_or",   "", d) %}
-				 | reg oper["|="]  reg 						{% d => _([ "|", d[0], d[0], d[2]], "op_or",   "", d) %}
-op_xor			-> reg oper["x"]  reg into reg				{% d => _([ "x", d[0], d[2], d[4]], "op_xor",  "", d) %}
-				 | reg oper["x="]  reg 						{% d => _([ "x", d[0], d[0], d[2]], "op_xor",  "", d) %}
-op_nand			-> reg oper["~&"] reg into reg				{% d => _(["~&", d[0], d[2], d[4]], "op_nand", "", d) %}
-				 | reg oper["~&="] reg 						{% d => _(["~&", d[0], d[0], d[2]], "op_nand", "", d) %}
-op_nor			-> reg oper["~|"] reg into reg				{% d => _(["~|", d[0], d[2], d[4]], "op_nor",  "", d) %}
-				 | reg oper["~|="] reg 						{% d => _(["~|", d[0], d[0], d[2]], "op_nor",  "", d) %}
-op_xnor			-> reg oper["~x"] reg into reg				{% d => _(["~x", d[0], d[2], d[4]], "op_xnor", "", d) %}
-				 | reg oper["~x="] reg 						{% d => _(["~x", d[0], d[0], d[2]], "op_xnor", "", d) %}
-op_not			-> "~" _ reg into reg						{% d => _([ "~", d[0], d[3]      ], "op_not",  "", d) %}
+//																				rs    rt    rd
+op_add			-> reg oper["+"]  reg into reg				{% d => _(["add",  d[0], d[2], d[4]], "op_add",  "", d) %}
+				 | reg oper["+="] reg						{% d => -(["add",  d[0], d[2], d[0]], "op_add",  "", d) %}
+op_sub			-> reg oper["-"]  reg into reg				{% d => _(["sub",  d[0], d[2], d[4]], "op_sub",  "", d) %}
+				 | reg oper["-="]  reg 						{% d => _(["sub",  d[0], d[2], d[0]], "op_sub",  "", d) %}
+op_mult			-> reg oper["*"]  reg into reg				{% d => _(["mult", d[0], d[2], d[4]], "op_mult", "", d) %}
+				 | reg oper["*="]  reg 						{% d => _(["mult", d[0], d[2], d[0]], "op_mult", "", d) %}
+op_and			-> reg oper["&"]  reg into reg				{% d => _(["and",  d[0], d[2], d[4]], "op_and",  "", d) %}
+				 | reg oper["&="]  reg 						{% d => _(["and",  d[0], d[2], d[0]], "op_and",  "", d) %}
+op_or			-> reg oper["|"]  reg into reg				{% d => _(["or",   d[0], d[2], d[4]], "op_or",   "", d) %}
+				 | reg oper["|="]  reg 						{% d => _(["or",   d[0], d[2], d[0]], "op_or",   "", d) %}
+op_xor			-> reg oper["x"]  reg into reg				{% d => _(["xor",  d[0], d[2], d[4]], "op_xor",  "", d) %}
+				 | reg oper["x="]  reg 						{% d => _(["xor",  d[0], d[2], d[0]], "op_xor",  "", d) %}
+op_nand			-> reg oper["~&"] reg into reg				{% d => _(["nand", d[0], d[2], d[4]], "op_nand", "", d) %}
+				 | reg oper["~&="] reg 						{% d => _(["nand", d[0], d[2], d[0]], "op_nand", "", d) %}
+op_nor			-> reg oper["~|"] reg into reg				{% d => _(["nor",  d[0], d[2], d[4]], "op_nor",  "", d) %}
+				 | reg oper["~|="] reg 						{% d => _(["nor",  d[0], d[2], d[0]], "op_nor",  "", d) %}
+op_xnor			-> reg oper["~x"] reg into reg				{% d => _(["xnor", d[0], d[2], d[4]], "op_xnor", "", d) %}
+				 | reg oper["~x="] reg 						{% d => _(["xnor", d[0], d[2], d[0]], "op_xnor", "", d) %}
+op_not			-> "~" _ reg into reg						{% d => _(["not",  d[0], d[3]      ], "op_not",  "", d) %}
 
 var_addr		-> "&" var									{% d => "&" + d[1]    %}
 var_val			-> "*" var									{% d => "*" + d[1]    %}
 imm				-> (int | var_val | var_addr)				{% d => d[0][0] %}
 
-op_addi			-> reg oper["+"]  imm into reg				{% d => _([ "_+", d[0], d[2], d[4]], "op_addi",  "", d) %}
-				 | reg oper["++"]							{% d => _([ "_+", d[0], 1,    d[0]], "op_addi",  "", d) %}
-				 | oper["++"] reg							{% d => _([ "_+", d[1], 1,    d[1]], "op_addi",  "", d) %}
-op_subi			-> reg oper["-"]  imm into reg				{% d => _([ "_-", d[0], d[2], d[4]], "op_subi",  "", d) %}
-				 | reg oper["--"]							{% d => _([ "_-", d[0], 1,    d[0]], "op_subi",  "", d) %}
-				 | oper["--"] reg							{% d => _([ "_-", d[1], 1,    d[1]], "op_subi",  "", d) %}
-op_multi		-> reg oper["*"]  imm into reg				{% d => _([ "_*", d[0], d[2], d[4]], "op_multi", "", d) %}
-op_andi			-> reg oper["&"]  imm into reg				{% d => _([ "_&", d[0], d[2], d[4]], "op_andi",  "", d) %}
-op_ori			-> reg oper["|"]  imm into reg				{% d => _([ "_|", d[0], d[2], d[4]], "op_ori",   "", d) %}
-op_xori			-> reg oper["x"]  imm into reg				{% d => _([ "_x", d[0], d[2], d[4]], "op_xori",  "", d) %}
-op_nandi		-> reg oper["~&"] imm into reg				{% d => _(["_~&", d[0], d[2], d[4]], "op_nandi", "", d) %}
-op_nori			-> reg oper["~|"] imm into reg				{% d => _(["_~|", d[0], d[2], d[4]], "op_nori",  "", d) %}
-op_xnori		-> reg oper["~x"] imm into reg				{% d => _(["_~x", d[0], d[2], d[4]], "op_xnori", "", d) %}
+op_addi			-> reg oper["+"]  imm into reg				{% d => _(["addi",  d[0], d[2], d[4]], "op_addi",  "", d) %}
+				 | reg oper["++"]							{% d => _(["addi",  d[0], 1,    d[0]], "op_addi",  "", d) %}
+				 | oper["++"] reg							{% d => _(["addi",  d[1], 1,    d[1]], "op_addi",  "", d) %}
+op_subi			-> reg oper["-"]  imm into reg				{% d => _(["subi",  d[0], d[2], d[4]], "op_subi",  "", d) %}
+				 | reg oper["--"]							{% d => _(["subi",  d[0], 1,    d[0]], "op_subi",  "", d) %}
+				 | oper["--"] reg							{% d => _(["subi",  d[1], 1,    d[1]], "op_subi",  "", d) %}
+op_multi		-> reg oper["*"]  imm into reg				{% d => _(["multi", d[0], d[2], d[4]], "op_multi", "", d) %}
+op_andi			-> reg oper["&"]  imm into reg				{% d => _(["andi",  d[0], d[2], d[4]], "op_andi",  "", d) %}
+op_ori			-> reg oper["|"]  imm into reg				{% d => _(["ori",   d[0], d[2], d[4]], "op_ori",   "", d) %}
+op_xori			-> reg oper["x"]  imm into reg				{% d => _(["xori",  d[0], d[2], d[4]], "op_xori",  "", d) %}
+op_nandi		-> reg oper["~&"] imm into reg				{% d => _(["nandi", d[0], d[2], d[4]], "op_nandi", "", d) %}
+op_nori			-> reg oper["~|"] imm into reg				{% d => _(["nori",  d[0], d[2], d[4]], "op_nori",  "", d) %}
+op_xnori		-> reg oper["~x"] imm into reg				{% d => _(["xnori", d[0], d[2], d[4]], "op_xnori", "", d) %}
 
 op_lui			-> ("lui" _ ":" _) imm into reg				{% d => _(["lui",  d[1], d[3]], "op_lui",  "", d) %}
 op_mfhi			-> "%hi" into reg							{% d => _(["mfhi", d[2]      ], "op_mfhi", "", d) %}
 op_mflo			-> "%lo" into reg							{% d => _(["mflo", d[2]      ], "op_mflo", "", d) %}
 
-op_sl			-> reg oper["<"]  reg into reg				{% d => _(["<",  d[0], d[2], d[4]], "op_sl",  "", d) %}
-op_sle			-> reg oper["<="] reg into reg				{% d => _(["<=", d[0], d[2], d[4]], "op_sle", "", d) %}
-op_seq			-> reg oper["=="] reg into reg				{% d => _(["==", d[0], d[2], d[4]], "op_seq", "", d) %}
-op_sge			-> reg oper[">"]  reg into reg				{% d => _([">",  d[0], d[2], d[4]], "op_sge", "", d) %}
-op_sg			-> reg oper[">="] reg into reg				{% d => _([">=", d[0], d[2], d[4]], "op_sg",  "", d) %}
+op_sl			-> reg oper["<"]  reg into reg				{% d => _(["sl",  d[0], d[2], d[4]], "op_sl",  "", d) %}
+op_sle			-> reg oper["<="] reg into reg				{% d => _(["sle", d[0], d[2], d[4]], "op_sle", "", d) %}
+op_seq			-> reg oper["=="] reg into reg				{% d => _(["seq", d[0], d[2], d[4]], "op_seq", "", d) %}
+op_sge			-> reg oper[">"]  reg into reg				{% d => _(["sge", d[0], d[2], d[4]], "op_sge", "", d) %}
+op_sg			-> reg oper[">="] reg into reg				{% d => _(["sg",  d[0], d[2], d[4]], "op_sg",  "", d) %}
 
 op_j			-> ":" _ (imm | var)						{% d => _(["jump", d[2][0]], "op_j", "", d) %}
 op_jc			-> "?" _ (imm | var)						{% d => _(["jc", d[2][0]], "op_jc", "", d) %}
@@ -153,9 +154,9 @@ op_pop			-> "]" (_ (reg)):+							{% d => _(["pop", ...d[1].map(x => x[1][0])], 
 op_jeq			-> reg oper["=="] reg oper["?"] reg			{% d => _(["jeq", d[0], d[2], d[4]], "op_jeq", "", d) %}
 				 | reg oper["=="] reg oper["?"] var			{% d => _(["jeq", d[0], d[2], ["label", d[4]]], "op_jeq", "", d) %}
 
-op_c			-> "[" _ reg _ "]" into "[" _ reg _ "]"		{% d => _(["c", d[2], d[8]], "op_c", "", d) %}
-op_l			-> "[" _ reg _ "]" into reg					{% d => _(["l", d[2], d[6]], "op_l", "", d) %}
-op_s			-> reg into "[" _ reg _ "]"					{% d => _(["s", d[0], d[4]], "op_s", "", d) %}
+op_c			-> "[" _ reg _ "]" into "[" _ reg _ "]"		{% d => _(["mem", d[2], d[8], 0], "op_c", "", d) %}
+op_l			-> "[" _ reg _ "]" into reg					{% d => _(["mem", d[2], d[6], 1], "op_l", "", d) %}
+op_s			-> reg into "[" _ reg _ "]"					{% d => _(["mem", d[0], d[4], 2], "op_s", "", d) %}
 
 reg_temp		-> "$t" ([0-9a-f] | "1" [0-9a])				{% d => _(["t", d[1].join("")], "reg_temp",  `["t", d[1].join("")]`, d) %}
 reg_saved		-> "$s" ([0-9a-f] | "1" [0-9a])				{% d => _(["s", d[1].join("")], "reg_saved", `["s", d[1].join("")]`, d) %}
