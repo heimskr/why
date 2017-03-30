@@ -413,7 +413,7 @@ Copies the value stored at the memory address pointed to by `rs` into the memory
 
 ### <a name="op-l"></a>Load
 > `l rd, rs`  
-> `[$rs] -> $rd`
+> `[$rs] -> $rd`  
 > `000000010100` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
 
 Loads the value stored at the memory address pointed to by `rs` into `rd`.
