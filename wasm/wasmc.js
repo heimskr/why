@@ -19,11 +19,11 @@ const EXCEPTIONS = ["dbz"];
 const R_TYPES = [
 	0b000000000001, // Math
 	0b000000000010, // Logic
-	0b000000001101, // Move From HI Register
-	0b000000001110, // Move From LO Register
-	0b000000001111, // Comparisons
-	0b000000010010, // Jump to Register
-	0b000000010011, // Memory
+	0b000000001100, // Move From HI Register
+	0b000000001100, // Move From LO Register
+	0b000000001110, // Comparisons
+	0b000000010001, // Jump to Register
+	0b000000010010, // Memory
 ];
 
 const I_TYPES = [
@@ -36,13 +36,13 @@ const I_TYPES = [
 	0b000000001001, // Bitwise OR Immediate
 	0b000000001010, // Bitwise XNOR Immediate
 	0b000000001011, // Bitwise XOR Immediate
-	0b000000001100, // Load Upper Immediate
+	0b000000001101, // Load Upper Immediate
 
 ];
 
 const J_TYPES = [
-	0b000000010000, // Jump
-	0b000000010001, // Jump Conditional
+	0b000000001111, // Jump
+	0b000000010000, // Jump Conditional
 ];
 
 const OPS = {
