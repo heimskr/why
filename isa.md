@@ -228,8 +228,8 @@ Computes the bitwise NOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-not"></a>Bitwise NOT
 > `not rd, rs`  
-> `~$rs -> $rd`
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+> `~$rs -> $rd`  
+> `000000000010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
    
 Computes the bitwise NOT of `rs` and stores the result in `rd`.
 
