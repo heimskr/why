@@ -298,7 +298,7 @@ class Wasmc {
 		if (!I_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
 		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
 		if (rd < 0 || 127 < rd) throw `rd (${rd}) not within the valid range (0–127)`;
-		if (imm < 0 || 4095 < imm) throw `imm (${imm}) not within the valid range (-2147483648–2147483647)`;
+		if (imm < 0 || 4294967295 < imm) throw `imm (${imm}) not within the valid range (-2147483648–2147483647)`;
 
 		let lower = imm;
 		let upper = rd | (rs << 7) | (opcode << 20);
@@ -314,7 +314,7 @@ class Wasmc {
 	jType(opcode, rs, addr) {
 		if (!J_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
 		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
-		if (addr < 0 || 4095 < addr) throw `addr (${addr}) not within the valid range (-2147483648–2147483647)`;
+		if (addr < 0 || 4294967295 < addr) throw `addr (${addr}) not within the valid range (0–4294967295)`;
 
 		let lower = addr;
 		let upper = (rs << 13) | (opcode << 20);

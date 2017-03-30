@@ -333,7 +333,7 @@ Copies the value of the [`HI`](#hi-lo) register into `rd`.
 ### <a name="op-mflo"></a>Move From LO Register
 > `mflo rd`  
 > `%lo -> $rd`  
-> `000000001101` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001100` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Copies the value of the [`LO`](#hi-lo) register into `rd`.
 
@@ -342,7 +342,7 @@ Copies the value of the [`LO`](#hi-lo) register into `rd`.
 ### <a name="op-lui"></a>Load Upper Immediate
 > `lui rd, imm`  
 > `lui: imm -> $rd`  
-> `000000001110` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001101` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Loads an immediate value into the upper half of the word at `rd`. The lower half is replaced with zeroes.
 
@@ -351,21 +351,21 @@ Loads an immediate value into the upper half of the word at `rd`. The lower half
 ### <a name="op-sl"></a>Set on Less Than
 > `sl rd, rs, rt`  
 > `$rs < $rt -> $rd`  
-> `000000001111` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
 
 If the value in `rs` is less than the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sle"></a>Set on Less Than or Equal
 > `sle rd, rs, rt`  
 > `$rs <= $rt -> $rd`  
-> `000000001111` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 If the value in `rs` is less than or equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-seq"></a>Set on Equal
 > `seq rd, rs, rt`  
 > `$rs == $rt -> $rd`  
-> `000000001111` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
 
 If the value in `rs` is equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -388,14 +388,14 @@ This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
 ### <a name="op-j"></a>Jump
 > `j target`  
 > `: label` or `: imm`  
-> `000000010000` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000001111` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional
 > `jc target, rs`  
 > `$rs? label` or `$rs? imm`  
-> `000000010001` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000010000` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
@@ -404,7 +404,7 @@ Jumps to the address of a given label or directly to a given address, provided t
 ### <a name="op-jr"></a>Jump to Register
 > `jr rs`  
 > `: $rs`  
-> `000000010010` `0000000` `sssssss` `0000000` `000` `0000000000000000` `000000000000`
+> `000000010001` `0000000` `sssssss` `0000000` `000` `0000000000000000` `000000000000`
 
 Jumps to the address stored in `rs`.
 
@@ -413,21 +413,21 @@ Jumps to the address stored in `rs`.
 ### <a name="op-c"></a>Copy
 > `c rd, rs`  
 > `[$rs] -> [$rd]`  
-> `000000010011` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000010010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
 
 Copies the value stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-l"></a>Load
 > `l rd, rs`  
 > `[$rs] -> $rd`  
-> `000000010011` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000010010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Loads the value stored at the memory address pointed to by `rs` into `rd`.
 
 ### <a name="op-s"></a>Store
 > `s rd, rs`  
 > `$rs -> [$rd]`  
-> `000000010011` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000010010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
 
 Stores the value of `rs` into the memory address pointed to by `rd`.
 
