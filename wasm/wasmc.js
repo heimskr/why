@@ -16,6 +16,86 @@ require("string.prototype.padend").shim();
 
 const EXCEPTIONS = ["dbz"];
 
+const R_TYPES = [
+	0b000000000001, // Math
+	0b000000000010, // Logic
+	0b000000001101, // Move From HI Register
+	0b000000001110, // Move From LO Register
+	0b000000001111, // Comparisons
+	0b000000010010, // Jump to Register
+	0b000000010011, // Memory
+];
+
+const I_TYPES = [
+	0b000000000011, // Addition Immediate
+	0b000000000100, // Subtraction Immediate
+	0b000000000101, // Multiplication Immediate
+	0b000000000110, // Bitwise AND Immediate
+	0b000000000111, // Bitwise NAND Immediate
+	0b000000001000, // Bitwise NOR Immediate
+	0b000000001001, // Bitwise OR Immediate
+	0b000000001010, // Bitwise XNOR Immediate
+	0b000000001011, // Bitwise XOR Immediate
+	0b000000001100, // Load Upper Immediate
+
+];
+
+const J_TYPES = [
+	0b000000010000, // Jump
+	0b000000010001, // Jump Conditional
+];
+
+const OPS = {
+	add:   0b000000000001,
+	sub:   0b000000000001,
+	mult:  0b000000000001,
+	and:   0b000000000010,
+	nand:  0b000000000010,
+	nor:   0b000000000010,
+	not:   0b000000000010,
+	or:    0b000000000010,
+	xnor:  0b000000000010,
+	xor:   0b000000000010,
+	addi:  0b000000000011,
+	subi:  0b000000000100,
+	multi: 0b000000000101,
+	andi:  0b000000000110,
+	nandi: 0b000000000111,
+	nori:  0b000000001000,
+	ori:   0b000000001001,
+	xnori: 0b000000001010,
+	xori:  0b000000001011,
+	mfhi:  0b000000001100,
+	mflo:  0b000000001100,
+	lui:   0b000000001101,
+	sl:    0b000000001110,
+	sle:   0b000000001110,
+	seq:   0b000000001110,
+	jump:  0b000000001111,
+	jc:    0b000000010000,
+	jr:    0b000000010001,
+	mem:   0b000000010010,
+};
+
+const FUNCTS = {
+	add:  0b000000000000,
+	and:  0b000000000000,
+	jr:   0b000000000000,
+	mfhi: 0b000000000000,
+	sl:   0b000000000000,
+	mflo: 0b000000000001,
+	nand: 0b000000000001,
+	sle:  0b000000000001,
+	sub:  0b000000000001,
+	mult: 0b000000000010,
+	nor:  0b000000000010,
+	seq:  0b000000000010,
+	not:  0b000000000011,
+	or:   0b000000000100,
+	xnor: 0b000000000101,
+	xor:  0b000000000110,
+};
+
 class Wasmc {
 	static die(...a) { console.error(...a); process.exit(1) };
 
@@ -98,6 +178,10 @@ class Wasmc {
 			parsed.data = { };
 		};
 
+		if (typeof parsed.code == "undefined") {
+			parsed.code = { };
+		};
+
 		return parsed;
 	};
 
@@ -108,7 +192,16 @@ class Wasmc {
 		let { data, offsets: data_offsets, offset } = this.getData(parsed, meta);
 		meta[2] = Long.fromInt(offset);
 		let handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
-		let code = [];
+
+		let labels = [];
+		parsed.code.forEach((item, i) => {
+			if (item[0]) {
+				labels[item[0]] = offset + i;
+				this.log(`Label ${item[0]} at offset ${offset + i}`);
+			};
+		});
+
+		let code = this.getCode(parsed, meta, labels);
 
 		const out = meta.concat(handlers).concat(data).concat(code);
 
@@ -118,6 +211,7 @@ class Wasmc {
 			data: Wasmc.longs2strs(data),
 			code: Wasmc.longs2strs(code),
 			out: Wasmc.longs2strs(out),
+			labels,
 			data_offsets
 		});
 	};
@@ -138,6 +232,7 @@ class Wasmc {
 		
 		// The beginning of the handler pointer section comes right after the end of the meta section.
 		meta[0] = Long.fromInt(meta.length, true);
+
 		// The handlers section is exactly as large as the set of exceptions; the data section begins
 		// at the sum of the lengths of the meta section and the handlers section.
 		meta[1] = Long.fromInt(meta.length + EXCEPTIONS.length);
@@ -166,6 +261,70 @@ class Wasmc {
 		});
 
 		return { data, offsets, offset };
+	};
+
+	getCode(parsed, meta, labels) {
+		let out = [];
+		parsed.code.forEach((item, i) => {
+			let [label, op, ...args] = item;
+			if (op == "add") {
+
+			};
+		});
+
+		return out;
+	};
+
+	rType(opcode, rt, rs, rd, shift, func) {
+		if (!R_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
+		if (rt < 0 || 127 < rt) throw `rt (${rt}) not within the valid range (0–127)`;
+		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
+		if (rd < 0 || 127 < rd) throw `rd (${rd}) not within the valid range (0–127)`;
+		if (shift < 0 || 65535 < shift) throw `shift (${shift}) not within the valid range (0–65535)`;
+		if (func < 0 || 4095 < func) throw `func (${func}) not within the valid range (0–4095)`;
+
+		let lower = func | (shift << 12) | ((rd & 1) << 31);
+		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
+		let long = Long.fromBits(lower, upper, true);
+
+		this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
+		this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
+		this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
+
+		return long;
+	};
+
+	iType(opcode, rs, rd, imm) {
+		if (!I_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
+		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
+		if (rd < 0 || 127 < rd) throw `rd (${rd}) not within the valid range (0–127)`;
+		if (imm < 0 || 4095 < imm) throw `imm (${imm}) not within the valid range (-2147483648–2147483647)`;
+
+		let lower = imm;
+		let upper = rd | (rs << 7) | (opcode << 20);
+		let long = Long.fromBits(lower, upper, true);
+
+		this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
+		this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
+		this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
+
+		return long;
+	};
+
+	jType(opcode, rs, addr) {
+		if (!J_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
+		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
+		if (addr < 0 || 4095 < addr) throw `addr (${addr}) not within the valid range (-2147483648–2147483647)`;
+
+		let lower = addr;
+		let upper = (rs << 13) | (opcode << 20);
+		let long = Long.fromBits(lower, upper, true);
+
+		this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
+		this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
+		this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
+
+		return long;
 	};
 
 	log(...args) {
