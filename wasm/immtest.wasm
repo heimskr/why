@@ -1,0 +1,25 @@
+#meta
+name: "Immediate Values Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+foo: "bar"
+
+#code
+// Purpose of this program: to test wasmc's handling of labels and immediate values.
+
+: 1234 // jump to an immediate value
+: &next // jump to a label
+
+@next
+
+$t0 += $t1 // (r-type control) add one register to another.
+$t0 += 128 // add an immediate value to a register.
+$t0 += *foo
+
+: $t0 ($t0 == $t1) // jump-if-equal to a register
+: &hey ($t0 == $t1) // jump-if-equal to a label
+
+@hey <>

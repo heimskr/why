@@ -35,7 +35,8 @@ ftestj: fibonacci.wasm
 fcompile: $(COMPILED) fibonacci.wasm
 	node wasmc.js fibonacci.wasm
 
-
+imm: $(COMPILED) immtest.wasm
+	node wasmc.js immtest.wasm
 
 clean:
 	rm -f $(COMPILED)

@@ -2,6 +2,7 @@
 <blockquote>
 	<ol>
 		<li><a href="#intro">Introduction</a>
+		<li><a href="#registers">Registers</a></li>
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
@@ -10,7 +11,14 @@
 				<li><a href="#prog-code">Code Section</a></li>
 			</ol>
 		</li>
-		<li><a href="#registers">Registers</a> </li>
+		<li><a href="#exceptions">Exceptions</a></li>
+		<li><a href="#format">Instruction Format</a>
+			<ol>
+				<li><a href="#format-r">R-Type Instructions</a></li>
+				<li><a href="#format-i">I-Type Instructions</a></li>
+				<li><a href="#format-j">J-Type Instructions</a></li>
+			</ol>
+		</li>
 		<li><a href="#operations">Operations</a>
 			<ol>
 				<li><a href="#ops-math-r">Math (R-Types)</a>
@@ -77,6 +85,7 @@
 				<li><a href="#ops-jump-r">Jumps (R-Types)</a>
 					<ol>
 						<li><a href="#op-jr">Jump to Register</a> (<code>jr</code>)</li>
+						<li><a href="#op-jrc">Jump to Register Conditional</a> (<code>jrc</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-r">Memory (R-Types)</a>
@@ -86,23 +95,22 @@
 						<li><a href="#op-s">Store</a> (<code>s</code>)</li>
 					</ol>
 				</li>
+				<li><a href="#ops-mem-i">Memory (I-Types)</a>
+					<ol>
+						<li><a href="#op-li">Load Immediate</a> (<code>li</code>)</li>
+						<li><a href="#op-si">Store Immediate</a> (<code>si</code>)</li>
+						<li><a href="#op-set">Set</a> (<code>set</code>)</li>
+					</ol>
+				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
 					<ol>
-						<li><a href="#op-la">Load Address</a> (<code>la</code>)</li>
-						<li><a href="#op-li">Load Immediate</a> (<code>li</code>)</li>
 						<li><a href="#op-mv">Move</a> (<code>mv</code>)</li>
 						<li><a href="#op-ret">Return</a> (<code>ret</code>)</li>
 						<li><a href="#op-push">Push</a> (<code>push</code>)</li>
 						<li><a href="#op-pop">Pop</a> (<code>pop</code>)</li>
+						<li><a href="#op-jeq">Jump if Equal</a> (<code>jeq</code>)</li>
 					</ol>
 				</li>
-			</ol>
-		</li>
-		<li><a href="#format">Instruction Format</a>
-			<ol>
-				<li><a href="#format-r">R-Type Instructions</a></li>
-				<li><a href="#format-i">I-Type Instructions</a></li>
-				<li><a href="#format-j">J-Type Instructions</a></li>
 			</ol>
 		</li>
 	</ol>
@@ -110,7 +118,28 @@
 
 # <a name="intro"></a>Introduction
 
-The VM emulates a custom instruction set that may or may not actually be theoretically implementable as real hardware. (As of this writing, the only relevant class I've taken is CMPE 12). This instruction set has 64-bit word length, but the memory addressability is 32 bits. 
+The VM emulates a custom instruction set that may or may not actually be theoretically implementable as real hardware. (As of this writing, the only relevant class I've taken is CMPE 12). This instruction set has 64-bit word length, but the memory addressability is 32 bits.
+
+# <a name="registers"></a>Registers
+There are 128 registers. Their purposes are pretty much stolen from MIPS:
+
+| Number   | Name         | Purpose                                     |
+|----------|--------------|---------------------------------------------|
+| 0        | `$0`         | Always contains zero.                       |
+| 1        | `$g`         | Global area pointer (start of data segment) |
+| 2        | `$s`         | Stack pointer.                              |
+| 3        | `$f`         | Frame pointer.                              |
+| 4        | `$r`         | Return address.                             |
+| 5–20     | `$r0`–`$rf`  | Contains return values.                     |
+| 21–36    | `$a0`–`$af`  | Contains arguments for subroutines.         |
+| 37–60    | `$t0`–`$t17` | Temporary registers.                        |
+| 61–84    | `$s0`–`$s17` | Saved registers.                            |
+| 85–101   | `$k0`–`$k10` | Kernel registers.                           |
+| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
+| 118–121  | `$f0`–`$f3`  | Floating point return values.               |
+| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.             |
+
+<a name="hi-lo"></a>In addition, there are two extra registers (`HI` and `LO`), but they aren't directly accessible from code; the contents are accessed using the  [`mfhi`](#mfhi) and [`mflo`](#mflo) instructions. 
 
 # <a name="prog"></a>Programs
 
@@ -154,29 +183,33 @@ some_number: 42
 ## <a name="prog-code"></a>Code Section
 The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
 
-# <a name="registers"></a>Registers
-There are 128 registers. Their purposes are pretty much stolen from MIPS:
-
-| Number   | Name         | Purpose                                     |
-|----------|--------------|---------------------------------------------|
-| 0        | `$0`         | Always contains zero.                       |
-| 1        | `$g`         | Global area pointer (start of data segment) |
-| 2        | `$s`         | Stack pointer.                              |
-| 3        | `$f`         | Frame pointer.                              |
-| 4        | `$r`         | Return address.                             |
-| 5–20     | `$r0`–`$rf`  | Contains return values.                     |
-| 21–36    | `$a0`–`$af`  | Contains arguments for subroutines.         |
-| 37–60    | `$t0`–`$t17` | Temporary registers.                        |
-| 61–84    | `$s0`–`$s17` | Saved registers.                            |
-| 85–101   | `$k0`–`$k10` | Kernel registers.                           |
-| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
-| 118–121  | `$f0`–`$f3`  | Floating point return values.               |
-| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.             |
-
-<a name="hi-lo"></a>In addition, there are two extra registers (`HI` and `LO`), but they aren't directly accessible from code; the contents are accessed using the  [`mfhi`](#mfhi) and [`mflo`](#mflo) instructions.
-
 # <a name="exceptions"></a>Exceptions
 Exceptions occur when invalid code is executed. For example, trying to divide by zero will cause a division by zero error. When an exception occurs, the VM will search for a handler in the [handler pointer section](#prog-ptrs) and, if one is found, jump to it. If no handler is found in the handler pointer section, code will continue, which may result in undefined behavior. For example, unhandled division by zero may or may not store a result in `rd`, and if it does, the value it stores isn't guaranteed to be defined. (Note that division isn't currently implemented because support for floating point numbers hasn't been implemented.)
+
+
+# <a name="format"></a>Instruction Format
+Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
+
+## <a name="format-r"></a>R-Type Instructions
+R-type instructions perform computations with multiple registers.
+
+| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3) | 27–12 (16) | 11–0 (12) |
+|------------:|:-----------:|:---------:|:---------:|:---------:|:---------:|:----------:|:---------:|
+| **Purpose** | Opcode      | rt        | rs        | rd        | Unused    | Shift      | Function  |
+
+## <a name="format-i"></a>I-Type Instructions
+I-type instructions perform computations with registers and an immediate value.
+
+| Range       | 63–52 (12) | 51–46 (6) | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
+|------------:|:----------:|:---------:|:---------:|:---------:|:---------------:|
+| **Purpose** | Opcode     | Unused    | rs        | rd        | Immediate Value |
+
+## <a name="format-j"></a>J-Type Instructions
+J-type instructions point the program counter to a given address under certain circumstances.
+
+|   Range | 63–52 (12) | 51–45 (7) | 44–32 (13) | 31–0 (32) |
+|--------:|:----------:|:---------:|:----------:|:---------:|
+| Purpose | Opcode     | rs        | Unused     | Address   |
 
 # <a name="operations"></a>Operations
 
@@ -387,14 +420,14 @@ This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
 
 ### <a name="op-j"></a>Jump
 > `j target`  
-> `: label` or `: imm`  
+> `: &label` or `: imm`  
 > `000000001111` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional
 > `jc target, rs`  
-> `$rs? label` or `$rs? imm`  
+> `$rs? &label` or `$rs? imm`  
 > `000000010000` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
@@ -402,11 +435,18 @@ Jumps to the address of a given label or directly to a given address, provided t
 ## <a name="ops-jump-r"></a>Jumps (R-Types)
 
 ### <a name="op-jr"></a>Jump to Register
-> `jr rs`  
-> `: $rs`  
-> `000000010001` `0000000` `sssssss` `0000000` `000` `0000000000000000` `000000000000`
+> `jr rd`  
+> `: $rd`  
+> `000000010001` `0000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
 
-Jumps to the address stored in `rs`.
+Jumps to the address stored in `rd`.
+
+### <a name="op-jrc"></a>Jump to Register Conditional
+> `jrc rd, rs`  
+> `: $rd ($rs)`  
+> `000000010001` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+
+Jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
 
 ## <a name="ops-mem-r"></a>Memory (R-Types)
 
@@ -431,27 +471,30 @@ Loads the value stored at the memory address pointed to by `rs` into `rd`.
 
 Stores the value of `rs` into the memory address pointed to by `rd`.
 
-## <a name="ops-pseudo"></a>Pseudoinstructions
-
-### <a name="op-la"></a>Load Address
-> `la rd, var`  
-> `&var -> $rd`
-
-Loads the address of a variable into `rd`.
-
-Translation (given `u` is the upper half of the address of `var` and `l` is the lower half):  
-<code>[lui](#op-lui) rd, u</code>  
-<code>[ori](#op-ori) rd, rd, l</code>
+## <a name="ops-mem-i"></a>Memory (I-Types)
 
 ### <a name="op-li"></a>Load Immediate
 > `li rd, imm`  
-> `imm -> $rd`
- 
-Loads a constant or into `rd`.
+> `[imm] -> $rd`  
+> `000000010011` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Translation (given `u` is the upper half of `imm` and `l` is the lower half):  
-<code>[lui](#op-lui) rd, u</code>  
-<code>[ori](#op-ori) rd, rd, l</code>
+Loads the value stored at address `imm` into `rd`.
+
+### <a name="op-si"></a>Store Immediate
+> `si rs, imm`  
+> `$rs -> [imm]`  
+> `000000010100` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Copies the value of `rs` into memory at address `imm`.
+
+### <a name="op-set"></a>Set
+> `set rd, imm`  
+> `imm -> $rd`  
+> `000000010101` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Sets a register to the given immediate value.
+
+## <a name="ops-pseudo"></a>Pseudoinstructions
 
 ### <a name="op-mv"></a>Move
 > `mv rd, rs`  
@@ -492,7 +535,7 @@ Translation:
 
 ### <a name="op-jeq"></a>Jump if Equal
 > `jeq rd, rs, rt`  
-> `$rs == $rt? $rd`
+> `: $rd ($rs == $rt)`
 
 If the value in `rs` is equal to the value in `rt`, jumps to the address stored in `rd` (or to the address of `var`). (Modifies `m0`.)
 
@@ -501,7 +544,7 @@ Translation:
 <code>[jc](#op-jc) rd, m0</code>
 
 > `jeq label, rs, rt`  
-> `$rs == $rt? label`
+> `: &label ($rs == $rt)`
 
 If the value in `rs` is equal to the value in `rt`, jumps to `label`. (Modifies `m0` and `m1`.)
 
@@ -509,28 +552,3 @@ Translation:
 <code>[seq](#op-seq) m0, rs, rt</code>  
 <code>[la](#op-la) m1, &label</code>  
 <code>[jc](#op-jc) m1, m0</code>
-
-
-# <a name="format"></a>Instruction Format
-Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
-
-## <a name="format-r"></a>R-Type Instructions
-R-type instructions perform computations with multiple registers.
-
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3) | 27–12 (16) | 11–0 (12) |
-|------------:|:-----------:|:---------:|:---------:|:---------:|:---------:|:----------:|:---------:|
-| **Purpose** | Opcode      | rt        | rs        | rd        | Unused    | Shift      | Function  |
-
-## <a name="format-i"></a>I-Type Instructions
-I-type instructions perform computations with registers and an immediate value.
-
-| Range       | 63–52 (12) | 51–46 (6) | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
-|------------:|:----------:|:---------:|:---------:|:---------:|:---------------:|
-| **Purpose** | Opcode     | Unused    | rs        | rd        | Immediate Value |
-
-## <a name="format-j"></a>J-Type Instructions
-J-type instructions point the program counter to a given address under certain circumstances.
-
-|   Range | 63–52 (12) | 51–45 (7) | 44–32 (13) | 31–0 (32) |
-|--------:|:----------:|:---------:|:----------:|:---------:|
-| Purpose | Opcode     | rs        | Unused     | Address   |

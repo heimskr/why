@@ -194,11 +194,13 @@ class Wasmc {
 
 	processCode() {
 		this.expanded.forEach((item, i) => {
+			console.log({item});
 			this.addCode(item);
 		});
 	};
 
 	expandCode() {
+		const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions will need to be
 		// gone over once again after labels have been sorted out so we can replace variable references with addresses.
 		this.parsed.code.forEach((item, i) => {
@@ -237,16 +239,17 @@ class Wasmc {
 					// this.expanded.push([null, "ori", _0, _M[1], args[2][1]
 					// this.expanded.push([null, 
 				};
-			} else if (R_TYPES.includes(OPS[op]) && _.some(args, (reg) => reg[0] == "label")) {
-				// console.log(chalk.bold.italic.green("PASSED"), "for", item);
+			} else if (R_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
+				console.log(chalk.bold.green("Matched"), "for", item);
 				let [rt, rs, rd] = args;
 				let _label = label;
 				let getLabel = () => [_label, _label = null][0]
 
-				let [lt, ls, ld] = [rt, rs, rd].map((reg) => reg[0] == "label");
+				let [lt, ls, ld] = [rt, rs, rd].map(isLabelRef);
 				[rt, rs].forEach((reg, i) => {
-					if (reg[0] == "label") {
+					if (isLabelRef(reg)) {
 						// Whoops, this register isn't actually a register
+						// console.log(chalk.red.bold("Pushing:"), [getLabel(), "li", _0, ["register", "m", i], reg]);
 						this.expanded.push([getLabel(), "li", _0, _M[i], reg]);
 					};
 				});
@@ -266,7 +269,7 @@ class Wasmc {
 					// this.expanded.push([[]].concat(item));
 				// };
 			} else {
-				// console.log(chalk.bold.italic.red("FAILED"), `for (${op})`, item);
+				console.log(chalk.bold.red("No match"), `for (${op})`, item);
 				this.expanded.push(item);
 			};
 		});
@@ -338,7 +341,7 @@ jc rd, m0
 
 			};
 		} else {
-			console.log(`Unknown instruction ${chalk.bold.red(op)}.`, [label, op, ...args]);
+			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
 			this.code.push(Long.fromInt(0xdead, true));
 		};
 	};

@@ -21,7 +21,9 @@ exports.I_TYPES = [
 	0b000000001010, // Bitwise XNOR Immediate
 	0b000000001011, // Bitwise XOR Immediate
 	0b000000001101, // Load Upper Immediate
-
+	0b000000010011, // Load Immediate
+	0b000000010100, // Store Immediate
+	0b000000010101, // Set
 ];
 
 exports.J_TYPES = [
@@ -58,9 +60,13 @@ exports.OPS = {
 	j:     0b000000001111,
 	jc:    0b000000010000,
 	jr:    0b000000010001,
+	jrc:   0b000000010001,
 	c:     0b000000010010,
 	l:     0b000000010010,
 	s:     0b000000010010,
+	li:    0b000000010011,
+	si:    0b000000010100,
+	set:   0b000000010101,
 };
 
 exports.FUNCTS = {
@@ -70,6 +76,7 @@ exports.FUNCTS = {
 	jr:   0b000000000000,
 	mfhi: 0b000000000000,
 	sl:   0b000000000000,
+	jrc:  0b000000000001,
 	l:    0b000000000001,
 	mflo: 0b000000000001,
 	nand: 0b000000000001,
@@ -86,6 +93,7 @@ exports.FUNCTS = {
 };
 
 exports.REGISTER_OFFSETS = {
+	0: 0,
 	zero: 0,
 	stack: 2,
 	return: 4,
@@ -93,5 +101,8 @@ exports.REGISTER_OFFSETS = {
 	a: 21,
 	t: 37,
 	s: 61,
+	k: 85,
+	m: 102,
+	f: 118,
 	e: 122
 };
