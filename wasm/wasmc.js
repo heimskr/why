@@ -129,15 +129,20 @@ class Wasmc {
 		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0), true);
 		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
 
-
-		console.log({
-			meta: Wasmc.longs2strs(this.meta),
-			handlers: Wasmc.longs2strs(this.handlers),
-			data: Wasmc.longs2strs(this.data),
-			code: Wasmc.longs2strs(this.code),
-			out: Wasmc.longs2strs(out),
-			offsets: this.offsets
-		});
+		if (this.opt.debug) {
+			console.log({
+				meta: Wasmc.longs2strs(this.meta),
+				handlers: Wasmc.longs2strs(this.handlers),
+				data: Wasmc.longs2strs(this.data),
+				code: Wasmc.longs2strs(this.code),
+				out: Wasmc.longs2strs(out),
+				offsets: this.offsets
+			});
+		} else {
+			let outname = typeof this.opt.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.opt.out;
+			fs.writeFileSync(outname, Wasmc.longs2strs(out).join("\n"));
+			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the bytecode to", chalk.bold(outname) + ".");
+		};
 	};
 
 	processMetadata(parsed) {
@@ -238,9 +243,8 @@ class Wasmc {
 				};
 			} else if (R_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
 				let [rt, rs, rd] = args;
-				let _label = label, getLabel = () => [_label, _label = null][0];
-
 				let [lt, ls, ld] = [rt, rs, rd].map(isLabelRef);
+				let _label = label, getLabel = () => [_label, _label = null][0];
 				[rt, rs].forEach((reg, i) => {
 					if (isLabelRef(reg)) {
 						// Whoops, this register isn't actually a register
@@ -256,10 +260,8 @@ class Wasmc {
 			} else if (I_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
 				console.log(chalk.green("Discovered i-type:"), chalk.bold(op), item);
 				let [rs, rd, imm] = args;
-				let _label = label, getLabel = () => [_label, _label = null][0];
-
 				let [ls, ld] = [rs, rd].map(isLabelRef);
-
+				let _label = label, getLabel = () => [_label, _label = null][0];
 				if (ls) {
 					this.expanded.push([getLabel(), "li", _0, _M[0], rs]);
 				};
@@ -291,7 +293,7 @@ class Wasmc {
 			});
 		});
 
-		console.log(chalk.bold.yellow("<expanded>\n"), this.expanded, chalk.bold.yellow("\n</expanded>"));// JSON.stringify(this.expanded, null, 4)});
+		// console.log(chalk.bold.yellow("<expanded>\n"), this.expanded, chalk.bold.yellow("\n</expanded>"));
 	};
 
 	addCode([op, ...args]) {
@@ -344,9 +346,9 @@ class Wasmc {
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
-		this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
-		this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
-		this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
+		// this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
+		// this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
+		// this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
 
 		return long;
 	};
@@ -361,9 +363,9 @@ class Wasmc {
 		let upper = rd | (rs << 7) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
-		this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
-		this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
-		this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
+		// this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
+		// this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
+		// this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
 
 		return long;
 	};
@@ -377,9 +379,9 @@ class Wasmc {
 		let upper = (rs << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
-		this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
-		this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
-		this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
+		// this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
+		// this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
+		// this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
 
 		return long;
 	};
@@ -407,7 +409,7 @@ const _0 = ["register", "zero",  0];
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {
-		alias: { b: "binary", d: "debug" },
+		alias: { b: "binary", d: "debug", o: "out" },
 		boolean: ["binary", "debug"],
 		default: { binary: false, debug: false }
 	}), filename = opt._[0];
