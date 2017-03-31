@@ -200,29 +200,20 @@ class Wasmc {
 			};
 
 			if (op == "jeq") {
-
-				// jc: target, rs [. jc rs target]
-				// m0 -> rs
-				// rd -> target
-
-				// R-types: [..., rt, rs, rd]
-				// I-types: [..., rs, rd, imm]
-
+				// First, store rs==rt in $m0.
 				this.expanded.push([label, "seq", ...args.slice(0, 2), _M[0]]);
+
 				if (args[2][0] == "value") {
 					// Set $m1 to the immediate value and then conditionally jump to $m1.
-					// We set $m1 to the immediate value with ori on $0.
-					this.expanded.push([null, "ori", _0, _M[1], args[2][1]]);
+					this.expanded.push([null, "set", _0, _M[1], args[2][1]]);
 					this.expanded.push([null, "jrc", _0, _M[0], _M[1]]);
 				} else if (args[2][0] == "register") {
-					// We're already given a register, so we 
-					// don't have to do anything with $m1.
+					// We're already given a register, so we don't have to do anything with $m1.
 					this.expanded.push([null, "jrc", _0, _M[0], args[2]]);
 				} else if (args[2][0] == "label") {
-					// Load the value at the given variable into $m1
-					// and then conditionally jump to $m1.
-					// this.expanded.push([null, "ori", _0, _M[1], args[2][1]
-					// this.expanded.push([null, 
+					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
+					this.expanded.push([null, "li", _0, _M[1], args[2]]);
+					this.expanded.push([null, "jrc", _0, M[0], _M[1]]);
 				};
 			} else if (R_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
 				console.log(chalk.bold.green("Matched"), "for", item);
