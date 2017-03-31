@@ -14,89 +14,9 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const EXCEPTIONS = ["dbz"];
+const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPS, FUNCTS, REGISTER_OFFSETS } = require("./constants.js");
 
-const R_TYPES = [
-	0b000000000001, // Math
-	0b000000000010, // Logic
-	0b000000001100, // Move From HI Register
-	0b000000001100, // Move From LO Register
-	0b000000001110, // Comparisons
-	0b000000010001, // Jump to Register
-	0b000000010010, // Memory
-];
-
-const I_TYPES = [
-	0b000000000011, // Addition Immediate
-	0b000000000100, // Subtraction Immediate
-	0b000000000101, // Multiplication Immediate
-	0b000000000110, // Bitwise AND Immediate
-	0b000000000111, // Bitwise NAND Immediate
-	0b000000001000, // Bitwise NOR Immediate
-	0b000000001001, // Bitwise OR Immediate
-	0b000000001010, // Bitwise XNOR Immediate
-	0b000000001011, // Bitwise XOR Immediate
-	0b000000001101, // Load Upper Immediate
-
-];
-
-const J_TYPES = [
-	0b000000001111, // Jump
-	0b000000010000, // Jump Conditional
-];
-
-const OPS = {
-	add:   0b000000000001,
-	sub:   0b000000000001,
-	mult:  0b000000000001,
-	and:   0b000000000010,
-	nand:  0b000000000010,
-	nor:   0b000000000010,
-	not:   0b000000000010,
-	or:    0b000000000010,
-	xnor:  0b000000000010,
-	xor:   0b000000000010,
-	addi:  0b000000000011,
-	subi:  0b000000000100,
-	multi: 0b000000000101,
-	andi:  0b000000000110,
-	nandi: 0b000000000111,
-	nori:  0b000000001000,
-	ori:   0b000000001001,
-	xnori: 0b000000001010,
-	xori:  0b000000001011,
-	mfhi:  0b000000001100,
-	mflo:  0b000000001100,
-	lui:   0b000000001101,
-	sl:    0b000000001110,
-	sle:   0b000000001110,
-	seq:   0b000000001110,
-	jump:  0b000000001111,
-	jc:    0b000000010000,
-	jr:    0b000000010001,
-	mem:   0b000000010010,
-};
-
-const FUNCTS = {
-	add:  0b000000000000,
-	and:  0b000000000000,
-	jr:   0b000000000000,
-	mfhi: 0b000000000000,
-	sl:   0b000000000000,
-	mflo: 0b000000000001,
-	nand: 0b000000000001,
-	sle:  0b000000000001,
-	sub:  0b000000000001,
-	mult: 0b000000000010,
-	nor:  0b000000000010,
-	seq:  0b000000000010,
-	not:  0b000000000011,
-	or:   0b000000000100,
-	xnor: 0b000000000101,
-	xor:  0b000000000110,
-};
-
-class Wasmc {
+exports.Wasmc = class Wasmc {
 	static die(...a) { console.error(...a); process.exit(1) };
 
 	// Converts an array of 8 characters into a Long.
@@ -117,6 +37,11 @@ class Wasmc {
 	// Given an array of longs, returns an array containing the 16-length zero-padded hex representations.
 	static longs2strs(longs) {
 		return longs.map((l) => l.toString(16).padStart(16, "0"));
+	};
+
+	// Converts ["register", ...] to the corresponding number
+	static convertRegister([, type, n]) {
+		return REGISTER_OFFSETS[type] + n;
 	};
 	
 	constructor(opt, filename) {
@@ -267,8 +192,10 @@ class Wasmc {
 		let out = [];
 		parsed.code.forEach((item, i) => {
 			let [label, op, ...args] = item;
-			if (op == "add") {
-
+			if (op.match(/^(add|mult|n?and|(x?n|x)?or|not|mf(hi|lo)|s(le?|eq|ub)|[cls])$/)) {
+				out.push(this.rType(OPS[op], ...args.map(Wasmc.convertRegister), 0, FUNCTS[op]));
+			} else {
+				out.push(Long.fromInt(0xdead, true));
 			};
 		});
 
@@ -295,7 +222,7 @@ class Wasmc {
 	};
 
 	iType(opcode, rs, rd, imm) {
-		if (!I_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
+		if (!I_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid i-type`;
 		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
 		if (rd < 0 || 127 < rd) throw `rd (${rd}) not within the valid range (0–127)`;
 		if (imm < 0 || 4294967295 < imm) throw `imm (${imm}) not within the valid range (-2147483648–2147483647)`;
@@ -312,7 +239,7 @@ class Wasmc {
 	};
 
 	jType(opcode, rs, addr) {
-		if (!J_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
+		if (!J_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid j-type`;
 		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
 		if (addr < 0 || 4294967295 < addr) throw `addr (${addr}) not within the valid range (0–4294967295)`;
 
@@ -336,14 +263,16 @@ class Wasmc {
 	};
 };
 
-const opt = minimist(process.argv.slice(2), {
-	alias: { b: "binary", d: "debug" },
-	boolean: ["binary", "debug"],
-	default: { binary: false, debug: false }
-}), filename = opt._[0];
+if (require.main === module) {
+	const opt = minimist(process.argv.slice(2), {
+		alias: { b: "binary", d: "debug" },
+		boolean: ["binary", "debug"],
+		default: { binary: false, debug: false }
+	}), filename = opt._[0];
 
-if (!filename) {
-	return console.log("Usage: node wasmc.js [filename]");
+	if (!filename) {
+		return console.log("Usage: node wasmc.js [filename]");
+	};
+
+	new Wasmc(opt, filename).compile();
 };
-
-new Wasmc(opt, filename).compile();

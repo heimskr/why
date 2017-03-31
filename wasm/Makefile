@@ -1,7 +1,7 @@
 SYNTAX		= wasm.ne
 COMPILED	= wasm.js
 COMPILE		= nearleyc
-TEST		= node test.js
+TEST		= node tree.js
 EXAMPLE		= example.wasm
 ALT			= example2.wasm
 
@@ -11,33 +11,24 @@ $(COMPILED): $(SYNTAX)
 test: $(EXAMPLE)
 	$(TEST) $(EXAMPLE)
 
-tree: $(EXAMPLE)
-	$(TEST) $(EXAMPLE) -t
-
-trees: $(EXAMPLE)
-	$(TEST) $(EXAMPLE) -st
+testj: $(EXAMPLE)
+	$(TEST) $(EXAMPLE) -s
 
 
 
 atest: $(ALT)
 	$(TEST) $(ALT)
 
-atree: $(ALT)
-	$(TEST) $(ALT) -t
-
-atrees: $(ALT)
-	$(TEST) $(ALT) -st
+atestj: $(ALT)
+	$(TEST) $(ALT) -s
 
 
 
 ftest: fibonacci.wasm
 	$(TEST) fibonacci.wasm
 
-ftree: fibonacci.wasm
-	$(TEST) fibonacci.wasm -t
-
-ftrees: fibonacci.wasm
-	$(TEST) fibonacci.wasm -st
+ftestj: fibonacci.wasm
+	$(TEST) fibonacci.wasm -s
 
 
 

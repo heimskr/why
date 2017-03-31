@@ -15,7 +15,7 @@ const die = (...a) => { console.error(...a); process.exit(1) };
 const opt = minimist(process.argv.slice(2), {
 	alias: { t: "tree", d: "dev", s: "simple" },
 	boolean: ["tree", "dev", "simple"],
-	default: { dev: true }
+	default: { tree: true, dev: true }
 }), filename = opt._[0];
 
 if (!filename) {
