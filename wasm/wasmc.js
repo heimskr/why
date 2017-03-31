@@ -41,7 +41,7 @@ class Wasmc {
 
 	// If the input is an array (expected format: ["register", ...]), then the output is the number corresponding to that array.
 	// Otherwise, if the input is something other than an array, then the output is same as the input.
-	static convertRegister(x) { // [, type, n]
+	static convertRegister(x) {
 		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[1]] + x[2]) : x;
 	};
 	
@@ -123,7 +123,6 @@ class Wasmc {
 
 		let handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
 
-		// this.processLabels();
 		this.expandCode();
 		this.processCode();
 
@@ -183,15 +182,6 @@ class Wasmc {
 		this.meta[2] = Long.fromInt(offset);
 	};
 
-	processLabels() {
-		// this.parsed.code.forEach((item, i) => {
-		// 	if (item[0]) {
-		// 		this.offsets[item[0]] = this.meta[2].toInt() + i;
-		// 		this.log(`Label ${item[0]} at offset ${this.meta[2].toInt() + i}`);
-		// 	};
-		// });
-	};
-
 	processCode() {
 		this.expanded.forEach((item, i) => {
 			console.log({item});
@@ -210,11 +200,6 @@ class Wasmc {
 			};
 
 			if (op == "jeq") {
-				// console.log({item});
-				// [label, "seq", rt, rs, rd]
-				// args[0]: rt
-				// args[1]: rs
-				// args[2]: rd
 
 				// jc: target, rs [. jc rs target]
 				// m0 -> rs
@@ -249,7 +234,6 @@ class Wasmc {
 				[rt, rs].forEach((reg, i) => {
 					if (isLabelRef(reg)) {
 						// Whoops, this register isn't actually a register
-						// console.log(chalk.red.bold("Pushing:"), [getLabel(), "li", _0, ["register", "m", i], reg]);
 						this.expanded.push([getLabel(), "li", _0, _M[i], reg]);
 					};
 				});
@@ -259,15 +243,6 @@ class Wasmc {
 				if (ld) {
 					this.expanded.push([getLabel(), "si", _M[2], _0, rd]);
 				};
-
-
-				// args.filter((arg) => args instanceof Array && args.length == 2 && args[0] == "label")
-				// let label_args;
-				// if (label_args = args.filter((arg) => args instanceof Array && args.length == 2 && args[0] == "label")) {
-
-				// } else {
-					// this.expanded.push([[]].concat(item));
-				// };
 			} else {
 				console.log(chalk.bold.red("No match"), `for (${op})`, item);
 				this.expanded.push(item);
@@ -295,13 +270,6 @@ class Wasmc {
 	};
 
 	addCode([op, ...args]) {
-		// if (label) {
-		// 	this.offsets[label] = this.meta[2].toInt() + this.code.length;
-		// 	console.log(`Label ${item[0]} at offset ${this.meta[2].toInt() + i}`);
-		// };
-
-		// if (op.match(/^(add|mult|n?and|(x?n|x)?or|not|mf(hi|lo)|s(le?|eq|ub)|[cls]|jr)$/)) {
-		// } else if (op.match(/^(add|sub|mult|n?and|(x?n|x)?or|lu)i$/)) {
 		if (R_TYPES.includes(OPS[op])) {
 			this.code.push(this.rType(OPS[op], ...args.map(Wasmc.convertRegister), 0, FUNCTS[op]));
 		} else if (I_TYPES.includes(OPS[op])) {
@@ -311,27 +279,6 @@ class Wasmc {
 		} else if (op == "nop") {
 			this.code.push(Long.UZERO);
 		} else if (op == "jeq") {
-/*
-jeq rd, rs, rt
-$rs == $rt? :$rd
-If the value in rs is equal to the value in rt, jumps to the address stored in rd (or to the address of var). (Modifies m0.)
-
-Translation:
-seq m0, rs, rt
-jc rd, m0
-
-
-`seq rd, rs, rt`  
-[op, rt, rs, rd]
-
--> [seq, rt, rs, m0]
-
-> `seq rd, rs, rt`  
-> `$rs == $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
-
-[jeq, rt, rs, rd]
-*/
 			this.addCode([null, "seq", ...[args[0], args[1], [, "m", 0]].map(Wasmc.convertRegister)]);
 			if (args[2][0] == "register") {
 				// > `jc target, rs`  
