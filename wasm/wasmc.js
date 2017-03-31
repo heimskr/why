@@ -121,16 +121,18 @@ class Wasmc {
 		this.processMetadata();
 		this.processData();
 
-		let handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
+		this.handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
 
 		this.expandCode();
 		this.processCode();
 
+		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0), true);
 		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
+
 
 		console.log({
 			meta: Wasmc.longs2strs(this.meta),
-			handlers: Wasmc.longs2strs(handlers),
+			handlers: Wasmc.longs2strs(this.handlers),
 			data: Wasmc.longs2strs(this.data),
 			code: Wasmc.longs2strs(this.code),
 			out: Wasmc.longs2strs(out),
@@ -184,7 +186,6 @@ class Wasmc {
 
 	processCode() {
 		this.expanded.forEach((item, i) => {
-			console.log({item});
 			this.addCode(item);
 		});
 	};
@@ -193,14 +194,34 @@ class Wasmc {
 		const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions will need to be
 		// gone over once again after labels have been sorted out so we can replace variable references with addresses.
-		this.parsed.code.forEach((item, i) => {
+		this.parsed.code.forEach((item) => {
 			let [label, op, ...args] = item;
 			if (label) {
 				this.offsets[label] = this.meta[2].toInt() + this.expanded.length;
 			};
 
-			if (op == "jeq") {
-				// First, store rs==rt in $m0.
+			if (op == "mv") {
+				this.expanded.push([label, "or", args[0], _0, args[1]]);
+			} else if (op == "ret") {
+				this.expanded.push([label, "jr", _0, _0, _RA]);
+			} else if (op == "push") {
+				let _label = label, getLabel = () => [_label, _label = null][0];
+				args.forEach((reg, i) => {
+					this.expanded.push([getLabel(), "s", _0, reg, _SP]);
+					this.expanded.push([label, "addi", _SP, _SP, 1]);
+				});
+			} else if (op == "pop") {
+				let _label = label, getLabel = () => [_label, _label = null][0];
+				args.forEach((reg, i) => {
+					this.expanded.push([getLabel(), "l", _0, _SP, reg]);
+					this.expanded.push([label, "subi", _SP, _SP, 1]);
+				});
+			} else if (op == "sge") {
+				this.expanded.push([label, "sle", args[1], args[0], args[2]]);
+			} else if (op == "sg") {
+				this.expanded.push([label, "sl", args[1], args[0], args[2]]);
+			} else if (op == "jeq") {
+				// First, set $m0 to rs == rt.
 				this.expanded.push([label, "seq", ...args.slice(0, 2), _M[0]]);
 
 				if (args[2][0] == "value") {
@@ -213,13 +234,11 @@ class Wasmc {
 				} else if (args[2][0] == "label") {
 					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
 					this.expanded.push([null, "li", _0, _M[1], args[2]]);
-					this.expanded.push([null, "jrc", _0, M[0], _M[1]]);
+					this.expanded.push([null, "jrc", _0, _M[0], _M[1]]);
 				};
 			} else if (R_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
-				console.log(chalk.bold.green("Matched"), "for", item);
 				let [rt, rs, rd] = args;
-				let _label = label;
-				let getLabel = () => [_label, _label = null][0]
+				let _label = label, getLabel = () => [_label, _label = null][0];
 
 				let [lt, ls, ld] = [rt, rs, rd].map(isLabelRef);
 				[rt, rs].forEach((reg, i) => {
@@ -234,25 +253,40 @@ class Wasmc {
 				if (ld) {
 					this.expanded.push([getLabel(), "si", _M[2], _0, rd]);
 				};
+			} else if (I_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
+				console.log(chalk.green("Discovered i-type:"), chalk.bold(op), item);
+				let [rs, rd, imm] = args;
+				let _label = label, getLabel = () => [_label, _label = null][0];
+
+				let [ls, ld] = [rs, rd].map(isLabelRef);
+
+				if (ls) {
+					this.expanded.push([getLabel(), "li", _0, _M[0], rs]);
+				};
+
+				this.expanded.push([getLabel(), op, ...[rs, rd].map((reg, i) => [ls, ld][i]? _M[i] : reg), imm]);
+
+				if (ld) {
+					this.expanded.push([getLabel(), "si", _M[1], _0, rd]);
+				};
 			} else {
-				console.log(chalk.bold.red("No match"), `for (${op})`, item);
 				this.expanded.push(item);
 			};
 		});
 
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
-		this.expanded.forEach((item, i) => {
+		this.expanded.forEach((item) => {
 			// First off, now that we've recorded all the label positions,
 			// we can remove the label tags.
 			item.shift();
 
 			// Look at everything past the operation name (the arguments).
-			item.slice(1).forEach((arg, j) => {
+			item.slice(1).forEach((arg, i) => {
 				// If the argument is a label reference,
 				if (arg instanceof Array && arg.length == 2 && arg[0] == "label") {
 					// replace it with an address from the offsets map. 
-					item[2 + j] = this.offsets[arg[1]];
+					item[2 + i] = this.offsets[arg[1]];
 				};
 			});
 		});
@@ -265,19 +299,10 @@ class Wasmc {
 			this.code.push(this.rType(OPS[op], ...args.map(Wasmc.convertRegister), 0, FUNCTS[op]));
 		} else if (I_TYPES.includes(OPS[op])) {
 			this.code.push(this.iType(OPS[op], ...args.map(this.convertValue, this)));
-		} else if (op.match(/^jc?$/)) {
+		} else if (J_TYPES.includes(OPS[op])) {
 			this.code.push(this.jType(OPS[op], ...args.map(this.convertValue, this)));
 		} else if (op == "nop") {
 			this.code.push(Long.UZERO);
-		} else if (op == "jeq") {
-			this.addCode([null, "seq", ...[args[0], args[1], [, "m", 0]].map(Wasmc.convertRegister)]);
-			if (args[2][0] == "register") {
-				// > `jc target, rs`  
-				// [jc, rs, addr]
-				// this.addCode(["jc", args[2]]);
-			} else {
-
-			};
 		} else {
 			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
 			this.code.push(Long.fromInt(0xdead, true));
@@ -369,12 +394,16 @@ class Wasmc {
 };
 
 exports.Wasmc = Wasmc;
-const _K = _.range(0, 17).map((n) => ["register", "k", n]);
-const _M = _.range(0, 16).map((n) => ["register", "m", n]);
+const _R = _.range(0, 16).map((n) => ["register", "r", n]); // w
+const _A = _.range(0, 16).map((n) => ["register", "a", n]); // i
+const _T = _.range(0, 24).map((n) => ["register", "t", n]); // n
+const _S = _.range(0, 24).map((n) => ["register", "s", n]); // k
+const _K = _.range(0, 17).map((n) => ["register", "k", n]); // 
+const _RA = ["register", "return", 0];                      // ;
+const _M = _.range(0, 16).map((n) => ["register", "m", n]); // )
 const _E = _.range(0,  6).map((n) => ["register", "e", n]);
-const _S = ["register", "stack", 0];
+const _SP = ["register", "stack", 0];
 const _0 = ["register", "zero",  0];
-
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {

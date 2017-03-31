@@ -503,7 +503,7 @@ Sets a register to the given immediate value.
 Copies the value of `rs` into `rd`.
 
 Translation:  
-<code>[addi](#op-addi) rd, rs, 0</code>.
+<code>[or](#op-or) rd, rs, $0</code>.
 
 ### <a name="op-ret"></a>Return
 > `ret`
@@ -511,7 +511,7 @@ Translation:
 Jumps to the return address.
 
 Translation:  
-<code>[jr](#op-jr) ra</code>.
+<code>[jr](#op-jr) $r</code>.
 
 ### <a name="op-push"></a>Push
 > `push rs`  
@@ -520,18 +520,18 @@ Translation:
 Pushes the value of `rs` to the stack.
 
 Translation:  
-<code>[s](#op-s) s, rs</code>  
-<code>[addi](#op-addi) s, s, 1</code>
+<code>[s](#op-s) $s, rs</code>  
+<code>[addi](#op-addi) $s, $s, 1</code>
 
 ### <a name="op-pop"></a>Pop
-> `pop rs`  
+> `pop rd`  
 > `] $rd`
 
 Pops the value at the top of the stack and stores it in `rd`.
 
 Translation:  
-<code>[l](#op-l) rs, s</code>  
-<code>[addi](#op-addi) s, s, -1</code>
+<code>[l](#op-l) rs, $s</code>  
+<code>[addi](#op-addi) $s, $s, -1</code>
 
 ### <a name="op-jeq"></a>Jump if Equal
 > `jeq rd, rs, rt`  
@@ -540,8 +540,8 @@ Translation:
 If the value in `rs` is equal to the value in `rt`, jumps to the address stored in `rd` (or to the address of `var`). (Modifies `m0`.)
 
 Translation:  
-<code>[seq](#op-seq) m0, rs, rt</code>  
-<code>[jc](#op-jc) rd, m0</code>
+<code>[seq](#op-seq) $m0, rs, rt</code>  
+<code>[jc](#op-jc) rd, $m0</code>
 
 > `jeq label, rs, rt`  
 > `: &label ($rs == $rt)`
@@ -552,3 +552,7 @@ Translation:
 <code>[seq](#op-seq) m0, rs, rt</code>  
 <code>[la](#op-la) m1, &label</code>  
 <code>[jc](#op-jc) m1, m0</code>
+
+### <a href="#op-sge">Set on Greater Than or Equal</a>
+
+### <a href="#op-sg">Set on Greater Than</a>

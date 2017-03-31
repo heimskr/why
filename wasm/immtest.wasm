@@ -10,7 +10,7 @@ foo: "bar"
 #code
 // Purpose of this program: to test wasmc's handling of labels and immediate values.
 
-: 1234 // jump to an immediate value
+: 1234  // jump to an immediate value
 : &next // jump to a label
 
 @next
@@ -19,7 +19,7 @@ $t0 += $t1 // (r-type control) add one register to another.
 $t0 += 128 // add an immediate value to a register.
 $t0 += *foo
 
-: $t0 ($t0 == $t1) // jump-if-equal to a register
+: $t0  ($t0 == $t1) // jump-if-equal to a register
 : &hey ($t0 == $t1) // jump-if-equal to a label
 
-@hey <>
+@hey <> // to have a label at the end, we have to insert a NOP
