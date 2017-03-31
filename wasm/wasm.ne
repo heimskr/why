@@ -138,7 +138,7 @@ op_xnori		-> reg oper["~x"]  imm into reg				{% d => ["xnori", d[0], d[4], d[2]]
 				 | reg oper["~x="] imm						{% d => ["xnori", d[0], d[0], d[2]] %}
 op_lui			-> ("lui" _ ":" _) imm into reg				{% d => ["lui",     0,  d[3], d[1]] %}
 #																			   rs        addr
-op_j			-> ":" _ (imm | var)						{% d => ["jump",    0,     d[2][0]] %}
+op_j			-> ":" _ (imm | var)						{% d => ["j",       0,     d[2][0]] %}
 op_jc			-> reg "?" _ (imm | var)					{% d => ["jc",    d[0],    d[2][0]] %}
 
 op_la			-> var_addr into reg						{% d => ["la", d[0], d[2]] %}

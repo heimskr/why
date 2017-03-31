@@ -63,9 +63,26 @@ checkLong("Long.fromInt", false, Long.fromInt(3), Long.fromInt(4));
 checkEqual("Wasmc.convertRegister", true, Wasmc.convertRegister([, "s", 0x0a]), 71);
 checkEqual("Wasmc.convertRegister", true, Wasmc.convertRegister([, "t", 0x02]), 39);
 
-checkLong("Wasmc.rType", true,
+checkLong("l", true,
 	c.rType(OPS.l, 0, Wasmc.convertRegister([, "s", 0x0a]), Wasmc.convertRegister([, "t", 0x02]), 0, FUNCTS.l),
 	Long.fromString("0000000100100000000100011101001110000000000000000000000000000001", true, 2)
+);
+
+checkLong("lui", true,
+	c.iType(OPS.lui, Wasmc.convertRegister([, "t", 0]), Wasmc.convertRegister([, "r", 5]), 42),
+	Long.fromString("0000000011010000000100101000101000000000000000000000000000101010", true, 2)
+);
+
+checkLong("j", true,
+	c.jType(OPS.j, 0, 666666),
+	Long.fromString("0000000011110000000000000000000000000000000010100010110000101010", true, 2)
+);
+
+// 000000010000 sssssss 0000000000000 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+// opcode rs addr
+checkLong("jc", true,
+	c.jType(OPS.jc, Wasmc.convertRegister([, "s", 0x14]), 666666),
+	Long.fromString("0000000100001010001000000000000000000000000010100010110000101010", true, 2)
 );
 
 tests.showResults();
