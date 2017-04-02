@@ -116,7 +116,7 @@ const Parser = exports.Parser = {
 
 	formatI(op, rs, rd, imm) {
 		if (op == "addi") {
-			if (rs == rd)
+			if (rs == rd) {
 				return imm == 1? `${rd}++` : `${rs} += ${imm}`;
 			};
 
