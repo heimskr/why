@@ -645,3 +645,7 @@ Translation:
 ### <a href="#op-sge">Set on Greater Than or Equal</a>
 
 ### <a href="#op-sg">Set on Greater Than</a>
+
+### <a href="#op-sgeu">Set on Greater Than or Equal Unsigned</a>
+
+### <a href="#op-sgu">Set on Greater Than Unsigned</a>
