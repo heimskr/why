@@ -136,8 +136,7 @@ op_subi			-> reg _ "-"  _ int into reg				{% d => ["subi",  d[0], d[4], d[2]] %}
 				 | reg _ "--" _								{% d => ["subi",  d[0], d[0],   1 ] %}
 				 | _ "--" _ reg								{% d => ["subi",  d[1], d[1],   1 ] %}
 				 | reg _ "-="  _ int						{% d => ["subi",  d[0], d[0], d[4]] %}
-op_multi		-> reg _ "*"   _ int						{% d => ["multi", d[0], d[4], d[2]] %}
-				 | reg _ "*="  _ int						{% d => ["multi", d[0], d[0], d[2]] %}
+op_multi		-> reg _ "*"   _ int						{% d => ["multi", d[0],   0,  d[2]] %}
 op_andi			-> reg _ "&"   _ int into reg				{% d => ["andi",  d[0], d[4], d[2]] %}
 				 | reg _ "&="  _ int						{% d => ["andi",  d[0], d[0], d[2]] %}
 op_ori			-> reg _ "|"   _ int into reg				{% d => ["ori",   d[0], d[4], d[2]] %}
