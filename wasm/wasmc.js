@@ -74,15 +74,15 @@ class Wasmc {
 		};
 
 		const parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
-		const source = `\n${fs.readFileSync(this.filename, {encoding: "utf8"})}\n`;
+		const source = fs.readFileSync(this.filename, {encoding: "utf8"}) + "\n";
 
 		let trees;
 		try {
 			trees = parser.feed(source).results;
 		} catch (e) {
-			console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset) - 1}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length - 1}`) + ":");
+			console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset)}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length}`) + ":");
 			if (this.opt.dev) {
-				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset) - 1; return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length - 1 + $2})` }));
+				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset); return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})` }));
 			};
 
 			process.exit(1);
