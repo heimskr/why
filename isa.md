@@ -23,9 +23,12 @@
 			<ol>
 				<li><a href="#ops-math-r">Math (R-Types)</a>
 					<ol>
-						<li><a href="#op-add">Addition</a> (<code>add</code>)</li>
-						<li><a href="#op-sub">Subtraction</a> (<code>sub</code>)</li>
-						<li><a href="#op-mult">Multiplication</a> (<code>mult</code>)</li>
+						<li><a href="#op-add">Add</a> (<code>add</code>)</li>
+						<li><a href="#op-sub">Subtract</a> (<code>sub</code>)</li>
+						<li><a href="#op-mult">Multiply</a> (<code>mult</code>)</li>
+						<li><a href="#op-addu">Add Unsigned</a> (<code>addu</code>)</li>
+						<li><a href="#op-subu">Subtract Unsigned</a> (<code>subu</code>)</li>
+						<li><a href="#op-multu">Multiply Unsigned</a> (<code>multu</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-r">Logic (R-Types)</a>
@@ -41,9 +44,12 @@
 				</li>
 				<li><a href="#ops-math-i">Math (I-Types)</a>
 					<ol>
-						<li><a href="#op-addi">Addition Immediate</a> (<code>addi</code>)</li>
-						<li><a href="#op-subi">Subtraction Immediate</a> (<code>subi</code>)</li>
-						<li><a href="#op-multi">Multiplication Immediate</a> (<code>multi</code>)</li>
+						<li><a href="#op-addi">Add Immediate</a> (<code>addi</code>)</li>
+						<li><a href="#op-subi">Subtract Immediate</a> (<code>subi</code>)</li>
+						<li><a href="#op-multi">Multiply Immediate</a> (<code>multi</code>)</li>
+						<li><a href="#op-addiu">Add Immediate Unsigned</a> (<code>addiu</code>)</li>
+						<li><a href="#op-subiu">Subtract Immediate Unsigned</a> (<code>subiu</code>)</li>
+						<li><a href="#op-multiu">Multiply Immediate Unsigned</a> (<code>multiu</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-i">Logic (I-Types)</a>
@@ -70,10 +76,15 @@
 				<li><a href="#ops-comp-r">Comparisons (R-Types)</a>
 					<ol>
 						<li><a href="#op-sl">Set on Less Than</a> (<code>sl</code>)</li>
-						<li><a href="#op-sle">Set on Less Than or Equal</a> (<code>sl</code>)</li>
-						<li><a href="#op-seq">Set on Equal</a> (<code>sl</code>)</li>
+						<li><a href="#op-sle">Set on Less Than or Equal</a> (<code>sle</code>)</li>
+						<li><a href="#op-seq">Set on Equal</a> (<code>seq</code>)</li>
 						<li><a href="#op-sge">Set on Greater Than or Equal</a> (<code>sge</code>)</li>
 						<li><a href="#op-sg">Set on Greater Than</a> (<code>sg</code>)</li>
+						<li><a href="#op-slu">Set on Less Than Unsigned</a> (<code>slu</code>)</li>
+						<li><a href="#op-sleu">Set on Less Than or Equal Unsigned</a> (<code>sleu</code>)</li>
+						<li><a href="#op-sequ">Set on Equal Unsigned</a> (<code>sequ</code>)</li>
+						<li><a href="#op-sgeu">Set on Greater Than or Equal Unsigned</a> (<code>sgeu</code>)</li>
+						<li><a href="#op-sgu">Set on Greater Than Unsigned</a> (<code>sgu</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-jump-j">Jumps (J-Types)</a>
@@ -215,26 +226,48 @@ J-type instructions point the program counter to a given address under certain c
 
 ## <a name="ops-math-r"></a>Math (R-Types)
 
-### <a name="op-add"></a>Addition
+### <a name="op-add"></a>Add
 > `add rd, rs, rt`  
 > `$rs + $rt -> $rd` or `$rd += $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
 
 Adds the values in `rs` and `rt` and stores the result in `rd`.
 
-### <a name="op-sub"></a>Subtraction
+### <a name="op-sub"></a>Subtract
 > `sub rd, rs, rt`  
 > `$rs - $rt -> $rd` or `$rd -= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`.
 
-### <a name="op-mult"></a>Multiplication
+### <a name="op-mult"></a>Multiply
 > `mult rs, rt`  
 > `$rs * $rt`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `000` `0000000000000000` `000000000010`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+
+
+### <a name="op-addu"></a>Add Unsigned
+> `addu rd, rs, rt`  
+> `$rs _+ $rt -> $rd` or `$rd += $rt`  
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+
+Adds the values in `rs` and `rt` (treating both as unsigned values) and stores the result in `rd`.
+
+### <a name="op-subu"></a>Subtract Unsigned
+> `subu rd, rs, rt`  
+> `$rs _- $rt -> $rd` or `$rd -= $rt`  
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+
+Subtracts the value in `rt` from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
+
+### <a name="op-multu"></a>Multiply Unsigned
+> `multu rs, rt`  
+> `$rs _* $rt`  
+> `000000000001` `ttttttt` `sssssss` `0000000` `000` `0000000000000000` `000000000101`
+
+Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ## <a name="ops-logic-r"></a>Logic (R-Types)
 
@@ -289,26 +322,47 @@ Computes the bitwise XOR of `rs` and `rt` and stores the result in `rd`.
 
 ## <a name="ops-math-i"></a>Math (I-Types)
 
-### <a name="op-addi"></a>Addition Immediate
+### <a name="op-addi"></a>Add Immediate
 > `addi rd, rs, imm`  
 > `$rs + imm -> $rd`  
 > `000000000011` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Adds the value in `rs` and a constant and stores the result in `rd`.
 
-### <a name="op-subi"></a>Subtraction Immediate
+### <a name="op-subi"></a>Subtract Immediate
 > `subi rd, rs, imm`  
 > `$rs - imm -> $rd`  
 > `000000000100` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Subtracts a constant from the value in `rs` and stores the result in `rd`.
 
-### <a name="op-multi"></a>Multiplication Immediate
+### <a name="op-multi"></a>Multiply Immediate
 > `multi rd, rs, imm`  
 > `$rs * imm`
 > `000000000101` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Multiplies the value in `rs` by a constant and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+
+### <a name="op-addiu"></a>Add Immediate Unsigned
+> `addi rd, rs, imm`  
+> `$rs _+ imm -> $rd`  
+> `000000010110` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Adds the value in `rs` and a constant (treating both as unsigned values) and stores the result in `rd`.
+
+### <a name="op-subiu"></a>Subtract Immediate Unsigned
+> `subi rd, rs, imm`  
+> `$rs _- imm -> $rd`  
+> `000000010111` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Subtracts a constant from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
+
+### <a name="op-multiu"></a>Multiply Immediate Unsigned
+> `multi rd, rs, imm`  
+> `$rs _* imm`
+> `000000011000` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Multiplies the value in `rs` by a constant (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ## <a name="ops-logic-i"></a>Logic (I-Types)
 
@@ -415,6 +469,41 @@ This is a pseudoinstruction; its translation is `sle rd, rt, rs`.
 
 If the value in `rs` is greather than the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.  
 This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
+
+### <a name="op-slu"></a>Set on Less Than Unsigned
+> `slu rd, rs, rt`  
+> `$rs _< $rt -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+
+If the value in `rs` is less than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sleu"></a>Set on Less Than or Equal Unsigned
+> `sleu rd, rs, rt`  
+> `$rs _<= $rt -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+
+If the value in `rs` is less than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sequ"></a>Set on Equal Unsigned
+> `sequ rd, rs, rt`  
+> `$rs _== $rt -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
+
+If the value in `rs` is equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sgeu"></a>*Set on Greater Than or Equal Unsigned*
+> `sgeu rd, rs, rt`  
+> `$rs _>= $rt -> $rd`
+
+If the value in `rs` is greather than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.  
+This is a pseudoinstruction; its translation is `sleu rd, rt, rs`.
+
+### <a name="op-sgu"></a>*Set on Greater Than Unsigned*
+> `sgu rd, rs, rt`  
+> `$rs _> $rt -> $rd`
+
+If the value in `rs` is greather than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.  
+This is a pseudoinstruction; its translation is `slu rd, rt, rs`.
 
 ## <a name="ops-jump-j"></a>Jumps (J-Types)
 

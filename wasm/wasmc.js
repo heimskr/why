@@ -16,7 +16,7 @@ require("string.prototype.padend").shim();
 
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS } = require("./constants.js");
 
-class Wasmc {
+class WASMC {
 	static die(...a) { console.error(...a); process.exit(1) };
 
 	// Converts an array of 8 characters into a Long.
@@ -31,7 +31,7 @@ class Wasmc {
 
 	// Given any string, str2longs nullpads and chunks it and returns an array of Longs.
 	static str2longs(str) {
-		return _.chunk(Wasmc.nullpad(str).split(""), 8).map(Wasmc.chunk2long);
+		return _.chunk(WASMC.nullpad(str).split(""), 8).map(WASMC.chunk2long);
 	};
 
 	// Given an array of longs, returns an array containing the 16-length zero-padded hex representations.
@@ -100,7 +100,7 @@ class Wasmc {
 		this.parsed = trees[0];
 
 		if (typeof this.parsed != "object") {
-			Wasmc.die("Parser output isn't an object.");
+			WASMC.die("Parser output isn't an object.");
 		};
 
 		if (typeof this.parsed.metadata == "undefined") {
@@ -131,16 +131,16 @@ class Wasmc {
 
 		if (this.opt.debug) {
 			console.log({
-				meta: Wasmc.longs2strs(this.meta),
-				handlers: Wasmc.longs2strs(this.handlers),
-				data: Wasmc.longs2strs(this.data),
-				code: Wasmc.longs2strs(this.code),
-				out: Wasmc.longs2strs(out),
+				meta: WASMC.longs2strs(this.meta),
+				handlers: WASMC.longs2strs(this.handlers),
+				data: WASMC.longs2strs(this.data),
+				code: WASMC.longs2strs(this.code),
+				out: WASMC.longs2strs(out),
 				offsets: this.offsets
 			});
 		} else {
 			let outname = typeof this.opt.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.opt.out;
-			fs.writeFileSync(outname, Wasmc.longs2strs(out).join("\n"));
+			fs.writeFileSync(outname, WASMC.longs2strs(out).join("\n"));
 			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the bytecode to", chalk.bold(outname) + ".");
 		};
 	};
@@ -150,14 +150,14 @@ class Wasmc {
 
 		const orcid = typeof this.parsed.meta.orcid == "undefined"? "0000000000000000" : this.parsed.meta.orcid.replace(/\D/g, "");
 		if (orcid.length != 16) {
-			Wasmc.die("Error: invalid ORCID.");
+			WASMC.die("Error: invalid ORCID.");
 		};
 
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
-		[this.meta[4], this.meta[5]] = [orcid.substr(0, 8), orcid.substr(8)].map((half) => Wasmc.chunk2long(half.split("")));
+		[this.meta[4], this.meta[5]] = [orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")));
 
 		// Append the name-version-author string.
-		this.meta = this.meta.concat(Wasmc.str2longs(`${name}\0${version}\0${author}\0`));
+		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
 		
 		// The beginning of the handler pointer section comes right after the end of the meta section.
 		this.meta[0] = Long.fromInt(this.meta.length, true);
@@ -176,9 +176,9 @@ class Wasmc {
 			if (type.match(/^(in|floa)t$/)) {
 				pieces = [Long.fromValue(value)];
 			} else if (type == "string") {
-				pieces = Wasmc.str2longs(value);
+				pieces = WASMC.str2longs(value);
 			} else {
-				Wasmc.die(`Error: unknown data type "${type}" for "${key}".`);
+				WASMC.die(`Error: unknown data type "${type}" for "${key}".`);
 			};
 
 			this.offsets[key] = offset;
@@ -298,7 +298,7 @@ class Wasmc {
 
 	addCode([op, ...args]) {
 		if (R_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.rType(OPCODES[op], ...args.map(Wasmc.convertRegister), 0, FUNCTS[op]));
+			this.code.push(this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), 0, FUNCTS[op]));
 		} else if (I_TYPES.includes(OPCODES[op])) {
 			this.code.push(this.iType(OPCODES[op], ...args.map(this.convertValue, this)));
 		} else if (J_TYPES.includes(OPCODES[op])) {
@@ -316,7 +316,7 @@ class Wasmc {
 	// If x is a number, return it.
 	convertValue(x) {
 		if (x instanceof Array || typeof x == "number") {
-			return Wasmc.convertRegister(x);
+			return WASMC.convertRegister(x);
 		};
 
 		if (typeof x == "string") {
@@ -395,7 +395,7 @@ class Wasmc {
 	};
 };
 
-exports.Wasmc = Wasmc;
+module.exports = WASMC;
 const _R = _.range(0, 16).map((n) => ["register", "r", n]); // w
 const _A = _.range(0, 16).map((n) => ["register", "a", n]); // i
 const _T = _.range(0, 24).map((n) => ["register", "t", n]); // n
@@ -418,5 +418,5 @@ if (require.main === module) {
 		return console.log("Usage: node wasmc.js [filename]");
 	};
 
-	new exports.Wasmc(opt, filename).compile();
+	new WASMC(opt, filename).compile();
 };
