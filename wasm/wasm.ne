@@ -162,7 +162,7 @@ op_jc			-> ":" _ int _ "(" _ reg _ ")" 				{% d => ["jc",    d[6],    d[2]] %}
 
 op_la			-> var_addr into reg						{% d => ["la", d[0], d[2]] %}
 op_mv			-> reg   into reg							{% d => ["mv", d[0], d[2]] %}
-op_ret			-> "ret"									{% d => ["jr", -1,  ["register", "return", 0], 0] %}
+op_ret			-> "ret"									{% d => ["jr", 0,  ["register", "return", 0], 0] %}
 op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %}
 op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
 op_jeq			-> ":" _ reg _ "(" _ rv _ "==" _ rv ")"		{% d => ["jeq", d[10], d[6], d[2]] %}

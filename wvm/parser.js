@@ -15,12 +15,12 @@ const STESFFO = _.multiInvert(REGISTER_OFFSETS);
 const OFFSET_VALUES = Object.values(REGISTER_OFFSETS).sort((a, b) => b - a);
 
 const Parser = exports.Parser = {
-	open(filename) {
+	open(filename, silent=true) {
 		const text = fs.readFileSync(filename, { encoding: "utf8" });
-		return Parser.parse(text.split("\n").map((s) => Long.fromString(s, true, 16)));
+		return Parser.parse(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent);
 	},
 
-	parse(longs) {
+	parse(longs, silent=true) {
 		let offsets = {
 			$handlers: longs[0].toInt(),
 			$data: longs[1].toInt(),
@@ -38,14 +38,17 @@ const Parser = exports.Parser = {
 
 		let code = longs.slice(offsets.$code, offsets.$end).map(Parser.parseInstruction);
 
-		console.log({
-			offsets,
-			handlers,
-			meta,
-			code
-		});
+		if (!silent) {
+			console.log({
+				offsets,
+				handlers,
+				meta
+			});
 
-		console.log([, ...code].join("\n"));
+			console.log([, ...code].join("\n"));
+		};
+
+		return { offsets, handlers, meta, code };
 	},
 
 	parseInstruction(instruction) {
@@ -112,8 +115,22 @@ const Parser = exports.Parser = {
 	},
 
 	formatI(op, rs, rd, imm) {
-		if (op == "addi")  return `${rs} + ${imm} -> ${rd}`;
-		if (op == "subi")  return `${rs} - ${imm} -> ${rd}`;
+		if (op == "addi") {
+			if (rs == rd)
+				return imm == 1? `${rd}++` : `${rs} += ${imm}`;
+			};
+
+			return `${rs} + ${imm} -> ${rd}`;
+		};
+
+		if (op == "subi") {
+			if (rs == rd) {
+				return imm == 1? `${rd}--` : `${rs} -= ${imm}`;
+			};
+
+			return `${rs} - ${imm} -> ${rd}`;
+		};
+
 		if (op == "multi") return `${rs} * ${imm}`;
 		if (op == "andi")  return `${rs} & ${imm} -> ${rd}`;
 		if (op == "nandi") return `${rs} ~& ${imm} -> ${rd}`;
@@ -140,5 +157,5 @@ if (require.main === module) {
 		return console.log("Usage: node parser.js [filename]");
 	};
 
-	Parser.open(filename);
+	Parser.open(filename, false);
 };

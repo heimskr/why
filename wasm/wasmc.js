@@ -286,9 +286,9 @@ class Wasmc {
 			// Look at everything past the operation name (the arguments).
 			item.slice(1).forEach((arg, i) => {
 				// If the argument is a label reference,
-				if (arg instanceof Array && arg.length == 2 && arg[0] == "label") {
+				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
-					item[2 + i] = this.offsets[arg[1]];
+					item[i + 1] = this.offsets[arg[1]];
 				};
 			});
 		});
