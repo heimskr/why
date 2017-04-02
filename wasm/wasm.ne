@@ -86,8 +86,10 @@ pair[OPER]		-> reg _ $OPER _ reg						{% d => [d[0], d[4]] %}
 
 op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_addi | op_subi | op_multi | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
+				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu
 				 | op_lui | op_mfhi | op_mflo
-				 | op_sl | op_sle | op_seq | op_sge | op_sg
+				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
+				 | op_slu | op_sleu | op_sequ | op_sgeu | op_sgu | op_sliu | op_sleiu | op_seqiu | op_sgeiu | op_sgiu
 				 | op_c | op_l | op_s | op_li | op_si | op_set
 				 | op_j | op_jc | op_jr | op_jrc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
@@ -99,8 +101,12 @@ op_add			-> pair["+"]  into reg						{% d => ["add",   d[2], d[0], d[4]] %}
 				 | rv _ "+="  _ rv							{% d => ["add",   d[4], d[0], d[0]] %}
 op_sub			-> pair["-"]  into reg						{% d => ["sub",   d[2], d[0], d[4]] %}
 				 | rv _ "-="  _ rv							{% d => ["sub",   d[4], d[0], d[0]] %}
-op_mult			-> pair["*"]  into reg						{% d => ["mult",  d[2], d[0],   0 ] %}
-				 | rv _ "*="  _ rv							{% d => ["mult",  d[4], d[0], d[0]] %}
+op_mult			-> pair["*"]								{% d => ["mult",  d[2], d[0],   0 ] %}
+op_addu			-> pair["?+"]  into reg						{% d => ["addu",  d[2], d[0], d[4]] %}
+				 | rv _ "?+="  _ rv							{% d => ["addu",  d[4], d[0], d[0]] %}
+op_subu			-> pair["?-"]  into reg						{% d => ["subu",  d[2], d[0], d[4]] %}
+				 | rv _ "?-="  _ rv							{% d => ["subu",  d[4], d[0], d[0]] %}
+op_multu		-> pair["?*"]								{% d => ["multu", d[2], d[0],   0 ] %}
 op_and			-> pair["&"]  into reg						{% d => ["and",   d[2], d[0], d[4]] %}
 				 | rv _ "&="  _ rv							{% d => ["and",   d[4], d[0], d[0]] %}
 op_or			-> pair["|"]  into reg						{% d => ["or",    d[2], d[0], d[4]] %}
@@ -116,43 +122,68 @@ op_xnor			-> pair["~x"] into reg						{% d => ["xnor",  d[2], d[0], d[4]] %}
 op_not			-> "~" _ rv into rv							{% d => ["not",     0,  d[2], d[4]] %}
 op_mfhi			-> "%hi" into rv							{% d => ["mfhi",    0,    0,  d[2]] %}
 op_mflo			-> "%lo" into rv							{% d => ["mflo",    0,    0,  d[2]] %}
-op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[0], d[2], d[4]] %}
-op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[0], d[2], d[4]] %}
-op_seq			-> rv _ "==" _ rv into rv					{% d => ["seq",   d[0], d[2], d[4]] %}
-op_sge			-> rv _ ">"  _ rv into rv					{% d => ["sle",   d[2], d[0], d[4]] %}
-op_sg			-> rv _ ">=" _ rv into rv					{% d => ["sl",    d[2], d[0], d[4]] %}
-op_jr			-> ":" _ reg								{% d => ["jr",      0,    0,  d[2]] %}
+op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[0], d[4], d[6]] %}
+op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[0], d[4], d[6]] %}
+op_seq			-> rv _ "==" _ rv into rv					{% d => ["seq",   d[0], d[4], d[6]] %}
+op_sge			-> rv _ ">"  _ rv into rv					{% d => ["sge",   d[4], d[0], d[6]] %}
+op_sg			-> rv _ ">=" _ rv into rv					{% d => ["sg",    d[4], d[0], d[6]] %}
+op_slu			-> rv _ "?<"  _ rv into rv					{% d => ["slu",   d[0], d[4], d[6]] %}
+op_sleu			-> rv _ "?<=" _ rv into rv					{% d => ["sleu",  d[0], d[4], d[6]] %}
+op_sequ			-> rv _ "?==" _ rv into rv					{% d => ["sequ",  d[0], d[4], d[6]] %}
+op_sgeu			-> rv _ "?>"  _ rv into rv					{% d => ["sgeu",  d[4], d[0], d[6]] %}
+op_sgu			-> rv _ "?>=" _ rv into rv					{% d => ["sgu",   d[4], d[0], d[6]] %}
 op_jrc			-> ":" _ reg _ "(" _ reg _ ")"				{% d => ["jrc",     0,  d[6], d[2]] %}
+op_jr			-> ":" _ reg								{% d => ["jr",      0,    0,  d[2]] %}
 op_c			-> "[" _ rv _ "]" into "[" _ rv _ "]"		{% d => ["c",       0,  d[2], d[8]] %}
 op_l			-> "[" _ rv _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
 op_s			-> rv into "[" _ rv _ "]"					{% d => ["s",       0,  d[0], d[4]] %}
 
 #																			   rs    rd    imm
-op_addi			-> reg _ "+"  _ int into reg				{% d => ["addi",  d[0], d[4], d[2]] %}
-				 | reg _ "++" _								{% d => ["addi",  d[0], d[0],   1 ] %}
-				 | _ "++" _ reg								{% d => ["addi",  d[1], d[1],   1 ] %}
-				 | reg _ "+=" _ int							{% d => ["addi",  d[0], d[0], d[4]] %}
-op_subi			-> reg _ "-"  _ int into reg				{% d => ["subi",  d[0], d[4], d[2]] %}
-				 | reg _ "--" _								{% d => ["subi",  d[0], d[0],   1 ] %}
-				 | _ "--" _ reg								{% d => ["subi",  d[1], d[1],   1 ] %}
-				 | reg _ "-="  _ int						{% d => ["subi",  d[0], d[0], d[4]] %}
-op_multi		-> reg _ "*"   _ int						{% d => ["multi", d[0],   0,  d[2]] %}
-op_andi			-> reg _ "&"   _ int into reg				{% d => ["andi",  d[0], d[4], d[2]] %}
-				 | reg _ "&="  _ int						{% d => ["andi",  d[0], d[0], d[2]] %}
-op_ori			-> reg _ "|"   _ int into reg				{% d => ["ori",   d[0], d[4], d[2]] %}
-				 | reg _ "|="  _ int						{% d => ["ori",   d[0], d[0], d[2]] %}
-op_xori			-> reg _ "x"   _ int into reg				{% d => ["xori",  d[0], d[4], d[2]] %}
-				 | reg _ "x="  _ int						{% d => ["xori",  d[0], d[0], d[2]] %}
-op_nandi		-> reg _ "~&"  _ int into reg				{% d => ["nandi", d[0], d[4], d[2]] %}
-				 | reg _ "~&=" _ int						{% d => ["nandi", d[0], d[0], d[2]] %}
-op_nori			-> reg _ "~|"  _ int into reg				{% d => ["nori",  d[0], d[4], d[2]] %}
-				 | reg _ "~|=" _ int						{% d => ["nori",  d[0], d[0], d[2]] %}
-op_xnori		-> reg _ "~x"  _ int into reg				{% d => ["xnori", d[0], d[4], d[2]] %}
-				 | reg _ "~x=" _ int						{% d => ["xnori", d[0], d[0], d[2]] %}
-op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",     0,  d[6], d[4]] %}
-op_li			-> "[" _ int _ "]" into rv					{% d => ["li",      0,  d[4], d[1]] %}
-op_si			-> rv into "[" _ int _ "]"					{% d => ["si",    d[0],   0,  d[3]] %}
-op_set			-> int into rv								{% d => ["set",     0,  d[2], d[0]] %}
+op_addi			-> reg _ "+"   _ int into reg				{% d => ["addi",   d[0], d[6], d[4]] %}
+				 | reg _ "++"								{% d => ["addi",   d[0], d[0],   1 ] %}
+				 |     _ "++"  _ reg						{% d => ["addi",   d[3], d[3],   1 ] %}
+				 | reg _ "+="  _ int						{% d => ["addi",   d[0], d[0], d[4]] %}
+op_subi			-> reg _ "-"   _ int into reg				{% d => ["subi",   d[0], d[6], d[4]] %}
+				 | reg _ "--"								{% d => ["subi",   d[0], d[0],   1 ] %}
+				 |     _ "--"  _ reg						{% d => ["subi",   d[3], d[3],   1 ] %}
+				 | reg _ "-="  _ int						{% d => ["subi",   d[0], d[0], d[4]] %}
+op_multi		-> reg _ "*"   _ int						{% d => ["multi",  d[0],   0,  d[4]] %}
+op_addiu		-> reg _ "?+"  _ int into reg				{% d => ["addiu",  d[0], d[6], d[4]] %}
+				 | reg _ "?++"								{% d => ["addiu",  d[0], d[0],   1 ] %}
+				 | _ "?++" _ reg							{% d => ["addiu",  d[3], d[3],   1 ] %}
+				 | reg _ "?+=" _ int						{% d => ["addiu",  d[0], d[0], d[4]] %}
+op_subiu		-> reg _ "?-"  _ int into reg				{% d => ["subiu",  d[0], d[6], d[4]] %}
+				 | reg _ "?--"								{% d => ["subiu",  d[0], d[0],   1 ] %}
+				 | _ "?--" _ reg							{% d => ["subiu",  d[3], d[3],   1 ] %}
+				 | reg _ "?-="  _ int						{% d => ["subiu",  d[0], d[0], d[4]] %}
+op_multiu		-> reg _ "?*"   _ int						{% d => ["multiu", d[0],   0,  d[4]] %}
+op_andi			-> reg _ "&"   _ int into reg				{% d => ["andi",   d[0], d[6], d[4]] %}
+				 | reg _ "&="  _ int						{% d => ["andi",   d[0], d[0], d[4]] %}
+op_ori			-> reg _ "|"   _ int into reg				{% d => ["ori",    d[0], d[6], d[4]] %}
+				 | reg _ "|="  _ int						{% d => ["ori",    d[0], d[0], d[4]] %}
+op_xori			-> reg _ "x"   _ int into reg				{% d => ["xori",   d[0], d[6], d[4]] %}
+				 | reg _ "x="  _ int						{% d => ["xori",   d[0], d[0], d[4]] %}
+op_nandi		-> reg _ "~&"  _ int into reg				{% d => ["nandi",  d[0], d[6], d[4]] %}
+				 | reg _ "~&=" _ int						{% d => ["nandi",  d[0], d[0], d[4]] %}
+op_nori			-> reg _ "~|"  _ int into reg				{% d => ["nori",   d[0], d[6], d[4]] %}
+				 | reg _ "~|=" _ int						{% d => ["nori",   d[0], d[0], d[4]] %}
+op_xnori		-> reg _ "~x"  _ int into reg				{% d => ["xnori",  d[0], d[6], d[4]] %}
+				 | reg _ "~x=" _ int						{% d => ["xnori",  d[0], d[0], d[4]] %}
+op_sli			-> rv _ "<"  _ int into rv					{% d => ["sli",    d[0], d[4], d[6]] %}
+op_slei			-> rv _ "<=" _ int into rv					{% d => ["slei",   d[0], d[4], d[6]] %}
+op_seqi			-> rv _ "==" _ int into rv					{% d => ["seqi",   d[0], d[4], d[6]] %}
+op_sgei			-> rv _ ">"  _ int into rv					{% d => ["sgei",   d[4], d[0], d[6]] %}
+op_sgi			-> rv _ ">=" _ int into rv					{% d => ["sgi",    d[4], d[0], d[6]] %}
+op_sliu			-> rv _ "?<"  _ int into rv					{% d => ["sliu",   d[0], d[4], d[6]] %}
+op_sleiu		-> rv _ "?<=" _ int into rv					{% d => ["sleiu",  d[0], d[4], d[6]] %}
+op_seqiu		-> rv _ "?==" _ int into rv					{% d => ["seqiu",  d[0], d[4], d[6]] %}
+op_sgeiu		-> rv _ "?>"  _ int into rv					{% d => ["sgeiu",  d[4], d[0], d[6]] %}
+op_sgiu			-> rv _ "?>=" _ int into rv					{% d => ["sgiu",   d[4], d[0], d[6]] %}
+op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
+op_li			-> "[" _ int _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
+op_si			-> rv into "[" _ int _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
+op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
+				 | "&" var into rv							{% d => ["set",      0,  d[3], ["label", d[1]]] %}
 
 #																			   rs      addr
 op_j			-> ":" _ int								{% d => ["j",       0,     d[2]] %}
@@ -171,8 +202,8 @@ op_jeq			-> ":" _ reg _ "(" _ rv _ "==" _ rv ")"		{% d => ["jeq", d[10], d[6], d
 
 op_nop			-> "<>"										{% d => ["nop"] %}
 
-reg_temp		-> "$t" ([0-9a-f] | "1" [0-9a])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
-reg_saved		-> "$s" ([0-9a-f] | "1" [0-9a])				{% d => ["s", parseInt(d[1].join(""), 16)] %}
+reg_temp		-> "$t" ([0-9a-f] | "1" [0-7])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
+reg_saved		-> "$s" ([0-9a-f] | "1" [0-7])				{% d => ["s", parseInt(d[1].join(""), 16)] %}
 reg_arg			-> "$a" [0-9a-f]							{% d => ["a", parseInt(d[1], 16)] %}
 reg_return		-> "$r" [0-9a-f]							{% d => ["r", parseInt(d[1], 16)] %}
 reg_exc			-> "$e" [0-5]								{% d => ["e", parseInt(d[1], 16)] %}

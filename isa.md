@@ -87,6 +87,20 @@
 						<li><a href="#op-sgu">Set on Greater Than Unsigned</a> (<code>sgu</code>)</li>
 					</ol>
 				</li>
+				<li><a href="#ops-comp-i">Comparisons (I-Types)</a>
+					<ol>
+						<li><a href="#op-sli">Set on Less Than Immediate</a> (<code>slu</code>)</li>
+						<li><a href="#op-slei">Set on Less Than or Equal Immediate</a> (<code>sleu</code>)</li>
+						<li><a href="#op-seqi">Set on Equal Immediate</a> (<code>sequ</code>)</li>
+						<li><a href="#op-sgei">Set on Greater Than or Equal Immediate</a> (<code>sgeu</code>)</li>
+						<li><a href="#op-sgi">Set on Greater Than Immediate</a> (<code>sgu</code>)</li>
+						<li><a href="#op-sliu">Set on Less Than Immediate Unsigned</a> (<code>sliu</code>)</li>
+						<li><a href="#op-sleiu">Set on Less Than or Equal Immediate Unsigned</a> (<code>sleiu</code>)</li>
+						<li><a href="#op-seqiu">Set on Equal Immediate Unsigned</a> (<code>seqiu</code>)</li>
+						<li><a href="#op-sgeiu">Set on Greater Than or Equal Immediate Unsigned</a> (<code>sgeiu</code>)</li>
+						<li><a href="#op-sgiu">Set on Greater Than Immediate Unsigned</a> (<code>sgiu</code>)</li>
+					</ol>
+				</li>
 				<li><a href="#ops-jump-j">Jumps (J-Types)</a>
 					<ol>
 						<li><a href="#op-j">Jump</a> (<code>j</code>)</li>
@@ -250,21 +264,21 @@ Multiplies the value in `rs` by the value in `rt` and stories the upper half in 
 
 ### <a name="op-addu"></a>Add Unsigned
 > `addu rd, rs, rt`  
-> `$rs _+ $rt -> $rd` or `$rd += $rt`  
+> `$rs ?+ $rt -> $rd` or `$rd += $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
 
 Adds the values in `rs` and `rt` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-subu"></a>Subtract Unsigned
 > `subu rd, rs, rt`  
-> `$rs _- $rt -> $rd` or `$rd -= $rt`  
+> `$rs ?- $rt -> $rd` or `$rd -= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
 
 Subtracts the value in `rt` from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-multu"></a>Multiply Unsigned
 > `multu rs, rt`  
-> `$rs _* $rt`  
+> `$rs ?* $rt`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `000` `0000000000000000` `000000000101`
 
 Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
@@ -345,21 +359,21 @@ Multiplies the value in `rs` by a constant and stories the upper half in [`HI`](
 
 ### <a name="op-addiu"></a>Add Immediate Unsigned
 > `addi rd, rs, imm`  
-> `$rs _+ imm -> $rd`  
+> `$rs ?+ imm -> $rd`  
 > `000000010110` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Adds the value in `rs` and a constant (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-subiu"></a>Subtract Immediate Unsigned
 > `subi rd, rs, imm`  
-> `$rs _- imm -> $rd`  
+> `$rs ?- imm -> $rd`  
 > `000000010111` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Subtracts a constant from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-multiu"></a>Multiply Immediate Unsigned
 > `multi rd, rs, imm`  
-> `$rs _* imm`
+> `$rs ?* imm`
 > `000000011000` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Multiplies the value in `rs` by a constant (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
@@ -472,38 +486,110 @@ This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
 
 ### <a name="op-slu"></a>Set on Less Than Unsigned
 > `slu rd, rs, rt`  
-> `$rs _< $rt -> $rd`  
+> `$rs ?< $rt -> $rd`  
 > `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
 
 If the value in `rs` is less than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sleu"></a>Set on Less Than or Equal Unsigned
 > `sleu rd, rs, rt`  
-> `$rs _<= $rt -> $rd`  
+> `$rs ?<= $rt -> $rd`  
 > `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
 
 If the value in `rs` is less than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sequ"></a>Set on Equal Unsigned
 > `sequ rd, rs, rt`  
-> `$rs _== $rt -> $rd`  
+> `$rs ?== $rt -> $rd`  
 > `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
 
 If the value in `rs` is equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sgeu"></a>*Set on Greater Than or Equal Unsigned*
 > `sgeu rd, rs, rt`  
-> `$rs _>= $rt -> $rd`
+> `$rs ?>= $rt -> $rd`
 
 If the value in `rs` is greather than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.  
 This is a pseudoinstruction; its translation is `sleu rd, rt, rs`.
 
 ### <a name="op-sgu"></a>*Set on Greater Than Unsigned*
 > `sgu rd, rs, rt`  
-> `$rs _> $rt -> $rd`
+> `$rs ?> $rt -> $rd`
 
 If the value in `rs` is greather than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.  
 This is a pseudoinstruction; its translation is `slu rd, rt, rs`.
+
+## <a name="ops-comp-i"></a>Comparisons (I-Types)
+
+### <a name="op-sli"></a>Set on Less Than Immediate
+> `sli rd, rs, imm`  
+> `$rs < imm -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+
+If the value in `rs` is less than `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-slei"></a>Set on Less Than or Equal Immediate
+> `slei rd, rs, imm`  
+> `$rs <= imm -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+
+If the value in `rs` is less than or equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-seqi"></a>Set on Equal Immediate
+> `seqi rd, rs, imm`  
+> `$rs == imm -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+
+If the value in `rs` is equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sgei"></a>*Set on Greater Than or Equal Immediate*
+> `sgei rd, rs, imm`  
+> `$rs >= imm -> $rd`
+
+If the value in `rs` is greather than or equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.  
+This is a pseudoinstruction; its translation is `sle rd, rt, rs`.
+
+### <a name="op-sgi"></a>*Set on Greater Than Immediate*
+> `sgi rd, rs, imm`  
+> `$rs > imm -> $rd`
+
+If the value in `rs` is greather than `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.  
+This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
+
+### <a name="op-sliu"></a>Set on Less Than Immediate Unsigned
+> `sliu rd, rs, imm`  
+> `$rs ?< imm -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+
+If the value in `rs` is less than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sleiu"></a>Set on Less Than or Equal Immediate Unsigned
+> `sleiu rd, rs, imm`  
+> `$rs ?<= imm -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+
+If the value in `rs` is less than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-seqiu"></a>Set on Equal Immediate Unsigned
+> `seqiu rd, rs, imm`  
+> `$rs ?== imm -> $rd`  
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
+
+If the value in `rs` is equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sgeiu"></a>*Set on Greater Than or Equal Immediate Unsigned*
+> `sgeiu rd, rs, imm`  
+> `$rs ?>= imm -> $rd`
+
+If the value in `rs` is greather than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.  
+This is a pseudoinstruction; its translation is `sleiu rd, rt, rs`.
+
+### <a name="op-sgiu"></a>*Set on Greater Than Immediate Unsigned*
+> `sgiu rd, rs, imm`  
+> `$rs ?> imm -> $rd`
+
+If the value in `rs` is greather than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.  
+This is a pseudoinstruction; its translation is `sliu rd, rt, rs`.
 
 ## <a name="ops-jump-j"></a>Jumps (J-Types)
 
@@ -516,7 +602,7 @@ Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional
 > `jc target, rs`  
-> `$rs? &label` or `$rs? imm`  
+> `: &label ($rs)` or `: imm ($rs)`  
 > `000000010000` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
@@ -638,9 +724,9 @@ Translation:
 If the value in `rs` is equal to the value in `rt`, jumps to `label`. (Modifies `m0` and `m1`.)
 
 Translation:  
-<code>[seq](#op-seq) m0, rs, rt</code>  
-<code>[la](#op-la) m1, &label</code>  
-<code>[jc](#op-jc) m1, m0</code>
+<code>[seq](#op-seq) $m0, rs, rt</code>  
+<code>[li](#op-li) $m1, &label</code>  
+<code>[jrc](#op-jrc) $m1, $m0</code>
 
 ### <a href="#op-sge">Set on Greater Than or Equal</a>
 
@@ -649,3 +735,11 @@ Translation:
 ### <a href="#op-sgeu">Set on Greater Than or Equal Unsigned</a>
 
 ### <a href="#op-sgu">Set on Greater Than Unsigned</a>
+
+### <a href="#op-sgei">Set on Greater Than or Equal Immediate</a>
+
+### <a href="#op-sgi">Set on Greater Than Immediate</a>
+
+### <a href="#op-sgeiu">Set on Greater Than or Equal Immediate Unsigned</a>
+
+### <a href="#op-sgiu">Set on Greater Than Immediate Unsigned</a>

@@ -258,7 +258,6 @@ class WASMC {
 					this.expanded.push([getLabel(), "si", _M[2], _0, rd]);
 				};
 			} else if (I_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
-				console.log(chalk.green("Discovered i-type:"), chalk.bold(op), item);
 				let [rs, rd, imm] = args;
 				let [ls, ld] = [rs, rd].map(isLabelRef);
 				let _label = label, getLabel = () => [_label, _label = null][0];

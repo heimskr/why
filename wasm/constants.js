@@ -11,9 +11,9 @@ exports.R_TYPES = [
 ];
 
 exports.I_TYPES = [
-	0b000000000011, // Addition Immediate
-	0b000000000100, // Subtraction Immediate
-	0b000000000101, // Multiplication Immediate
+	0b000000000011, // Add Immediate
+	0b000000000100, // Subtract Immediate
+	0b000000000101, // Multiply Immediate
 	0b000000000110, // Bitwise AND Immediate
 	0b000000000111, // Bitwise NAND Immediate
 	0b000000001000, // Bitwise NOR Immediate
@@ -24,6 +24,15 @@ exports.I_TYPES = [
 	0b000000010011, // Load Immediate
 	0b000000010100, // Store Immediate
 	0b000000010101, // Set
+	0b000000010110, // Add Immediate Unsigned
+	0b000000010111, // Subtract Immediate Unsigned
+	0b000000011000, // Multiply Immediate Unsigned
+	0b000000011001, // Set on Less Than Immediate
+	0b000000011010, // Set on Less Than or Equal Immediate
+	0b000000011011, // Set on Equal Immediate
+	0b000000011100, // Set on Less Than Immediate Unsigned
+	0b000000011101, // Set on Less Than or Equal Immediate Unsigned
+	0b000000011110, // Set on Equal Immediate Unsigned
 ];
 
 exports.J_TYPES = [
@@ -76,6 +85,12 @@ exports.OPCODES = {
 	addiu:  0b000000010110,
 	subiu:  0b000000010111,
 	multiu: 0b000000011000,
+	sli:    0b000000011001,
+	slei:   0b000000011010,
+	seqi:   0b000000011011,
+	sliu:   0b000000011100,
+	sleiu:  0b000000011101,
+	seqiu:  0b000000011110,
 };
 
 exports.FUNCTS = {
@@ -97,7 +112,7 @@ exports.FUNCTS = {
 	seq:   0b000000000010,
 	addu:  0b000000000011,
 	not:   0b000000000011,
-	slu:   0b000000000011
+	slu:   0b000000000011,
 	or:    0b000000000100,
 	sleu:  0b000000000100,
 	subu:  0b000000000100,
