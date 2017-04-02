@@ -1,6 +1,4 @@
 #!/usr/local/bin/node
-// Parses wasmc output.
-
 let Wasmc = require("../wasm/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),
@@ -61,36 +59,11 @@ const Parser = exports.Parser = {
 
 		if (type == "r") {
 			const funct = get(52);
-			// const shift = get(36, 16);
-			// const op = SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0];
-			// const rt = get(12, 7);
-			// const rs = get(19, 7);
-			// const rd = get(26, 7);
-
-			// return {op, rt, rs, rd, shift, funct};
-
 			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), get(36, 16), funct);
-			return {
-				op: SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
-				rt: Parser.getRegister(get(12, 7)),
-				rs: Parser.getRegister(get(19, 7)),
-				rd: Parser.getRegister(get(26, 7)),
-				shift: get(36, 16),
-				funct
-			};
 		} else if (type == "i") {
 			return Parser.formatI(SEDOCPO[opcode][0], Parser.getRegister(get(18, 7)), Parser.getRegister(get(25, 7)), get(32));
-			return {
-				op: SEDOCPO[opcode][0],
-				rs: Parser.getRegister(get(18, 7)),
-				rd: Parser.getRegister(get(25, 7)),
-				imm: get(32)
-			};
 		} else if (type == "j") {
 			return Parser.formatJ(SEDOCPO[opcode][0], Parser.getRegister(get(12, 7)), get(32));
-			return {
-				op: SEDOCPO[opcode][0],
-			};
 		} else if (opcode == 0) {
 			return "<>";
 		};
