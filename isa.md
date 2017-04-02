@@ -231,8 +231,8 @@ Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`
 
 ### <a name="op-mult"></a>Multiplication
 > `mult rs, rt`  
-> `$rs * $rt` or `$rd *= $rt`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `$rs * $rt`  
+> `000000000001` `ttttttt` `sssssss` `0000000` `000` `0000000000000000` `000000000010`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
@@ -305,8 +305,8 @@ Subtracts a constant from the value in `rs` and stores the result in `rd`.
 
 ### <a name="op-multi"></a>Multiplication Immediate
 > `multi rd, rs, imm`  
-> `$rs * imm -> $rd`  
-> `000000000101` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `$rs * imm`
+> `000000000101` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Multiplies the value in `rs` by a constant and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 

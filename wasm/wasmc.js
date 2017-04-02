@@ -14,7 +14,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPS, FUNCTS, REGISTER_OFFSETS } = require("./constants.js");
+const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS } = require("./constants.js");
 
 class Wasmc {
 	static die(...a) { console.error(...a); process.exit(1) };
@@ -241,7 +241,7 @@ class Wasmc {
 					this.expanded.push([null, "li", _0, _M[1], args[2]]);
 					this.expanded.push([null, "jrc", _0, _M[0], _M[1]]);
 				};
-			} else if (R_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
+			} else if (R_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
 				let [rt, rs, rd] = args;
 				let [lt, ls, ld] = [rt, rs, rd].map(isLabelRef);
 				let _label = label, getLabel = () => [_label, _label = null][0];
@@ -257,7 +257,7 @@ class Wasmc {
 				if (ld) {
 					this.expanded.push([getLabel(), "si", _M[2], _0, rd]);
 				};
-			} else if (I_TYPES.includes(OPS[op]) && _.some(args, isLabelRef)) {
+			} else if (I_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
 				console.log(chalk.green("Discovered i-type:"), chalk.bold(op), item);
 				let [rs, rd, imm] = args;
 				let [ls, ld] = [rs, rd].map(isLabelRef);
@@ -297,12 +297,12 @@ class Wasmc {
 	};
 
 	addCode([op, ...args]) {
-		if (R_TYPES.includes(OPS[op])) {
-			this.code.push(this.rType(OPS[op], ...args.map(Wasmc.convertRegister), 0, FUNCTS[op]));
-		} else if (I_TYPES.includes(OPS[op])) {
-			this.code.push(this.iType(OPS[op], ...args.map(this.convertValue, this)));
-		} else if (J_TYPES.includes(OPS[op])) {
-			this.code.push(this.jType(OPS[op], ...args.map(this.convertValue, this)));
+		if (R_TYPES.includes(OPCODES[op])) {
+			this.code.push(this.rType(OPCODES[op], ...args.map(Wasmc.convertRegister), 0, FUNCTS[op]));
+		} else if (I_TYPES.includes(OPCODES[op])) {
+			this.code.push(this.iType(OPCODES[op], ...args.map(this.convertValue, this)));
+		} else if (J_TYPES.includes(OPCODES[op])) {
+			this.code.push(this.jType(OPCODES[op], ...args.map(this.convertValue, this)));
 		} else if (op == "nop") {
 			this.code.push(Long.UZERO);
 		} else {

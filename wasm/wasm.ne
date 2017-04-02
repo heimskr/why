@@ -99,7 +99,7 @@ op_add			-> pair["+"]  into reg						{% d => ["add",   d[2], d[0], d[4]] %}
 				 | rv _ "+="  _ rv							{% d => ["add",   d[4], d[0], d[0]] %}
 op_sub			-> pair["-"]  into reg						{% d => ["sub",   d[2], d[0], d[4]] %}
 				 | rv _ "-="  _ rv							{% d => ["sub",   d[4], d[0], d[0]] %}
-op_mult			-> pair["*"]  into reg						{% d => ["mult",  d[2], d[0], d[4]] %}
+op_mult			-> pair["*"]  into reg						{% d => ["mult",  d[2], d[0],   0 ] %}
 				 | rv _ "*="  _ rv							{% d => ["mult",  d[4], d[0], d[0]] %}
 op_and			-> pair["&"]  into reg						{% d => ["and",   d[2], d[0], d[4]] %}
 				 | rv _ "&="  _ rv							{% d => ["and",   d[4], d[0], d[0]] %}
@@ -136,7 +136,7 @@ op_subi			-> reg _ "-"  _ int into reg				{% d => ["subi",  d[0], d[4], d[2]] %}
 				 | reg _ "--" _								{% d => ["subi",  d[0], d[0],   1 ] %}
 				 | _ "--" _ reg								{% d => ["subi",  d[1], d[1],   1 ] %}
 				 | reg _ "-="  _ int						{% d => ["subi",  d[0], d[0], d[4]] %}
-op_multi		-> reg _ "*"   _ int into reg				{% d => ["multi", d[0], d[4], d[2]] %}
+op_multi		-> reg _ "*"   _ int						{% d => ["multi", d[0], d[4], d[2]] %}
 				 | reg _ "*="  _ int						{% d => ["multi", d[0], d[0], d[2]] %}
 op_andi			-> reg _ "&"   _ int into reg				{% d => ["andi",  d[0], d[4], d[2]] %}
 				 | reg _ "&="  _ int						{% d => ["andi",  d[0], d[0], d[2]] %}
@@ -155,21 +155,17 @@ op_li			-> "[" _ int _ "]" into rv					{% d => ["li",      0,  d[4], d[1]] %}
 op_si			-> rv into "[" _ int _ "]"					{% d => ["si",    d[0],   0,  d[3]] %}
 op_set			-> int into rv								{% d => ["set",     0,  d[2], d[0]] %}
 
-#																			   rs        addr
+#																			   rs      addr
 op_j			-> ":" _ int								{% d => ["j",       0,     d[2]] %}
 				 | ":" _ "&" var							{% d => ["j",       0,     d[3]] %}
-op_jc			-> reg "?" _ int							{% d => ["jc",    d[0],    d[3]] %}
-				 | reg "?" _ "&" var						{% d => ["jc",    d[0],    d[4]] %}
+op_jc			-> ":" _ int _ "(" _ reg _ ")" 				{% d => ["jc",    d[6],    d[2]] %}
+				 | ":" _ "&" var _ "(" _ reg _ ")" 			{% d => ["jc",    d[7],    d[3]] %}
 
 op_la			-> var_addr into reg						{% d => ["la", d[0], d[2]] %}
 op_mv			-> reg   into reg							{% d => ["mv", d[0], d[2]] %}
-op_ret			-> "ret"									{% d => ["jr",   0,  ["register", "return", 0], 0] %}
+op_ret			-> "ret"									{% d => ["jr", -1,  ["register", "return", 0], 0] %}
 op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %}
-op_pop			-> "]" (_ (reg)):+							{% d => ["pop", ...d[1].map(x => x[1][0])] %}
-#op_jeq			-> reg _ "==" _ reg _ "?" _ "*" _ reg		{% d => ["jeq", d[0], d[4], d[10]          ] %}
-#				 | reg _ "==" _ reg _ "?" _ "&" var			{% d => ["jeq", d[0], d[4], ["label", d[9]]] %}
-#				 | reg _ "==" _ reg _ "?" _ int				{% d => ["jeq", d[0], d[4], ["value", d[8]]] %}
-
+op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
 op_jeq			-> ":" _ reg _ "(" _ rv _ "==" _ rv ")"		{% d => ["jeq", d[10], d[6], d[2]] %}
 				 | ":" _ "&" var _ "(" _ rv _ "==" _ rv ")"	{% d => ["jeq", d[11], d[7], ["label", d[3]]] %}
 

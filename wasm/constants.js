@@ -31,7 +31,7 @@ exports.J_TYPES = [
 	0b000000010000, // Jump Conditional
 ];
 
-exports.OPS = {
+exports.OPCODES = {
 	add:   0b000000000001,
 	sub:   0b000000000001,
 	mult:  0b000000000001,
@@ -95,7 +95,11 @@ exports.FUNCTS = {
 exports.REGISTER_OFFSETS = {
 	0: 0,
 	zero: 0,
+	g: 1,
+	sp: 2,
 	stack: 2,
+	f: 3,
+	ra: 4,
 	return: 4,
 	r: 5,
 	a: 21,

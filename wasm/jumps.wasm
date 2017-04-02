@@ -1,0 +1,13 @@
+#meta
+name: "Jumps"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#code
+: &next ($t0)
+@next
+: 5 ($t0)
+: $t0
+: 6
+@end <>
