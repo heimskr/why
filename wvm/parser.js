@@ -3,13 +3,14 @@ let WASMC = require("../wasm/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
+	chalk = require("chalk"),
 	minimist = require("minimist");
 
 require("../util.js")(_);
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS } = require("../wasm/constants.js");
+const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../wasm/constants.js");
 const SEDOCPO = _.multiInvert(OPCODES);
 const STESFFO = _.multiInvert(REGISTER_OFFSETS);
 const OFFSET_VALUES = Object.values(REGISTER_OFFSETS).sort((a, b) => b - a);
@@ -39,13 +40,18 @@ const Parser = module.exports = {
 		let code = longs.slice(offsets.$code, offsets.$end);
 
 		if (!silent) {
-			console.log({
-				offsets,
-				handlers,
-				meta
-			});
+			console.log(chalk.dim("/*"));
+			console.log(chalk.green.dim("#offsets"));
+			console.log(Object.keys(offsets).map((k) => `${chalk.dim(`${k}:`)} ${chalk.magenta.dim(offsets[k])}`).join("\n"));
+			console.log(chalk.dim("*/") + "\n");
 
-			console.log([, ...code.map(Parser.formatInstruction)].join("\n"));
+			console.log(chalk.green("#meta"));
+			console.log(Object.keys(meta).map((k) => `${chalk.cyan(k)}: ${chalk.yellow(`"${meta[k]}"`)}`).concat([""]).join("\n"));
+
+			console.log(chalk.green("#handlers"));
+			console.log(handlers.map(([k, v]) => `${k}: ${chalk.magenta(v)}`).join("\n"));
+
+			console.log([, chalk.green("#code"), ...code.map(Parser.formatInstruction)].join("\n"));
 		};
 
 		return { offsets, handlers, meta, code: code.map(Parser.parseInstruction) };
@@ -64,9 +70,12 @@ const Parser = module.exports = {
 			const funct = get(52);
 			return {
 				op: SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
-				rt: Parser.getRegister(get(12, 7)),
-				rs: Parser.getRegister(get(19, 7)),
-				rd: Parser.getRegister(get(26, 7)),
+				// rt: opcode == OPCODES.trap? get(12, 7) : Parser.getRegister(get(12, 7)),
+				// rs: opcode == OPCODES.trap? get(19, 7) : Parser.getRegister(get(19, 7)),
+				// rd: opcode == OPCODES.trap? get(26, 7) : Parser.getRegister(get(26, 7)),
+				rt: opcode == Parser.getRegister(get(12, 7)),
+				rs: opcode == Parser.getRegister(get(19, 7)),
+				rd: opcode == Parser.getRegister(get(26, 7)),
 				shift: get(36, 16),
 				funct,
 				type: "r"
@@ -101,7 +110,7 @@ const Parser = module.exports = {
 
 		if (type == "r") {
 			const funct = get(52);
-			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), get(36, 16), funct);
+			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && (opcode == OPCODES.trap || FUNCTS[op] == funct))[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), get(36, 16), funct);
 		} else if (type == "i") {
 			return Parser.formatI(SEDOCPO[opcode][0], Parser.getRegister(get(18, 7)), Parser.getRegister(get(25, 7)), get(32));
 		} else if (type == "j") {
@@ -131,61 +140,99 @@ const Parser = module.exports = {
 	},
 
 	formatR(op, rt, rs, rd, shift, funct) {
-		if (op == "add")  return `${rs} + ${rt} -> ${rd}`;
-		if (op == "sub")  return `${rs} - ${rt} -> ${rd}`;
-		if (op == "mult") return `${rs} * ${rt}`;
-		if (op == "and")  return `${rs} & ${rt} -> ${rd}`;
-		if (op == "nand") return `${rs} ~& ${rt} -> ${rd}`;
-		if (op == "nor")  return `${rs} ~| ${rt} -> ${rd}`;
-		if (op == "not")  return `~${rs} -> ${rd}`;
-		if (op == "or")   return `${rs} | ${rt} -> ${rd}`;
-		if (op == "xnor") return `${rs} ~x ${rt} -> ${rd}`;
-		if (op == "xor")  return `${rs} x ${rt} -> ${rd}`;
-		if (op == "mfhi") return `%hi -> ${rd}`;
-		if (op == "mflo") return `%lo -> ${rd}`;
-		if (op == "sl")   return `${rs} < ${rt} -> ${rd}`;
-		if (op == "sle")  return `${rs} <= ${rt} -> ${rd}`;
-		if (op == "seq")  return `${rs} == ${rt} -> ${rd}`;
-		if (op == "jr")   return `: ${rd}`;
-		if (op == "jrc")  return `: ${rd} (${rs})`;
-		if (op == "c")    return `[${rs}] -> [${rd}]`;
-		if (op == "l")    return `[${rs}] -> ${rd}`;
-		if (op == "s")    return `${rs} -> [${rd}]`;
+		if (op == "add")   return `${chalk.yellow(rs)} ${chalk.red("+")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sub")   return `${chalk.yellow(rs)} ${chalk.red("-")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "mult")  return `${chalk.yellow(rs)} ${chalk.red("*")} ${chalk.yellow(rt)}`;
+		if (op == "and")   return `${chalk.yellow(rs)} ${chalk.red("&")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "nand")  return `${chalk.yellow(rs)} ${chalk.red("~&")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "nor")   return `${chalk.yellow(rs)} ${chalk.red("~|")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "not")   return `${chalk.red("~") + chalk.yellow(rs)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "or")    return `${chalk.yellow(rs)} ${chalk.red("|")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "xnor")  return `${chalk.yellow(rs)} ${chalk.red("~x")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "xor")   return `${chalk.yellow(rs)} ${chalk.red("x")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "mfhi")  return `${chalk.green("%hi")} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "mflo")  return `${chalk.green("%lo")} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sl")    return `${chalk.yellow(rs)} ${chalk.red("<")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sle")   return `${chalk.yellow(rs)} ${chalk.red("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "seq")   return `${chalk.yellow(rs)} ${chalk.red("==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "jr")    return `: ${chalk.yellow(rd)}`;
+		if (op == "jrc")   return `: ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
+		if (op == "c")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
+		if (op == "l")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "s")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
+		if (op == "addu")  return `${chalk.yellow(rs)} ${chalk.red("?+")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "subu")  return `${chalk.yellow(rs)} ${chalk.red("?-")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "multu") return `${chalk.yellow(rs)} ${chalk.red("?*")} ${chalk.yellow(rt)}`;
+		if (op == "slu")   return `${chalk.yellow(rs)} ${chalk.red("?<")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sleu")  return `${chalk.yellow(rs)} ${chalk.red("?<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sequ")  return `${chalk.yellow(rs)} ${chalk.red("?==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "trap") return this.formatTrap(rt, rs, rd, shift, funct);
+		return `(unknown r-type: ${chalk.red(op)})`;
 	},
 
 	formatI(op, rs, rd, imm) {
 		if (op == "addi") {
 			if (rs == rd) {
-				return imm == 1? `${rd}++` : `${rs} += ${imm}`;
+				return imm == 1? `${chalk.yellow(rd)}++` : `${chalk.yellow(rs)} ${chalk.red("+=")} ${chalk.magenta(imm)}`;
 			};
 
-			return `${rs} + ${imm} -> ${rd}`;
+			return `${chalk.yellow(rs)} ${chalk.red("+")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		};
 
 		if (op == "subi") {
 			if (rs == rd) {
-				return imm == 1? `${rd}--` : `${rs} -= ${imm}`;
+				return imm == 1? `${chalk.yellow(rd)}--` : `${chalk.yellow(rs)} ${chalk.red("-=")} ${chalk.magenta(imm)}`;
 			};
 
-			return `${rs} - ${imm} -> ${rd}`;
+			return `${chalk.yellow(rs)} ${chalk.red("-")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		};
 
-		if (op == "multi") return `${rs} * ${imm}`;
-		if (op == "andi")  return `${rs} & ${imm} -> ${rd}`;
-		if (op == "nandi") return `${rs} ~& ${imm} -> ${rd}`;
-		if (op == "nori")  return `${rs} ~| ${imm} -> ${rd}`;
-		if (op == "ori")   return `${rs} | ${imm} -> ${rd}`;
-		if (op == "xnori") return `${rs} ~x ${imm} -> ${rd}`;
-		if (op == "xori")  return `${rs} x ${imm} -> ${rd}`;
-		if (op == "lui")   return `lui: ${imm} -> ${rd}`;
-		if (op == "li")    return `[${imm}] -> ${rd}`;
-		if (op == "si")    return `${rs} -> [${imm}]`;
-		if (op == "set")   return `${imm} -> ${rd}`;
+		if (op == "addiu") {
+			if (rs == rd) {
+				return imm == 1? `${chalk.yellow(rd)}?++` : `${chalk.yellow(rs)} ${chalk.red("?+=")} ${chalk.magenta(imm)}`;
+			};
+
+			return `${chalk.yellow(rs)} ${chalk.red("?+")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		};
+
+		if (op == "subiu") {
+			if (rs == rd) {
+				return imm == 1? `${chalk.yellow(rd)}?--` : `${chalk.yellow(rs)} ${chalk.red("?-=")} ${chalk.magenta(imm)}`;
+			};
+
+			return `${chalk.yellow(rs)} ${chalk.red("?-")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		};
+
+		if (op == "multi") return `${chalk.yellow(rs)} ${chalk.red("*")} ${chalk.magenta(imm)}`;
+		if (op == "multiu") return `${chalk.yellow(rs)} ${chalk.red("?*")} ${chalk.magenta(imm)}`;
+		if (op == "andi")  return `${chalk.yellow(rs)} ${chalk.red("&")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "nandi") return `${chalk.yellow(rs)} ${chalk.red("~&")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "nori")  return `${chalk.yellow(rs)} ${chalk.red("~|")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "ori")   return `${chalk.yellow(rs)} ${chalk.red("|")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "xnori") return `${chalk.yellow(rs)} ${chalk.red("~x")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "xori")  return `${chalk.yellow(rs)} ${chalk.red("x")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "lui")   return `${chalk.dim("lui:")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "li")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "si")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(imm)}]`;
+		if (op == "set")   return `${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sli")   return `${chalk.yellow(rs)} ${chalk.red("<")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "slei")  return `${chalk.yellow(rs)} ${chalk.red("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "seqi")  return `${chalk.yellow(rs)} ${chalk.red("==")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sliu")  return `${chalk.yellow(rs)} ${chalk.red("?<")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sleiu") return `${chalk.yellow(rs)} ${chalk.red("?<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "seqiu") return `${chalk.yellow(rs)} ${chalk.red("?==")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		return `(unknown i-type: ${chalk.red(op)})`;
 	},
 
 	formatJ(op, rs, addr) {
-		if (op == "j")  return `: ${addr}`;
-		if (op == "jc") return `: ${addr} (${rs})`;
+		if (op == "j")  return `${chalk.dim(":")} ${chalk.magenta(addr)}`;
+		if (op == "jc") return `${chalk.dim(":")} ${chalk.magenta(addr)} (${chalk.yellow(rs)})`;
+		return `(unknown j-type: ${chalk.red(op)})`;
+	},
+
+	formatTrap(rt, rs, rd, shift, funct) {
+		if (funct == TRAPS.printr) return `<${chalk.bold("print")} ${chalk.yellow(rs)}>`;
+		return `<unknown trap: ${chalk.red(funct)}>`;
 	}
 };
 

@@ -127,6 +127,11 @@
 						<li><a href="#op-set">Set</a> (<code>set</code>)</li>
 					</ol>
 				</li>
+				<li><a href="#ops-special">Special Instructions</a>
+					<ol>
+						<li><a href="#op-trap">Trap</a> (<code>trap</code>)</li>
+					</ol>
+				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
 					<ol>
 						<li><a href="#op-mv">Move</a> (<code>mv</code>)</li>
@@ -136,6 +141,11 @@
 						<li><a href="#op-jeq">Jump if Equal</a> (<code>jeq</code>)</li>
 					</ol>
 				</li>
+			</ol>
+		</li>
+		<li><a href="#traps">Traps</a>
+			<ol>
+				<li><a href="#trap-printr">Print Register</a> (<code>printr</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -155,10 +165,12 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | 2        | `$s`         | Stack pointer.                              |
 | 3        | `$f`         | Frame pointer.                              |
 | 4        | `$r`         | Return address.                             |
-| 5–20     | `$r0`–`$rf`  | Contains return values.                     |
-| 21–36    | `$a0`–`$af`  | Contains arguments for subroutines.         |
-| 37–60    | `$t0`–`$t17` | Temporary registers.                        |
-| 61–84    | `$s0`–`$s17` | Saved registers.                            |
+| 5        | `$lo`        | Stores the lower half of a mult/div result. |
+| 6        | `$hi`        | Stores the upper half of a mult/div result. |
+| 7–22     | `$r0`–`$rf`  | Contains return values.                     |
+| 23–38    | `$a0`–`$af`  | Contains arguments for subroutines.         |
+| 39–61    | `$t0`–`$t16` | Temporary registers.                        |
+| 62–84    | `$s0`–`$s16` | Saved registers.                            |
 | 85–101   | `$k0`–`$k10` | Kernel registers.                           |
 | 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
 | 118–121  | `$f0`–`$f3`  | Floating point return values.               |
@@ -669,6 +681,14 @@ Copies the value of `rs` into memory at address `imm`.
 
 Sets a register to the given immediate value.
 
+## <a name="ops-special"></a>Special Instructions
+
+### <a name="op-trap"></a>Trap  
+> (varies; see <a href="#traps">Traps</a>)  
+> `000000011111` `ttttttt` `sssssss` `ddddddd` `000` `xxxxxxxxxxxxxxxx` `ffffffffffff`
+
+Performs a special instruction, typically for interaction with the world outside the VM.
+
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
 ### <a name="op-mv"></a>Move
@@ -743,3 +763,10 @@ Translation:
 ### <a href="#op-sgeiu">Set on Greater Than or Equal Immediate Unsigned</a>
 
 ### <a href="#op-sgiu">Set on Greater Than Immediate Unsigned</a>
+
+# <a name="traps"></a>Traps
+
+### <a name="trap-printr"></a>Print Register
+Syntax: `<print $rs>`  
+
+Prints the value stored in `rs` to the console.

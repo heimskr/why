@@ -205,7 +205,9 @@ class WASMC {
 				this.offsets[label] = this.meta[2].toInt() + this.expanded.length;
 			};
 
-			if (op == "mv") {
+			if (op == "trap") {
+				this.expanded.push([label, "trap", ...args]);
+			} else if (op == "mv") {
 				this.expanded.push([label, "or", args[0], _0, args[1]]);
 			} else if (op == "ret") {
 				this.expanded.push([label, "jr", _0, _0, _RA]);
@@ -296,7 +298,9 @@ class WASMC {
 	};
 
 	addCode([op, ...args]) {
-		if (R_TYPES.includes(OPCODES[op])) {
+		if (op == "trap") {
+			this.code.push(this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), 0, args[3]));
+		} else if (R_TYPES.includes(OPCODES[op])) {
 			this.code.push(this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), 0, FUNCTS[op]));
 		} else if (I_TYPES.includes(OPCODES[op])) {
 			this.code.push(this.iType(OPCODES[op], ...args.map(this.convertValue, this)));
@@ -404,7 +408,9 @@ const _RA = ["register", "return", 0];                      // ;
 const _M = _.range(0, 16).map((n) => ["register", "m", n]); // )
 const _E = _.range(0,  6).map((n) => ["register", "e", n]);
 const _SP = ["register", "stack", 0];
-const _0 = ["register", "zero",  0];
+const _HI = ["register", "hi",    0];
+const _LO = ["register", "lo",    0];
+const _0  = ["register", "zero",  0];
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {

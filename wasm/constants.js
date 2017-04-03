@@ -8,6 +8,7 @@ exports.R_TYPES = [
 	0b000000001110, // Comparisons
 	0b000000010001, // Jump to Register
 	0b000000010010, // Memory
+	0b000000011111, // Trap
 ];
 
 exports.I_TYPES = [
@@ -91,6 +92,7 @@ exports.OPCODES = {
 	sliu:   0b000000011100,
 	sleiu:  0b000000011101,
 	seqiu:  0b000000011110,
+	trap:   0b000000011111,
 };
 
 exports.FUNCTS = {
@@ -131,12 +133,18 @@ exports.REGISTER_OFFSETS = {
 	f: 3,
 	ra: 4,
 	return: 4,
-	r: 5,
-	a: 21,
-	t: 37,
-	s: 61,
+	lo: 5,
+	hi: 6,
+	r: 7,
+	a: 23,
+	t: 39,
+	s: 62,
 	k: 85,
 	m: 102,
 	f: 118,
 	e: 122
+};
+
+exports.TRAPS = {
+	printr: 0b0000000000000001, // print contents of register whose ID is stored in $a0.
 };

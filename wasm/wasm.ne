@@ -93,6 +93,7 @@ op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or 
 				 | op_c | op_l | op_s | op_li | op_si | op_set
 				 | op_j | op_jc | op_jr | op_jrc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
+				 | op_printr
 															{% d => d %}
 into			-> _ "->" _									{% d => null %}
 
@@ -138,7 +139,7 @@ op_c			-> "[" _ rv _ "]" into "[" _ rv _ "]"		{% d => ["c",       0,  d[2], d[8]
 op_l			-> "[" _ rv _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
 op_s			-> rv into "[" _ rv _ "]"					{% d => ["s",       0,  d[0], d[4]] %}
 
-#																			   rs    rd    imm
+#																			    rs    rd    imm
 op_addi			-> reg _ "+"   _ int into reg				{% d => ["addi",   d[0], d[6], d[4]] %}
 				 | reg _ "++"								{% d => ["addi",   d[0], d[0],   1 ] %}
 				 |     _ "++"  _ reg						{% d => ["addi",   d[3], d[3],   1 ] %}
@@ -199,6 +200,8 @@ op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
 op_jeq			-> ":" _ reg _ "(" _ rv _ "==" _ rv ")"		{% d => ["jeq", d[10], d[6], d[2]] %}
 				 | ":" _ "&" var _ "(" _ rv _ "==" _ rv ")"	{% d => ["jeq", d[11], d[7], ["label", d[3]]] %}
 
+#																			   rt    rs    rd   funct
+op_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    1 ] %}
 
 op_nop			-> "<>"										{% d => ["nop"] %}
 
@@ -210,8 +213,10 @@ reg_exc			-> "$e" [0-5]								{% d => ["e", parseInt(d[1], 16)] %}
 reg_zero		-> "$" [z0]									{% d => ["zero",   0] %}
 reg_retaddr		-> "$" [r<]									{% d => ["return", 0] %}
 reg_stack		-> "$" [s*]									{% d => ["stack",  0] %}
-reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc)
-															{% d => ["register", ...d[0][0]] %}
+reg_lo			-> "$lo"									{% d => ["lo",     0] %}
+reg_hi			-> "$hi"									{% d => ["hi",     0] %}
+reg				-> reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc | reg_lo | reg_hi
+															{% d => ["register", ...d[0]] %}
 
 
 var -> varchar:+ {%
