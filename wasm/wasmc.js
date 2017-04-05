@@ -14,7 +14,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS } = require("./constants.js");
+const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS } = require("./constants.js");
 
 class WASMC {
 	static die(...a) { console.error(...a); process.exit(1) };
@@ -42,7 +42,7 @@ class WASMC {
 	// If the input is an array (expected format: ["register", ...]), then the output is the number corresponding to that array.
 	// Otherwise, if the input is something other than an array, then the output is same as the input.
 	static convertRegister(x) {
-		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[1]] + x[2]) : x;
+		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1]) : x;
 	};
 	
 	constructor(opt, filename) {
@@ -186,7 +186,7 @@ class WASMC {
 			offset += pieces.length;
 		});
 
-		this.meta[2] = Long.fromInt(offset);
+q		this.meta[2] = Long.fromInt(offset);
 	};
 
 	processCode() {
@@ -205,43 +205,110 @@ class WASMC {
 				this.offsets[label] = this.meta[2].toInt() + this.expanded.length;
 			};
 
-			if (op == "trap") {
-				this.expanded.push([label, "trap", ...args]);
+			const add = (x) => this.expanded.push(x);
+
+			const addPush = (args, _label=label) => {
+				const getLabel = () => [_label, _label = null][0];
+				args.forEach((reg, i) => {
+					add([getLabel(), "s", _0, reg, _SP]);
+					add([null, "subi", _SP, _SP, 1]);
+				});
+			};
+
+			const addPop = (args, _label=label) => {
+				const getLabel = () => [_label, _label = null][0];
+				args.forEach((reg, i) => {
+					add([getLabel(), "l", _0, _SP, reg]);
+					add([null, "addi", _SP, _SP, 1]);
+				});
+			};
+
+			if (op == "call") {
+				let [name, ...vals] = args;
+
+				// There can't be more arguments than the set of argument registers can handle.
+				if (MAX_ARGS < vals.length) {
+					throw new Error(`Too many arguments given to subroutine (given ${vals.length}, maximum is ${MAX_ARGS})`);
+				};
+
+				// Push the current return address and the current values in $a_0...$a_{n-1} (in that order) to the stack.
+				addPush([_RA, ..._.range(0, vals.length).map((n) => _A[n])], label);
+
+				// For each argument in the subroutine call, set its corresponding
+				// argument register based on the type of the argument. (An argument
+				// can be an immediate value, a register, a variable dereference or
+				// a label/variable reference.)
+				vals.forEach((val, i) => {
+					if (typeof val == "number") {
+						add([null, "set", _0, _A[i], Long.fromInt(val).toUnsigned().toInt()]);
+					} else if (!(val instanceof Array)) {
+						throw new Error(`Invalid value for argument ${i + 1}: ${JSON.stringify(val)}`);
+					} else if (val[0] == "register") {
+						add([null, "or", val, _0, _A[i]]);
+					} else if (val[0] == "label") {
+						add([null, "li", _0, _A[i], val]);
+					} else if (val[0] == "address") {
+						add([null, "set", _0, _A[i], ["label", val[1]]]);
+					} else {
+						throw new Error(`Invalid value for argument ${i + 1}: ${JSON.stringify(val)}`);
+					};
+				});
+
+				// Pop the values we pushed earlier, btu in reverse order.
+				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
+			} else if (op == "trap") {
+				add([label, "trap", ...args]);
 			} else if (op == "mv") {
-				this.expanded.push([label, "or", args[0], _0, args[1]]);
+				add([label, "or", args[0], _0, args[1]]);
 			} else if (op == "ret") {
-				this.expanded.push([label, "jr", _0, _0, _RA]);
+				add([label, "jr", _0, _0, _RA]);
 			} else if (op == "push") {
-				let _label = label, getLabel = () => [_label, _label = null][0];
-				args.forEach((reg, i) => {
-					this.expanded.push([getLabel(), "s", _0, reg, _SP]);
-					this.expanded.push([label, "addi", _SP, _SP, 1]);
-				});
+				addPush(args);
 			} else if (op == "pop") {
-				let _label = label, getLabel = () => [_label, _label = null][0];
-				args.forEach((reg, i) => {
-					this.expanded.push([getLabel(), "l", _0, _SP, reg]);
-					this.expanded.push([label, "subi", _SP, _SP, 1]);
-				});
-			} else if (op == "sge") {
-				this.expanded.push([label, "sle", args[1], args[0], args[2]]);
+				addPop(args);
 			} else if (op == "sg") {
-				this.expanded.push([label, "sl", args[1], args[0], args[2]]);
+				console.log("expanding sg");
+				add([label, "sl", args[1], args[0], args[2]]);
+			} else if (op == "sge") {
+				console.log("expanding sge");
+				add([label, "sle", args[1], args[0], args[2]]);
+			} else if (op == "sgu") {
+				add([label, "slu", args[1], args[0], args[2]]);
+			} else if (op == "sgeu") {
+				add([label, "sleu", args[1], args[0], args[2]]);
+			/*
+
+			Immediate > and >= will require their own instructions, because you can't just
+			swap a register and an immediate value without an unhealthy amount of trickery.
+
+			} else if (op == "sgei") {
+				add([label, "slei", args[1], args[0], args[2]]);
+			} else if (op == "sgeiu") {
+				add([label, "sleiu", args[1], args[0], args[2]]);
+			} else if (op == "sgi") {
+				add([label, args[1], args[0], args[2]]);
+			} else if (op == "sgi") {
+				add([label, "sli", args[1], args[0], args[2]]);
+			} else if (op == "sgiu") {
+				add([label, "sliu", args[1], args[0], args[2]]);
+			} else if (op == "sgi") {
+				add([label, args[1], args[0], args[2]]);
+			*/
 			} else if (op == "jeq") {
 				// First, set $m0 to rs == rt.
-				this.expanded.push([label, "seq", ...args.slice(0, 2), _M[0]]);
+				add([label, "seq", ...args.slice(0, 2), _M[0]]);
 
 				if (args[2][0] == "value") {
 					// Set $m1 to the immediate value and then conditionally jump to $m1.
-					this.expanded.push([null, "set", _0, _M[1], args[2][1]]);
-					this.expanded.push([null, "jrc", _0, _M[0], _M[1]]);
+					add([null, "set", _0, _M[1], args[2][1]]);
+					add([null, "jrc", _0, _M[0], _M[1]]);
 				} else if (args[2][0] == "register") {
 					// We're already given a register, so we don't have to do anything with $m1.
-					this.expanded.push([null, "jrc", _0, _M[0], args[2]]);
+					add([null, "jrc", _0, _M[0], args[2]]);
 				} else if (args[2][0] == "label") {
 					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
-					this.expanded.push([null, "li", _0, _M[1], args[2]]);
-					this.expanded.push([null, "jrc", _0, _M[0], _M[1]]);
+					add([null, "li",  _0, _M[1], args[2]]);
+					add([null, "jrc", _0, _M[0],   _M[1]]);
 				};
 			} else if (R_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
 				let [rt, rs, rd] = args;
@@ -250,30 +317,30 @@ class WASMC {
 				[rt, rs].forEach((reg, i) => {
 					if (isLabelRef(reg)) {
 						// Whoops, this register isn't actually a register
-						this.expanded.push([getLabel(), "li", _0, _M[i], reg]);
+						add([getLabel(), "li", _0, _M[i], reg]);
 					};
 				});
 
-				this.expanded.push([getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
+				add([getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 
 				if (ld) {
-					this.expanded.push([getLabel(), "si", _M[2], _0, rd]);
+					add([getLabel(), "si", _M[2], _0, rd]);
 				};
 			} else if (I_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
 				let [rs, rd, imm] = args;
 				let [ls, ld] = [rs, rd].map(isLabelRef);
 				let _label = label, getLabel = () => [_label, _label = null][0];
 				if (ls) {
-					this.expanded.push([getLabel(), "li", _0, _M[0], rs]);
+					add([getLabel(), "li", _0, _M[0], rs]);
 				};
 
-				this.expanded.push([getLabel(), op, ...[rs, rd].map((reg, i) => [ls, ld][i]? _M[i] : reg), imm]);
+				add([getLabel(), op, ...[rs, rd].map((reg, i) => [ls, ld][i]? _M[i] : reg), imm]);
 
 				if (ld) {
-					this.expanded.push([getLabel(), "si", _M[1], _0, rd]);
+					add([getLabel(), "si", _M[1], _0, rd]);
 				};
 			} else {
-				this.expanded.push(item);
+				add(item);
 			};
 		});
 
@@ -293,8 +360,6 @@ class WASMC {
 				};
 			});
 		});
-
-		// console.log(chalk.bold.yellow("<expanded>\n"), this.expanded, chalk.bold.yellow("\n</expanded>"));
 	};
 
 	addCode([op, ...args]) {
@@ -324,7 +389,7 @@ class WASMC {
 
 		if (typeof x == "string") {
 			if (typeof this.offsets[x] == "undefined") {
-				throw `Undefined label: ${x}`;
+				throw new Error(`Undefined label: ${x}`);
 			};
 
 			return this.offsets[x];
@@ -334,57 +399,45 @@ class WASMC {
 			return x;
 		};
 
-		throw `Unrecognized value: ${x}`;
+		throw new Error(`Unrecognized value: ${x}`);
 	};
 
 	rType(opcode, rt, rs, rd, shift, func) {
-		if (!R_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid r-type`;
-		if (rt < 0 || 127 < rt) throw `rt (${rt}) not within the valid range (0–127)`;
-		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
-		if (rd < 0 || 127 < rd) throw `rd (${rd}) not within the valid range (0–127)`;
-		if (shift < 0 || 65535 < shift) throw `shift (${shift}) not within the valid range (0–65535)`;
-		if (func < 0 || 4095 < func) throw `func (${func}) not within the valid range (0–4095)`;
+		if (!R_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid r-type`);
+		if (rt < 0 || 127 < rt) throw new Error(`rt (${rt}) not within the valid range (0–127)`);
+		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
+		if (rd < 0 || 127 < rd) throw new Error(`rd (${rd}) not within the valid range (0–127)`);
+		if (shift < 0 || 65535 < shift) throw new Error(`shift (${shift}) not within the valid range (0–65535)`);
+		if (func < 0 || 4095 < func) throw new Error(`func (${func}) not within the valid range (0–4095)`);
 
 		let lower = func | (shift << 12) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
-		// this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
-		// this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
-		// this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
-
 		return long;
 	};
 
 	iType(opcode, rs, rd, imm) {
-		if (!I_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid i-type`;
-		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
-		if (rd < 0 || 127 < rd) throw `rd (${rd}) not within the valid range (0–127)`;
-		if (imm < 0 || 4294967295 < imm) throw `imm (${imm}) not within the valid range (-2147483648–2147483647)`;
+		if (!I_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid i-type`);
+		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
+		if (rd < 0 || 127 < rd) throw new Error(`rd (${rd}) not within the valid range (0–127)`);
+		if (imm < 0 || 4294967295 < imm) throw new Error(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
 
 		let lower = imm;
 		let upper = rd | (rs << 7) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
-		// this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
-		// this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
-		// this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
-
 		return long;
 	};
 
 	jType(opcode, rs, addr) {
-		if (!J_TYPES.includes(opcode)) throw `opcode ${opcode} isn't a valid j-type`;
-		if (rs < 0 || 127 < rs) throw `rs (${rs}) not within the valid range (0–127)`;
-		if (addr < 0 || 4294967295 < addr) throw `addr (${addr}) not within the valid range (0–4294967295)`;
+		if (!J_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid j-type`);
+		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
+		if (addr < 0 || 4294967295 < addr) throw new Error(`addr (${addr}) not within the valid range (0–4294967295)`);
 
 		let lower = addr;
 		let upper = (rs << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
-
-		// this.log(`Lower: ${lower.toString(2).padStart(32, "_")} (${lower.toString(2).length})`);
-		// this.log(`Upper: ${upper.toString(2).padStart(32, "_")} (${upper.toString(2).length})`);
-		// this.log(`Long: ${long.toString(16)}, ${long.toString(2)} <--`, long);
 
 		return long;
 	};
@@ -420,7 +473,8 @@ if (require.main === module) {
 	}), filename = opt._[0];
 
 	if (!filename) {
-		return console.log("Usage: node wasmc.js [filename]");
+		console.log("Usage: node wasmc.js [filename]");
+		process.exit(0);
 	};
 
 	new WASMC(opt, filename).compile();

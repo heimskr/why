@@ -130,7 +130,7 @@ exports.REGISTER_OFFSETS = {
 	g: 1,
 	sp: 2,
 	stack: 2,
-	f: 3,
+	fp: 3,
 	ra: 4,
 	return: 4,
 	lo: 5,
@@ -147,4 +147,9 @@ exports.REGISTER_OFFSETS = {
 
 exports.TRAPS = {
 	printr: 0b0000000000000001, // print contents of register whose ID is stored in $a0.
+	halt:   0b0000000000000010, // tells the vm to stop
 };
+
+// largest number of arguments allowed for a subroutine call.
+// equal to the number of arguments registers.
+exports.MAX_ARGS = exports.REGISTER_OFFSETS.t - exports.REGISTER_OFFSETS.a;

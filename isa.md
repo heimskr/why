@@ -89,11 +89,11 @@
 				</li>
 				<li><a href="#ops-comp-i">Comparisons (I-Types)</a>
 					<ol>
-						<li><a href="#op-sli">Set on Less Than Immediate</a> (<code>slu</code>)</li>
-						<li><a href="#op-slei">Set on Less Than or Equal Immediate</a> (<code>sleu</code>)</li>
-						<li><a href="#op-seqi">Set on Equal Immediate</a> (<code>sequ</code>)</li>
-						<li><a href="#op-sgei">Set on Greater Than or Equal Immediate</a> (<code>sgeu</code>)</li>
-						<li><a href="#op-sgi">Set on Greater Than Immediate</a> (<code>sgu</code>)</li>
+						<li><a href="#op-sli">Set on Less Than Immediate</a> (<code>sli</code>)</li>
+						<li><a href="#op-slei">Set on Less Than or Equal Immediate</a> (<code>slei</code>)</li>
+						<li><a href="#op-seqi">Set on Equal Immediate</a> (<code>seqi</code>)</li>
+						<li><a href="#op-sgei">Set on Greater Than or Equal Immediate</a> (<code>sgei</code>)</li>
+						<li><a href="#op-sgi">Set on Greater Than Immediate</a> (<code>sgi</code>)</li>
 						<li><a href="#op-sliu">Set on Less Than Immediate Unsigned</a> (<code>sliu</code>)</li>
 						<li><a href="#op-sleiu">Set on Less Than or Equal Immediate Unsigned</a> (<code>sleiu</code>)</li>
 						<li><a href="#op-seqiu">Set on Equal Immediate Unsigned</a> (<code>seqiu</code>)</li>

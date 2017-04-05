@@ -7,22 +7,82 @@ let WASMC = require("../wasm/wasmc.js"),
 	chalk = require("chalk"),
 	Parser = require("./parser.js");
 
+chalk = new chalk.constructor({ enabled: !process.browser });
+
+require("string.prototype.padstart").shim();
+require("string.prototype.padend").shim();
+
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../wasm/constants.js");
 
-class WVM {
-	constructor({ memorySize=640000, program }={}) {
+const WVM = module.exports = class WVM {
+	constructor({ memorySize=640000, program, memory: initial }={}) {
 		if (typeof program != "object") {
 			throw `Unable to load program.`;
 		};
 
-		this.memory = new Uint32Array(memorySize * 2);
+		if (!(initial instanceof Array)) {
+			throw `Unable to load memory.`;
+		};
+
+		({ offsets: this.offsets, handlers: this.handlers, meta: this.meta, code: this.code} = program);
+		this.initial = initial;
 		this.memorySize = memorySize;
+		this.resetMemory();
 		this.resetRegisters();
-		this.programCounter = program.offsets.$code;
+		this.programCounter = this.offsets.$code;
+		this.active = true;
+
+		// Limits the number of clock cycles the VM will run (to prevent infinite loops).
+		// This will be removed when the VM is stable enough, which may be soon.
+		this.ttl = 50;
+	};
+
+	onTick() { };
+	onSet(addr, val) { };
+
+	loadInstruction() {
+		return this.get(this.programCounter);
+	};
+
+	start() {
+		while (this.active && this.ttl--) {
+			this.tick();
+		};
+	};
+
+	tick() {
+		let instr = Parser.parseInstruction(this.loadInstruction());
+		if (!instr) {
+			console.error(chalk.red("Invalid instruction:"), instr, this.loadInstruction().toString(2));
+			return;
+		};
+
+		console.log(`[${this.programCounter.toString().padStart(4, " ")}]`, "Instruction:", instr);
+		if (typeof this[`op_${instr.op}`] == "undefined") {
+			console.warn(chalk.yellow(`Unimplemented ${instr.type} operation:`), instr.op);
+		} else {
+			const fn = this[`op_${instr.op}`].bind(this);
+			if (instr.type == "r") {
+				fn(instr.rt, instr.rs, instr.rd, instr.shift, instr.funct);
+			} else if (instr.type == "i") {
+				fn(instr.rs, instr.rd, instr.imm);
+			} else if (instr.type == "j") {
+				fn(instr.rs, instr.addr);
+			};
+		};
+
+		this.programCounter++;
+		this.onTick();
+	};
+
+	resetMemory() {
+		this.memory = new Uint32Array(this.memorySize * 2);
+		this.initial.forEach((long, i) => this.set(i, long));
 	};
 
 	resetRegisters() {
 		this.registers = this.regs = _.range(0, 128).map(() => Long.ZERO);
+		this.registers[REGISTER_OFFSETS.stack] = this.memorySize - 1;
 	};
 
 	get(k, signed=false) {
@@ -37,14 +97,18 @@ class WVM {
 			this.memory[2*k + 1] = v & 0xffffffff00000000;
 		};
 
+		this.onSet(k, v);
 		return true;
 	};
 
 	op_trap(rt, rs, rd, shift, funct) {
 		if (funct == TRAPS.printr) {
 			console.log(`${Parser.getRegister(rs)}:`, this.registers[rs]);
-		} else {
-			// exception: unknown trap.
+		} else if (funct == TRAPS.halt) {
+			console.warn("Process halted.");
+			this.active = false;
+		} else { // This may be changed to an exception in the future.
+			console.log("Unknown trap:", {rt, rs, rd, shift, func});
 		};
 	};
 
@@ -80,7 +144,7 @@ class WVM {
 	op_mflo  (rt, rs, rd)  { this.regs[rd] = this.lo                                                                                              };
 	op_s     (rt, rs, rd)  { this.set(this.regs[rd], rs)                                                                                          };
 	op_si    (rs, rd, imm) { this.set(imm, this.regs[rs])                                                                                         };
-	op_li    (rs, rd, imm) { this.regs[rd] = this.get(imm)                                                                                        };
+	op_li    (rs, rd, imm) { this.regs[rd] = this.get(imm);                                                                                       };
 	op_ori   (rs, rd, imm) { this.regs[rd] = this.regs[rs].or(imm)                                                                                };
 	op_andi  (rs, rd, imm) { this.regs[rd] = this.regs[rs].and(imm)                                                                               };
 	op_xori  (rs, rd, imm) { this.regs[rd] = this.regs[rs].xor(imm)                                                                               };
@@ -123,7 +187,8 @@ class WVM {
 	op_addiu (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true))      };
 	op_subi  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toSigned().subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false))    };
 	op_subiu (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)) };
-	// is there really any difference between seqiu and seqi, or between seq and sequ?
+
+	// Is there really any difference between seqiu and seqi, or between seq and sequ?
 
 	get hi() { return this.registers[REGISTER_OFFSETS.hi] };
 	get lo() { return this.registers[REGISTER_OFFSETS.lo] };
@@ -135,10 +200,17 @@ if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), { }), filename = opt._[0];
 
 	if (!filename) {
-		return console.log("Usage: node wvm.js [filename]");
+		console.log("Usage: node wvm.js [filename]");
+		process.exit(0);
 	};
 
-	let { offsets, handlers, meta, code } = Parser.open(filename);
-	let vm = new WVM({ program: { offsets, handlers, meta, code } });
-	console.log(vm.registers);
+	let { parsed, raw } = Parser.open(filename);
+	let { offsets, handlers, meta, code } = parsed;
+	let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: raw });
+	vm.tick();
+};
+
+if (process.browser) {
+	window.WVM = WVM;
+	window.Parser = Parser;
 };

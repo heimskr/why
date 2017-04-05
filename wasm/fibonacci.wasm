@@ -5,6 +5,12 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #code
+
+!fibonacci(10)
+<halt>
+
+
+
 @fibonacci // $a0 -> $r0
 [ $t0 $t1
 	0 -> $t0

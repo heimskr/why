@@ -1,7 +1,7 @@
 module.exports = (_) => _.mixin({
 	// Stringifies a long representing 8 characters.
 	longString(long) {
-		return long instanceof Array? long.map(arguments.callee) :  _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
+		return long instanceof Array? long.map(_.longString) :  _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
 	},
 
 	// Converts a sequence of longs to strings and splits by \0.
