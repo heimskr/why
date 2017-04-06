@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 let WASMC = require("../wasm/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),

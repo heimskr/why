@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 let fs = require("fs"),
 	nearley = require("nearley"),
 	nearleyg = require("nearley/lib/nearley-language-bootstrapped.js"),
