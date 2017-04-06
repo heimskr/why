@@ -1,0 +1,28 @@
+.navbar.navbar-smol {
+	min-height: $navbar-height !important;
+	
+	.navbar-nav > li > a, .navbar-brand {
+		padding-top: 4px !important; 
+		padding-bottom: 0 !important;
+		height: $navbar-height;
+	}
+
+	.glyphicon {
+		position: relative;
+		top: 2px;
+	}
+}
+
+.navbar a {
+	color: white !important;
+}
+
+.navbar {
+	font-family: Consolas, monospace;
+
+	.navbar-brand {
+		position: relative;
+		top: 2px;
+	}
+
+}

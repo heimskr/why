@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+	<head>
+		<title>WVM</title>
+		<link rel="stylesheet" href="bootstrap.css" />
+		<link rel="stylesheet" href="bootstrap-theme.css" />
+		<link rel="stylesheet" href="app.css" />
+		<link rel="stylesheet" href="jquery.splitter.css" />
+		<script type="text/javascript" src="jquery.js"></script>
+		<script type="text/javascript" src="bootstrap.js"></script>
+		<script type="text/javascript" src="app.js"></script>
+	</head>
+	<body>
+		<nav class="navbar navbar-inverse navbar-fixed-top navbar-smol">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">WVM</a>
+				</div>
+
+
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li>
+							<a href="#" id="step">
+								Step
+								<span class="glyphicon glyphicon-step-forward"></span>
+							</a>
+						</li>
+						<li>
+							<a href="#" id="set_range">
+								Set Range
+								<span class="glyphicon glyphicon-filter"></span>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<div id="container">
+			<div id="top">
+				<div id="memory_container">
+					<table id="memory"></table>
+				</div>
+				<div id="registers_container">
+					<table id="registers"></table>
+				</div>
+			</div>
+			<div id="console"></div>
+		</div>
+
+	</body>
+</html>

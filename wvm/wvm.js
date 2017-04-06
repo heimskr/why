@@ -7,14 +7,14 @@ let WASMC = require("../wasm/wasmc.js"),
 	chalk = require("chalk"),
 	Parser = require("./parser.js");
 
-chalk = new chalk.constructor({ enabled: !process.browser });
-
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../wasm/constants.js");
 
 const WVM = module.exports = class WVM {
+	static get DEFAULT_TTL() { return 500 };
+
 	constructor({ memorySize=640000, program, memory: initial }={}) {
 		if (typeof program != "object") {
 			throw `Unable to load program.`;
@@ -34,7 +34,7 @@ const WVM = module.exports = class WVM {
 
 		// Limits the number of clock cycles the VM will run (to prevent infinite loops).
 		// This will be removed when the VM is stable enough, which may be soon.
-		this.ttl = 50;
+		this.ttl = WVM.DEFAULT_TTL;
 	};
 
 	onTick() { };
@@ -45,7 +45,7 @@ const WVM = module.exports = class WVM {
 	};
 
 	start() {
-		while (this.active && this.ttl--) {
+		while (this.active && this.ttl) {
 			this.tick();
 		};
 	};
@@ -58,20 +58,25 @@ const WVM = module.exports = class WVM {
 		};
 
 		console.log(`[${this.programCounter.toString().padStart(4, " ")}]`, "Instruction:", instr);
+		let skipPC = false;
 		if (typeof this[`op_${instr.op}`] == "undefined") {
 			console.warn(chalk.yellow(`Unimplemented ${instr.type} operation:`), instr.op);
 		} else {
 			const fn = this[`op_${instr.op}`].bind(this);
 			if (instr.type == "r") {
-				fn(instr.rt, instr.rs, instr.rd, instr.shift, instr.funct);
+				skipPC = !!fn(instr.rt, instr.rs, instr.rd, instr.shift, instr.funct);
 			} else if (instr.type == "i") {
-				fn(instr.rs, instr.rd, instr.imm);
+				skipPC = !!fn(instr.rs, instr.rd, instr.imm);
 			} else if (instr.type == "j") {
-				fn(instr.rs, instr.addr);
+				skipPC = !!fn(instr.rs, instr.addr);
 			};
 		};
 
-		this.programCounter++;
+		if (!skipPC) {
+			this.programCounter++;
+		};
+		
+		this.ttl--;
 		this.onTick();
 	};
 
@@ -81,7 +86,7 @@ const WVM = module.exports = class WVM {
 	};
 
 	resetRegisters() {
-		this.registers = this.regs = _.range(0, 128).map(() => Long.ZERO);
+		this.registers = _.range(0, 128).map(() => Long.ZERO);
 		this.registers[REGISTER_OFFSETS.stack] = this.memorySize - 1;
 	};
 
@@ -89,14 +94,9 @@ const WVM = module.exports = class WVM {
 		return new Long(this.memory[2*k], this.memory[2*k + 1], signed);
 	};
 
-	set(k, v) {
-		if (v instanceof Long) {
-			[this.memory[2*k], this.memory[2*k + 1]] = [v.low, v.high];
-		} else {
-			this.memory[2*k] = v & 0xffffffff
-			this.memory[2*k + 1] = v & 0xffffffff00000000;
-		};
-
+	set(k, v_) {
+		const v = v_ instanceof Long? v_ : Long.fromInt(v_);
+		[this.memory[2*k], this.memory[2*k + 1]] = [v.low, v.high];
 		this.onSet(k, v);
 		return true;
 	};
@@ -139,56 +139,207 @@ const WVM = module.exports = class WVM {
 	// multu
 	// multi
 
-	// Yeah, this is unreadable. :~)
-	op_mfhi  (rt, rs, rd)  { this.regs[rd] = this.hi                                                                                              };
-	op_mflo  (rt, rs, rd)  { this.regs[rd] = this.lo                                                                                              };
-	op_s     (rt, rs, rd)  { this.set(this.regs[rd], rs)                                                                                          };
-	op_si    (rs, rd, imm) { this.set(imm, this.regs[rs])                                                                                         };
-	op_li    (rs, rd, imm) { this.regs[rd] = this.get(imm);                                                                                       };
-	op_ori   (rs, rd, imm) { this.regs[rd] = this.regs[rs].or(imm)                                                                                };
-	op_andi  (rs, rd, imm) { this.regs[rd] = this.regs[rs].and(imm)                                                                               };
-	op_xori  (rs, rd, imm) { this.regs[rd] = this.regs[rs].xor(imm)                                                                               };
-	op_l     (rt, rs, rd)  { this.regs[rd] = this.get(this.regs[rs])                                                                              };
-	op_set   (rs, rd, imm) { this.regs[rd] = Long.fromInt(imm, true)                                                                              };
-	op_or    (rt, rs, rd)  { this.regs[rd] = this.regs[rs].or(this.regs[rt])                                                                      };
-	op_lui   (rs, rd, imm) { this.regs[rd].high = imm; this.regs[rd].low = 0                                                                      };
-	op_and   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].and(this.regs[rt])                                                                     };
-	op_xor   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].xor(this.regs[rt])                                                                     };
-	op_c     (rt, rs, rd)  { this.set(this.regs[rd], this.get(this.regs[rs]))                                                                     };
-	op_j     (rs, addr)    { this.programCounter = Long.fromInt(imm, true).toInt()                                                                };
-	op_jr    (rt, rs, rd)  { this.programCounter = this.regs[rd].toUnsigned().toInt()                                                             };
-	op_add   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toSigned().add(this.regs[rt].toSigned())                                               };
-	op_addu  (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toUnsigned().add(this.regs[rt].toUnsigned())                                           };
-	op_sub   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toSigned().subtract(this.regs[rt].toSigned())                                          };
-	op_subu  (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toUnsigned().subtract(this.regs[rt].toUnsigned())                                      };
-	op_jc    (rs, addr)    { if (!this.regs[rd].equals(0)) this.programCounter = Long.fromInt(imm, true).toInt()                                  };
-	op_jrc   (rt, rs, rd)  { if (!this.regs[rs].equals(0)) this.programCounter = this.regs[rd].toUnsigned().toInt()                               };
-	op_not   (rt, rs, rd)  { let { low, high, unsigned } = this.regs[rs]; this.regs[rd] = new Long(~low, ~high, unsigned)                         };
-	op_seq   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toSigned().equals(this.regs[rt].toSigned())? Long.UONE : Long.UZERO                    };
-	op_seqi  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toSigned().equals(Long.fromInt(imm, false))? Long.UONE : Long.UZERO                    };
-	op_seqiu (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().equals(Long.fromInt(imm, true))? Long.UONE : Long.UZERO                   };
-	op_sl    (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toSigned().lessThan(this.regs[rt].toSigned())? Long.UONE : Long.UZERO                  };
-	op_sli   (rs, rd, imm) { this.regs[rd] = this.regs[rs].toSigned().lessThan(Long.fromInt(imm, false))? Long.UONE : Long.UZERO                  };
-	op_nori  (rs, rd, imm) { let { low, high, unsigned } = this.regs[rs].or(imm); this.regs[rd] = new Long(~low, ~high, unsigned)                 };
-	op_sliu  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO                 };
-	op_sliu  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO                 };
-	op_nandi (rs, rd, imm) { let { low, high, unsigned } = this.regs[rs].and(imm); this.regs[rd] = new Long(~low, ~high, unsigned)                };
-	op_xnori (rs, rd, imm) { let { low, high, unsigned } = this.regs[rs].xor(imm); this.regs[rd] = new Long(~low, ~high, unsigned)                };
-	op_sequ  (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toUnsigned().equals(this.regs[rt].toUnsigned())? Long.UONE : Long.UZERO                };
-	op_slu   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toUnsigned().lessThan(this.regs[rt].toUnsigned())? Long.UONE : Long.UZERO              };
-	op_sle   (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toSigned().lessThanOrEqual(this.regs[rt].toSigned())? Long.UONE : Long.UZERO           };
-	op_slei  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toSigned().lessThanOrEqual(Long.fromInt(imm, false))? Long.UONE : Long.UZERO           };
-	op_sleiu (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))? Long.UONE : Long.UZERO          };
-	op_addi  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toSigned().add(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false))         };
-	op_sleu  (rt, rs, rd)  { this.regs[rd] = this.regs[rs].toUnsigned().lessThanOrEqual(this.regs[rt].toUnsigned())? Long.UONE : Long.UZERO       };
-	op_nor   (rt, rs, rd)  { let { low, high, unsigned } = this.regs[rs].or(this.regs[rt]); this.regs[rd] = new Long(~low, ~high, unsigned)       };
-	op_nand  (rt, rs, rd)  { let { low, high, unsigned } = this.regs[rs].and(this.regs[rt]); this.regs[rd] = new Long(~low, ~high, unsigned)      };
-	op_nxor  (rt, rs, rd)  { let { low, high, unsigned } = this.regs[rs].xor(this.regs[rt]); this.regs[rd] = new Long(~low, ~high, unsigned)      };
-	op_addiu (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true))      };
-	op_subi  (rs, rd, imm) { this.regs[rd] = this.regs[rs].toSigned().subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false))    };
-	op_subiu (rs, rd, imm) { this.regs[rd] = this.regs[rs].toUnsigned().subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)) };
+	op_mfhi(rt, rs, rd) {
+		this.registers[rd] = this.hi;
+	};
+
+	op_mflo(rt, rs, rd) {
+		this.registers[rd] = this.lo;
+	};
+
+	op_s(rt, rs, rd) {
+		this.set(this.registers[rd], rs);
+	};
+
+	op_si(rs, rd, imm) {
+		this.set(imm, this.registers[rs]);
+	};
+
+	op_li(rs, rd, imm) {
+		this.registers[rd] = this.get(imm);;
+	};
+
+	op_ori(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].or(imm);
+	};
+
+	op_andi(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].and(imm);
+	};
+
+	op_xori(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].xor(imm);
+	};
+
+	op_l(rt, rs, rd) {
+		this.registers[rd] = this.get(this.registers[rs]);
+	};
+
+	op_set(rs, rd, imm) {
+		this.registers[rd] = Long.fromInt(imm, true);
+	};
+
+	op_or(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].or(this.registers[rt]);
+	};
+
+	op_lui(rs, rd, imm) {
+		this.registers[rd].high = imm; this.registers[rd].low = 0;
+	};
+
+	op_and(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].and(this.registers[rt]);
+	};
+
+	op_xor(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].xor(this.registers[rt]);
+	};
+
+	op_c(rt, rs, rd) {
+		this.set(this.registers[rd], this.get(this.registers[rs]));
+	};
+
+	op_j(rs, addr) {
+		this.programCounter = Long.fromInt(addr, true).toInt();
+		return true;
+	};
+
+	op_jr(rt, rs, rd) {
+		this.programCounter = this.registers[rd].toUnsigned().toInt();
+	};
+
+	op_add(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().add(this.registers[rt].toSigned());
+	};
+
+	op_addu(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toUnsigned().add(this.registers[rt].toUnsigned());
+	};
+
+	op_sub(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().subtract(this.registers[rt].toSigned());
+	};
+
+	op_subu(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toUnsigned().subtract(this.registers[rt].toUnsigned());
+	};
+
+	op_jc(rs, addr) {
+		if (!this.registers[rd].equals(0)) {
+			this.programCounter = Long.fromInt(imm, true).toInt();
+			return true;
+		};
+	};
+
+	op_jrc(rt, rs, rd) {
+		if (!this.registers[rs].equals(0)) {
+			this.programCounter = this.registers[rd].toUnsigned().toInt();
+			return true;
+		};
+	};
+
+	op_not(rt, rs, rd) {
+		let { low, high, unsigned } = this.registers[rs];
+		this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_seq(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().equals(this.registers[rt].toSigned())? Long.UONE : Long.UZERO;
+	};
+
+	op_seqi(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().equals(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+	};
 
 	// Is there really any difference between seqiu and seqi, or between seq and sequ?
+	op_seqiu(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
+	};
+
+	op_sl(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().lessThan(this.registers[rt].toSigned())? Long.UONE : Long.UZERO;
+	};
+
+	op_sli(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().lessThan(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+	};
+
+	op_nori(rs, rd, imm) {
+		let { low, high, unsigned } = this.registers[rs].or(imm);
+		this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_sliu(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
+	};
+
+	op_sliu(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
+	};
+
+	op_nandi(rs, rd, imm) {
+		let { low, high, unsigned } = this.registers[rs].and(imm);
+		this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_xnori(rs, rd, imm) {
+		let { low, high, unsigned } = this.registers[rs].xor(imm);
+		this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_sequ(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
+	};
+
+	op_slu(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
+	};
+
+	op_sle(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(this.registers[rt].toSigned())? Long.UONE : Long.UZERO;
+	};
+
+	op_slei(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+	};
+
+	op_sleiu(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
+	};
+
+	op_addi(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().add(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
+	};
+
+	op_sleu(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
+	};
+
+	op_nor(rt, rs, rd) {
+		let { low, high, unsigned } = this.registers[rs].or(this.registers[rt]);
+		this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_nand(rt, rs, rd) {
+		let { low, high, unsigned } = this.registers[rs].and(this.registers[rt]); this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_nxor(rt, rs, rd) {
+		let { low, high, unsigned } = this.registers[rs].xor(this.registers[rt]); this.registers[rd] = new Long(~low, ~high, unsigned);
+	};
+
+	op_addiu(rs, rd, imm) {
+		this.registers[rd] = Long.fromInt(this.registers[rs], true).add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true));
+	};
+
+	op_subiu(rs, rd, imm) {
+		this.registers[rd] = Long.fromInt(this.registers[rs], true).subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true));;
+	};
+
+	op_subi(rs, rd, imm) {
+		this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
+	};
+
 
 	get hi() { return this.registers[REGISTER_OFFSETS.hi] };
 	get lo() { return this.registers[REGISTER_OFFSETS.lo] };

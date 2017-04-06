@@ -186,7 +186,7 @@ class WASMC {
 			offset += pieces.length;
 		});
 
-q		this.meta[2] = Long.fromInt(offset);
+		this.meta[2] = Long.fromInt(offset);
 	};
 
 	processCode() {
@@ -254,7 +254,9 @@ q		this.meta[2] = Long.fromInt(offset);
 					};
 				});
 
-				// Pop the values we pushed earlier, btu in reverse order.
+				add([null, "j", _0, ["label", name]]);
+
+				// Pop the values we pushed earlier, but in reverse order.
 				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
 			} else if (op == "trap") {
 				add([label, "trap", ...args]);
@@ -307,7 +309,7 @@ q		this.meta[2] = Long.fromInt(offset);
 					add([null, "jrc", _0, _M[0], args[2]]);
 				} else if (args[2][0] == "label") {
 					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
-					add([null, "li",  _0, _M[1], args[2]]);
+					add([null, "set",  _0, _M[1], args[2]]);
 					add([null, "jrc", _0, _M[0],   _M[1]]);
 				};
 			} else if (R_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
@@ -473,7 +475,7 @@ if (require.main === module) {
 	}), filename = opt._[0];
 
 	if (!filename) {
-		console.log("Usage: node wasmc.js [filename]");
+		console.log("Usage: node wasmc.js [filename] <-o out>");
 		process.exit(0);
 	};
 

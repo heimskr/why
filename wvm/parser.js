@@ -3,10 +3,9 @@ let WASMC = require("../wasm/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
-	chalk_ = require("chalk"),
 	minimist = require("minimist");
 
-const chalk = new chalk_.constructor({ enabled: !process.browser });
+const chalk = new (require("chalk")).constructor({ enabled: true });
 
 require("../util.js")(_);
 require("string.prototype.padstart").shim();
@@ -134,6 +133,10 @@ const Parser = module.exports = {
 	},
 
 	getRegister(n) {
+		if (n == REGISTER_OFFSETS.return) {
+			return "$rt";
+		};
+
 		for (let i = 0; i < OFFSET_VALUES.length; i++) {
 			if (OFFSET_VALUES[i] <= n) {
 				const s = STESFFO[OFFSET_VALUES[i]][0];
@@ -166,8 +169,8 @@ const Parser = module.exports = {
 		if (op == "sl")    return `${chalk.yellow(rs)} ${chalk.red("<")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "sle")   return `${chalk.yellow(rs)} ${chalk.red("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "seq")   return `${chalk.yellow(rs)} ${chalk.red("==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "jr")    return `: ${chalk.yellow(rd)}`;
-		if (op == "jrc")   return `: ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
+		if (op == "jr")    return `${chalk.dim(":")} ${chalk.yellow(rd)}`;
+		if (op == "jrc")   return `${chalk.dim(":")} ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
 		if (op == "c")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
 		if (op == "l")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "s")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.yellow(rd)}]`;

@@ -9,11 +9,9 @@ version: "1"
 !fibonacci(10)
 <halt>
 
-
-
 @fibonacci // $a0 -> $r0
 [ $t0 $t1
-	0 -> $t0
+	1 -> $t0
 	1 -> $t1
 	0 -> $r0
 	@fibonacci_loop

@@ -5,24 +5,27 @@
 	"main": "why.js",
 	"author": "Kai Tamkun",
 	"license": "MIT",
-	"devDependencies": {},
-	"dependencies": {
-		"babel-plugin-transform-react-jsx": "^6.23.0",
+	"devDependencies": {
+		"ansi-html": "^0.0.7",
 		"babel-preset-es2015": "^6.24.0",
 		"babel-preset-es2017": "^6.22.0",
 		"babelify": "^7.3.0",
+		"bootstrap": "^3.3.7",
 		"brfs": "^1.4.3",
-		"chalk": "^1.1.3",
 		"exorcist": "^0.4.0",
-		"get-line-from-pos": "^1.0.0",
 		"grunt": "^1.0.1",
 		"grunt-babel": "^6.0.0",
 		"grunt-browserify": "^5.0.0",
 		"grunt-contrib-watch": "^1.0.0",
 		"grunt-exorcise": "^2.1.1",
 		"grunt-sass": "^2.0.0",
-		"grunt-shell": "^2.1.0",
+		"http-server": "^0.9.0",
 		"jquery": "^3.2.1",
+		"jquery.splitter": "^0.24.0"
+	},
+	"dependencies": {
+		"chalk": "^1.1.3",
+		"get-line-from-pos": "^1.0.0",
 		"lodash": "^4.17.4",
 		"long": "^3.2.0",
 		"minimist": "^1.2.0",
@@ -31,5 +34,9 @@
 		"shell-escape": "^0.2.0",
 		"string.prototype.padend": "^3.0.0",
 		"string.prototype.padstart": "^3.0.0"
+	},
+	"scripts": {
+		"start": "node_modules/http-server/bin/http-server wvm/dist",
+		"build": "grunt"
 	}
 }
