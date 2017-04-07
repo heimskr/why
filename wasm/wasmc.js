@@ -140,8 +140,17 @@ class WASMC {
 			});
 		} else {
 			let outname = typeof this.opt.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.opt.out;
-			fs.writeFileSync(outname, WASMC.longs2strs(out).join("\n"));
-			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the bytecode to", chalk.bold(outname) + ".");
+
+			let frozen = this.opt.library? JSON.stringify({
+				meta: this.parsed.meta,
+				handlers: this.parsed.handlers,
+				data: this.parsed.data,
+				offsets: this.offsets,
+				out: WASMC.longs2strs(out)
+			}) : WASMC.longs2strs(out).join("\n");
+
+			fs.writeFileSync(outname, frozen);
+			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the output to", chalk.bold(outname) + ".");
 		};
 	};
 
@@ -468,9 +477,18 @@ const _0  = ["register", "zero",  0];
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {
-		alias: { b: "binary", d: "debug", o: "out" },
-		boolean: ["binary", "debug"],
-		default: { binary: false, debug: false }
+		alias: {
+			b: "binary",
+			o: "out",
+			l: "library",
+			d: "debug"
+		},
+		boolean: ["binary", "debug", "library"],
+		default: {
+			binary:  false,
+			debug:   false,
+			library: false
+		}
 	}), filename = opt._[0];
 
 	if (!filename) {
