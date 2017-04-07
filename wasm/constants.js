@@ -6,7 +6,7 @@ exports.R_TYPES = [
 	0b000000001100, // Move From HI Register
 	0b000000001100, // Move From LO Register
 	0b000000001110, // Comparisons
-	0b000000010001, // Jump to Register
+	0b000000010001, // Jumps
 	0b000000010010, // Memory
 	0b000000011111, // Trap
 ];
@@ -39,6 +39,8 @@ exports.I_TYPES = [
 exports.J_TYPES = [
 	0b000000001111, // Jump
 	0b000000010000, // Jump Conditional
+	0b000000100000, // Jump and Link
+	0b000000100001, // Jump and Link Conditional
 ];
 
 exports.OPCODES = {
@@ -93,6 +95,8 @@ exports.OPCODES = {
 	sleiu:  0b000000011101,
 	seqiu:  0b000000011110,
 	trap:   0b000000011111,
+	jl:     0b000000100000,
+	jlc:    0b000000100001,
 };
 
 exports.FUNCTS = {
@@ -108,11 +112,13 @@ exports.FUNCTS = {
 	nand:  0b000000000001,
 	sle:   0b000000000001,
 	sub:   0b000000000001,
+	jrl:   0b000000000010,
 	mult:  0b000000000010,
 	nor:   0b000000000010,
 	s:     0b000000000010,
 	seq:   0b000000000010,
 	addu:  0b000000000011,
+	jrlc:  0b000000000011,
 	not:   0b000000000011,
 	slu:   0b000000000011,
 	or:    0b000000000100,

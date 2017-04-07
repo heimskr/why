@@ -1,8 +1,5 @@
-$reg-size: 300px;
 $border: 1px solid #444;
 $padding: 10px;
-$bottom: -$padding;
-$splitter-size: 3px;
 $font: 10pt Consolas, monospace;
 $navbar-height: 28px;
 
@@ -19,107 +16,16 @@ body {
 	top: $navbar-height;
 	width: 100%;
 	height: 100%;
+	font: $font;
 
 	.hsplitter, .vsplitter {
 		background: #444;
 	}
-
-	* {
-		font: $font;
-	}
 }
 
-#memory_container {
-	overflow: auto;
-
-	#memory {
-		margin: 0;
-		padding: 0px;
-		padding-top: 10px;
-		height: 100%;
-		width: 100%;
-
-		td:first-child {
-			text-align: right;
-			color: #666;
-		}
-
-		td {
-			padding: 3px 10px;
-		}
-
-		td:last-child {
-			width: 100%;
-		}
-
-		tr.program-counter {
-			background: #444;
-
-			td:first-child {
-				color: white;
-			}
-		}
-
-		td:nth-child(2):before {
-			content: "0x";
-			color: #999;
-			padding-right: 5px;
-		}
-
-		.digit-group {
-			padding: 0 1px;
-		}
-	}
-}
-
-@mixin register($class, $color) {
-	tr.reg-#{$class} td:first-child {
-		color: $color !important;
-	}
-}
-
-#registers {
-	border-collapse: collapse;
-	overflow: auto;
-	width: 100%;
-
-	td, th {
-		padding-left: 10px;
-		padding-right: 10px;
-	}
-
-	td:last-child {
-		width: 100%;
-		color: white !important;
-	}
-
-	tr.reg-0 td:first-child {
-		color: black;
-		text-shadow: 0px 0px 2px rgba(255, 255, 255, 1);
-	}
-
-	tr.reg-g, tr.reg-fp, tr.reg-fx, tr.reg-ex, tr.reg-kx {
-		td:first-child {
-			color: #777;
-			text-decoration: line-through;
-		}
-	}
-
-	tr.active-register {
-		background: rgba(0, 255, 0, 0.3);
-	}
-
-	@include register(g, #777);
-	@include register(fp, #777);
-	@include register(sp, #a00);
-	@include register(rt, #0a0);
-	@include register(lo, #a60);
-	@include register(hi, #a60);
-	@include register(rx, #0ac);
-	@include register(ax, #a0c);
-	@include register(tx, #aa0);
-	@include register(sx, #33f);
-}
+@import "memory.scss";
+@import "registers.scss";
+@import "console.scss";
 
 tr {
 	background: #131313;

@@ -1,0 +1,48 @@
+@mixin register($class, $color) {
+	tr.reg-#{$class} td:first-child {
+		color: $color !important;
+	}
+}
+
+#registers {
+	border-collapse: collapse;
+	overflow: auto;
+	width: 100%;
+
+	td, th {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
+	td:last-child {
+		width: 100%;
+		color: white !important;
+	}
+
+	tr.reg-0 td:first-child {
+		color: black;
+		text-shadow: 0px 0px 2px rgba(255, 255, 255, 1);
+	}
+
+	tr.reg-g, tr.reg-fp, tr.reg-fx, tr.reg-ex, tr.reg-kx {
+		td:first-child {
+			color: #777;
+			text-decoration: line-through;
+		}
+	}
+
+	tr.active-register {
+		background: rgba(0, 255, 0, 0.3);
+	}
+
+	@include register(g, #777);
+	@include register(fp, #777);
+	@include register(sp, #a00);
+	@include register(rt, #0a0);
+	@include register(lo, #a60);
+	@include register(hi, #a60);
+	@include register(rx, #0ac);
+	@include register(ax, #a0c);
+	@include register(tx, #aa0);
+	@include register(sx, #33f);
+}

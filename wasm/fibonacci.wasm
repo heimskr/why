@@ -6,7 +6,8 @@ version: "1"
 
 #code
 
-!fibonacci(10)
+!fibonacci(50)
+<print $r0>
 <halt>
 
 @fibonacci // $a0 -> $r0

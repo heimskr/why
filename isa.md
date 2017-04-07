@@ -105,12 +105,16 @@
 					<ol>
 						<li><a href="#op-j">Jump</a> (<code>j</code>)</li>
 						<li><a href="#op-jc">Jump Conditional</a> (<code>jc</code>)</li>
+						<li><a href="#op-jl">Jump and Link</a> (<code>jl</code>)</li>
+						<li><a href="#op-jlc">Jump and Link Conditional</a> (<code>jlc</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-jump-r">Jumps (R-Types)</a>
 					<ol>
 						<li><a href="#op-jr">Jump to Register</a> (<code>jr</code>)</li>
 						<li><a href="#op-jrc">Jump to Register Conditional</a> (<code>jrc</code>)</li>
+						<li><a href="#op-jrl">Jump to Register and Link</a> (<code>jrl</code>)</li>
+						<li><a href="#op-jrlc">Jump to Register and Link Conditional</a> (<code>jrlc</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-r">Memory (R-Types)</a>
@@ -146,6 +150,7 @@
 		<li><a href="#traps">Traps</a>
 			<ol>
 				<li><a href="#trap-printr">Print Register</a> (<code>printr</code>)</li>
+				<li><a href="#trap-halt">Halt</a> (<code>halt</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -161,10 +166,10 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | Number   | Name         | Purpose                                     |
 |----------|--------------|---------------------------------------------|
 | 0        | `$0`         | Always contains zero.                       |
-| 1        | `$g`         | Global area pointer (start of data segment) |
-| 2        | `$s`         | Stack pointer.                              |
-| 3        | `$f`         | Frame pointer.                              |
-| 4        | `$r`         | Return address.                             |
+| 1        | `$gp`        | Global area pointer (start of data segment) |
+| 2        | `$sp`        | Stack pointer.                              |
+| 3        | `$fp`        | Frame pointer.                              |
+| 4        | `$rt`        | Return address.                             |
 | 5        | `$lo`        | Stores the lower half of a mult/div result. |
 | 6        | `$hi`        | Stores the upper half of a mult/div result. |
 | 7–22     | `$r0`–`$rf`  | Contains return values.                     |
@@ -619,6 +624,20 @@ Jumps to the address of a given label or directly to a given address.
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
+### <a name="op-jl"></a>Jump and Link
+> `jl target`  
+> `:: &label` or `:: imm`  
+> `000000100000` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Stores the address of the next instruction in `$rt` and then <a href="#op-j">jumps</a> to the target.
+
+### <a name="op-jlc"></a>Jump and Link Conditional
+> `jlc target, rs`  
+> `:: &label ($rs)` or `:: imm ($rs)`  
+> `000000010001` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero, after storing the address of the next instruction in `$rt`.
+
 ## <a name="ops-jump-r"></a>Jumps (R-Types)
 
 ### <a name="op-jr"></a>Jump to Register
@@ -634,6 +653,20 @@ Jumps to the address stored in `rd`.
 > `000000010001` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
 
 Jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
+
+### <a name="op-jrl"></a>Jump to Register and Link
+> `jrl rd`  
+> `:: $rd`  
+> `000000010001` `0000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000010`
+
+Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`.
+
+### <a name="op-jrlc"></a>Jump to Register and Link Conditional
+> `jrlc rd, rs`  
+> `:: $rd ($rs)`  
+> `000000010001` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+
+Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
 
 ## <a name="ops-mem-r"></a>Memory (R-Types)
 
@@ -770,3 +803,8 @@ Translation:
 Syntax: `<print $rs>`  
 
 Prints the value stored in `rs` to the console.
+
+### <a name="trap-halt"></a>Halt
+Syntax: `<halt>`
+
+Halts the VM.

@@ -254,16 +254,15 @@ class WASMC {
 					};
 				});
 
-				add([null, "j", _0, ["label", name]]);
+				// Store the program counter in $rt and jump to the subroutine.
+				add([null, "jl", _0, ["label", name]]);
 
-				// Pop the values we pushed earlier, but in reverse order.
+				// Now that we've returned from the subroutine, pop the values we pushed earlier, but in reverse order.
 				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
 			} else if (op == "trap") {
 				add([label, "trap", ...args]);
 			} else if (op == "mv") {
 				add([label, "or", args[0], _0, args[1]]);
-			} else if (op == "ret") {
-				add([label, "jr", _0, _0, _RA]);
 			} else if (op == "push") {
 				addPush(args);
 			} else if (op == "pop") {

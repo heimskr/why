@@ -1,0 +1,48 @@
+#console {
+	overflow: auto;
+
+	.clear {
+		position: absolute;
+		top: 5px;
+		right: 7px;
+		font-size: 1.5em;
+		opacity: 0.5;
+		color: red;
+	}
+
+	.messages {
+		width: 100%;
+
+		tr {
+			background: transparent;
+		
+			td {
+				width: 100%;
+			}
+
+			th, td {
+				padding: 2px 4px;
+			}
+
+			th {
+				color: #777;
+
+				&:before {
+					content: "[";
+				}
+
+				&:after {
+					content: "]";
+				}
+			}
+		}
+	}
+
+	pre {
+		background: transparent;
+		border-radius: 0px;
+		color: white;
+		padding: 3px 5px;
+		border: none;
+	}
+}

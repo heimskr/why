@@ -161,7 +161,7 @@ const Parser = module.exports = {
 		if (op == "nand")  return alt_op("~&");
 		if (op == "nor")   return alt_op("~|");
 		if (op == "not")   return `${chalk.red("~") + chalk.yellow(rs)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "or")    return alt_op("|");
+		if (op == "or")    return rs == "$0"? `${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}` : alt_op("|");
 		if (op == "xnor")  return alt_op("~x");
 		if (op == "xor")   return alt_op("x");
 		if (op == "mfhi")  return `${chalk.green("%hi")} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
@@ -171,6 +171,8 @@ const Parser = module.exports = {
 		if (op == "seq")   return `${chalk.yellow(rs)} ${chalk.red("==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "jr")    return `${chalk.dim(":")} ${chalk.yellow(rd)}`;
 		if (op == "jrc")   return `${chalk.dim(":")} ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
+		if (op == "jrl")   return `${chalk.dim("::")} ${chalk.yellow(rd)}`;
+		if (op == "jrlc")  return `${chalk.dim("::")} ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
 		if (op == "c")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
 		if (op == "l")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "s")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
@@ -220,8 +222,10 @@ const Parser = module.exports = {
 	},
 
 	formatJ(op, rs, addr) {
-		if (op == "j")  return `${chalk.dim(":")} ${chalk.magenta(addr)}`;
-		if (op == "jc") return `${chalk.dim(":")} ${chalk.magenta(addr)} (${chalk.yellow(rs)})`;
+		if (op == "j")   return `${chalk.dim(":")} ${chalk.magenta(addr)}`;
+		if (op == "jc")  return `${chalk.dim(":")} ${chalk.magenta(addr)} (${chalk.yellow(rs)})`;
+		if (op == "jl")  return `${chalk.dim("::")} ${chalk.magenta(addr)}`;
+		if (op == "jlc") return `${chalk.dim("::")} ${chalk.magenta(addr)} (${chalk.yellow(rs)})`;
 		return `(unknown j-type: ${chalk.red(op)})`;
 	},
 

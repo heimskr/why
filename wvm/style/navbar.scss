@@ -25,4 +25,26 @@
 		top: 2px;
 	}
 
+	#run {
+		> .glyphicon-play {
+			color: green;
+			display: inline-block;
+		}
+
+		> .glyphicon-pause {
+			color: red;
+			display: none;
+		}
+	}
+		
+
+	#run.active {
+		> .glyphicon-play {
+			display: none;
+		}
+
+		> .glyphicon-pause {
+			display: inline-block;
+		}
+	}
 }
