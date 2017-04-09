@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "@$&*\t \":",
+	chars: "@$&*\t \":()",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
@@ -40,7 +40,7 @@ int				-> (int_hex | int_bin | int_dec)			{% d => d[0][0] %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
 				 | ("-":? ".") [0-9]:+						{% d => parseFloat(filter(d[0]).join("") + d[1].join("")) %}
 
-section			-> (data_section | code_section | meta_section | handlers_section)
+section			-> (data_section | code_section | meta_section | handlers_section | include_section)
 															{% d => d[0][0] %}
 
 meta_section	-> _ meta_header _ sep meta:*				{% d => ["meta", compileObject(d[4])] %}
@@ -50,23 +50,28 @@ meta			-> _ metakey _ [:=] _ string				{% d => [d[1][0], d[5]] %}
 metakey			-> ("orcid" | "version" | "author" | "name"){% d => d[0] %}
 
 handlers_section-> _ handlers_header _ sep handler:*		{% d => ["handlers", compileObject(d[4])] %}
+handlers_header	-> "#handlers" | "#h"						{% d => null %}
 handler			-> _ var (_ ":" _ | __) "&" var _ sep		{% d => [d[1], d[4]] %}
 				 | _ var (_ ":" _ | __) int _ sep			{% d => [d[1], d[3]] %}
 				 | _ sep									{% d => null %}
-handlers_header	-> "#handlers" | "#h"						{% d => null %}
 
 data_section	-> _ data_header _ sep datadef:*			{% d => ["data", compileData(d[4])] %}
+data_header		-> "#data" | "#d"							{% d => null %}
 datadef			-> _ var (_ ":" _ | __) float  _ sep		{% d => ["float",  d[1], d[3]] %}
 				 | _ var (_ ":" _ | __) int    _ sep		{% d => ["int",    d[1], d[3]] %}
 				 | _ var (_ ":" _ | __) string _ sep		{% d => ["string", d[1], d[3]] %}
 				 | _ sep 									{% d => null %}
-data_header		-> "#data" | "#d"							{% d => null %}
 
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", filter(d[4])] %}
+code_header		-> "#code" | "#c"							{% d => null %}
 statement		-> _ op _ sep								{% d => [null, ...d[1][0]] %}
 				 | _ label (_ lineend):* _ op _ sep			{% d => [d[1], ...d[4][0]] %}
 				 | _ sep									{% d => null %}
-code_header		-> "#code" | "#c"							{% d => null %}
+
+include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}
+include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}
+inclusion		-> _ string _ sep							{% d => d[1] %}
+				 | _ sep									{% d => null %}
 
 label			-> "@" var									{% d => d[1] %}
 var_addr		-> "&" var									{% d => ["address", d[1]] %}
@@ -228,7 +233,6 @@ reg_hi			-> "$hi"									{% d => ["hi",     0] %}
 reg_asm			-> "$m" [0-9a-f]							{% d => ["m", parseInt(d[1], 16)] %}
 reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc | reg_lo | reg_hi | reg_asm)
 															{% d => ["register", ...d[0][0]] %}
-
 
 var -> varchar:+ {%
 	(d, location, reject) => {

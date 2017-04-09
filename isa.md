@@ -235,23 +235,23 @@ Like much of this instruction set, the formatting for instructions is copied fro
 ## <a name="format-r"></a>R-Type Instructions
 R-type instructions perform computations with multiple registers.
 
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3) | 27–12 (16) | 11–0 (12) |
-|------------:|:-----------:|:---------:|:---------:|:---------:|:---------:|:----------:|:---------:|
-| **Purpose** | Opcode      | rt        | rs        | rd        | Unused    | Shift      | Function  |
+| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3)    | 27–12 (16) | 11–0 (12) |
+|------------:|:-----------:|:---------:|:---------:|:---------:|:------------:|:----------:|:---------:|
+| **Purpose** | Opcode      | rt        | rs        | rd        | Linker flags | Shift      | Function  |
 
 ## <a name="format-i"></a>I-Type Instructions
 I-type instructions perform computations with registers and an immediate value.
 
-| Range       | 63–52 (12) | 51–46 (6) | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
-|------------:|:----------:|:---------:|:---------:|:---------:|:---------------:|
-| **Purpose** | Opcode     | Unused    | rs        | rd        | Immediate Value |
+| Range       | 63–52 (12) | 51–49 (3) | 48–46 (3)    | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
+|------------:|:----------:|:---------:|:------------:|:---------:|:---------:|:---------------:|
+| **Purpose** | Opcode     | Unused    | Linker flags | rs        | rd        | Immediate Value |
 
 ## <a name="format-j"></a>J-Type Instructions
 J-type instructions point the program counter to a given address under certain circumstances.
 
-|   Range | 63–52 (12) | 51–45 (7) | 44–32 (13) | 31–0 (32) |
-|--------:|:----------:|:---------:|:----------:|:---------:|
-| Purpose | Opcode     | rs        | Unused     | Address   |
+|   Range | 63–52 (12) | 51–45 (7) | 44–35 (10) | 34–32 (3)    | 31–0 (32) |
+|--------:|:----------:|:---------:|:----------:|:------------:|:---------:|
+| Purpose | Opcode     | rs        | Unused     | Linker flags | Address   |
 
 # <a name="operations"></a>Operations
 
@@ -260,21 +260,21 @@ J-type instructions point the program counter to a given address under certain c
 ### <a name="op-add"></a>Add
 > `add rd, rs, rt`  
 > `$rs + $rt -> $rd` or `$rd += $rt`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000000`
 
 Adds the values in `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-sub"></a>Subtract
 > `sub rd, rs, rt`  
 > `$rs - $rt -> $rd` or `$rd -= $rt`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000001`
 
 Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`.
 
 ### <a name="op-mult"></a>Multiply
 > `mult rs, rt`  
 > `$rs * $rt`  
-> `000000000001` `ttttttt` `sssssss` `0000000` `000` `0000000000000000` `000000000010`
+> `000000000001` `ttttttt` `sssssss` `0000000` `...` `0000000000000000` `000000000010`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
@@ -282,21 +282,21 @@ Multiplies the value in `rs` by the value in `rt` and stories the upper half in 
 ### <a name="op-addu"></a>Add Unsigned
 > `addu rd, rs, rt`  
 > `$rs ?+ $rt -> $rd` or `$rd += $rt`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000011`
 
 Adds the values in `rs` and `rt` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-subu"></a>Subtract Unsigned
 > `subu rd, rs, rt`  
 > `$rs ?- $rt -> $rd` or `$rd -= $rt`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000100`
 
 Subtracts the value in `rt` from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-multu"></a>Multiply Unsigned
 > `multu rs, rt`  
 > `$rs ?* $rt`  
-> `000000000001` `ttttttt` `sssssss` `0000000` `000` `0000000000000000` `000000000101`
+> `000000000001` `ttttttt` `sssssss` `0000000` `...` `0000000000000000` `000000000101`
 
 Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
@@ -305,49 +305,49 @@ Multiplies the value in `rs` by the value in `rt` (treating both as unsigned val
 ### <a name="op-and"></a>Bitwise AND
 > `and rd, rs, rt`  
 > `$rs & $rt -> $rd` or `$rd &= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000000`
    
 Computes the bitwise AND of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nand"></a>Bitwise NAND
 > `nand rd, rs, rt`  
 > `$rs ~& $rt -> $rd` or `$rd ~&= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000001`
    
 Computes the bitwise NAND of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nor"></a>Bitwise NOR
 > `nor rd, rs, rt`  
 > `$rs ~| $rt -> $rd` or `$rd ~|= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000010`
    
 Computes the bitwise NOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-not"></a>Bitwise NOT
 > `not rd, rs`  
 > `~$rs -> $rd`  
-> `000000000010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+> `000000000010` `0000000` `sssssss` `ddddddd` `...` `0000000000000000` `000000000011`
    
 Computes the bitwise NOT of `rs` and stores the result in `rd`.
 
 ### <a name="op-or"></a>Bitwise OR
 > `or rd, rs, rt`  
 > `$rs | $rt -> $rd` or `$rd |= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000100`
    
 Computes the bitwise OR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-nxor"></a>Bitwise XNOR
 > `xnor rd, rs, rt`  
 > `$rs ~x $rt -> $rd` or `$rd ~x= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000101`
    
 Computes the bitwise XNOR of `rs` and `rt` and stores the result in `rd`.
 
 ### <a name="op-xor"></a>Bitwise XOR
 > `xor rd, rs, rt`  
 > `$rs x $rt -> $rd` or `$rd x= $rt`  
-> `000000000010` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000110`
+> `000000000010` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000110`
 
 Computes the bitwise XOR of `rs` and `rt` and stores the result in `rd`.
 
@@ -356,42 +356,42 @@ Computes the bitwise XOR of `rs` and `rt` and stores the result in `rd`.
 ### <a name="op-addi"></a>Add Immediate
 > `addi rd, rs, imm`  
 > `$rs + imm -> $rd`  
-> `000000000011` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000000011` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Adds the value in `rs` and a constant and stores the result in `rd`.
 
 ### <a name="op-subi"></a>Subtract Immediate
 > `subi rd, rs, imm`  
 > `$rs - imm -> $rd`  
-> `000000000100` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000000100` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Subtracts a constant from the value in `rs` and stores the result in `rd`.
 
 ### <a name="op-multi"></a>Multiply Immediate
 > `multi rd, rs, imm`  
 > `$rs * imm`
-> `000000000101` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000000101` `000...` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Multiplies the value in `rs` by a constant and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ### <a name="op-addiu"></a>Add Immediate Unsigned
 > `addi rd, rs, imm`  
 > `$rs ?+ imm -> $rd`  
-> `000000010110` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000010110` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Adds the value in `rs` and a constant (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-subiu"></a>Subtract Immediate Unsigned
 > `subi rd, rs, imm`  
 > `$rs ?- imm -> $rd`  
-> `000000010111` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000010111` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Subtracts a constant from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-multiu"></a>Multiply Immediate Unsigned
 > `multi rd, rs, imm`  
 > `$rs ?* imm`
-> `000000011000` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000011000` `000...` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Multiplies the value in `rs` by a constant (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
@@ -400,42 +400,42 @@ Multiplies the value in `rs` by a constant (treating both as unsigned values) an
 ### <a name="op-andi"></a>Bitwise AND Immediate
 > `andi rd, rs, imm`  
 > `$rs & imm -> $rd`  
-> `000000000110` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000000110` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Computes the bitwise AND of `rs` and a constant and stores the result in `rd`.
 
 ### <a name="op-nandi"></a>Bitwise NAND Immediate
 > `nandi rd, rs, imm`  
 > `$rs ~& imm -> $rd`  
-> `000000000111` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000000111` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Computes the bitwise NAND of `rs` and a constant and stores the result in `rd`.
 
 ### <a name="op-nori"></a>Bitwise NOR Immediate
 > `nori rd, rs, imm`  
 > `$rs ~| imm -> $rd`  
-> `000000001000` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001000` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
    
 Computes the bitwise NOR of `rs` and a constant and stores the result in `rd`.
 
 ### <a name="op-ori"></a>Bitwise OR Immediate
 > `ori rd, rs, imm`  
 > `$rs | imm -> $rd`  
-> `000000001001` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001001` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
    
 Computes the bitwise OR of `rs` and a constant and stores the result in `rd`.
 
 ### <a name="op-xnori"></a>Bitwise XNOR Immediate
 > `xnori rd, rs, imm`  
 > `$rs ~x imm -> $rd`  
-> `000000001010` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001010` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
    
 Computes the bitwise XNOR of `rs` and a constant and stores the result in `rd`.
 
 ### <a name="op-xori"></a>Bitwise XOR Immediate
 > `xori rd, rs, imm`  
 > `$rs x imm -> $rd`  
-> `000000001011` `000000` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001011` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 
@@ -444,14 +444,14 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 ### <a name="op-mfhi"></a>Move From HI Register
 > `mfhi rd`  
 > `%hi -> $rd`  
-> `000000001100` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001100` `0000000` `0000000` `ddddddd` `...` `0000000000000000` `000000000000`
 
 Copies the value of the [`HI`](#hi-lo) register into `rd`.
 
 ### <a name="op-mflo"></a>Move From LO Register
 > `mflo rd`  
 > `%lo -> $rd`  
-> `000000001100` `000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000001100` `0000000` `0000000` `ddddddd` `...` `0000000000000000` `000000000001`
 
 Copies the value of the [`LO`](#hi-lo) register into `rd`.
 
@@ -460,7 +460,7 @@ Copies the value of the [`LO`](#hi-lo) register into `rd`.
 ### <a name="op-lui"></a>Load Upper Immediate
 > `lui rd, imm`  
 > `lui: imm -> $rd`  
-> `000000001101` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000001101` `000...` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Loads an immediate value into the upper half of the word at `rd`. The lower half is replaced with zeroes.
 
@@ -469,21 +469,21 @@ Loads an immediate value into the upper half of the word at `rd`. The lower half
 ### <a name="op-sl"></a>Set on Less Than
 > `sl rd, rs, rt`  
 > `$rs < $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000000`
 
 If the value in `rs` is less than the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sle"></a>Set on Less Than or Equal
 > `sle rd, rs, rt`  
 > `$rs <= $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000001`
 
 If the value in `rs` is less than or equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-seq"></a>Set on Equal
 > `seq rd, rs, rt`  
 > `$rs == $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000010`
 
 If the value in `rs` is equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -504,21 +504,21 @@ This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
 ### <a name="op-slu"></a>Set on Less Than Unsigned
 > `slu rd, rs, rt`  
 > `$rs ?< $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000011`
 
 If the value in `rs` is less than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sleu"></a>Set on Less Than or Equal Unsigned
 > `sleu rd, rs, rt`  
 > `$rs ?<= $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000100`
 
 If the value in `rs` is less than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sequ"></a>Set on Equal Unsigned
 > `sequ rd, rs, rt`  
 > `$rs ?== $rt -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000101`
 
 If the value in `rs` is equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -541,21 +541,21 @@ This is a pseudoinstruction; its translation is `slu rd, rt, rs`.
 ### <a name="op-sli"></a>Set on Less Than Immediate
 > `sli rd, rs, imm`  
 > `$rs < imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000000`
 
 If the value in `rs` is less than `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-slei"></a>Set on Less Than or Equal Immediate
 > `slei rd, rs, imm`  
 > `$rs <= imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000001`
 
 If the value in `rs` is less than or equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-seqi"></a>Set on Equal Immediate
 > `seqi rd, rs, imm`  
 > `$rs == imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000010`
 
 If the value in `rs` is equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -576,21 +576,21 @@ This is a pseudoinstruction; its translation is `sl rd, rt, rs`.
 ### <a name="op-sliu"></a>Set on Less Than Immediate Unsigned
 > `sliu rd, rs, imm`  
 > `$rs ?< imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000011`
 
 If the value in `rs` is less than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sleiu"></a>Set on Less Than or Equal Immediate Unsigned
 > `sleiu rd, rs, imm`  
 > `$rs ?<= imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000100`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000100`
 
 If the value in `rs` is less than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-seqiu"></a>Set on Equal Immediate Unsigned
 > `seqiu rd, rs, imm`  
 > `$rs ?== imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `000` `0000000000000000` `000000000101`
+> `000000001110` `ttttttt` `sssssss` `ddddddd` `...` `0000000000000000` `000000000101`
 
 If the value in `rs` is equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -613,28 +613,28 @@ This is a pseudoinstruction; its translation is `sliu rd, rt, rs`.
 ### <a name="op-j"></a>Jump
 > `j target`  
 > `: &label` or `: imm`  
-> `000000001111` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000001111` `0000000` `0000000000...` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional
 > `jc target, rs`  
 > `: &label ($rs)` or `: imm ($rs)`  
-> `000000010000` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000010000` `sssssss` `0000000000...` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
 ### <a name="op-jl"></a>Jump and Link
 > `jl target`  
 > `:: &label` or `:: imm`  
-> `000000100000` `0000000` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000100000` `0000000` `0000000000...` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Stores the address of the next instruction in `$rt` and then <a href="#op-j">jumps</a> to the target.
 
 ### <a name="op-jlc"></a>Jump and Link Conditional
 > `jlc target, rs`  
 > `:: &label ($rs)` or `:: imm ($rs)`  
-> `000000010001` `sssssss` `0000000000000` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000010001` `sssssss` `0000000000...` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero, after storing the address of the next instruction in `$rt`.
 
@@ -643,28 +643,28 @@ Jumps to the address of a given label or directly to a given address, provided t
 ### <a name="op-jr"></a>Jump to Register
 > `jr rd`  
 > `: $rd`  
-> `000000010001` `0000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000010001` `0000000` `0000000` `ddddddd` `...` `0000000000000000` `000000000000`
 
 Jumps to the address stored in `rd`.
 
 ### <a name="op-jrc"></a>Jump to Register Conditional
 > `jrc rd, rs`  
 > `: $rd ($rs)`  
-> `000000010001` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000010001` `0000000` `sssssss` `ddddddd` `...` `0000000000000000` `000000000001`
 
 Jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
 
 ### <a name="op-jrl"></a>Jump to Register and Link
 > `jrl rd`  
 > `:: $rd`  
-> `000000010001` `0000000` `0000000` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000010001` `0000000` `0000000` `ddddddd` `...` `0000000000000000` `000000000010`
 
 Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`.
 
 ### <a name="op-jrlc"></a>Jump to Register and Link Conditional
 > `jrlc rd, rs`  
 > `:: $rd ($rs)`  
-> `000000010001` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000011`
+> `000000010001` `0000000` `sssssss` `ddddddd` `...` `0000000000000000` `000000000011`
 
 Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
 
@@ -673,21 +673,21 @@ Stores the address of the next instruction in `$rt` and jumps to the address sto
 ### <a name="op-c"></a>Copy
 > `c rd, rs`  
 > `[$rs] -> [$rd]`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000000`
+> `000000010010` `0000000` `sssssss` `ddddddd` `...` `0000000000000000` `000000000000`
 
 Copies the value stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-l"></a>Load
 > `l rd, rs`  
 > `[$rs] -> $rd`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000001`
+> `000000010010` `0000000` `sssssss` `ddddddd` `...` `0000000000000000` `000000000001`
 
 Loads the value stored at the memory address pointed to by `rs` into `rd`.
 
 ### <a name="op-s"></a>Store
 > `s rd, rs`  
 > `$rs -> [$rd]`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `000` `0000000000000000` `000000000010`
+> `000000010010` `0000000` `sssssss` `ddddddd` `...` `0000000000000000` `000000000010`
 
 Stores the value of `rs` into the memory address pointed to by `rd`.
 
@@ -696,21 +696,21 @@ Stores the value of `rs` into the memory address pointed to by `rd`.
 ### <a name="op-li"></a>Load Immediate
 > `li rd, imm`  
 > `[imm] -> $rd`  
-> `000000010011` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000010011` `000...` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Loads the value stored at address `imm` into `rd`.
 
 ### <a name="op-si"></a>Store Immediate
 > `si rs, imm`  
 > `$rs -> [imm]`  
-> `000000010100` `000000` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000010100` `000...` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Copies the value of `rs` into memory at address `imm`.
 
 ### <a name="op-set"></a>Set
 > `set rd, imm`  
 > `imm -> $rd`  
-> `000000010101` `000000` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000010101` `000...` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets a register to the given immediate value.
 
@@ -718,7 +718,7 @@ Sets a register to the given immediate value.
 
 ### <a name="op-trap"></a>Trap  
 > (varies; see <a href="#traps">Traps</a>)  
-> `000000011111` `ttttttt` `sssssss` `ddddddd` `000` `xxxxxxxxxxxxxxxx` `ffffffffffff`
+> `000000011111` `ttttttt` `sssssss` `ddddddd` `...` `xxxxxxxxxxxxxxxx` `ffffffffffff`
 
 Performs a special instruction, typically for interaction with the world outside the VM.
 
@@ -801,10 +801,12 @@ Translation:
 
 ### <a name="trap-printr"></a>Print Register
 Syntax: `<print $rs>`  
+Function value: `0000000000000001`
 
 Prints the value stored in `rs` to the console.
 
 ### <a name="trap-halt"></a>Halt
-Syntax: `<halt>`
+Syntax: `<halt>`  
+Function value: `0000000000000010`
 
 Halts the VM.
