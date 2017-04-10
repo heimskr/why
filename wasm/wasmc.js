@@ -14,7 +14,8 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS } = require("./constants.js");
+const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS } = require("./constants.js");
+const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 class WASMC {
 	static die(...a) { console.error(...a); process.exit(1) };
@@ -48,6 +49,7 @@ class WASMC {
 	constructor(opt, filename) {
 		this.opt = opt;
 		this.filename = filename;
+		this.ignoreFlags = !this.opt.library;
 		this.parsed = { };
 		this.offsets = { };
 		this.expanded = [];
@@ -122,8 +124,7 @@ class WASMC {
 
 		this.handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
 
-		this.expandCode();
-		this.processCode();
+		this.processCode(this.expandLabels(this.expandCode()));
 
 		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0), true);
 		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
@@ -197,23 +198,23 @@ class WASMC {
 		this.meta[2] = Long.fromInt(offset);
 	};
 
-	processCode() {
-		this.expanded.forEach((item, i) => {
+	processCode(expanded) {
+		expanded.forEach((item, i) => {
 			this.addCode(item);
 		});
 	};
 
 	expandCode() {
-		const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
+		let expanded = [];
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions will need to be
 		// gone over once again after labels have been sorted out so we can replace variable references with addresses.
 		this.parsed.code.forEach((item) => {
 			let [label, op, ...args] = item;
 			if (label) {
-				this.offsets[label] = this.meta[2].toInt() + this.expanded.length;
+				this.offsets[label] = this.meta[2].toInt() + expanded.length;
 			};
 
-			const add = (x) => this.expanded.push(x);
+			const add = (x) => expanded.push(x);
 
 			const addPush = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
@@ -335,9 +336,13 @@ class WASMC {
 			};
 		});
 
+		return expanded;
+	};
+
+	expandLabels(expanded) {
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
-		this.expanded.forEach((item) => {
+		expanded.forEach((item) => {
 			// First off, now that we've recorded all the label positions,
 			// we can remove the label tags.
 			item.shift();
@@ -348,25 +353,30 @@ class WASMC {
 				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
 					item[i + 1] = this.offsets[arg[1]];
+					item.flags = FLAGS.ADJUST_ADDRESS;
 				};
 			});
 		});
+
+		return expanded;
 	};
 
-	addCode([op, ...args]) {
+	addCode(item) {
+		const [op, ...args] = item;
+		const { flags } = item;
 		if (op == "trap") {
-			this.code.push(this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), 0, args[3]));
+			this.code.push(this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), 0, args[3], flags));
 		} else if (R_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), 0, FUNCTS[op]));
+			this.code.push(this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), 0, FUNCTS[op], flags));
 		} else if (I_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.iType(OPCODES[op], ...args.map(this.convertValue, this)));
+			this.code.push(this.iType(OPCODES[op], ...args.map(this.convertValue, this), flags));
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.jType(OPCODES[op], ...args.map(this.convertValue, this)));
+			this.code.push(this.jType(OPCODES[op], ...args.map(this.convertValue, this), flags));
 		} else if (op == "nop") {
 			this.code.push(Long.UZERO);
 		} else {
 			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
-			this.code.push(Long.fromInt(0xdead, true));
+			this.code.push(Long.fromString("deadc0de", true, 16));
 		};
 	};
 
@@ -393,7 +403,7 @@ class WASMC {
 		throw new Error(`Unrecognized value: ${x}`);
 	};
 
-	rType(opcode, rt, rs, rd, shift, func) {
+	rType(opcode, rt, rs, rd, shift, func, flags=0) {
 		if (!R_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid r-type`);
 		if (rt < 0 || 127 < rt) throw new Error(`rt (${rt}) not within the valid range (0–127)`);
 		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
@@ -401,33 +411,33 @@ class WASMC {
 		if (shift < 0 || 65535 < shift) throw new Error(`shift (${shift}) not within the valid range (0–65535)`);
 		if (func < 0 || 4095 < func) throw new Error(`func (${func}) not within the valid range (0–4095)`);
 
-		let lower = func | (shift << 12) | ((rd & 1) << 31);
+		let lower = func | (shift << 12) | (this.ignoreFlags? 0 : flags << 28) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;
 	};
 
-	iType(opcode, rs, rd, imm) {
+	iType(opcode, rs, rd, imm, flags=0) {
 		if (!I_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid i-type`);
 		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
 		if (rd < 0 || 127 < rd) throw new Error(`rd (${rd}) not within the valid range (0–127)`);
 		if (imm < 0 || 4294967295 < imm) throw new Error(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
 
 		let lower = imm;
-		let upper = rd | (rs << 7) | (opcode << 20);
+		let upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;
 	};
 
-	jType(opcode, rs, addr) {
+	jType(opcode, rs, addr, flags=0) {
 		if (!J_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid j-type`);
 		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
 		if (addr < 0 || 4294967295 < addr) throw new Error(`addr (${addr}) not within the valid range (0–4294967295)`);
 
 		let lower = addr;
-		let upper = (rs << 13) | (opcode << 20);
+		let upper = (this.ignoreFlags? 0 : flags) | (rs << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;

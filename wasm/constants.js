@@ -159,3 +159,8 @@ exports.TRAPS = {
 // largest number of arguments allowed for a subroutine call.
 // equal to the number of arguments registers.
 exports.MAX_ARGS = exports.REGISTER_OFFSETS.t - exports.REGISTER_OFFSETS.a;
+
+exports.FLAGS = {
+	IGNORE: 0,
+	ADJUST_ADDRESS: 1
+};
