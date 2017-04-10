@@ -48,13 +48,12 @@ class WASMC {
 	constructor(opt, filename) {
 		this.opt = opt;
 		this.filename = filename;
-		this.offsets = { };
 		this.parsed = { };
+		this.offsets = { };
+		this.expanded = [];
 		this.meta = [];
 		this.data = [];
-		this.offsets = { };
 		this.code = [];
-		this.expanded = [];
 	};
 
 	get binary() { return this.opt.binary };
@@ -286,24 +285,6 @@ class WASMC {
 				add([label, "slu", args[1], args[0], args[2]]);
 			} else if (op == "sgeu") {
 				add([label, "sleu", args[1], args[0], args[2]]);
-			/*
-
-			Immediate > and >= will require their own instructions, because you can't just
-			swap a register and an immediate value without an unhealthy amount of trickery.
-
-			} else if (op == "sgei") {
-				add([label, "slei", args[1], args[0], args[2]]);
-			} else if (op == "sgeiu") {
-				add([label, "sleiu", args[1], args[0], args[2]]);
-			} else if (op == "sgi") {
-				add([label, args[1], args[0], args[2]]);
-			} else if (op == "sgi") {
-				add([label, "sli", args[1], args[0], args[2]]);
-			} else if (op == "sgiu") {
-				add([label, "sliu", args[1], args[0], args[2]]);
-			} else if (op == "sgi") {
-				add([label, args[1], args[0], args[2]]);
-			*/
 			} else if (op == "jeq") {
 				// First, set $m0 to rs == rt.
 				add([label, "seq", ...args.slice(0, 2), _M[0]]);
@@ -462,13 +443,13 @@ class WASMC {
 };
 
 module.exports = WASMC;
-const _R = _.range(0, 16).map((n) => ["register", "r", n]); // w
-const _A = _.range(0, 16).map((n) => ["register", "a", n]); // i
-const _T = _.range(0, 24).map((n) => ["register", "t", n]); // n
-const _S = _.range(0, 24).map((n) => ["register", "s", n]); // k
-const _K = _.range(0, 17).map((n) => ["register", "k", n]); // 
-const _RA = ["register", "return", 0];                      // ;
-const _M = _.range(0, 16).map((n) => ["register", "m", n]); // )
+const _R = _.range(0, 16).map((n) => ["register", "r", n]);
+const _A = _.range(0, 16).map((n) => ["register", "a", n]);
+const _T = _.range(0, 24).map((n) => ["register", "t", n]);
+const _S = _.range(0, 24).map((n) => ["register", "s", n]);
+const _K = _.range(0, 17).map((n) => ["register", "k", n]);
+const _RA = ["register", "return", 0];
+const _M = _.range(0, 16).map((n) => ["register", "m", n]);
 const _E = _.range(0,  6).map((n) => ["register", "e", n]);
 const _SP = ["register", "stack", 0];
 const _HI = ["register", "hi",    0];

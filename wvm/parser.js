@@ -230,8 +230,8 @@ const Parser = module.exports = {
 	},
 
 	formatTrap(rt, rs, rd, shift, funct) {
-		if (funct == TRAPS.printr) return `<${chalk.bold("print")} ${chalk.yellow(rs)}>`;
-		if (funct == TRAPS.halt)   return `<${chalk.bold("halt")}>`;
+		if (funct == TRAPS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
+		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
 	}
 };

@@ -1,5 +1,10 @@
+#top {
+	height: 100% !important;
+}
+
 #console {
 	overflow: auto;
+	display: none;
 
 	.clear {
 		position: absolute;

@@ -15,7 +15,7 @@ body {
 	left: 0px;
 	top: $navbar-height;
 	width: 100%;
-	height: 100%;
+	height: calc(100% - #{$navbar-height});
 	font: $font;
 
 	.hsplitter, .vsplitter {

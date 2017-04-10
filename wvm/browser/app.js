@@ -94,7 +94,6 @@ let App = window.App = {
 	displayMemory() {
 		$("#memory tr").remove();
 		App.range.forEach(([left, right]) => {
-			console.log({left, right});
 			_.range(left, right + 1).forEach((i) => {
 				let long = App.vm.get(i);
 				$("<tr></tr>").addClass(`addr-${i}${vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
@@ -126,7 +125,7 @@ let App = window.App = {
 		};
 
 		if (App.vm.offsets.$data <= addr) {
-			return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long))
+			return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "cyan").replace(/\#ff0000/g, "#a00");
 		};
 
 		if (App.config.attemptUTF8) {
@@ -159,9 +158,7 @@ let App = window.App = {
 		vm.ttl = WVM.DEFAULT_TTL;
 		vm.programCounter = vm.offsets.$code;
 
-		// App.setRange(`${vm.offsets.$data}-${vm.offsets.$end - 1}; ${vm.memorySize - 10}-${vm.memorySize - 1}`);
 		App.setRange(`0-${vm.offsets.$end - 1}; ${vm.memorySize - 10}-${vm.memorySize - 1}`);
-		// App.displayMemory();
 		App.displayRegisters();
 
 		(vm.onTick = App.onTick)();
@@ -223,6 +220,7 @@ let App = window.App = {
 	},
 
 	log(str) {
+		console.log(str);
 		$("<tr></tr>").append($("<th></th>").text(moment().format("HH:mm:ss"))).append($("<td></td>").html(str)).prependTo($("#console .messages"));
 	},
 
@@ -240,8 +238,8 @@ function initializeUI() {
 		row.click(() => row.toggleClass("active-register"));
 	};
 
-	$(window).resize(() => $("#container").height(window.innerHeight - 28).split({ orientation: "horizontal" }));
-	$("#container").height(window.innerHeight - 28).split({ orientation: "horizontal", limit: 5, position: "80%" });
+	// $(window).resize(() => $("#container").height(window.innerHeight - 28).split({ orientation: "horizontal" }));
+	// $("#container").height(window.innerHeight - 28).split({ orientation: "horizontal", limit: 5, position: "900" });
 	$("#top").split({ orientation: "vertical", limit: 210, position: "83%" });
 	$(".hsplitter").height(4);
 	$(".vsplitter").width(4);
