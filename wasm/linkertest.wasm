@@ -1,0 +1,24 @@
+/*
+Calculates a number in the Fibonacci sequences and then doubles and triples it.
+*/
+
+#meta
+name: "Linker Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#includes
+"compiled/fibonacci.wo"
+"compiled/doubler.wo"
+
+#code
+
+[&iterations] -> $a0
+!fibonacci()
+
+$r0 -> $a0
+!sextuple()
+
+<print $r0>
+<halt>

@@ -62,12 +62,6 @@
 						<li><a href="#op-xori">Bitwise XOR Immediate</a> (<code>xori</code>)</li>
 					</ol>
 				</li>
-				<li><a href="#ops-data-r">Data (R-Types)</a>
-					<ol>
-						<li><a href="#op-mfhi">Move From HI Register</a> (<code>mfhi</code>)</li>
-						<li><a href="#op-mflo">Move From LO Register</a> (<code>mflo</code>)</li>
-					</ol>
-				</li>
 				<li><a href="#ops-data-i">Data (I-Types)</a>
 					<ol>
 						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
@@ -235,9 +229,9 @@ Like much of this instruction set, the formatting for instructions is copied fro
 ## <a name="format-r"></a>R-Type Instructions
 R-type instructions perform computations with multiple registers.
 
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–28 (3)    | 27–12 (16) | 11–0 (12) |
-|------------:|:-----------:|:---------:|:---------:|:---------:|:------------:|:----------:|:---------:|
-| **Purpose** | Opcode      | rt        | rs        | rd        | Linker flags | Shift      | Function  |
+| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–15 (16) | 14–12 (3)    | 11–0 (12) |
+|------------:|:-----------:|:---------:|:---------:|:---------:|:----------:|:------------:|:---------:|
+| **Purpose** | Opcode      | rt        | rs        | rd        | Unused     | Linker flags | Function  |
 
 ## <a name="format-i"></a>I-Type Instructions
 I-type instructions perform computations with registers and an immediate value.
@@ -438,22 +432,6 @@ Computes the bitwise XNOR of `rs` and a constant and stores the result in `rd`.
 > `000000001011` `000...` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
-
-## <a name="ops-data-r"></a>Data (R-Types)
-
-### <a name="op-mfhi"></a>Move From HI Register
-> `mfhi rd`  
-> `%hi -> $rd`  
-> `000000001100` `0000000` `0000000` `ddddddd` `...` `0000000000000000` `000000000000`
-
-Copies the value of the [`HI`](#hi-lo) register into `rd`.
-
-### <a name="op-mflo"></a>Move From LO Register
-> `mflo rd`  
-> `%lo -> $rd`  
-> `000000001100` `0000000` `0000000` `ddddddd` `...` `0000000000000000` `000000000001`
-
-Copies the value of the [`LO`](#hi-lo) register into `rd`.
 
 ## <a name="ops-data-i"></a>Data (I-Types)
 

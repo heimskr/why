@@ -124,7 +124,7 @@ let App = window.App = {
 			});
 		};
 
-		if (App.vm.offsets.$data <= addr) {
+		if (App.vm.offsets.$code <= addr) {
 			return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "cyan").replace(/\#ff0000/g, "#a00");
 		};
 
@@ -281,11 +281,10 @@ function initializeUI() {
 	});
 };
 
-let raw = fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8").split("\n").map((s) => Long.fromString(s, true, 16))
-let parsed = Parser.parse(raw, true);
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
 
-let { offsets, handlers, meta, code } = parsed;
-let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: raw });
+let { offsets, handlers, meta, code } = opened.parsed;
+let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
 window.vm = vm;
 
 $(() => {

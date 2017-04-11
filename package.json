@@ -26,6 +26,7 @@
 	"dependencies": {
 		"chalk": "^1.1.3",
 		"get-line-from-pos": "^1.0.0",
+		"jsome": "^2.3.26",
 		"lodash": "^4.17.4",
 		"long": "^3.2.0",
 		"minimist": "^1.2.0",

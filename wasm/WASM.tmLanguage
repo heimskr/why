@@ -18,7 +18,7 @@
 		<array>
 			<dict>
 				<key>match</key>
-				<string>![^@$lt;*\t ":()]+\b</string>
+				<string>![^@$&lt;*\t ":()]+\b</string>
 				<key>name</key>
 				<string>support.function.wasm</string>
 			</dict>
@@ -86,7 +86,7 @@
 			</dict>
 			<dict>
 				<key>match</key>
-				<string>\b(name|author|orcid|version)\b</string>
+				<string>\b(name|author|orcid|version|library)\b</string>
 				<key>name</key>
 				<string>support.type.property-name.wasm</string>
 			</dict>

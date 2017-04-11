@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 let fs = require("fs"),
 	nearley = require("nearley"),
-	nearleyg = require("nearley/lib/nearley-language-bootstrapped.js"),
-	nearleyc = require("nearley/lib/compile.js"),
-	gen = require("nearley/lib/generate.js"),
 	chalk = require("chalk"),
 	getline = require("get-line-from-pos"),
 	minimist = require("minimist"),
-	prettyjson = require("prettyjson"),
 	Long = require("long"),
 	_ = require("lodash");
 
@@ -46,10 +42,10 @@ class WASMC {
 		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1]) : x;
 	};
 	
-	constructor(opt, filename) {
-		this.opt = opt;
+	constructor(options, filename) {
+		this.options = options;
 		this.filename = filename;
-		this.ignoreFlags = !this.opt.library;
+		this.ignoreFlags = true;
 		this.parsed = { };
 		this.offsets = { };
 		this.expanded = [];
@@ -58,8 +54,8 @@ class WASMC {
 		this.code = [];
 	};
 
-	get binary() { return this.opt.binary };
-	get debug() { return this.opt.debug };
+	get binary() { return this.options.binary };
+	get debug() { return this.options.debug };
 
 	parse() {
 		let grammar;
@@ -67,7 +63,7 @@ class WASMC {
 			grammar = require("./wasm.js");
 		} catch (e) {
 			console.error("Couldn't read wasm.js.");
-			if (this.opt.debug) {
+			if (this.options.debug) {
 				console.error(e);
 			};
 
@@ -75,14 +71,14 @@ class WASMC {
 		};
 
 		const parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
-		const source = fs.readFileSync(this.filename, {encoding: "utf8"}) + "\n";
+		const source = fs.readFileSync(this.filename, "utf8") + "\n";
 
 		let trees;
 		try {
 			trees = parser.feed(source).results;
 		} catch (e) {
 			console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset)}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length}`) + ":");
-			if (this.opt.dev) {
+			if (this.options.dev) {
 				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset); return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})` }));
 			};
 
@@ -101,7 +97,7 @@ class WASMC {
 		this.parsed = trees[0];
 
 		if (typeof this.parsed != "object") {
-			WASMC.die("Parser output isn't an object.");
+			WASMC.die("Error: parser output isn't an object.");
 		};
 
 		if (typeof this.parsed.metadata == "undefined") {
@@ -129,7 +125,7 @@ class WASMC {
 		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0), true);
 		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
 
-		if (this.opt.debug) {
+		if (this.options.debug) {
 			console.log({
 				meta: WASMC.longs2strs(this.meta),
 				handlers: WASMC.longs2strs(this.handlers),
@@ -139,18 +135,16 @@ class WASMC {
 				offsets: this.offsets
 			});
 		} else {
-			let outname = typeof this.opt.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.opt.out;
+			let outname = typeof this.options.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.options.out;
 
-			let frozen = this.opt.library? JSON.stringify({
+			let frozen = this.options.library? JSON.stringify({
 				meta: this.parsed.meta,
-				handlers: this.parsed.handlers,
-				data: this.parsed.data,
-				offsets: this.offsets,
-				out: WASMC.longs2strs(out)
+				labels: this.offsets,
+				program: WASMC.longs2strs(out).join(" ")
 			}) : WASMC.longs2strs(out).join("\n");
 
 			fs.writeFileSync(outname, frozen);
-			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the output to", chalk.bold(outname) + ".");
+			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
 		};
 	};
 
@@ -174,6 +168,10 @@ class WASMC {
 		// The handlers section is exactly as large as the set of exceptions; the data section begins
 		// at the sum of the lengths of the meta section and the handlers section.
 		this.meta[1] = Long.fromInt(this.meta.length + EXCEPTIONS.length);
+
+		// Library compilation can be triggered either via inclusion of "library" in
+		// the program's #data section or by use of the --library option.
+		this.options.library = !(this.ignoreFlags = !(this.parsed.meta.library || this.options.library));
 
 		this.log({ meta: this.meta, version, author });
 	};
@@ -313,6 +311,7 @@ class WASMC {
 					};
 				});
 
+				// console.log({op}, [getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 				add([getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 
 				if (ld) {
@@ -411,7 +410,7 @@ class WASMC {
 		if (shift < 0 || 65535 < shift) throw new Error(`shift (${shift}) not within the valid range (0–65535)`);
 		if (func < 0 || 4095 < func) throw new Error(`func (${func}) not within the valid range (0–4095)`);
 
-		let lower = func | (shift << 12) | (this.ignoreFlags? 0 : flags << 28) | ((rd & 1) << 31);
+		let lower = func | (this.ignoreFlags? 0 : flags << 12) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
@@ -467,7 +466,7 @@ const _LO = ["register", "lo",    0];
 const _0  = ["register", "zero",  0];
 
 if (require.main === module) {
-	const opt = minimist(process.argv.slice(2), {
+	const options = minimist(process.argv.slice(2), {
 		alias: {
 			b: "binary",
 			o: "out",
@@ -476,16 +475,16 @@ if (require.main === module) {
 		},
 		boolean: ["binary", "debug", "library"],
 		default: {
-			binary:  false,
-			debug:   false,
+			binary: false,
+			debug: false,
 			library: false
 		}
-	}), filename = opt._[0];
+	}), filename = options._[0];
 
 	if (!filename) {
 		console.log("Usage: node wasmc.js [filename] <-o out>");
 		process.exit(0);
 	};
 
-	new WASMC(opt, filename).compile();
+	new WASMC(options, filename).compile();
 };

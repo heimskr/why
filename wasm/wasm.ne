@@ -46,6 +46,7 @@ section			-> (data_section | code_section | meta_section | handlers_section | in
 meta_section	-> _ meta_header _ sep meta:*				{% d => ["meta", compileObject(d[4])] %}
 meta_header		-> "#meta" | "#m"							{% d => null %}
 meta			-> _ metakey _ [:=] _ string				{% d => [d[1][0], d[5]] %}
+				 | _ "library"								{% d => ["library", true] %}
 				 | _ sep									{% d => null %}
 metakey			-> ("orcid" | "version" | "author" | "name"){% d => d[0] %}
 
@@ -91,10 +92,9 @@ riap[OPER]		-> pair[$OPER]								{% d => d[0].reverse() %}
 op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_addi | op_subi | op_multi | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
 				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu
-				 | op_lui | op_mfhi | op_mflo
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sequ | op_sgeu | op_sgu | op_sliu | op_sleiu | op_seqiu | op_sgeiu | op_sgiu
-				 | op_c | op_l | op_s | op_li | op_si | op_set
+				 | op_lui | op_c | op_l | op_s | op_li | op_si | op_set
 				 | op_j | op_jc | op_jr | op_jrc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | call | trap_printr | trap_halt | trap_n
@@ -125,8 +125,6 @@ op_mult			-> riap["*"]								{% d => ["mult",     ...d[0],   0 ] %}
 op_multu		-> riap["?*"]								{% d => ["multu",    ...d[0],   0 ] %}
 				 | rv _ "~x="  _ rv							{% d => ["xnor",  d[4], d[0], d[0]] %}
 op_not			-> "~" _ rv into rv							{% d => ["not",     0,  d[2], d[4]] %}
-op_mfhi			-> "%hi" into rv							{% d => ["mfhi",    0,    0,  d[2]] %}
-op_mflo			-> "%lo" into rv							{% d => ["mflo",    0,    0,  d[2]] %}
 op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[0], d[4], d[6]] %}
 op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[0], d[4], d[6]] %}
 op_seq			-> rv _ "==" _ rv into rv					{% d => ["seq",   d[0], d[4], d[6]] %}
@@ -142,7 +140,7 @@ op_jrl			-> "::" _ reg								{% d => ["jrl",     0,    0,  d[2]] %}
 op_jrc			-> ":" _ reg _ "(" _ reg _ ")"				{% d => ["jrc",     0,  d[6], d[2]] %}
 op_jr			-> ":" _ reg								{% d => ["jr",      0,    0,  d[2]] %}
 op_c			-> "[" _ rv _ "]" into "[" _ rv _ "]"		{% d => ["c",       0,  d[2], d[8]] %}
-op_l			-> "[" _ rv _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
+op_l			-> "[" _ reg _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
 op_s			-> rv into "[" _ rv _ "]"					{% d => ["s",       0,  d[0], d[4]] %}
 
 # I-Type instructions														    rs    rd    imm
@@ -188,19 +186,20 @@ op_sgeiu		-> rv _ "?>"  _ int into rv					{% d => ["sgeiu",  d[6], d[0], d[4]] %
 op_sgiu			-> rv _ "?>=" _ int into rv					{% d => ["sgiu",   d[6], d[0], d[4]] %}
 op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
 op_li			-> "[" _ int _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
+				 | "[" _ "&" var _ "]" into rv				{% d => ["li",       0,  d[7], ["label", d[3]]] %}
 op_si			-> rv into "[" _ int _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 				 | "&" var into rv							{% d => ["set",      0,  d[3], ["label", d[1]]] %}
 
 # J-Type instructions														   rs      addr
 op_jl			-> "::" _ int								{% d => ["jl",      0,     d[2]] %}
-				 | "::" _ "&" var							{% d => ["jl",      0,     d[3]] %}
+				 | "::" _ "&" var							{% d => ["jl",      0,     ["label", d[3]]] %}
 op_jlc			-> "::" _ int _ "(" _ reg _ ")"				{% d => ["jlc",   d[6],    d[2]] %}
-				 | "::" _ "&" var _ "(" _ reg _ ")"			{% d => ["jlc",   d[7],    d[3]] %}
+				 | "::" _ "&" var _ "(" _ reg _ ")"			{% d => ["jlc",   d[7],    ["label", d[3]]] %}
 op_j			-> ":" _ int								{% d => ["j",       0,     d[2]] %}
-				 | ":" _ "&" var							{% d => ["j",       0,     d[3]] %}
+				 | ":" _ "&" var							{% d => ["j",       0,     ["label", d[3]]] %}
 op_jc			-> ":" _ int _ "(" _ reg _ ")"				{% d => ["jc",    d[6],    d[2]] %}
-				 | ":" _ "&" var _ "(" _ reg _ ")"			{% d => ["jc",    d[7],    d[3]] %}
+				 | ":" _ "&" var _ "(" _ reg _ ")"			{% d => ["jc",    d[7],    ["label", d[3]]] %}
 
 op_mv			-> reg into reg								{% d => ["mv", d[0], d[2]] %}
 op_ret			-> "ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}

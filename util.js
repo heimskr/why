@@ -1,3 +1,5 @@
+let jsome = require("jsome");
+
 module.exports = (_) => {
 	if (typeof Object.values == "undefined") {
 		Object.values = (obj) => Object.keys(obj).map((key) => obj[key]);
@@ -19,6 +21,10 @@ module.exports = (_) => {
 		multiInvert(obj) {
 			let entries = _.entries(obj);
 			return _.fromPairs(_(obj).values().uniq().value().map((val) => [val, entries.filter((item) => item[1] == val).map((item) => item[0])]));
+		},
+
+		pretty(obj) {
+			return jsome.getColoredString(obj);
 		}
 	});
 };

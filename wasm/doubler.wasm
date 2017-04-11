@@ -1,0 +1,32 @@
+#meta
+name: "Doubler"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+library
+
+#data
+doubler_foo: "hey there."
+doubler_factor: 5
+
+#code
+
+@double
+	$a0 + $a0 -> $r0
+ret
+
+@triple
+	$a0 + $a0 -> $r0
+	$r0 += $a0
+ret
+
+@sextuple
+	!double()
+	$r0 -> $a0
+	!triple()
+ret
+
+@by_factor
+	$a0 * *doubler_factor
+	$lo -> $r0
+ret

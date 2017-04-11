@@ -18,10 +18,23 @@ const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b -
 
 const Parser = module.exports = {
 	open(filename, silent=true) {
-		const text = fs.readFileSync(filename, "utf8");
-		return {
-			parsed: Parser.parse(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent),
-			raw: text.split("\n").map((s) => Long.fromString(s, true, 16))
+		return Parser.read(fs.readFileSync(filename, "utf8"), silent);
+	},
+
+	read(text, silent=true) {
+		if (text.match(/{/)) {
+			const data = JSON.parse(text);
+			const raw = data.program.split(/\s+/).map((s) => Long.fromString(s, true, 16));
+			return {
+				raw,
+				data,
+				parsed: Parser.parse(raw)
+			};
+		} else {
+			return {
+				parsed: Parser.parse(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent),
+				raw: text.split("\n").map((s) => Long.fromString(s, true, 16))
+			};
 		};
 	},
 
@@ -81,6 +94,7 @@ const Parser = module.exports = {
 				rd: get(26, 7),
 				shift: get(36, 16),
 				funct,
+				flags: get(49, 3),
 				type: "r"
 			};
 		} else if (type == "i") {
@@ -89,6 +103,7 @@ const Parser = module.exports = {
 				rs: get(18, 7),
 				rd: get(25, 7),
 				imm: get(32),
+				flags: get(15, 3),
 				type: "i"
 			};
 		} else if (type == "j") {
@@ -96,6 +111,7 @@ const Parser = module.exports = {
 				op: SEDOCPO[opcode][0],
 				rs: get(12, 7),
 				addr: get(32),
+				flags: get(29, 3),
 				type: "j"
 			};
 		} else if (opcode == 0) {

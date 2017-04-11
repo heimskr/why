@@ -78,7 +78,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks("grunt-babel");
 	grunt.loadNpmTasks("grunt-exorcise");
-	grunt.loadNpmTasks("grunt-shell");
 
 	grunt.registerTask("wasmc", "Dummy task for wasmc.js.", () => { });
 	grunt.registerTask("nearley", "Compiles WASM's nearley source.", () => {

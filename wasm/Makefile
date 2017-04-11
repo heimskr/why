@@ -4,39 +4,16 @@ COMPILE		= nearleyc
 TEST		= node tree.js
 EXAMPLE		= example.wasm
 ALT			= example2.wasm
+LIBRARIES	= fibonacci double
+LIBS		= $(patsubst %, compiled/%.wo, $(LIBRARIES))
+
+all: $(COMPILED) $(LIBS)
+
+compiled/%.wo: %.wasm
+	node wasmc.js $*.wasm -lo compiled/$*.wo
 
 $(COMPILED): $(SYNTAX)
 	$(COMPILE) $(SYNTAX) -o $(COMPILED)
 
-test: $(EXAMPLE)
-	$(TEST) $(EXAMPLE)
-
-testj: $(EXAMPLE)
-	$(TEST) $(EXAMPLE) -s
-
-
-
-atest: $(ALT)
-	$(TEST) $(ALT)
-
-atestj: $(ALT)
-	$(TEST) $(ALT) -s
-
-
-
-ftest: fibonacci.wasm
-	$(TEST) fibonacci.wasm
-
-ftestj: fibonacci.wasm
-	$(TEST) fibonacci.wasm -s
-
-
-
-fcompile: $(COMPILED) fibonacci.wasm
-	node wasmc.js fibonacci.wasm
-
-imm: $(COMPILED) immtest.wasm
-	node wasmc.js immtest.wasm
-
 clean:
-	rm -f $(COMPILED)
+	rm -f $(COMPILED) compiled/*
