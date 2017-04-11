@@ -12,8 +12,14 @@ version: "1"
 "compiled/fibonacci.wo"
 "compiled/doubler.wo"
 
+#data
+nothing: "hey."
+
 #code
 
+: &start
+
+@start
 [&iterations] -> $a0
 !fibonacci()
 

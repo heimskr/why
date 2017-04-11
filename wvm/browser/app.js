@@ -281,7 +281,7 @@ function initializeUI() {
 	});
 };
 
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });

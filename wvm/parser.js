@@ -87,13 +87,11 @@ const Parser = module.exports = {
 		if (type == "r") {
 			const funct = get(52);
 			return {
-
 				op: opcode == OPCODES.trap? "trap" : SEDOCPO[opcode].filter((op) => SEDOCPO[opcode].length == 1 || Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
 				opcode,
 				rt: get(12, 7),
 				rs: get(19, 7),
 				rd: get(26, 7),
-				shift: get(36, 16),
 				funct,
 				flags: get(49, 3),
 				type: "r"
@@ -101,6 +99,7 @@ const Parser = module.exports = {
 		} else if (type == "i") {
 			return {
 				op: SEDOCPO[opcode][0],
+				opcode,
 				rs: get(18, 7),
 				rd: get(25, 7),
 				imm: get(32),
@@ -110,13 +109,14 @@ const Parser = module.exports = {
 		} else if (type == "j") {
 			return {
 				op: SEDOCPO[opcode][0],
+				opcode,
 				rs: get(12, 7),
 				addr: get(32),
 				flags: get(29, 3),
 				type: "j"
 			};
 		} else if (opcode == 0) {
-			return { op: "nop" };
+			return { op: "nop", opcode };
 		};
 	},
 
@@ -131,7 +131,7 @@ const Parser = module.exports = {
 
 		if (type == "r") {
 			const funct = get(52);
-			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && (opcode == OPCODES.trap || FUNCTS[op] == funct))[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), get(36, 16), funct);
+			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && (opcode == OPCODES.trap || FUNCTS[op] == funct))[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), funct);
 		} else if (type == "i") {
 			return Parser.formatI(SEDOCPO[opcode][0], Parser.getRegister(get(18, 7)), Parser.getRegister(get(25, 7)), get(32));
 		} else if (type == "j") {
@@ -164,7 +164,7 @@ const Parser = module.exports = {
 		return null;
 	},
 
-	formatR(op, rt, rs, rd, shift, funct) {
+	formatR(op, rt, rs, rd, funct) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${chalk.red(oper + "=")} ${chalk.yellow(rt)}`;
 			if (rt == rd) return `${chalk.yellow(rt)} ${chalk.red(oper + "=")} ${chalk.yellow(rs)}`;
@@ -199,7 +199,7 @@ const Parser = module.exports = {
 		if (op == "slu")   return `${chalk.yellow(rs)} ${chalk.red("?<")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "sleu")  return `${chalk.yellow(rs)} ${chalk.red("?<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "sequ")  return `${chalk.yellow(rs)} ${chalk.red("?==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "trap") return this.formatTrap(rt, rs, rd, shift, funct);
+		if (op == "trap") return this.formatTrap(rt, rs, rd, funct);
 		return `(unknown r-type: ${chalk.red(op)})`;
 	},
 
@@ -246,7 +246,7 @@ const Parser = module.exports = {
 		return `(unknown j-type: ${chalk.red(op)})`;
 	},
 
-	formatTrap(rt, rs, rd, shift, funct) {
+	formatTrap(rt, rs, rd, funct) {
 		if (funct == TRAPS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;

@@ -5,7 +5,7 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #data
-iterations: 50
+iterations: 10
 
 #code
 
@@ -16,6 +16,7 @@ iterations: 50
 
 @fibonacci // $a0 -> $r0
 [ $t0 $t1
+	$a0 -= 2
 	1 -> $t0
 	1 -> $t1
 	0 -> $r0

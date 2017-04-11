@@ -116,10 +116,8 @@ class WASMC {
 	compile() {
 		this.parse();
 		this.processMetadata();
+		this.processHandlers();
 		this.processData();
-
-		this.handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO); // just a placeholder for now.
-
 		this.processCode(this.expandLabels(this.expandCode()));
 
 		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0), true);
@@ -176,6 +174,11 @@ class WASMC {
 		this.log({ meta: this.meta, version, author });
 	};
 
+	processHandlers() {
+		// just a placeholder for now.
+		this.handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO);
+	};
+
 	processData() {
 		let offset = this.meta[1].toInt();
 		_(this.parsed.data).forEach(([type, value], key) => {
@@ -225,8 +228,8 @@ class WASMC {
 			const addPop = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach((reg, i) => {
-					add([getLabel(), "l", _0, _SP, reg]);
-					add([null, "addi", _SP, _SP, 1]);
+					add([getLabel(), "addi", _SP, _SP, 1]);
+					add([null, "l", _0, _SP, reg]);
 				});
 			};
 
@@ -311,7 +314,6 @@ class WASMC {
 					};
 				});
 
-				// console.log({op}, [getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 				add([getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 
 				if (ld) {
@@ -361,21 +363,44 @@ class WASMC {
 	};
 
 	addCode(item) {
+		this.code.push(this.compileInstruction(item));
+	};
+
+	compileInstruction(item) {
 		const [op, ...args] = item;
 		const { flags } = item;
 		if (op == "trap") {
-			this.code.push(this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), 0, args[3], flags));
+			return this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags);
 		} else if (R_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), 0, FUNCTS[op], flags));
+			return this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), FUNCTS[op], flags);
 		} else if (I_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.iType(OPCODES[op], ...args.map(this.convertValue, this), flags));
+			return this.iType(OPCODES[op], ...args.map(this.convertValue, this), flags);
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			this.code.push(this.jType(OPCODES[op], ...args.map(this.convertValue, this), flags));
+			return this.jType(OPCODES[op], ...args.map(this.convertValue, this), flags);
 		} else if (op == "nop") {
-			this.code.push(Long.UZERO);
+			return Long.UZERO;
 		} else {
 			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
-			this.code.push(Long.fromString("deadc0de", true, 16));
+			return Long.fromString("deadc0de", true, 16);
+		};
+	};
+
+	unparseInstruction(instruction) {
+		const { type } = instruction;
+		if (type == "r") {
+			const { opcode, rt, rs, rd, funct, flags } = instruction;
+			return this.rType(opcode, rt, rs, rd, funct, flags);
+		} else if (type == "i") {
+			const { opcode, rs, rd, imm, flags } = instruction;
+			return this.iType(opcode, rs, rd, imm, flags);
+		} else if (type == "j") {
+			const { opcode, rs, addr, flags } = instruction;
+			return this.jType(opcode, rs, addr, flags);
+		} else if (op == "nop") {
+			return Long.UZERO;
+		} else {
+			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
+			return Long.fromString("deadc0de", true, 16);
 		};
 	};
 
@@ -402,12 +427,11 @@ class WASMC {
 		throw new Error(`Unrecognized value: ${x}`);
 	};
 
-	rType(opcode, rt, rs, rd, shift, func, flags=0) {
+	rType(opcode, rt, rs, rd, func, flags=0) {
 		if (!R_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid r-type`);
 		if (rt < 0 || 127 < rt) throw new Error(`rt (${rt}) not within the valid range (0–127)`);
 		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
 		if (rd < 0 || 127 < rd) throw new Error(`rd (${rd}) not within the valid range (0–127)`);
-		if (shift < 0 || 65535 < shift) throw new Error(`shift (${shift}) not within the valid range (0–65535)`);
 		if (func < 0 || 4095 < func) throw new Error(`func (${func}) not within the valid range (0–4095)`);
 
 		let lower = func | (this.ignoreFlags? 0 : flags << 12) | ((rd & 1) << 31);
