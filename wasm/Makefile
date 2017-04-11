@@ -4,7 +4,7 @@ COMPILE		= nearleyc
 TEST		= node tree.js
 EXAMPLE		= example.wasm
 ALT			= example2.wasm
-LIBRARIES	= fibonacci double
+LIBRARIES	= fibonacci doubler
 LIBS		= $(patsubst %, compiled/%.wo, $(LIBRARIES))
 
 all: $(COMPILED) $(LIBS)
