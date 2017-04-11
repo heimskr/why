@@ -28,7 +28,7 @@ const Parser = module.exports = {
 			return {
 				raw,
 				data,
-				parsed: Parser.parse(raw)
+				parsed: Parser.parse(raw, silent)
 			};
 		} else {
 			return {
@@ -45,6 +45,7 @@ const Parser = module.exports = {
 			$code: longs[2].toInt(),
 			$end: longs[3].toInt()
 		};
+
 
 		let handlers = longs.slice(offsets.$handlers, offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);
 
