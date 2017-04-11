@@ -23,7 +23,12 @@
 
 		tr.program-counter {
 			background: #444;
+		}
 
+		tr.stack-pointer {
+			background: #2a2a2a;
+
+		tr.program-counter, tr.stack-pointer {
 			td:first-child {
 				color: white;
 			}

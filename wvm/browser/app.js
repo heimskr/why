@@ -169,8 +169,10 @@ let App = window.App = {
 
 	onTick() {
 		App.displayRegisters();
-		$("#memory tr").removeClass("program-counter");
+		$(".program-counter").removeClass("program-counter");
 		$(`#memory tr.addr-${vm.programCounter}`).addClass("program-counter");
+		$(".stack-pointer").removeClass("stack-pointer");
+		$(`#memory tr.addr-${vm.registers[REGISTER_OFFSETS.stack].toInt()}`).addClass("stack-pointer");
 	},
 
 	onSet(addr, to) {
