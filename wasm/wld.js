@@ -5,8 +5,7 @@ let fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
 	WASMC = require("./wasmc.js"),
-	Parser = require("../wvm/parser.js"),
-	colorize = require("json-colorizer");
+	Parser = require("../wvm/parser.js");
 
 require("../util.js");
 require("string.prototype.padstart").shim();

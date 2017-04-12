@@ -14,8 +14,6 @@ const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS
 
 /** Class representing a virtual machine. */
 class WVM {
-	static get DEFAULT_TTL() { return 500 };
-
 	constructor({ memorySize=640000, program, memory: initial }={}) {
 		if (typeof program != "object") {
 			throw `Unable to load program.`;
@@ -30,12 +28,8 @@ class WVM {
 		this.memorySize = memorySize;
 		this.resetMemory();
 		this.resetRegisters();
-		this.programCounter = this.offsets.$code;
+		this.programCounter = this.offsets.$code * 8;
 		this.active = true;
-
-		// Limits the number of clock cycles the VM will run (to prevent infinite loops).
-		// This will be removed when the VM is stable enough, which may be soon.
-		this.ttl = WVM.DEFAULT_TTL;
 	};
 
 	onTick() { };
@@ -47,12 +41,13 @@ class WVM {
 	};
 
 	start() {
-		while (this.active && this.ttl) {
+		while (this.active) {
 			this.tick();
 		};
 	};
 
 	tick() {
+		console.log("Instruction:", this.loadInstruction().toString(16).padStart(16, "0"));
 		let instr = Parser.parseInstruction(this.loadInstruction());
 		if (!instr) {
 			console.error(chalk.red("Invalid instruction:"), instr, this.loadInstruction().toString(2));
@@ -75,10 +70,9 @@ class WVM {
 		};
 
 		if (!skipPC) {
-			this.programCounter++;
+			this.programCounter += 8;
 		};
 		
-		this.ttl--;
 		this.onTick();
 	};
 

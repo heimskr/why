@@ -221,14 +221,14 @@ class WASMC {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach((reg, i) => {
 					add([getLabel(), "s", _0, reg, _SP]);
-					add([null, "subi", _SP, _SP, 1]);
+					add([null, "subi", _SP, _SP, 8]);
 				});
 			};
 
 			const addPop = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach((reg, i) => {
-					add([getLabel(), "addi", _SP, _SP, 1]);
+					add([getLabel(), "addi", _SP, _SP, 8]);
 					add([null, "l", _0, _SP, reg]);
 				});
 			};
@@ -300,6 +300,7 @@ class WASMC {
 					add([null, "jrc", _0, _M[0], args[2]]);
 				} else if (args[2][0] == "label") {
 					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
+					console.log("jeq with label:", args[2]);
 					add([null, "set",  _0, _M[1], args[2]]);
 					add([null, "jrc", _0, _M[0],   _M[1]]);
 				};
@@ -353,7 +354,8 @@ class WASMC {
 				// If the argument is a label reference,
 				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
-					item[i + 1] = this.offsets[arg[1]];
+					console.log(item, ":", this.offsets[arg[1]], "->", this.offsets[arg[1]] * 8);
+					item[i + 1] = this.offsets[arg[1]] * 8;
 					item.flags = FLAGS.ADJUST_ADDRESS;
 				};
 			});

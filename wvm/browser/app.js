@@ -96,13 +96,13 @@ let App = window.App = {
 		App.range.forEach(([left, right]) => {
 			_.range(left, right + 1).forEach((i) => {
 				let long = App.vm.getWord(8*i);
-				$("<tr></tr>").addClass(`addr-${i}${vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
+				$("<tr></tr>").addClass(`addr-${i}${8*vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
 					.append($("<td></td>").text(8*i))
 					.append($("<td></td>").html(App.hexCell(long)))
 					.append($("<td></td>").html(App.decompiledCell(long, i)))
 					.click((event) => {
 						if (!$(event.target).hasClass("handler")) {
-							vm.programCounter = i;
+							vm.programCounter = 8*i;
 							App.onTick();
 						};
 					});
@@ -156,7 +156,6 @@ let App = window.App = {
 		App.vm = vm;
 		vm.enabled = false;
 		vm.ttl = WVM.DEFAULT_TTL;
-		vm.programCounter = vm.offsets.$code;
 
 		App.setRange(`0-${vm.offsets.$end - 1}; ${vm.memorySize - 10}-${vm.memorySize - 1}`);
 		App.displayRegisters();
@@ -168,11 +167,22 @@ let App = window.App = {
 	},
 
 	onTick() {
+		const pc = vm.programCounter;
+		const sp = vm.registers[REGISTER_OFFSETS.stack].toInt();
+
+		if (pc % 8) {
+			console.warn(`Program counter (${pc}) is misaligned by ${pc % 8} byte${pc % 8 == 1? "" : "s"}.`);
+		};
+
+		if (sp % 8) {
+			console.warn(`Program counter (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
+		};
+
 		App.displayRegisters();
 		$(".program-counter").removeClass("program-counter");
-		$(`#memory tr.addr-${vm.programCounter}`).addClass("program-counter");
+		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter");
 		$(".stack-pointer").removeClass("stack-pointer");
-		$(`#memory tr.addr-${vm.registers[REGISTER_OFFSETS.stack].toInt()}`).addClass("stack-pointer");
+		$(`#memory tr.addr-${sp / 8}`).addClass("stack-pointer");
 	},
 
 	onSetWord(addr, to) {
