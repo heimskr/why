@@ -12,7 +12,8 @@ require("string.prototype.padend").shim();
 
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../wasm/constants.js");
 
-const WVM = module.exports = class WVM {
+/** Class representing a virtual machine. */
+class WVM {
 	static get DEFAULT_TTL() { return 500 };
 
 	constructor({ memorySize=640000, program, memory: initial }={}) {
@@ -38,10 +39,11 @@ const WVM = module.exports = class WVM {
 	};
 
 	onTick() { };
-	onSet(addr, val) { };
+	onSetWord(addr, val) { };
+	onSetByte(addr, val) { };
 
 	loadInstruction() {
-		return this.get(this.programCounter);
+		return this.getWord(this.programCounter);
 	};
 
 	start() {
@@ -81,23 +83,63 @@ const WVM = module.exports = class WVM {
 	};
 
 	resetMemory() {
-		this.memory = new Uint32Array(this.memorySize * 2);
-		this.initial.forEach((long, i) => this.set(i, long));
+		this.memory = new Uint8Array(this.memorySize * 8);
+		this.initial.forEach((long, i) => this.setWord(8*i, long));
 	};
 
 	resetRegisters() {
 		this.registers = _.range(0, 128).map(() => Long.ZERO);
-		this.registers[REGISTER_OFFSETS.stack] = Long.fromInt(this.memorySize - 1, true);
+		this.registers[REGISTER_OFFSETS.stack] = Long.fromInt(8*(this.memorySize - 1), true);
 	};
 
-	get(k, signed=false) {
-		return new Long(this.memory[2*k], this.memory[2*k + 1], signed);
+	getWord(k, signed=false) {
+		if (k & 0b111) {
+			// This isn't supposed to happen, because the key is misaligned. (The key is supposed to be a multiple of 8.
+			// In the future, this may cause an exception.
+		};
+
+		return new Long(this.memory[k+7] | this.memory[k+6] << 8 | this.memory[k+5] << 16 | this.memory[k+4] << 24, this.memory[k+3] << 32 | this.memory[k+2] << 40 | this.memory[k+1] << 48 | this.memory[k] << 56, signed);
 	};
 
-	set(k, v_) {
+
+	setWord(k, v_) {
 		const v = v_ instanceof Long? v_ : Long.fromInt(v_);
-		[this.memory[2*k], this.memory[2*k + 1]] = [v.low, v.high];
-		this.onSet(k, v);
+		
+		if (k & 0b111) {
+			// Another misalignment.
+		};
+
+		const mask = 0xff;
+		for (let i = 0; i < 4; i++) {
+			this.memory[k + 7 - i] = v.low >> 8*i & mask;
+		};
+
+		for (let i = 4; i < 8; i++) {
+			this.memory[k + 7 - i] = v.high >> 8*i & mask;
+		};
+
+		this.onSetWord(k, v);
+		return true;
+	};
+
+	/**
+	 * Gets a byte from memory.
+	 * @param {number} k - The index of the byte to get.
+	 * @param {number} The byte at the given address.
+	 */
+	getByte(k) {
+		return this.memory[k];
+	};
+
+	/**
+	 * Sets a byte in memory to a given value.
+	 * @param {number} k - The index of the byte to set.
+	 * @param {number} v - The byte to write to memory.
+	 * @return {boolean} A boolean representing whether the byte was successfully set.
+	 */
+	setByte(k, v) {
+		this.memory[k] = v instanceof Long? v.low & 0xff : v;
+		this.onSetByte(k, v);
 		return true;
 	};
 
@@ -339,23 +381,23 @@ const WVM = module.exports = class WVM {
 	};
 
 	op_c(rt, rs, rd) {
-		this.set(this.registers[rd], this.get(this.registers[rs]));
+		this.setWord(this.registers[rd], this.getWord(this.registers[rs]));
 	};
 
 	op_l(rt, rs, rd) {
-		this.registers[rd] = this.get(this.registers[rs]);
+		this.registers[rd] = this.getWord(this.registers[rs]);
 	};
 
 	op_s(rt, rs, rd) {
-		this.set(this.registers[rd], this.registers[rs]);
+		this.setWord(this.registers[rd], this.registers[rs]);
 	};
 
 	op_li(rs, rd, imm) {
-		this.registers[rd] = this.get(imm);
+		this.registers[rd] = this.getWord(imm);
 	};
 
 	op_si(rs, rd, imm) {
-		this.set(imm, this.registers[rs]);
+		this.setWord(imm, this.registers[rs]);
 	};
 
 	op_set(rs, rd, imm) {
@@ -368,17 +410,21 @@ const WVM = module.exports = class WVM {
 		} else if (funct == TRAPS.halt) {
 			this.stop();
 			return true;
+		} else if (funct == TRAPS.eval) {
+			let addr = this.registers[rs];
+			console.log({ addr });
 		} else { // This may be changed to an exception in the future.
 			console.log("Unknown trap:", {rt, rs, rd, shift, func});
 		};
 	};
-
 
 	get hi() { return this.registers[REGISTER_OFFSETS.hi] };
 	get lo() { return this.registers[REGISTER_OFFSETS.lo] };
 	set hi(to) { this.registers[REGISTER_OFFSETS.hi] = to };
 	set lo(to) { this.registers[REGISTER_OFFSETS.lo] = to };
 };
+
+module.exports = WVM;
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), { }), filename = opt._[0];

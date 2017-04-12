@@ -150,6 +150,7 @@ exports.REGISTER_OFFSETS = {
 exports.TRAPS = {
 	printr: 0b0000000000000001, // print contents of register whose ID is stored in $a0.
 	halt:   0b0000000000000010, // tells the vm to stop
+	eval:   0b0000000000000011, // executes the string starting at a given address as JS
 };
 
 // largest number of arguments allowed for a subroutine call.

@@ -5,7 +5,7 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #data
-iterations: 10
+iterations: 50
 
 #code
 

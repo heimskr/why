@@ -95,9 +95,9 @@ let App = window.App = {
 		$("#memory tr").remove();
 		App.range.forEach(([left, right]) => {
 			_.range(left, right + 1).forEach((i) => {
-				let long = App.vm.get(i);
+				let long = App.vm.getWord(8*i);
 				$("<tr></tr>").addClass(`addr-${i}${vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
-					.append($("<td></td>").text(i))
+					.append($("<td></td>").text(8*i))
 					.append($("<td></td>").html(App.hexCell(long)))
 					.append($("<td></td>").html(App.decompiledCell(long, i)))
 					.click((event) => {
@@ -162,7 +162,7 @@ let App = window.App = {
 		App.displayRegisters();
 
 		(vm.onTick = App.onTick)();
-		vm.onSet = App.onSet;
+		vm.onSetWord = App.onSetWord;
 		vm.log = App.log;
 		vm.stop = App.stop;
 	},
@@ -175,8 +175,8 @@ let App = window.App = {
 		$(`#memory tr.addr-${vm.registers[REGISTER_OFFSETS.stack].toInt()}`).addClass("stack-pointer");
 	},
 
-	onSet(addr, to) {
-		let row = $(`#memory tr.addr-${addr.toInt()}`);
+	onSetWord(addr, to) {
+		let row = $(`#memory tr.addr-${addr.toInt() / 8}`);
 		row.find("td:eq(1)").html(App.hexCell(to));
 		row.find("td:eq(2)").html(App.decompiledCell(to, addr));
 	},
@@ -261,7 +261,7 @@ function initializeUI() {
 		let old = App.active;
 		App.active = false;
 		let answer = parseFloat(prompt("Time between heartbeats (s):", App.heartrate / 1000));
-		if (isNaN(answer) || answer <= 0) {
+		if (isNaN(answer) || answer < 0) {
 			alert("Invalid number.");
 		} else {
 			App.heartrate = answer * 1000;

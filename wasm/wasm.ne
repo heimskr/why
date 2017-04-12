@@ -97,7 +97,7 @@ op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or 
 				 | op_lui | op_c | op_l | op_s | op_li | op_si | op_set
 				 | op_j | op_jc | op_jr | op_jrc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
-				 | call | trap_printr | trap_halt | trap_n
+				 | call | trap_printr | trap_halt | trap_n | trap_eval
 															{% d => d %}
 into			-> _ "->" _									{% d => null %}
 
@@ -213,6 +213,7 @@ op_nop			-> "<>"										{% d => ["nop"] %}
 trap_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    1 ] %}
 trap_halt		-> "<" _ "halt" _ ">"						{% d => ["trap",    0,    0,    0,    2 ] %}
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
+trap_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    3 ] %}
 
 call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) => x[0])] %}
 				 | "!" var _ "(" _ ")"						{% d => ["call", d[1]] %}

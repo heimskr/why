@@ -4,6 +4,7 @@ let shellescape = require("shell-escape"),
 	chalk = require("chalk");
 
 module.exports = function(grunt) {
+	const jsdoc_files = ["*.js", "wasm/*.js", "wvm/*.js", "wvm/browser/*.js"];
 	grunt.initConfig({
 		pkg: grunt.file.readJSON("package.json"),
 
@@ -30,6 +31,11 @@ module.exports = function(grunt) {
 			nearley: {
 				files: ["wasm/wasm.ne"],
 				tasks: ["nearley"]
+			},
+
+			jsdoc: {
+				files: jsdoc_files,
+				tasks: ["jsdoc"]
 			}
 		},
 
@@ -70,6 +76,15 @@ module.exports = function(grunt) {
 					}
 				}
 			}
+		},
+
+		jsdoc: {
+			dist: {
+				src: jsdoc_files,
+				options: {
+					destination: "doc"
+				}
+			}
 		}
 	});
 
@@ -78,6 +93,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks("grunt-babel");
 	grunt.loadNpmTasks("grunt-exorcise");
+	grunt.loadNpmTasks("grunt-jsdoc");
 
 	grunt.registerTask("wasmc", "Dummy task for wasmc.js.", () => { });
 	grunt.registerTask("nearley", "Compiles WASM's nearley source.", () => {
@@ -111,5 +127,5 @@ module.exports = function(grunt) {
 		};
 	});
 
-	grunt.registerTask("default", ["nearley", "sass", "browserify:dev", "watch"]);
+	grunt.registerTask("default", ["jsdoc", "nearley", "sass", "browserify:dev", "watch"]);
 };

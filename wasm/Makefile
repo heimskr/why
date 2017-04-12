@@ -9,11 +9,13 @@ LIBS		= $(patsubst %, compiled/%.wo, $(LIBRARIES))
 
 all: $(COMPILED) $(LIBS)
 
-compiled/%.wo: %.wasm
-	node wasmc.js $*.wasm -lo compiled/$*.wo
+compiled/%.wo: %.wasm _
+	@ node wasmc.js $*.wasm -lo compiled/$*.wo
 
-$(COMPILED): $(SYNTAX)
-	$(COMPILE) $(SYNTAX) -o $(COMPILED)
+$(COMPILED): $(SYNTAX) _
+	@ $(COMPILE) $(SYNTAX) -o $(COMPILED)
 
 clean:
 	rm -f $(COMPILED) compiled/*
+
+_:
