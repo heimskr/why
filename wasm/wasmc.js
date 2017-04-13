@@ -28,7 +28,7 @@ class WASMC {
 
 	// Given any string, str2longs nullpads and chunks it and returns an array of Longs.
 	static str2longs(str) {
-		return _.chunk(WASMC.nullpad(str).split(""), 8).map(WASMC.chunk2long);
+		return str == ""? [Long.UZERO] : _.chunk(WASMC.nullpad(str).split(""), 8).map(WASMC.chunk2long);
 	};
 
 	// Given an array of longs, returns an array containing the 16-length zero-padded hex representations.
@@ -120,7 +120,7 @@ class WASMC {
 		this.processData();
 		this.processCode(this.expandLabels(this.expandCode()));
 
-		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0), true);
+		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0) * 8, true);
 		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
 
 		if (this.options.debug) {
@@ -143,6 +143,7 @@ class WASMC {
 
 			fs.writeFileSync(outname, frozen);
 			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
+			console.log("Offsets:", this.offsets);
 		};
 	};
 
@@ -161,11 +162,11 @@ class WASMC {
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
 		
 		// The beginning of the handler pointer section comes right after the end of the meta section.
-		this.meta[0] = Long.fromInt(this.meta.length, true);
+		this.meta[0] = Long.fromInt(this.meta.length * 8, true);
 
 		// The handlers section is exactly as large as the set of exceptions; the data section begins
 		// at the sum of the lengths of the meta section and the handlers section.
-		this.meta[1] = Long.fromInt(this.meta.length + EXCEPTIONS.length);
+		this.meta[1] = Long.fromInt((this.meta.length + EXCEPTIONS.length) * 8);
 
 		// Library compilation can be triggered either via inclusion of "library" in
 		// the program's #data section or by use of the --library option.
@@ -192,8 +193,9 @@ class WASMC {
 			};
 
 			this.offsets[key] = offset;
+			console.log(chalk.yellow("Assigning"), offset, "to", key);
 			this.data = this.data.concat(pieces);
-			offset += pieces.length;
+			offset += pieces.length * 8;
 		});
 
 		this.meta[2] = Long.fromInt(offset);
@@ -212,7 +214,8 @@ class WASMC {
 		this.parsed.code.forEach((item) => {
 			let [label, op, ...args] = item;
 			if (label) {
-				this.offsets[label] = this.meta[2].toInt() + expanded.length;
+				this.offsets[label] = this.meta[2].toInt() + expanded.length * 8;
+				console.log(chalk.magenta("Assigning"), this.offsets[label], "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
 			};
 
 			const add = (x) => expanded.push(x);
@@ -354,8 +357,8 @@ class WASMC {
 				// If the argument is a label reference,
 				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
-					console.log(item, ":", this.offsets[arg[1]], "->", this.offsets[arg[1]] * 8);
-					item[i + 1] = this.offsets[arg[1]] * 8;
+					// console.log(item, ":", this.offsets[arg[1]], "->", this.offsets[arg[1]] * 8);
+					item[i + 1] = this.offsets[arg[1]];
 					item.flags = FLAGS.ADJUST_ADDRESS;
 				};
 			});

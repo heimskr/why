@@ -6,6 +6,8 @@ version: "1"
 
 #data
 iterations: 50
+empty: ""
+redherring: 2
 
 #code
 
@@ -21,7 +23,8 @@ iterations: 50
 	1 -> $t1
 	0 -> $r0
 	@fibonacci_loop
-		: &fibonacci_loop_done ($a0 == $0); $a0--
+		: &fibonacci_loop_done if $a0 == $0
+		$a0--
 		$t0 + $t1 -> $r0
 		$t1 -> $t0
 		$r0 -> $t1

@@ -24,7 +24,7 @@
 			</dict>
 			<dict>
 				<key>match</key>
-				<string>(?&lt;=@)[^@$&lt;*\t ":]+\b</string>
+				<string>(?&lt;=@)[^@$&lt;*\t ":]+\b|\bif\b</string>
 				<key>name</key>
 				<string>keyword.control.operator.wasm</string>
 			</dict>
@@ -71,18 +71,6 @@
 				<string>[@&amp;*]</string>
 				<key>name</key>
 				<string>storage.type.wasm</string>
-			</dict>
-			<dict>
-				<key>match</key>
-				<string>:(visited|valid|root|right|required|read-write|read-only|out-range|optional|only-of-type|only-child|nth-of-type|nth-last-of-type|nth-last-child|nth-child|not|link|left|last-of-type|last-child|lang|invalid|indeterminate|in-range|hover|focus|first-of-type|first-line|first-letter|first-child|first|enabled|empty|disabled|default|checked|before|after|active)</string>
-				<key>name</key>
-				<string>entity.other.attribute-name.tag.pseudo-class</string>
-			</dict>
-			<dict>
-				<key>match</key>
-				<string>::(after|before|choices|first-letter|first-line|repeat-index|repeat-item|selection|value)</string>
-				<key>name</key>
-				<string>entity.other.attribute-name.tag.pseudo-element</string>
 			</dict>
 			<dict>
 				<key>match</key>

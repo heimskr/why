@@ -135,9 +135,9 @@ op_sleu			-> rv _ "?<=" _ rv into rv					{% d => ["sleu",  d[0], d[4], d[6]] %}
 op_sequ			-> rv _ "?==" _ rv into rv					{% d => ["sequ",  d[0], d[4], d[6]] %}
 op_sgeu			-> rv _ "?>"  _ rv into rv					{% d => ["sgeu",  d[4], d[0], d[6]] %}
 op_sgu			-> rv _ "?>=" _ rv into rv					{% d => ["sgu",   d[4], d[0], d[6]] %}
-op_jrlc			-> "::" _ reg _ "(" _ reg _ ")"				{% d => ["jrlc",    0,  d[6], d[2]] %}
+op_jrlc			-> "::" _ reg __ "if" __ reg				{% d => ["jrlc",    0,  d[6], d[2]] %}
 op_jrl			-> "::" _ reg								{% d => ["jrl",     0,    0,  d[2]] %}
-op_jrc			-> ":" _ reg _ "(" _ reg _ ")"				{% d => ["jrc",     0,  d[6], d[2]] %}
+op_jrc			-> ":" _ reg __ "if" __ reg					{% d => ["jrc",     0,  d[6], d[2]] %}
 op_jr			-> ":" _ reg								{% d => ["jr",      0,    0,  d[2]] %}
 op_c			-> "[" _ rv _ "]" into "[" _ rv _ "]"		{% d => ["c",       0,  d[2], d[8]] %}
 op_l			-> "[" _ reg _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
@@ -194,19 +194,19 @@ op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 # J-Type instructions														   rs      addr
 op_jl			-> "::" _ int								{% d => ["jl",      0,     d[2]] %}
 				 | "::" _ "&" var							{% d => ["jl",      0,     ["label", d[3]]] %}
-op_jlc			-> "::" _ int _ "(" _ reg _ ")"				{% d => ["jlc",   d[6],    d[2]] %}
-				 | "::" _ "&" var _ "(" _ reg _ ")"			{% d => ["jlc",   d[7],    ["label", d[3]]] %}
+op_jlc			-> "::" _ int __ "if" __ reg				{% d => ["jlc",   d[6],    d[2]] %}
+				 | "::" _ "&" var __ "if" __ reg			{% d => ["jlc",   d[7],    ["label", d[3]]] %}
 op_j			-> ":" _ int								{% d => ["j",       0,     d[2]] %}
 				 | ":" _ "&" var							{% d => ["j",       0,     ["label", d[3]]] %}
-op_jc			-> ":" _ int _ "(" _ reg _ ")"				{% d => ["jc",    d[6],    d[2]] %}
-				 | ":" _ "&" var _ "(" _ reg _ ")"			{% d => ["jc",    d[7],    ["label", d[3]]] %}
+op_jc			-> ":" _ int __ "if" __ reg					{% d => ["jc",    d[6],    d[2]] %}
+				 | ":" _ "&" var __ "if" __ reg				{% d => ["jc",    d[7],    ["label", d[3]]] %}
 
 op_mv			-> reg into reg								{% d => ["mv", d[0], d[2]] %}
 op_ret			-> "ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}
 op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %}
 op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
-op_jeq			-> ":" _ reg _ "(" _ rv _ "==" _ rv ")"		{% d => ["jeq", d[10], d[6], d[2]] %}
-				 | ":" _ "&" var _ "(" _ rv _ "==" _ rv ")"	{% d => ["jeq", d[11], d[7], ["label", d[3]]] %}
+op_jeq			-> ":" _ reg __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[2]] %}
+				 | ":" _ "&" var __ "if" __ rv _ "==" _ rv	{% d => ["jeq", d[11], d[7], ["label", d[3]]] %}
 op_nop			-> "<>"										{% d => ["nop"] %}
 
 # Traps																		   rt    rs    rd   funct

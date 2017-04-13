@@ -28,7 +28,7 @@ class WVM {
 		this.memorySize = memorySize;
 		this.resetMemory();
 		this.resetRegisters();
-		this.programCounter = this.offsets.$code * 8;
+		this.programCounter = this.offsets.$code;
 		this.active = true;
 	};
 
@@ -61,11 +61,11 @@ class WVM {
 		} else {
 			const fn = this[`op_${instr.op}`].bind(this);
 			if (instr.type == "r") {
-				skipPC = !!fn(instr.rt, instr.rs, instr.rd, instr.shift, instr.funct);
+				skipPC = fn(instr.rt, instr.rs, instr.rd, instr.shift, instr.funct);
 			} else if (instr.type == "i") {
-				skipPC = !!fn(instr.rs, instr.rd, instr.imm);
+				skipPC = fn(instr.rs, instr.rd, instr.imm);
 			} else if (instr.type == "j") {
-				skipPC = !!fn(instr.rs, instr.addr);
+				skipPC = fn(instr.rs, instr.addr);
 			};
 		};
 
@@ -87,7 +87,7 @@ class WVM {
 	};
 
 	getWord(k, signed=false) {
-		if (k & 0b111) {
+		if (k % 8) {
 			// This isn't supposed to happen, because the key is misaligned. (The key is supposed to be a multiple of 8.
 			// In the future, this may cause an exception.
 		};
@@ -99,7 +99,7 @@ class WVM {
 	setWord(k, v_) {
 		const v = v_ instanceof Long? v_ : Long.fromInt(v_);
 		
-		if (k & 0b111) {
+		if (k % 8) {
 			// Another misalignment.
 		};
 
@@ -147,7 +147,7 @@ class WVM {
 	};
 
 	link() {
-		this.registers[REGISTER_OFFSETS.return] = Long.fromInt(this.programCounter + 1, true);
+		this.registers[REGISTER_OFFSETS.return] = Long.fromInt(this.programCounter + 8, true);
 	};
 
 	op_add(rt, rs, rd) {

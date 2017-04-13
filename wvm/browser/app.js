@@ -94,12 +94,12 @@ let App = window.App = {
 	displayMemory() {
 		$("#memory tr").remove();
 		App.range.forEach(([left, right]) => {
-			_.range(left, right + 1).forEach((i) => {
+			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
 				let long = App.vm.getWord(8*i);
 				$("<tr></tr>").addClass(`addr-${i}${8*vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
 					.append($("<td></td>").text(8*i))
 					.append($("<td></td>").html(App.hexCell(long)))
-					.append($("<td></td>").html(App.decompiledCell(long, i)))
+					.append($("<td></td>").html(App.decompiledCell(long, 8*i)))
 					.click((event) => {
 						if (!$(event.target).hasClass("handler")) {
 							vm.programCounter = 8*i;
@@ -120,7 +120,7 @@ let App = window.App = {
 		if (App.vm.offsets.$handlers <= addr && addr < App.vm.offsets.$data) {
 			return $("<a></a>").attr({ href: "#" }).addClass("handler").text(long.toString()).click(() => {
 				vm.programCounter = long.toInt();
-				App.onTick();
+				App.highlightProgramCounter();
 			});
 		};
 
@@ -138,7 +138,7 @@ let App = window.App = {
 			const parsed = parseInt(x.join(""), 16);
 			if (App.config.displayWhitespace) {
 				switch (parsed) {
-					case 9: return "⭾";
+					case 9:  return "⭾";
 					case 10:
 					case 13: return "⏎";
 				};
@@ -157,7 +157,7 @@ let App = window.App = {
 		vm.enabled = false;
 		vm.ttl = WVM.DEFAULT_TTL;
 
-		App.setRange(`0-${vm.offsets.$end - 1}; ${vm.memorySize - 10}-${vm.memorySize - 1}`);
+		App.setRange(`0-${vm.offsets.$end - 8}; ${8*(vm.memorySize - 10)}-${8*(vm.memorySize - 1)}`);
 		App.displayRegisters();
 
 		(vm.onTick = App.onTick)();
@@ -167,20 +167,29 @@ let App = window.App = {
 	},
 
 	onTick() {
+		App.displayRegisters();
+		App.highlightProgramCounter();
+		App.highlightStackPointer();
+	},
+
+	highlightProgramCounter() {
 		const pc = vm.programCounter;
-		const sp = vm.registers[REGISTER_OFFSETS.stack].toInt();
 
 		if (pc % 8) {
 			console.warn(`Program counter (${pc}) is misaligned by ${pc % 8} byte${pc % 8 == 1? "" : "s"}.`);
 		};
-
-		if (sp % 8) {
-			console.warn(`Program counter (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
-		};
-
-		App.displayRegisters();
+		
 		$(".program-counter").removeClass("program-counter");
 		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter");
+	},
+
+	highlightStackPointer() {
+		const sp = vm.registers[REGISTER_OFFSETS.stack].toInt();
+
+		if (sp % 8) {
+			console.warn(`Stack pointer (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
+		};
+
 		$(".stack-pointer").removeClass("stack-pointer");
 		$(`#memory tr.addr-${sp / 8}`).addClass("stack-pointer");
 	},
@@ -246,8 +255,22 @@ let App = window.App = {
 function initializeUI() {
 	for (let i = 0; i < 128; i++) {
 		const regname = Parser.getRegister(i);
-		const row = $("<tr></tr>").appendTo($("#registers")).append($("<td></td>").text(regname)).append($("<td></td>").text("0")).addClass("reg-" + regname.replace(/^\$/, "").replace(/^([ratskremf])(\d+[a-f]*|\d*[a-f]+)$/, "$1x"));
-		row.click(() => row.toggleClass("active-register"));
+		const row = $("<tr></tr>").appendTo($("#registers")).addClass("reg-" + regname.replace(/^\$/, "").replace(/^([ratskremf])(\d+[a-f]*|\d*[a-f]+)$/, "$1x"));
+		const valcell = $("<td></td>").text("0");
+		const namecell = $("<td></td>").text(regname).click((event) => {
+			event.stopPropagation();
+			let input = prompt(`New value for ${regname}:`);
+			const radix = { b: 2, t: 3, q: 4, o: 8, h: 16, x: 16 }[input[0]] || 10;
+			const unsigned = input[input.length - 1] == "u";
+			const long = App.vm.registers[i] = Long.fromString(input.substring(radix != 10, input.length - (unsigned? 1 : 0)), unsigned, radix);
+			valcell.text(long.toString(10));
+			
+			if (i == REGISTER_OFFSETS.stack) {
+				App.highlightStackPointer();
+			};
+		});
+
+		row.append(namecell).append(valcell).click(() => row.toggleClass("active-register"));
 	};
 
 	// $(window).resize(() => $("#container").height(window.innerHeight - 28).split({ orientation: "horizontal" }));
@@ -293,7 +316,9 @@ function initializeUI() {
 	});
 };
 
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.wo", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
