@@ -46,7 +46,6 @@ const Parser = module.exports = {
 			$end: longs[3].toInt()
 		};
 
-
 		let handlers = longs.slice(offsets.$handlers, offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);
 
 		let meta = {
@@ -55,7 +54,7 @@ const Parser = module.exports = {
 
 		[meta.name, meta.version, meta.author] = _(longs).slice(6, offsets.$handlers).longStrings();
 
-		let code = longs.slice(offsets.$code, offsets.$end);
+		let code = longs.slice(offsets.$code / 8, offsets.$end / 8);
 
 		if (!silent) {
 			console.log(chalk.dim("/*"));

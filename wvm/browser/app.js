@@ -157,7 +157,7 @@ let App = window.App = {
 		vm.enabled = false;
 		vm.ttl = WVM.DEFAULT_TTL;
 
-		App.setRange(`0-${vm.offsets.$end - 8}; ${8*(vm.memorySize - 10)}-${8*(vm.memorySize - 1)}`);
+		App.setRange(`0-${vm.offsets.$end*8 - 8}; ${8*(vm.memorySize - 10)}-${8*(vm.memorySize - 1)}`);
 		App.displayRegisters();
 
 		(vm.onTick = App.onTick)();
@@ -264,7 +264,7 @@ function initializeUI() {
 			const unsigned = input[input.length - 1] == "u";
 			const long = App.vm.registers[i] = Long.fromString(input.substring(radix != 10, input.length - (unsigned? 1 : 0)), unsigned, radix);
 			valcell.text(long.toString(10));
-			
+
 			if (i == REGISTER_OFFSETS.stack) {
 				App.highlightStackPointer();
 			};
@@ -316,9 +316,9 @@ function initializeUI() {
 	});
 };
 
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.wo", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.wo", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });

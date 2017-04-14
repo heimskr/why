@@ -143,7 +143,6 @@ class WASMC {
 
 			fs.writeFileSync(outname, frozen);
 			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
-			console.log("Offsets:", this.offsets);
 		};
 	};
 
@@ -193,7 +192,7 @@ class WASMC {
 			};
 
 			this.offsets[key] = offset;
-			console.log(chalk.yellow("Assigning"), offset, "to", key);
+			this.log(chalk.yellow("Assigning"), offset, "to", key);
 			this.data = this.data.concat(pieces);
 			offset += pieces.length * 8;
 		});
@@ -215,7 +214,7 @@ class WASMC {
 			let [label, op, ...args] = item;
 			if (label) {
 				this.offsets[label] = this.meta[2].toInt() + expanded.length * 8;
-				console.log(chalk.magenta("Assigning"), this.offsets[label], "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
+				this.log(chalk.magenta("Assigning"), this.offsets[label], "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
 			};
 
 			const add = (x) => expanded.push(x);
@@ -281,10 +280,10 @@ class WASMC {
 			} else if (op == "pop") {
 				addPop(args);
 			} else if (op == "sg") {
-				console.log("expanding sg");
+				this.log("expanding sg");
 				add([label, "sl", args[1], args[0], args[2]]);
 			} else if (op == "sge") {
-				console.log("expanding sge");
+				this.log("expanding sge");
 				add([label, "sle", args[1], args[0], args[2]]);
 			} else if (op == "sgu") {
 				add([label, "slu", args[1], args[0], args[2]]);
@@ -303,7 +302,7 @@ class WASMC {
 					add([null, "jrc", _0, _M[0], args[2]]);
 				} else if (args[2][0] == "label") {
 					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
-					console.log("jeq with label:", args[2]);
+					this.log("jeq with label:", args[2]);
 					add([null, "set",  _0, _M[1], args[2]]);
 					add([null, "jrc", _0, _M[0],   _M[1]]);
 				};
@@ -357,7 +356,6 @@ class WASMC {
 				// If the argument is a label reference,
 				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
-					// console.log(item, ":", this.offsets[arg[1]], "->", this.offsets[arg[1]] * 8);
 					item[i + 1] = this.offsets[arg[1]];
 					item.flags = FLAGS.ADJUST_ADDRESS;
 				};
@@ -385,7 +383,7 @@ class WASMC {
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
+			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
 			return Long.fromString("deadc0de", true, 16);
 		};
 	};
@@ -404,7 +402,7 @@ class WASMC {
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			console.log(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
+			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
 			return Long.fromString("deadc0de", true, 16);
 		};
 	};
@@ -471,12 +469,14 @@ class WASMC {
 		return long;
 	};
 
+	warn(...args) {
+		console.warn(...args);
+	};
+
 	log(...args) {
-		if (this.debug) {
+		if (this.options.debug) {
 			console.log(...args);
 		};
-
-		return !!this.debug;
 	};
 };
 

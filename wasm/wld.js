@@ -62,17 +62,17 @@ class Linker {
 			let parser = Parser.open(lib);
 			let { $handlers, $data, $code, $end } = parser.parsed.offsets;
 			this.libraries[lib] = parser;
-			parser.dataStart = this.dataOffset + this.data.length;
-			this.data = this.data.concat(parser.raw.slice($data, $code));
+			parser.dataStart = this.dataOffset + this.data.length * 8;
+			this.data = this.data.concat(parser.raw.slice($data / 8, $code / 8));
 		});
 
-		this.codeOffset = this.dataOffset + this.data.length
+		this.codeOffset = this.dataOffset + this.data.length * 8;
 		return this;
 	};
 
 	readjustCode() {
 		let expanded = this.compiler.expandCode();
-		let codeStart = this.codeOffset + expanded.length;
+		let codeStart = this.codeOffset + expanded.length * 8;
 		let dataStart;
 
 		this.libraryNames.forEach((lib) => {
@@ -111,7 +111,7 @@ class Linker {
 					} else if (instruction.type == "i") {
 						addr = instruction.imm;
 					} else {
-						this.warn("Flag detected for r-type instruction:", instruction);
+						this.warn("Flag detected for R-type instruction:", instruction);
 					};
 
 					instruction[instruction.type == "j"? "addr" : "imm"] = adjust(addr);
@@ -127,10 +127,10 @@ class Linker {
 				};
 
 				this.labels[label] = adjust(labels[label]);
-				console.log(`Adjusting ${label} from ${labels[label]} to ${this.labels[label]}.`);
+				this.log(`${chalk.cyan("Adjusting")} ${label} from ${chalk.bold(labels[label])} to ${chalk.bold(this.labels[label])}.`);
 			});
 
-			codeStart += library.code.length;
+			codeStart += library.code.length * 8;
 		});
 
 		return expanded;
@@ -169,6 +169,12 @@ class Linker {
 	warn(...args) {
 		console.warn(...args);
 	};
+
+	log(...args) {
+		if (this.options.debug) {
+			console.log(...args);
+		};
+	};
 };
 
 module.exports = Linker;
@@ -177,9 +183,12 @@ if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
 		alias: {
 			o: "out",
+			d: "debug",
 		},
-		boolean: [],
-		default: { }
+		boolean: ["debug"],
+		default: {
+			debug: false 
+		}
 	}), filename = options._[0];
 
 	if (!filename || options._.length < 2 || !options.out) {
