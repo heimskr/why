@@ -279,16 +279,6 @@ class WASMC {
 				addPush(args);
 			} else if (op == "pop") {
 				addPop(args);
-			} else if (op == "sg") {
-				this.log("expanding sg");
-				add([label, "sl", args[1], args[0], args[2]]);
-			} else if (op == "sge") {
-				this.log("expanding sge");
-				add([label, "sle", args[1], args[0], args[2]]);
-			} else if (op == "sgu") {
-				add([label, "slu", args[1], args[0], args[2]]);
-			} else if (op == "sgeu") {
-				add([label, "sleu", args[1], args[0], args[2]]);
 			} else if (op == "jeq") {
 				// First, set $m0 to rs == rt.
 				add([label, "seq", ...args.slice(0, 2), _M[0]]);
@@ -432,10 +422,10 @@ class WASMC {
 
 	rType(opcode, rt, rs, rd, func, flags=0) {
 		if (!R_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid r-type`);
-		if (rt < 0 || 127 < rt) throw new Error(`rt (${rt}) not within the valid range (0–127)`);
-		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
-		if (rd < 0 || 127 < rd) throw new Error(`rd (${rd}) not within the valid range (0–127)`);
-		if (func < 0 || 4095 < func) throw new Error(`func (${func}) not within the valid range (0–4095)`);
+		if (rt < 0 || 127 < rt) this.warn(`rt (${rt}) not within the valid range (0–127)`);
+		if (rs < 0 || 127 < rs) this.warn(`rs (${rs}) not within the valid range (0–127)`);
+		if (rd < 0 || 127 < rd) this.warn(`rd (${rd}) not within the valid range (0–127)`);
+		if (func < 0 || 4095 < func) this.warn(`func (${func}) not within the valid range (0–4095)`);
 
 		let lower = func | (this.ignoreFlags? 0 : flags << 12) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
@@ -446,21 +436,21 @@ class WASMC {
 
 	iType(opcode, rs, rd, imm, flags=0) {
 		if (!I_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid i-type`);
-		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
-		if (rd < 0 || 127 < rd) throw new Error(`rd (${rd}) not within the valid range (0–127)`);
-		if (imm < 0 || 4294967295 < imm) throw new Error(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
+		if (rs < 0 || 127 < rs) this.warn(`rs (${rs}) not within the valid range (0–127)`);
+		if (rd < 0 || 127 < rd) this.warn(`rd (${rd}) not within the valid range (0–127)`);
+		if (imm < -2147483648 || 2147483647 < imm) this.warn(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
 
 		let lower = imm;
 		let upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) | (opcode << 20);
-		let long = Long.fromBits(lower, upper, true);
+		let long = Long.fromBits(lower, upper);
 
 		return long;
 	};
 
 	jType(opcode, rs, addr, flags=0) {
 		if (!J_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid j-type`);
-		if (rs < 0 || 127 < rs) throw new Error(`rs (${rs}) not within the valid range (0–127)`);
-		if (addr < 0 || 4294967295 < addr) throw new Error(`addr (${addr}) not within the valid range (0–4294967295)`);
+		if (rs < 0 || 127 < rs) this.warn(`rs (${rs}) not within the valid range (0–127)`);
+		if (addr < 0 || 4294967295 < addr) this.warn(`addr (${addr}) not within the valid range (0–4294967295)`);
 
 		let lower = addr;
 		let upper = (this.ignoreFlags? 0 : flags) | (rs << 13) | (opcode << 20);
@@ -470,7 +460,7 @@ class WASMC {
 	};
 
 	warn(...args) {
-		console.warn(...args);
+		console.log(...args);
 	};
 
 	log(...args) {

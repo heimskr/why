@@ -6,6 +6,7 @@ EXAMPLE		= example.wasm
 ALT			= example2.wasm
 LIBRARIES	= fibonacci doubler
 LIBS		= $(patsubst %, compiled/%.wo, $(LIBRARIES))
+CHECK		= \x1b[32m\xe2\x9c\x94\x1b[0m
 
 all: $(COMPILED) $(LIBS) compiled/linkertest.why
 
@@ -19,7 +20,7 @@ fib:
 	@ node wasmc.js fibonacci.wasm -lo compiled/fibonacci.wo
 
 $(COMPILED): $(SYNTAX) _
-	@ $(COMPILE) $(SYNTAX) -o $(COMPILED)
+	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled wasm.ne to wasm.js."
 
 clean:
 	rm -f $(COMPILED) compiled/*

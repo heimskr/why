@@ -1,0 +1,29 @@
+#meta
+name: "Shift Tests"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#code
+
+5 -> $s0
+3 -> $s1
+-133 -> $s2
+
+$s0 <<= 4
+<print $s0>
+// Expected value of $s0: 0x50
+
+$s0 >>= $s1
+<print $s0>
+// Expected value of $s0: 0xa
+
+$s2 >>= 2
+<print $s2>
+// Expected value of $s2: -0x22
+
+$s2 >>>= 3
+<print $s2>
+// Expected value of $s2: 0x1ffffffffffffffb
+
+<halt>

@@ -47,7 +47,6 @@ class WVM {
 	};
 
 	tick() {
-		console.log("Instruction:", this.loadInstruction().toString(16).padStart(16, "0"));
 		let instr = Parser.parseInstruction(this.loadInstruction());
 		if (!instr) {
 			console.error(chalk.red("Invalid instruction:"), instr, this.loadInstruction().toString(2));
@@ -170,6 +169,18 @@ class WVM {
 
 	// multu
 
+	op_sll(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().shiftLeft(this.registers[rt]);
+	};
+
+	op_srl(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(this.registers[rt]);
+	};
+
+	op_sra(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().shiftRight(this.registers[rt]);
+	};
+
 	op_and(rt, rs, rd) {
 		this.registers[rd] = this.registers[rs].and(this.registers[rt]);
 	};
@@ -210,15 +221,15 @@ class WVM {
 
 	// multi
 
-	op_addiu(rs, rd, imm) {
+	op_addui(rs, rd, imm) {
 		this.registers[rd] = Long.fromInt(this.registers[rs], true).add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true));
 	};
 
-	op_subiu(rs, rd, imm) {
+	op_subui(rs, rd, imm) {
 		this.registers[rd] = Long.fromInt(this.registers[rs], true).subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true));;
 	};
 
-	op_multiu(rs, rd, imm) {
+	op_multui(rs, rd, imm) {
 		let i = imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true);
 		let n = this.registers[rs].toUnsigned();
 
@@ -239,6 +250,18 @@ class WVM {
 
 		this.hi = nhiihi.add(abhi);
 		this.lo = new Long(nloilo.toInt(), ablo.toInt(), true);
+	};
+
+	op_slli(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().shiftLeft(imm instanceof Long? imm.toUnsigned() : imm);
+	};
+
+	op_srli(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(imm instanceof Long? imm.toUnsigned() : imm);
+	};
+
+	op_srai(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().shiftRight(imm instanceof Long? imm.toUnsigned() : imm);
 	};
 
 	op_andi(rs, rd, imm) {
@@ -290,7 +313,7 @@ class WVM {
 	};
 
 	op_seq(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().equals(this.registers[rt].toSigned())? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
 	};
 
 	op_slu(rt, rs, rd) {
@@ -299,10 +322,6 @@ class WVM {
 
 	op_sleu(rt, rs, rd) {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
-	};
-
-	op_sequ(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toUnsigned().equals(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
 	};
 
 	op_sli(rs, rd, imm) {
@@ -314,20 +333,15 @@ class WVM {
 	};
 
 	op_seqi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().equals(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
 	};
 
-	op_sliu(rs, rd, imm) {
+	op_slui(rs, rd, imm) {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
 	};
 
-	op_sleiu(rs, rd, imm) {
+	op_sleui(rs, rd, imm) {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
-	};
-
-	// Is there really any difference between seqiu and seqi, or between seq and sequ?
-	op_seqiu(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
 	};
 
 	op_j(rs, addr) {
@@ -386,12 +400,32 @@ class WVM {
 		this.setWord(this.registers[rd], this.registers[rs]);
 	};
 
+	op_cb(rt, rs, rd) {
+		this.setByte(this.registers[rd], this.getByte(this.registers[rs]));
+	};
+
+	op_lb(rt, rs, rd) {
+		this.registers[rd] = this.getByte(this.registers[rs]);
+	};
+
+	op_sb(rt, rs, rd) {
+		this.setByte(this.registers[rd], this.registers[rs].and(0xff));
+	};
+
 	op_li(rs, rd, imm) {
 		this.registers[rd] = this.getWord(imm);
 	};
 
 	op_si(rs, rd, imm) {
 		this.setWord(imm, this.registers[rs]);
+	};
+
+	op_lbi(rs, rd, imm) {
+		this.registers[rd] = this.getByte(imm);
+	};
+
+	op_sbi(rs, rd, imm) {
+		this.setByte(imm, this.registers[rs].and(0xff));
 	};
 
 	op_set(rs, rd, imm) {

@@ -34,6 +34,11 @@ exports.I_TYPES = [
 	0b000000011100, // Set on Less Than Immediate Unsigned
 	0b000000011101, // Set on Less Than or Equal Immediate Unsigned
 	0b000000011110, // Set on Equal Immediate Unsigned
+	0b000000100010, // Shift Left Logical Immediate
+	0b000000100011, // Shift Right Logical Immediate
+	0b000000100100, // Shift Right Arithmetic Immediate
+	0b000000100101, // Load Byte Immediate
+	0b000000100110, // Store Byte Immediate
 ];
 
 exports.J_TYPES = [
@@ -46,6 +51,9 @@ exports.J_TYPES = [
 exports.OPCODES = {
 	add:    0b000000000001,
 	addu:   0b000000000001,
+	sll:    0b000000000001,
+	srl:    0b000000000001,
+	sra:    0b000000000001,
 	sub:    0b000000000001,
 	subu:   0b000000000001,
 	mult:   0b000000000001,
@@ -78,23 +86,31 @@ exports.OPCODES = {
 	jr:     0b000000010001,
 	jrc:    0b000000010001,
 	c:      0b000000010010,
+	cb:     0b000000010010,
 	l:      0b000000010010,
+	lb:     0b000000010010,
 	s:      0b000000010010,
+	sb:     0b000000010010,
 	li:     0b000000010011,
 	si:     0b000000010100,
 	set:    0b000000010101,
-	addiu:  0b000000010110,
-	subiu:  0b000000010111,
-	multiu: 0b000000011000,
+	addui:  0b000000010110,
+	subui:  0b000000010111,
+	multui: 0b000000011000,
 	sli:    0b000000011001,
 	slei:   0b000000011010,
 	seqi:   0b000000011011,
-	sliu:   0b000000011100,
-	sleiu:  0b000000011101,
-	seqiu:  0b000000011110,
+	slui:   0b000000011100,
+	sleui:  0b000000011101,
+	sequi:  0b000000011110,
 	trap:   0b000000011111,
 	jl:     0b000000100000,
 	jlc:    0b000000100001,
+	slli:   0b000000100010,
+	srli:   0b000000100011,
+	srai:   0b000000100100,
+	lbi:    0b000000100101,
+	sbi:    0b000000100110,
 };
 
 exports.FUNCTS = {
@@ -114,37 +130,44 @@ exports.FUNCTS = {
 	s:     0b000000000010,
 	seq:   0b000000000010,
 	addu:  0b000000000011,
+	cb:    0b000000000011,
 	jrlc:  0b000000000011,
 	not:   0b000000000011,
 	slu:   0b000000000011,
+	lb:    0b000000000100,
 	or:    0b000000000100,
 	sleu:  0b000000000100,
 	subu:  0b000000000100,
 	multu: 0b000000000101,
+	sb:    0b000000000101,
 	sequ:  0b000000000101,
 	xnor:  0b000000000101,
+	sll:   0b000000000110,
 	xor:   0b000000000110,
+	srl:   0b000000000111,
+	sra:   0b000000001000,
+
 };
 
 exports.REGISTER_OFFSETS = {
-	0: 0,
-	zero: 0,
-	g: 1,
-	sp: 2,
-	stack: 2,
-	fp: 3,
-	ra: 4,
+	0:      0,
+	zero:   0,
+	g:      1,
+	sp:     2,
+	stack:  2,
+	fp:     3,
+	ra:     4,
 	return: 4,
-	lo: 5,
-	hi: 6,
-	r: 7,
-	a: 23,
-	t: 39,
-	s: 62,
-	k: 85,
-	m: 102,
-	f: 118,
-	e: 122
+	lo:     5,
+	hi:     6,
+	r:      7,
+	a:     23,
+	t:     39,
+	s:     62,
+	k:     85,
+	m:    102,
+	f:    118,
+	e:    122,
 };
 
 exports.TRAPS = {

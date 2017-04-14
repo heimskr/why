@@ -88,7 +88,7 @@ let App = window.App = {
 	},
 
 	displayRegisters() {
-		_.range(0, 128).forEach((i) => $($("#registers tr")[i]).find("td:last-child").text(vm.registers[i]));
+		_.range(0, 128).forEach((i) => $($("#registers tr")[i]).find("td:last-child").text(vm.registers[i].toSigned().toString()));
 	},
 
 	displayMemory() {
@@ -125,7 +125,7 @@ let App = window.App = {
 		};
 
 		if (App.vm.offsets.$code <= addr) {
-			return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "cyan").replace(/\#ff0000/g, "#a00");
+			return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "#00bfff").replace(/\#ff0000/g, "#a00");
 		};
 
 		if (App.config.attemptUTF8) {
@@ -316,9 +316,10 @@ function initializeUI() {
 	});
 };
 
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.wo", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/shifts.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
