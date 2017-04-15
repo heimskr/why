@@ -189,9 +189,9 @@ const Parser = module.exports = {
 		if (op == "sle")   return `${chalk.yellow(rs)} ${chalk.red("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "seq")   return `${chalk.yellow(rs)} ${chalk.red("==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "jr")    return `${chalk.dim(":")} ${chalk.yellow(rd)}`;
-		if (op == "jrc")   return `${chalk.dim(":")} ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
+		if (op == "jrc")   return `${chalk.dim(":")} ${chalk.yellow(rd)} if ${chalk.yellow(rs)}`;
 		if (op == "jrl")   return `${chalk.dim("::")} ${chalk.yellow(rd)}`;
-		if (op == "jrlc")  return `${chalk.dim("::")} ${chalk.yellow(rd)} (${chalk.yellow(rs)})`;
+		if (op == "jrlc")  return `${chalk.dim("::")} ${chalk.yellow(rd)} if ${chalk.yellow(rs)}`;
 		if (op == "c")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
 		if (op == "l")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "s")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
@@ -250,9 +250,9 @@ const Parser = module.exports = {
 
 	formatJ(op, rs, addr) {
 		if (op == "j")   return `${chalk.dim(":")} ${chalk.magenta(addr)}`;
-		if (op == "jc")  return `${chalk.dim(":")} ${chalk.magenta(addr)} (${chalk.yellow(rs)})`;
+		if (op == "jc")  return `${chalk.dim(":")} ${chalk.magenta(addr)} if ${chalk.yellow(rs)}`;
 		if (op == "jl")  return `${chalk.dim("::")} ${chalk.magenta(addr)}`;
-		if (op == "jlc") return `${chalk.dim("::")} ${chalk.magenta(addr)} (${chalk.yellow(rs)})`;
+		if (op == "jlc") return `${chalk.dim("::")} ${chalk.magenta(addr)} if ${chalk.yellow(rs)}`;
 		return `(unknown J-type: ${chalk.red(op)})`;
 	},
 
