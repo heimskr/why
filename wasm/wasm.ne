@@ -21,6 +21,28 @@ const compileData = (entries) => {
 	filter(entries).forEach((entry) => obj[entry[1]] = select(entry, 0, 2));
 	return obj;
 };
+
+const compileSubroutine = (name, args, code) => {
+	return [
+		[name, "push", ...args],
+		...code.map((item) => item == Symbol.for("done")? [null, "j", 0, ["label", `${name}$done`]] : item),
+		[`${name}$done`, "pop", ...args.reverse()],
+		[null, "jr", 0, 0, ["register", "return", 0]]
+	];
+};
+
+const compileCode = (statements) => {
+	const out = [];
+	statements.forEach((statement) => {
+		if (statement != null && statement[0] == "subroutine") {
+			statement[1].forEach((substatement) => out.push(substatement));
+		} else if (statement != null) {
+			out.push(statement);
+		};
+	});
+
+	return out;
+};
 %}
 
 @builtin "string.ne"
@@ -63,11 +85,22 @@ datadef			-> _ var (_ ":" _ | __) float  _ sep		{% d => ["float",  d[1], d[3]] %
 				 | _ var (_ ":" _ | __) string _ sep		{% d => ["string", d[1], d[3]] %}
 				 | _ sep 									{% d => null %}
 
-code_section	-> _ code_header _ sep statement:*			{% d => ["code", filter(d[4])] %}
+code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
 code_header		-> "#code" | "#c"							{% d => null %}
 statement		-> _ op _ sep								{% d => [null, ...d[1][0]] %}
 				 | _ label (_ lineend):* _ op _ sep			{% d => [d[1], ...d[4][0]] %}
 				 | _ sep									{% d => null %}
+				 | _ subroutine								{% d => ["subroutine", d[1]] %}
+
+subroutine		-> "sub" __ var _ "(" _ sub_saved _ ")" _ "{" _ subroutine_code:* _ "}"
+															{% d => compileSubroutine(d[2], d[6], filter(d[12])) %}
+				 | "sub" __ var _ "(" _ ")" _ "{" _ subroutine_code:* _ "}"
+															{% d => compileSubroutine(d[2], [], filter(d[10])) %}
+subroutine_code -> _ op										{% d => [null, ...d[1][0]] %}
+				 | _ label (_ lineend):* _ op				{% d => [d[1], ...d[4][0]] %}
+				 | _ sep									{% d => null %}
+				 | _ "done"									{% d => Symbol.for("done") %}
+sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 
 include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}
 include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}

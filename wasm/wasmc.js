@@ -22,8 +22,9 @@ class WASMC {
 	};
 
 	// Adds nulls to the end of the string to lengthen it to a multiple of 8.
+	// If the string is already a multiple of eight, add one null at the end.
 	static nullpad(str) {
-		return str.padEnd(Math.ceil(str.length / 8) * 8, "\0");
+		return str.length % 8? str.padEnd(Math.ceil(str.length / 8) * 8, "\0") : `${str}\0`;
 	};
 
 	// Given any string, str2longs nullpads and chunks it and returns an array of Longs.

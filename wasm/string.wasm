@@ -1,0 +1,52 @@
+#meta
+name: "Strings"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+library
+
+#data
+zero: ""
+five: "abcde"
+eight: "one word"
+sixteen: "fedcba9876543210"
+nineteen: "nineteen characters"
+
+#code
+
+!test()
+<halt>
+
+sub strlen($t0) {
+	0 -> $r0
+	@strlen_loop
+		[$a0] -> $t0 /b
+		: &strlen_next if $t0
+		done
+		@strlen_next
+			$a0++
+			$r0++
+			: &strlen_loop
+}
+
+sub test() {
+	!strlen(&zero)
+	<print $r0>
+	!strlen(&five)
+	<print $r0>
+	!strlen(&eight)
+	<print $r0>
+	!strlen(&sixteen)
+	<print $r0>
+	!strlen(&nineteen)
+	<print $r0>
+
+	/*
+		Expected output:
+		0x0
+		0x5
+		0x8
+		0x10
+		0x13
+	*/
+}

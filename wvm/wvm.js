@@ -86,6 +86,8 @@ class WVM {
 	};
 
 	getWord(k, signed=false) {
+		k = k instanceof Long? k.toInt() : k;
+
 		if (k % 8) {
 			// This isn't supposed to happen, because the key is misaligned. (The key is supposed to be a multiple of 8.
 			// In the future, this may cause an exception.
@@ -95,9 +97,10 @@ class WVM {
 	};
 
 
-	setWord(k, v_) {
-		const v = v_ instanceof Long? v_ : Long.fromInt(v_);
-		
+	setWord(k, v) {
+		k = k instanceof Long? k.toInt() : k;
+		v = v instanceof Long? v : Long.fromInt(v);
+
 		if (k % 8) {
 			// Another misalignment.
 		};
@@ -351,7 +354,7 @@ class WVM {
 
 	op_jc(rs, addr) {
 		if (!this.registers[rs].equals(0)) {
-			this.programCounter = Long.fromInt(imm, true).toInt();
+			this.programCounter = Long.fromInt(addr, true).toInt();
 			return true;
 		};
 	};
@@ -405,7 +408,7 @@ class WVM {
 	};
 
 	op_lb(rt, rs, rd) {
-		this.registers[rd] = this.getByte(this.registers[rs]);
+		this.registers[rd] = Long.fromInt(this.getByte(this.registers[rs]));
 	};
 
 	op_sb(rt, rs, rd) {

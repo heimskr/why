@@ -117,7 +117,7 @@ let App = window.App = {
 	_unprintable: [...[[0, 32]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])],
 
 	decompiledCell(long, addr) {
-		if (App.vm.offsets.$handlers <= addr && addr < App.vm.offsets.$data) {
+		if (addr < 32 || App.vm.offsets.$handlers <= addr && addr < App.vm.offsets.$data) {
 			return $("<a></a>").attr({ href: "#" }).addClass("handler").text(long.toString()).click(() => {
 				vm.programCounter = long.toInt();
 				App.highlightProgramCounter();
@@ -157,7 +157,7 @@ let App = window.App = {
 		vm.enabled = false;
 		vm.ttl = WVM.DEFAULT_TTL;
 
-		App.setRange(`0-${vm.offsets.$end*8 - 8}; ${8*(vm.memorySize - 10)}-${8*(vm.memorySize - 1)}`);
+		App.setRange(`0-${vm.offsets.$end - 8}; ${8*(vm.memorySize - 10)}-${8*(vm.memorySize - 1)}`);
 		App.displayRegisters();
 
 		(vm.onTick = App.onTick)();
@@ -195,7 +195,8 @@ let App = window.App = {
 	},
 
 	onSetWord(addr, to) {
-		let row = $(`#memory tr.addr-${addr.toInt() / 8}`);
+		addr = addr instanceof Long? addr.toInt() : addr;
+		let row = $(`#memory tr.addr-${addr / 8}`);
 		row.find("td:eq(1)").html(App.hexCell(to));
 		row.find("td:eq(2)").html(App.decompiledCell(to, addr));
 	},
@@ -260,6 +261,10 @@ function initializeUI() {
 		const namecell = $("<td></td>").text(regname).click((event) => {
 			event.stopPropagation();
 			let input = prompt(`New value for ${regname}:`);
+			if (!input) {
+				return;
+			};
+
 			const radix = { b: 2, t: 3, q: 4, o: 8, h: 16, x: 16 }[input[0]] || 10;
 			const unsigned = input[input.length - 1] == "u";
 			const long = App.vm.registers[i] = Long.fromString(input.substring(radix != 10, input.length - (unsigned? 1 : 0)), unsigned, radix);
@@ -319,7 +324,8 @@ function initializeUI() {
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.wo", "utf8"));
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/shifts.why", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/shifts.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/string.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
