@@ -30,11 +30,13 @@ class WVM {
 		this.resetRegisters();
 		this.programCounter = this.offsets.$code;
 		this.active = true;
+		this.cycles = 0;
 	};
 
 	onTick() { };
 	onSetWord(addr, val) { };
 	onSetByte(addr, val) { };
+	onPrintChar(val) { };
 
 	loadInstruction() {
 		return this.getWord(this.programCounter);
@@ -72,6 +74,7 @@ class WVM {
 			this.programCounter += 8;
 		};
 		
+		this.cycles++;
 		this.onTick();
 	};
 
@@ -424,7 +427,7 @@ class WVM {
 	};
 
 	op_lbi(rs, rd, imm) {
-		this.registers[rd] = this.getByte(imm);
+		this.registers[rd] = Long.fromInt(this.getByte(imm));
 	};
 
 	op_sbi(rs, rd, imm) {
@@ -442,8 +445,9 @@ class WVM {
 			this.stop();
 			return true;
 		} else if (funct == TRAPS.eval) {
-			let addr = this.registers[rs];
-			console.log({ addr });
+			console.warn("<eval> is currently unimplemented.");
+		} else if (funct == TRAPS.printc) {
+			this.onPrintChar(this.registers[rs].toUnsigned().toInt() & 0xff);
 		} else { // This may be changed to an exception in the future.
 			console.log("Unknown trap:", {rt, rs, rd, shift, func});
 		};

@@ -25,6 +25,11 @@ module.exports = (_) => {
 
 		pretty(obj) {
 			return jsome.getColoredString(obj);
+		},
+
+		replaceChar(str, index, replacement) {
+			console.log(`Replacing ${str[index] == "\n"? "\\n" : str[index] == " "? "space" : str[index]} with ${replacement == "\n"? "\\n" : replacement}`);
+			return str.substr(0, index) + replacement + str.substr(index + replacement.length);
 		}
 	});
 };

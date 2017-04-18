@@ -11,6 +11,15 @@ five: "abcde"
 eight: "one word"
 sixteen: "fedcba9876543210"
 nineteen: "nineteen characters"
+w: "w"
+w0: 0
+w1: 0
+w2: 0
+w3: 0
+w4: 0
+w5: 0
+w6: 0
+w7: 0
 
 #code
 
@@ -19,17 +28,67 @@ nineteen: "nineteen characters"
 
 sub strlen($t0) {
 	0 -> $r0
-	@strlen_loop
+	@_strlen_loop
 		[$a0] -> $t0 /b
-		: &strlen_next if $t0
+		: &_strlen_next if $t0
 		done
-		@strlen_next
+		@_strlen_next
 			$a0++
 			$r0++
-			: &strlen_loop
+			: &_strlen_loop
+}
+
+sub strcat($s0, $s1, $t0) {
+	// $a0: address of destination string
+	// $a1: address of source string
+	// $s0: contains pointer to destination string
+	// $s1: contains pointer to source string
+	// $t0: temporary storage for characters
+
+	$a0 -> $s0
+	$a1 -> $s1
+	!strlen($a0)
+	$s0 += $r0
+	@_strcat_loop
+		[$s1] -> $t0 /b
+		: &_strcat_next if $t0
+		done
+		@_strcat_next
+			$t0 -> [$s0] /b
+			$s0++
+			$s1++
+			: &_strcat_loop
+}
+
+sub strchr($t0) {
+	// $a0: pointer to string to search
+	// $a1: character to search for
+	// $r0: pointer to the first instance of the character if found; 0 otherwise
+	// $t0: temporary storage
+
+	@_strchr_loop
+		[$a0] -> $t0 /b
+		: &_strchr_nonzero if $t0
+		: &_strchr_failed
+		@_strchr_nonzero
+		: &_strchr_found if $t0 == $a1
+		$a0++
+	: &_strchr_loop
+
+	@_strchr_found $a0 -> $r0; done
+	@_strchr_failed 0 -> $r0
 }
 
 sub test() {
+	*w -> $t0 /b
+	!strchr(&eight, $t0)
+	<print $r0>
+	[$r0] -> $t0 /b
+	!strcat(&w0, &nineteen)
+	!strcat(&w0, &sixteen)
+	!strcat(&w0, &eight)
+	!strcat(&w0, &five)
+	!strcat(&w0, &zero)
 	!strlen(&zero)
 	<print $r0>
 	!strlen(&five)
@@ -40,13 +99,17 @@ sub test() {
 	<print $r0>
 	!strlen(&nineteen)
 	<print $r0>
+	!strlen(&w0)
+	<print $r0>
 
 	/*
 		Expected output:
+		0x64 (will change if #data is modified too much)
 		0x0
 		0x5
 		0x8
 		0x10
 		0x13
+		0x30
 	*/
 }

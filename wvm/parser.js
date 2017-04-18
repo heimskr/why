@@ -139,7 +139,7 @@ const Parser = module.exports = {
 			return "<>";
 		};
 
-		throw `Can't parse instruction ${instruction} (${opcode}).`;
+		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
 	},
 
 	instructionType(opcode) {

@@ -5,49 +5,18 @@
 #console {
 	overflow: auto;
 	display: none;
+	z-index: 901;
+	
+	position: fixed;
+	top: 50px;
+	right: 50px;
+	bottom: 50px;
+	left: 50px;
+	padding: 5px;
 
-	.clear {
-		position: absolute;
-		top: 5px;
-		right: 7px;
-		font-size: 1.5em;
-		opacity: 0.5;
-		color: red;
-	}
-
-	.messages {
-		width: 100%;
-
-		tr {
-			background: transparent;
-		
-			td {
-				width: 100%;
-			}
-
-			th, td {
-				padding: 2px 4px;
-			}
-
-			th {
-				color: #777;
-
-				&:before {
-					content: "[";
-				}
-
-				&:after {
-					content: "]";
-				}
-			}
-		}
-	}
-
-	pre {
-		background: transparent;
-		border-radius: 0px;
-		color: white;
-		padding: 3px 5px;
-		border: none;
-	}
+	box-shadow: 0px 0px 10px green;
+	border: none;
+	
+	background: black;
+	color: green;
 }

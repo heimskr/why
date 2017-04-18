@@ -18,21 +18,39 @@ require("jquery.splitter");
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../../wasm/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
-let App = window.App = {
-	config: {
-		range: "0-100",
-		displayWhitespace: false,
-		attemptUTF8: false // seems to be buggy.
-	},
+const UNPRINTABLE = [...[[0, 32]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
+let App = window.App = class App {
 
-	vm: null,
-	range: [[0, 100]],
-	heartbeatActive: false,
-	heartrate: 500,
-	interval: null,
+	constructor(vm, config={ }) {
+		this.vm = vm;
+		this.heartbeatActive = false;
+		this.active = false;
+		this.interval = null;
+		this.cursor = [0, 0];
 
-	setRange(str) {
-		let range = str.trim().split(/\D+/).map((s) => s.match(/^0x/)? parseInt(s.substr(2), 16) : parseInt(s));
+		this.config = {
+			range: [[0, 100]],
+			displayWhitespace: false,
+			attemptUTF8: false, // seems to be buggy.
+			consoleSize: [120, 40],
+			heartrate: 500
+		};
+
+		_.each(config, (val, key) => this.config[key] = val);
+	};
+
+	get range() {
+		return this.config.range.map((arr) => arr.join("-")).join(", ");
+	};
+
+	set range(to) {
+		if (to instanceof Array) {
+			this.config.range = to;
+			this.displayMemory();
+			return;
+		};
+
+		let range = to.trim().split(/\D+/).map((s) => s.match(/^0x/)? parseInt(s.substr(2), 16) : parseInt(s));
 		if (range.length % 2 == 1) {
 			alert("Invalid range.");
 			return;
@@ -72,63 +90,69 @@ let App = window.App = {
 
 		};
 
-		App.range = pairs;
-		App.displayMemory();
-		return App.config.range = str;
-	},
+		this.config.range = pairs;
+		this.displayMemory();
+	};
 
 	inRange(addr) {
-		for (let i = 0; i < App.range.length; i += 2) {
-			if (App.range[i] <= addr && addr <= App.range[i + 1]) {
+		for (let i = 0; i < this.config.range.length; i += 2) {
+			if (this.config.range[i] <= addr && addr <= this.config.range[i + 1]) {
 				return true;
 			};
 		};
 
 		return false;
-	},
+	};
 
 	displayRegisters() {
-		_.range(0, 128).forEach((i) => $($("#registers tr")[i]).find("td:last-child").text(vm.registers[i].toSigned().toString()));
-	},
+		$("#registers").removeClass().addClass(`base-${localStorage.wvm_reg_base || 10}`);
+		_.range(0, 128).forEach((i) => $($("#registers tr")[i]).find("td:last-child").html(this.vm.registers[i]? this.vm.registers[i].toSigned().toString(localStorage.wvm_reg_base || 10) : "?"));
+	};
 
 	displayMemory() {
 		$("#memory tr").remove();
-		App.range.forEach(([left, right]) => {
+		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
-				let long = App.vm.getWord(8*i);
-				$("<tr></tr>").addClass(`addr-${i}${8*vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
+				const long = this.vm.getWord(8*i);
+				const tr = $("<tr></tr>").addClass(`addr-${i}${8*vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
 					.append($("<td></td>").text(8*i))
-					.append($("<td></td>").html(App.hexCell(long)))
-					.append($("<td></td>").html(App.decompiledCell(long, 8*i)))
+					.append($("<td></td>").html(this.hexCell(long)))
+					.append($("<td></td>").html(this.decompiledCell(long, 8*i)))
 					.click((event) => {
 						if (!$(event.target).hasClass("handler")) {
 							vm.programCounter = 8*i;
-							App.onTick();
+							this.onTick();
 						};
 					});
+
+				if (this.vm.data && this.vm.data.labels) {
+					tr.append($("<td></td>").text(Object.keys(this.vm.data.labels).filter((label) => this.vm.data.labels[label] == 8 * i)[0] || ""));
+				};
 			});
 		});
-	},
+	};
 
 	hexCell(long) {
 		return _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
-	},
-
-	_unprintable: [...[[0, 32]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])],
+	};
 
 	decompiledCell(long, addr) {
-		if (addr < 32 || App.vm.offsets.$handlers <= addr && addr < App.vm.offsets.$data) {
+		if (addr < 32 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$data) {
 			return $("<a></a>").attr({ href: "#" }).addClass("handler").text(long.toString()).click(() => {
-				vm.programCounter = long.toInt();
-				App.highlightProgramCounter();
+				this.vm.programCounter = long.toInt();
+				this.highlightProgramCounter();
 			});
 		};
 
-		if (App.vm.offsets.$code <= addr) {
-			return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "#00bfff").replace(/\#ff0000/g, "#a00");
+		if (this.vm.offsets.$code <= addr) {
+			try {
+				return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "#00bfff").replace(/\#ff0000/g, "#a00");
+			} catch(e) {
+				return "❓";
+			};
 		};
 
-		if (App.config.attemptUTF8) {
+		if (this.config.attemptUTF8) {
 			try {
 				return decodeURIComponent(escape(atob(String.fromCharCode(..._.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => parseInt(x.join(""), 16) || ".".charCodeAt(0))))));
 			} catch(e) { };
@@ -136,7 +160,7 @@ let App = window.App = {
 
 		return _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => {
 			const parsed = parseInt(x.join(""), 16);
-			if (App.config.displayWhitespace) {
+			if (this.config.displayWhitespace) {
 				switch (parsed) {
 					case 9:  return "⭾";
 					case 10:
@@ -144,36 +168,43 @@ let App = window.App = {
 				};
 			};
 
-			return App._unprintable.includes(parsed)? `<span class="dim">.</span>` : String.fromCharCode(parsed);
+			if (parsed == 32) {
+				return "&nbsp;";
+			};
+
+			return UNPRINTABLE.includes(parsed)? `<span class="dim">.</span>` : String.fromCharCode(parsed);
 		}).join("");
-	},
+	};
 
 	decompileNext() {
-		return Parser.formatInstruction(App.vm.loadInstruction());
-	},
+		return Parser.formatInstruction(this.vm.loadInstruction());
+	};
 
 	initializeVM(vm) {
-		App.vm = vm;
-		vm.enabled = false;
-		vm.ttl = WVM.DEFAULT_TTL;
+		if (vm) {
+			this.vm = vm;
+		};
 
-		App.setRange(`0-${vm.offsets.$end - 8}; ${8*(vm.memorySize - 10)}-${8*(vm.memorySize - 1)}`);
-		App.displayRegisters();
+		this.vm.enabled = false;
 
-		(vm.onTick = App.onTick)();
-		vm.onSetWord = App.onSetWord;
-		vm.log = App.log;
-		vm.stop = App.stop;
-	},
+		this.range = `0-${this.vm.offsets.$end - 8}; ${8*(this.vm.memorySize - 16)}-${8*(this.vm.memorySize - 1)}`;
+		this.displayRegisters();		
+
+		(this.vm.onTick = this.onTick.bind(this))();
+		this.vm.onSetWord = this.onSetWord.bind(this);
+		this.vm.onSetByte = this.onSetByte.bind(this);
+		this.vm.log = this.log.bind(this);
+		this.vm.stop = this.stop.bind(this);
+	};
 
 	onTick() {
-		App.displayRegisters();
-		App.highlightProgramCounter();
-		App.highlightStackPointer();
-	},
+		this.displayRegisters();
+		this.highlightProgramCounter();
+		this.highlightStackPointer();
+	};
 
 	highlightProgramCounter() {
-		const pc = vm.programCounter;
+		const pc = this.vm.programCounter;
 
 		if (pc % 8) {
 			console.warn(`Program counter (${pc}) is misaligned by ${pc % 8} byte${pc % 8 == 1? "" : "s"}.`);
@@ -181,10 +212,10 @@ let App = window.App = {
 		
 		$(".program-counter").removeClass("program-counter");
 		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter");
-	},
+	};
 
 	highlightStackPointer() {
-		const sp = vm.registers[REGISTER_OFFSETS.stack].toInt();
+		const sp = this.vm.registers[REGISTER_OFFSETS.stack].toInt();
 
 		if (sp % 8) {
 			console.warn(`Stack pointer (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
@@ -192,68 +223,100 @@ let App = window.App = {
 
 		$(".stack-pointer").removeClass("stack-pointer");
 		$(`#memory tr.addr-${sp / 8}`).addClass("stack-pointer");
-	},
+	};
 
 	onSetWord(addr, to) {
 		addr = addr instanceof Long? addr.toInt() : addr;
 		let row = $(`#memory tr.addr-${addr / 8}`);
-		row.find("td:eq(1)").html(App.hexCell(to));
-		row.find("td:eq(2)").html(App.decompiledCell(to, addr));
-	},
+		row.find("td:eq(1)").html(this.hexCell(to));
+		row.find("td:eq(2)").html(this.decompiledCell(to, addr));
+	};
+
+	onSetByte(addr, to) {
+		addr = addr instanceof Long? addr.toInt() : addr;
+		let word = this.vm.getWord(addr - addr % 8);
+		let row = $(`#memory tr.addr-${Math.floor(addr / 8)}`);
+		row.find("td:eq(1)").html(this.hexCell(word));
+		row.find("td:eq(2)").html(this.decompiledCell(word, addr));
+	};
 
 	heartbeat() {
-		if (!App.heartbeatActive) {
-			return clearInterval(App.interval);
+		if (!this.heartbeatActive) {
+			return clearInterval(this.interval);
 		};
 
-		if (App.active) {
-			vm.tick();
-			if (!vm.active) {
-				App.active = false;
+		if (this.active) {
+			this.vm.tick();
+			if (!this.vm.active) {
+				this.active = false;
 			};
 		};
-	},
+	};
 
 	startHeartbeat() {
-		clearInterval(App.interval);
-		App.heartbeatActive = true;
-		App.interval = setInterval(App.heartbeat, App.heartrate);
-	},
+		clearInterval(this.interval);
+		this.heartbeatActive = true;
+		this.interval = setInterval(() => this.heartbeat(), this.heartrate);
+	};
 
-	setHeartrate(newHeartrate) {
-		if (newHeartrate == App.heartbeat) {
-			return;
-		};
+	get heartrate() {
+		return this.config.heartrate;
+	};
 
-		App.heartrate = newHeartrate;
-		if (App.heartbeatActive) {
-			App.startHeartbeat();
+	set heartrate(to) {
+		if (to != this.config.heartrate) {
+			this.config.heartrate = to;
+			if (this.heartbeatActive) {
+				this.startHeartbeat();
+			};
 		};
-	},
+	};
 
 	toggleActive() {
-		if (App.active = !App.active) {
-			App.startHeartbeat();
+		if (this.active = !this.active) {
+			this.startHeartbeat();
 		} else {
-			clearInterval(App.interval);
+			clearInterval(this.interval);
 		};
 
-		return App.active;
-	},
+		return this.active;
+	};
 
 	log(str) {
 		console.log(str);
-		$("<tr></tr>").append($("<th></th>").text(moment().format("HH:mm:ss"))).append($("<td></td>").html(str)).prependTo($("#console .messages"));
-	},
+	};
 
 	stop() {
-		App.active = false;
-		vm.active = false;
-		App.log("Execution halted.");
-	}
+		this.active = false;
+		this.vm.active = false;
+		console.log(`Execution halted after ${this.vm.cycles} cycle${this.vm.cycles == 1? "" : "s"}.`);
+	};
+
+	onPrintChar(c) {
+		const index = () => this.cursor[0] + this.cursor[1] * (this.config.consoleSize[0] + 1);
+		if (this.consoleText.length <= index()) {
+			return;
+		};
+
+		if (c == "\n" || this.consoleText[index()] == "\n") {
+			this.cursor[0] = 0;
+			this.cursor[1]++;
+
+			if (c == "\n" || this.config.consoleSize[1] <= this.cursor[1]) {
+				return;
+			};
+		};
+
+		$("#console").text(this.consoleText = _.replaceChar(this.consoleText, index(), c));
+		this.cursor[0]++;
+	};
+
+	initializeText() {
+		$("#console").text(this.consoleText = [...Array(app.config.consoleSize[1])].map(() => " ".repeat(app.config.consoleSize[0])).join("\n"));
+	};
 };
 
-function initializeUI() {
+function initializeUI(app) {
 	for (let i = 0; i < 128; i++) {
 		const regname = Parser.getRegister(i);
 		const row = $("<tr></tr>").appendTo($("#registers")).addClass("reg-" + regname.replace(/^\$/, "").replace(/^([ratskremf])(\d+[a-f]*|\d*[a-f]+)$/, "$1x"));
@@ -267,71 +330,91 @@ function initializeUI() {
 
 			const radix = { b: 2, t: 3, q: 4, o: 8, h: 16, x: 16 }[input[0]] || 10;
 			const unsigned = input[input.length - 1] == "u";
-			const long = App.vm.registers[i] = Long.fromString(input.substring(radix != 10, input.length - (unsigned? 1 : 0)), unsigned, radix);
+			const long = app.vm.registers[i] = Long.fromString(input.substring(radix != 10, input.length - (unsigned? 1 : 0)), unsigned, radix);
 			valcell.text(long.toString(10));
 
 			if (i == REGISTER_OFFSETS.stack) {
-				App.highlightStackPointer();
+				app.highlightStackPointer();
 			};
 		});
 
 		row.append(namecell).append(valcell).click(() => row.toggleClass("active-register"));
 	};
 
-	// $(window).resize(() => $("#container").height(window.innerHeight - 28).split({ orientation: "horizontal" }));
-	// $("#container").height(window.innerHeight - 28).split({ orientation: "horizontal", limit: 5, position: "900" });
-	$("#top").split({ orientation: "vertical", limit: 210, position: "83%" });
+	$("#top").split({ orientation: "vertical", limit: 210, position: "81.5%" });
 	$(".hsplitter").height(4);
 	$(".vsplitter").width(4);
 
-	$("#step").click(() => App.vm.tick());
+	$("#step").click(() => app.vm.tick());
 	$("#set_range").click(() => {
-		let input = prompt("Range:", App.config.range);
+		let input = prompt("Range:", app.range);
 		if (input) {
-			App.config.range = App.setRange(input);
+			app.range = input;
 		};
 	});
 
 	$("#run").click(() => {
-		$("#run")[App.toggleActive()? "addClass" : "removeClass"]("active");
+		$("#run")[app.toggleActive()? "addClass" : "removeClass"]("active");
 	}).contextmenu((event) => {
 		event.preventDefault();
-		let old = App.active;
-		App.active = false;
-		let answer = parseFloat(prompt("Time between heartbeats (s):", App.heartrate / 1000));
+		let old = app.active;
+		app.active = false;
+		let answer = parseFloat(prompt("Time between heartbeats (s):", app.config.heartrate / 1000));
 		if (isNaN(answer) || answer < 0) {
 			alert("Invalid number.");
 		} else {
-			App.heartrate = answer * 1000;
+			app.config.heartrate = answer * 1000;
 		};
 
-		App.active = old;
+		app.active = old;
 	});
 
-	$(".navbar-brand").click(() => {
-		
-	});
+	$(document.body).keydown((event) => {
+		const { key, ctrlKey, shiftKey, preventDefault } = event;
 
-	$("#console .clear").click(() => $("#console .messages tr").remove());
-
-	$(document.body).keydown(({ key }) => {
 		if (key == ".") {
-			App.vm.tick();
+			app.vm.active && app.vm.tick();
+		} else if (ctrlKey && !shiftKey) {
+			if (key == "m") {
+				$("#console").toggle();
+			} else if (key == "b") {
+				localStorage.wvm_reg_base = 2;
+				app.displayRegisters();
+			} else if (key == "o") {
+				localStorage.wvm_reg_base = 8;
+				app.displayRegisters();
+			} else if (key == "d") {
+				localStorage.wvm_reg_base = 10;
+				app.displayRegisters();
+			} else if (key == "h") {
+				localStorage.wvm_reg_base = 16;
+				app.displayRegisters();
+			};
+		} else {
+			return;
 		};
+
+		event.preventDefault();
 	});
+
+	app.initializeText();
 };
 
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/linkertest.why", "utf8"));
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.wo", "utf8"));
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/shifts.why", "utf8"));
 let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/string.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
+if (opened.data) {
+	vm.data = opened.data;
+};
+
 window.vm = vm;
+let app;
 
 $(() => {
-	initializeUI();
-	App.initializeVM(vm);
+	app = window.app = new App(vm, { });
+	app.config.consoleSize[0] = Math.floor(($("#console").width()) / 8);
+	app.config.consoleSize[1] = Math.floor(($("#console").height() - 16) / 16 - 3);
+	initializeUI(app);
+	app.initializeVM();
 });

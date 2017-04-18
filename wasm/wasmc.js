@@ -138,7 +138,7 @@ class WASMC {
 
 			let frozen = this.options.library? JSON.stringify({
 				meta: this.parsed.meta,
-				labels: this.offsets,
+				labels: _.omitBy(this.offsets, (val, key) => key[0] == "_"),
 				program: WASMC.longs2strs(out).join(" ")
 			}) : WASMC.longs2strs(out).join("\n");
 

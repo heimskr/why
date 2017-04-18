@@ -27,7 +27,7 @@ const compileSubroutine = (name, args, code) => {
 		[name, "push", ...args],
 		...code.map((item) => item == Symbol.for("done")? [null, "j", 0, ["label", `${name}$done`]] : item),
 		[`${name}$done`, "pop", ...args.reverse()],
-		[null, "jr", 0, 0, ["register", "return", 0]]
+		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
 	];
 };
 
@@ -236,10 +236,12 @@ op_srai			-> rv _ ">>"   _ int into rv				{% d => ["srai",   d[0], d[6], d[4]] %
 op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
 op_lbi			-> "[" _ int _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]] %}
 				 | "[" _ "&" var _ "]" into rv _ "/b"		{% d => ["lbi",      0,  d[7], ["label", d[3]]] %}
+				 | "*" var into rv _ "/b"					{% d => ["lbi",      0,  d[3], ["label", d[1]]] %}
 op_sbi			-> rv into "[" _ int _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  d[4]] %}
 				 | rv into "[" _ "&" var _ "]" _ "/b"		{% d => ["sbi",    d[0],   0,  ["label", d[5]]] %}
 op_li			-> "[" _ int _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
 				 | "[" _ "&" var _ "]" into rv				{% d => ["li",       0,  d[7], ["label", d[3]]] %}
+				 | "*" var into rv _						{% d => ["li",       0,  d[3], ["label", d[1]]] %}
 op_si			-> rv into "[" _ int _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
 				 | rv into "[" _ "&" var _ "]"				{% d => ["si",     d[0],   0,  ["label", d[5]]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
@@ -264,10 +266,11 @@ op_jeq			-> ":" _ reg __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[
 op_nop			-> "<>"										{% d => ["nop"] %}
 
 # Traps																		   rt    rs    rd   funct
+trap_printc		-> "<" _ "printc" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    4 ] %}
 trap_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    1 ] %}
 trap_halt		-> "<" _ "halt" _ ">"						{% d => ["trap",    0,    0,    0,    2 ] %}
-trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
 trap_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    3 ] %}
+trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
 
 call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) => x[0])] %}
 				 | "!" var _ "(" _ ")"						{% d => ["call", d[1]] %}

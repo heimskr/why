@@ -17,6 +17,27 @@
 	td:last-child {
 		width: 100%;
 		color: white !important;
+
+		&:before {
+			color: #999;
+			padding-right: 2px;
+		}
+	}
+
+	&.base-2 td:last-child:before {
+		content: "0b";
+	}
+
+	&.base-8 td:last-child:before {
+		content: "#{"\a0"}0";
+	}
+
+	&.base-10 td:last-child:before {
+		content: "\a0\a0";
+	}
+
+	&.base-16 td:last-child:before {
+		content: "0x";
 	}
 
 	td:first-child {
