@@ -58,7 +58,8 @@ string			-> dqstring									{% d => d[0] %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
 int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
 int_dec			-> "-":? [0-9]:+							{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
-int				-> (int_hex | int_bin | int_dec)			{% d => d[0][0] %}
+char			-> "'" sstrchar "'"							{% d => d[1].charCodeAt(0) %}
+int				-> (int_hex | int_bin | int_dec | char)		{% d => d[0][0] %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
 				 | ("-":? ".") [0-9]:+						{% d => parseFloat(filter(d[0]).join("") + d[1].join("")) %}
 

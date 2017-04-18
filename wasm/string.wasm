@@ -11,7 +11,6 @@ five: "abcde"
 eight: "one word"
 sixteen: "fedcba9876543210"
 nineteen: "nineteen characters"
-w: "w"
 w0: 0
 w1: 0
 w2: 0
@@ -22,7 +21,6 @@ w6: 0
 w7: 0
 
 #code
-
 !test()
 <halt>
 
@@ -80,7 +78,7 @@ sub strchr($t0) {
 }
 
 sub test() {
-	*w -> $t0 /b
+	'w' -> $t0
 	!strchr(&eight, $t0)
 	<print $r0>
 	[$r0] -> $t0 /b
