@@ -1,4 +1,8 @@
 @mixin register($class, $color) {
+	.reg-#{$class} {
+		color: $color;
+	}
+
 	tr.reg-#{$class} td:first-child {
 		color: $color !important;
 	}
@@ -45,7 +49,7 @@
 		cursor: pointer;
 	}
 
-	tr.reg-0, tr.reg-sx {
+	tr.reg-0 {
 		td:first-child {
 			text-shadow: 0px 0px 1px rgba(255, 255, 255, 1);
 		}
@@ -61,16 +65,18 @@
 	tr.active-register {
 		background: rgba(0, 255, 0, 0.3);
 	}
-
-	@include register(0, #000);
-	@include register(g, #777);
-	@include register(fp, #777);
-	@include register(sp, #a00);
-	@include register(rt, #0a0);
-	@include register(lo, #a60);
-	@include register(hi, #a60);
-	@include register(rx, #f00);
-	@include register(ax, #ffa000);
-	@include register(tx, #fffa00);
-	@include register(sx, #00f);
 }
+
+@include register(0, #000);
+@include register(g, #777);
+@include register(fp, #777);
+@include register(sp, #a00);
+@include register(rt, #0a0);
+@include register(lo, #a60);
+@include register(hi, #a60);
+@include register(rx, #f00);
+@include register(ax, #ffa000);
+@include register(tx, #fffa00);
+@include register(sx, #080);
+@include register(kx, #08f);
+@include register(mx, #a0f);

@@ -145,8 +145,20 @@ let App = window.App = class App {
 		};
 
 		if (this.vm.offsets.$code <= addr) {
+			if (long.equals(0)) {
+				return "";
+			};
+
 			try {
-				return long.equals(0)? "" : ansiHTML(Parser.formatInstruction(long)).replace(/\#e8bf03/g, "orange").replace(/\#ff00ff/g, "purple").replace(/\#00ffee/g, "#00bfff").replace(/\#ff0000/g, "#a00");
+				let html = ansiHTML(Parser.formatInstruction(long));
+				html = html.replace(/\#e8bf03/g, "orange")
+						   .replace(/\#ff00ff/g, "#f08")
+						   .replace(/\#00ffee/g, "#00bfff")
+						   .replace(/\#ff0000/g, "#a00")
+						   .replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
+						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
+						   // .replace(/<span style="[^"]*">\$sp<\/span>/, `<span class="reg-sp">$sp</span>`)
+				return html;
 			} catch(e) {
 				return "❓";
 			};

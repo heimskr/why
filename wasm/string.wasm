@@ -24,7 +24,7 @@ w7: 0
 !test()
 <halt>
 
-sub strlen($t0) {
+sub strlen() {
 	0 -> $r0
 	@_strlen_loop
 		[$a0] -> $t0 /b
@@ -36,7 +36,7 @@ sub strlen($t0) {
 			: &_strlen_loop
 }
 
-sub strcat($s0, $s1, $t0) {
+sub strcat($s0, $s1) {
 	// $a0: address of destination string
 	// $a1: address of source string
 	// $s0: contains pointer to destination string
@@ -58,7 +58,7 @@ sub strcat($s0, $s1, $t0) {
 			: &_strcat_loop
 }
 
-sub strchr($t0) {
+sub strchr() {
 	// $a0: pointer to string to search
 	// $a1: character to search for
 	// $r0: pointer to the first instance of the character if found; 0 otherwise
