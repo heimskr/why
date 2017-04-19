@@ -20,7 +20,7 @@ fib:
 	@ node wasmc.js fibonacci.wasm -lo compiled/fibonacci.wo
 
 $(COMPILED): $(SYNTAX) _
-	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled wasm.ne to wasm.js."
+	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
 
 clean:
 	rm -f $(COMPILED) compiled/*

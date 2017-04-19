@@ -6,7 +6,6 @@ const special = {
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
-const flatten = (arr) => arr.filter((e) => e != null).reduce((flat, toFlatten) => flat.filter((e) => e != null).concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten), []);
 const filter = (arr, index=null, ...remove) => arr.filter((item) => !(remove.length? remove : [null]).includes(typeof index == "number" && 0 <= index? item[index] : item));
 const select = (arr, ...indices) => indices.map((i) => arr[i]);
 
