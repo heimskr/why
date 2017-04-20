@@ -47,7 +47,8 @@ item -> _ lineend											{% _() %}
 	  | _ (type_any | source_filename | target | struct | global | function_def)
 	  														{% __(1, 0) %}
 
-lineend				-> (comment newline | newline) 				{% d => null %}
+lineend				-> (comment newline | newline) 									{% d => null %}
+spaced[X]			-> " " $X " "													{% _(1) %}
 
 comma				-> _ "," _														{% _( ) %}
 eq					-> _ "=" _														{% _( ) %}
@@ -207,7 +208,9 @@ bang				-> "!" bang_type __ "!" decimal									{% d => [d[1], d[4]] %}
 
 function_def		-> function_header _ "{" function_line:* "}"					{% d => [...d[0], filter(d[3])] %}
 function_line		-> _ lineend													{% _( ) %}
-					 | _ (i_alloca | i_load)										{% __(1, 0) %}
+					 | _ instruction												{% _(1) %}
+
+instruction			-> (i_alloca | i_load | i_icmp)									{% __ %}
 
 i_alloca			-> temporary
 					   " = alloca "
@@ -229,7 +232,7 @@ i_load				-> (i_load_normal | i_load_atomic)								{% __ %}
 i_load_normal		-> temporary
 					   " = load "
 					   "volatile ":?
-					   (type_any ", " type_any "*")
+					   (type_any ", " type_any "* " temporary)
 					   (", align " decimal):?
 					   (", !nontemporal !" decimal):?
 					   (", !invariant.load !" decimal):?
@@ -242,6 +245,7 @@ i_load_normal		-> temporary
 					   	   volatile: !!d[2],
 					   	   type: d[3][0],
 					   	   ptr: d[3][2],
+					   	   register: d[3][4],
 					   	   align: d[4]? d[4][1] : null,
 					   	   nontemporal: d[5]? d[5][1] : null,
 					   	   invariantLoad: d[6]? d[6][1] : null,
@@ -251,6 +255,25 @@ i_load_normal		-> temporary
 					   	   dereferenceable_or_null: d[10]? d[10][1] : null,
 					   	   align2: d[11]? d[11][1] : null
 					   }] %}
+
+i_icmp				-> temporary
+					   " = icmp "
+					   ("eq" | "ne" | "ugt" | "uge" | "ult" | "ule" | "sgt" | "sge" | "slt" | "sle")
+					   spaced[type_any]
+					   icmp_operand
+					   ", "
+					   icmp_operand
+					   {% d => ["instruction", "icmp", {
+					   	   operator: d[2][0],
+					   	   type: d[3],
+					   	   op1: d[4],
+					   	   op2: d[6]
+					   }] %}
+
+icmp_operand		-> temporary													{% d => ["temporary", d[0]] %}
+					 | decimal														{% _ %}
+
+
 
 temporary			-> "%" decimal													{% d => d[1] %}
 

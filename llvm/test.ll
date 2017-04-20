@@ -26,6 +26,7 @@ target triple = "x86_64-apple-macosx10.12.0"
 @.str.49 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
 @.str.1.50 = private unnamed_addr constant [4 x i8] c" %d\00", align 1
 
+; Function Attrs: noinline nounwind ssp uwtable
 define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %3 = alloca i32, align 4
   %4 = alloca i32, align 4
@@ -34,7 +35,7 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %7 = alloca %struct.GraphObj*, align 8
   %8 = alloca %struct.ListObj*, align 8
   %9 = alloca %struct.ListObj*, align 8
-  ; %10 = icmp eq i32 %0, 3
+  %10 = icmp eq i32 %0, 3
   ; br i1 %10, label %14, label %11
 
 ; <label>:11:                                     ; preds = %2
