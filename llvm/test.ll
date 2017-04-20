@@ -36,7 +36,7 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %8 = alloca %struct.ListObj*, align 8
   %9 = alloca %struct.ListObj*, align 8
   %10 = icmp eq i32 %0, 3
-  ; br i1 %10, label %14, label %11
+  br i1 %10, label %14, label %11
 
 ; <label>:11:                                     ; preds = %2
   %12 = load i8*, i8** %1, align 8

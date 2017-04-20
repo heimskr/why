@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "@$&*\t \":()",
+	chars: "=@$&*\t \":()",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
@@ -210,7 +210,7 @@ function_def		-> function_header _ "{" function_line:* "}"					{% d => [...d[0],
 function_line		-> _ lineend													{% _( ) %}
 					 | _ instruction												{% _(1) %}
 
-instruction			-> (i_alloca | i_load | i_icmp)									{% __ %}
+instruction			-> (i_alloca | i_load | i_icmp | i_br)							{% __ %}
 
 i_alloca			-> temporary
 					   " = alloca "
@@ -256,7 +256,7 @@ i_load_normal		-> temporary
 					   	   align2: d[11]? d[11][1] : null
 					   }] %}
 
-i_icmp				-> temporary
+i_icmp				-> label
 					   " = icmp "
 					   ("eq" | "ne" | "ugt" | "uge" | "ult" | "ule" | "sgt" | "sge" | "slt" | "sle")
 					   spaced[type_any]
@@ -270,11 +270,27 @@ i_icmp				-> temporary
 					   	   op2: d[6]
 					   }] %}
 
-icmp_operand		-> temporary													{% d => ["temporary", d[0]] %}
-					 | decimal														{% _ %}
+icmp_operand		-> (label | decimal)											{% __ %}
 
+i_br				-> (i_br_conditional | i_br_unconditional)						{% __ %}
 
+i_br_conditional	-> "br"
+					   spaced[type_any]
+					   label
+					   ", label "
+					   label
+					   ", label "
+					   label
+					   {% d => ["instruction", "br_conditional", {
+					   	   type: d[1],
+					   	   cond: d[2],
+					   	   iftrue: d[4],
+					   	   iffalse: d[6]
+					   }] %}
 
+i_br_unconditional	-> "br label " label											{% d => ["instruction", "br_unconditional", { dest: d[1] }] %}
+
+label				-> "%" (var | decimal)											{% d => ["label", d[1][0]] %}
 temporary			-> "%" decimal													{% d => d[1] %}
 
 
