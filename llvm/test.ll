@@ -50,6 +50,34 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %17 = tail call %struct.__sFILE* @"\01_fopen"(i8* %16, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.1, i64 0, i64 0)) #6
   %18 = icmp eq %struct.__sFILE* %17, null
   br i1 %18, label %19, label %22
+
+; <label>:19:                                     ; preds = %14
+  %20 = load i8*, i8** %15, align 8
+  %21 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([33 x i8], [33 x i8]* @.str.2, i64 0, i64 0), i8* %20)
+  tail call void @exit(i32 1) #7
+  unreachable
+
+; <label>:22:                                     ; preds = %14
+  %23 = getelementptr inbounds i8*, i8** %1, i64 2
+  %24 = load i8*, i8** %23, align 8
+  %25 = tail call %struct.__sFILE* @"\01_fopen"(i8* %24, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.3, i64 0, i64 0)) #6
+  %26 = icmp eq %struct.__sFILE* %25, null
+  br i1 %26, label %27, label %30
+
+; <label>:27:                                     ; preds = %22
+  %28 = load i8*, i8** %23, align 8
+  %29 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([33 x i8], [33 x i8]* @.str.4, i64 0, i64 0), i8* %28)
+  tail call void @exit(i32 1) #7
+  unreachable
+
+; <label>:30:                                     ; preds = %22
+  %31 = call i32 (%struct.__sFILE*, i8*, ...) @fscanf(%struct.__sFILE* nonnull %17, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.49, i64 0, i64 0), i32* nonnull %3)
+  %32 = load i32, i32* %3, align 4
+  %33 = call %struct.GraphObj* @newGraph(i32 %32)
+  store %struct.GraphObj* %33, %struct.GraphObj** %6, align 8
+  %34 = call i32 (%struct.__sFILE*, i8*, ...) @fscanf(%struct.__sFILE* nonnull %17, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.6, i64 0, i64 0), i32* nonnull %4, i32* nonnull %5)
+  %35 = icmp eq i32 %34, 2
+  br i1 %35, label %.lr.ph49.preheader, label %._crit_edge50
 }
 
 
@@ -70,4 +98,49 @@ define i32* @langref_gep_test(%struct.ST* %s) {
   ; yields i32*:iptr
   %iptr = getelementptr [10 x i32], [10 x i32]* @arr, i16 0, i16 0
   ; ret i32* %t5
+}
+
+define void @switches() {
+  switch i32 %583, label %594 [
+    i32 0, label %584
+    i32 1, label %584
+  ]
+
+  switch i32 %130, label %211 [
+    i32 0, label %131
+    i32 1, label %132
+    i32 2, label %161
+  ]
+
+  switch i32 %255, label %315 [
+    i32 0, label %256
+    i32 1, label %304
+  ]
+
+  switch i32 %15, label %28 [
+    i32 16, label %16
+    i32 48, label %16
+    i32 17, label %17
+    i32 1, label %17
+    i32 8, label %18
+    i32 24, label %19
+    i32 56, label %20
+    i32 25, label %21
+    i32 9, label %21
+    i32 20, label %22
+    i32 52, label %22
+    i32 21, label %23
+    i32 5, label %23
+    i32 12, label %24
+    i32 28, label %25
+    i32 60, label %26
+    i32 29, label %27
+    i32 13, label %27
+  ]
+
+  switch i32 %74, label %78 [
+    i32 0, label %75
+    i32 1, label %76
+    i32 2, label %77
+  ]
 }

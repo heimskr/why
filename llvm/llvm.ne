@@ -74,7 +74,7 @@ source_filename		-> "source_filename" prop										{% d => ["source_filename", 
 target				-> "target" __ targetname prop									{% d => ["target", d[2], d[3]] %}
 targetname			-> ("datalayout" | "triple")									{% __(0, 0) %}
 
-variable				-> "%" (var | decimal | string)									{% d => ["variable", d[1][0]] %}
+variable			-> "%" (var | decimal | string)									{% d => ["variable", d[1][0]] %}
 temporary			-> "%" decimal													{% d => d[1] %}
 
 type_struct			-> "%struct." var												{% d => ["struct", d[1]] %}
@@ -162,7 +162,7 @@ function_header		-> "define"
 					   __
 					   var_name
 					   (_ "(")
-					   function_types
+					   function_types:?
 					   ")"
 					   (_ unnamed_addr):?
 					   ((__ fnattr):+ | __ "#" decimal):?
@@ -173,7 +173,7 @@ function_header		-> "define"
 					   ("  prefix" __ constant):? # what about that "@md" thing?
 					   ("  prologue" __ constant):?
 					   ("  personality" __ constant):?
-					   (" " bang):*
+					   (" " bang_any):*
 					   {% d => ["function", {
 					       linkage:		 d[1]? d[1][1] : null,
 					       visibility:	 d[2]? d[2][1] : null,
@@ -182,7 +182,7 @@ function_header		-> "define"
 					       retattrs:	 select(d[5], 1),
 					       type:		 d[7],
 					       name:		 d[9],
-					       types:		 d[11],
+					       types:		 d[11]? d[11] : null,
 					       unnamed_addr: d[13]? d[13][1] : null,
 					       fnattrs:		 d[14],
 					       section:		 d[15]? d[15][3] : null,
@@ -216,13 +216,14 @@ constant			-> constant_int													{% _ %}
 					 																{% d => [d[0], d[4][0], ...d[4][1].map((x) => x[1])] %}
 
 bang_type			-> ("nontemporal" | "invariant.load" | "invariant.group" | "nonnull" | "dereferenceable" | "dereferenceable_or_null" | "align") {% __ %}
-bang				-> "!" bang_type __ "!" decimal									{% d => [d[1], d[4]] %}
+bang[X]				-> "!" $X " !" decimal											{% d => [d[1], d[3]] %}
+bang_any			-> bang[bang_type]												{% _ %}
 
 function_def		-> function_header _ "{" function_line:* "}"					{% d => [...d[0], filter(d[3])] %}
 function_line		-> _ lineend													{% _( ) %}
 					 | _ instruction												{% _(1) %}
 
-instruction			-> (i_alloca | i_load | i_icmp | i_br | i_call | i_unreachable | i_getelementptr) {% __ %}
+instruction			-> (i_alloca | i_load | i_icmp | i_br | i_call | i_unreachable | i_getelementptr | i_switch | i_store) {% __ %}
 
 i_alloca			-> temporary
 					   " = alloca "
@@ -267,7 +268,10 @@ i_load_normal		-> temporary
 					   	   align2: d[11]? d[11][1] : null
 					   }] %}
 
-icmp_operand		-> (variable | decimal | "null")								{% d => d[0] == "null"? null : d[0] %}
+operand				-> (variable | decimal)											{% __ %}
+icmp_operand		-> "null"														{% _() %}
+					 | operand														{% _ %}
+
 i_icmp				-> variable
 					   " = icmp "
 					   ("eq" | "ne" | "ugt" | "uge" | "ult" | "ule" | "sgt" | "sge" | "slt" | "sle")
@@ -364,8 +368,46 @@ i_getelementptr_2	-> variable
 					       flavor: 2
 					   }] %}
 
+i_switch			-> "switch"
+						spaced[type_int]
+						operand
+						", label "
+						variable
+						" [" 
+						i_switch_line:*
+						(_ "]")
+					   {% d => ["instruction", "switch", {
+					       type: d[1],
+					       operand: d[2],
+					       default: d[4],
+					       table: d[6]? filter(d[6]) : []
+					   }] %}
 
+i_store				-> (i_store_normal | i_store_atomic)							{% __ %}
+i_store_normal		-> "store"
+					   " volatile":?
+					   spaced[type_any]
+					   operand
+					   ", "
+					   type_any
+					   "* "
+					   operand
+					   (", align " decimal):?
+					   (", " bang["nontemporal"]):?
+					   (", " bang["invariant.group"]):?
+					   {% d => ["instruction", "store", {
+					       volatile: !!d[1],
+					       storeType: d[2][0],
+					       storeValue: d[3],
+					       destinationType: d[5],
+					       destinationValue: d[7],
+					       align: d[8]? d[8][1] : null,
+					       nontemporal: d[9]? d[9][1][1] : null,
+					       invariantGroup: d[10]? d[10][1][1] : null
+					   }] %}
 
+i_switch_line		-> _ type_int " " decimal ", label " variable					{% d => [d[1], d[3], d[5]] %}
+					 | _ lineend													{% _() %}
 
 call_fnty			-> type_any " (" commalist[type_any] ", ...":? ")"				{% compileFnty %}
 call_fnptrval		-> "@" (var | string)											{% _(1) %}
@@ -376,12 +418,12 @@ fast_math_flag		-> ("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% 
 
 typed_args_list		-> commalist[constant]											{% d => d[0].map((x) => x[0]) %}
 
-constant			-> type_any " " variable											{% d => [d[0], d[2]] %}
-					 | type_any " " const_expr										{% d => [d[0], d[2]] %}
+constant			-> type_any (" " parattr):* " " variable						{% d => [d[0], d[3], d[1].map((x) => x[0])] %}
+					 | type_any (" " parattr):* " " const_expr						{% d => [d[0], d[3], d[1].map((x) => x[0])] %}
 cst_to_type[X]		-> $X " " constant " to " type_any								{% d => [d[0], ...d[2], d[4]] %}
 cst_to_types		-> ("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
 const_expr			-> cst_to_type[cst_to_types]									{% d => ["expr", d[0][0], ...d[0].slice(1)] %}
-					 | getelementptr_expr												{% _ %}
+					 | getelementptr_expr											{% _ %}
 
 getelementptr_expr	-> "getelementptr "
 					   "inbounds ":?
@@ -408,11 +450,11 @@ var -> varchar:+ {%
 	}
 %}
 
-varchar -> . 						{% (d, location, reject) => d[0] && special.chars.indexOf(d[0]) === -1 ? d[0] : reject %}
-comment	-> ";" [^\n]:*				{% d => null %}
-_		-> [\t ]:*					{% d => null %}
-__		-> [\t ]:+					{% d => null %}
-newline -> "\r" "\n" | "\r" | "\n"	{% d => null %}
+varchar -> . 				{% (d, location, reject) => d[0] && special.chars.indexOf(d[0]) === -1 ? d[0] : reject %}
+comment	-> ";" [^\n]:*		{% d => null %}
+_		-> [\t ]:*			{% d => null %}
+__		-> [\t ]:+			{% d => null %}
+newline -> "\r\n" | [\r\n]	{% d => null %}
 
 @{%/*
 
