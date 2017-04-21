@@ -40,4 +40,7 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
 
 ; <label>:11:                                     ; preds = %2
   %12 = load i8*, i8** %1, align 8
+  %13 = tail call i32 (i8*, i6666, ...) @printf(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str, i64 0, i64 0), i8* %12)
+  tail call void @exit(i32 1) #7
+  ; unreachable
 }

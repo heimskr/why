@@ -7,7 +7,7 @@ let fs = require("fs"),
 	chalk = require("chalk"),
 	getline = require("get-line-from-pos"),
 	minimist = require("minimist"),
-	prettyjson = require("prettyjson"),
+	jsome = require("jsome"),
 	path = require("path");
 
 const die = (...a) => { console.error(...a); process.exit(1) };
@@ -15,7 +15,7 @@ const die = (...a) => { console.error(...a); process.exit(1) };
 const opt = minimist(process.argv.slice(2), {
 	alias: { t: "tree", d: "dev", s: "simple" },
 	boolean: ["tree", "dev", "simple"],
-	default: { tree: true, dev: true }
+	default: { tree: true, dev: true, simple: false }
 }), filename = opt._[0];
 
 if (!filename) {
@@ -64,14 +64,14 @@ try {
 	process.exit(1);
 };
 
-const printTree = (tree) => prettyjson.render(tree || "[null]");
+const printTree = (tree) => jsome(tree || "[null]");
 
 if (trees.length > 1 && opt.dev) {
-	trees.forEach((tree) => console.log(opt.simple? JSON.stringify(trees[tree], null, 4) : printTree(trees[tree]), "\n"));
+	trees.forEach((tree) => opt.simple? console.log(JSON.stringify(trees[tree], null, 4)) : printTree(trees[tree]));
 	console.warn(chalk.yellow.italic(`^^^^^^^^^^^^^^^^^^^^^^\nAmbiguous grammar (${trees.length}).\n`));
 } else if (trees.length === 0) {
 	console.warn(chalk.yellow.italic("Nothing parsed."));
 	process.exit(1);
 } else if (opt.tree) {
-	console.log(opt.simple? JSON.stringify(trees[0], null, 4) : printTree(trees[0]));
+	opt.simple? console.log(JSON.stringify(trees[0], null, 4)) : printTree(trees[0])
 };

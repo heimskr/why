@@ -1,6 +1,8 @@
 @{%
 "use strict";
 
+const { uniq: unique } = require("lodash");
+
 const special = {
 	chars: "=@$&*\t \":()",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
@@ -37,6 +39,10 @@ const __ = (x, y) => {
 	return () => { throw "Unknown type given to __." };
 };
 
+const compileFastMathFlags = (flags) => flags.includes("fast")? ["nnan", "ninf", "nsz", "arcp", "constract", "fast"] : unique(flags);
+
+const compileFnty = (d) => [d[0], d[2], !!d[3]]; // [ return type: Type, argument types (excluding "..."): [Type], is_varargs: Boolean ]
+
 %}
 
 @include "strings.ne"
@@ -47,8 +53,11 @@ item -> _ lineend											{% _() %}
 	  | _ (type_any | source_filename | target | struct | global | function_def)
 	  														{% __(1, 0) %}
 
-lineend				-> (comment newline | newline) 									{% d => null %}
+lineend				-> (comment newline | newline) 									{% _( ) %}
 spaced[X]			-> " " $X " "													{% _(1) %}
+list[X]				-> $X (" " $X):*												{% d => [d[0], ...d[1].map((x) => x[1])] %}
+commalist[X]		-> $X (", " $X):*												{% d => [d[0], ...d[1].map((x) => x[1])] %}
+pars[X]				-> "(" $X ")"													{% _(1) %}
 
 comma				-> _ "," _														{% _( ) %}
 eq					-> _ "=" _														{% _( ) %}
@@ -65,12 +74,15 @@ source_filename		-> "source_filename" prop										{% d => ["source_filename", 
 target				-> "target" __ targetname prop									{% d => ["target", d[2], d[3]] %}
 targetname			-> ("datalayout" | "triple")									{% __(0, 0) %}
 
+label				-> "%" (var | decimal | string)									{% d => ["label", d[1][0]] %}
+temporary			-> "%" decimal													{% d => d[1] %}
+
 type_struct			-> "%struct." var												{% d => ["struct", d[1]] %}
 struct_header		-> type_struct eq "type"										{% __(0, 1) %}
 struct				-> struct_header __ "opaque"									{% d => ["struct", d[0], "opaque"] %}
-					 | struct_header _ "{" _ types _ "}"							{% d => ["struct", d[0], d[4].map((x) => x.slice(1))] %}
+					 | struct_header _ "{" _ types _ "}"							{% d => ["struct", d[0], d[4].map((x) => x[0])] %}
 
-types				-> type_any (_ "," _ type_any):*								{% d => [d[0], ...d[1].map((x) => x[3])] %}
+types				-> commalist[type_any]											{% _ %}
 
 type_int			-> "i" natural													{% d => ["int", d[1]] %}
 type_array			-> "[" _ natural _ "x" _ type_any "]"							{% d => ["array", d[2], d[6].slice(1)] %}
@@ -183,7 +195,7 @@ function_header		-> "define"
 					       bangs:		 select(d[22], 1)
 					   }] %}
 
-function_type		-> type_any (__ parattr):*										{% d => [d[0].slice(1), d[1].map((x) => x[1])] %}
+function_type		-> type_any (__ parattr):*										{% d => [d[0].slice(1), d[1].map((x) => x[1][0])] %}
 function_types		-> function_types comma function_type							{% d => d[0].concat([d[2]]) %}
 					 | function_type												{% d => [d[0]] %}
 
@@ -210,7 +222,7 @@ function_def		-> function_header _ "{" function_line:* "}"					{% d => [...d[0],
 function_line		-> _ lineend													{% _( ) %}
 					 | _ instruction												{% _(1) %}
 
-instruction			-> (i_alloca | i_load | i_icmp | i_br)							{% __ %}
+instruction			-> (i_alloca | i_load | i_icmp | i_br | i_call)					{% __ %}
 
 i_alloca			-> temporary
 					   " = alloca "
@@ -228,7 +240,6 @@ i_alloca			-> temporary
 					   }] %}
 
 i_load				-> (i_load_normal | i_load_atomic)								{% __ %}
-
 i_load_normal		-> temporary
 					   " = load "
 					   "volatile ":?
@@ -256,6 +267,7 @@ i_load_normal		-> temporary
 					   	   align2: d[11]? d[11][1] : null
 					   }] %}
 
+icmp_operand		-> (label | decimal)											{% __ %}
 i_icmp				-> label
 					   " = icmp "
 					   ("eq" | "ne" | "ugt" | "uge" | "ult" | "ule" | "sgt" | "sge" | "slt" | "sle")
@@ -270,10 +282,8 @@ i_icmp				-> label
 					   	   op2: d[6]
 					   }] %}
 
-icmp_operand		-> (label | decimal)											{% __ %}
-
 i_br				-> (i_br_conditional | i_br_unconditional)						{% __ %}
-
+i_br_unconditional	-> "br label " label											{% d => ["instruction", "br_unconditional", { dest: d[1] }] %}
 i_br_conditional	-> "br"
 					   spaced[type_any]
 					   label
@@ -282,16 +292,75 @@ i_br_conditional	-> "br"
 					   ", label "
 					   label
 					   {% d => ["instruction", "br_conditional", {
-					   	   type: d[1],
+					   	   type: d[1][0].slice(1),
 					   	   cond: d[2],
 					   	   iftrue: d[4],
 					   	   iffalse: d[6]
 					   }] %}
 
-i_br_unconditional	-> "br label " label											{% d => ["instruction", "br_unconditional", { dest: d[1] }] %}
+i_call				-> (label " = "):?
+					   (("tail" | "notail" | "musttail") " "):?
+					   "call"
+					   (" " fast_math_flags):?
+					   (" " cconv):?
+					   (" " retattr):*
+					   _
+					   (call_fnty | type_any)
+					   _
+					   call_fnptrval
+					   "("
+					   typed_args_list
+					   ")"
+					   # todo: fn attrs
+					   (_ list["#" decimal]):?
+					   {% d => ["instruction", "call", {
+					       assign: d[0]? d[0][0] : null,
+					       tail: d[1]? d[1][0][0] : null,
+					       fastmath: d[3] || null,
+					       cconv: d[4] || null,
+					       retattr: d[5]? d[5].map((x) => x[1]) : [],
+					       type: d[7][0],
+					       name: d[9],
+					       args: d[11],
+					       bundles: d[13]? d[13][1].map((x) => x[1]) : []
+					   }] %}
 
-label				-> "%" (var | decimal)											{% d => ["label", d[1][0]] %}
-temporary			-> "%" decimal													{% d => d[1] %}
+
+
+call_fnty			-> type_any " (" commalist[type_any] ", ...":? ")"				{% compileFnty %}
+call_fnptrval		-> "@" (var | string)											{% _(1) %}
+#call_retattrs		-> call_retattr (" ")
+
+fast_math_flags		-> list[fast_math_flag]											{% compileFastMathFlags %}
+fast_math_flag		-> ("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
+
+typed_args_list		-> commalist[constant]											{% d => d[0].map((x) => x[0]) %}
+
+constant			-> type_any " " label											{% d => [d[0], d[2]] %}
+					 | type_any " " const_expr										{% d => [d[0], d[2]] %}
+cst_to_type[X]		-> $X " " constant " to " type_any								{% d => [d[0], ...d[2], d[4]] %}
+cst_to_types		-> ("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
+const_expr			-> cst_to_type[cst_to_types]									{% d => ["expr", d[0][0], ...d[0].slice(1)] %}
+					 | getelement_expr												{% _ %}
+
+getelement_expr		-> "getelementptr "
+					   "inbounds ":?
+					   "("
+					   type_any
+					   ", "
+					   type_any
+					   "* "
+					   var_name
+					   (", " type_int " " decimal):*
+					   ")"
+					   {% d => ["expr", "getelement", {
+					   	   inbounds: !!d[1],
+					   	   type: d[3],
+					   	   ptr: d[5],
+					   	   name: d[7],
+					   	   indices: d[8].map((x) => [x[1], x[3]])
+					   }] %}
+
 
 
 

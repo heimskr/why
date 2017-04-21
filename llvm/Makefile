@@ -10,7 +10,7 @@ $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
 
 test: $(TEST) $(COMPILED) test.ll
-	node $(TEST) test.ll -s
+	node $(TEST) test.ll
 
 clean:
 	rm -f $(COMPILED)
