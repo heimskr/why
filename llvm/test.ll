@@ -42,5 +42,32 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %12 = load i8*, i8** %1, align 8
   %13 = tail call i32 (i8*, i6666, ...) @printf(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str, i64 0, i64 0), i8* %12)
   tail call void @exit(i32 1) #7
-  ; unreachable
+  unreachable
+
+; <label>:14:                                     ; preds = %2
+  %15 = getelementptr inbounds i8*, i8** %1, i64 1
+  %16 = load i8*, i8** %15, align 8
+  %17 = tail call %struct.__sFILE* @"\01_fopen"(i8* %16, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.1, i64 0, i64 0)) #6
+  %18 = icmp eq %struct.__sFILE* %17, null
+  br i1 %18, label %19, label %22
+}
+
+
+
+define i32* @langref_gep_test(%struct.ST* %s) {
+  %t1 = getelementptr %struct.ST, %struct.ST* %s, i32 1                        ; yields %struct.ST*:%t1
+  %t2 = getelementptr %struct.ST, %struct.ST* %t1, i32 0, i32 2                ; yields %struct.RT*:%t2
+  %t3 = getelementptr %struct.RT, %struct.RT* %t2, i32 0, i32 1                ; yields [10 x [20 x i32]]*:%t3
+  %t4 = getelementptr [10 x [20 x i32]], [10 x [20 x i32]]* %t3, i32 0, i32 5  ; yields [20 x i32]*:%t4
+  %t5 = getelementptr [20 x i32], [20 x i32]* %t4, i32 0, i32 13               ; yields i32*:%t5
+  %arrayidx = getelementptr inbounds %struct.ST, %struct.ST* %s, i64 1, i32 2, i32 1, i64 5, i64 13
+  ; yields [12 x i8]*:aptr
+  %aptr = getelementptr {i32, [12 x i8]}, {i32, [12 x i8]}* %saptr, i64 0, i32 1
+  ; yields i8*:vptr
+  %vptr = getelementptr {i32, <2 x i8>}, {i32, <2 x i8>}* %svptr, i64 0, i32 1, i32 1
+  ; yields i8*:eptr
+  %eptr = getelementptr [12 x i8], [12 x i8]* %aptr, i64 0, i32 1
+  ; yields i32*:iptr
+  %iptr = getelementptr [10 x i32], [10 x i32]* @arr, i16 0, i16 0
+  ; ret i32* %t5
 }

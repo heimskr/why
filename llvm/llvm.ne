@@ -74,7 +74,7 @@ source_filename		-> "source_filename" prop										{% d => ["source_filename", 
 target				-> "target" __ targetname prop									{% d => ["target", d[2], d[3]] %}
 targetname			-> ("datalayout" | "triple")									{% __(0, 0) %}
 
-label				-> "%" (var | decimal | string)									{% d => ["label", d[1][0]] %}
+variable				-> "%" (var | decimal | string)									{% d => ["variable", d[1][0]] %}
 temporary			-> "%" decimal													{% d => d[1] %}
 
 type_struct			-> "%struct." var												{% d => ["struct", d[1]] %}
@@ -195,7 +195,7 @@ function_header		-> "define"
 					       bangs:		 select(d[22], 1)
 					   }] %}
 
-function_type		-> type_any (__ parattr):*										{% d => [d[0].slice(1), d[1].map((x) => x[1][0])] %}
+function_type		-> type_any (__ parattr):* (" " variable):?						{% d => [d[0].slice(1), d[2]? d[2][1] : null, d[1].map((x) => x[1][0])] %}
 function_types		-> function_types comma function_type							{% d => d[0].concat([d[2]]) %}
 					 | function_type												{% d => [d[0]] %}
 
@@ -222,7 +222,7 @@ function_def		-> function_header _ "{" function_line:* "}"					{% d => [...d[0],
 function_line		-> _ lineend													{% _( ) %}
 					 | _ instruction												{% _(1) %}
 
-instruction			-> (i_alloca | i_load | i_icmp | i_br | i_call)					{% __ %}
+instruction			-> (i_alloca | i_load | i_icmp | i_br | i_call | i_unreachable | i_getelementptr) {% __ %}
 
 i_alloca			-> temporary
 					   " = alloca "
@@ -267,8 +267,8 @@ i_load_normal		-> temporary
 					   	   align2: d[11]? d[11][1] : null
 					   }] %}
 
-icmp_operand		-> (label | decimal)											{% __ %}
-i_icmp				-> label
+icmp_operand		-> (variable | decimal | "null")								{% d => d[0] == "null"? null : d[0] %}
+i_icmp				-> variable
 					   " = icmp "
 					   ("eq" | "ne" | "ugt" | "uge" | "ult" | "ule" | "sgt" | "sge" | "slt" | "sle")
 					   spaced[type_any]
@@ -283,14 +283,14 @@ i_icmp				-> label
 					   }] %}
 
 i_br				-> (i_br_conditional | i_br_unconditional)						{% __ %}
-i_br_unconditional	-> "br label " label											{% d => ["instruction", "br_unconditional", { dest: d[1] }] %}
+i_br_unconditional	-> "br label " variable											{% d => ["instruction", "br_unconditional", { dest: d[1] }] %}
 i_br_conditional	-> "br"
 					   spaced[type_any]
-					   label
+					   variable
 					   ", label "
-					   label
+					   variable
 					   ", label "
-					   label
+					   variable
 					   {% d => ["instruction", "br_conditional", {
 					   	   type: d[1][0].slice(1),
 					   	   cond: d[2],
@@ -298,7 +298,7 @@ i_br_conditional	-> "br"
 					   	   iffalse: d[6]
 					   }] %}
 
-i_call				-> (label " = "):?
+i_call				-> (variable " = "):?
 					   (("tail" | "notail" | "musttail") " "):?
 					   "call"
 					   (" " fast_math_flags):?
@@ -325,6 +325,46 @@ i_call				-> (label " = "):?
 					       bundles: d[13]? d[13][1].map((x) => x[1]) : []
 					   }] %}
 
+i_unreachable		-> "unreachable"												{% d => ["instruction", "unreachable", { }] %}
+
+i_getelementptr		-> (i_getelementptr_1 | i_getelementptr_2)						{% __ %}
+i_getelementptr_1	-> variable
+					   " = getelementptr "
+					   "inbounds ":?
+					   type_any
+					   ", "
+					   type_ptr
+					   " "
+					   (variable | var_name)
+					   (", " "inrange ":? type_int " " (variable | decimal)):+
+					   {% d => ["instruction", "getelementptr", {
+					       inbounds: !!d[2],
+					       type: d[3],
+					       pointerType: d[5],
+					       pointerValue: d[7],
+					       indices: d[8].map((x) => [x[2], x[4][0], !!x[1]]),
+					       flavor: 1
+					   }] %}
+i_getelementptr_2	-> variable
+					   " = getelementptr"
+					   " inbounds":?
+					   " {"
+					   types
+					   "}, {"
+					   types
+					   "}* "
+					   (variable | var_name)
+					   (", " "inrange ":? type_int " " (variable | decimal)):+
+					   {% d => ["instruction", "getelementptr", {
+					       inbounds: !!d[2],
+					       type: d[4],
+					       pointerType: d[6],
+					       pointerValue: d[8],
+					       indices: d[9].map((x) => [x[2], x[4][0], !!x[1]]),
+					       flavor: 2
+					   }] %}
+
+
 
 
 call_fnty			-> type_any " (" commalist[type_any] ", ...":? ")"				{% compileFnty %}
@@ -336,14 +376,14 @@ fast_math_flag		-> ("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% 
 
 typed_args_list		-> commalist[constant]											{% d => d[0].map((x) => x[0]) %}
 
-constant			-> type_any " " label											{% d => [d[0], d[2]] %}
+constant			-> type_any " " variable											{% d => [d[0], d[2]] %}
 					 | type_any " " const_expr										{% d => [d[0], d[2]] %}
 cst_to_type[X]		-> $X " " constant " to " type_any								{% d => [d[0], ...d[2], d[4]] %}
 cst_to_types		-> ("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
 const_expr			-> cst_to_type[cst_to_types]									{% d => ["expr", d[0][0], ...d[0].slice(1)] %}
-					 | getelement_expr												{% _ %}
+					 | getelementptr_expr												{% _ %}
 
-getelement_expr		-> "getelementptr "
+getelementptr_expr	-> "getelementptr "
 					   "inbounds ":?
 					   "("
 					   type_any
@@ -360,9 +400,6 @@ getelement_expr		-> "getelementptr "
 					   	   name: d[7],
 					   	   indices: d[8].map((x) => [x[1], x[3]])
 					   }] %}
-
-
-
 
 var -> varchar:+ {%
 	(d, location, reject) => {
