@@ -78,6 +78,16 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %34 = call i32 (%struct.__sFILE*, i8*, ...) @fscanf(%struct.__sFILE* nonnull %17, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.6, i64 0, i64 0), i32* nonnull %4, i32* nonnull %5)
   %35 = icmp eq i32 %34, 2
   br i1 %35, label %.lr.ph49.preheader, label %._crit_edge50
+
+.lr.ph49.preheader:                               ; preds = %30
+  br label %.lr.ph49
+
+.lr.ph49:                                         ; preds = %.lr.ph49.preheader, %40
+  %36 = load i32, i32* %4, align 4
+  %37 = load i32, i32* %5, align 4
+  %38 = or i32 %37, %36
+  %39 = icmp eq i32 %38, 0
+  br i1 %39, label %._crit_edge50.loopexit, label %40
 }
 
 
