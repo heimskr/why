@@ -41,7 +41,7 @@ const __ = (x, y) => {
 
 const compileFastMathFlags = (flags) => flags.includes("fast")? ["nnan", "ninf", "nsz", "arcp", "constract", "fast"] : unique(flags);
 
-const compileFnty = (d) => [d[0], d[2], !!d[3]]; // [ return type: Type, argument types (excluding "..."): [Type], is_varargs: Boolean ]
+const compileFnty = (d) => [d[0], d[2], !!d[3]]; // [ Type returntype, Type[] argumenttypes (excluding "..."), Boolean is_varargs ]
 
 %}
 
@@ -91,13 +91,14 @@ type_ptr			->	type_any _ "*"												{% d => ["ptr", d[0].slice(1)] %}
 type_multiptr		->	type_int _ "(" _ types _ ")" _ "*"							{% d => ["multiptr", d[0], d[4].map((x) => x.slice(1))] %}
 type_void			->	"void"														{% d => ["void"] %}
 type_function		->	type_any _ "(" _ type_function_args ")"						{% d => ["function", d[0], d[3]] %}
-type_any			->	(type_multiptr | type_ptr | type_array | type_vector | type_int | type_struct | type_void)
+type_any			->	(type_multiptr | type_ptr | type_array | type_vector)		{% __ %}
+					 |	(type_int | type_struct | type_void)						{% __ %}
 																					{% d => ["type", ...d[0][0]] %}
 type_intvec			->	(type_int | type_vector)									{% __ %}
 
 type_function_args	->	type_any (comma type_any):* (comma "...") _					{% d => [d[0], ...d[1].map((x) => x.slice(1)), "..."] %}
 					 |	type_any (comma type_any):* _								{% d => [d[0], ...d[1].map((x) => x.slice(1))] %}
-					 |	null															{% d => [] %}
+					 |	null														{% d => [] %}
 
 var_name			->	"@" var														{% _(1) %}
 label				->	var ":"														{% d => ["label", d[0]] %}
@@ -117,7 +118,7 @@ global				->	var_name
 						(comma "section" _ string):?
 						(comma "comdat" _ "(" _ "$" _ var _ ")"):?
 						(comma "align" __ decimal):?
-						#// not sure what "(, !name !N)*" is supposed to mean, but it doesn't to be used in various things I found online, so whatever ¯\_(ツ)_/¯
+						#// not sure what "(, !name !N)*" is supposed to mean, but it doesn't seem to be used in various things I found online, so whatever ¯\_(ツ)_/¯
 						{% d => [
 							"global",
 							d[0],					// variable name
@@ -131,8 +132,8 @@ global				->	var_name
 							d[9]? d[9][1] : null,	// global_constant
 							d[11],					// type
 							d[12]? d[12][1] : null,	// initial value
-							d[13]? d[13][3] : null, 	// section
-							d[14]? d[14][7] : null, 	// comdat (what is that)
+							d[13]? d[13][3] : null, // section
+							d[14]? d[14][7] : null, // comdat (what is that)
 							d[15]? d[15][3] : null	// align
 				   		] %}
 
@@ -142,6 +143,7 @@ visibility			->	"default"													{% d => 0 %}
 					 |	"hidden"														{% d => 1 %}
 					 |	"protected"													{% d => 2 %}
 dll_storage_class	->	("dllimport" | "dllexport")									{% __ %}
+# something about thread_Local seems incorrect (can't really seem to find relevant syntax documentation)
 thread_local		->	"thread_local" _ "(" _ ("localdynamic" | "initialexec" | "localexec") _ ")"
 																					{% d => d[4][0] %}
 unnamed_addr		->	("local_unnamed_addr" | "unnamed_addr")						{% __ %}
