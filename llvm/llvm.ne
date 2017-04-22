@@ -83,23 +83,18 @@ struct				->	struct_header __ "opaque"									{% d => ["struct", d[0], "opaque"
 types				->	commalist[type_any]											{% _ %}
 
 type_int			->	"i" natural													{% d => ["int", d[1]] %}
-type_float			->	("half" | "float" | "double" | "fp128" | "x86_fp80" |
-					     "ppc_fp128")												{% d => ["float", d[0][0]] %}
 type_array			->	"[" _ natural _ "x" _ type_any "]"							{% d => ["array", d[2], d[6].slice(1)] %}
-type_vector			->	"<" _ natural _ "x" _ vector_type _ ">"						{% d => ["vector", d[2], d[6]] %}
-vector_type			->	(type_int | type_ptr | type_float)							{% d => d[0][0] %}
-type_ptr			->	type_any _ "*"												{% d => ["ptr", d[0].slice(1), null] %}
-					 |	type_any " addrspace(" decimal ")" _ "*"					{% d => ["ptr", d[0].slice(1), d[2]] %}
+type_vector			->	"<" _ natural _ "x" _ vector_type ">"						{% d => ["vector", d[2], d[6]] %}
+vector_type			->	(type_int | type_ptr)										{% d => d[0][0] %}
+					 |	"float"														{% d => ["float"] %}
+type_ptr			->	type_any _ "*"												{% d => ["ptr", d[0].slice(1)] %}
 type_multiptr		->	type_int _ "(" _ types _ ")" _ "*"							{% d => ["multiptr", d[0], d[4].map((x) => x.slice(1))] %}
 type_void			->	"void"														{% d => ["void"] %}
 type_function		->	type_any _ "(" _ type_function_args ")"						{% d => ["function", d[0], d[3]] %}
-type_any			->	((type_multiptr | type_ptr | type_array | type_vector)
-						 (type_int | type_struct | type_void | type_function))		{% d => ["type", ...d[0][0][0]] %}
-type_intvec			->	type_int													{% _ %}
-					 |	"<" _ natural _ "x" _ type_int _ ">"						{% d => ["vector", d[2], d[6]] %}
-type_floatvec		->	type_float													{% _ %}
-					 |	"<" _ natural _ "x" _ type_float _ ">"						{% d => ["vector", d[2], d[6]] %}
-type_x86mmx			->	"x86_mmx"													{% _ %}
+type_any			->	(type_multiptr | type_ptr | type_array | type_vector)		{% __ %}
+					 |	(type_int | type_struct | type_void)						{% __ %}
+																					{% d => ["type", ...d[0][0]] %}
+type_intvec			->	(type_int | type_vector)									{% __ %}
 
 type_function_args	->	type_any (comma type_any):* (comma "...") _					{% d => [d[0], ...d[1].map((x) => x.slice(1)), "..."] %}
 					 |	type_any (comma type_any):* _								{% d => [d[0], ...d[1].map((x) => x.slice(1))] %}
@@ -124,28 +119,28 @@ global				->	var_name
 						(comma "comdat" _ "(" _ "$" _ var _ ")"):?
 						(comma "align" __ decimal):?
 						#// not sure what "(, !name !N)*" is supposed to mean, but it doesn't seem to be used in various things I found online, so whatever ¯\_(ツ)_/¯
-						{% d => ["global", {
-							name:                    d[ 0],
-							linkage:                 d[ 2]? d[ 2][1] : null,
-							visibility:              d[ 3]? d[ 3][1] : null,
-							dllStorageClass:         d[ 4]? d[ 4][1] : null,
-							threadlocal:             d[ 5] || null,
-							unnamedAddr:             d[ 6]? d[ 6][1] : null,
-							addrspace:               d[ 7]? d[ 7][1] : null,
-							externallyInitialized: !!d[ 8],
-							globalConstant:          d[ 9]? d[ 9][1] : null,
-							type:                    d[11],
-							initialValue:            d[12]? d[12][1] : null,
-							section:                 d[13]? d[13][3] : null,
-							comdat:                  d[14]? d[14][7] : null, // comdat? what is that? who knows.
-							align:                   d[15]? d[15][3] : null
-				   		}] %}
+						{% d => [
+							"global",
+							d[0],					// variable name
+							d[2]? d[2][1] : null,	// linkage
+							d[3]? d[3][1] : null,	// visibility
+							d[4]? d[4][1] : null,	// dll storage class
+							d[5] || null,			// thread local
+							d[6]? d[6][1] : null,	// unnamed_addr
+							d[7]? d[7][1] : null,	// addrspace
+							!!d[8],					// externally_initialized
+							d[9]? d[9][1] : null,	// global_constant
+							d[11],					// type
+							d[12]? d[12][1] : null,	// initial value
+							d[13]? d[13][3] : null, // section
+							d[14]? d[14][7] : null, // comdat (what is that)
+							d[15]? d[15][3] : null	// align
+				   		] %}
 
-linkage				->	("private" | "appending" | "available_externally" | "weak")	{% __ %}
-					 |	("extern_weak" | "linkonce_odr" | "weak_odr" | "external")	{% __ %}
-					 |	("linkonce" | "common" | "internal")						{% __ %}
+linkage				->	("private" | "internal" | "available_externally" | "linkonce" | "weak" | "common" | "appending" | "extern_weak" | "linkonce_odr" | "weak_odr" | "external")
+																					{% __ %}
 visibility			->	"default"													{% d => 0 %}
-					 |	"hidden"													{% d => 1 %}
+					 |	"hidden"														{% d => 1 %}
 					 |	"protected"													{% d => 2 %}
 dll_storage_class	->	("dllimport" | "dllexport")									{% __ %}
 # something about thread_Local seems incorrect (can't really seem to find relevant syntax documentation)
@@ -183,24 +178,24 @@ function_header		->	"define"
 						("  personality" __ constant):?
 						(" " bang_any):*
 						{% d => ["function", {
-							type:            d[7],
-							name:            d[9],
-							retattrs:        select(d[5], 1),
-							bangs:           select(d[22], 1),
-							fnattrs:         d[14],
-							types:           d[11]? d[11]    : null,
-							linkage:         d[ 1]? d[ 1][1] : null,
-							visibility:      d[ 2]? d[ 2][1] : null,
-							dllStorageClass: d[ 3]? d[ 3][1] : null,
-							cconv:           d[ 4]? d[ 4][1] : null,
-							unnamedAddr:     d[13]? d[13][1] : null,
-							section:         d[15]? d[15][3] : null,
-							comdat:          d[16]? d[16][7] : null,
-							align:           d[17]? d[17][3] : null,
-							gc:              d[18]? d[18][3] : null,
-							prefix:          d[19]? d[19][3] : null,
-							prologue:        d[20]? d[20][3] : null,
-							personality:     d[21]? d[21][3] : null
+							linkage:		 d[1]? d[1][1] : null,
+							visibility:	 d[2]? d[2][1] : null,
+							storageclass: d[3]? d[3][1] : null,
+							cconv:		 d[4]? d[4][1] : null,
+							retattrs:	 select(d[5], 1),
+							type:		 d[7],
+							name:		 d[9],
+							types:		 d[11]? d[11] : null,
+							unnamed_addr: d[13]? d[13][1] : null,
+							fnattrs:		 d[14],
+							section:		 d[15]? d[15][3] : null,
+							comdat:		 d[16]? d[16][7] : null,
+							align:		 d[17]? d[17][3] : null,
+							gc:			 d[18]? d[18][3] : null,
+							prefix:		 d[19]? d[19][3] : null,
+							prologue:	 d[20]? d[20][3] : null,
+							personality:	 d[21]? d[21][3] : null,
+							bangs:		 select(d[22], 1)
 						}] %}
 
 function_type		->	type_any (__ parattr):* (" " variable):?						{% d => [d[0].slice(1), d[2]? d[2][1] : null, d[1].map((x) => x[1][0])] %}
@@ -297,7 +292,7 @@ i_load_normal		->	variable
 							invariantGroup: d[7]? d[7][1] : null,
 							nonnull: d[8]? d[8][1] : null,
 							dereferenceable: d[9]? d[9][1] : null,
-							dereferenceableOrNull: d[10]? d[10][1] : null,
+							dereferenceable_or_null: d[10]? d[10][1] : null,
 							align2: d[11]? d[11][1] : null
 						}] %}
 
@@ -315,10 +310,10 @@ i_icmp				->	variable
 						icmp_operand
 						{% d => ["instruction", "icmp", {
 							destination: d[0],
-							operator:    d[2][0],
-							type:        d[3],
-							op1:         d[4],
-							op2:         d[6]
+							operator: d[2][0],
+							type: d[3],
+							op1: d[4],
+							op2: d[6]
 						}] %}
 
 i_br				->	(i_br_conditional | i_br_unconditional)						{% __ %}
@@ -331,9 +326,9 @@ i_br_conditional	->	"br"
 						", label "
 						variable
 						{% d => ["instruction", "br_conditional", {
-							type:    d[1][0].slice(1),
-							cond:    d[2],
-							iftrue:  d[4],
+							type: d[1][0].slice(1),
+							cond: d[2],
+							iftrue: d[4],
 							iffalse: d[6]
 						}] %}
 
@@ -353,15 +348,15 @@ i_call				->	(variable " = "):?
 						# todo: fn attrs
 						(_ list["#" decimal]):?
 						{% d => ["instruction", "call", {
-							assign:   d[0]? d[0][0]    : null,
-							tail:     d[1]? d[1][0][0] : null,
+							assign: d[0]? d[0][0] : null,
+							tail: d[1]? d[1][0][0] : null,
 							fastmath: d[3] || null,
-							cconv:    d[4] || null,
-							type:     d[7][0],
-							name:     d[9],
-							args:     d[11],
-							retattr:  d[5]? d[5].map((x) => x[1]) : [],
-							bundles:  d[13]? d[13][1].map((x) => x[1]) : []
+							cconv: d[4] || null,
+							retattr: d[5]? d[5].map((x) => x[1]) : [],
+							type: d[7][0],
+							name: d[9],
+							args: d[11],
+							bundles: d[13]? d[13][1].map((x) => x[1]) : []
 						}] %}
 
 i_unreachable		->	"unreachable"												{% d => ["instruction", "unreachable", { }] %}
@@ -377,13 +372,13 @@ i_getelementptr_1	->	variable
 						(variable | var_name)
 						(", " "inrange ":? type_int " " (variable | decimal)):+
 						{% d => ["instruction", "getelementptr", {
-							destination:  d[0],
-							inbounds:   !!d[2],
-							type:         d[3],
-							pointerType:  d[5],
+							destination: d[0],
+							inbounds: !!d[2],
+							type: d[3],
+							pointerType: d[5],
 							pointerValue: d[7],
-							indices:      d[8].map((x) => [x[2], x[4][0], !!x[1]]),
-							flavor:      "single"
+							indices: d[8].map((x) => [x[2], x[4][0], !!x[1]]),
+							flavor: "single"
 						}] %}
 i_getelementptr_2	->	variable
 						" = getelementptr"
@@ -396,13 +391,13 @@ i_getelementptr_2	->	variable
 						(variable | var_name)
 						(", " "inrange ":? type_int " " (variable | decimal)):+
 						{% d => ["instruction", "getelementptr", {
-							destination:  d[0],
-							inbounds:   !!d[2],
-							type:         d[4],
-							pointerType:  d[6],
+							destination: d[0],
+							inbounds: !!d[2],
+							type: d[4],
+							pointerType: d[6],
 							pointerValue: d[8],
-							indices:      d[9].map((x) => [x[2], x[4][0], !!x[1]]),
-							flavor:       "multi"
+							indices: d[9].map((x) => [x[2], x[4][0], !!x[1]]),
+							flavor: "multi"
 						}] %}
 
 i_switch_line		->	_ type_int " " decimal ", label " variable					{% d => [d[1], d[3], d[5]] %}
@@ -416,10 +411,10 @@ i_switch			->	"switch"
 						i_switch_line:*
 						(_ "]")
 						{% d => ["instruction", "switch", {
-							type:    d[1],
+							type: d[1],
 							operand: d[2],
 							default: d[4],
-							table:   d[6]? filter(d[6]) : []
+							table: d[6]? filter(d[6]) : []
 						}] %}
 
 i_store				->	(i_store_normal | i_store_atomic)							{% __ %}
@@ -435,14 +430,14 @@ i_store_normal		->	"store"
 						(", " bang["nontemporal"]):?
 						(", " bang["invariant.group"]):?
 						{% d => ["instruction", "store", {
-							volatile:       !!d[1],
-							storeType:        d[2][0],
-							storeValue:       d[3],
-							destinationType:  d[5],
+							volatile: !!d[1],
+							storeType: d[2][0],
+							storeValue: d[3],
+							destinationType: d[5],
 							destinationValue: d[7],
-							align:            d[ 8]? d[ 8][1]    : null,
-							nontemporal:      d[ 9]? d[ 9][1][1] : null,
-							invariantGroup:   d[10]? d[10][1][1] : null
+							align: d[8]? d[8][1] : null,
+							nontemporal: d[9]? d[9][1][1] : null,
+							invariantGroup: d[10]? d[10][1][1] : null
 						}] %}
 
 i_binary			->	(i_binary_normal | i_binary_dangerous | i_binary_fastmath)	{% __ %}
@@ -456,11 +451,11 @@ i_binary_normal		->	variable
 						operand
 						{% d => ["instruction", "binary", {
 							destination: d[0],
-							operation:   d[2][0],
-							type:        d[3][0],
-							op1:         d[4],
-							op2:         d[6],
-							flavor:      "normal"
+							operation: d[2][0],
+							type: d[3][0],
+							op1: d[4],
+							op2: d[6],
+							flavor: "normal"
 						}] %}
 i_binary_exact		->	variable
 						" = "
@@ -472,12 +467,12 @@ i_binary_exact		->	variable
 						operand
 						{% d => ["instruction", "binary", {
 							destination: d[0],
-							operation:   d[2][0],
-							exact:     !!d[3],
-							type:        d[4][0],
-							op1:         d[5],
-							op2:         d[7],
-							flavor:      "exact"
+							operation: d[2][0],
+							exact: !!d[3],
+							type: d[4][0],
+							op1: d[5],
+							op2: d[7],
+							flavor: "exact"
 						}] %}
 i_binary_fastmath	->	variable
 						" = "
@@ -489,14 +484,14 @@ i_binary_fastmath	->	variable
 						floperand
 						{% d => ["instruction", "binary", {
 							destination: d[0],
-							operation:   d[2][0],
-							flags:       d[3]? d[3].map((x) => x[1]) : [],
-							type:        d[4][0],
-							op1:         d[5],
-							op2:         d[7],
-							flavor:      "fastmath"
+							operation: d[2][0],
+							flags: d[3]? d[3].map((x) => x[1]) : [],
+							type: d[4][0],
+							op1: d[5],
+							op2: d[7],
+							flavor: "fastmath"
 						}] %}
-i_binary_dangerous	->	variable
+i_dangerous			->	variable
 						" = "
 						("add" | "mul" | "shl" | "sub")
 						" nuw":?
@@ -507,13 +502,13 @@ i_binary_dangerous	->	variable
 						operand
 						{% d => ["instruction", "binary", {
 							destination: d[0],
-							operation:   d[2][0],
-							nuw:       !!d[3],
-							nsw:       !!d[4],
-							type:        d[5][0],
-							op1:         d[6],
-							op2:         d[8],
-							flavor:      "dangerous"
+							operation: d[2][0],
+							nuw: !!d[3],
+							nsw: !!d[4],
+							type: d[5][0],
+							op1: d[6],
+							op2: d[8],
+							flavor: "dangerous"
 						}] %}
 
 
@@ -530,9 +525,8 @@ typed_args_list		->	commalist[constant]											{% d => d[0].map((x) => x[0]) 
 constant			->	type_any (" " parattr):* " " variable						{% d => [d[0], d[3], d[1].map((x) => x[0])] %}
 					 |	type_any (" " parattr):* " " const_expr						{% d => [d[0], d[3], d[1].map((x) => x[0])] %}
 cst_to_type[X]		->	$X " " constant " to " type_any								{% d => [d[0], ...d[2], d[4]] %}
-cst_to_types		->	("trunc" | "zext" | "sext" | "fptrunc" | "fpext" |
-						 "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" |
-						 "inttoptr" | "bitcast" | "addrspacecast")					{% __ %}
+cst_to_types		->	("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
+																					{% __ %}
 const_expr			->	cst_to_type[cst_to_types]									{% d => ["expr", d[0][0], ...d[0].slice(1)] %}
 					 |	getelementptr_expr											{% _ %}
 
@@ -548,10 +542,10 @@ getelementptr_expr	->	"getelementptr "
 						")"
 						{% d => ["expr", "getelement", {
 							inbounds: !!d[1],
-							type:       d[3],
-							ptr:        d[5],
-							name:       d[7],
-							indices:    d[8].map((x) => [x[1], x[3]])
+							type: d[3],
+							ptr: d[5],
+							name: d[7],
+							indices: d[8].map((x) => [x[1], x[3]])
 						}] %}
 
 var -> varchar:+ {%
