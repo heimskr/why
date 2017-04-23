@@ -1,7 +1,7 @@
 @{%
 "use strict";
 
-const { uniq: unique } = require("lodash");
+const { uniq: unique, some } = require("lodash");
 
 const special = {
 	chars: "=@$&*\t \":()",
@@ -62,10 +62,14 @@ eq					->	_ "=" _														{% _( ) %}
 prop				->	eq string													{% _(1) %}
 
 cstring				->	"c" string													{% _(1) %}
-float				->	"-":? [0-9]:+ "." [0-9]:*									{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
-					 |	("-":? ".") [0-9]:+											{% d => parseFloat(filter(d[0]).join("") + d[1].join("")) %}
+float				->	"-":? [0-9]:+ "." [0-9]:+									{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
 decimal				->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
-natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}														
+					 |	"true"														{% d => true %}
+					 |	"false"														{% d => false %}
+natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}
+vector				-> "<" commalist[type_any " " value] ">"						{% d => ["vector", d[1][0]] %}
+
+value				-> (float | decimal | vector | variable | boolean)				{% __ %}
 
 source_filename		->	"source_filename" prop										{% d => ["source_filename", d[1]] %}
 
@@ -83,21 +87,21 @@ struct				->	struct_header __ "opaque"									{% d => ["struct", d[0], "opaque"
 types				->	commalist[type_any]											{% _ %}
 
 type_int			->	"i" natural													{% d => ["int", d[1]] %}
+type_float			->	("half" | "float" | "double" | "fp128" | "x86_fp80" |
+					     "ppc_fp128")												{% d => ["float", d[0][0]] %}
 type_array			->	"[" _ natural _ "x" _ type_any "]"							{% d => ["array", d[2], d[6].slice(1)] %}
 type_vector			->	"<" _ natural _ "x" _ vector_type ">"						{% d => ["vector", d[2], d[6]] %}
 vector_type			->	(type_int | type_ptr)										{% d => d[0][0] %}
 					 |	"float"														{% d => ["float"] %}
 type_ptr			->	type_any _ "*"												{% d => ["ptr", d[0].slice(1)] %}
-type_multiptr		->	type_int _ "(" _ types _ ")" _ "*"							{% d => ["multiptr", d[0], d[4].map((x) => x.slice(1))] %}
 type_void			->	"void"														{% d => ["void"] %}
-type_function		->	type_any _ "(" _ type_function_args ")"						{% d => ["function", d[0], d[3]] %}
-type_any			->	(type_multiptr | type_ptr | type_array | type_vector | type_int | type_struct | type_void)
-																					{% d => ["type", ...d[0][0]] %}
-type_intvec			->	(type_int | type_vector)									{% __ %}
-
-type_function_args	->	type_any (comma type_any):* (comma "...") _					{% d => [d[0], ...d[1].map((x) => x.slice(1)), "..."] %}
-					 |	type_any (comma type_any):* _								{% d => [d[0], ...d[1].map((x) => x.slice(1))] %}
-					 |	null															{% d => [] %}
+type_function		->	type_any _ "(" types ", ...":? ")*"							{% d => ["function", d[0], d[3], !!d[4]] %}
+type_any			->	(type_void | type_ptr | type_array | type_int | type_float |
+						 type_function | type_vector | type_struct)					{% d => ["type", ...d[0][0]] %}
+type_intvec			->	type_int													{% _ %}
+					 |	"<" _ natural _ "x" _ type_int _ ">"						{% d => ["vector", d[2], d[6]] %}
+type_floatvec		->	type_float													{% _ %}
+					 |	"<" _ natural _ "x" _ type_float _ ">"						{% d => ["vector", d[2], d[6]] %}
 
 var_name			->	"@" var														{% _(1) %}
 label				->	var ":"														{% d => ["label", d[0]] %}
@@ -136,7 +140,8 @@ global				->	var_name
 							d[15]? d[15][3] : null	// align
 				   		] %}
 
-linkage				->	("private" | "internal" | "available_externally" | "linkonce" | "weak" | "common" | "appending" | "extern_weak" | "linkonce_odr" | "weak_odr" | "external")
+linkage				->	("private" | "internal" | "available_externally" |
+						 "linkonce" | "weak" | "common" | "appending" | "extern_weak" | "linkonce_odr" | "weak_odr" | "external")
 																					{% __ %}
 visibility			->	"default"													{% d => 0 %}
 					 |	"hidden"														{% d => 1 %}
@@ -200,16 +205,16 @@ function_type		->	type_any (__ parattr):* (" " variable):?						{% d => [d[0].sl
 function_types		->	function_types comma function_type							{% d => d[0].concat([d[2]]) %}
 					 |	function_type												{% d => [d[0]] %}
 
-cconv				->	("ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc")	{% __ %}
-					 |	("preserve_allcc" | "preserve_mostcc" | "x86_vectorcallcc")	{% __ %}
-					 |	("cc10" | "cc11" | "arm_apcscc" | "coldcc" | "webkit_jscc")	{% __ %}
-					 |	("cc64" | "cc65" | "cc66" | "ptx_device" | "x86_stdcallcc")	{% __ %}
-					 |	("cc67" | "cc68" | "cc69" | "cc70" | "cc1023" | "anyregcc")	{% __ %}
-					 |	("cc71" | "cc72" | "cc75" | "msp430_intrcc" | "ptx_kernel")	{% __ %}
-					 |	("cc76" | "cc77" | "cc78" | "spir_func" | "x86_64_win64cc")	{% __ %}
-					 |	("cc79" | "cc80" | "arm_aapcs_vfpcc" | "intel_ocl_bicc")	{% __ %}
-					 |	("x86_64_sysvcc" | "x86_fastcallcc" | "x86_thiscallcc")		{% __ %}
-					 |	("arm_aapcscc" | "spir_kernel")								{% __ %}
+cconv				->	("ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" |
+						 "preserve_allcc" | "preserve_mostcc" | "x86_vectorcallcc" |
+						 "cc10" | "cc11" | "arm_apcscc" | "coldcc" | "webkit_jscc" |
+						 "cc64" | "cc65" | "cc66" | "ptx_device" | "x86_stdcallcc" |
+						 "cc67" | "cc68" | "cc69" | "cc70" | "cc1023" | "anyregcc" |
+						 "cc71" | "cc72" | "cc75" | "msp430_intrcc" | "ptx_kernel" |
+						 "cc76" | "cc77" | "cc78" | "spir_func" | "x86_64_win64cc" |
+						 "cc79" | "cc80" | "arm_aapcs_vfpcc" | "intel_ocl_bicc"    |
+						 "x86_64_sysvcc" | "x86_fastcallcc" | "x86_thiscallcc"     |
+						 "arm_aapcscc" | "spir_kernel")								{% __ %}
 
 retattr				->	("zeroext" | "signext" | "inreg" | "noalias" | "nonnull")	{% d => [d[0][0]] %}
 					 |	("dereferenceable" | "deferenceable_or_null") " (" decimal
@@ -218,15 +223,15 @@ retattr				->	("zeroext" | "signext" | "inreg" | "noalias" | "nonnull")	{% d => 
 parattr				->	("byval" | "inalloca" | "sret" | "nocapture" | "readonly")	{% _  %}
 					 |	retattr														{% _  %}
 
-fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse") {% __ %}
-					 |	("inlinehint" | "inaccessiblemem_or_argmemonly" | "sspreq")	{% __ %}
-					 |	("sanitize_memory" | "jumptable" | "minsize" | "nobuiltin")	{% __ %}
-					 |	("noduplicate" | "noimplicitfloat" | "builtin" | "uwtable")	{% __ %}
-					 |	("nounwind" | "optnone" | "optsize" | "readnone" | "naked")	{% __ %}
-					 |	("readonly" | "writeonly" | "argmemonly" | "returns_twice")	{% __ %}
-					 |	("safestack" | "inaccessiblememonly" | "cold" | "noreturn")	{% __ %}
-					 |	("nonlazybind" | "sanitize_thread" | "thunk" | "sspstrong")	{% __ %}
-					 |	("sanitize_address" | "noinline" | "ssp")					{% __ %}
+fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse" |
+						 "inlinehint" | "inaccessiblemem_or_argmemonly" | "sspreq" |
+						 "sanitize_memory" | "jumptable" | "minsize" | "nobuiltin" |
+						 "noduplicate" | "noimplicitfloat" | "builtin" | "uwtable" |
+						 "nounwind" | "optnone" | "optsize" | "readnone" | "naked" |
+						 "readonly" | "writeonly" | "argmemonly" | "returns_twice" |
+						 "safestack" | "inaccessiblememonly" | "cold" | "noreturn" |
+						 "nonlazybind" | "sanitize_thread" | "thunk" | "sspstrong" |
+						 "sanitize_address" | "noinline" | "ssp")					{% __ %}
 					 |	"patchable-function" eq "\"prologue-short-redirect\""		{% d => [d[0], d[2].replace(/^"|"$/g, "")] %}
 
 constant_int		->	type_int __ decimal											{% d => [d[0], d[2]] %}
@@ -246,8 +251,9 @@ function_line		->	_ lineend													{% _( ) %}
 					 |	_ instruction												{% _(1) %}
 					 |	_ label														{% _ %}
 
-instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store)	{% __ %}
-					 |	(i_getelementptr | i_unreachable | i_br | i_binary)			{% __ %}
+instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store  |
+						 i_getelementptr | i_unreachable | i_br | i_binary | i_phi |
+						 i_conversion)												{% __ %}
 
 i_alloca			->	variable
 						" = alloca "
@@ -341,7 +347,7 @@ i_call				->	(variable " = "):?
 						_
 						call_fnptrval
 						"("
-						typed_args_list
+						(typed_args_list | _)
 						")"
 						# todo: fn attrs
 						(_ list["#" decimal]):?
@@ -353,7 +359,7 @@ i_call				->	(variable " = "):?
 							retattr: d[5]? d[5].map((x) => x[1]) : [],
 							type: d[7][0],
 							name: d[9],
-							args: d[11],
+							args: d[11][0],
 							bundles: d[13]? d[13][1].map((x) => x[1]) : []
 						}] %}
 
@@ -489,7 +495,7 @@ i_binary_fastmath	->	variable
 							op2: d[7],
 							flavor: "fastmath"
 						}] %}
-i_dangerous			->	variable
+i_binary_dangerous	->	variable
 						" = "
 						("add" | "mul" | "shl" | "sub")
 						" nuw":?
@@ -507,6 +513,36 @@ i_dangerous			->	variable
 							op1: d[6],
 							op2: d[8],
 							flavor: "dangerous"
+						}] %}
+
+i_phi_pair			-> "[ " floperand ", " variable " ]"							{% d => [d[1], d[3]] %}
+i_phi				->	variable
+						" = phi "
+						type_any
+						" "
+						commalist[i_phi_pair]
+						{% d => ["instruction", "phi", {
+							destination: d[0],
+							type: d[2],
+							pairs: d[4]
+						}] %}
+
+i_conversion		->	(i_conversion_ext)											{% __ %}
+i_conversion_ext	->	variable
+						" = "
+						("bitcast" | "fpext" | "fptosi" | "fptoui" | "fptrunc" | "inttoptr" | "ptrtoint" | "sext" | "sitofp" | "trunc" | "uitofp" | "zext")
+						" "
+						type_any
+						" "
+						value
+						" to "
+						type_any
+						{% d => ["instruction", "conversion", {
+							destination: d[0],
+							sourceType: d[4],
+							sourceValue: d[6],
+							destinationType: d[8],
+							flavor: d[2][0],
 						}] %}
 
 

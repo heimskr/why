@@ -12,6 +12,9 @@ $(COMPILED): $(SYNTAX) _
 test: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
 
+stest: $(TEST) $(COMPILED) syntax.ll
+	node $(TEST) syntax.ll
+
 clean:
 	rm -f $(COMPILED)
 

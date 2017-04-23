@@ -88,6 +88,58 @@ define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
   %38 = or i32 %37, %36
   %39 = icmp eq i32 %38, 0
   br i1 %39, label %._crit_edge50.loopexit, label %40
+
+; <label>:40:                                     ; preds = %.lr.ph49
+  call void @addArc(%struct.GraphObj* %33, i32 %36, i32 %37)
+  %41 = call i32 (%struct.__sFILE*, i8*, ...) @fscanf(%struct.__sFILE* nonnull %17, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.6, i64 0, i64 0), i32* nonnull %4, i32* nonnull %5)
+  %42 = icmp eq i32 %41, 2
+  br i1 %42, label %.lr.ph49, label %._crit_edge50.loopexit
+
+._crit_edge50.loopexit:                           ; preds = %.lr.ph49, %40
+  br label %._crit_edge50
+
+._crit_edge50:                                    ; preds = %._crit_edge50.loopexit, %30
+  %43 = call i64 @fwrite(i8* getelementptr inbounds ([37 x i8], [37 x i8]* @.str.7, i64 0, i64 0), i64 36, i64 1, %struct.__sFILE* nonnull %25)
+  call void @printGraph(%struct.__sFILE* nonnull %25, %struct.GraphObj* %33)
+  %fputc = call i32 @fputc(i32 10, %struct.__sFILE* nonnull %25)
+  %44 = call %struct.GraphObj* @transpose(%struct.GraphObj* %33)
+  store %struct.GraphObj* %44, %struct.GraphObj** %7, align 8
+  %45 = call %struct.ListObj* @newList()
+  store %struct.ListObj* %45, %struct.ListObj** %8, align 8
+  %46 = load i32, i32* %3, align 4
+  %47 = icmp slt i32 %46, 1
+  br i1 %47, label %._crit_edge47, label %.lr.ph46.preheader
+
+.lr.ph46.preheader:                               ; preds = %._crit_edge50
+  br label %.lr.ph46
+
+.lr.ph46:                                         ; preds = %.lr.ph46.preheader, %.lr.ph46
+  %.03544 = phi i32 [ %48, %.lr.ph46 ], [ 1, %.lr.ph46.preheader ]
+  call void @append(%struct.ListObj* %45, i32 %.03544)
+  %48 = add nuw nsw i32 %.03544, 1
+  %49 = load i32, i32* %3, align 4
+  %50 = icmp slt i32 %.03544, %49
+  br i1 %50, label %.lr.ph46, label %._crit_edge47.loopexit
+
+._crit_edge47.loopexit:                           ; preds = %.lr.ph46
+  br label %._crit_edge47
+
+._crit_edge47:                                    ; preds = %._crit_edge47.loopexit, %._crit_edge50
+  call void @DFS(%struct.GraphObj* %33, %struct.ListObj* %45)
+  call void @DFS(%struct.GraphObj* %44, %struct.ListObj* %45)
+  %51 = load i32, i32* %3, align 4
+  %52 = sext i32 %51 to i64
+  %53 = call i8* @calloc(i64 %52, i64 8)
+  %54 = bitcast i8* %53 to %struct.ListObj**
+  %55 = call %struct.ListObj* @newList()
+  store %struct.ListObj* %55, %struct.ListObj** %9, align 8
+  call void @moveBack(%struct.ListObj* %45)
+  %56 = call i32 @index(%struct.ListObj* %45)
+  %57 = icmp eq i32 %56, -1
+  br i1 %57, label %._crit_edge43, label %.lr.ph42.preheader
+
+.lr.ph42.preheader:                               ; preds = %._crit_edge47
+  br label %.lr.ph42
 }
 
 
