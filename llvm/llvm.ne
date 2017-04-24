@@ -243,7 +243,7 @@ bang[X]				->	"!" $X " !" decimal											{% d => [d[1], d[3]] %}
 bang_any			->	bang[bang_type]												{% _ %}
 instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store  |
 						 i_getelementptr | i_unreachable | i_br | i_binary | i_phi |
-						 i_conversion)												{% __ %}
+						 i_conversion | i_ret)										{% __ %}
 
 i_alloca			->	variable
 						" = alloca "
@@ -534,6 +534,9 @@ i_conversion_ext	->	variable
 							destinationType: d[8],
 							flavor: d[2][0],
 						}] %}
+
+i_ret				->	"ret " type_any " " value									{% d => ["instruction", "ret", { type: d[1], value: d[3] }] %}
+					 |	"ret void"													{% d => ["instruction", "ret", { type: ["void"], value: null }] %}
 
 
 
