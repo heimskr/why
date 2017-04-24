@@ -15,6 +15,9 @@ test: $(TEST) $(COMPILED) test.ll
 stest: $(TEST) $(COMPILED) syntax.ll
 	node $(TEST) syntax.ll
 
+qtest: $(TEST) $(COMPILED) test.ll
+	node $(TEST) test.ll -q
+
 clean:
 	rm -f $(COMPILED)
 

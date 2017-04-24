@@ -25,4 +25,15 @@ define i32* @hello() {
 	%52 = sext i32 %51 to i64
 	%53 = call i8* @calloc(i64 %52, i64 8)
 	%54 = bitcast i8* %53 to %struct.ListObj**
+	store %struct.ListObj** null, %struct.ListObj*** %23, align 8
 }
+
+attributes #5 = { noinline norecurse nounwind readonly ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+
+!llvm.ident = !{!0, !0, !0}
+!llvm.module.flags = !{!1}
+
+!0 = !{!"clang version 4.0.0 (tags/RELEASE_400/final)"}
+!1 = !{i32 1, !"PIC Level", i32 2}
+!2 = distinct !{!2, !3}
+!3 = !{!"llvm.loop.unroll.disable"}
