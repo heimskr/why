@@ -167,7 +167,7 @@ function_header		->	"define"
 						__
 						var_name
 						(_ "(")
-						(commalist[constant] | _)
+						(commalist[function_type] | _)
 						")"
 						(_ unnamed_addr):?
 						((__ fnattr):+ | __ "#" decimal):?
@@ -199,6 +199,12 @@ function_header		->	"define"
 							personality:  d[21]? d[21][3] : null,
 							bangs:        select(d[22], 1)
 						}] %}
+
+function_type		->	type_any (_ parattr):* (" " variable):?
+function_def		->	function_header _ "{" function_line:* "}"					{% d => [...d[0], filter(d[3])] %}
+function_line		->	_ lineend													{% _( ) %}
+					 |	_ instruction												{% _(1) %}
+					 |	_ label														{% _ %}
 
 cconv				->	("ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" |
 						 "preserve_allcc" | "preserve_mostcc" | "x86_vectorcallcc" |
@@ -235,12 +241,6 @@ bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __
 
 bang[X]				->	"!" $X " !" decimal											{% d => [d[1], d[3]] %}
 bang_any			->	bang[bang_type]												{% _ %}
-
-function_def		->	function_header _ "{" function_line:* "}"					{% d => [...d[0], filter(d[3])] %}
-function_line		->	_ lineend													{% _( ) %}
-					 |	_ instruction												{% _(1) %}
-					 |	_ label														{% _ %}
-
 instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store  |
 						 i_getelementptr | i_unreachable | i_br | i_binary | i_phi |
 						 i_conversion)												{% __ %}
