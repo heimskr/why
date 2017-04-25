@@ -4,7 +4,7 @@ let shellescape = require("shell-escape"),
 	chalk = require("chalk");
 
 module.exports = function(grunt) {
-	const jsdoc_files = ["*.js", "wasm/*.js", "wvm/*.js", "wvm/browser/*.js"];
+	const jsdoc_files = ["*.js", "wasm/*.js", "wvm/*.js", "wvm/browser/*.js", "llvm/*.js"];
 	grunt.initConfig({
 		pkg: grunt.file.readJSON("package.json"),
 
@@ -34,7 +34,7 @@ module.exports = function(grunt) {
 			},
 
 			jsdoc: {
-				files: jsdoc_files,
+				files: ["jsdoc.json", ...jsdoc_files],
 				tasks: ["jsdoc"]
 			}
 		},
@@ -82,7 +82,9 @@ module.exports = function(grunt) {
 			dist: {
 				src: jsdoc_files,
 				options: {
-					destination: "doc"
+					destination: "doc",
+					config: "jsdoc.json",
+					template: "./node_modules/ink-docstrap/template"
 				}
 			}
 		}

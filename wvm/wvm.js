@@ -12,7 +12,15 @@ require("string.prototype.padend").shim();
 
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../wasm/constants.js");
 
-/** Class representing a virtual machine. */
+/**
+ * `wvm` is the virtual machine for why.js. It executes bytecode produced by `wasmc`.
+ *
+ * @module wvm
+ */
+
+/**
+ * Class representing a virtual machine.
+ */
 class WVM {
 	constructor({ memorySize=640000, program, memory: initial }={}) {
 		if (typeof program != "object") {
@@ -124,7 +132,7 @@ class WVM {
 	/**
 	 * Gets a byte from memory.
 	 * @param {number} k - The index of the byte to get.
-	 * @param {number} The byte at the given address.
+	 * @return {number} The byte at the given address.
 	 */
 	getByte(k) {
 		return this.memory[k];
