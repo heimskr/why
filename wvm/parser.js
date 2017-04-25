@@ -7,7 +7,7 @@ let WASMC = require("../wasm/wasmc.js"),
 
 const chalk = new (require("chalk")).constructor({ enabled: true });
 
-require("../util.js")(_);
+require("../util.js").mixins(_);
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 

@@ -1,6 +1,7 @@
-let jsome = require("jsome");
+let jsome = require("jsome"),
+	chalk = require("chalk");
 
-module.exports = (_) => {
+exports.mixins = (_) => {
 	if (typeof Object.values == "undefined") {
 		Object.values = (obj) => Object.keys(obj).map((key) => obj[key]);
 	};
@@ -32,4 +33,17 @@ module.exports = (_) => {
 			return str.substr(0, index) + replacement + str.substr(index + replacement.length);
 		}
 	});
+};
+
+// Wouldn't seem particularly idiomatic to make this a lodash mixin.
+exports.displayIOError = (error, filename="file", mode="r", print=console.error) => {
+	const { message } = error;
+	const intro = chalk.red(`Couldn't open ${chalk.bold(filename)} for ${mode == "r"? "read" : "write"}ing`) + ":";
+	if (message.match(/^ENOENT:/)) {
+		print(intro, `no such file.`);
+	} else if (message.match(/^EACCES:/)) {
+		print(intro, `permission denied.`);
+	} else {
+		print(intro, e.message);
+	};
 };
