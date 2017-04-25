@@ -17,6 +17,7 @@ const { displayIOError } = require("../util.js");
 /**
  * Class representing an instance of the ll2w compiler. It contains all the methods comprising the
  * compilation process and various fields representing the internal state of the compiler.
+ * @class
  */
 class LL2W {
 	/**
@@ -64,7 +65,7 @@ class LL2W {
 	 * @param {string} text The source code for the compiler to use.
 	 */
 	feed(text) {
-
+		this.debug(() => console.time("parse"));
 		this.initialize();
 		this.source = text + "\n";
 		let trees;
@@ -97,7 +98,25 @@ class LL2W {
 	};
 
 	/**
-	 * Finds and extracts `source_filename` and `target` entries in the AST.
+	 * Iterates the AST and executes a function for every top-level entry of a given type.
+	 * @param {?string} type - The type of entry to iterate for. Entries not of this type will be
+	 * ignored. If null, all entries will be iterated for.
+	 * @param {function} fn - The function to call on each iteration.
+	 */
+	iterateTree(type, fn) {
+		if (!this.ast) {
+			throw new Error("AST not yet generated");
+		};
+
+		if (type == null) {
+			this.ast.forEach((entry) => fn(...entry));
+		} else {
+			this.ast.forEach(([name, ...args]) => name == type && fn(...args));
+		};
+	};
+
+	/**
+	 * Finds and extracts `source_filename` and `target` entries from the AST.
 	 */
 	extractInformation() {
 		/**
@@ -113,15 +132,34 @@ class LL2W {
 		 */
 		this.targets = { };
 
-		this.ast.forEach(([name, ...args]) => {
-			if (name == "source_filename") {
-				this.sourceFilename = args[0];
-			} else if (name == "target") {
-				this.targets[args[0]] = args[1];
-			} else {
-				console.log("skipping", name);
-			};
-		});
+		this.iterateTree("source_filename", (name) => this.sourceFilename = name);
+		this.iterateTree("target", (key, value) => this.targets[key] = value);
+	};
+
+	/**
+	 * Finds and extracts `attributes` entries from the AST.
+	 */
+	extractAttributes() {
+		/**
+		 * A map of attribute definitions.
+		 * @type {Object}
+		 */
+		this.attributes = { };
+
+		this.iterateTree("attributes", (name, attrs) => this.attributes[name] = attrs);
+	};
+
+	/**
+	 * Finds and extracts `struct` entries from the AST.
+	 */
+	extractStructs() {
+		/**
+		 * A map of struct definitions.
+		 * @type {Object}
+		 */
+		this.structs = { };
+
+		this.iterateTree("struct", (name, types) => this.structs[name] = types);
 	};
 
 	/**
@@ -168,4 +206,13 @@ if (require.main === module) {
 	};
 
 	compiler.extractInformation();
+	compiler.extractAttributes();
+	compiler.extractStructs();
+
+	compiler.debug(() => require("jsome")({
+		sourceFilename: compiler.sourceFilename,
+		targets: compiler.targets,
+		attributes: compiler.attributes,
+		structs: compiler.structs
+	}));
 };

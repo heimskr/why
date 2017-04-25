@@ -74,9 +74,9 @@ target				->	"target " targetname " = " string							{% d => ["target", d[1], d[
 targetname			->	("datalayout" | "triple")									{% __(0, 0) %}
 
 attributes			->	"attributes #" decimal " = { " list[attribute] " }"			{% d => ["attributes", d[1], d[3]] %}
-attribute			->	string "=" string											{% d => [2, d[0], d[2]] %}
-					 |	string														{% d => [1, d[0]] %}
-					 |  fnattr														{% d => [0, ...d[0]] %}
+attribute			->	string "=" string											{% d => [d[0], d[2]] %}
+					 |	string														{% d => [d[0], true] %}
+					 |  fnattr														{% d => [d[0]] %}
 
 metadata_def		-> "!"
 						(decimal | var)
@@ -94,8 +94,8 @@ metadata			->	constant													{% d => d[0].slice(0, 2) %}
 variable			->	"%" (var | decimal | string)								{% d => ["variable", d[1][0]] %}
 
 type_struct			->	"%struct." var												{% d => ["struct", d[1]] %}
-struct				->	type_struct " = type opaque"								{% d => ["struct", d[0], "opaque"] %}
-					 |	type_struct " = type { " types " }"							{% d => ["struct", d[0], d[2].map((x) => x)] %}
+struct				->	type_struct " = type opaque"								{% d => [...d[0], "opaque"] %}
+					 |	type_struct " = type { " types " }"							{% d => [...d[0], d[2]] %}
 
 types				->	commalist[type_any]											{% _ %}
 
