@@ -84,7 +84,7 @@ module.exports = function(grunt) {
 				options: {
 					destination: "doc",
 					config: "jsdoc.json",
-					template: "./node_modules/ink-docstrap/template"
+					template: "./node_modules/docdash"
 				}
 			}
 		}

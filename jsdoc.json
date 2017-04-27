@@ -1,7 +1,6 @@
 {
 	"plugins": ["plugins/markdown"],
 	"templates": {
-        "cleverLinks": true,
-		"theme": "slate"
+        "cleverLinks": true
 	}
 }
