@@ -8,7 +8,6 @@ let _ = require("lodash");
 
 /**
  * Represents a directed graph datatype.
- * @class
  */
 class Graph {
 	/**

@@ -7,38 +7,73 @@ let fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash");
 
+/**
+ * `wasm` is the assembly language for Why.js. The `wasmc` utility parses it and compiles it to `wvm` bytecode.
+ * 
+ * @module wasm
+ */
+
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
 const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS } = require("./constants.js");
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
+/**
+ * Class representing an instance of the wasmc compiler.
+ */
 class WASMC {
+	/**
+	 * Prints a message to stderr and exits the process with return code 1.
+	 * @param {...*} args - The arguments to pass to `console.error`.
+	 */
 	static die(...a) { console.error(...a); process.exit(1) };
 
-	// Converts an array of 8 characters into a Long.
+	/**
+	 * Converts an array of 8 characters into a Long.
+	 * @param {Array.<string>} chunk - An array of 8 characters.
+	 * @return {Long} A Long containing the concatenated ASCII values of the characters.
+	 */
 	static chunk2long(chunk) {
 		return Long.fromString(chunk.map((c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""), true, 16);
 	};
 
-	// Adds nulls to the end of the string to lengthen it to a multiple of 8.
-	// If the string is already a multiple of eight, add one null at the end.
+	/**
+	 * Adds nulls to the end of the string to lengthen it to a multiple of 8.
+	 * If the string is already a multiple of eight, add one null at the end.
+	 * @param {string} str - The string to be nullpadded.
+	 * @return {string} The concatenation of the given string and a number of null characters.
+	 */
 	static nullpad(str) {
 		return str.length % 8? str.padEnd(Math.ceil(str.length / 8) * 8, "\0") : `${str}\0`;
 	};
 
-	// Given any string, str2longs nullpads and chunks it and returns an array of Longs.
+	/**
+	 * Nullpads and chunks a given string into an array of Longs.
+	 * @param {string} str - The string to convert into Longs.
+	 * @return {Array.<Long>} An array of Longs representing the input string.
+	 */
 	static str2longs(str) {
 		return str == ""? [Long.UZERO] : _.chunk(WASMC.nullpad(str).split(""), 8).map(WASMC.chunk2long);
 	};
 
-	// Given an array of longs, returns an array containing the 16-length zero-padded hex representations.
+	/**
+	 * Returns an array containing the 16-length zero-padded hex representations of a given array of Longs.
+	 * If any element of the input array isn't a Long value, it will be represented as a string of 16 "x"s.
+	 * @param {Array.<Long>} longs - An array of Longs to convert to strings.
+	 * @return {Array.<string>} An array of zero-padded hex strings corresponding to the inputs.
+	 */
 	static longs2strs(longs) {
 		return longs.map((l) => l instanceof Long? l.toString(16).padStart(16, "0") : "x".repeat(16));
 	};
 
-	// If the input is an array (expected format: ["register", ...]), then the output is the number corresponding to that array.
-	// Otherwise, if the input is something other than an array, then the output is same as the input.
+	/**
+	 * If the input is an array (expected format: ["register", ...]), then the output is the number corresponding to
+	 * that array. Otherwise, if the input is something other than an array, then the output is same as the input.
+	 * @param {Array} x - An array representing a register, such as ["register", "return", 0] for $rt or
+	 *                    ["register", "t", 22] for $t16.
+	 * @return {number} The ID corresponding to the register.
+	 */
 	static convertRegister(x) {
 		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1]) : x;
 	};

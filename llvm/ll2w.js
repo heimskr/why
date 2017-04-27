@@ -17,7 +17,6 @@ const { displayIOError } = require("../util.js");
 /**
  * Class representing an instance of the ll2w compiler. It contains all the methods comprising the
  * compilation process and various fields representing the internal state of the compiler.
- * @class
  */
 class LL2W {
 	/**
@@ -62,12 +61,18 @@ class LL2W {
 	/**
 	 * Loads LLVM intermediate representation source code (the typical file extension is `.ll`)
 	 * and parses it.
-	 * @param {string} text The source code for the compiler to use.
+	 * @param {string} text - The source code for the compiler to use.
 	 */
 	feed(text) {
 		this.debug(() => console.time("parse"));
 		this.initialize();
+
+		/**
+		 * The source code of the program as passed to feed() with one newline appended.
+		 * @type {string}
+		 */
 		this.source = text + "\n";
+
 		let trees;
 		try {
 			trees = this.parser.feed(this.source).results;
@@ -89,9 +94,13 @@ class LL2W {
 			process.exit(1);
 		};
 
+		/**
+		 * The abstract syntax tree of the LLVM IR.
+		 * @type {Array}
+		 */
 		this.ast = trees[0];
-		this.debug(() => console.timeEnd("parse"));
 
+		this.debug(() => console.timeEnd("parse"));
 		if (typeof this.ast != "object") {
 			LL2W.die("Error: parser output isn't an object.");
 		};
@@ -128,7 +137,7 @@ class LL2W {
 
 		/**
 		 * A map of target definitions.
-		 * @type {Object}
+		 * @type {Object.<string, string>}
 		 */
 		this.targets = { };
 
@@ -142,7 +151,7 @@ class LL2W {
 	extractAttributes() {
 		/**
 		 * A map of attribute definitions.
-		 * @type {Object}
+		 * @type {Object.<string, Array>}
 		 */
 		this.attributes = { };
 
@@ -155,11 +164,46 @@ class LL2W {
 	extractStructs() {
 		/**
 		 * A map of struct definitions.
-		 * @type {Object}
+		 * @type {Object.<string, Array>}
 		 */
 		this.structs = { };
 
 		this.iterateTree("struct", (name, types) => this.structs[name] = types);
+	};
+
+	/**
+	 * Finds and extracts `metadata` entries from the AST.
+	 */
+	extractMetadata() {
+		/**
+		 * A map of metadata entries.
+		 * @type {Object.<string, Object>}
+		 */
+		this.metadata = { };
+
+		this.ast.filter(([type, name]) => type == "metadata" && typeof name == "number")
+			.sort((a, b) => b[1] < a[1])
+			.forEach(([, name, distinct, ...items]) => {
+				let recursive = false;
+				let toAdd = [];
+				console.log({items});
+				items.forEach((item) => {
+					if (item == name) {
+						recursive = true;
+					} else if (typeof item == "number") {
+						const meta = this.metadata[item];
+						if (typeof meta == "undefined") {
+							console.warn(`Nonexistent metadata entry "${item}" was referenced by "${name}".`);
+						} else {
+							toAdd = toAdd.concat(meta.items);
+						};
+					} else {
+						toAdd.push(item);
+					};
+				});
+
+				this.metadata[name] = { recursive, items };
+			});
 	};
 
 	/**
@@ -174,7 +218,7 @@ class LL2W {
 
 	/**
 	 * Prints a message to stderr and exits the process with return code 1.
-	 * @param {...*} args The arguments to pass to `console.error`.
+	 * @param {...*} args - The arguments to pass to `console.error`.
 	 */
 	static die(...args) {
 		console.error(...args);
@@ -208,11 +252,13 @@ if (require.main === module) {
 	compiler.extractInformation();
 	compiler.extractAttributes();
 	compiler.extractStructs();
+	compiler.extractMetadata();
 
 	compiler.debug(() => require("jsome")({
 		sourceFilename: compiler.sourceFilename,
 		targets: compiler.targets,
 		attributes: compiler.attributes,
-		structs: compiler.structs
+		structs: compiler.structs,
+		metadata: compiler.metadata
 	}));
 };

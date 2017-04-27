@@ -84,7 +84,7 @@ metadata_def		-> "!"
 						" distinct":?
 						" !{"
 						commalist[metadata]
-						"}"															{% d => ["metadata", d[1][0], ...d[5]] %}
+						"}"															{% d => ["metadata", d[1][0], !!d[3], ...d[5]] %}
 metadata			->	constant													{% d => d[0].slice(0, 2) %}
 					 |	"!" string													{% d => d[1] %}
 					 |	"null"														{% d => null %}

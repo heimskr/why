@@ -277,8 +277,8 @@ call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) =
 arg				-> (rv | int | var_addr)					{% d => d[0] %}
 args			-> arg (_ "," _ arg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 
-reg_temp		-> "$t" ([0-9a-f] | "1" [0-7])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
-reg_saved		-> "$s" ([0-9a-f] | "1" [0-7])				{% d => ["s", parseInt(d[1].join(""), 16)] %}
+reg_temp		-> "$t" ([0-9a-f] | "1" [0-6])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
+reg_saved		-> "$s" ([0-9a-f] | "1" [0-6])				{% d => ["s", parseInt(d[1].join(""), 16)] %}
 reg_arg			-> "$a" [0-9a-f]							{% d => ["a", parseInt(d[1], 16)] %}
 reg_return		-> "$r" [0-9a-f]							{% d => ["r", parseInt(d[1], 16)] %}
 reg_exc			-> "$e" [0-5]								{% d => ["e", parseInt(d[1], 16)] %}
