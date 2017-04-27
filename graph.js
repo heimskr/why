@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 let _ = require("lodash");
 
 /**
@@ -179,7 +180,6 @@ class Graph {
 
 		this.nodes.forEach((node) => {
 			if (node.out.length) {
-				console.log(node.id, node.out);
 				throw new Error("Graph contains a cycle.");
 			};
 		});
@@ -372,26 +372,10 @@ if (require.main === module) {
 
 	if (choice == "in0") {
 		g = new Graph(8);
-		g.arc(0, 1);
-		g.arc(1, 2);
-		g.arc(1, 4);
-		g.arc(1, 5);
-		g.arc(2, 3);
-		g.arc(2, 6);
-		g.arc(3, 2);
-		g.arc(3, 7);
-		g.arc(4, 0);
-		g.arc(4, 5);
-		g.arc(5, 6);
-		g.arc(6, 5);
-		g.arc(6, 7);
-		g.arc(7, 7);
+		g.arcs([0, 1], [1, 2, 5], [2, 3, 6], [3, 2, 7], [4, 0, 5], [5, 6], [6, 5, 7], [7, 7]);
 	} else if (choice == "test.ll") {
 		g = new Graph(5);
-		g.arc(2, 2);
-		g.arc(2, 3);
-		g.arc(4, 3);
-		g.arc(4, 4);
+		g.arcs([2, 2, 3], [4, 3, 4]);
 		g.removeLoops();
 	} else if (choice == "table.ll") {
 		g = new Graph(32);
@@ -416,7 +400,7 @@ if (require.main === module) {
 	try {
 		console.log(g.sort());
 	} catch(e) {
-		if (e.message.match(/cyclic/)) {
+		if (e.message.match(/cycl/)) {
 			console.log("(graph is cyclic)");
 		} else {
 			throw e;

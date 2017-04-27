@@ -10,14 +10,14 @@ CHECK		= \x1b[32m\xe2\x9c\x94\x1b[0m
 
 all: $(COMPILED) $(LIBS) compiled/linkertest.why
 
-compiled/linkertest.why: compiled/doubler.wo compiled/fibonacci.wo linkertest.wasm
-	@ node wld.js linkertest.wasm compiled/doubler.wo compiled/fibonacci.wo -o compiled/linkertest.why
+compiled/linkertest.why: compiled/doubler.wo compiled/fibonacci.wo examples/linkertest.wasm
+	@ node wld.js examples/linkertest.wasm compiled/doubler.wo compiled/fibonacci.wo -o compiled/linkertest.why
 
-compiled/%.wo: $(COMPILED) %.wasm _
-	@ node wasmc.js $*.wasm -lo compiled/$*.wo
+compiled/%.wo: $(COMPILED) examples/%.wasm _
+	@ node wasmc.js examples/$*.wasm compiled/$*.wo -l
 
 fib:
-	@ node wasmc.js fibonacci.wasm -lo compiled/fibonacci.wo
+	@ node wasmc.js examples/fibonacci.wasm compiled/fibonacci.wo -l
 
 $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."

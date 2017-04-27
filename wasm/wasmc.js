@@ -627,7 +627,6 @@ if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
 		alias: {
 			b: "binary",
-			o: "out",
 			l: "library",
 			d: "debug"
 		},
@@ -640,9 +639,11 @@ if (require.main === module) {
 	}), filename = options._[0];
 
 	if (!filename) {
-		console.log("Usage: node wasmc.js [filename] <-o out>");
+		console.log("Usage: ./wasmc.js <filename> [out]");
 		process.exit(0);
 	};
+
+	options.out = options._[1];
 
 	new WASMC(options, filename).compile();
 };

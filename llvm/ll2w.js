@@ -3,7 +3,8 @@ let minimist = require("minimist"),
 	fs = require("fs"),
 	chalk = require("chalk"),
 	getline = require("get-line-from-pos"),
-	nearley = require("nearley");
+	nearley = require("nearley"),
+	Graph = require("../graph.js");
 
 const { displayIOError } = require("../util.js");
 
@@ -235,6 +236,12 @@ if (require.main === module) {
 		boolean: ["debug"],
 		default: { d: false }
 	}), infile = options._[0];
+
+	if (!infile) {
+		console.log("Usage: ./ll2w.js <filename> [out]");
+		process.exit(0);
+	};
+
 	let outfile = options._[1] || infile.replace(/\.ll$/, "") + ".why";
 	const compiler = new LL2W(options);
 
