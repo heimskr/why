@@ -28,6 +28,7 @@ class LL2W {
 		/**
 		 * The initial options supplied.
 		 * @type {Object}
+		 * @name module:llvm~LL2W#options
 		 */
 		this.options = options;
 	};
