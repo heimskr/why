@@ -159,8 +159,9 @@ class Graph {
 	 * @return {Array<Node>} A topologically sorted list of the graph's nodes.
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
-	sort() {
-		const l = [], s = this.nodes.filter((node) => !node.in.length);
+	sorted() {
+		let copy = this.clone();
+		const l = [], s = copy.nodes.filter((node) => !node.in.length);
 		if (!s.length) {
 			throw new Error("Graph is cyclic.");
 		};
@@ -169,7 +170,7 @@ class Graph {
 			let n = s.pop();
 			l.unshift(n);
 			
-			this.nodes.filter((m) => m != n && m.connectsFrom(n)).forEach((m) => {
+			copy.nodes.filter((m) => m != n && m.connectsFrom(n)).forEach((m) => {
 				m.removeArcFrom(n);
 				
 				if (!m.in.length) {
@@ -178,13 +179,13 @@ class Graph {
 			});
 		};
 
-		this.nodes.forEach((node) => {
+		copy.nodes.forEach((node) => {
 			if (node.out.length) {
 				throw new Error("Graph contains a cycle.");
 			};
 		});
 
-		return l;
+		return l.map((node) => this.nodes[node.id]);
 	};
 
 	/**
@@ -396,9 +397,9 @@ if (require.main === module) {
 	console.log(g.components);
 	console.log(`\n${chalk.bold("DFS(G):")}`);
 	console.log(g.dfs());
-	console.log(`\n${chalk.bold("Sort(G):")}`);
+	console.log(`\n${chalk.bold("Sorted(G):")}`);
 	try {
-		console.log(g.sort());
+		console.log(g.sorted());
 	} catch(e) {
 		if (e.message.match(/cycl/)) {
 			console.log("(graph is cyclic)");

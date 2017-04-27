@@ -4,7 +4,8 @@ let minimist = require("minimist"),
 	chalk = require("chalk"),
 	getline = require("get-line-from-pos"),
 	nearley = require("nearley"),
-	Graph = require("../graph.js");
+	Graph = require("../graph.js"),
+	_ = require("lodash");
 
 const { displayIOError } = require("../util.js");
 
@@ -183,29 +184,28 @@ class LL2W {
 		 */
 		this.metadata = { };
 
-		this.ast.filter(([type, name]) => type == "metadata" && typeof name == "number")
-			.sort((a, b) => b[1] < a[1])
-			.forEach(([, name, distinct, ...items]) => {
-				let recursive = false;
-				let toAdd = [];
-				console.log({items});
-				items.forEach((item) => {
-					if (item == name) {
-						recursive = true;
-					} else if (typeof item == "number") {
-						const meta = this.metadata[item];
-						if (typeof meta == "undefined") {
-							console.warn(`Nonexistent metadata entry "${item}" was referenced by "${name}".`);
-						} else {
-							toAdd = toAdd.concat(meta.items);
-						};
-					} else {
-						toAdd.push(item);
-					};
-				});
+		const metas = this.ast.filter(([type, name]) => type == "metadata" && _.isNumber(name));
+		const graph = new Graph(metas.length);
 
-				this.metadata[name] = { recursive, items };
+		metas.forEach(([, name, distinct, ...items]) => {
+			let recursive = false, toAdd = [];
+
+			items.forEach((item, i) => {
+				if (item == name) {
+					recursive = true;
+				} else if (typeof item == "number") {
+					graph.arc(name, item);
+				} else {
+					toAdd.push(item);
+				};
 			});
+
+			this.metadata[name] = { recursive, items: toAdd };
+		});
+
+		graph.sorted().forEach(({ id }) => graph.getNode(id).out.forEach((dependency) => {
+			this.metadata[id].items = _.unionWith(this.metadata[id].items, this.metadata[dependency].items, _.isEqual);
+		}));
 	};
 
 	/**

@@ -37,3 +37,5 @@ attributes #5 = { noinline norecurse nounwind readonly ssp uwtable "correctly-ro
 !1 = !{i32 1, !"PIC Level", i32 2}
 !2 = distinct !{!2, !3}
 !3 = !{!"llvm.loop.unroll.disable"}
+!4 = !{!0, !3, !2, !4, !1, !"four", !5, i32 1}
+!5 = distinct !{!5, !3}
