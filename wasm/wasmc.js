@@ -89,7 +89,7 @@ class WASMC {
 	};
 
 	/**
-	 * Loads the Nearley grammar, reads the source file and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
+	 * Loads the Nearley grammar, parses the source file and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
 	 */
 	parse() {
 		let grammar;
@@ -255,6 +255,10 @@ class WASMC {
 		});
 	};
 
+	/**
+	 * Returns a copy of {@link module:wasm~WASMC#parsed parsed}.code with all pseudoinstructions expanded.
+	 * @return {Object[]} An array of expanded instructions.
+	 */
 	expandCode() {
 		let expanded = [];
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions will need to be
@@ -382,6 +386,12 @@ class WASMC {
 		return expanded;
 	};
 
+	/**
+	 * Replaces all label references in a given array of expanded instructions with the corresponding memory addresses.
+	 * Mutates the input array.
+	 * @param {Object[]} expanded - An array of expanded instructions (see {@link module:wasm~WASMC#expandCode expandCode}).
+	 * @return {Object[]} The mutated input array with label references replaced with memory addresses.
+	 */
 	expandLabels(expanded) {
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
@@ -404,13 +414,22 @@ class WASMC {
 		return expanded;
 	};
 
+	/**
+	 * Compiles an instruction and adds it to the {@link module:wasm~WASMC#code code array}.
+	 * @param {Object} item - The instruction to compile and add.
+	 */
 	addCode(item) {
 		this.code.push(this.compileInstruction(item));
 	};
 
-	compileInstruction(item) {
-		const [op, ...args] = item;
-		const { flags } = item;
+	/**
+	 * Compiles an array representation of an instruction into a Long containing the bytecode.
+	 * @param {Array} instruction - An uncompiled instruction.
+	 * @return {Long} The bytecode representation of the instruction.
+	 */
+	compileInstruction(instruction) {
+		const [op, ...args] = instruction;
+		const { flags } = instruction;
 		if (op == "trap") {
 			return this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags);
 		} else if (R_TYPES.includes(OPCODES[op])) {
@@ -427,6 +446,11 @@ class WASMC {
 		};
 	};
 
+	/**
+	 * Compiles an object representaiton of an instruction into a Long containing the bytecode.
+	 * @param {Object} instruction - An uncompiled instruction.
+	 * @return {Long} The bytecode representation of the instruction.
+	 */
 	unparseInstruction(instruction) {
 		const { type } = instruction;
 		if (type == "r") {
@@ -446,9 +470,13 @@ class WASMC {
 		};
 	};
 
-	// If x is an array accepted by convertRegister, the output is the index of that array.
-	// If x is a string, then the label map is checked and the address for the label x is returned.
-	// If x is a number, return it.
+	/**
+	 * If the input is an array or number accepted by convertRegister, the output is the corresponding register index.
+	 * If the input is a string, then the label map is checked and the corresponding address is returned.
+	 * @param {(string[]|number|string)} x - The value to convert.
+	 * @return {number} The converted value.
+	 * @throws Will throw an exception if the input is of an unrecognized type.
+	 */
 	convertValue(x) {
 		if (x instanceof Array || typeof x == "number") {
 			return WASMC.convertRegister(x);
@@ -460,10 +488,6 @@ class WASMC {
 			};
 
 			return this.offsets[x];
-		};
-
-		if (typeof x == "number") {
-			return x;
 		};
 
 		throw new Error(`Unrecognized value: ${x}`);
