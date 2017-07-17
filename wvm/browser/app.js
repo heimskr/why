@@ -223,7 +223,7 @@ let App = window.App = class App {
 		};
 		
 		$(".program-counter").removeClass("program-counter");
-		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter");
+		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter")[0].scrollIntoViewIfNeeded();
 	};
 
 	highlightStackPointer() {
@@ -425,8 +425,8 @@ let app;
 
 $(() => {
 	app = window.app = new App(vm, { });
-	app.config.consoleSize[0] = Math.floor(($("#console").width()) / 8);
-	app.config.consoleSize[1] = Math.floor(($("#console").height() - 16) / 16 - 3);
+	app.config.consoleSize[0] = Math.max(10, Math.floor(($("#console").width()) / 8));
+	app.config.consoleSize[1] = Math.max(10, Math.floor(($("#console").height() - 16) / 16 - 3));
 	initializeUI(app);
 	app.initializeVM();
 });
