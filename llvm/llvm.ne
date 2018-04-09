@@ -50,7 +50,7 @@ main -> item:+																		{% d => filter(d[0]) %}
 item ->	_ lineend																	{% _() %}
 	  |	_
 	  	(type_any | source_filename | target | struct | function_def | declaration |
-		 global | attributes | metadata_def)										{% __(1, 0) %}
+		 global_def | attributes | metadata_def)									{% __(1, 0) %}
 
 lineend				->	(comment newline | newline) 								{% _( ) %}
 spaced[X]			->	" " $X " "													{% _(1) %}
@@ -116,9 +116,9 @@ type_intvec			->	type_int													{% _ %}
 type_floatvec		->	type_float													{% _ %}
 					 |	"<" natural " x " type_float ">"							{% d => ["vector", d[1], d[3]] %}
 
-var_name			->	"@" var														{% _(1) %}
+global				->	"@" var														{% _(1) %}
 label				->	var ":"														{% d => ["label", d[0]] %}
-global				->	var_name
+global_def			->	global
 						" ="
 						(" " linkage):?
 						(" " visibility):?
@@ -135,8 +135,8 @@ global				->	var_name
 						(", comdat $" var):?
 						(", align " decimal):?
 						#// not sure what "(, !name !N)*" is supposed to mean, but it doesn't to be used in various things I found online, so whatever ¯\_(ツ)_/¯
-						{% d => ["global", {
-							variable:                d[ 0],
+						{% d => ["global constant", {
+							name:                    d[ 0],
 							linkage:                 d[ 2]? d[ 2][1] : null,
 							visibility:              d[ 3]? d[ 3][1] : null,
 							storageClass:            d[ 4]? d[ 4][1] : null,
@@ -218,7 +218,7 @@ function_type		->	type_any (_ parattr):* (" " variable):?
 function_def		->	"define" function_header " {" function_line:* "}"			{% d => [...d[1], filter(d[3])] %}
 function_line		->	_ lineend													{% _( ) %}
 					 |	_ instruction												{% _(1) %}
-					 |	_ label														{% _ %}
+					 |	_ label														{% _(1) %}
 
 cconv				->	("ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" |
 						 "preserve_allcc" | "preserve_mostcc" | "x86_vectorcallcc" |
@@ -284,7 +284,7 @@ i_load				->	(i_load_normal | i_load_atomic)								{% __ %}
 i_load_normal		->	variable
 						" = load "
 						"volatile ":?
-						(type_any ", " type_any "* " (variable | var_name))
+						(type_any ", " type_any "* " (variable | global))
 						(", align " decimal):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "load", {
@@ -371,7 +371,7 @@ i_getelementptr_1	->	variable
 						", "
 						type_ptr
 						" "
-						(variable | var_name)
+						(variable | global)
 						(", " "inrange ":? type_int " " (variable | decimal)):+
 						{% d => ["instruction", "getelementptr", {
 							destination: d[0],
@@ -390,7 +390,7 @@ i_getelementptr_2	->	variable
 						"}, {"
 						types
 						"}* "
-						(variable | var_name)
+						(variable | global)
 						(", " "inrange ":? type_int " " (variable | decimal)):+
 						{% d => ["instruction", "getelementptr", {
 							destination: d[0],
@@ -568,7 +568,7 @@ getelementptr_expr	->	"getelementptr "
 						", "
 						type_any
 						"* "
-						var_name
+						global
 						(", " type_int " " decimal):*
 						")"
 						{% d => ["expr", "getelement", {

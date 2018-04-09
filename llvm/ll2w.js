@@ -13,7 +13,7 @@ const { displayIOError } = require("../util.js");
  * `ll2w` is an LLVM intermediate representation to WVM compiler (thus
  * <code><b>ll</b>vm<b>2w</b>vm</code>) written from scratch.
  * 
- * @module llvm
+ * @module llvm/ll2w
  */
 
 /**
@@ -140,7 +140,7 @@ class LL2W {
 
 		/**
 		 * A map of target definitions.
-		 * @type {Object.<string, string>}
+		 * @type {Object<string, string>}
 		 */
 		this.targets = { };
 
@@ -154,7 +154,7 @@ class LL2W {
 	extractAttributes() {
 		/**
 		 * A map of attribute definitions.
-		 * @type {Object.<string, Array>}
+		 * @type {Object<string, Array>}
 		 */
 		this.attributes = { };
 
@@ -167,7 +167,7 @@ class LL2W {
 	extractStructs() {
 		/**
 		 * A map of struct definitions.
-		 * @type {Object.<string, Array>}
+		 * @type {Object<string, Array>}
 		 */
 		this.structs = { };
 
@@ -180,14 +180,14 @@ class LL2W {
 	extractMetadata() {
 		/**
 		 * A map of metadata entries.
-		 * @type {Object.<string, Object>}
+		 * @type {Object<string, Object>}
 		 */
 		this.metadata = { };
 
-		const metas = this.ast.filter(([type, name]) => type == "metadata" && _.isNumber(name));
+		const metas = this.ast.filter(([type]) => type == "metadata");
 		const graph = new Graph(metas.length);
 
-		metas.forEach(([, name, distinct, ...items]) => {
+		metas.filter(([, name]) => _.isNumber(name)).forEach(([, name, distinct, ...items]) => {
 			let recursive = false, toAdd = [];
 
 			items.forEach((item, i) => {
@@ -200,12 +200,33 @@ class LL2W {
 				};
 			});
 
-			this.metadata[name] = { recursive, items: toAdd };
+			this.metadata[name] = { recursive, distinct, items: toAdd };
 		});
 
-		graph.sorted().forEach(({ id }) => graph.getNode(id).out.forEach((dependency) => {
-			this.metadata[id].items = _.unionWith(this.metadata[id].items, this.metadata[dependency].items, _.isEqual);
+		graph.sorted().forEach(({ id: name }) => graph.getNode(name).out.forEach((dependency) => {
+			this.metadata[name].items = _.unionWith(this.metadata[name].items, this.metadata[dependency].items, _.isEqual);
 		}));
+
+		metas.filter(([, name]) => !_.isNumber(name)).forEach(([, name, distinct, ...items]) => {
+			this.metadata[name] = {
+				recursive: false,
+				distinct, 
+				items: _.uniqWith(_.flatten(items.map((i) => this.metadata[i].items)), _.isEqual)
+			};
+		});
+	};
+
+	/**
+	 * Finds and extracts global constant defintions from the AST.
+	 */
+	extractGlobalConstants() {
+		/**
+		 * A map of global constant definitions.
+		 * @type {Object<string, Object>}
+		 */
+		this.constants = { };
+
+		this.iterateTree("global constant", (item) => this.constants[item.name] = _.omit(item, "name"));
 	};
 
 	/**
@@ -261,12 +282,28 @@ if (require.main === module) {
 	compiler.extractAttributes();
 	compiler.extractStructs();
 	compiler.extractMetadata();
+	compiler.extractGlobalConstants();
 
 	compiler.debug(() => require("jsome")({
 		sourceFilename: compiler.sourceFilename,
 		targets: compiler.targets,
 		attributes: compiler.attributes,
 		structs: compiler.structs,
-		metadata: compiler.metadata
+		metadata: compiler.metadata,
+		constants: compiler.constants,
 	}));
 };
+
+/*
+Potentially useful links:
+	http://stackoverflow.com/questions/36087319/llvm-openmp-what-is-the-meaning-of-internal-thread-local-unnamed-addr-global/36094052
+
+	LLVM backends:
+		http://llvm.org/docs/WritingAnLLVMBackend.html
+		https://jonathan2251.github.io/lbd/TutorialLLVMBackendCpu0.pdf
+		https://opus4.kobv.de/opus4-fau/files/1108/tricore_llvm.pdf
+
+	Register allocation:
+		https://en.wikipedia.org/wiki/Register_allocation#Iterated_Register_Coalescing
+		https://www.cs.cmu.edu/~fp/courses/15411-f09/lectures/03-regalloc.pdf
+*/

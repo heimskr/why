@@ -1,17 +1,16 @@
 #!/usr/bin/env node
-let WASMC = require("../wasm/wasmc.js"),
-	fs = require("fs"),
+let fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
 	minimist = require("minimist");
 
-const chalk = new (require("chalk")).constructor({ enabled: true });
+const chalk = new (require("chalk")).constructor({enabled: true});
 
 require("../util.js").mixins(_);
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../wasm/constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS} = require("../wasm/constants.js");
 const SEDOCPO = _.multiInvert(OPCODES);
 const STESFFO = _.multiInvert(REGISTER_OFFSETS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
@@ -35,7 +34,7 @@ const Parser = module.exports = {
 				parsed: Parser.parse(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent),
 				raw: text.split("\n").map((s) => Long.fromString(s, true, 16))
 			};
-		};
+		}
 	},
 
 	parse(longs, silent=true) {
@@ -69,15 +68,15 @@ const Parser = module.exports = {
 			console.log(handlers.map(([k, v]) => `${k}: ${chalk.magenta(v)}`).join("\n"));
 
 			console.log([, chalk.green("#code"), ...code.map(Parser.formatInstruction)].join("\n"));
-		};
+		}
 
-		return { offsets, handlers, meta, code: code.map(Parser.parseInstruction) };
+		return {offsets, handlers, meta, code: code.map(Parser.parseInstruction)};
 	},
 
 	parseInstruction(instruction) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
-		};
+		}
 
 		const get = (...args) => parseInt(instruction.substr(...args), 2);
 		const opcode = get(0, 12);
@@ -115,8 +114,8 @@ const Parser = module.exports = {
 				type: "j"
 			};
 		} else if (opcode == 0) {
-			return { op: "nop", opcode };
-		};
+			return {op: "nop", opcode};
+		}
 	},
 
 	colorOper(oper) {
@@ -126,7 +125,7 @@ const Parser = module.exports = {
 	formatInstruction(instruction) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
-		};
+		}
 
 		const get = (...args) => parseInt(instruction.substr(...args), 2);
 		const opcode = get(0, 12);
@@ -141,7 +140,7 @@ const Parser = module.exports = {
 			return Parser.formatJ(SEDOCPO[opcode][0], Parser.getRegister(get(12, 7)), get(32));
 		} else if (opcode == 0) {
 			return "<>";
-		};
+		}
 
 		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
 	},
@@ -155,14 +154,14 @@ const Parser = module.exports = {
 	getRegister(n) {
 		if (n == REGISTER_OFFSETS.return) {
 			return "$rt";
-		};
+		}
 
 		for (let i = 0; i < OFFSET_VALUES.length; i++) {
 			if (OFFSET_VALUES[i] <= n) {
 				const s = STESFFO[OFFSET_VALUES[i]][0];
 				return "$" + (s.match(/^[ratskemf]$/)? s + (n - OFFSET_VALUES[i]).toString(16) : s);
-			};
-		};
+			}
+		}
 
 		return null;
 	},
@@ -216,7 +215,7 @@ const Parser = module.exports = {
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
 				return imm == 1? chalk.yellow(rd) + chalk.yellow.dim(increment) : `${chalk.yellow(rs)} ${Parser.colorOper(opequals)} ${chalk.magenta(imm)}`;
-			};
+			}
 
 			return `${chalk.yellow(rs)} ${Parser.colorOper(op)} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		};
@@ -268,12 +267,12 @@ const Parser = module.exports = {
 };
 
 if (require.main === module) {
-	const opt = minimist(process.argv.slice(2), { }), filename = opt._[0];
+	const opt = minimist(process.argv.slice(2), {}), filename = opt._[0];
 
 	if (!filename) {
 		console.log("Usage: node parser.js [filename]");
 		process.exit(0);
-	};
+	}
 
 	Parser.open(filename, false);
-};
+}

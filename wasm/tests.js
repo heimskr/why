@@ -3,15 +3,15 @@ let Wasmc = require("./wasmc.js").Wasmc,
 	Long = require("long"),
 	chalk = require("chalk");
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPS, FUNCTS, REGISTER_OFFSETS } = require("./constants.js");
+const {OPS, FUNCTS} = require("./constants.js");
 
 let tests = {
 	passed: 0,
 	failed: 0,
 	undef: 0,
-	pass(x) { tests.passed++; return chalk.green(`${x} \u2714`) },
-	fail(x) { tests.failed++; return chalk.red(`${x} \u2718`) },
-	maybe(x) { tests.undef++; return chalk.yellow(`${x} ~`) },
+	pass(x) { tests.passed++; return chalk.green(`${x} \u2714`); },
+	fail(x) { tests.failed++; return chalk.red(`${x} \u2718`); },
+	maybe(x) { tests.undef++; return chalk.yellow(`${x} ~`); },
 	assert(bool, trueMessage, falseMessage, assertTrue=true, handleUndef=true) {
 		return typeof bool == "undefined" && handleUndef? tests.maybe("Undefined") : (tests[(!!assertTrue == !!bool)? "pass" : "fail"])(bool? trueMessage : falseMessage);
 	},
@@ -19,11 +19,11 @@ let tests = {
 		console.log("");
 		let color = tests.passed + tests.failed == 0? chalk.dim : (tests.passed == 0 && 0 < tests.failed? chalk.red : (0 < tests.passed && tests.failed == 0? chalk.green : chalk.yellow));
 		// let pre = `${(0 < tests.undef? Array(Math.ceil(len / 2)).fill(`${color}█${yellow}█`).join("") : color + Array(len).fill("█").join(""))+reset} `;
-		
+	
 		// let pre = `${0 < tests.undef? Array(Math.ceil(len / 2)).fill(`${color("█")}█`).join("") : color(Array(len).fill("█").join(""))} `;
 		let pre = `${(0 < tests.undef? chalk.yellow : color)("█".repeat(3))} `;
 
-		let great = `Nice 👌🏻 👍🏻`;
+		let great = "Nice 👌🏻 👍🏻";
 		if (tests.passed == 0 && tests.failed == 0) {
 			console.log(`${pre}No tests were run.`);
 		} else {
@@ -34,10 +34,10 @@ let tests = {
 				console.log(`${pre+chalk.bold("Verdict")}: ${0 < tests.undef? "Fix the undefined values and you're good. 🔧" : great}`);
 			} else if (0 < tests.passed && 0 < tests.failed) {
 				console.log(`${pre+chalk.bold("Verdict")}: ${chalk.yellow(Math.floor(1000*tests.passed/(tests.passed+tests.failed))/10 + "%")} isn't good enough; try harder.`);
-			};
-		};
+			}
+		}
 	}
-}, exp;
+};
 
 const checkEqual = (prefix="", assertTrue, ...input) => input.slice(1).forEach((item) => console.log(`${prefix? prefix + ": " : ""}${chalk.bold(input[0])} == ${chalk.bold(item)}? ${tests.assert(input[0] === item, "Yes", "No", assertTrue)}`));
 const checkLong = (prefix="", assertTrue, ...input) => {

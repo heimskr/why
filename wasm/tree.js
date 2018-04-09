@@ -10,24 +10,25 @@ let fs = require("fs"),
 	prettyjson = require("prettyjson"),
 	path = require("path");
 
-const die = (...a) => { console.error(...a); process.exit(1) };
+const die = (...a) => { console.error(...a); process.exit(1); };
 
 const opt = minimist(process.argv.slice(2), {
 	alias: { t: "tree", d: "dev", s: "simple" },
 	boolean: ["tree", "dev", "simple"],
 	default: { tree: true, dev: true }
-}), filename = opt._[0];
+});
+
+const filename = opt._[0];
 
 if (!filename) {
 	die("Invalid filename.", { opt });
-};
+}
 
 
 let name = "wasm", grammar, parser;
 let lines = fs.readFileSync(filename, { encoding: "utf8" }).split("\n");
 
 if (opt.dev) {
-	let file = grammar;
 	grammar = fs.readFileSync(path.join(__dirname, `${name}.ne`), "utf8");
 	parser = new nearley.Parser(nearleyg.ParserRules, nearleyg.ParserStart);
 	grammar = nearleyc(parser.feed(grammar).results[0], { });
@@ -40,29 +41,29 @@ if (opt.dev) {
 		console.error(`Couldn't read ${grammar}.js.`);
 		if (opt.dev) {
 			console.log(e);
-		};
+		}
 
 		process.exit(1);
-	};
-};
+	}
+}
 
 // generate parser
-parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart)
+parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
 
 // join up the lines again
 let source = `\n${lines.join("\n")}\n`;
 
 let trees;
 try {
-	trees = parser.feed(source).results
+	trees = parser.feed(source).results;
 } catch (e) {
 	console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset) - 1}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length - 1}`) + ":");
 	if (opt.dev) {
-		console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset) - 1; return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length - 1 + $2})` }));
-	};
+		console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset) - 1; return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length - 1 + $2})`; }));
+	}
 
 	process.exit(1);
-};
+}
 
 const printTree = (tree) => prettyjson.render(tree || "[null]");
 
@@ -74,4 +75,4 @@ if (trees.length > 1 && opt.dev) {
 	process.exit(1);
 } else if (opt.tree) {
 	console.log(opt.simple? JSON.stringify(trees[0], null, 4) : printTree(trees[0]));
-};
+}

@@ -233,8 +233,9 @@ class Node {
 	 * Creates a new node.
 	 * @param {number} id - The node's ID.
 	 * @param {Graph} graph - The graph containing this node.
+	 * @param {*} data - The data attached to the node.
 	 */
-	constructor(id, graph) {
+	constructor(id, graph, data=null) {
 		/**
 		 * The node's ID.
 		 * @type {number}
@@ -262,6 +263,13 @@ class Node {
 		 * @name module:util~Node#in
 		 */
 		this.in = [];
+
+		/**
+		 * The data attached to the node.
+		 * @type {*}
+		 * @name module:util~Node#data
+		 */
+		this.data = data;
 	};
 
 	/**
@@ -357,6 +365,7 @@ class Node {
 };
 
 module.exports = Graph;
+module.exports.Node = Node;
 
 /**
  * @typedef {Object} DFSResult

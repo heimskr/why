@@ -20,7 +20,7 @@ const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
- * Class representing an instance of the wasmc compiler.
+ * Represents a `wasmc` instance.
  */
 class WASMC {
 	
@@ -86,7 +86,7 @@ class WASMC {
 		 * @name module:wasm~WASMC#code
 		 */
 		this.code = [];
-	};
+	}
 
 	/**
 	 * Loads the Nearley grammar, parses the source file and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
@@ -99,10 +99,10 @@ class WASMC {
 			console.error("Couldn't read wasm.js.");
 			if (this.options.debug) {
 				console.error(e);
-			};
+			}
 
 			process.exit(1);
-		};
+		}
 
 		const parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
 		const source = fs.readFileSync(this.filename, "utf8") + "\n";
@@ -113,11 +113,11 @@ class WASMC {
 		} catch (e) {
 			console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset)}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length}`) + ":");
 			if (this.options.dev) {
-				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset); return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})` }));
-			};
+				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset); return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})`; }));
+			}
 
 			process.exit(1);
-		};
+		}
 
 		if (trees.length > 1) {
 			trees.forEach((tree) => console.log(JSON.stringify(trees[tree], null, 4)));
@@ -126,26 +126,26 @@ class WASMC {
 		} else if (trees.length === 0) {
 			console.warn(chalk.red.italic("Nothing parsed."));
 			process.exit(1);
-		};
+		}
 
 		this.parsed = trees[0];
 
 		if (typeof this.parsed != "object") {
 			WASMC.die("Error: parser output isn't an object.");
-		};
+		}
 
 		if (typeof this.parsed.metadata == "undefined") {
 			this.parsed.metadata = { };
-		};
+		}
 
 		if (typeof this.parsed.data == "undefined") {
 			this.parsed.data = { };
-		};
+		}
 
 		if (typeof this.parsed.code == "undefined") {
 			this.parsed.code = { };
-		};
-	};
+		}
+	}
 
 	/**
 	 * {@link module:wasm~WASMC#parse Parses} and processes the source code and writes the output.
@@ -180,8 +180,8 @@ class WASMC {
 
 			fs.writeFileSync(outname, frozen);
 			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
-		};
-	};
+		}
+	}
 
 	/**
 	 * Extracts and processes the program's metadata and stores it in {@link module:wasm~WASMC#meta meta}.
@@ -192,7 +192,7 @@ class WASMC {
 		const orcid = typeof this.parsed.meta.orcid == "undefined"? "0000000000000000" : this.parsed.meta.orcid.replace(/\D/g, "");
 		if (orcid.length != 16) {
 			WASMC.die("Error: invalid ORCID.");
-		};
+		}
 
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
 		[this.meta[4], this.meta[5]] = [orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")));
@@ -212,14 +212,14 @@ class WASMC {
 		this.options.library = !(this.ignoreFlags = !(this.parsed.meta.library || this.options.library));
 
 		this.log({ meta: this.meta, version, author });
-	};
+	}
 
 	/**
 	 * Will eventually extract and process the program's handlers and store it, but is currently just a placeholder.
 	 */
 	processHandlers() {
 		this.handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO);
-	};
+	}
 
 	/**
 	 * Extracts and processes the program's data and stores it in {@link module:wasm~WASMC#data data}.
@@ -234,7 +234,7 @@ class WASMC {
 				pieces = WASMC.str2longs(value);
 			} else {
 				WASMC.die(`Error: unknown data type "${type}" for "${key}".`);
-			};
+			}
 
 			this.offsets[key] = offset;
 			this.log(chalk.yellow("Assigning"), offset, "to", key);
@@ -243,17 +243,17 @@ class WASMC {
 		});
 
 		this.meta[2] = Long.fromInt(offset);
-	};
+	}
 
 	/**
 	 * Copies an array of expanded code into the {@link module:wasm~WASMC#code main code array}.
 	 * @param {Array} expanded - The list of expanded instructions to compile and store.
 	 */
 	processCode(expanded) {
-		expanded.forEach((item, i) => {
+		expanded.forEach((item) => {
 			this.addCode(item);
 		});
-	};
+	}
 
 	/**
 	 * Returns a copy of {@link module:wasm~WASMC#parsed parsed}.code with all pseudoinstructions expanded.
@@ -268,13 +268,13 @@ class WASMC {
 			if (label) {
 				this.offsets[label] = this.meta[2].toInt() + expanded.length * 8;
 				this.log(chalk.magenta("Assigning"), this.offsets[label], "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
-			};
+			}
 
 			const add = (x) => expanded.push(x);
 
 			const addPush = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
-				args.forEach((reg, i) => {
+				args.forEach((reg) => {
 					add([getLabel(), "s", _0, reg, _SP]);
 					add([null, "subi", _SP, _SP, 8]);
 				});
@@ -282,7 +282,7 @@ class WASMC {
 
 			const addPop = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
-				args.forEach((reg, i) => {
+				args.forEach((reg) => {
 					add([getLabel(), "addi", _SP, _SP, 8]);
 					add([null, "l", _0, _SP, reg]);
 				});
@@ -294,7 +294,7 @@ class WASMC {
 				// There can't be more arguments than the set of argument registers can handle.
 				if (MAX_ARGS < vals.length) {
 					throw new Error(`Too many arguments given to subroutine (given ${vals.length}, maximum is ${MAX_ARGS})`);
-				};
+				}
 
 				// Push the current return address and the current values in $a_0...$a_{n-1} (in that order) to the stack.
 				addPush([_RA, ..._.range(0, vals.length).map((n) => _A[n])], label);
@@ -316,7 +316,7 @@ class WASMC {
 						add([null, "set", _0, _A[i], ["label", val[1]]]);
 					} else {
 						throw new Error(`Invalid value for argument ${i + 1}: ${JSON.stringify(val)}`);
-					};
+					}
 				});
 
 				// Store the program counter in $rt and jump to the subroutine.
@@ -348,7 +348,7 @@ class WASMC {
 					this.log("jeq with label:", args[2]);
 					add([null, "set",  _0, _M[1], args[2]]);
 					add([null, "jrc", _0, _M[0],   _M[1]]);
-				};
+				}
 			} else if (R_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
 				let [rt, rs, rd] = args;
 				let [lt, ls, ld] = [rt, rs, rd].map(isLabelRef);
@@ -357,34 +357,34 @@ class WASMC {
 					if (isLabelRef(reg)) {
 						// Whoops, this register isn't actually a register
 						add([getLabel(), "li", _0, _M[i], reg]);
-					};
+					}
 				});
 
 				add([getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 
 				if (ld) {
 					add([getLabel(), "si", _M[2], _0, rd]);
-				};
+				}
 			} else if (I_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
 				let [rs, rd, imm] = args;
 				let [ls, ld] = [rs, rd].map(isLabelRef);
 				let _label = label, getLabel = () => [_label, _label = null][0];
 				if (ls) {
 					add([getLabel(), "li", _0, _M[0], rs]);
-				};
+				}
 
 				add([getLabel(), op, ...[rs, rd].map((reg, i) => [ls, ld][i]? _M[i] : reg), imm]);
 
 				if (ld) {
 					add([getLabel(), "si", _M[1], _0, rd]);
-				};
+				}
 			} else {
 				add(item);
-			};
+			}
 		});
 
 		return expanded;
-	};
+	}
 
 	/**
 	 * Replaces all label references in a given array of expanded instructions with the corresponding memory addresses.
@@ -407,12 +407,12 @@ class WASMC {
 					// replace it with an address from the offsets map. 
 					item[i + 1] = this.offsets[arg[1]];
 					item.flags = FLAGS.ADJUST_ADDRESS;
-				};
+				}
 			});
 		});
 
 		return expanded;
-	};
+	}
 
 	/**
 	 * Compiles an instruction and adds it to the {@link module:wasm~WASMC#code code array}.
@@ -420,7 +420,7 @@ class WASMC {
 	 */
 	addCode(item) {
 		this.code.push(this.compileInstruction(item));
-	};
+	}
 
 	/**
 	 * Compiles an array representation of an instruction into a Long containing the bytecode.
@@ -443,8 +443,8 @@ class WASMC {
 		} else {
 			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
 			return Long.fromString("deadc0de", true, 16);
-		};
-	};
+		}
+	}
 
 	/**
 	 * Compiles an object representaiton of an instruction into a Long containing the bytecode.
@@ -452,7 +452,7 @@ class WASMC {
 	 * @return {Long} The bytecode representation of the instruction.
 	 */
 	unparseInstruction(instruction) {
-		const { type } = instruction;
+		const { op, type } = instruction;
 		if (type == "r") {
 			const { opcode, rt, rs, rd, funct, flags } = instruction;
 			return this.rType(opcode, rt, rs, rd, funct, flags);
@@ -467,8 +467,8 @@ class WASMC {
 		} else {
 			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
 			return Long.fromString("deadc0de", true, 16);
-		};
-	};
+		}
+	}
 
 	/**
 	 * If the input is an array or number accepted by convertRegister, the output is the corresponding register index.
@@ -480,18 +480,18 @@ class WASMC {
 	convertValue(x) {
 		if (x instanceof Array || typeof x == "number") {
 			return WASMC.convertRegister(x);
-		};
+		}
 
 		if (typeof x == "string") {
 			if (typeof this.offsets[x] == "undefined") {
 				throw new Error(`Undefined label: ${x}`);
-			};
+			}
 
 			return this.offsets[x];
-		};
+		}
 
 		throw new Error(`Unrecognized value: ${x}`);
-	};
+	}
 
 	/**
 	 * Compiles an R-type instruction into bytecode.
@@ -515,7 +515,7 @@ class WASMC {
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;
-	};
+	}
 
 	/**
 	 * Compiles an I-type instruction into bytecode.
@@ -537,7 +537,7 @@ class WASMC {
 		let long = Long.fromBits(lower, upper);
 
 		return long;
-	};
+	}
 
 	/**
 	 * Compiles a J-type instruction into bytecode.
@@ -557,7 +557,7 @@ class WASMC {
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;
-	};
+	}
 
 	/**
 	 * Prints a warning.
@@ -565,7 +565,7 @@ class WASMC {
 	 */
 	warn(...args) {
 		console.log(...args);
-	};
+	}
 
 	/**
 	 * Prints a message if the debug {@link module:wasm~WASMC#options option} is set.
@@ -574,14 +574,14 @@ class WASMC {
 	log(...args) {
 		if (this.options.debug) {
 			console.log(...args);
-		};
-	};
+		}
+	}
 
 	/**
 	 * Prints a message to stderr and exits the process with return code 1.
 	 * @param {...*} args - The arguments to pass to `console.error`.
 	 */
-	static die(...a) { console.error(...a); process.exit(1) };
+	static die(...a) { console.error(...a); process.exit(1); }
 
 	/**
 	 * Converts an array of 8 characters into a Long.
@@ -590,7 +590,7 @@ class WASMC {
 	 */
 	static chunk2long(chunk) {
 		return Long.fromString(chunk.map((c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""), true, 16);
-	};
+	}
 
 	/**
 	 * Adds nulls to the end of the string to lengthen it to a multiple of 8.
@@ -600,7 +600,7 @@ class WASMC {
 	 */
 	static nullpad(str) {
 		return str.length % 8? str.padEnd(Math.ceil(str.length / 8) * 8, "\0") : `${str}\0`;
-	};
+	}
 
 	/**
 	 * Nullpads and chunks a given string into an array of Longs.
@@ -609,7 +609,7 @@ class WASMC {
 	 */
 	static str2longs(str) {
 		return str == ""? [Long.UZERO] : _.chunk(WASMC.nullpad(str).split(""), 8).map(WASMC.chunk2long);
-	};
+	}
 
 	/**
 	 * Returns an array containing the 16-length zero-padded hex representations of a given array of Longs.
@@ -619,55 +619,47 @@ class WASMC {
 	 */
 	static longs2strs(longs) {
 		return longs.map((l) => l instanceof Long? l.toString(16).padStart(16, "0") : "x".repeat(16));
-	};
+	}
 
 	/**
 	 * If the input is an array (expected format: ["register", ...]), then the output is the number corresponding to
 	 * that array. Otherwise, if the input is something other than an array, then the output is same as the input.
-	 * @param {Array} x - An array representing a register, such as ["register", "return", 0] for $rt or
-	 *                    ["register", "t", 22] for $t16.
+	 * @param {Array} x - An array representing a register, such as ["register", "return", 0] for $rt or ["register", "t", 22] for $t16.
 	 * @return {number} The ID corresponding to the register.
 	 */
 	static convertRegister(x) {
 		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1]) : x;
-	};
-};
+	}
+}
 
 module.exports = WASMC;
-const _R = _.range(0, 16).map((n) => ["register", "r", n]);
 const _A = _.range(0, 16).map((n) => ["register", "a", n]);
-const _T = _.range(0, 24).map((n) => ["register", "t", n]);
-const _S = _.range(0, 24).map((n) => ["register", "s", n]);
-const _K = _.range(0, 17).map((n) => ["register", "k", n]);
 const _RA = ["register", "return", 0];
 const _M = _.range(0, 16).map((n) => ["register", "m", n]);
-const _E = _.range(0,  6).map((n) => ["register", "e", n]);
 const _SP = ["register", "stack", 0];
-const _HI = ["register", "hi",    0];
-const _LO = ["register", "lo",    0];
 const _0  = ["register", "zero",  0];
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
-		alias: {
-			b: "binary",
-			l: "library",
-			d: "debug"
-		},
-		boolean: ["binary", "debug", "library"],
-		default: {
-			binary: false,
-			debug: false,
-			library: false
-		}
-	}), filename = options._[0];
+			alias: {
+				b: "binary",
+				l: "library",
+				d: "debug"
+			},
+			boolean: ["binary", "debug", "library"],
+			default: {
+				binary: false,
+				debug: false,
+				library: false
+			}
+		}), filename = options._[0];
 
 	if (!filename) {
 		console.log("Usage: ./wasmc.js <filename> [out]");
 		process.exit(0);
-	};
+	}
 
 	options.out = options._[1];
 
 	new WASMC(options, filename).compile();
-};
+}

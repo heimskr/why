@@ -4,6 +4,11 @@ target triple = "x86_64-apple-macosx10.12.0"
 
 %struct.__sFILE = type { i8*, i32, i32, i16, i16, %struct.__sbuf, i32, i8*, i32 (i8*)*, i32 (i8*, i8*, i32)*, i64 (i8*, i64, i32)*, i32 (i8*, i8*, i32)*, %struct.__sbuf, %struct.__sFILEX*, i32, [3 x i8], [1 x i8], %struct.__sbuf, i32, i64 }
 
+@.str.6 = private unnamed_addr constant [6 x i8] c"%d %d\00", align 1
+@.str.7 = private unnamed_addr constant [37 x i8] c"Adjacency list representation of G:\0A\00", align 1
+@__stderrp = external local_unnamed_addr global %struct.__sFILE*, align 8
+@.str.1.16 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
+
 define i32* @hello() {
 	%X = zext i32 257 to i64              ; yields i64:257
 	%Y = zext i1 true to i32              ; yields i32:1

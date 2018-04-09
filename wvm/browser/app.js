@@ -1,7 +1,7 @@
 if (!process.browser) {
 	console.error("This script is intended for browsers only.");
 	process.exit(1);
-};
+}
 
 let WVM = require("../wvm.js"),
 	Parser = require("../parser.js"),
@@ -10,12 +10,11 @@ let WVM = require("../wvm.js"),
 	Long = require("long"),
 	_ = require("lodash"),
 	ansiHTML = require("ansi-html"),
-	chalk = require("chalk"),
-	moment = require("moment");
+	chalk = require("chalk");
 
 require("jquery.splitter");
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS } = require("../../wasm/constants.js");
+const {REGISTER_OFFSETS} = require("../../wasm/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
 const UNPRINTABLE = [...[[0, 32]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
@@ -37,30 +36,30 @@ let App = window.App = class App {
 		};
 
 		_.each(config, (val, key) => this.config[key] = val);
-	};
+	}
 
 	get range() {
 		return this.config.range.map((arr) => arr.join("-")).join(", ");
-	};
+	}
 
 	set range(to) {
 		if (to instanceof Array) {
 			this.config.range = to;
 			this.displayMemory();
 			return;
-		};
+		}
 
 		let range = to.trim().split(/\D+/).map((s) => s.match(/^0x/)? parseInt(s.substr(2), 16) : parseInt(s));
 		if (range.length % 2 == 1) {
 			alert("Invalid range.");
 			return;
-		};
+		}
 
 		// This algorithm to remove redundancy and overlap is overkill, but why not?
 		let pairs = [];
 		for (let i = 0; i < range.length; i += 2) {
 			pairs.push(range.slice(i, i + 2));
-		};
+		}
 
 		let newPairs = [pairs[0]];
 		pairs.slice(1).forEach((pair) => {
@@ -68,8 +67,8 @@ let App = window.App = class App {
 				if (pair[0] <= newPairs[i][0]) {
 					newPairs.splice(i, 0, pair);
 					return;
-				};
-			};
+				}
+			}
 
 			newPairs.push(pair);
 		});
@@ -86,28 +85,28 @@ let App = window.App = class App {
 			} else if (right2 <= right) {
 				pairs.splice(i, 2, [left, right]);
 				i--;
-			};
+			}
 
-		};
+		}
 
 		this.config.range = pairs;
 		this.displayMemory();
-	};
+	}
 
 	inRange(addr) {
 		for (let i = 0; i < this.config.range.length; i += 2) {
 			if (this.config.range[i] <= addr && addr <= this.config.range[i + 1]) {
 				return true;
-			};
-		};
+			}
+		}
 
 		return false;
-	};
+	}
 
 	displayRegisters() {
 		$("#registers").removeClass().addClass(`base-${localStorage.wvm_reg_base || 10}`);
 		_.range(0, 128).forEach((i) => $($("#registers tr")[i]).find("td:last-child").html(this.vm.registers[i]? this.vm.registers[i].toSigned().toString(localStorage.wvm_reg_base || 10) : "?"));
-	};
+	}
 
 	displayMemory() {
 		$("#memory tr").remove();
@@ -122,19 +121,19 @@ let App = window.App = class App {
 						if (!$(event.target).hasClass("handler")) {
 							vm.programCounter = 8*i;
 							this.onTick();
-						};
+						}
 					});
 
 				if (this.vm.data && this.vm.data.labels) {
 					tr.append($("<td></td>").text(Object.keys(this.vm.data.labels).filter((label) => this.vm.data.labels[label] == 8 * i)[0] || ""));
-				};
+				}
 			});
 		});
-	};
+	}
 
 	hexCell(long) {
 		return _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
-	};
+	}
 
 	decompiledCell(long, addr) {
 		if (addr < 32 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$data) {
@@ -142,33 +141,35 @@ let App = window.App = class App {
 				this.vm.programCounter = long.toInt();
 				this.highlightProgramCounter();
 			});
-		};
+		}
 
 		if (this.vm.offsets.$code <= addr) {
 			if (long.equals(0)) {
 				return "";
-			};
+			}
 
 			try {
 				let html = ansiHTML(Parser.formatInstruction(long));
-				html = html.replace(/\#e8bf03/g, "orange")
-						   .replace(/\#ff00ff/g, "#f08")
-						   .replace(/\#00ffee/g, "#00bfff")
-						   .replace(/\#ff0000/g, "#a00")
+				html = html.replace(/#e8bf03/g, "orange")
+						   .replace(/#ff00ff/g, "#f08")
+						   .replace(/#00ffee/g, "#00bfff")
+						   .replace(/#ff0000/g, "#a00")
 						   .replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
-						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
+						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`);
 						   // .replace(/<span style="[^"]*">\$sp<\/span>/, `<span class="reg-sp">$sp</span>`)
 				return html;
 			} catch(e) {
 				return "❓";
-			};
-		};
+			}
+		}
 
 		if (this.config.attemptUTF8) {
 			try {
 				return decodeURIComponent(escape(atob(String.fromCharCode(..._.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => parseInt(x.join(""), 16) || ".".charCodeAt(0))))));
-			} catch(e) { };
-		};
+			} catch(e) {
+				// Couldn't decode
+			}
+		}
 
 		return _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => {
 			const parsed = parseInt(x.join(""), 16);
@@ -177,25 +178,25 @@ let App = window.App = class App {
 					case 9:  return "⭾";
 					case 10:
 					case 13: return "⏎";
-				};
-			};
+				}
+			}
 
 			if (parsed == 32) {
 				return "&nbsp;";
-			};
+			}
 
-			return UNPRINTABLE.includes(parsed)? `<span class="dim">.</span>` : String.fromCharCode(parsed);
+			return UNPRINTABLE.includes(parsed)? "<span class=\"dim\">.</span>" : String.fromCharCode(parsed);
 		}).join("");
-	};
+	}
 
 	decompileNext() {
 		return Parser.formatInstruction(this.vm.loadInstruction());
-	};
+	}
 
 	initializeVM(vm) {
 		if (vm) {
 			this.vm = vm;
-		};
+		}
 
 		this.vm.enabled = false;
 
@@ -207,108 +208,108 @@ let App = window.App = class App {
 		this.vm.onSetByte = this.onSetByte.bind(this);
 		this.vm.log = this.log.bind(this);
 		this.vm.stop = this.stop.bind(this);
-	};
+	}
 
 	onTick() {
 		this.displayRegisters();
 		this.highlightProgramCounter();
 		this.highlightStackPointer();
-	};
+	}
 
 	highlightProgramCounter() {
 		const pc = this.vm.programCounter;
 
 		if (pc % 8) {
 			console.warn(`Program counter (${pc}) is misaligned by ${pc % 8} byte${pc % 8 == 1? "" : "s"}.`);
-		};
+		}
 		
 		$(".program-counter").removeClass("program-counter");
 		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter")[0].scrollIntoViewIfNeeded();
-	};
+	}
 
 	highlightStackPointer() {
 		const sp = this.vm.registers[REGISTER_OFFSETS.stack].toInt();
 
 		if (sp % 8) {
 			console.warn(`Stack pointer (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
-		};
+		}
 
 		$(".stack-pointer").removeClass("stack-pointer");
 		$(`#memory tr.addr-${sp / 8}`).addClass("stack-pointer");
-	};
+	}
 
 	onSetWord(addr, to) {
 		addr = addr instanceof Long? addr.toInt() : addr;
 		let row = $(`#memory tr.addr-${addr / 8}`);
 		row.find("td:eq(1)").html(this.hexCell(to));
 		row.find("td:eq(2)").html(this.decompiledCell(to, addr));
-	};
+	}
 
-	onSetByte(addr, to) {
+	onSetByte(addr) {
 		addr = addr instanceof Long? addr.toInt() : addr;
 		let word = this.vm.getWord(addr - addr % 8);
 		let row = $(`#memory tr.addr-${Math.floor(addr / 8)}`);
 		row.find("td:eq(1)").html(this.hexCell(word));
 		row.find("td:eq(2)").html(this.decompiledCell(word, addr));
-	};
+	}
 
 	heartbeat() {
 		if (!this.heartbeatActive) {
 			return clearInterval(this.interval);
-		};
+		}
 
 		if (this.active) {
 			this.vm.tick();
 			if (!this.vm.active) {
 				this.active = false;
-			};
-		};
-	};
+			}
+		}
+	}
 
 	startHeartbeat() {
 		clearInterval(this.interval);
 		this.heartbeatActive = true;
 		this.interval = setInterval(() => this.heartbeat(), this.heartrate);
-	};
+	}
 
 	get heartrate() {
 		return this.config.heartrate;
-	};
+	}
 
 	set heartrate(to) {
 		if (to != this.config.heartrate) {
 			this.config.heartrate = to;
 			if (this.heartbeatActive) {
 				this.startHeartbeat();
-			};
-		};
-	};
+			}
+		}
+	}
 
 	toggleActive() {
-		if (this.active = !this.active) {
+		if ((this.active = !this.active)) {
 			this.startHeartbeat();
 		} else {
 			clearInterval(this.interval);
-		};
+		}
 
 		return this.active;
-	};
+	}
 
 	log(str) {
 		console.log(str);
-	};
+	}
 
 	stop() {
 		this.active = false;
 		this.vm.active = false;
 		console.log(`Execution halted after ${this.vm.cycles} cycle${this.vm.cycles == 1? "" : "s"}.`);
-	};
+	}
 
 	onPrintChar(c) {
 		const index = () => this.cursor[0] + this.cursor[1] * (this.config.consoleSize[0] + 1);
 		if (this.consoleText.length <= index()) {
 			return;
-		};
+		}
 
 		if (c == "\n" || this.consoleText[index()] == "\n") {
 			this.cursor[0] = 0;
@@ -316,16 +317,16 @@ let App = window.App = class App {
 
 			if (c == "\n" || this.config.consoleSize[1] <= this.cursor[1]) {
 				return;
-			};
-		};
+			}
+		}
 
 		$("#console").text(this.consoleText = _.replaceChar(this.consoleText, index(), c));
 		this.cursor[0]++;
-	};
+	}
 
 	initializeText() {
 		$("#console").text(this.consoleText = [...Array(app.config.consoleSize[1])].map(() => " ".repeat(app.config.consoleSize[0])).join("\n"));
-	};
+	}
 };
 
 function initializeUI(app) {
@@ -338,7 +339,7 @@ function initializeUI(app) {
 			let input = prompt(`New value for ${regname}:`);
 			if (!input) {
 				return;
-			};
+			}
 
 			const radix = { b: 2, t: 3, q: 4, o: 8, h: 16, x: 16 }[input[0]] || 10;
 			const unsigned = input[input.length - 1] == "u";
@@ -347,11 +348,11 @@ function initializeUI(app) {
 
 			if (i == REGISTER_OFFSETS.stack) {
 				app.highlightStackPointer();
-			};
+			}
 		});
 
 		row.append(namecell).append(valcell).click(() => row.toggleClass("active-register"));
-	};
+	}
 
 	$("#top").split({ orientation: "vertical", limit: 210, position: "81.5%" });
 	$(".hsplitter").height(4);
@@ -362,7 +363,7 @@ function initializeUI(app) {
 		let input = prompt("Range:", app.range);
 		if (input) {
 			app.range = input;
-		};
+		}
 	});
 
 	$("#run").click(() => {
@@ -376,13 +377,13 @@ function initializeUI(app) {
 			alert("Invalid number.");
 		} else {
 			app.config.heartrate = answer * 1000;
-		};
+		}
 
 		app.active = old;
 	});
 
 	$(document.body).keydown((event) => {
-		const { key, ctrlKey, shiftKey, preventDefault } = event;
+		const {key, ctrlKey, shiftKey} = event;
 
 		if (key == ".") {
 			app.vm.active && app.vm.tick();
@@ -401,24 +402,24 @@ function initializeUI(app) {
 			} else if (key == "h") {
 				localStorage.wvm_reg_base = 16;
 				app.displayRegisters();
-			};
+			}
 		} else {
 			return;
-		};
+		}
 
 		event.preventDefault();
 	});
 
 	app.initializeText();
-};
+}
 
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/string.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/megafib.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
 if (opened.data) {
 	vm.data = opened.data;
-};
+}
 
 window.vm = vm;
 let app;
