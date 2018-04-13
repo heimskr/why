@@ -333,8 +333,16 @@ class WASMC {
 			} else if (op == "pop") {
 				addPop(args);
 			} else if (op == "jeq") {
-				// First, set $m0 to rs == rt.
-				add([label, "seq", ...args.slice(0, 2), _M[0]]);
+				const right = args[0];
+				const left = args[1];
+				if (isLabelRef(right)) {
+					add([label, "li", _0, _M[2], right]);
+					add([null, "seq", _M[2], left, _M[0]]);
+				} else if (typeof right == "number") {
+					add([label, "seqi", left, _M[0], right]);
+				} else {
+					add([label, "seq", right, left, _M[0]]);
+				}
 
 				if (args[2][0] == "value") {
 					// Set $m1 to the immediate value and then conditionally jump to $m1.

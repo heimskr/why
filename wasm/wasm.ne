@@ -263,6 +263,8 @@ op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %
 op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
 op_jeq			-> ":" _ reg __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[2]] %}
 				 | ":" _ "&" var __ "if" __ rv _ "==" _ rv	{% d => ["jeq", d[11], d[7], ["label", d[3]]] %}
+				 | ":" _ reg __ "if" __ rv _ "==" _ int     {% d => ["jeq", d[10], d[6], d[2]] %}
+				 | ":" _ "&" var __ "if" __ rv _ "==" _ int {% d => ["jeq", d[11], d[7], ["label", d[3]]] %}
 op_nop			-> "<>"										{% d => ["nop"] %}
 
 # Traps																		   rt    rs    rd   funct

@@ -33,10 +33,10 @@ module.exports = function(grunt) {
 				tasks: ["nearley"]
 			},
 
-			jsdoc: {
-				files: ["jsdoc.json", ...jsdoc_files],
-				tasks: ["jsdoc"]
-			}
+//			jsdoc: {
+//				files: ["jsdoc.json", ...jsdoc_files],
+//				tasks: ["jsdoc"]
+//			}
 		},
 
 		exorcise: {
