@@ -1,0 +1,39 @@
+// megafib.wasm
+// Stress-tests the VM by computing many fibonacci numbers.
+// Note that overflow occurs after about 0x60 iterations.
+
+#meta
+name: "Megafib"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+// library
+
+#data
+count: 1000
+
+#code
+
+// $s0: contains n, the number of Fibonacci iterations computed.
+// $s1: contains F(n - 2)
+// $s2: contains F(n - 1)
+// $s3: contains F(n)
+
+2 -> $s0
+0 -> $s1
+1 -> $s2
+1 -> $s3
+
+@calculate
+	$s3 -> $t0
+	$s3 += $s2
+	$s2 -> $s1
+	$t0 -> $s2
+	$s0++
+
+	: &done if $s0 == *count
+	: &calculate
+
+@done
+	<print $s3>
+	<halt>
