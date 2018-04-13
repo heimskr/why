@@ -501,19 +501,19 @@ If the value in `rs` is less than or equal to the value in `rt` (treating both a
 
 ### <a name="op-sli"></a>Set on Less Than Immediate
 > `$rs < imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000000`
+> `000000011001` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 If the value in `rs` is less than `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-slei"></a>Set on Less Than or Equal Immediate
 > `$rs <= imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000001`
+> `000000011010` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 If the value in `rs` is less than or equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-seqi"></a>Set on Equal Immediate
 > `$rs == imm -> $rd`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000010`
+> `000000011011` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 If the value in `rs` is equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
@@ -527,13 +527,13 @@ If the value in `rs` is equal to `imm`, `rd` is set to 1; otherwise, `rd` is set
 
 ### <a name="op-slui"></a>Set on Less Than Unsigned Immediate
 > `$rs < imm -> $rd /u`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000011`
+> `000000011100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 If the value in `rs` is less than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-sleui"></a>Set on Less Than or Equal Unsigned Immediate
 > `$rs <= imm -> $rd /u`  
-> `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000100`
+> `000000011101` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 If the value in `rs` is less than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
