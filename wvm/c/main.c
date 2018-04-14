@@ -11,6 +11,8 @@ int main(int argc, char *argv[]) {
 	wvm_load("../../wasm/compiled/megafib.why");
 	wvm_init_pc();
 
+	wvm_print_memory();
+
 	wvm_free();
 
 	return 0;
