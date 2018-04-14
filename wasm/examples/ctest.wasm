@@ -12,6 +12,7 @@ test: "Hello World!"
 
 #code
 
+&test -> $sf
 !strprint(&test)
 
 <halt>

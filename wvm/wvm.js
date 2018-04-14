@@ -456,7 +456,8 @@ class WVM {
 		} else if (funct == TRAPS.eval) {
 			console.warn("<eval> is currently unimplemented.");
 		} else if (funct == TRAPS.printc) {
-			this.onPrintChar(this.registers[rs].toUnsigned().toInt() & 0xff);
+			// this.onPrintChar(this.registers[rs].toUnsigned().toInt() & 0xff);
+			console.log(`<printc ${Parser.getRegister(rs)}=${this.registers[rs]}>`, String.fromCharCode(this.registers[rs].toUnsigned().toInt() & 0xff)); 
 		} else { // This may be changed to an exception in the future.
 			console.log("Unknown trap:", {rt, rs, rd, shift, funct});
 		}

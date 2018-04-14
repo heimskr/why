@@ -16,8 +16,11 @@ int main(int argc, char *argv[]) {
 	do {
 		// printf("\33[2J\33[H");
 		// wvm_print_memory();
-		// usleep(5000);
+		// printf("(%04lld)\n", pc);
+		// usleep(50);
 	} while (wvm_tick());
+
+	printf("\33[31mExecution halted.\33[0m\n");
 
 	wvm_free();
 
