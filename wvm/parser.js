@@ -267,12 +267,31 @@ const Parser = module.exports = {
 };
 
 if (require.main === module) {
-	const opt = minimist(process.argv.slice(2), {}), filename = opt._[0];
+	const opt = minimist(process.argv.slice(2), {
+		alias: {s: "single"},
+		boolean: ["single"],
+		default: {single: false}
+	}), name = opt._[0];
 
-	if (!filename) {
+	if (!name) {
 		console.log("Usage: node parser.js [filename]");
 		process.exit(0);
 	}
 
-	Parser.open(filename, false);
+	if (opt.single) {
+		let num = name;
+		if (typeof name == "string") {
+			if (name.match(/^0x/)) {
+				num = parseInt(name.substr(2), 16);
+			} else if (name.match(/^0b/)) {
+				num = parseInt(name.substr(2), 2);
+			} else {
+				num = parseInt(name);
+			}
+		}
+
+		console.log(Parser.formatInstruction(num.toString(2).padStart(64, "0")));
+	} else {
+		Parser.open(name, false);
+	}
 }
