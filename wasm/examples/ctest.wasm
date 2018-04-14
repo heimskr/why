@@ -12,6 +12,29 @@ hw: "Hello World!"
 
 #code
 
-!strprint(&hw)
+<>
+
+1 -> $a0
+:: &bnl
+!$a0.
+:: &bnl
+
+: &strprint_test
+
+<>
+
+@bnl
+	!bprint()
+	!newline()
+	ret
+
+<>
+
+@strprint_test
+	&hw -> $a0
+	:: &strprint
+	:: &newline
 
 <halt>
+
+<>

@@ -5,6 +5,8 @@
 
 typedef void (*op_fn)(word);
 
+void op_nop(word instruction);    // 0   X
+
 void op_add(word instruction);    // 1   R 0
 void op_sub(word instruction);    // 1   R 1
 void op_mult(word instruction);   // 1   R 2
@@ -22,6 +24,13 @@ void op_not(word instruction);    // 2   R 3
 void op_or(word instruction);     // 2   R 4
 void op_xnor(word instruction);   // 2   R 5
 void op_xor(word instruction);    // 2   R 6
+void op_land(word instruction);   // 2   R 8
+void op_lnand(word instruction);  // 2   R 9
+void op_lnor(word instruction);   // 2   R 10
+void op_lnot(word instruction);   // 2   R 11
+void op_lor(word instruction);    // 2   R 12
+void op_lxnor(word instruction);  // 2   R 13
+void op_lxor(word instruction);   // 2   R 14
 
 void op_addi(word instruction);   // 3   I
 void op_subi(word instruction);   // 4   I

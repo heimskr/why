@@ -27,6 +27,10 @@
 #define rtv registers[rt]
 #define rdv registers[rd]
 
+void op_nop(word instruction) {
+	INC();
+}
+
 void op_add(word instruction) {
 	RREGS();
 	rdv = rsv + rtv;
@@ -115,6 +119,49 @@ void op_xnor(word instruction) {
 void op_xor(word instruction) {
 	RREGS();
 	rdv = rsv ^ rtv;
+	INC();
+}
+
+void op_land(word instruction) {
+	RREGS();
+	rdv = rsv && rtv;
+	INC();
+}
+
+void op_lnand(word instruction) {
+	RREGS();
+	rdv = !(rsv && rtv);
+	INC();
+}
+
+void op_lnor(word instruction) {
+	RREGS();
+	rdv = !(rsv || rtv);
+	INC();
+}
+
+void op_lnot(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rd = wvm_r_rd(instruction);
+	rdv = !rsv;
+	INC();
+}
+
+void op_lor(word instruction) {
+	RREGS();
+	rdv = rsv || rtv;
+	INC();
+}
+
+void op_lxnor(word instruction) {
+	RREGS();
+	rdv = !(rsv ^ rtv);
+	INC();
+}
+
+void op_lxor(word instruction) {
+	RREGS();
+	rdv = !!(rsv ^ rtv);
 	INC();
 }
 

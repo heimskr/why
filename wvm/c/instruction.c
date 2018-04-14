@@ -48,6 +48,8 @@ ins_type wvm_get_type(opcode_t opcode) {
  */
 op_fn wvm_get_fn(word instruction) {
 	switch (wvm_get_opcode(instruction)) {
+		case 0:
+			return op_nop;
 		case 1:
 			switch (wvm_r_func(instruction)) {
 				case 0: return op_add;
@@ -62,13 +64,20 @@ op_fn wvm_get_fn(word instruction) {
 			}
 		case 2:
 			switch (wvm_r_func(instruction)) {
-				case 0: return op_and;
-				case 1: return op_nand;
-				case 2: return op_nor;
-				case 3: return op_not;
-				case 4: return op_or;
-				case 5: return op_xnor;
-				case 6: return op_xor;
+				case 0:  return op_and;
+				case 1:  return op_nand;
+				case 2:  return op_nor;
+				case 3:  return op_not;
+				case 4:  return op_or;
+				case 5:  return op_xnor;
+				case 6:  return op_xor;
+				case 8:  return op_land;
+				case 9:  return op_lnand;
+				case 10:  return op_lnor;
+				case 11:  return op_lnot;
+				case 12:  return op_lor;
+				case 13:  return op_lxnor;
+				case 14:  return op_lxor;
 			}
 		case 3:  return op_addi;
 		case 4:  return op_subi;

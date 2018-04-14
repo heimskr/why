@@ -19,6 +19,8 @@ w4: 0
 w5: 0
 w6: 0
 w7: 0
+s_true: "true"
+s_false: "false"
 
 #code
 !test()
@@ -89,6 +91,20 @@ sub strprint() {
 		<printc $t0>
 		$a0++
 		: &_strprint_loop
+}
+
+sub bprint() {
+	: &_bprint_true if $a0
+		&s_false -> $a0
+		: &strprint
+	@_bprint_true
+		&s_true -> $a0
+		: &strprint
+}
+
+sub newline() {
+	10 -> $t0
+	<printc $t0>
 }
 
 sub test() {
