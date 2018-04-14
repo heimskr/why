@@ -131,7 +131,7 @@ op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or 
 				 | op_j | op_jc | op_jr | op_jrc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
-				 | call | trap_printr | trap_halt | trap_n | trap_eval
+				 | call | trap_printc | trap_printr | trap_halt | trap_n | trap_eval
 															{% d => d %}
 into			-> _ "->" _									{% d => null %}
 

@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	wvm_load("../../wasm/compiled/megafib.why");
+	wvm_load("ctest.why");
 	wvm_init_pc();
 	wvm_print_memory();
 

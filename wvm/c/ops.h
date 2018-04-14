@@ -78,5 +78,7 @@ void op_set(word instruction);    // 21  I
 
 void op_pr(word instruction);     // 31 ?R 1
 void op_halt(word instruction);   // 31 ?R 2
+void op_eval(word instruction);   // 31 ?R 3
+void op_printc(word instruction); // 31 ?R 4
 
 #endif

@@ -402,3 +402,15 @@ void op_pr(word instruction) {
 void op_halt(word instruction) {
 	alive = 0;
 }
+
+void op_eval(word instruction) {
+	// This isn't javascript.
+	fprintf(stderr, "op_eval not implemented.\n");
+	exit(1);
+}
+
+void op_printc(word instruction) {
+	RRS();
+	printf("%c", (char) rsv);
+	INC();
+}

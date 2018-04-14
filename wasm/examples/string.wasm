@@ -77,6 +77,22 @@ sub strchr() {
 	@_strchr_failed 0 -> $r0
 }
 
+sub strprint() {
+	// $a0: pointer to string to print
+	// $t0: temporary storage
+
+	@_strprint_loop
+		[$a0] -> $t0
+		$t0 == $0 -> $t1
+		~$t1 -> $t1
+		: &_strprint_print if $t1
+		done
+		@_strprint_print
+		<printc $t0>
+		$a0++
+		: &_strprint_loop
+}
+
 sub test() {
 	'w' -> $t0
 	!strchr(&eight, $t0)
