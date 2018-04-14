@@ -647,13 +647,13 @@ Copies the word beginning at the memory address pointed to by `rs` into memory b
 
 ### <a name="op-lbi"></a>Load Byte Immediate (`lbi`)
 > `[imm] -> $rd /b`  
-> `000000010011` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000100101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Loads the byte at address `imm` into `rd`.
 
 ### <a name="op-sbi"></a>Store Byte Immediate (`sbi`)
 > `$rs -> [imm] /b`  
-> `000000010100` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000100110` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Copies the byte stored at the memory address pointed to by `rs` into memory at address `imm`.
 
