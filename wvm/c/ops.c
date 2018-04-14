@@ -286,6 +286,7 @@ void op_jrlc(word instruction) {
 
 void op_c(word instruction) {
 	RREGS();
+	wvm_set_word(rdv, wvm_get_word(rsv));
 }
 
 void op_l(word instruction) {
@@ -294,37 +295,46 @@ void op_l(word instruction) {
 }
 
 void op_s(word instruction) {
-
+	RREGS();
+	wvm_set_word(rdv, rsv);
 }
 
 void op_cb(word instruction) {
-
+	RREGS();
+	wvm_set_byte(rdv, wvm_get_byte(rsv));
 }
 
 void op_lb(word instruction) {
-
+	RREGS();
+	rdv = wvm_get_byte(rsv);
 }
 
 void op_sb(word instruction) {
-
+	RREGS();
+	wvm_set_byte(rdv, rsv);
 }
 
 void op_li(word instruction) {
-
+	IRD(); IIMM();
+	rdv = wvm_get_word(imm);
 }
 
 void op_si(word instruction) {
-
+	IRS(); IIMM();
+	wvm_set_word(imm, rsv);
 }
 
 void op_lbi(word instruction) {
-
+	IRD(); IIMM();
+	rdv = wvm_get_byte(imm);
 }
 
 void op_sbi(word instruction) {
-
+	IRS(); IIMM();
+	wvm_set_byte(imm, rsv);
 }
 
 void op_set(word instruction) {
-
+	IRD(); IIMM();
+	rdv = imm;
 }

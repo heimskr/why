@@ -58,7 +58,7 @@ void wvm_init_pc() {
 }
 
 /**
- * Returns the nth word in the VM memory.
+ * Returns a word from the VM memory.
  * @param addr The byte-indexed address of the word to retrieve.
  * @return The word at the given index.
  */
@@ -86,6 +86,24 @@ void wvm_set_word(word addr, word value) {
 	memory[addr + 5] = (value >> 2*8) & 0xff;
 	memory[addr + 6] = (value >> 1*8) & 0xff;
 	memory[addr + 7] =  value         & 0xff;
+}
+
+/**
+ * Returns a byte from the VM memory.
+ * @param addr The byte-indexed address of the byte to retrieve.
+ * @return The byte at the given index.
+ */
+byte wvm_get_byte(word addr) {
+	return memory[addr];
+}
+
+/**
+ * Sets a byte in the VM memory.
+ * @param addr The byte-indexed starting address of the destination in the VM memory.
+ * @param value The value to store in the VM memory.
+ */
+void wvm_set_byte(word addr, byte value) {
+	memory[addr] = value;
 }
 
 /**
