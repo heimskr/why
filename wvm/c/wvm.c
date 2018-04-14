@@ -96,14 +96,21 @@ char wvm_get_byte(lomg byte_offset) {
  * Prints all the memory to the console.
  */
 void wvm_print_memory() {
-	printf("       ┌────────────────────┬──────────────────────────────────────────────────────────────────┬──────────────────────┐\n");
-	printf("       │    \33[1mHexadecimal\33[0m     │                              \33[1mBinary\33[0m                              │       \33[1mDecimal\33[0m        │\n");
-	printf("┌──────┼────────────────────┼──────────────────────────────────────────────────────────────────┼──────────────────────┤\n");
+	char *binsep = "───────────────────────────────────────────────────────────────────";
+	char *binsep2 = "─────────────┬─────────────────────────────────────────────────────";
+	char *binsep3 = "─────────────┴─────────────────────────────────────────────────────";
+	printf("       ┌────────────────────┬%s┬──────────────────────┐\n", binsep);
+	printf("       │    \33[1mHexadecimal\33[0m     │");
+	printf("                              \33[1mBinary\33[0m                               │");
+	printf("       \33[1mDecimal\33[0m        │\n");
+	printf("┌──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
 	for (int i = 0; i < memsize; i++) {
 		lomg boffset = i << 3;
 		lomg word = wvm_get_word(boffset);
-		if (boffset == offset_handlers || boffset == offset_data || boffset == offset_code) {
-			printf("├──────┼────────────────────┼──────────────────────────────────────────────────────────────────┼──────────────────────┤\n");
+		if (boffset == offset_handlers || boffset == offset_data) {
+			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
+		} else if (boffset == offset_code) {
+			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep2);
 		}
 
 		printf("│\33[38;5;8m");
@@ -112,8 +119,15 @@ void wvm_print_memory() {
 		}
 		
 		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
+		if (boffset < offset_code) {
+			printf(" ");
+		}
+
 		for (int j = 63; j >= 0; j--) {
 			printf("%d", (int) (word >> j) & 1);
+			if (j == 52 && boffset >= offset_code) {
+				printf("\33[38;5;238m│\33[38;5;250m");
+			}
 		}
 
 		printf("\33[0m │ \33[38;5;240m%20lld\33[0m │", word);
@@ -128,7 +142,7 @@ void wvm_print_memory() {
 
 		printf("\n");
 	}
-	printf("└──────┴────────────────────┴──────────────────────────────────────────────────────────────────┴──────────────────────┘\n");
+	printf("└──────┴────────────────────┴%s┴──────────────────────┘\n", binsep3);
 }
 
 /**
