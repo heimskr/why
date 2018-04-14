@@ -11,6 +11,7 @@
 bool wvm_init(word length) {
 	pc = 0;
 	memsize = 0;
+	alive = 1;
 	return (memory = calloc(length * 8, sizeof(byte))) != NULL;
 }
 
@@ -119,6 +120,17 @@ void wvm_jump(word addr) {
  */
 void wvm_link() {
 	registers[R_RT] = pc + 8;
+}
+
+/**
+ * Executes the next instruction.
+ * @return Whether to continue to the next instruction.
+ */
+bool wvm_tick() {
+	word instruction = wvm_get_word(pc);
+	printf("instruction: %016llx\n", instruction);
+	alive = 0;
+	return alive;
 }
 
 /**

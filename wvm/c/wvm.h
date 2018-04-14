@@ -19,6 +19,7 @@ byte wvm_get_byte(word addr);
 void wvm_set_byte(word addr, byte value);
 void wvm_jump(word addr);
 void wvm_link();
+bool wvm_tick();
 void wvm_print_memory();
 
 byte *memory;
@@ -29,5 +30,6 @@ word offset_data;
 word offset_code;
 word offset_end;
 word registers[128];
+bool alive;
 
 #endif

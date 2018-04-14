@@ -2,6 +2,7 @@
  * Contains functions that execute operations. *
  ***********************************************/
 
+#include <stdio.h>
 #include "ops.h"
 #include "instruction.h"
 #include "registers.h"
@@ -337,4 +338,13 @@ void op_sbi(word instruction) {
 void op_set(word instruction) {
 	IRD(); IIMM();
 	rdv = imm;
+}
+
+void op_pr(word instruction) {
+	RRS();
+	printf("$%s: 0x%llx / %lld\n", wvm_decode_reg(rs), rsv, rsv);
+}
+
+void op_halt(word instruction) {
+	alive = 0;
 }

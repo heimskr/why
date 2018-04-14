@@ -118,7 +118,14 @@ op_fn wvm_get_fn(word instruction) {
 		case 27: return op_seqi;
 		case 28: return op_slui;
 		case 29: return op_sleui;
-		// 30 and 31 are also missing.
+		// 30 is also missing.
+		case 31: // Are traps true R-types? The format in the ISA documentation looks strange.
+			switch (wvm_r_func(instruction)) {
+				case 1:
+					return op_pr;
+				case 2:
+					return op_halt;
+			}
 		case 32: return op_jl;
 		case 33: return op_jlc;
 		case 34: return op_slli;

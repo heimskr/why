@@ -76,4 +76,7 @@ void op_lbi(word instruction);    // 37  I
 void op_sbi(word instruction);    // 38  I
 void op_set(word instruction);    // 21  I
 
+void op_pr(word instruction);     // 31 ?R 1
+void op_halt(word instruction);   // 31 ?R 2
+
 #endif
