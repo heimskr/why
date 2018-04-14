@@ -413,7 +413,7 @@ function initializeUI(app) {
 	app.initializeText();
 }
 
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/ops.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/megafib.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });

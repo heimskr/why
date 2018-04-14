@@ -4,15 +4,14 @@
 #include "instruction.h"
 
 /**
- * Allocates memory for the VM and resets some global variables..
- * @param length The number of longs to allocate.
+ * Allocates memory for the VM and resets some global variables.
+ * @param length The number of words to allocate.
  * @return Whether the allocation succeeded.
  */
 bool wvm_init(word length) {
 	pc = 0;
-	ir = 0;
 	memsize = 0;
-	return (memory = calloc(length, sizeof(word))) != NULL;
+	return (memory = calloc(length * 8, sizeof(byte))) != NULL;
 }
 
 /**
@@ -40,7 +39,7 @@ int wvm_load(char *filename) {
 	char line[20];
 	while (fgets(line, 18, file)) {
 		word instr = strtol(line, NULL, 16);
-		memory[memsize++] = instr;
+		wvm_set_word(memsize++ * 8, instr);
 	}
 
 	offset_handlers = wvm_get_word(0);
@@ -55,46 +54,38 @@ int wvm_load(char *filename) {
  * Sets the initial position of the program counter.
  */
 void wvm_init_pc() {
-	pc = memory[2];
+	pc = offset_code;
 }
 
 /**
  * Returns the nth word in the VM memory.
- * @param n The byte-index of the word to retrieve.
+ * @param addr The byte-indexed address of the word to retrieve.
  * @return The word at the given index.
  */
-word wvm_get_word(word n) {
-	if (n % 8 == 0) {
-		// Everything is so much simpler when the index is word aligned.
-		return memory[n >> 3];
+word wvm_get_word(word addr) {
+	word out = 0;
+
+	for (byte i = 0; i < 8; i++) {
+		out |= ((word) memory[addr + i]) << ((7 - i) * 8);
 	}
 
-	// The offset isn't word aligned, so we have to get two words from the memory
-	// and shuffle them around to assemble a single word to return.
-
-	// The number of bytes to take from the word on the right half of the concatenation.
-	// It's equal to the remainder of trying to use n as a word-aligned offset.
-	char right_length = n % 8;
-
-	// The length of the left half is 8 minus the right length, because the total length is 8 bytes.
-	char left_length = 8 - right_length;
-
-	// The left half is earlier in memory, the right half is right after.
-	word left = memory[n >> 3];
-	word right = memory[(n >> 3) + 1];
-	
-	// First, we assemble a mask to select the (left_length) least significant bytes of the left word.
-	// Then we shift those bytes to the left to make room for the bytes from the right word.
-	return ((left & ((1 << (left_length << 3)) - 1)) << right_length) | (right >> left_length);
+	return out;
 }
 
 /**
- * Returns the byte at a given offset in the VM memory.
- * @param n The index of the byte to retrieve.
- * @return The byte at the given index.
+ * Sets a word in the VM memory.
+ * @param addr The byte-indexed starting address of the destination in the VM memory.
+ * @param value The value to store in the VM memory.
  */
-char wvm_get_byte(word byte_offset) {
-	return (memory[byte_offset >> 4] >> (byte_offset % 16)) & 0xff;
+void wvm_set_word(word addr, word value) {
+	memory[addr]     = (value >> 7*8) & 0xff;
+	memory[addr + 1] = (value >> 6*8) & 0xff;
+	memory[addr + 2] = (value >> 5*8) & 0xff;
+	memory[addr + 3] = (value >> 4*8) & 0xff;
+	memory[addr + 4] = (value >> 3*8) & 0xff;
+	memory[addr + 5] = (value >> 2*8) & 0xff;
+	memory[addr + 6] = (value >> 1*8) & 0xff;
+	memory[addr + 7] =  value         & 0xff;
 }
 
 /**
@@ -131,7 +122,7 @@ void wvm_print_memory() {
 			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
 
 		printf("│\33[38;5;8m");
-		if (word == pc)
+		if (boffset == pc)
 			printf("\33[7m");
 		
 		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
