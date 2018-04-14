@@ -137,7 +137,6 @@ void wvm_increment_pc() {
  */
 bool wvm_tick() {
 	word instruction = wvm_get_word(pc);
-	printf("[%016llx]\n", instruction);
 	op_fn op = wvm_get_fn(instruction);
 	op(instruction);
 	return alive;
