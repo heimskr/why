@@ -11,6 +11,7 @@ void wvm_init_pc();
 lomg wvm_get_word(lomg n);
 char wvm_get_byte(lomg byte_offset);
 void wvm_print_memory();
+uint16_t wvm_get_opcode(lomg instruction);
 
 lomg *memory;
 size_t memsize;
