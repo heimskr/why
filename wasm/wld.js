@@ -162,7 +162,7 @@ class Linker {
 	finalizeOutput() {
 		const compiler = this.compiler;
 		compiler.meta[2] = Long.fromInt(this.codeOffset, true);
-		compiler.meta[3] = Long.fromInt([compiler.meta, compiler.handlers, this.data, compiler.code].reduce((a, b) => a + b.length, 0), true);
+		compiler.meta[3] = Long.fromInt([compiler.meta, compiler.handlers, this.data, compiler.code].reduce((a, b) => a + 8*b.length, 0), true);
 		return compiler.meta.concat(compiler.handlers).concat(this.data).concat(compiler.code);
 	}
 
