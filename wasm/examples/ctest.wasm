@@ -12,6 +12,6 @@ test: "Hello World!"
 
 #code
 
-!strprint()
+!strprint(&test)
 
 <halt>

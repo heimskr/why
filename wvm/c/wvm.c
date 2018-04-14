@@ -12,7 +12,8 @@ bool wvm_init(word length) {
 	pc = 0;
 	memsize = 0;
 	alive = 1;
-	return (memory = calloc(length * 8, sizeof(byte))) != NULL;
+	membytes = length * 8;
+	return (memory = calloc(membytes, sizeof(byte))) != NULL;
 }
 
 /**
@@ -52,10 +53,11 @@ int wvm_load(char *filename) {
 }
 
 /**
- * Sets the initial position of the program counter.
+ * Initializes the VM after a program is loaded.
  */
-void wvm_init_pc() {
+void wvm_init_vm() {
 	pc = offset_code;
+	registers[R_SP] = membytes - 8;
 }
 
 /**
@@ -135,6 +137,7 @@ void wvm_increment_pc() {
  */
 bool wvm_tick() {
 	word instruction = wvm_get_word(pc);
+	printf("[%016llx]\n", instruction);
 	op_fn op = wvm_get_fn(instruction);
 	op(instruction);
 	return alive;

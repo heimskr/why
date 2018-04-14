@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	wvm_load("ctest.why");
-	wvm_init_pc();
+	wvm_init_vm();
 	wvm_print_memory();
 
 	do {

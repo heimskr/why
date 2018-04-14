@@ -12,7 +12,7 @@ typedef uint8_t byte;
 bool wvm_init(word length);
 void wvm_free();
 int wvm_load(char *filename);
-void wvm_init_pc();
+void wvm_init_vm();
 word wvm_get_word(word addr);
 void wvm_set_word(word addr, word value);
 byte wvm_get_byte(word addr);
@@ -31,6 +31,7 @@ word offset_data;
 word offset_code;
 word offset_end;
 word registers[128];
+word membytes;
 bool alive;
 
 #endif
