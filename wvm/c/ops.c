@@ -168,47 +168,60 @@ void op_xori(word instruction) {
 }
 
 void op_lui(word instruction) {
-
+	IREGS();
+	rdv = ((word) imm) << 32;
 }
 
 void op_sl(word instruction) {
-
+	RREGS();
+	rdv = rsv < rtv;
 }
 
 void op_sle(word instruction) {
-
+	RREGS();
+	rdv = rsv <= rtv;
 }
 
 void op_seq(word instruction) {
-
+	RREGS();
+	rdv = rsv == rtv;
 }
 
 void op_slu(word instruction) {
-
+	// TODO: ???
+	RREGS();
+	rdv = ((uword) rsv) < (uword) rtv;
 }
 
 void op_sleu(word instruction) {
-
+	// Does this actually do anything differently from op_sle?
+	RREGS();
+	rdv = ((uword) rsv) <= (uword) rtv;
 }
 
 void op_sli(word instruction) {
-
+	IREGS();
+	rdv = rsv < (word) imm;
 }
 
 void op_slei(word instruction) {
-
+	IREGS();
+	rdv = rsv <= (word) imm;
 }
 
 void op_seqi(word instruction) {
-
+	IREGS();
+	rdv = rsv == (word) imm;
 }
 
 void op_slui(word instruction) {
-
+	IREGS();
+	rdv = ((uword) rsv) < (uword) imm;
 }
 
 void op_sleui(word instruction) {
-
+	IREGS();
+	rdv = ((uword) rsv) <= (uword) imm;
 }
 
 void op_j(word instruction) {
