@@ -8,6 +8,7 @@
 
 #define RREGS() reg_t rs, rt, rd; wvm_r_regs(instruction, &rs, &rt, &rd);
 #define IREGS() reg_t rs = wvm_i_rs(instruction); reg_t rd = wvm_i_rd(instruction); imm_t imm = wvm_i_imm(instruction);
+#define JREGS() reg_t rs = wvm_j_rs(instruction); imm_t addr = wvm_j_addr(instruction);
 #define rsv registers[rs]
 #define rtv registers[rt]
 #define rdv registers[rd]
@@ -61,7 +62,6 @@ void op_and(word instruction) {
 }
 
 void op_nand(word instruction) {
-
 	RREGS();
 	rdv = ~(rsv & rtv);
 }
@@ -69,7 +69,6 @@ void op_nand(word instruction) {
 void op_nor(word instruction) {
 	RREGS();
 	rdv = ~(rsv | rtv);
-
 }
 
 void op_not(word instruction) {
@@ -225,35 +224,53 @@ void op_sleui(word instruction) {
 }
 
 void op_j(word instruction) {
-
+	JREGS();
+	wvm_jump(addr);
 }
 
 void op_jc(word instruction) {
-
+	JREGS();
+	if (rsv)
+		wvm_jump(addr);
 }
 
 void op_jl(word instruction) {
-
+	JREGS();
+	wvm_link();
+	wvm_jump(addr);
 }
 
 void op_jlc(word instruction) {
-
+	JREGS();
+	if (rsv) {
+		wvm_link();
+		wvm_jump(addr);
+	}
 }
 
 void op_jr(word instruction) {
-
+	RREGS();
+	wvm_jump(rdv);
 }
 
 void op_jrc(word instruction) {
-
+	RREGS();
+	if (rsv)
+		wvm_jump(rdv);
 }
 
 void op_jrl(word instruction) {
-
+	RREGS();
+	wvm_link();
+	wvm_jump(rdv);
 }
 
 void op_jrlc(word instruction) {
-
+	RREGS();
+	if (rsv) {
+		wvm_link();
+		wvm_jump(rdv);
+	}
 }
 
 void op_c(word instruction) {

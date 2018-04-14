@@ -14,11 +14,13 @@ int wvm_load(char *filename);
 void wvm_init_pc();
 word wvm_get_word(word n);
 char wvm_get_byte(word byte_offset);
+void wvm_jump(word addr);
+void wvm_link();
 void wvm_print_memory();
 
 word *memory;
 size_t memsize;
-word pc; // in words, not bytes.
+word pc; // in bytes, not words.
 word ir;
 word offset_handlers;
 word offset_data;

@@ -55,7 +55,7 @@ int wvm_load(char *filename) {
  * Sets the initial position of the program counter.
  */
 void wvm_init_pc() {
-	pc = memory[2] >> 3;
+	pc = memory[2];
 }
 
 /**
@@ -98,6 +98,21 @@ char wvm_get_byte(word byte_offset) {
 }
 
 /**
+ * Jumps to a given (byte-indexed) address.
+ * @param addr An address in memory.
+ */
+void wvm_jump(word addr) {
+	pc = addr;
+}
+
+/**
+ * Stores the address of the next instruction in `$rt`.
+ */
+void wvm_link() {
+	registers[R_RT] = pc + 8;
+}
+
+/**
  * Prints all the memory to the console.
  */
 void wvm_print_memory() {
@@ -116,7 +131,7 @@ void wvm_print_memory() {
 			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
 
 		printf("│\33[38;5;8m");
-		if (i == pc)
+		if (word == pc)
 			printf("\33[7m");
 		
 		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
