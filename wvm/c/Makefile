@@ -15,3 +15,8 @@ clean:
 
 test: wvm
 	./wvm
+
+link:
+	../../wasm/wld.js ../../wasm/examples/ctest.wasm ../../wasm/examples/string.why -o ctest.why
+
+ltest: link test

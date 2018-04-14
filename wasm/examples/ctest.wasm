@@ -18,6 +18,26 @@ hw: "Hello World!"
 :: &bnl
 !$a0.
 :: &bnl
+:: &newline
+
+<>
+
+2 -> $a0
+:: &bnl
+!$a0 -> $a0
+:: &bnl
+:: &newline
+
+<>
+
+0 -> $s0
+$s0 -> $a0
+:: &bnl
+!$s0 -> $a0
+:: &bnl
+:: &newline
+
+<>
 
 : &strprint_test
 
