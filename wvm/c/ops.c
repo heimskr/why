@@ -6,16 +6,20 @@
 #include "instruction.h"
 #include "registers.h"
 
-#define REGS() reg_t rs, rt, rd; wvm_r_regs(instruction, &rs, &rt, &rd);
+#define RREGS() reg_t rs, rt, rd; wvm_r_regs(instruction, &rs, &rt, &rd);
+#define IREGS() reg_t rs = wvm_i_rs(instruction); reg_t rd = wvm_i_rd(instruction); imm_t imm = wvm_i_imm(instruction);
+#define rsv registers[rs]
+#define rtv registers[rt]
+#define rdv registers[rd]
 
 void op_add(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] + registers[rt];
+	RREGS();
+	rdv = rsv + rtv;
 }
 
 void op_sub(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] - registers[rt];
+	RREGS();
+	rdv = rsv - rtv;
 }
 
 void op_mult(word instruction) {
@@ -37,117 +41,130 @@ void op_multu(word instruction) {
 }
 
 void op_sll(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] << registers[rt];
+	RREGS();
+	rdv = rsv << rtv;
 }
 
 void op_srl(word instruction) {
-	REGS();
-	registers[rd] = ((uword) registers[rs]) >> ((uword) registers[rt]);
+	RREGS();
+	rdv = ((uword) rsv) >> (uword) rtv;
 }
 
 void op_sra(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] >> registers[rt];
+	RREGS();
+	rdv = rsv >> rtv;
 }
 
 void op_and(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] & registers[rt];
+	RREGS();
+	rdv = rsv & rtv;
 }
 
 void op_nand(word instruction) {
 
-	REGS();
-	registers[rd] = ~(registers[rs] & registers[rt]);
+	RREGS();
+	rdv = ~(rsv & rtv);
 }
 
 void op_nor(word instruction) {
-	REGS();
-	registers[rd] = ~(registers[rs] | registers[rt]);
+	RREGS();
+	rdv = ~(rsv | rtv);
 
 }
 
 void op_not(word instruction) {
 	reg_t rs = wvm_r_rs(instruction);
 	reg_t rd = wvm_r_rd(instruction);
-	registers[rd] = ~registers[rs];
+	rdv = ~rsv;
 }
 
 void op_or(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] | registers[rt];
-
+	RREGS();
+	rdv = rsv | rtv;
 }
 
 void op_xnor(word instruction) {
-	REGS();
-	registers[rd] = ~(registers[rs] ^ registers[rt]);
+	RREGS();
+	rdv = ~(rsv ^ rtv);
 }
 
 void op_xor(word instruction) {
-	REGS();
-	registers[rd] = registers[rs] ^ registers[rt];
+	RREGS();
+	rdv = rsv ^ rtv;
 }
 
 void op_addi(word instruction) {
-	
+	IREGS();
+	rdv = rsv + (word) imm;
 }
 
 void op_subi(word instruction) {
-
+	IREGS();
+	rdv = rsv - (word) imm;
 }
 
 void op_multi(word instruction) {
-
+	// TODO: see op_mult.
 }
 
 void op_addui(word instruction) {
-
+	IREGS();
+	// Does this do anything?
+	rdv = ((uword) rsv) + (uword) imm;
 }
 
 void op_subui(word instruction) {
-
+	IREGS();
+	rdv = ((uword) rsv) - (uword) imm;
 }
 
 void op_multui(word instruction) {
-
+	// TODO
 }
 
 void op_slli(word instruction) {
-
+	IREGS();
+	rdv = rsv << (word) imm;
 }
 
 void op_srli(word instruction) {
-
+	IREGS();
+	rdv = ((uword) rsv) >> (uword) imm;
 }
 
 void op_srai(word instruction) {
-
+	IREGS();
+	rdv = rsv >> (word) imm;
 }
 
 void op_andi(word instruction) {
-
+	IREGS();
+	rdv = rsv & (word) imm;
 }
 
 void op_nandi(word instruction) {
-
+	IREGS();
+	rdv = ~(rsv & (word) imm);
 }
 
 void op_nori(word instruction) {
-
+	IREGS();
+	rdv = ~(rsv | (word) imm);
 }
 
 void op_ori(word instruction) {
-
+	IREGS();
+	rdv = rsv | (word) imm;
 }
 
 void op_xnori(word instruction) {
-
+	IREGS();
+	rdv = ~(rsv ^ (word) imm);
 }
 
 void op_xori(word instruction) {
-
+	IREGS();
+	rdv = rsv ^ (word) imm;
 }
 
 void op_lui(word instruction) {
