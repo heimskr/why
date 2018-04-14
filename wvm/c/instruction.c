@@ -73,11 +73,11 @@ op_fn wvm_get_fn(word instruction) {
 				case 6:  return op_xor;
 				case 8:  return op_land;
 				case 9:  return op_lnand;
-				case 10:  return op_lnor;
-				case 11:  return op_lnot;
-				case 12:  return op_lor;
-				case 13:  return op_lxnor;
-				case 14:  return op_lxor;
+				case 10: return op_lnor;
+				case 11: return op_lnot;
+				case 12: return op_lor;
+				case 13: return op_lxnor;
+				case 14: return op_lxor;
 			}
 		case 3:  return op_addi;
 		case 4:  return op_subi;

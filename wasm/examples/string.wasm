@@ -64,6 +64,7 @@ sub strchr() {
 	// $a0: pointer to string to search
 	// $a1: character to search for
 	// $r0: pointer to the first instance of the character if found; 0 otherwise
+	// $r1: 1 if a character was found; 0 otherwise
 	// $t0: temporary storage
 
 	@_strchr_loop
@@ -75,8 +76,14 @@ sub strchr() {
 		$a0++
 	: &_strchr_loop
 
-	@_strchr_found $a0 -> $r0; done
-	@_strchr_failed 0 -> $r0
+	@_strchr_found
+		$a0 -> $r0
+		1 -> $r1
+		done
+	@_strchr_failed
+		0 -> $r0
+		0 -> $r1
+		done
 }
 
 sub strprint() {
@@ -92,6 +99,23 @@ sub strprint() {
 		$a0++
 		: &_strprint_loop
 }
+
+/*
+sub strcpy() {
+	// $a0: pointer to source string
+	// $a1: pointer to destination
+	// $t0: temporary storage
+
+	@_strcpy_loop
+		[$a0] -> $t0 /b
+		: &_strcpy_copy if $t0
+		done
+		@_strcpy_copy
+		$t0 -> [$a1] /b
+		$a0++
+		$a1++
+		: &_strcpy_loop
+}//*/
 
 sub bprint() {
 	: &_bprint_true if $a0

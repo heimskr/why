@@ -166,6 +166,19 @@ const Parser = module.exports = {
 		return null;
 	},
 
+	format(instruction) {
+		const {type, op, rt, rs, rd, funct, imm, addr} = instruction;
+		if (type == "r") {
+			return Parser.formatR(op, rt, rs, rd, funct);
+		} else if (type == "i") {
+			return Parser.formatI(op, rs, rd, imm);
+		} else if (type == "j") {
+			return Parser.formatJ(op, rs, addr);
+		}
+
+		return "?";
+	},
+
 	formatR(op, rt, rs, rd, funct) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;

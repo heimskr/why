@@ -39,6 +39,12 @@ $s0 -> $a0
 
 <>
 
+&hw -> $a0
+&`end -> $a1
+//:: &strcpy
+
+<>
+
 : &strprint_test
 
 <>

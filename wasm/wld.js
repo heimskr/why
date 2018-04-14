@@ -26,6 +26,7 @@ class Linker {
 		this.out = out;
 		this.codeOffset = 0;
 		this.labels = { };
+		this.end = null;
 	}
 
 	link() {
@@ -103,7 +104,7 @@ class Linker {
 
 			library.code = [];
 			library.parsed.code.forEach((instruction) => {
-				if (instruction.flags == 1) {
+				if (instruction.flags & 1) {
 					let addr;
 
 					if (instruction.type == "j") {
@@ -115,7 +116,13 @@ class Linker {
 					}
 
 					instruction[instruction.type == "j"? "addr" : "imm"] = adjust(addr);
-					instruction.flags = 0;
+					instruction.flags &= ~1;
+				}
+
+				if (instruction.flags & 2) {
+					console.log("length:", this.getLength());
+					instruction[instruction.type == "j"? "addr" : "imm"] = this.getLength();
+					instruction.flags &= ~2;
 				}
 
 				library.code.push(this.compiler.unparseInstruction(instruction));
@@ -133,6 +140,7 @@ class Linker {
 			codeStart += library.code.length * 8;
 		});
 
+		this.end = codeStart;
 		return expanded;
 	}
 
@@ -153,6 +161,8 @@ class Linker {
 
 			this.compiler.offsets[name] = this.labels[name];
 		});
+
+		this.compiler.offsets["`end"] = this.end;
 	}
 
 	concatenateCode() {
@@ -162,8 +172,13 @@ class Linker {
 	finalizeOutput() {
 		const compiler = this.compiler;
 		compiler.meta[2] = Long.fromInt(this.codeOffset, true);
-		compiler.meta[3] = Long.fromInt([compiler.meta, compiler.handlers, this.data, compiler.code].reduce((a, b) => a + 8*b.length, 0), true);
+		compiler.meta[3] = this.getLength();
 		return compiler.meta.concat(compiler.handlers).concat(this.data).concat(compiler.code);
+	}
+
+	getLength() {
+		const {compiler: {meta, handlers, code}, data} = this;
+		return Long.fromInt([meta, handlers, data, code].reduce((a, b) => a + 8*b.length, 0), true)
 	}
 
 	warn(...args) {
