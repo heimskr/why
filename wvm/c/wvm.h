@@ -5,23 +5,25 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef long long int lomg;
+typedef int64_t word;
+typedef uint64_t uword;
 
-bool wvm_init(lomg length);
+bool wvm_init(word length);
 void wvm_free();
 int wvm_load(char *filename);
 void wvm_init_pc();
-lomg wvm_get_word(lomg n);
-char wvm_get_byte(lomg byte_offset);
+word wvm_get_word(word n);
+char wvm_get_byte(word byte_offset);
 void wvm_print_memory();
 
-lomg *memory;
+word *memory;
 size_t memsize;
-lomg pc; // in words, not bytes.
-lomg ir;
-lomg offset_handlers;
-lomg offset_data;
-lomg offset_code;
-lomg offset_end;
+word pc; // in words, not bytes.
+word ir;
+word offset_handlers;
+word offset_data;
+word offset_code;
+word offset_end;
+word registers[128];
 
 #endif

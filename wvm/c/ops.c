@@ -3,247 +3,276 @@
  ***********************************************/
 
 #include "ops.h"
+#include "instruction.h"
+#include "registers.h"
 
-void op_add(lomg instruction) {
+void op_add(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
+	registers[rd] = registers[rs] + registers[rt];
+}
+
+void op_sub(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
+	registers[rd] = registers[rs] - registers[rt];
+}
+
+void op_mult(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
+	registers[rd] = registers[rs] + registers[rt];
+}
+
+void op_addu(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
 
 }
 
-void op_sub(lomg instruction) {
+void op_subu(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
 
 }
 
-void op_mult(lomg instruction) {
+void op_multu(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
 
 }
 
-void op_addu(lomg instruction) {
+void op_sll(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
 
 }
 
-void op_subu(lomg instruction) {
+void op_srl(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
 
 }
 
-void op_multu(lomg instruction) {
+void op_sra(word instruction) {
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rt = wvm_r_rt(instruction);
+	reg_t rd = wvm_r_rd(instruction);
 
 }
 
-void op_sll(lomg instruction) {
+void op_and(word instruction) {
 
 }
 
-void op_srl(lomg instruction) {
+void op_nand(word instruction) {
 
 }
 
-void op_sra(lomg instruction) {
+void op_nor(word instruction) {
 
 }
 
-void op_and(lomg instruction) {
+void op_not(word instruction) {
 
 }
 
-void op_nand(lomg instruction) {
+void op_or(word instruction) {
 
 }
 
-void op_nor(lomg instruction) {
+void op_xnor(word instruction) {
 
 }
 
-void op_not(lomg instruction) {
+void op_xor(word instruction) {
 
 }
 
-void op_or(lomg instruction) {
+void op_addi(word instruction) {
 
 }
 
-void op_xnor(lomg instruction) {
+void op_subi(word instruction) {
 
 }
 
-void op_xor(lomg instruction) {
+void op_multi(word instruction) {
 
 }
 
-void op_addi(lomg instruction) {
+void op_addui(word instruction) {
 
 }
 
-void op_subi(lomg instruction) {
+void op_subui(word instruction) {
 
 }
 
-void op_multi(lomg instruction) {
+void op_multui(word instruction) {
 
 }
 
-void op_addui(lomg instruction) {
+void op_slli(word instruction) {
 
 }
 
-void op_subui(lomg instruction) {
+void op_srli(word instruction) {
 
 }
 
-void op_multui(lomg instruction) {
+void op_srai(word instruction) {
 
 }
 
-void op_slli(lomg instruction) {
+void op_andi(word instruction) {
 
 }
 
-void op_srli(lomg instruction) {
+void op_nandi(word instruction) {
 
 }
 
-void op_srai(lomg instruction) {
+void op_nori(word instruction) {
 
 }
 
-void op_andi(lomg instruction) {
+void op_ori(word instruction) {
 
 }
 
-void op_nandi(lomg instruction) {
+void op_xnori(word instruction) {
 
 }
 
-void op_nori(lomg instruction) {
+void op_xori(word instruction) {
 
 }
 
-void op_ori(lomg instruction) {
+void op_lui(word instruction) {
 
 }
 
-void op_xnori(lomg instruction) {
+void op_sl(word instruction) {
 
 }
 
-void op_xori(lomg instruction) {
+void op_sle(word instruction) {
 
 }
 
-void op_lui(lomg instruction) {
+void op_seq(word instruction) {
 
 }
 
-void op_sl(lomg instruction) {
+void op_slu(word instruction) {
 
 }
 
-void op_sle(lomg instruction) {
+void op_sleu(word instruction) {
 
 }
 
-void op_seq(lomg instruction) {
+void op_sli(word instruction) {
 
 }
 
-void op_slu(lomg instruction) {
+void op_slei(word instruction) {
 
 }
 
-void op_sleu(lomg instruction) {
+void op_seqi(word instruction) {
 
 }
 
-void op_sli(lomg instruction) {
+void op_slui(word instruction) {
 
 }
 
-void op_slei(lomg instruction) {
+void op_sleui(word instruction) {
 
 }
 
-void op_seqi(lomg instruction) {
+void op_j(word instruction) {
 
 }
 
-void op_slui(lomg instruction) {
+void op_jc(word instruction) {
 
 }
 
-void op_sleui(lomg instruction) {
+void op_jl(word instruction) {
 
 }
 
-void op_j(lomg instruction) {
+void op_jlc(word instruction) {
 
 }
 
-void op_jc(lomg instruction) {
+void op_jr(word instruction) {
 
 }
 
-void op_jl(lomg instruction) {
+void op_jrc(word instruction) {
 
 }
 
-void op_jlc(lomg instruction) {
+void op_jrl(word instruction) {
 
 }
 
-void op_jr(lomg instruction) {
+void op_jrlc(word instruction) {
 
 }
 
-void op_jrc(lomg instruction) {
+void op_c(word instruction) {
 
 }
 
-void op_jrl(lomg instruction) {
+void op_l(word instruction) {
 
 }
 
-void op_jrlc(lomg instruction) {
+void op_s(word instruction) {
 
 }
 
-void op_c(lomg instruction) {
+void op_cb(word instruction) {
 
 }
 
-void op_l(lomg instruction) {
+void op_lb(word instruction) {
 
 }
 
-void op_s(lomg instruction) {
+void op_sb(word instruction) {
 
 }
 
-void op_cb(lomg instruction) {
+void op_li(word instruction) {
 
 }
 
-void op_lb(lomg instruction) {
+void op_si(word instruction) {
 
 }
 
-void op_sb(lomg instruction) {
+void op_lbi(word instruction) {
 
 }
 
-void op_li(lomg instruction) {
+void op_sbi(word instruction) {
 
 }
 
-void op_si(lomg instruction) {
-
-}
-
-void op_lbi(lomg instruction) {
-
-}
-
-void op_sbi(lomg instruction) {
-
-}
-
-void op_set(lomg instruction) {
+void op_set(word instruction) {
 
 }

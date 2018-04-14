@@ -9,23 +9,23 @@ typedef enum ins_type_enum ins_type;
 typedef uint16_t opcode_t;
 typedef uint32_t imm_t;
 
-opcode_t wvm_get_opcode(lomg instruction);
+opcode_t wvm_get_opcode(word instruction);
 ins_type wvm_get_type(opcode_t opcode);
-op_fn wvm_get_fn(lomg instruction);
+op_fn wvm_get_fn(word instruction);
 
-reg_t wvm_r_rt(lomg instruction);
-reg_t wvm_r_rs(lomg instruction);
-reg_t wvm_r_rd(lomg instruction);
-char wvm_r_flags(lomg instruction);
-char wvm_r_func(lomg instruction);
+reg_t wvm_r_rt(word instruction);
+reg_t wvm_r_rs(word instruction);
+reg_t wvm_r_rd(word instruction);
+char wvm_r_flags(word instruction);
+char wvm_r_func(word instruction);
 
-char wvm_i_flags(lomg instruction);
-reg_t wvm_i_rs(lomg instruction);
-reg_t wvm_i_rd(lomg instruction);
-imm_t wvm_i_imm(lomg instruction);
+char wvm_i_flags(word instruction);
+reg_t wvm_i_rs(word instruction);
+reg_t wvm_i_rd(word instruction);
+imm_t wvm_i_imm(word instruction);
 
-reg_t wvm_j_rs(lomg instruction);
-char wvm_j_flags(lomg instruction);
-imm_t wvm_j_addr(lomg instruction);
+reg_t wvm_j_rs(word instruction);
+char wvm_j_flags(word instruction);
+imm_t wvm_j_addr(word instruction);
 
 #endif

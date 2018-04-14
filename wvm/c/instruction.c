@@ -11,7 +11,7 @@
  * @param instruction A raw instruction.
  * @return The instruction's opcode.
  */
-opcode_t wvm_get_opcode(lomg instruction) {
+opcode_t wvm_get_opcode(word instruction) {
 	return instruction >> 52;
 }
 
@@ -46,7 +46,7 @@ ins_type wvm_get_type(opcode_t opcode) {
  * @param instruction A raw instruction.
  * @return A pointer to a function that handles the instruction.
  */
-op_fn wvm_get_fn(lomg instruction) {
+op_fn wvm_get_fn(word instruction) {
 	switch (wvm_get_opcode(instruction)) {
 		case 1:
 			switch (wvm_r_func(instruction)) {
@@ -136,7 +136,7 @@ op_fn wvm_get_fn(lomg instruction) {
  * @param instruction An R-type instruction.
  * @return A register ID.
  */
-reg_t wvm_r_rt(lomg instruction) {
+reg_t wvm_r_rt(word instruction) {
 	return (instruction >> 45) & 127; 
 }
 
@@ -145,7 +145,7 @@ reg_t wvm_r_rt(lomg instruction) {
  * @param instruction An R-type instruction.
  * @return A register ID.
  */
-reg_t wvm_r_rs(lomg instruction) {
+reg_t wvm_r_rs(word instruction) {
 	return (instruction >> 38) & 127; 
 }
 
@@ -154,7 +154,7 @@ reg_t wvm_r_rs(lomg instruction) {
  * @param instruction An R-type instruction.
  * @return A register ID.
  */
-reg_t wvm_r_rd(lomg instruction) {
+reg_t wvm_r_rd(word instruction) {
 	return (instruction >> 31) & 127; 
 }
 
@@ -163,7 +163,7 @@ reg_t wvm_r_rd(lomg instruction) {
  * @param instruction An R-type instruction.
  * @return A set of linker flags.
  */
-char wvm_r_flags(lomg instruction) {
+char wvm_r_flags(word instruction) {
 	return (instruction >> 12) & 63;
 }
 
@@ -172,7 +172,7 @@ char wvm_r_flags(lomg instruction) {
  * @param instruction An R-type instruction.
  * @return A function ID.
  */
-char wvm_r_func(lomg instruction) {
+char wvm_r_func(word instruction) {
 	return instruction & 4095;
 }
 
@@ -181,7 +181,7 @@ char wvm_r_func(lomg instruction) {
  * @param instruction An I-type instruction.
  * @return A set of linker flags.
  */
-char wvm_i_flags(lomg instruction) {
+char wvm_i_flags(word instruction) {
 	return (instruction >> 46) & 63;
 }
 
@@ -190,7 +190,7 @@ char wvm_i_flags(lomg instruction) {
  * @param instruction An I-type instruction.
  * @return A register ID.
  */
-reg_t wvm_i_rs(lomg instruction) {
+reg_t wvm_i_rs(word instruction) {
 	return (instruction >> 39) & 127;
 }
 
@@ -199,7 +199,7 @@ reg_t wvm_i_rs(lomg instruction) {
  * @param instruction An I-type instruction.
  * @return A register ID.
  */
-reg_t wvm_i_rd(lomg instruction) {
+reg_t wvm_i_rd(word instruction) {
 	return (instruction >> 32) & 127;
 }
 
@@ -208,7 +208,7 @@ reg_t wvm_i_rd(lomg instruction) {
  * @param instruction An I-type instruction.
  * @return An immediate value.
  */
-imm_t wvm_i_imm(lomg instruction) {
+imm_t wvm_i_imm(word instruction) {
 	return instruction & 0xffffffff;
 }
 
@@ -217,7 +217,7 @@ imm_t wvm_i_imm(lomg instruction) {
  * @param instruction A J-type instruction.
  * @return A register ID.
  */
-reg_t wvm_j_rs(lomg instruction) {
+reg_t wvm_j_rs(word instruction) {
 	return (instruction >> 45) & 127;
 }
 
@@ -226,7 +226,7 @@ reg_t wvm_j_rs(lomg instruction) {
  * @param instruction A J-type instruction.
  * @return A set of linker flags.
  */
-char wvm_j_flags(lomg instruction) {
+char wvm_j_flags(word instruction) {
 	return (instruction >> 32) & 63;
 }
 
@@ -235,6 +235,6 @@ char wvm_j_flags(lomg instruction) {
  * @param instruction A J-type instruction.
  * @return An address value.
  */
-imm_t wvm_j_addr(lomg instruction) {
+imm_t wvm_j_addr(word instruction) {
 	return instruction & 0xffffffff;
 }

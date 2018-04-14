@@ -8,11 +8,11 @@
  * @param length The number of longs to allocate.
  * @return Whether the allocation succeeded.
  */
-bool wvm_init(lomg length) {
+bool wvm_init(word length) {
 	pc = 0;
 	ir = 0;
 	memsize = 0;
-	return (memory = calloc(length, sizeof(lomg))) != NULL;
+	return (memory = calloc(length, sizeof(word))) != NULL;
 }
 
 /**
@@ -39,7 +39,7 @@ int wvm_load(char *filename) {
 	memsize = 0;
 	char line[20];
 	while (fgets(line, 18, file)) {
-		lomg instr = strtol(line, NULL, 16);
+		word instr = strtol(line, NULL, 16);
 		memory[memsize++] = instr;
 	}
 
@@ -63,7 +63,7 @@ void wvm_init_pc() {
  * @param n The byte-index of the word to retrieve.
  * @return The word at the given index.
  */
-lomg wvm_get_word(lomg n) {
+word wvm_get_word(word n) {
 	if (n % 8 == 0) {
 		// Everything is so much simpler when the index is word aligned.
 		return memory[n >> 3];
@@ -80,8 +80,8 @@ lomg wvm_get_word(lomg n) {
 	char left_length = 8 - right_length;
 
 	// The left half is earlier in memory, the right half is right after.
-	lomg left = memory[n >> 3];
-	lomg right = memory[(n >> 3) + 1];
+	word left = memory[n >> 3];
+	word right = memory[(n >> 3) + 1];
 	
 	// First, we assemble a mask to select the (left_length) least significant bytes of the left word.
 	// Then we shift those bytes to the left to make room for the bytes from the right word.
@@ -93,7 +93,7 @@ lomg wvm_get_word(lomg n) {
  * @param n The index of the byte to retrieve.
  * @return The byte at the given index.
  */
-char wvm_get_byte(lomg byte_offset) {
+char wvm_get_byte(word byte_offset) {
 	return (memory[byte_offset >> 4] >> (byte_offset % 16)) & 0xff;
 }
 
@@ -108,8 +108,8 @@ void wvm_print_memory() {
 	printf("       \33[1mDecimal\33[0m        │\n");
 	printf("┌──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
 	for (int i = 0; i < memsize; i++) {
-		lomg boffset = i << 3;
-		lomg word = wvm_get_word(boffset);
+		word boffset = i << 3;
+		word word = wvm_get_word(boffset);
 		if (boffset == offset_handlers || boffset == offset_data)
 			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
 		else if (boffset == offset_code)
