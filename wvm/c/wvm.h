@@ -19,6 +19,7 @@ byte wvm_get_byte(word addr);
 void wvm_set_byte(word addr, byte value);
 void wvm_jump(word addr);
 void wvm_link();
+void wvm_increment_pc();
 bool wvm_tick();
 void wvm_print_memory();
 

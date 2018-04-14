@@ -123,13 +123,20 @@ void wvm_link() {
 }
 
 /**
+ * Increments the program counter by one word.
+ */
+void wvm_increment_pc() {
+	pc += 8;
+}
+
+/**
  * Executes the next instruction.
  * @return Whether to continue to the next instruction.
  */
 bool wvm_tick() {
 	word instruction = wvm_get_word(pc);
-	printf("instruction: %016llx\n", instruction);
-	alive = 0;
+	op_fn op = wvm_get_fn(instruction);
+	op(instruction);
 	return alive;
 }
 

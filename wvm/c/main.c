@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "wvm.h"
 
 int main(int argc, char *argv[]) {
@@ -10,8 +11,13 @@ int main(int argc, char *argv[]) {
 
 	wvm_load("../../wasm/compiled/megafib.why");
 	wvm_init_pc();
-
 	wvm_print_memory();
+
+	do {
+		// printf("\33[2J\33[H");
+		// wvm_print_memory();
+		// usleep(5000);
+	} while (wvm_tick());
 
 	wvm_free();
 
