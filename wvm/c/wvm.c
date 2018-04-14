@@ -40,6 +40,11 @@ int wvm_load(char *filename) {
 		memory[memsize++] = instr;
 	}
 
+	offset_handlers = wvm_get_word(0);
+	offset_data = wvm_get_word(8);
+	offset_code = wvm_get_word(16);
+	offset_end = wvm_get_word(24);
+
 	return memsize;
 }
 
@@ -48,7 +53,6 @@ int wvm_load(char *filename) {
  */
 void wvm_init_pc() {
 	pc = memory[2] >> 3;
-	printf("PC = %lld\n", pc);
 }
 
 /**
@@ -96,13 +100,33 @@ void wvm_print_memory() {
 	printf("       │    \33[1mHexadecimal\33[0m     │      \33[1mBinary\33[0m      │       \33[1mDecimal\33[0m        │\n");
 	printf("┌──────┼────────────────────┼──────────────────┼──────────────────────┤\n");
 	for (int i = 0; i < memsize; i++) {
-		lomg word = wvm_get_word(i << 3);
-		printf("│\33[38;5;8m %04d \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", i << 3, word);
+		lomg boffset = i << 3;
+		lomg word = wvm_get_word(boffset);
+		if (boffset == offset_handlers || boffset == offset_data || boffset == offset_code) {
+			printf("├──────┼────────────────────┼──────────────────┼──────────────────────┤\n");
+		}
+
+		printf("│\33[38;5;8m");
+		if (i == pc) {
+			printf("\33[7m");
+		}
+		
+		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
 		for (int j = 15; j >= 0; j--) {
 			printf("%d", (int) (word >> j) & 1);
 		}
 
-		printf("\33[0m │ \33[38;5;240m%20lld\33[0m │\n", word);
+		printf("\33[0m │ \33[38;5;240m%20lld\33[0m │", word);
+
+		if (boffset == offset_handlers) {
+			printf(" Handlers");
+		} else if (boffset == offset_data) {
+			printf(" Data");
+		} else if (boffset == offset_code) {
+			printf(" Code");
+		}
+
+		printf("\n");
 	}
 	printf("└──────┴────────────────────┴──────────────────┴──────────────────────┘\n");
 }
