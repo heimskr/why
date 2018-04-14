@@ -6,99 +6,92 @@
 #include "instruction.h"
 #include "registers.h"
 
+#define REGS() reg_t rs, rt, rd; wvm_r_regs(instruction, &rs, &rt, &rd);
+
 void op_add(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
+	REGS();
 	registers[rd] = registers[rs] + registers[rt];
 }
 
 void op_sub(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
+	REGS();
 	registers[rd] = registers[rs] - registers[rt];
 }
 
 void op_mult(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-	registers[rd] = registers[rs] + registers[rt];
+	// TODO: catching overflow is hard.
 }
 
 void op_addu(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-
+	// TODO: signed arithmetic and unsigned arithmetic are pretty much the same?
+	// Unless they're not? It's 3:51 AM and I'm tired.
+	op_add(instruction);
 }
 
 void op_subu(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-
+	op_sub(instruction);
 }
 
 void op_multu(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-
+	op_mult(instruction);
 }
 
 void op_sll(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-
+	REGS();
+	registers[rd] = registers[rs] << registers[rt];
 }
 
 void op_srl(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-
+	REGS();
+	registers[rd] = ((uword) registers[rs]) >> ((uword) registers[rt]);
 }
 
 void op_sra(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rt = wvm_r_rt(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-
+	REGS();
+	registers[rd] = registers[rs] >> registers[rt];
 }
 
 void op_and(word instruction) {
-
+	REGS();
+	registers[rd] = registers[rs] & registers[rt];
 }
 
 void op_nand(word instruction) {
 
+	REGS();
+	registers[rd] = ~(registers[rs] & registers[rt]);
 }
 
 void op_nor(word instruction) {
+	REGS();
+	registers[rd] = ~(registers[rs] | registers[rt]);
 
 }
 
 void op_not(word instruction) {
-
+	reg_t rs = wvm_r_rs(instruction);
+	reg_t rd = wvm_r_rd(instruction);
+	registers[rd] = ~registers[rs];
 }
 
 void op_or(word instruction) {
+	REGS();
+	registers[rd] = registers[rs] | registers[rt];
 
 }
 
 void op_xnor(word instruction) {
-
+	REGS();
+	registers[rd] = ~(registers[rs] ^ registers[rt]);
 }
 
 void op_xor(word instruction) {
-
+	REGS();
+	registers[rd] = registers[rs] ^ registers[rt];
 }
 
 void op_addi(word instruction) {
-
+	
 }
 
 void op_subi(word instruction) {

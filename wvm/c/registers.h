@@ -1,6 +1,6 @@
 #ifndef __REGISTERS_H__
 #define __REGISTERS_H__
-typedef char reg_t;
+typedef unsigned char reg_t;
 
 #define R_0 0
 #define R_G 1

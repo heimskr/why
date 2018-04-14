@@ -16,6 +16,7 @@ op_fn wvm_get_fn(word instruction);
 reg_t wvm_r_rt(word instruction);
 reg_t wvm_r_rs(word instruction);
 reg_t wvm_r_rd(word instruction);
+void wvm_r_regs(word instruction, reg_t *rs, reg_t *rt, reg_t *rd);
 char wvm_r_flags(word instruction);
 char wvm_r_func(word instruction);
 

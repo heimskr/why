@@ -159,6 +159,19 @@ reg_t wvm_r_rd(word instruction) {
 }
 
 /**
+ * Decodes all three registers of an R-type instruction at once.
+ * @param instruction An R-type instruction.
+ * @param rs A pointer to the rs ID.
+ * @param rt A pointer to the rt ID.
+ * @param rd A pointer to the rd ID.
+ */
+void wvm_r_regs(word instruction, reg_t *rs, reg_t *rt, reg_t *rd) {
+	*rs = wvm_r_rs(instruction);
+	*rt = wvm_r_rt(instruction);
+	*rd = wvm_r_rd(instruction);
+}
+
+/**
  * Returns the linker flags of an R-type instruction.
  * @param instruction An R-type instruction.
  * @return A set of linker flags.
