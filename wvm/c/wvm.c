@@ -105,39 +105,34 @@ void wvm_print_memory() {
 	for (int i = 0; i < memsize; i++) {
 		lomg boffset = i << 3;
 		lomg word = wvm_get_word(boffset);
-		if (boffset == offset_handlers || boffset == offset_data) {
+		if (boffset == offset_handlers || boffset == offset_data)
 			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
-		} else if (boffset == offset_code) {
+		else if (boffset == offset_code)
 			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
-		}
 
 		printf("│\33[38;5;8m");
-		if (i == pc) {
+		if (i == pc)
 			printf("\33[7m");
-		}
 		
 		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
-		if (boffset < offset_code) {
+		if (boffset < offset_code)
 			printf(" ");
-		}
 
 		for (int j = 63; j >= 0; j--) {
 			printf("%d", (int) (word >> j) & 1);
-			if (j == 52 && boffset >= offset_code) {
+			if (j == 52 && boffset >= offset_code)
 				printf("\33[38;5;238m│\33[38;5;250m");
-			}
 		}
 
 		printf("\33[0m │ \33[38;5;240m%20lld\33[0m │", word);
 
-		if (boffset == offset_handlers) {
+		if (boffset == offset_handlers)
 			printf(" Handlers");
-		} else if (boffset == offset_data) {
+		else if (boffset == offset_data)
 			printf(" Data");
-		} else if (boffset == offset_code) {
+		else if (boffset == offset_code)
 			printf(" Code");
-		}
-
+		
 		printf("\n");
 	}
 	printf("└──────┴────────────────────┴%s┴──────────────────────┘\n", binsep);
