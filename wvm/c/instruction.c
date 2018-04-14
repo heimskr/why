@@ -41,14 +41,95 @@ ins_type wvm_get_type(opcode_t opcode) {
 	return I;
 }
 
-// /**
-//  * Returns a pointer to the function that handles a given instruction.
-//  * @param instruction A raw instruction.
-//  * @return A pointer to a function that handles the instruction.
-//  */
-// op_fn wvm_get_fn(lomg instruction) {
-// 	
-// }
+/**
+ * Returns a pointer to the function that handles a given instruction.
+ * @param instruction A raw instruction.
+ * @return A pointer to a function that handles the instruction.
+ */
+op_fn wvm_get_fn(lomg instruction) {
+	switch (wvm_get_opcode(instruction)) {
+		case 1:
+			switch (wvm_r_func(instruction)) {
+				case 0: return op_add;
+				case 1: return op_sub;
+				case 2: return op_mult;
+				case 3: return op_addu;
+				case 4: return op_subu;
+				case 5: return op_multu;
+				case 6: return op_sll;
+				case 7: return op_srl;
+				case 8: return op_sra;
+			}
+		case 2:
+			switch (wvm_r_func(instruction)) {
+				case 0: return op_and;
+				case 1: return op_nand;
+				case 2: return op_nor;
+				case 3: return op_not;
+				case 4: return op_or;
+				case 5: return op_xnor;
+				case 6: return op_xor;
+			}
+		case 3:  return op_addi;
+		case 4:  return op_subi;
+		case 5:  return op_multi;
+		case 6:  return op_andi;
+		case 7:  return op_nandi;
+		case 8:  return op_nori;
+		case 9:  return op_ori;
+		case 10: return op_xnori;
+		case 11: return op_xori;
+		// I guess there's no instruction with opcode 12. Hmm.
+		case 13: return op_lui;
+		case 14:
+			switch (wvm_r_func(instruction)) {
+				case 0: return op_sl;
+				case 1: return op_sle;
+				case 2: return op_seq;
+				case 3: return op_slu;
+				case 4: return op_sleu;
+			}
+		case 15: return op_j;
+		case 16: return op_jc;
+		case 17:
+			switch (wvm_r_func(instruction)) {
+				case 0: return op_jr;
+				case 1: return op_jrc;
+				case 2: return op_jrl;
+				case 3: return op_jrlc;
+			}
+		case 18:
+			switch (wvm_r_func(instruction)) {
+				case 0: return op_c;
+				case 1: return op_l;
+				case 2: return op_s;
+				case 3: return op_cb;
+				case 4: return op_lb;
+				case 5: return op_sb;
+			}
+		case 19: return op_li;
+		case 20: return op_si;
+		case 21: return op_set;
+		case 22: return op_addui;
+		case 23: return op_subui;
+		case 24: return op_multui;
+		case 25: return op_sli;
+		case 26: return op_slei;
+		case 27: return op_seqi;
+		case 28: return op_slui;
+		case 29: return op_sleui;
+		// 30 and 31 are also missing.
+		case 32: return op_jl;
+		case 33: return op_jlc;
+		case 34: return op_slli;
+		case 35: return op_srli;
+		case 36: return op_srai;
+		case 37: return op_lbi;
+		case 38: return op_sbi;
+	}
+
+	return NULL;
+}
 
 /**
  * Returns the `rt` register of an R-type instruction.
