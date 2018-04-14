@@ -183,6 +183,13 @@ const Parser = module.exports = {
 		if (op == "or")    return rs == "$0"? `${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}` : alt_op("|");
 		if (op == "xnor")  return alt_op("~x");
 		if (op == "xor")   return alt_op("x");
+		if (op == "land")  return alt_op("&&");
+		if (op == "lnand") return alt_op("!&&");
+		if (op == "lnor")  return alt_op("!||");
+		if (op == "lnot")  return rs == rd? `${Parser.colorOper("!") + chalk.yellow(rs)}.` : `${Parser.colorOper("!") + chalk.yellow(rs)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "lor")   return rs == "$0"? `${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}` : alt_op("||");
+		if (op == "lxnor") return alt_op("!xx");
+		if (op == "lxor")  return alt_op("xx");
 		if (op == "sll")   return alt_op("<<");
 		if (op == "srl")   return alt_op(">>>");
 		if (op == "sra")   return alt_op(">>");

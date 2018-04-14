@@ -226,6 +226,34 @@ class WVM {
 		this.registers[rd] = this.registers[rs].xor(this.registers[rt]);
 	}
 
+	op_land(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE;
+	}
+
+	op_lnand(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO;
+	}
+
+	op_lnor(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO;
+	}
+
+	op_lnot(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].eq(0)? Long.ONE : Long.ZERO;
+	}
+
+	op_lor(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE;
+	}
+
+	op_lxnor(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO;
+	}
+
+	op_lxor(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE;
+	}
+
 	op_addi(rs, rd, imm) {
 		this.registers[rd] = this.registers[rs].toSigned().add(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
 	}

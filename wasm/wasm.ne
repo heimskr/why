@@ -122,13 +122,15 @@ pair[OPER]		-> reg _ $OPER _ reg						{% d => [d[0], d[4]] %}
 
 riap[OPER]		-> pair[$OPER]								{% d => d[0].reverse() %}
 
-op				-> op_add | op_sub | op_mult | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
-				 | op_addi | op_subi | op_multi | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
+op				-> op_add | op_sub | op_mult | op_addi | op_subi | op_multi
+				 | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
+				 | op_land | op_lnand | op_lnor | op_lnot | op_lor | op_lxnor | op_lxor
+				 | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
 				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sequ | op_sgeu | op_sgu | op_slui | op_sleui | op_sequi | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
-				 | op_j | op_jc | op_jr | op_jrc
+				 | op_j | op_jc | op_jr | op_jrc | op_jl | op_jlc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
 				 | call | trap_printc | trap_printr | trap_halt | trap_n | trap_eval
@@ -156,9 +158,26 @@ op_nor			-> riap["~|"] into reg						{% d => ["nor",      ...d[0], d[2]] %}
 				 | rv _ "~|=" _ rv							{% d => ["nor",   d[4], d[0], d[0]] %}
 op_xnor			-> riap["~x"] into reg						{% d => ["xnor",     ...d[0], d[2]] %}
 				 | rv _ "~x=" _ rv							{% d => ["xnor",  d[4], d[0], d[0]] %}
+
+op_land			-> riap["&&"]  into reg						{% d => ["land",     ...d[0], d[2]] %}
+				 | rv _ "&&="  _ rv							{% d => ["land",  d[4], d[0], d[0]] %}
+op_lor			-> riap["||"]  into reg						{% d => ["lor",      ...d[0], d[2]] %}
+				 | rv _ "||="  _ rv							{% d => ["lor",   d[4], d[0], d[0]] %}
+op_lxor			-> riap["xx"]  into reg						{% d => ["lxor",     ...d[0], d[2]] %}
+				 | rv _ "xx="  _ rv							{% d => ["lxor",  d[4], d[0], d[0]] %}
+op_lnand		-> riap["!&&"] into reg						{% d => ["lnand",    ...d[0], d[2]] %}
+				 | rv _ "!&&=" _ rv							{% d => ["lnand", d[4], d[0], d[0]] %}
+op_lnor			-> riap["!||"] into reg						{% d => ["lnor",     ...d[0], d[2]] %}
+				 | rv _ "!||=" _ rv							{% d => ["lnor",  d[4], d[0], d[0]] %}
+op_lxnor		-> riap["!xx"] into reg						{% d => ["lxnor",    ...d[0], d[2]] %}
+				 | rv _ "!xx=" _ rv							{% d => ["lxnor", d[4], d[0], d[0]] %}
+op_lnot			-> "!" _ rv into rv							{% d => ["lnot",    0,  d[2], d[4]] %}
+				 | "!" _ rv _ "."							{% d => ["lnot",    0,  d[2], d[2]] %}
+
 op_multu		-> riap["*"] "/u"							{% d => ["multu",    ...d[0],   0 ] %}
 op_mult			-> riap["*"]								{% d => ["mult",     ...d[0],   0 ] %}
 op_not			-> "~" _ rv into rv							{% d => ["not",     0,  d[2], d[4]] %}
+				 | "~" _ rv _ "."							{% d => ["not",     0,  d[2], d[2]] %}
 op_slu			-> rv _ "<"  _ rv into rv _ "/u"			{% d => ["slu",   d[0], d[4], d[6]] %}
 op_sleu			-> rv _ "<=" _ rv into rv _ "/u"			{% d => ["sleu",  d[0], d[4], d[6]] %}
 op_sequ			-> rv _ "==" _ rv into rv _ "/u"			{% d => ["sequ",  d[0], d[4], d[6]] %}
