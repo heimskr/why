@@ -3,8 +3,7 @@ exports.EXCEPTIONS = ["dbz"];
 exports.R_TYPES = [
 	0b000000000001, // Math
 	0b000000000010, // Logic
-	0b000000001100, // Move From HI Register
-	0b000000001100, // Move From LO Register
+	0b000000001100, // Move From HI Register, Move From LO Register
 	0b000000001110, // Comparisons
 	0b000000010001, // Jumps
 	0b000000010010, // Memory

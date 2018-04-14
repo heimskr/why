@@ -1,14 +1,16 @@
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "wvm.h"
 
 /**
- * Allocates memory for the VM.
+ * Allocates memory for the VM and resets some global variables..
  * @param length The number of longs to allocate.
+ * @return Whether the allocation succeeded.
  */
-int wvm_init(lomg length) {
+bool wvm_init(lomg length) {
+	pc = 0;
+	ir = 0;
+	memsize = 0;
 	return (memory = calloc(length, sizeof(lomg))) != NULL;
 }
 
@@ -58,6 +60,7 @@ void wvm_init_pc() {
 /**
  * Returns the nth word in the VM memory.
  * @param n The byte-index of the word to retrieve.
+ * @return The word at the given index.
  */
 lomg wvm_get_word(lomg n) {
 	if (n % 8 == 0) {
@@ -87,6 +90,7 @@ lomg wvm_get_word(lomg n) {
 /**
  * Returns the byte at a given offset in the VM memory.
  * @param n The index of the byte to retrieve.
+ * @return The byte at the given index.
  */
 char wvm_get_byte(lomg byte_offset) {
 	return (memory[byte_offset >> 4] >> (byte_offset % 16)) & 0xff;
@@ -117,6 +121,17 @@ void wvm_print_memory() {
 		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
 		if (boffset < offset_code)
 			printf(" ");
+		else {
+			ins_type type = wvm_get_type(wvm_get_opcode(word));
+			if (type == R)
+				printf("\33[31m");
+			else if (type == I)
+				printf("\33[32m");
+			else if (type == J)
+				printf("\33[34m");
+			else
+				printf("\33[33m");
+		}
 
 		for (int j = 63; j >= 0; j--) {
 			printf("%d", (int) (word >> j) & 1);
@@ -135,13 +150,41 @@ void wvm_print_memory() {
 		
 		printf("\n");
 	}
+
 	printf("└──────┴────────────────────┴%s┴──────────────────────┘\n", binsep);
 }
 
 /**
  * Returns an instruction's opcode.
  * @param instruction A raw instruction.
+ * @return The instruction's opcode.
  */
-uint16_t wvm_get_opcode(lomg instruction) {
+opcode_t wvm_get_opcode(lomg instruction) {
 	return instruction >> 52;
+}
+
+/**
+ * Returns the type of an instruction based on its opcode.
+ * @param opcode An opcode.
+ * @return The corresponding type.
+ */
+ins_type wvm_get_type(opcode_t opcode) {
+	switch (opcode) {
+		case 1:
+		case 2:
+		case 12:
+		case 14:
+		case 17:
+		case 18:
+		case 31:
+			return R;
+
+		case 15:
+		case 16:
+		case 32:
+		case 33:
+			return J;
+	}
+
+	return I;
 }
