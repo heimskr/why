@@ -6,9 +6,20 @@
 #include "instruction.h"
 #include "registers.h"
 
+#define RRS() reg_t rs = wvm_r_rs(instruction);
+#define RRT() reg_t rt = wvm_r_rt(instruction);
+#define RRD() reg_t rd = wvm_r_rd(instruction);
 #define RREGS() reg_t rs, rt, rd; wvm_r_regs(instruction, &rs, &rt, &rd);
-#define IREGS() reg_t rs = wvm_i_rs(instruction); reg_t rd = wvm_i_rd(instruction); imm_t imm = wvm_i_imm(instruction);
-#define JREGS() reg_t rs = wvm_j_rs(instruction); imm_t addr = wvm_j_addr(instruction);
+
+#define IRS() reg_t rs = wvm_i_rs(instruction);
+#define IRD() reg_t rd = wvm_i_rd(instruction);
+#define IIMM() imm_t imm = wvm_i_imm(instruction);
+#define IREGS() IRS(); IRD(); IIMM();
+
+#define JRS() reg_t rs = wvm_j_rs(instruction);
+#define JADDR() imm_t addr = wvm_j_addr(instruction);
+#define JREGS() JRS(); JADDR();
+
 #define rsv registers[rs]
 #define rtv registers[rt]
 #define rdv registers[rd]
@@ -167,7 +178,7 @@ void op_xori(word instruction) {
 }
 
 void op_lui(word instruction) {
-	IREGS();
+	IRD(); IIMM();
 	rdv = ((word) imm) << 32;
 }
 
@@ -224,7 +235,7 @@ void op_sleui(word instruction) {
 }
 
 void op_j(word instruction) {
-	JREGS();
+	JADDR();
 	wvm_jump(addr);
 }
 
@@ -235,7 +246,7 @@ void op_jc(word instruction) {
 }
 
 void op_jl(word instruction) {
-	JREGS();
+	JADDR();
 	wvm_link();
 	wvm_jump(addr);
 }
@@ -274,11 +285,12 @@ void op_jrlc(word instruction) {
 }
 
 void op_c(word instruction) {
-
+	RREGS();
 }
 
 void op_l(word instruction) {
-
+	RREGS();
+	rdv = wvm_get_word(rsv);
 }
 
 void op_s(word instruction) {

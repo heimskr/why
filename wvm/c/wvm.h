@@ -7,6 +7,7 @@
 
 typedef int64_t word;
 typedef uint64_t uword;
+typedef uint8_t byte;
 
 bool wvm_init(word length);
 void wvm_free();
