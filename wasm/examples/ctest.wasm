@@ -8,11 +8,10 @@ version: "1"
 "examples/string.why"
 
 #data
-test: "Hello World!"
+hw: "Hello World!"
 
 #code
 
-&test -> $sf
-!strprint(&test)
+!strprint(&hw)
 
 <halt>

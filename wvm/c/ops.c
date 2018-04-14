@@ -411,7 +411,6 @@ void op_eval(word instruction) {
 
 void op_printc(word instruction) {
 	RRS();
-	printf("%lld\n", rs);
-	// printf("%c", (char) rsv);
+	printf("%c", (char) rsv);
 	INC();
 }

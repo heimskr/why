@@ -82,10 +82,8 @@ sub strprint() {
 	// $t0: temporary storage
 
 	@_strprint_loop
-		[$a0] -> $t0
-		$t0 == $0 -> $t1
-		~$t1 -> $t1
-		: &_strprint_print if $t1
+		[$a0] -> $t0 /b
+		: &_strprint_print if $t0
 		done
 		@_strprint_print
 		<printc $t0>
