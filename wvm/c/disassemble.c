@@ -12,7 +12,7 @@ char *wvm_disassemble(word instruction) {
 	if (type == R) {
 		wvm_disassemble_r(out, instruction);
 	} else {
-		sprintf(out, "??");
+		sprintf(out, "???");
 	}
 
 	return out;
@@ -76,9 +76,44 @@ void wvm_disassemble_r(char *str, word instruction) {
 
 			wvm_disassemble_alt_op(str, rs, rt, rd, oper);
 			break;
+
+		case OPS_MEM:
+			switch (func) {
+				case FUNCT_C:
+				case FUNCT_CB:
+					sprintf(str, "[%s$%s%s] %s->%s [%s$%s%s]%s", ANSI_YELLOW, srs, ANSI_RESET, ANSI_DIM, ANSI_RESET, ANSI_YELLOW, srd, ANSI_RESET, func == FUNCT_CB? " /b" : "");
+					return;
+				case FUNCT_L:
+				case FUNCT_LB:
+					sprintf(str, "[%s$%s%s] %s->%s %s$%s%s%s", ANSI_YELLOW, srs, ANSI_RESET, ANSI_DIM, ANSI_RESET, ANSI_YELLOW, srd, ANSI_RESET, func == FUNCT_LB? " /b" : "");
+					return;
+				case FUNCT_S:
+				case FUNCT_SB:
+					sprintf(str, "%s$%s%s %s->%s [%s$%s%s]%s", ANSI_YELLOW, srs, ANSI_RESET, ANSI_DIM, ANSI_RESET, ANSI_YELLOW, srd, ANSI_RESET, func == FUNCT_SB? " /b" : "");
+					return;
+			}
+
+		case OPS_TRAP:
+			sprintf(str, "<%s", ANSI_CYAN);
+			switch (func) {
+				case FUNCT_PRINTR:
+					sprintf(str, "%sprint%s %s%s", str, ANSI_RESET, ANSI_YELLOW, srs);
+					break;
+				case FUNCT_HALT:
+					sprintf(str, "%shalt", str);
+				case FUNCT_EVAL:
+					sprintf(str, "%seval", str);
+					break;
+				case FUNCT_PRINTC:
+					sprintf(str, "%sprintc%s %s%s", str, ANSI_RESET, ANSI_YELLOW, srs);
+					break;
+			}
+
+			sprintf(str, "%s%s>", str, ANSI_RESET);
+			return;
 	}
 
-	sprintf(str, "?");
+	sprintf(str, "(R)");
 }
 
 void wvm_disassemble_alt_op(char *str, reg_t rs, reg_t rt, reg_t rd, char *oper) {

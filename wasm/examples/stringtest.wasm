@@ -4,6 +4,9 @@ author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
 version: "1"
 
+#includes
+"examples/string.why"
+
 #data
 zero: ""
 five: "abcde"
@@ -20,6 +23,11 @@ w6: 0
 w7: 0
 
 #code
+
+!strlen(&nineteen)
+<print $r0>
+
+<halt>
 
 'w' -> $t0
 !strchr(&eight, $t0)
@@ -42,6 +50,8 @@ w7: 0
 <print $r0>
 !strlen(&w0)
 <print $r0>
+
+<halt>
 
 /*
 	Expected output:
