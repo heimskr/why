@@ -401,6 +401,10 @@ class WASMC {
 	 * @return {number} The address of the first byte after the end of the code section.
 	 */
 	getEnd(instructionCount) {
+		if (!this.handlers) {
+			this.processHandlers();
+		}
+		
 		return 8 * ([this.meta, this.handlers, this.data].reduce((a, b) => a + b.length, 0) + instructionCount);
 	}
 

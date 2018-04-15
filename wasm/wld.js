@@ -155,7 +155,7 @@ class Linker {
 		});
 
 		Object.keys(this.labels).forEach((name) => {
-			if (typeof this.compiler.offsets[name] != "undefined") {
+			if (typeof this.compiler.offsets[name] != "undefined" && name[0] != ".") {
 				this.warn("Label merge conflict:", name);
 			}
 
