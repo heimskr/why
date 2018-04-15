@@ -113,17 +113,18 @@ let App = window.App = class App {
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
 				const long = this.vm.getWord(8*i);
-
+				
 				const classes = [`addr-${i}`];
+				const dataStart = vm.offsets.$data == i * 8 && vm.offsets.$data != vm.offsets.$code;
+				const handlersStart = vm.offsets.$handlers == i * 8;
+				const codeStart = vm.offsets.$code == i * 8;
+				const stackStart = vm.memorySize - 16 == i;
+				const globalStart = vm.offsets.$end == i * 8;
 
-				if (vm.offsets.$code == i * 8)
-					classes.push("code-start");
-				if (vm.offsets.$data == i * 8 && vm.offsets.$data != vm.offsets.$code)
-					classes.push("data-start");
-				if (vm.offsets.$handlers == i * 8)
-					classes.push("handlers-start");
-				if (vm.offsets.$end == i * 8)
-					classes.push("global-start");
+				if (dataStart || stackStart)
+					classes.push("dashed");
+				if (handlersStart || codeStart || globalStart)
+					classes.push("solid");
 
 				const tr = $("<tr></tr>").addClass(classes.join(" ")).appendTo($("#memory"))
 					.append($("<td></td>").text(8*i))
