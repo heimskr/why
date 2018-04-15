@@ -162,7 +162,7 @@ class Linker {
 			this.compiler.offsets[name] = this.labels[name];
 		});
 
-		this.compiler.offsets["`end"] = this.end;
+		this.compiler.offsets[".end"] = this.end;
 	}
 
 	concatenateCode() {

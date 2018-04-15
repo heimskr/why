@@ -157,7 +157,7 @@ class WASMC {
 		this.processData();
 		this.processCode(this.expandLabels(this.expandCode()));
 
-		this.meta[3] = Long.fromInt([this.meta, this.handlers, this.data, this.code].reduce((a, b) => a + b.length, 0) * 8, true);
+		this.meta[3] = Long.fromInt(this.getEnd(this.code.length), true);
 		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
 
 		if (this.options.debug) {
@@ -391,7 +391,17 @@ class WASMC {
 			}
 		});
 
+		this.offsets[".end"] = this.getEnd(expanded.length);
 		return expanded;
+	}
+
+	/**
+	 * Returns the address of the beginning of the program memory section.
+	 * @param  {number} instructionCount The number of code instructions. 
+	 * @return {number} The address of the first byte after the end of the code section.
+	 */
+	getEnd(instructionCount) {
+		return 8 * ([this.meta, this.handlers, this.data].reduce((a, b) => a + b.length, 0) + instructionCount);
 	}
 
 	/**

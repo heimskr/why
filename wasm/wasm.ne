@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "@$&*\t \":()`",
+	chars: "@$&*\t \":()`.",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
@@ -109,7 +109,7 @@ inclusion		-> _ string _ sep							{% d => d[1] %}
 				 | _ sep									{% d => null %}
 
 label			-> "@" var									{% d => d[1] %}
-ptr_ref			-> "&" (var | "`end")						{% d => d[1][0] %}
+ptr_ref			-> "&" (var | ".end")						{% d => d[1][0] %}
 var_addr		-> ptr_ref									{% d => ["address", d[0]] %}
 
 # Matches either a register or a variable dereference (*var) and returns ["register", ...] or ["label", ...] respectively.
