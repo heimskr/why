@@ -81,6 +81,19 @@ void wvm_disassemble_r(char *str, word instruction) {
 			wvm_disassemble_alt_op(str, rs, rt, rd, oper);
 			return;
 
+		case OPS_RCOMP:
+			sprintf(str, "%s$%s%s %s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD);
+			if (func ==  FUNCT_SL || func ==  FUNCT_SLU)
+				sprintf(str, "%s<", str);
+			if (func ==  FUNCT_SLE || func ==  FUNCT_SLEU)
+				sprintf(str, "%s<=", str);
+			if (func ==  FUNCT_SEQ || func ==  FUNCT_SEQU)
+				sprintf(str, "%s==", str);
+			sprintf(str, "%s%s %s$%s%s %s->%s %s$%s%s", str, ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
+			if (func == FUNCT_SLU || func == FUNCT_SLEU || func == FUNCT_SEQU)
+				sprintf(str, "%s /u", str);
+			return;
+
 		case OPS_RJUMP:
 			sprintf(str, "%s:", ANSI_DIM);
 			if (func == FUNCT_JRL || func == FUNCT_JRLC)

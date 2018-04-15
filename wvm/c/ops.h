@@ -129,6 +129,7 @@ void op_nop(word instruction);    // 0   X
 #define OP_SEQ    14
 #define OP_SLU    14
 #define OP_SLEU   14
+#define OP_SEQU   14
 #define OP_J      15
 #define OP_JC     16
 #define OP_JR     17
