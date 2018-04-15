@@ -1,0 +1,88 @@
+#meta
+name: "Memory"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+library
+
+#data
+
+globalbase: 0 // pointer to first block in the list.
+
+#code
+
+// https://danluu.com/malloc-tutorial/
+
+!mem_init()
+
+<halt>
+
+sub mem_init() {
+	&.end -> $g
+	$g -> [&globalbase]
+}
+
+/*
+	struct block_meta { // 4 words total
+		word size;
+		ptr *next;
+		word free;
+		word magic;
+	};
+*/
+
+
+
+/*
+struct block_meta *find_free_block(struct block_meta **last, size_t size) {
+	struct block_meta *current = global_base;
+	while (current && !(current->free && current->size >= size)) {
+		*last = current;
+		current = current->next;
+	}
+	return current;
+}
+*/
+
+sub find_free_block() {
+	// $a0: pointer to pointer to the last block.
+	// $a1: size of the block to allocate.
+	// $t0: block *current
+	// $t1: &(current->next)
+	// $t2: !(current->free && current->size >= size), final result of conditional
+
+	@ffb_start
+	*globalbase -> $t0
+	: &ffb_loop
+
+	@ffb_condition
+		$t0 + 2 -> $t1
+		[$t1] -> $t2 // $t2 = current->free
+
+		[$t0] -> $t3
+		$t3 >= $a1 -> $t3 // $t3 = current->size >= size
+
+		$t2 && $t3 -> $t2 // $t2 = current->free && current->size >= size
+		!$t2.             // $t2 = !(current->free && current->size >= size)
+
+		$t0 && $t2 -> $t2 // $t2 = current && !(current->free && current->size >= size)
+		!$t2.
+		: &ffb_done if $t2
+		ret
+
+	@ffb_loop
+		:: &ffb_condition
+		$t0 -> [$a0] // $ *last = current
+		$t0 + 1 -> $t1
+		[$t1] -> $t0 // $t0 = current->next
+		: &ffb_loop
+		
+	@ffb_done
+		$t0 -> $r0
+}
+
+sub malloc() {
+	// $a0: number of bytes to allocate
+	// $r0: pointer to allocated memory; 0 if unsuccessful.
+
+}
