@@ -122,6 +122,8 @@ let App = window.App = class App {
 					classes.push("data-start");
 				if (vm.offsets.$handlers == i * 8)
 					classes.push("handlers-start");
+				if (vm.offsets.$end == i * 8)
+					classes.push("global-start");
 
 				const tr = $("<tr></tr>").addClass(classes.join(" ")).appendTo($("#memory"))
 					.append($("<td></td>").text(8*i))

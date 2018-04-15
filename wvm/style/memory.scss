@@ -36,14 +36,14 @@
 		}
 
 		tr.handlers-start, tr.data-start {
-			border-top: 1px dashed #777;
+			border-top: 1px dashed #555;
 		}
 
-		tr:nth-child(5), tr.code-start {
-			border-top: 1px solid #777;
+		tr:nth-child(5), tr.code-start, tr.global-start {
+			border-top: 1px solid #555;
 		}
 
-		tr:nth-child(5), tr.handlers-start, tr.data-start, tr.code-start {
+		tr:nth-child(5), tr.handlers-start, tr.data-start, tr.code-start, tr.global-start {
 			> td, > th {
 				padding-top: 2.5px;
 			}
