@@ -176,7 +176,7 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | Number   | Name         | Purpose                                     |
 |----------|--------------|---------------------------------------------|
 | 0        | `$0`         | Always contains zero.                       |
-| 1        | `$gp`        | Global area pointer (start of data segment) |
+| 1        | `$g`         | Global area pointer (start of data segment) |
 | 2        | `$sp`        | Stack pointer.                              |
 | 3        | `$fp`        | Frame pointer.                              |
 | 4        | `$rt`        | Return address.                             |
@@ -190,8 +190,6 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
 | 118–121  | `$f0`–`$f3`  | Floating point return values.               |
 | 122–127  | `$e0`–`$e5`  | Contains data about exceptions.             |
-
-<a name="hi-lo"></a>In addition, there are two extra registers (`HI` and `LO`), but they aren't directly accessible from code; the contents are accessed using the  [`mfhi`](#mfhi) and [`mflo`](#mflo) instructions. 
 
 # <a name="prog"></a>Programs
 
