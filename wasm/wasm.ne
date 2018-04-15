@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "@$&*\t \":()`.",
+	chars: "@$&*\t \":()`./",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
@@ -303,6 +303,7 @@ args			-> delimited[arg, ("," _)]					{% d => d[0][0] %}
 
 reg_temp		-> "$t" ([0-9a-f] | "1" [0-6])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
 reg_saved		-> "$s" ([0-9a-f] | "1" [0-6])				{% d => ["s", parseInt(d[1].join(""), 16)] %}
+reg_kern		-> "$k" ([0-9a-f] | "1" [0])				{% d => ["k", parseInt(d[1].join(""), 16)] %}
 reg_arg			-> "$a" [0-9a-f]							{% d => ["a", parseInt(d[1], 16)] %}
 reg_return		-> "$r" [0-9a-f]							{% d => ["r", parseInt(d[1], 16)] %}
 reg_exc			-> "$e" [0-5]								{% d => ["e", parseInt(d[1], 16)] %}
@@ -313,7 +314,7 @@ reg_lo			-> "$lo"									{% d => ["lo",     0] %}
 reg_hi			-> "$hi"									{% d => ["hi",     0] %}
 reg_gp			-> "$g"										{% d => ["g",      0] %}
 reg_asm			-> "$m" [0-9a-f]							{% d => ["m", parseInt(d[1], 16)] %}
-reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc | reg_lo | reg_hi | reg_asm | reg_gp)
+reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc | reg_lo | reg_hi | reg_asm | reg_gp | reg_kern)
 															{% d => ["register", ...d[0][0]] %}
 
 var -> varchar:+ {%

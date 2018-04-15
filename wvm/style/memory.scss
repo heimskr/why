@@ -35,6 +35,20 @@
 			}
 		}
 
+		tr.handlers-start, tr.data-start {
+			border-top: 1px dashed #777;
+		}
+
+		tr:nth-child(5), tr.code-start {
+			border-top: 1px solid #777;
+		}
+
+		tr:nth-child(5), tr.handlers-start, tr.data-start, tr.code-start {
+			> td, > th {
+				padding-top: 2.5px;
+			}
+		}
+
 		td:nth-child(2):before {
 			content: "0x";
 			color: #999;

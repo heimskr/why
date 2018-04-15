@@ -113,7 +113,17 @@ let App = window.App = class App {
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
 				const long = this.vm.getWord(8*i);
-				const tr = $("<tr></tr>").addClass(`addr-${i}${8*vm.programCounter == i? " program-counter" : ""}`).appendTo($("#memory"))
+
+				const classes = [`addr-${i}`];
+
+				if (vm.offsets.$code == i * 8)
+					classes.push("code-start");
+				if (vm.offsets.$data == i * 8 && vm.offsets.$data != vm.offsets.$code)
+					classes.push("data-start");
+				if (vm.offsets.$handlers == i * 8)
+					classes.push("handlers-start");
+
+				const tr = $("<tr></tr>").addClass(classes.join(" ")).appendTo($("#memory"))
 					.append($("<td></td>").text(8*i))
 					.append($("<td></td>").html(this.hexCell(long)))
 					.append($("<td></td>").html(this.decompiledCell(long, 8*i)))
