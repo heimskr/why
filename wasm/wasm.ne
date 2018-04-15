@@ -130,7 +130,7 @@ op				-> op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
 				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
-				 | op_slu | op_sleu | op_sequ | op_sgeu | op_sgu | op_slui | op_sleui | op_sequi | op_sgeui | op_sgui
+				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
 				 | op_j | op_jc | op_jr | op_jrc | op_jl | op_jlc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
@@ -182,7 +182,6 @@ op_not			-> "~" _ rv into rv							{% d => ["not",     0,  d[2], d[4]] %}
 				 | "~" _ rv _ "."							{% d => ["not",     0,  d[2], d[2]] %}
 op_slu			-> rv _ "<"  _ rv into rv _ "/u"			{% d => ["slu",   d[0], d[4], d[6]] %}
 op_sleu			-> rv _ "<=" _ rv into rv _ "/u"			{% d => ["sleu",  d[0], d[4], d[6]] %}
-op_sequ			-> rv _ "==" _ rv into rv _ "/u"			{% d => ["sequ",  d[0], d[4], d[6]] %}
 op_sgeu			-> rv _ ">"  _ rv into rv _ "/u"			{% d => ["sleu",  d[4], d[0], d[6]] %}
 op_sgu			-> rv _ ">=" _ rv into rv _ "/u"			{% d => ["slu",   d[4], d[0], d[6]] %}
 op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[0], d[4], d[6]] %}
@@ -240,7 +239,6 @@ op_xnori		-> reg _ "~x"  _ int into reg				{% d => ["xnori",  d[0], d[6], d[4]] 
 				 | reg _ "~x=" _ int						{% d => ["xnori",  d[0], d[0], d[4]] %}
 op_slui			-> rv _ "<"  _ int into rv _ "/u"			{% d => ["slui",   d[0], d[6], d[4]] %}
 op_sleui		-> rv _ "<=" _ int into rv _ "/u"			{% d => ["sleui",  d[0], d[6], d[4]] %}
-op_sequi		-> rv _ "==" _ int into rv _ "/u"			{% d => ["sequi",  d[0], d[6], d[4]] %}
 op_sgeui		-> rv _ ">"  _ int into rv _ "/u"			{% d => ["sgeui",  d[6], d[0], d[4]] %}
 op_sgui			-> rv _ ">=" _ int into rv _ "/u"			{% d => ["sgui",   d[6], d[0], d[4]] %}
 op_sli			-> rv _ "<"  _ int into rv					{% d => ["sli",    d[0], d[6], d[4]] %}

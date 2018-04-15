@@ -223,7 +223,6 @@ const Parser = module.exports = {
 		if (op == "multu") return `${chalk.yellow(rs)} ${Parser.colorOper("*") } ${chalk.yellow(rt)} /u`;
 		if (op == "slu")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "sleu")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "sequ")  return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "trap")  return this.formatTrap(rt, rs, rd, funct);
 		if (op == "cb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "lb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd)} /b`;
@@ -265,7 +264,6 @@ const Parser = module.exports = {
 		if (op == "seqi")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "slui")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "sequi")  return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "lbi")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} ${chalk.yellow(rd)} /b`;
 		if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(imm)}] /b`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;

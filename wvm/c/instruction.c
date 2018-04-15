@@ -24,7 +24,6 @@ ins_type wvm_get_type(opcode_t opcode) {
 	switch (opcode) {
 		case 1:
 		case 2:
-		case 12:
 		case 14:
 		case 17:
 		case 18:
@@ -88,7 +87,7 @@ op_fn wvm_get_fn(word instruction) {
 		case 9:  return op_ori;
 		case 10: return op_xnori;
 		case 11: return op_xori;
-		// I guess there's no instruction with opcode 12. Hmm.
+		// MFHI/MFLO were dropped.
 		case 13: return op_lui;
 		case 14:
 			switch (wvm_r_func(instruction)) {
@@ -127,7 +126,7 @@ op_fn wvm_get_fn(word instruction) {
 		case 27: return op_seqi;
 		case 28: return op_slui;
 		case 29: return op_sleui;
-		// 30 is also missing.
+		// 30 is also missing because sequi was removed.
 		case 31: // Are traps true R-types? The format in the ISA documentation looks strange.
 			switch (wvm_r_func(instruction)) {
 				case 1:
