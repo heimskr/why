@@ -427,7 +427,8 @@ function initializeUI(app) {
 }
 
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wvm/c/ctest.why", "utf8"));
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memory.why", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memory.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/stringtest.why", "utf8"));
 
 let { offsets, handlers, meta, code } = opened.parsed;
 let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });

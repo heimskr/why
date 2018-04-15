@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "wvm.h"
 #include "instruction.h"
+#include "disassemble.h"
 
 /**
  * Allocates memory for the VM and resets some global variables.
@@ -187,12 +188,17 @@ void wvm_print_memory() {
 
 		printf("\33[0m │ \33[38;5;240m%20lld\33[0m │", word);
 
-		if (boffset == offset_handlers)
+		if (boffset == 0)
+			printf(" Metadata");
+		else if (boffset == offset_handlers)
 			printf(" Handlers");
 		else if (boffset == offset_data)
 			printf(" Data");
-		else if (boffset == offset_code)
-			printf(" Code");
+		//else if (boffset == offset_code)
+		//	printf(" Code");
+
+		if (offset_code <= boffset)
+			printf(" %s", wvm_disassemble(word));
 		
 		printf("\n");
 	}

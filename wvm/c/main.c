@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	wvm_load("ctest.why");
+	wvm_load("../../wasm/examples/stringtest.why");
 	wvm_init_vm();
 	wvm_print_memory();
 
