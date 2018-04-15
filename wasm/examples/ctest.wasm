@@ -8,7 +8,7 @@ version: "1"
 "examples/string.why"
 
 #data
-hw: "Hello World!"
+hw: "Hello World!\n"
 
 #code
 
@@ -57,9 +57,9 @@ $s0 -> $a0
 <>
 
 @strprint_test
-	&hw -> $a0
-	:: &strprint
-	:: &newline
+!strprint(&hw)
+
+<>
 
 <halt>
 

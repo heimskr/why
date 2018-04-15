@@ -100,6 +100,18 @@ sub strprint() {
 		: &_strprint_loop
 }
 
+sub strcmp() {
+	// $a0: pointer to first string
+	// $a1: pointer to second string
+
+	@_strcmp_loop
+		[$a0] -> $t0 /b
+		[$a1] -> $t1 /b
+		$t0 == $t1 -> $t2
+		//!$t2.
+		//: @_strcmp_compare
+}
+
 /*
 sub strcpy() {
 	// $a0: pointer to source string

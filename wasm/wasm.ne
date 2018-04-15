@@ -45,6 +45,7 @@ const compileCode = (statements) => {
 %}
 
 @builtin "string.ne"
+@builtin "postprocessors.ne"
 
 main			-> program									{% d => compileObject(d[0]) %}
 program			-> lineend:* section:*						{% d => filter(d[1], 0, null, "\n") %}
@@ -108,7 +109,8 @@ inclusion		-> _ string _ sep							{% d => d[1] %}
 				 | _ sep									{% d => null %}
 
 label			-> "@" var									{% d => d[1] %}
-var_addr		-> "&" (var | "`end")						{% d => d[1][0] %}
+ptr_ref			-> "&" (var | "`end")						{% d => d[1][0] %}
+var_addr		-> ptr_ref									{% d => ["address", d[0]] %}
 
 # Matches either a register or a variable dereference (*var) and returns ["register", ...] or ["label", ...] respectively.
 rv				-> reg										{% d => d[0] %}
@@ -254,36 +256,36 @@ op_srai			-> rv _ ">>"   _ int into rv				{% d => ["srai",   d[0], d[6], d[4]] %
 				 | rv _ ">>="  _ int						{% d => ["srai",   d[0], d[0], d[4]] %}
 op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
 op_lbi			-> "[" _ int _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]] %}
-				 | "[" _ var_addr _ "]" into rv _ "/b"		{% d => ["lbi",      0,  d[6], ["label", d[2]]] %}
+				 | "[" _ ptr_ref _ "]" into rv _ "/b"		{% d => ["lbi",      0,  d[6], ["label", d[2]]] %}
 				 | "*" var into rv _ "/b"					{% d => ["lbi",      0,  d[3], ["label", d[1]]] %}
 op_sbi			-> rv into "[" _ int _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  d[4]] %}
-				 | rv into "[" _ var_addr _ "]" _ "/b"		{% d => ["sbi",    d[0],   0,  ["label", d[4]]] %}
+				 | rv into "[" _ ptr_ref _ "]" _ "/b"		{% d => ["sbi",    d[0],   0,  ["label", d[4]]] %}
 op_li			-> "[" _ int _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
-				 | "[" _ var_addr _ "]" into rv				{% d => ["li",       0,  d[6], ["label", d[2]]] %}
+				 | "[" _ ptr_ref _ "]" into rv				{% d => ["li",       0,  d[6], ["label", d[2]]] %}
 				 | "*" var into rv _						{% d => ["li",       0,  d[3], ["label", d[1]]] %}
 op_si			-> rv into "[" _ int _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
-				 | rv into "[" _ var_addr _ "]"				{% d => ["si",     d[0],   0,  ["label", d[4]]] %}
+				 | rv into "[" _ ptr_ref _ "]"				{% d => ["si",     d[0],   0,  ["label", d[4]]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
-				 | var_addr into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
+				 | ptr_ref into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
 
 # J-Type instructions														   rs      addr
 op_jl			-> "::" _ int								{% d => ["jl",      0,     d[2]] %}
-				 | "::" _ var_addr							{% d => ["jl",      0,     ["label", d[2]]] %}
+				 | "::" _ ptr_ref							{% d => ["jl",      0,     ["label", d[2]]] %}
 op_jlc			-> "::" _ int __ "if" __ reg				{% d => ["jlc",   d[6],    d[2]] %}
-				 | "::" _ var_addr __ "if" __ reg			{% d => ["jlc",   d[6],    ["label", d[2]]] %}
+				 | "::" _ ptr_ref __ "if" __ reg			{% d => ["jlc",   d[6],    ["label", d[2]]] %}
 op_j			-> ":" _ int								{% d => ["j",       0,     d[2]] %}
-				 | ":" _ var_addr							{% d => ["j",       0,     ["label", d[2]]] %}
+				 | ":" _ ptr_ref							{% d => ["j",       0,     ["label", d[2]]] %}
 op_jc			-> ":" _ int __ "if" __ reg					{% d => ["jc",    d[6],    d[2]] %}
-				 | ":" _ var_addr __ "if" __ reg			{% d => ["jc",    d[6],    ["label", d[2]]] %}
+				 | ":" _ ptr_ref __ "if" __ reg				{% d => ["jc",    d[6],    ["label", d[2]]] %}
 
 op_mv			-> reg into reg								{% d => ["mv", d[0], d[2]] %}
 op_ret			-> "ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}
 op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %}
 op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
 op_jeq			-> ":" _ reg __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[2]] %}
-				 | ":" _ var_addr __ "if" __ rv _ "==" _ rv	{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
+				 | ":" _ ptr_ref __ "if" __ rv _ "==" _ rv	{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
 				 | ":" _ reg __ "if" __ rv _ "==" _ int     {% d => ["jeq", d[10], d[6], d[2]] %}
-				 | ":" _ var_addr __ "if" __ rv _ "==" _ int{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
+				 | ":" _ ptr_ref __ "if" __ rv _ "==" _ int	{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
 op_nop			-> "<>"										{% d => ["nop"] %}
 
 # Traps																		   rt    rs    rd   funct
@@ -296,7 +298,8 @@ trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[
 call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) => x[0])] %}
 				 | "!" var _ "(" _ ")"						{% d => ["call", d[1]] %}
 arg				-> (rv | int | var_addr)					{% d => d[0] %}
-args			-> arg (_ "," _ arg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
+#args			-> arg (_ "," _ arg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
+args			-> delimited[arg, ("," _)]					{% d => d[0][0] %}
 
 reg_temp		-> "$t" ([0-9a-f] | "1" [0-6])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
 reg_saved		-> "$s" ([0-9a-f] | "1" [0-6])				{% d => ["s", parseInt(d[1].join(""), 16)] %}
