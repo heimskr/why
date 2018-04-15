@@ -101,6 +101,7 @@ void wvm_disassemble_r(char *str, word instruction) {
 					break;
 				case FUNCT_HALT:
 					sprintf(str, "%shalt", str);
+					break;
 				case FUNCT_EVAL:
 					sprintf(str, "%seval", str);
 					break;
