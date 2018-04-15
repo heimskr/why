@@ -4,8 +4,7 @@
 #include "ansi.h"
 #include "disassemble.h"
 
-
-char *wvm_disassemble(word instruction) {
+char * wvm_disassemble(word instruction) {
 	opcode_t opcode = wvm_get_opcode(instruction);
 	char *out = calloc(255, sizeof(char));
 	ins_type type = wvm_get_type(opcode);
@@ -145,6 +144,27 @@ void wvm_disassemble_r(char *str, word instruction) {
 	sprintf(str, "%s(Unknown R-type)%s", ANSI_DIM, ANSI_RESET);
 }
 
+void wvm_disassemble_r_alt_op(char *str, reg_t rs, reg_t rt, reg_t rd, char *oper) {
+	char *srs = wvm_decode_reg(rs);
+	char *srt = wvm_decode_reg(rt);
+	char *srd = wvm_decode_reg(rd);
+
+	if (rs == rd || rt == rd) {
+		char *src, *dest;
+		if (rs == rd) {
+			src = srs;
+			dest = srt;
+		} else {
+			src = srt;
+			dest = srs;
+		}
+
+		sprintf(str, "%s$%s%s %s%s=%s %s$%s%s", COLOR_REG, src, ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_REG, dest, ANSI_RESET);
+	} else {
+		sprintf(str, "%s$%s%s %s%s%s %s$%s%s %s->%s %s$%s%s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
+	}
+}
+
 void wvm_disassemble_i(char *str, word instruction) {
 	opcode_t opcode = wvm_get_opcode(instruction);
 	reg_t rs = wvm_i_rs(instruction);
@@ -164,7 +184,6 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_MULTUI:
 			sprintf(str, "%s$%s%s %s*%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
 			break;
-			
 		case OP_ANDI:
 			wvm_disassemble_i_alt_op(str, rs, rd, imm, "&");
 			break;
@@ -196,23 +215,27 @@ void wvm_disassemble_i(char *str, word instruction) {
 			sprintf(str, "%slui:%s %s%d%s %s->%s %s$%s%s", ANSI_DIM, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 			break;
 		case OP_LI:
+		case OP_LBI:
 			sprintf(str, "[%s%d%s] %s->%s %s$%s%s", COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 			break;
 		case OP_SI:
+		case OP_SBI:
 			sprintf(str, "%s$%s%s %s->%s [%s%d%s]", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
 			break;
 		case OP_SET:
 			sprintf(str, "%s%d%s %s->%s %s$%s%s", COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 			break;
-		
-		//if (op == "sli")    return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		//if (op == "slei")   return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		//if (op == "seqi")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		//if (op == "slui")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		//if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		//if (op == "lbi")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} ${chalk.yellow(rd)} /b`;
-		//if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(imm)}] /b`;
-			
+		case OP_SLI:
+		case OP_SLUI:
+			sprintf(str, "%s$%s%s %s<%s %s%d%s %s->%s %s$%s%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
+			break;
+		case OP_SLEI:
+		case OP_SLEUI:
+			sprintf(str, "%s$%s%s %s<=%s %s%d%s %s->%s %s$%s%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
+			break;
+		case OP_SEQI:
+			sprintf(str, "%s$%s%s %s==%s %s%d%s %s->%s %s$%s%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
+			break;
 		default:
 			sprintf(str, "%s(Unknown I-type)%s", ANSI_DIM, ANSI_RESET);
 			return;
@@ -220,6 +243,8 @@ void wvm_disassemble_i(char *str, word instruction) {
 
 	if (opcode == OP_ADDUI || opcode == OP_SUBUI || opcode == OP_MULTUI || opcode == OP_SLUI || opcode == OP_SLEUI)
 		sprintf(str, "%s /u", str);
+	else if (opcode == OP_LBI || opcode == OP_SBI)
+		sprintf(str, "%s /b", str);
 }
 
 void wvm_disassemble_i_alt_op(char *str, reg_t rs, reg_t rd, imm_t imm, char *oper) {
@@ -234,27 +259,6 @@ void wvm_disassemble_i_math(char *str, reg_t rs, reg_t rd, imm_t imm, char op) {
 			sprintf(str, "%s$%s%s%c%c%s", COLOR_REG, wvm_decode_reg(rs), ANSI_DIM, op, op, ANSI_RESET);
 		else sprintf(str, "%s$%s%s %s%c=%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, op, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
 	} else sprintf(str, "%s$%s%s %s%c%s %s%d%s %s->%s %s$%s%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, op, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
-}
-
-void wvm_disassemble_r_alt_op(char *str, reg_t rs, reg_t rt, reg_t rd, char *oper) {
-	char *srs = wvm_decode_reg(rs);
-	char *srt = wvm_decode_reg(rt);
-	char *srd = wvm_decode_reg(rd);
-
-	if (rs == rd || rt == rd) {
-		char *src, *dest;
-		if (rs == rd) {
-			src = srs;
-			dest = srt;
-		} else {
-			src = srt;
-			dest = srs;
-		}
-
-		sprintf(str, "%s$%s%s %s%s=%s %s$%s%s", COLOR_REG, src, ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_REG, dest, ANSI_RESET);
-	} else {
-		sprintf(str, "%s$%s%s %s%s%s %s$%s%s %s->%s %s$%s%s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
-	}
 }
 
 void wvm_disassemble_j(char *str, word instruction) {

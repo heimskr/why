@@ -1,6 +1,6 @@
 #include "registers.h"
 
-char *wvm_decode_reg(reg_t id) {
+char * wvm_decode_reg(reg_t id) {
 	switch (id) {
 		case 0: return "0";
 		case 1: return "g";

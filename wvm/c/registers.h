@@ -2,7 +2,7 @@
 #define __REGISTERS_H__
 typedef unsigned char reg_t;
 
-char *wvm_decode_reg(reg_t id);
+char * wvm_decode_reg(reg_t id);
 
 #define R_0 0
 #define R_G 1
