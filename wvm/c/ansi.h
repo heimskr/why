@@ -19,8 +19,7 @@
 
 #define ANSI_RED "\33[31m"
 #define ANSI_GREEN "\33[32m"
-//#define ANSI_YELLOW "\33[33m"
-#define ANSI_YELLOW "\33[38;5;226m"
+#define ANSI_YELLOW "\33[33m"
 #define ANSI_BLUE "\33[34m"
 #define ANSI_MAGENTA "\33[35m"
 #define ANSI_CYAN "\33[36m"
