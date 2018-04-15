@@ -2,28 +2,15 @@
 name: "Strings"
 author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
-version: "1"
+version: "2"
 library
 
 #data
-zero: ""
-five: "abcde"
-eight: "one word"
-sixteen: "fedcba9876543210"
-nineteen: "nineteen characters"
-w0: 0
-w1: 0
-w2: 0
-w3: 0
-w4: 0
-w5: 0
-w6: 0
-w7: 0
 s_true: "true"
 s_false: "false"
 
 #code
-!test()
+
 <halt>
 
 sub strlen() {
@@ -139,41 +126,6 @@ sub bprint() {
 }
 
 sub newline() {
-	10 -> $t0
+	'\n' -> $t0
 	<printc $t0>
-}
-
-sub test() {
-	'w' -> $t0
-	!strchr(&eight, $t0)
-	<print $r0>
-	[$r0] -> $t0 /b
-	!strcat(&w0, &nineteen)
-	!strcat(&w0, &sixteen)
-	!strcat(&w0, &eight)
-	!strcat(&w0, &five)
-	!strcat(&w0, &zero)
-	!strlen(&zero)
-	<print $r0>
-	!strlen(&five)
-	<print $r0>
-	!strlen(&eight)
-	<print $r0>
-	!strlen(&sixteen)
-	<print $r0>
-	!strlen(&nineteen)
-	<print $r0>
-	!strlen(&w0)
-	<print $r0>
-
-	/*
-		Expected output:
-		0x64 (will change if #data is modified too much)
-		0x0
-		0x5
-		0x8
-		0x10
-		0x13
-		0x30
-	*/
 }

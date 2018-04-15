@@ -5,15 +5,19 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 library
 
-#data
+#includes
+"examples/string.why"
 
+#data
 globalbase: 0 // pointer to first block in the list.
+emsg_cantallocate: "Couldn't find a free block."
 
 #code
 
 // https://danluu.com/malloc-tutorial/
 
 !mem_init()
+!strprint(&emsg_cantallocate)
 
 <halt>
 
@@ -51,7 +55,6 @@ sub find_free_block() {
 	// $t1: &(current->next)
 	// $t2: !(current->free && current->size >= size), final result of conditional
 
-	@ffb_start
 	*globalbase -> $t0
 	: &ffb_loop
 
