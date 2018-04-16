@@ -3,6 +3,7 @@
 #include "wvm.h"
 #include "instruction.h"
 #include "disassemble.h"
+#include "ansi.h"
 
 /**
  * Allocates memory for the VM and resets some global variables.
@@ -147,46 +148,41 @@ bool wvm_tick() {
  * Prints all the memory to the console.
  */
 void wvm_print_memory() {
-	char *binsep = "───────────────────────────────────────────────────────────────────";
-	printf("       ┌────────────────────┬%s┬──────────────────────┐\n", binsep);
+	char *sep = "────────────────────────";
+	char *jump = "\33[54G";
+	printf("       ┌────────────────────┬%s┐\n", sep);
 	printf("       │    \33[1mHexadecimal\33[0m     │");
-	printf("                              \33[1mBinary\33[0m                               │");
-	printf("       \33[1mDecimal\33[0m        │\n");
-	printf("┌──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
+	printf("     \33[1mDecoded\33[0m            │");
+	// printf("       \33[1mDecimal\33[0m        │\n");
+	printf("\n┌──────┼────────────────────┼%s┤\n", sep);
 	for (int i = 0; i < memsize; i++) {
 		word boffset = i << 3;
 		word word = wvm_get_word(boffset);
 		if (boffset == offset_handlers || boffset == offset_data)
-			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
+			printf("├──────┼────────────────────┼%s┤\n", sep);
 		else if (boffset == offset_code)
-			printf("├──────┼────────────────────┼%s┼──────────────────────┤\n", binsep);
+			printf("├──────┼────────────────────┼%s┤\n", sep);
 
 		printf("│\33[38;5;8m");
 		if (boffset == pc)
 			printf("\33[7m");
 		
-		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │ \33[38;5;250m", boffset, word);
-		if (boffset < offset_code)
+		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │\33[38;5;250m", boffset, word);
+		if (i < 4)
+			printf(" %s%lld%s", ANSI_MAGENTA, word, ANSI_RESET);
+		else if (boffset < offset_handlers || (offset_data <= boffset && boffset < offset_code)) {
 			printf(" ");
-		else {
-			ins_type type = wvm_get_type(wvm_get_opcode(word));
-			if (type == R)
-				printf("\33[31m");
-			else if (type == I)
-				printf("\33[32m");
-			else if (type == J)
-				printf("\33[34m");
-			else
-				printf("\33[33m");
+			for (char j = 56; j >= 0; j -= 8) {
+				char byte = (char) (word >> j) & 0xff;
+				if (byte < 32)
+					printf("%s.%s", ANSI_DIM, ANSI_RESET);
+				else
+					printf("%c", byte);
+			}
 		}
 
-		for (int j = 63; j >= 0; j--) {
-			printf("%d", (int) (word >> j) & 1);
-			if (j == 52 && boffset >= offset_code)
-				printf("\33[38;5;238m│\33[38;5;250m");
-		}
-
-		printf("\33[0m │ \33[38;5;240m%20lld\33[0m │", word);
+		if (boffset < offset_code)
+			printf("%s│", jump);
 
 		if (boffset == 0)
 			printf(" Metadata");
@@ -194,14 +190,17 @@ void wvm_print_memory() {
 			printf(" Handlers");
 		else if (boffset == offset_data)
 			printf(" Data");
-		//else if (boffset == offset_code)
-		//	printf(" Code");
 
-		if (offset_code <= boffset)
+		if (offset_code <= boffset) {
 			printf(" %s", wvm_disassemble(word));
+			printf("%s│", jump);
+		
+		}
+		if (boffset == offset_code)
+			printf(" Code");
 		
 		printf("\n");
 	}
 
-	printf("└──────┴────────────────────┴%s┴──────────────────────┘\n", binsep);
+	printf("└──────┴────────────────────┴%s┘\n", sep);
 }
