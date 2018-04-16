@@ -6,7 +6,14 @@
 
 char * wvm_disassemble(word instruction) {
 	opcode_t opcode = wvm_get_opcode(instruction);
+
 	char *out = calloc(255, sizeof(char));
+
+	if (instruction == 0) {
+		sprintf(out, "%sNOP%s", ANSI_DIM, ANSI_RESET);
+		return out;
+	}
+
 	ins_type type = wvm_get_type(opcode);
 
 	if (type == R) {
