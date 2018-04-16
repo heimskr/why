@@ -42,7 +42,7 @@ int wvm_load(char *filename) {
 	memsize = 0;
 	char line[20];
 	while (fgets(line, 18, file)) {
-		word instr = strtol(line, NULL, 16);
+		word instr = strtoul(line, NULL, 16);
 		wvm_set_word(memsize++ * 8, instr);
 	}
 
@@ -153,7 +153,6 @@ void wvm_print_memory() {
 	printf("       ┌────────────────────┬%s┐\n", sep);
 	printf("       │    \33[1mHexadecimal\33[0m     │");
 	printf("     \33[1mDecoded\33[0m            │");
-	// printf("       \33[1mDecimal\33[0m        │\n");
 	printf("\n┌──────┼────────────────────┼%s┤\n", sep);
 	for (int i = 0; i < memsize; i++) {
 		word boffset = i << 3;
@@ -180,6 +179,15 @@ void wvm_print_memory() {
 					printf("%c", byte);
 			}
 		}
+
+		if (i == 0)
+			printf("\33[45G%shandlers%s", ANSI_DIM, ANSI_RESET);
+		else if (i == 1)
+			printf("\33[49G%sdata%s", ANSI_DIM, ANSI_RESET);
+		else if (i == 2)
+			printf("\33[49G%scode%s", ANSI_DIM, ANSI_RESET);
+		else if (i == 3)
+			printf("\33[50G%send%s", ANSI_DIM, ANSI_RESET);
 
 		if (boffset < offset_code)
 			printf("%s│", jump);

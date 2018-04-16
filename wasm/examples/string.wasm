@@ -99,7 +99,6 @@ sub strcmp() {
 		//: @_strcmp_compare
 }
 
-/*
 sub strcpy() {
 	// $a0: pointer to source string
 	// $a1: pointer to destination
@@ -114,7 +113,7 @@ sub strcpy() {
 		$a0++
 		$a1++
 		: &_strcpy_loop
-}//*/
+}
 
 sub bprint() {
 	: &_bprint_true if $a0
