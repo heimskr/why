@@ -163,6 +163,7 @@
 			<ol>
 				<li><a href="#trap-printr">Print Register</a> (<code>printr</code>)</li>
 				<li><a href="#trap-halt">Halt</a> (<code>halt</code>)</li>
+				<li><a href="#trap-eval">Evaluate String</a> (<code>eval</code>)</li>
 				<li><a href="#trap-prc">Print Character</a> (<code>prc</code>)</li>
 				<li><a href="#trap-prd">Print Decimal</a> (<code>prd</code>)</li>
 				<li><a href="#trap-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
@@ -731,7 +732,7 @@ Sets a register to the given immediate value.
 
 ### <a name="op-trap"></a>Trap (`trap`)
 > (varies; see <a href="#traps">Traps</a>)  
-> `000000011111` `ttttttt` `sssssss` `ddddddd` `...` `xxxxxxxxxxxxxxxx` `ffffffffffff`
+> `000000011111` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `xxxxxxxxxxxx`
 
 Performs a special instruction, typically for interaction with the world outside the VM.
 
@@ -845,30 +846,36 @@ If the value in `rs` is greather than `imm` (treating both as unsigned values), 
 
 ### <a name="trap-printr"></a>Print Register
 Syntax: `<print $rs>`
-Function value: `0000000000000001`
+Function value: `000000000001`
 
 Prints the value stored in `rs` to the console.
 
 ### <a name="trap-halt"></a>Halt
 Syntax: `<halt>`
-Function value: `0000000000000010`
+Function value: `000000000010`
 
 Halts the VM.
 
+### <a name="trap-eval"></a>Evaluate String
+Syntax: `<eval $rs>`
+Function value: `000000000011`
+
+Evaluates the string beginning at the address stored in `rs`. Unimplemented.
+
 ### <a name="trap-prc"></a>Print Character
 Syntax: `<prc $rs>`
-Function value: `0000000000000100`
+Function value: `000000000100`
 
 Prints the character stored in `rs` to the console.
 
 ### <a name="trap-prd"></a>Print Decimal
 Syntax: `<prd $rs>`
-Function value: `0000000000000101`
+Function value: `000000000101`
 
 Prints the number stored in `rs` to the console as a decimal.
 
 ### <a name="trap-prx"></a>Print Hexadecimal
 Syntax: `<prx $rs>`
-Function value: `0000000000000110`
+Function value: `000000000110`
 
 Prints the number stored in `rs` to the console as a hexadecimal.
