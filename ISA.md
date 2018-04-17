@@ -851,3 +851,15 @@ Syntax: `<halt>`
 Function value: `0000000000000010`
 
 Halts the VM.
+
+### <a name="trap-prc"></a>Print Character
+Syntax: `<prc $rs>`
+Function value: `0000000000000100`
+
+Prints the character stored in `rs` to the console.
+
+### <a name="trap-prdec"></a>Print Decimal
+Syntax: `<prdec $rs>`
+Function value: `0000000000000101`
+
+Prints the number stored in `rs` to the console as a decimal.

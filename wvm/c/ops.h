@@ -90,7 +90,8 @@ void op_set(word instruction);    // 21  I
 void op_pr(word instruction);     // 31 ?R 1
 void op_halt(word instruction);   // 31 ?R 2
 void op_eval(word instruction);   // 31 ?R 3
-void op_printc(word instruction); // 31 ?R 4
+void op_prc(word instruction);    // 31 ?R 4
+void op_prdec(word instruction);  // 31 ?R 5
 void op_nop(word instruction);    // 0   X
 
 #define OP_ADD    1
@@ -160,7 +161,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_PR     31
 #define OP_HALT   31
 #define OP_EVAL   31
-#define OP_PRINTC 31
+#define OP_PRC    31
+#define OP_PRDEC  31
 #define OP_JL     32
 #define OP_JLC    33
 #define OP_SLLI   34
@@ -203,7 +205,8 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_OR     4
 #define FUNCT_SLEU   4
 #define FUNCT_SUBU   4
-#define FUNCT_PRINTC 4
+#define FUNCT_PRC    4
+#define FUNCT_PRDEC  5
 #define FUNCT_MULTU  5
 #define FUNCT_SB     5
 #define FUNCT_SEQU   5

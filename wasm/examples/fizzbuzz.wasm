@@ -1,0 +1,53 @@
+#meta
+name: "FizzBuzz"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#includes
+"examples/string.why"
+
+#data
+fizz: "Fizz"
+buzz: "Buzz"
+done: "Done.\n"
+max: 151
+colon: ':'
+space: ' '
+nl: '\n'
+
+#code
+
+// $s0: i
+// $s1: max
+
+0 -> $s0
+*max -> $s1
+*nl -> $s2
+*colon -> $s3
+*space -> $s4
+
+@fizzbuzz_loop
+	$s0 % 3 -> $t0
+	$s0 % 5 -> $t1
+
+	<prdec $s0>
+	<prc $s3>
+	<prc $s4>
+
+	: &fizzbuzz_fizz_done if $t0
+	!strprint(&fizz)
+
+	@fizzbuzz_fizz_done
+	: &fizzbuzz_buzz_done if $t1
+	!strprint(&buzz)
+
+	@fizzbuzz_buzz_done
+	<prc $s2>
+	$s0++
+	: &fizzbuzz_done if $s0 == $s1
+	: &fizzbuzz_loop
+
+@fizzbuzz_done
+	!strprint(&done)
+	<halt>

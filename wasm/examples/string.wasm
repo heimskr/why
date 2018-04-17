@@ -82,7 +82,7 @@ sub strprint() {
 		: &_strprint_print if $t0
 		done
 		@_strprint_print
-		<printc $t0>
+		<prc $t0>
 		$a0++
 		: &_strprint_loop
 }
@@ -126,5 +126,5 @@ sub bprint() {
 
 sub newline() {
 	'\n' -> $t0
-	<printc $t0>
+	<prc $t0>
 }

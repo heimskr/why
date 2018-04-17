@@ -137,7 +137,9 @@ op_fn wvm_get_fn(word instruction) {
 				case 3:
 					return op_eval;
 				case 4:
-					return op_printc;
+					return op_prc;
+				case 5:
+					return op_prdec;
 			}
 		case 32: return op_jl;
 		case 33: return op_jlc;

@@ -135,7 +135,7 @@ op				-> op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_j | op_jc | op_jr | op_jrc | op_jl | op_jlc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
-				 | call | trap_printc | trap_printr | trap_halt | trap_n | trap_eval
+				 | call | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prdec
 															{% d => d %}
 into			-> _ "->" _									{% d => null %}
 
@@ -291,10 +291,11 @@ op_jeq			-> ":" _ reg __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[
 op_nop			-> "<>"										{% d => ["nop"] %}
 
 # Traps																		   rt    rs    rd   funct
-trap_printc		-> "<" _ "printc" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    4 ] %}
 trap_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    1 ] %}
 trap_halt		-> "<" _ "halt" _ ">"						{% d => ["trap",    0,    0,    0,    2 ] %}
 trap_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    3 ] %}
+trap_prc		-> "<" _ "prc" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    4 ] %}
+trap_prdec		-> "<" _ "prdec" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    5 ] %}
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
 
 call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) => x[0])] %}

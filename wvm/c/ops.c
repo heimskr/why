@@ -64,6 +64,7 @@ void op_multu(word instruction) {
 void op_mod(word instruction) {
 	RREGS();
 	rdv = rsv % rtv;
+	INC();
 }
 
 void op_sll(word instruction) {
@@ -467,8 +468,14 @@ void op_eval(word instruction) {
 	exit(1);
 }
 
-void op_printc(word instruction) {
+void op_prc(word instruction) {
 	RRS();
 	printf("%c", (char) rsv);
+	INC();
+}
+
+void op_prdec(word instruction) {
+	RRS();
+	printf("%lld", rsv);
 	INC();
 }
