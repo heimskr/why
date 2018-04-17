@@ -17,6 +17,6 @@ test: wvm
 	./wvm
 
 link:
-	../../wasm/wld.js ../../wasm/examples/fizzbuzz.wasm ../../wasm/examples/string.why -o ../../wasm/examples/fizzbuzz.why
+	../../wasm/wld.js ../../wasm/examples/memory.wasm ../../wasm/examples/string.why -o ../../wasm/examples/memory.why
 
 ltest: link test

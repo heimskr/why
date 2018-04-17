@@ -302,7 +302,6 @@ trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[
 call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) => x[0])] %}
 				 | "!" var _ "(" _ ")"						{% d => ["call", d[1]] %}
 arg				-> (rv | int | var_addr)					{% d => d[0] %}
-#args			-> arg (_ "," _ arg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 args			-> delimited[arg, ("," _)]					{% d => d[0][0] %}
 
 reg_temp		-> "$t" ([0-9a-f] | "1" [0-6])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
