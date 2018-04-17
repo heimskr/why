@@ -470,7 +470,7 @@ void op_eval(word instruction) {
 
 void op_prc(word instruction) {
 	RRS();
-	printf("%c", (char) rsv);
+	putchar(rsv);
 	INC();
 }
 
