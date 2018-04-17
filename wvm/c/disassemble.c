@@ -50,6 +50,7 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_SLL: oper = "<<"; break;
 				case FUNCT_SRL: oper = ">>>"; break;
 				case FUNCT_SRA: oper = ">>"; break;
+				case FUNCT_MOD: oper = "%"; break;
 			}
 
 			wvm_disassemble_r_alt_op(str, rs, rt, rd, oper);
@@ -190,6 +191,9 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_MULTI:
 		case OP_MULTUI:
 			sprintf(str, "%s$%s%s %s*%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
+			break;
+		case OP_MODI:
+			wvm_disassemble_i_alt_op(str, rs, rd, imm, "%");
 			break;
 		case OP_ANDI:
 			wvm_disassemble_i_alt_op(str, rs, rd, imm, "&");

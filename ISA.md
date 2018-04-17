@@ -32,6 +32,7 @@
 						<li><a href="#op-sll">Shift Left Logical</a> (<code>sll</code>)</li>
 						<li><a href="#op-srl">Shift Right Logical</a> (<code>srl</code>)</li>
 						<li><a href="#op-sra">Shift Right Arithmetic</a> (<code>sra</code>)</li>
+						<li><a href="#op-mod">Modulo</a> (<code>mod</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-r">Logic (R-Types)</a>
@@ -63,6 +64,7 @@
 						<li><a href="#op-slli">Shift Left Logical Immediate</a> (<code>slli</code>)</li>
 						<li><a href="#op-srli">Shift Right Logical Immediate</a> (<code>srli</code>)</li>
 						<li><a href="#op-srai">Shift Right Arithmetic Immediate</a> (<code>srai</code>)</li>
+						<li><a href="#op-modi">Modulo Immediate</a> (<code>modi</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-i">Logic (I-Types)</a>
@@ -320,6 +322,12 @@ Logically shifts the value in `rs` to the right by a number of bits equal to the
 
 Arithmetically shifts the value in `rs` to the left by a number of bits equal to the value in `rt` and stores the result in `rd`.
 
+### <a name="op-mod"></a>Modulo (`mod`)
+> `$rs % $rt -> $rd` or `$rs %= $rt`
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001001`
+
+Computes the `rt`-modulo of `rs` and stores the result in `rd`.
+
 ## <a name="ops-logic-r"></a>Logic (R-Types)
 
 ### <a name="op-and"></a>Bitwise AND (`and`)
@@ -461,6 +469,12 @@ Logically shifts the value in `rs` to the right by a number of bits equal to `im
 > `000000100100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Arithmetically shifts the value in `rs` to the right by a number of bits equal to `imm` and stores the result in `rd`.
+
+### <a name="op-modi"></a>Modulo Immediate (`modi`)
+> `$rs >> imm -> $rd` or `$rd >>= imm`
+> `000000011110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Computes the `imm`-modulo of `rs` and stores the result in `rd`.
 
 ## <a name="ops-logic-i"></a>Logic (I-Types)
 

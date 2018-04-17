@@ -61,6 +61,11 @@ void op_multu(word instruction) {
 	op_mult(instruction);
 }
 
+void op_mod(word instruction) {
+	RREGS();
+	rdv = rsv % rtv;
+}
+
 void op_sll(word instruction) {
 	RREGS();
 	rdv = rsv << rtv;
@@ -215,6 +220,12 @@ void op_srli(word instruction) {
 void op_srai(word instruction) {
 	IREGS();
 	rdv = rsv >> (word) imm;
+	INC();
+}
+
+void op_modi(word instruction) {
+	IREGS();
+	rdv = rsv % (word) imm;
 	INC();
 }
 

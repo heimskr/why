@@ -16,6 +16,7 @@ void op_multu(word instruction);  // 1   R 5
 void op_sll(word instruction);    // 1   R 6
 void op_srl(word instruction);    // 1   R 7
 void op_sra(word instruction);    // 1   R 8
+void op_mod(word instruction);    // 1   R 9
 
 void op_and(word instruction);    // 2   R 0
 void op_nand(word instruction);   // 2   R 1
@@ -41,6 +42,7 @@ void op_multui(word instruction); // 24  I
 void op_slli(word instruction);   // 34  I
 void op_srli(word instruction);   // 35  I
 void op_srai(word instruction);   // 36  I
+void op_modi(word instruction);   // 30  I
 
 void op_andi(word instruction);   // 6   I
 void op_nandi(word instruction);  // 7   I
@@ -99,6 +101,7 @@ void op_nop(word instruction);    // 0   X
 #define OP_MULTU  1
 #define OP_SLL    1
 #define OP_SRL    1
+#define OP_MOD    1
 #define OP_SRA    1
 #define OP_AND    2
 #define OP_NAND   2
@@ -153,6 +156,7 @@ void op_nop(word instruction);    // 0   X
 #define OP_SEQI   27
 #define OP_SLUI   28
 #define OP_SLEUI  29
+#define OP_MODI   30
 #define OP_PR     31
 #define OP_HALT   31
 #define OP_EVAL   31
@@ -210,6 +214,7 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_SRA    8
 #define FUNCT_LAND   8
 #define FUNCT_LNAND  9
+#define FUNCT_MOD    9
 #define FUNCT_LNOR   10
 #define FUNCT_LNOT   11
 #define FUNCT_LOR    12

@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "@$&*\t \":()`./",
+	chars: "@$&*\t \":()`./%",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
@@ -128,7 +128,7 @@ op				-> op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_land | op_lnand | op_lnor | op_lnot | op_lor | op_lxnor | op_lxor
 				 | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
-				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu
+				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu | op_mod | op_modi
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
@@ -148,6 +148,8 @@ op_add			-> riap["+"]  into reg						{% d => ["add",      ...d[0], d[2]] %}
 				 | rv _ "+="  _ rv							{% d => ["add",   d[4], d[0], d[0]] %}
 op_sub			-> riap["-"]  into reg						{% d => ["sub",      ...d[0], d[2]] %}
 				 | rv _ "-="  _ rv							{% d => ["sub",   d[4], d[0], d[0]] %}
+op_mod			-> riap["%"]  into reg						{% d => ["mod",      ...d[0], d[2]] %}
+				 | rv _ "%="  _ rv							{% d => ["mod",   d[4], d[0], d[0]] %}
 op_and			-> riap["&"]  into reg						{% d => ["and",      ...d[0], d[2]] %}
 				 | rv _ "&="  _ rv							{% d => ["and",   d[4], d[0], d[0]] %}
 op_or			-> riap["|"]  into reg						{% d => ["or",       ...d[0], d[2]] %}
@@ -224,6 +226,8 @@ op_subi			-> reg _ "-"   _ int into reg				{% d => ["subi",   d[0], d[6], d[4]] 
 				 | reg _ "--"								{% d => ["subi",   d[0], d[0],   1 ] %}
 				 |     _ "--"  _ reg						{% d => ["subi",   d[3], d[3],   1 ] %}
 				 | reg _ "-="  _ int						{% d => ["subi",   d[0], d[0], d[4]] %}
+op_modi			-> reg _ "%"   _ int into reg				{% d => ["modi",   d[0], d[6], d[4]] %}
+				 | reg _ "%="  _ int						{% d => ["modi",   d[0], d[0], d[4]] %}
 op_multi		-> reg _ "*"   _ int						{% d => ["multi",  d[0],   0,  d[4]] %}
 op_andi			-> reg _ "&"   _ int into reg				{% d => ["andi",   d[0], d[6], d[4]] %}
 				 | reg _ "&="  _ int						{% d => ["andi",   d[0], d[0], d[4]] %}

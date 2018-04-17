@@ -189,6 +189,7 @@ const Parser = module.exports = {
 		if (op == "add")   return alt_op("+");
 		if (op == "sub")   return alt_op("-");
 		if (op == "mult")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.yellow(rt)}`;
+		if (op == "mod")   return alt_op("%");
 		if (op == "and")   return alt_op("&");
 		if (op == "nand")  return alt_op("~&");
 		if (op == "nor")   return alt_op("~|");
@@ -246,6 +247,7 @@ const Parser = module.exports = {
 		if (op == "subui")  return `${mathi("--", "-=", "-")} /u`;
 		if (op == "multi")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(imm)}`;
 		if (op == "multui") return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(imm)} /u`;
+		if (op == "modi")   return alt_op("%");
 		if (op == "andi")   return alt_op("&");
 		if (op == "nandi")  return alt_op("~&");
 		if (op == "nori")   return alt_op("~|");

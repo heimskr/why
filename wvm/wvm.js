@@ -196,6 +196,10 @@ class WVM {
 		this.registers[rd] = this.registers[rs].toSigned().shiftRight(this.registers[rt]);
 	}
 
+	op_mod(rt, rs, rd) {
+		this.registers[rd] = this.registers[rs].toSigned().mod(this.registers[rt].toSigned());
+	}
+
 	op_and(rt, rs, rd) {
 		this.registers[rd] = this.registers[rs].and(this.registers[rt]);
 	}
@@ -260,6 +264,10 @@ class WVM {
 
 	op_subi(rs, rd, imm) {
 		this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
+	}
+
+	op_modi(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().mod(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
 	}
 
 	// multi

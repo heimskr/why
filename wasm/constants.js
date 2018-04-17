@@ -32,7 +32,7 @@ exports.I_TYPES = [
 	0b000000011011, // Set on Equal Immediate
 	0b000000011100, // Set on Less Than Immediate Unsigned
 	0b000000011101, // Set on Less Than or Equal Immediate Unsigned
-	0b000000011110, // Set on Equal Immediate Unsigned
+	0b000000011110, // Modulo Unsigned
 	0b000000100010, // Shift Left Logical Immediate
 	0b000000100011, // Shift Right Logical Immediate
 	0b000000100100, // Shift Right Arithmetic Immediate
@@ -57,6 +57,7 @@ exports.OPCODES = {
 	subu:   0b000000000001,
 	mult:   0b000000000001,
 	multu:  0b000000000001,
+	mod:    0b000000000001,
 	and:    0b000000000010,
 	nand:   0b000000000010,
 	nor:    0b000000000010,
@@ -107,6 +108,7 @@ exports.OPCODES = {
 	seqi:   0b000000011011,
 	slui:   0b000000011100,
 	sleui:  0b000000011101,
+	modi:   0b000000011110,
 	trap:   0b000000011111,
 	jl:     0b000000100000,
 	jlc:    0b000000100001,
@@ -151,6 +153,7 @@ exports.FUNCTS = {
 	sra:   0b000000001000,
 	land:  0b000000001000,
 	lnand: 0b000000001001,
+	mod:   0b000000001001,
 	lnor:  0b000000001010,
 	lnot:  0b000000001011,
 	lor:   0b000000001100,
