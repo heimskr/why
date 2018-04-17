@@ -163,6 +163,9 @@
 			<ol>
 				<li><a href="#trap-printr">Print Register</a> (<code>printr</code>)</li>
 				<li><a href="#trap-halt">Halt</a> (<code>halt</code>)</li>
+				<li><a href="#trap-prc">Print Character</a> (<code>prc</code>)</li>
+				<li><a href="#trap-prd">Print Decimal</a> (<code>prd</code>)</li>
+				<li><a href="#trap-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -858,8 +861,14 @@ Function value: `0000000000000100`
 
 Prints the character stored in `rs` to the console.
 
-### <a name="trap-prdec"></a>Print Decimal
-Syntax: `<prdec $rs>`
+### <a name="trap-prd"></a>Print Decimal
+Syntax: `<prd $rs>`
 Function value: `0000000000000101`
 
 Prints the number stored in `rs` to the console as a decimal.
+
+### <a name="trap-prx"></a>Print Hexadecimal
+Syntax: `<prx $rs>`
+Function value: `0000000000000110`
+
+Prints the number stored in `rs` to the console as a hexadecimal.

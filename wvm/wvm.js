@@ -494,8 +494,10 @@ class WVM {
 		} else if (funct == TRAPS.prc) {
 			// this.onPrintChar(this.registers[rs].toUnsigned().toInt() & 0xff);
 			console.log(`<prc ${Parser.getRegister(rs)}=${this.registers[rs]}>`, String.fromCharCode(this.registers[rs].toUnsigned().toInt() & 0xff)); 
-		} else if (funct == TRAPS.prdec) {
+		} else if (funct == TRAPS.prd) {
 			console.log(this.registers[rs].toString());
+		} else if (funct == TRAPS.prx) {
+			console.log(this.registers[rs].toString(16));
 		} else { // This may be changed to an exception in the future.
 			console.log("Unknown trap:", {rt, rs, rd, shift, funct});
 		}

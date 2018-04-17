@@ -281,7 +281,9 @@ const Parser = module.exports = {
 
 	formatTrap(rt, rs, rd, funct) {
 		if (funct == TRAPS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
-		if (funct == TRAPS.printc) return `<${chalk.cyan("printc")} ${chalk.yellow(rs)}>`;
+		if (funct == TRAPS.prc)    return `<${chalk.cyan("prc")} ${chalk.yellow(rs)}>`;
+		if (funct == TRAPS.prd)    return `<${chalk.cyan("prd")} ${chalk.yellow(rs)}>`;
+		if (funct == TRAPS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
 	}

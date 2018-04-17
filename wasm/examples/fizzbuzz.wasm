@@ -31,7 +31,7 @@ nl: '\n'
 	$s0 % 3 -> $t0
 	$s0 % 5 -> $t1
 
-	<prdec $s0>
+	<prd $s0>
 	<prc $s3>
 	<prc $s4>
 

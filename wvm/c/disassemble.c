@@ -143,8 +143,11 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_PRC:
 					sprintf(str, "%sprc%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
 					break;
-				case FUNCT_PRDEC:
-					sprintf(str, "%sprdec%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
+				case FUNCT_PRD:
+					sprintf(str, "%sprd%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
+					break;
+				case FUNCT_PRX:
+					sprintf(str, "%sprx%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
 					break;
 			}
 

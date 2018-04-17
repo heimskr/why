@@ -187,7 +187,8 @@ exports.TRAPS = {
 	halt:   0b0000000000000010, // tells the vm to stop
 	eval:   0b0000000000000011, // executes the string starting at a given address as JS
 	prc:    0b0000000000000100, // prints the character stored in an address to the console 
-	prdec:  0b0000000000000101, // prints contents of register whose ID is stored in $rs as a decimal.
+	prd:    0b0000000000000101, // prints contents of register whose ID is stored in $rs as a decimal.
+	prx:    0b0000000000000110, // prints contents of register whose ID is stored in $rs as a hexadecimal.
 };
 
 // largest number of arguments allowed for a subroutine call.

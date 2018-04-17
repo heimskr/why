@@ -474,8 +474,14 @@ void op_prc(word instruction) {
 	INC();
 }
 
-void op_prdec(word instruction) {
+void op_prd(word instruction) {
 	RRS();
 	printf("%lld", rsv);
+	INC();
+}
+
+void op_prx(word instruction) {
+	RRS();
+	printf("%llx", rsv);
 	INC();
 }
