@@ -186,11 +186,11 @@ op_slu			-> rv _ "<"  _ rv into rv _ "/u"			{% d => ["slu",   d[0], d[4], d[6]] 
 op_sleu			-> rv _ "<=" _ rv into rv _ "/u"			{% d => ["sleu",  d[0], d[4], d[6]] %}
 op_sgeu			-> rv _ ">"  _ rv into rv _ "/u"			{% d => ["sleu",  d[4], d[0], d[6]] %}
 op_sgu			-> rv _ ">=" _ rv into rv _ "/u"			{% d => ["slu",   d[4], d[0], d[6]] %}
-op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[0], d[4], d[6]] %}
-op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[0], d[4], d[6]] %}
+op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[4], d[0], d[6]] %}
+op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[4], d[0], d[6]] %}
 op_seq			-> rv _ "==" _ rv into rv					{% d => ["seq",   d[0], d[4], d[6]] %}
-op_sge			-> rv _ ">"  _ rv into rv					{% d => ["sle",   d[4], d[0], d[6]] %}
-op_sg			-> rv _ ">=" _ rv into rv					{% d => ["sl",    d[4], d[0], d[6]] %}
+op_sge			-> rv _ ">=" _ rv into rv					{% d => ["sle",   d[0], d[4], d[6]] %}
+op_sg			-> rv _ ">"  _ rv into rv					{% d => ["sl",    d[0], d[4], d[6]] %}
 op_jrlc			-> "::" _ reg __ "if" __ reg				{% d => ["jrlc",    0,  d[6], d[2]] %}
 op_jrl			-> "::" _ reg								{% d => ["jrl",     0,    0,  d[2]] %}
 op_jrc			-> ":" _ reg __ "if" __ reg					{% d => ["jrc",     0,  d[6], d[2]] %}

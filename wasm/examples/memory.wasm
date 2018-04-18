@@ -11,20 +11,41 @@ library
 #data
 globalbase: 0 // pointer to first block in the list.
 emsg_cantallocate: "Couldn't find a free block."
+ptrtoblock: 0
 
 #code
 
 // https://danluu.com/malloc-tutorial/
 
-!mem_init()
-!strprint(&emsg_cantallocate)
+:: &mem_init
+
+&.end -> $t0
+$t0 -> [&ptrtoblock]
+&ptrtoblock -> $a0
+60 -> $a1
+
+:: &find_free_block
+
+<print $r0>
 
 <halt>
 
+<>;<>;<>
 sub mem_init() {
 	&.end -> $g
 	$g -> [&globalbase]
+
+	// Initialize first block.
+	$g -> $k0
+	40 -> $k1               // size = 5w
+	$k1 -> [$k0]; $k0 += 8
+	$g + 80 -> $k1          // next = end+10w
+	$k1 -> [$k0]; $k0 += 8
+	0 -> $k1                // free = 0
+	$k1 -> [$k0]; $k0 += 8
+	$0 -> [$k0]             // magic = 0
 }
+<>;<>;<>
 
 /*
 	struct block_meta { // 4 words total
@@ -48,41 +69,54 @@ struct block_meta *find_free_block(struct block_meta **last, size_t size) {
 }
 */
 
+<>;<>;<>
 sub find_free_block() {
+	// $a0, $a1  ->  $r0
+	
 	// $a0: pointer to pointer to the last block.
 	// $a1: size of the block to allocate.
 	// $t0: block *current
 	// $t1: &(current->next)
 	// $t2: !(current->free && current->size >= size), final result of conditional
 
+	// $r0: pointer to block.
+
 	*globalbase -> $t0
 	: &ffb_loop
 
 	@ffb_condition
-		$t0 + 2 -> $t1
+		$t0 + 16 -> $t1
+		@CheckFree
 		[$t1] -> $t2 // $t2 = current->free
 
-		[$t0] -> $t3
+		@CompareSize
+		[$t0] -> $t3      // $t3 = current->size
 		$t3 >= $a1 -> $t3 // $t3 = current->size >= size
 
+		@FreeAndSize
 		$t2 && $t3 -> $t2 // $t2 = current->free && current->size >= size
 		!$t2.             // $t2 = !(current->free && current->size >= size)
 
+		@FullConditional
 		$t0 && $t2 -> $t2 // $t2 = current && !(current->free && current->size >= size)
 		!$t2.
 		: &ffb_done if $t2
 		ret
 
 	@ffb_loop
-		:: &ffb_condition
+		: &ffb_condition
+		@SetPointer
 		$t0 -> [$a0] // $ *last = current
-		$t0 + 1 -> $t1
+		@MoveNext
+		$t0 + 8 -> $t1
 		[$t1] -> $t0 // $t0 = current->next
+		@Repeat
 		: &ffb_loop
 		
 	@ffb_done
 		$t0 -> $r0
 }
+<>;<>;<>
 
 sub malloc() {
 	// $a0: number of bytes to allocate
