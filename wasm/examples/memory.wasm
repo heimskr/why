@@ -20,12 +20,13 @@ msg_free: "First block free? "
 msg_rsize: "Requested size: "
 msg_success: "\u001b[32mFound a free block at \u001b[0m"
 msg_markfree: "\u001b[38;5;226mMarking first block as free and retrying allocation.\u001b[0m\n\n"
+msg_reqmore1: "\u001b[38;5;226mIncreasing request size to \u001b[0m\u001b[1m"
+msg_reqmore2: "\u001b[0m \u001b[38;5;226mand retrying allocation.\u001b[0m\n\n"
 ansi_reset: "\u001b[0m"
 ansi_bold: "\u001b[1m"
 
 #code
 
-1 -> $s6
 '\n' -> $s7
 '.' -> $s8
 
@@ -38,45 +39,51 @@ $s0 -> [ptrtoblock]
 &ptrtoblock -> $a0
 20 -> $a1
 
-@attempt
-[$g] -> $s0
-!strprint(&msg_bsize); <prd $s0>; <prc $s7>
-$g + 16 -> $s0
-[$s0] -> $s0
-!strprint(&msg_free); <prd $t0>; <prc $s7>
-!strprint(&msg_rsize); <prd $a1>; <prc $s7>; <prc $s7>
+@test_unfree
+!attempt()
 
-:: find_free_block
 
-@checkresults
-<prc $s7>
-: success if $r0
-
-!strprint(&msg_cantallocate)
-: done
-
-@success
-!strprint(&msg_success)
-!strprint(&ansi_bold)
-<prd $r0>
-!strprint(&ansi_reset)
-<prc $s8>
-<prc $s7>
-
-@done
-<prc $s7>
-
-: tryagain if $s6
-<halt>
-
-@tryagain
-0 -> $s6
+@test_free
 <prc $s7>; <prc $s7>
 !strprint(&msg_markfree)
 $g + 16 -> $t0
 1 -> $t1
 $t1 -> [$t0]
-: attempt
+!attempt()
+
+@test_more
+<prc $s7>; <prc $s7>
+!strprint(&msg_reqmore1)
+60 -> $a1
+<prd $a1>
+!strprint(&msg_reqmore2)
+!attempt()
+
+
+<halt>
+
+sub attempt() {
+	[$g] -> $s0
+	!strprint(&msg_bsize); <prd $s0>; <prc $s7>
+	$g + 16 -> $s0
+	[$s0] -> $s0
+	!strprint(&msg_free); <prd $t0>; <prc $s7>
+	!strprint(&msg_rsize); <prd $a1>; <prc $s7>; <prc $s7>
+	!find_free_block()
+	<prc $s7>
+	: _checkresults_success if $r0
+
+	!strprint(&msg_cantallocate)
+	ret
+
+	@_checkresults_success
+	!strprint(&msg_success)
+	!strprint(&ansi_bold)
+	<prd $r0>
+	!strprint(&ansi_reset)
+	<prc $s8>
+	<prc $s7>
+}
 
 <>;<>;<>
 sub mem_init() {

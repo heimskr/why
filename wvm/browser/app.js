@@ -275,6 +275,9 @@ let App = window.App = class App {
 			this.vm.tick();
 			if (!this.vm.active) {
 				this.active = false;
+				if (this.heartrate < 0) {
+					this.vm.onTick = this.onTick;
+				}
 			}
 		}
 	}
@@ -282,7 +285,27 @@ let App = window.App = class App {
 	startHeartbeat() {
 		clearInterval(this.interval);
 		this.heartbeatActive = true;
-		this.interval = setInterval(() => this.heartbeat(), this.heartrate);
+		let rate = this.heartrate;
+
+		if (-1000 <= this.heartrate && this.heartrate < 0) {
+			// If the heartrate is slightly negative, don't bother with updating the UI.
+			this.vm.onTick = () => {};
+			rate = 0;
+		}
+
+		if (this.heartrate < -1000) {
+			// If the heartrate is really negative, don't even bother with the event loop.
+			// Hopefully you're not planning on executing an infinite loop.
+			this.vm.onTick = () => {};
+			while (this.vm.active) {
+				this.vm.tick();
+			}
+
+			this.active = false;
+			this.vm.onTick = this.onTick;
+		} else {
+			this.interval = setInterval(() => this.heartbeat(), rate);
+		}
 	}
 
 	get heartrate() {
@@ -386,7 +409,7 @@ function initializeUI(app) {
 		let old = app.active;
 		app.active = false;
 		let answer = parseFloat(prompt("Time between heartbeats (s):", app.config.heartrate / 1000));
-		if (isNaN(answer) || answer < 0) {
+		if (isNaN(answer)) {
 			alert("Invalid number.");
 		} else {
 			app.config.heartrate = answer * 1000;
