@@ -12,21 +12,38 @@ library
 globalbase: 0 // pointer to first block in the list.
 emsg_cantallocate: "Couldn't find a free block."
 ptrtoblock: 0
+msg1: "Address of current block: "
+msg2: "Block is unfree or too small? "
+msg3: "Mission accomplished? "
+bsizemsg: "Size of first block: "
+freemsg: "First block free? "
+rsizemsg: "Requested size: "
 
 #code
+
+'\n' -> $s7
 
 // https://danluu.com/malloc-tutorial/
 
 :: &mem_init
 
-&.end -> $t0
-$t0 -> [&ptrtoblock]
+&.end -> $s0
+$s0 -> [&ptrtoblock]
 &ptrtoblock -> $a0
-60 -> $a1
+20 -> $a1
+
+[$g] -> $s0
+!strprint(&bsizemsg); <prd $s0>; <prc $s7>
+$g + 16 -> $s0
+[$s0] -> $s0
+!strprint(&freemsg); <prd $t0>; <prc $s7>
+!strprint(&rsizemsg); <prd $a1>; <prc $s7>; <prc $s7>
 
 :: &find_free_block
 
+<prc $s7>
 <print $r0>
+<prc $s7>
 
 <halt>
 
@@ -97,9 +114,13 @@ sub find_free_block() {
 		$t2 && $t3 -> $t2 // $t2 = current->free && current->size >= size
 		!$t2.             // $t2 = !(current->free && current->size >= size)
 
+		!strprint(&msg1); <prd $t0>; <prc $s7>
+		!strprint(&msg2); <prd $t2>; <prc $s7>
+
 		@FullConditional
 		$t0 && $t2 -> $t2 // $t2 = current && !(current->free && current->size >= size)
 		!$t2.
+		!strprint(&msg3); <prd $t2>; <prc $s7>
 		: &ffb_done if $t2
 		ret
 
