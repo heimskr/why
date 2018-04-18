@@ -73,16 +73,16 @@ sub strchr() {
 		done
 }
 
-sub strprint() {
+sub strprint($s0) {
 	// $a0: pointer to string to print
-	// $t0: temporary storage
+	// $s0: character to print
 
 	@_strprint_loop
-		[$a0] -> $t0 /b
-		: &_strprint_print if $t0
+		[$a0] -> $s0 /b
+		: &_strprint_print if $s0
 		done
 		@_strprint_print
-		<prc $t0>
+		<prc $s0>
 		$a0++
 		: &_strprint_loop
 }
