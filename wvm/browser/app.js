@@ -276,7 +276,7 @@ let App = window.App = class App {
 			if (!this.vm.active) {
 				this.active = false;
 				if (this.heartrate < 0) {
-					this.vm.onTick = this.onTick;
+					this.vm.onTick = this.onTick.bind(this);
 				}
 			}
 		}
@@ -302,7 +302,7 @@ let App = window.App = class App {
 			}
 
 			this.active = false;
-			this.vm.onTick = this.onTick;
+			(this.vm.onTick = this.onTick.bind(this))();
 		} else {
 			this.interval = setInterval(() => this.heartbeat(), rate);
 		}
