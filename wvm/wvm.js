@@ -37,14 +37,18 @@ class WVM {
 		this.programCounter = this.offsets.$code;
 		this.active = true;
 		this.cycles = 0;
+
+		this.prcBuffer = "";
+		this.noBuffer = false;
+		this.filterANSI = true;
+		this.receivingANSI = false;
+
+		this.onPrintChar /* (val) */ = null;
 	}
 
 	onTick() { }
 	onSetWord(/*addr, val*/) { }
 	onSetByte(/*addr, val*/) { }
-	onPrintChar(/*val*/) {
-
-	}
 
 	loadInstruction() {
 		return this.getWord(this.programCounter);
@@ -485,6 +489,7 @@ class WVM {
 
 	op_trap(rt, rs, rd, shift, funct) {
 		if (funct == TRAPS.printr) {
+			this.flushPrcBuffer();
 			this.log(`${Parser.getRegister(rs)}: 0x${this.registers[rs].toString(16)}`);
 		} else if (funct == TRAPS.halt) {
 			this.stop();
@@ -492,14 +497,38 @@ class WVM {
 		} else if (funct == TRAPS.eval) {
 			console.warn("<eval> is currently unimplemented.");
 		} else if (funct == TRAPS.prc) {
-			// this.onPrintChar(this.registers[rs].toUnsigned().toInt() & 0xff);
-			console.log(`<prc ${Parser.getRegister(rs)}=${this.registers[rs]}>`, String.fromCharCode(this.registers[rs].toUnsigned().toInt() & 0xff)); 
+			const n = this.registers[rs].toUnsigned().toInt() & 0xff;
+			const c = String.fromCharCode(n);
+			if (this.onPrintChar) {
+				this.onPrintChar(n);
+			} else if (this.noBuffer) {
+				console.log(c);
+			} else if (c == "\n") {
+				this.flushPrcBuffer(true);
+			} else {
+				if (this.filterANSI && c == "\u001b") {
+					this.receivingANSI = true;
+				} else if (this.receivingANSI && c.match(/[a-z]/i)) {
+					this.receivingANSI = false;
+				} else if (!this.receivingANSI) {
+					this.prcBuffer += c;
+				}
+			}
 		} else if (funct == TRAPS.prd) {
+			this.flushPrcBuffer();
 			console.log(this.registers[rs].toString());
 		} else if (funct == TRAPS.prx) {
+			this.flushPrcBuffer();
 			console.log(this.registers[rs].toString(16));
 		} else { // This may be changed to an exception in the future.
 			console.log("Unknown trap:", {rt, rs, rd, shift, funct});
+		}
+	}
+
+	flushPrcBuffer(force = false) {
+		if (force || this.prcBuffer) {
+			console.log(this.prcBuffer);
+			this.prcBuffer = "";
 		}
 	}
 
