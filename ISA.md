@@ -609,25 +609,25 @@ If the value in `rs` is less than or equal to `imm` (treating both as unsigned v
 ## <a name="ops-jump-j"></a>Jumps (J-Types)
 
 ### <a name="op-j"></a>Jump (`j`)
-> `: &label` or `: imm`
+> `: label` or `: imm`
 > `000000001111` `0000000` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional (`jc`)
-> `: &label if $rs` or `: imm if $rs`
+> `: label if $rs` or `: imm if $rs`
 > `000000010000` `sssssss` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
 ### <a name="op-jl"></a>Jump and Link (`jl`)
-> `:: &label` or `:: imm`
+> `:: label` or `:: imm`
 > `000000100000` `0000000` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Stores the address of the next instruction in `$rt` and then <a href="#op-j">jumps</a> to the target.
 
 ### <a name="op-jlc"></a>Jump and Link Conditional (`jlc`)
-> `:: &label if $rs` or `:: imm if $rs`
+> `:: label if $rs` or `:: imm if $rs`
 > `000000100001` `sssssss` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero, after storing the address of the next instruction in `$rt`.
@@ -755,25 +755,25 @@ Translation:
 <code>[:](#op-jr) $r</code>
 
 ### <a name="op-push"></a>Push (`push`)
-> `[ $rs`
+> `[ $x $y $z ...`
 
-Pushes the value of `rs` to the stack.
+Pushes the value of the specified register(s) to the stack.
 
-Translation:  
+Translation for each register in order:  
 <code>$rs [->](#op-s) [$sp]</code>
 <code>$sp[++](#op-addi)</code>
 
 ### <a name="op-pop"></a>Pop (`pop`)
-> `] $rd`
+> `] $x $y $z`
 
-Pops the value at the top of the stack and stores it in `rd`.
+Pops the value(s) at the top of the stack and stores the value(s) in the specified register(s).
 
-Translation:  
+Translation for each register in order:
 <code>$sp[--](#op-subi)</code>
 <code>[$sp] [->](#op-l) $rd</code>
 
 ### <a name="op-jeq"></a>Jump if Equal (`jeq`)
-> `: $rd ($rs == $rt)`
+> `: $rd if $rs == $rt`
 
 If the value in `rs` is equal to the value in `rt`, jumps to the address stored in `rd` (or to the address of `var`). (Modifies `m0`.)
 
@@ -781,13 +781,13 @@ Translation:
 <code>$rs [==](#op-seq) $rt -> $m0</code>  
 <code>[:](#op-jrc) $rd if $m0</code>
 
-> `: &label ($rs == $rt)`
+> `: label if $rs == $rt`
 
 If the value in `rs` is equal to the value in `rt`, jumps to `label`. (Modifies `m0` and `m1`.)
 
 Translation:  
 <code>$rs [==](#op-seq) $rt -> $m0</code>  
-<code>[&label] [->](#op-li) $m1</code>  
+<code>[label] [->](#op-li) $m1</code>  
 <code>[:](#op-jrc) $m1 if $m0</code>
 
 ### <a name="op-sge"></a>Set on Greater Than or Equal (`sge`)

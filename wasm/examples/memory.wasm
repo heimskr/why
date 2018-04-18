@@ -25,10 +25,10 @@ rsizemsg: "Requested size: "
 
 // https://danluu.com/malloc-tutorial/
 
-:: &mem_init
+:: mem_init
 
 &.end -> $s0
-$s0 -> [&ptrtoblock]
+$s0 -> [ptrtoblock]
 &ptrtoblock -> $a0
 20 -> $a1
 
@@ -39,7 +39,7 @@ $g + 16 -> $s0
 !strprint(&freemsg); <prd $t0>; <prc $s7>
 !strprint(&rsizemsg); <prd $a1>; <prc $s7>; <prc $s7>
 
-:: &find_free_block
+:: find_free_block
 
 <prc $s7>
 <print $r0>
@@ -50,7 +50,7 @@ $g + 16 -> $s0
 <>;<>;<>
 sub mem_init() {
 	&.end -> $g
-	$g -> [&globalbase]
+	$g -> [globalbase]
 
 	// Initialize first block.
 	$g -> $k0
@@ -99,7 +99,7 @@ sub find_free_block() {
 	// $r0: pointer to block.
 
 	*globalbase -> $t0
-	: &ffb_loop
+	: ffb_loop
 
 	@ffb_condition
 		$t0 + 16 -> $t1
@@ -121,18 +121,18 @@ sub find_free_block() {
 		$t0 && $t2 -> $t2 // $t2 = current && !(current->free && current->size >= size)
 		!$t2.
 		!strprint(&msg3); <prd $t2>; <prc $s7>
-		: &ffb_done if $t2
+		: ffb_done if $t2
 		ret
 
 	@ffb_loop
-		: &ffb_condition
+		: ffb_condition
 		@SetPointer
 		$t0 -> [$a0] // $ *last = current
 		@MoveNext
 		$t0 + 8 -> $t1
 		[$t1] -> $t0 // $t0 = current->next
 		@Repeat
-		: &ffb_loop
+		: ffb_loop
 		
 	@ffb_done
 		$t0 -> $r0
