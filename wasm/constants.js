@@ -197,6 +197,5 @@ exports.MAX_ARGS = exports.REGISTER_OFFSETS.t - exports.REGISTER_OFFSETS.a;
 
 exports.FLAGS = {
 	IGNORE: 0,
-	ADJUST_ADDRESS: 1,
-	SET_TO_END: 2
+	ADJUST_ADDRESS: 1
 };
