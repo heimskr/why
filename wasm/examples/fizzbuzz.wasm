@@ -35,18 +35,18 @@ nl: '\n'
 	<prc $s3>
 	<prc $s4>
 
-	: &fizzbuzz_fizz_done if $t0
+	: fizzbuzz_fizz_done if $t0
 	!strprint(&fizz)
 
 	@fizzbuzz_fizz_done
-	: &fizzbuzz_buzz_done if $t1
+	: fizzbuzz_buzz_done if $t1
 	!strprint(&buzz)
 
 	@fizzbuzz_buzz_done
 	<prc $s2>
 	$s0++
-	: &fizzbuzz_done if $s0 == $s1
-	: &fizzbuzz_loop
+	: fizzbuzz_done if $s0 == $s1
+	: fizzbuzz_loop
 
 @fizzbuzz_done
 	!strprint(&done)
