@@ -10,18 +10,24 @@ library
 
 #data
 globalbase: 0 // pointer to first block in the list.
-emsg_cantallocate: "Couldn't find a free block."
+msg_cantallocate: "\u001b[38;5;9mCouldn't find a free block.\u001b[0m"
 ptrtoblock: 0
-msg1: "Address of current block: "
-msg2: "Block is unfree or too small? "
-msg3: "Mission accomplished? "
-bsizemsg: "Size of first block: "
-freemsg: "First block free? "
-rsizemsg: "Requested size: "
+msg_addr: "Address of current block: "
+msg_cond: "Block is unfree or too small? "
+msg_done: "Mission accomplished? "
+msg_bsize: "Size of first block: "
+msg_free: "First block free? "
+msg_rsize: "Requested size: "
+msg_success: "\u001b[32mFound a free block at \u001b[0m"
+msg_markfree: "\u001b[38;5;226mMarking first block as free and retrying allocation.\u001b[0m\n\n"
+ansi_reset: "\u001b[0m"
+ansi_bold: "\u001b[1m"
 
 #code
 
+1 -> $s6
 '\n' -> $s7
+'.' -> $s8
 
 // https://danluu.com/malloc-tutorial/
 
@@ -32,20 +38,45 @@ $s0 -> [ptrtoblock]
 &ptrtoblock -> $a0
 20 -> $a1
 
+@attempt
 [$g] -> $s0
-!strprint(&bsizemsg); <prd $s0>; <prc $s7>
+!strprint(&msg_bsize); <prd $s0>; <prc $s7>
 $g + 16 -> $s0
 [$s0] -> $s0
-!strprint(&freemsg); <prd $t0>; <prc $s7>
-!strprint(&rsizemsg); <prd $a1>; <prc $s7>; <prc $s7>
+!strprint(&msg_free); <prd $t0>; <prc $s7>
+!strprint(&msg_rsize); <prd $a1>; <prc $s7>; <prc $s7>
 
 :: find_free_block
 
+@checkresults
 <prc $s7>
-<print $r0>
+: success if $r0
+
+!strprint(&msg_cantallocate)
+: done
+
+@success
+!strprint(&msg_success)
+!strprint(&ansi_bold)
+<prd $r0>
+!strprint(&ansi_reset)
+<prc $s8>
 <prc $s7>
 
+@done
+<prc $s7>
+
+: tryagain if $s6
 <halt>
+
+@tryagain
+0 -> $s6
+<prc $s7>; <prc $s7>
+!strprint(&msg_markfree)
+$g + 16 -> $t0
+1 -> $t1
+$t1 -> [$t0]
+: attempt
 
 <>;<>;<>
 sub mem_init() {
@@ -58,7 +89,7 @@ sub mem_init() {
 	$k1 -> [$k0]; $k0 += 8
 	$g + 80 -> $k1          // next = end+10w
 	$k1 -> [$k0]; $k0 += 8
-	0 -> $k1                // free = 0
+	0 -> $k1                // free
 	$k1 -> [$k0]; $k0 += 8
 	$0 -> [$k0]             // magic = 0
 }
@@ -114,13 +145,13 @@ sub find_free_block() {
 		$t2 && $t3 -> $t2 // $t2 = current->free && current->size >= size
 		!$t2.             // $t2 = !(current->free && current->size >= size)
 
-		!strprint(&msg1); <prd $t0>; <prc $s7>
-		!strprint(&msg2); <prd $t2>; <prc $s7>
+		!strprint(&msg_addr); !bold($t0)
+		!strprint(&msg_cond); !bold($t2)
 
 		@FullConditional
 		$t0 && $t2 -> $t2 // $t2 = current && !(current->free && current->size >= size)
 		!$t2.
-		!strprint(&msg3); <prd $t2>; <prc $s7>
+		!strprint(&msg_done); !bold($t2)
 		: ffb_done if $t2
 		ret
 
@@ -138,6 +169,13 @@ sub find_free_block() {
 		$t0 -> $r0
 }
 <>;<>;<>
+
+sub bold() {
+	!strprint(&ansi_bold)
+	<prd $a0>
+	!strprint(&ansi_reset)
+	<prc $s7>
+}
 
 sub malloc() {
 	// $a0: number of bytes to allocate
