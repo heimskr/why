@@ -16,7 +16,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS } = require("./constants.js");
+const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, TRAPS } = require("./constants.js");
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
@@ -325,7 +325,13 @@ class WASMC {
 				// Now that we've returned from the subroutine, pop the values we pushed earlier, but in reverse order.
 				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
 			} else if (op == "trap") {
-				add([label, "trap", ...args]);
+				const funct = args[3];
+				if (funct == TRAPS.prc && args[1][0] == "char") {
+					add([label, "set", _0, _M[2], args[1][1]]);
+					add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
+				} else {
+					add([label, "trap", ...args]);
+				}
 			} else if (op == "mv") {
 				add([label, "or", args[0], _0, args[1]]);
 			} else if (op == "push") {

@@ -133,6 +133,7 @@ op				-> op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
+				 | op_lni | op_lbni
 				 | op_j | op_jc | op_jr | op_jrc | op_jl | op_jlc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
@@ -263,11 +264,16 @@ op_lbi			-> "[" _ int _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]
 				 | "*" var into rv _ "/b"					{% d => ["lbi",      0,  d[3], ["label", d[1]]] %}
 op_sbi			-> rv into "[" _ int _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  d[4]] %}
 				 | rv into "[" _ xvar _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  ["label", d[4]]] %}
+op_lbni			-> "[" _ int _ "]" into rv _ "/b"			{% d => ["lbni",     0,  d[6], d[2]] %}
+				 | "[" _ xvar _ "]" into "[" _ rv _ "]"
+				 	_ "/b"									{% d => ["lbni",     0,  d[8], ["label", d[2]]] %}
 op_li			-> "[" _ int _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into rv					{% d => ["li",       0,  d[6], ["label", d[2]]] %}
 				 | "*" var into rv _						{% d => ["li",       0,  d[3], ["label", d[1]]] %}
 op_si			-> rv into "[" _ int _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
 				 | rv into "[" _ xvar _ "]"					{% d => ["si",     d[0],   0,  ["label", d[4]]] %}
+op_lni			-> "[" _ int _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], d[2]] %}
+				 | "[" _ xvar _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], ["label", d[2]]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 				 | ptr_ref into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
 
@@ -296,6 +302,7 @@ trap_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0, 
 trap_halt		-> "<" _ "halt" _ ">"						{% d => ["trap",    0,    0,    0,    2 ] %}
 trap_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    3 ] %}
 trap_prc		-> "<" _ "prc" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    4 ] %}
+				 | "<" _ "prc" _ char _ ">"					{% d => ["trap", 0, ["char", d[4]], 0, 4] %}
 trap_prd		-> "<" _ "prd" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    5 ] %}
 trap_prx		-> "<" _ "prx" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    6 ] %}
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
