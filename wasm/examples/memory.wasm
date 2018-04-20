@@ -65,6 +65,8 @@ attempt()
 
 <halt>
 
+{3}
+
 sub attempt() {
 	[$g] -> $s0
 	strprint(&msg_bsize); <prd $s0>; <prc $s7>

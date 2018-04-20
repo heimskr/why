@@ -132,6 +132,8 @@
 						<li><a href="#op-cb">Copy Byte</a> (<code>cb</code>)</li>
 						<li><a href="#op-lb">Load Byte</a> (<code>lb</code>)</li>
 						<li><a href="#op-sb">Store Byte</a> (<code>sb</code>)</li>
+						<li><a href="#op-spush">Stack Push</a> (<code>spush</code>)</li>
+						<li><a href="#op-spop">Stack Pop</a> (<code>spop</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
@@ -698,6 +700,20 @@ Loads the byte stored at the memory address pointed to by `rs` into `rd`.
 
 Stores the byte of `rs` into the memory address pointed to by `rd`.
 
+### <a name="op-spush"></a>Stack Push (`spush`)
+> `[ $rs`  
+> `000000010010` `0000000` `sssssss` `0000000` `0000000000000` `......` `000000000110`
+
+Copies the word at `rs` into the stack and adjusts the stack pointer.  
+See also: <a href="#op-push">push pseudoinstruction</a>
+
+### <a name="op-spop"></a>Stack Pop (`spop`)
+> `[ $rs`  
+> `000000010010` `0000000` `ddddddd` `sssssss` `0000000000000` `......` `000000000111`
+
+Adjusts the stack pointer and copies the word at the stack pointer into `rd`.  
+See also: <a href="#op-pop">pop pseudoinstruction</a>
+
 ## <a name="ops-mem-i"></a>Memory (I-Types)
 
 ### <a name="op-li"></a>Load Immediate (`li`)
@@ -771,20 +787,20 @@ Translation:
 ### <a name="op-push"></a>Push (`push`)
 > `[ $x $y $z ...`
 
-Pushes the value of the specified register(s) to the stack.
+Pushes the value of the specified register(s) to the stack. Acts as a shorthand for calling
+<a href="#op-spush">spush</a> on multiple registers.
 
 Translation for each register in order:  
-<code>$rs [->](#op-s) [$sp]</code>
-<code>$sp[++](#op-addi)</code>
+<code><a href="#op-spush">[</a> $rs</code>
 
 ### <a name="op-pop"></a>Pop (`pop`)
 > `] $x $y $z`
 
 Pops the value(s) at the top of the stack and stores the value(s) in the specified register(s).
+Acts as a shorthand for calling <a href="#op-spop">spop</a> on multiple registers.
 
 Translation for each register in order:
-<code>$sp[--](#op-subi)</code>
-<code>[$sp] [->](#op-l) $rd</code>
+<code><a href="#op-spop">]</a> $rs</code>
 
 ### <a name="op-jeq"></a>Jump if Equal (`jeq`)
 > `: $rd if $rs == $rt`
