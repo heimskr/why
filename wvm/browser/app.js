@@ -450,7 +450,8 @@ function initializeUI(app) {
 }
 
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wvm/c/ctest.why", "utf8"));
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memory.why", "utf8"));
+// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memory.why", "utf8"));
+let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/ops.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/stringtest.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/fizzbuzz.why", "utf8"));
 

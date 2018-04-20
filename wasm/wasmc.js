@@ -273,16 +273,14 @@ class WASMC {
 			const addPush = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach((reg) => {
-					add([getLabel(), "s", _0, reg, _SP]);
-					add([null, "subi", _SP, _SP, 8]);
+					add([getLabel(), "spush", _0, reg, _0]);
 				});
 			};
 
 			const addPop = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach((reg) => {
-					add([getLabel(), "addi", _SP, _SP, 8]);
-					add([null, "l", _0, _SP, reg]);
+					add([getLabel(), "spop", _0, _0, reg]);
 				});
 			};
 
