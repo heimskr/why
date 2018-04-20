@@ -9,6 +9,7 @@ library
 "examples/string.why"
 
 #data
+heap_limit: 100000
 globalbase: 0 // pointer to first block in the list.
 msg_cantallocate: "\u001b[38;5;9mCouldn't find a free block.\u001b[0m"
 ptrtoblock: 0
@@ -24,7 +25,6 @@ msg_reqmore1: "\u001b[38;5;226mIncreasing request size to \u001b[0m\u001b[1m"
 msg_reqmore2: "\u001b[0m \u001b[38;5;226mand retrying allocation.\u001b[0m\n\n"
 ansi_reset: "\u001b[0m"
 ansi_bold: "\u001b[1m"
-
 heap_end: 0
 
 #code
@@ -60,7 +60,7 @@ attempt()
 
 <halt>
 
-{3}
+{5}
 
 sub attempt() {
 	[$g] -> $s0
@@ -82,9 +82,7 @@ sub attempt() {
 	<prd $r0>
 	strprint(&ansi_reset)
 	<p ".\n">
-}
-
-{3}
+} {3}
 
 sub mem_init() {
 	*.end -> $g
@@ -99,11 +97,10 @@ sub mem_init() {
 	0 -> $k1                // free
 	$k1 -> [$k0]
 	$g -> *heap_end
-}
-{3}
+} {3}
 
 /*
-	struct block_meta { // 4 words total
+	struct block_meta { // 3 words total
 		word size;
 		ptr *next;
 		word free;
@@ -172,24 +169,20 @@ sub find_free_block() {
 		
 	@ffb_done
 		$t0 -> $r0
-}
-
-{3}
+} {3}
 
 sub bold() {
 	strprint(&ansi_bold)
 	<prd $a0>
 	strprint(&ansi_reset)
 	<p '\n'>
-}
-
-{3}
+} {3}
 
 sub malloc() {
 	// $a0: number of bytes to allocate
 	// $r0: pointer to allocated memory; 0 if unsuccessful.
 	<>
-}
+} {3}
 
 
 //*/
