@@ -26,6 +26,7 @@
 #define rsv registers[rs]
 #define rtv registers[rt]
 #define rdv registers[rd]
+#define spv registers[R_SP]
 
 void op_nop(word instruction) {
 	INC();
@@ -420,6 +421,19 @@ void op_sb(word instruction) {
 	RREGS();
 	wvm_set_byte(rdv, rsv);
 	INC();
+}
+
+void op_spush(word instruction) {
+	RREGS();
+	wvm_set_word(spv, rsv);
+	spv -= 8;
+	INC();
+}
+
+void op_spop(word instruction) {
+	RREGS();
+	spv += 8;
+	rdv = wvm_get_word(spv);
 }
 
 void op_li(word instruction) {

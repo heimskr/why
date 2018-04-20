@@ -47,111 +47,107 @@ ins_type wvm_get_type(opcode_t opcode) {
  */
 op_fn wvm_get_fn(word instruction) {
 	switch (wvm_get_opcode(instruction)) {
-		case 0:
+		case OP_NOP:
 			return op_nop;
-		case 1:
+		case OPS_MATH:
 			switch (wvm_r_func(instruction)) {
-				case 0: return op_add;
-				case 1: return op_sub;
-				case 2: return op_mult;
-				case 3: return op_addu;
-				case 4: return op_subu;
-				case 5: return op_multu;
-				case 6: return op_sll;
-				case 7: return op_srl;
-				case 8: return op_sra;
-				case 9: return op_mod;
+				case FUNCT_ADD:   return op_add;
+				case FUNCT_SUB:   return op_sub;
+				case FUNCT_MULT:  return op_mult;
+				case FUNCT_ADDU:  return op_addu;
+				case FUNCT_SUBU:  return op_subu;
+				case FUNCT_MULTU: return op_multu;
+				case FUNCT_SLL:   return op_sll;
+				case FUNCT_SRL:   return op_srl;
+				case FUNCT_SRA:   return op_sra;
+				case FUNCT_MOD:   return op_mod;
 			}
-		case 2:
+		case OPS_RLOGIC:
 			switch (wvm_r_func(instruction)) {
-				case 0:  return op_and;
-				case 1:  return op_nand;
-				case 2:  return op_nor;
-				case 3:  return op_not;
-				case 4:  return op_or;
-				case 5:  return op_xnor;
-				case 6:  return op_xor;
-				case 8:  return op_land;
-				case 9:  return op_lnand;
-				case 10: return op_lnor;
-				case 11: return op_lnot;
-				case 12: return op_lor;
-				case 13: return op_lxnor;
-				case 14: return op_lxor;
+				case FUNCT_AND:   return op_and;
+				case FUNCT_NAND:  return op_nand;
+				case FUNCT_NOR:   return op_nor;
+				case FUNCT_NOT:   return op_not;
+				case FUNCT_OR:    return op_or;
+				case FUNCT_XNOR:  return op_xnor;
+				case FUNCT_XOR:   return op_xor;
+				case FUNCT_LAND:  return op_land;
+				case FUNCT_LNAND: return op_lnand;
+				case FUNCT_LNOR:  return op_lnor;
+				case FUNCT_LNOT:  return op_lnot;
+				case FUNCT_LOR:   return op_lor;
+				case FUNCT_LXNOR: return op_lxnor;
+				case FUNCT_LXOR:  return op_lxor;
 			}
-		case 3:  return op_addi;
-		case 4:  return op_subi;
-		case 5:  return op_multi;
-		case 6:  return op_andi;
-		case 7:  return op_nandi;
-		case 8:  return op_nori;
-		case 9:  return op_ori;
-		case 10: return op_xnori;
-		case 11: return op_xori;
+		case OP_ADDI:  return op_addi;
+		case OP_SUBI:  return op_subi;
+		case OP_MULTI: return op_multi;
+		case OP_ANDI:  return op_andi;
+		case OP_NANDI: return op_nandi;
+		case OP_NORI:  return op_nori;
+		case OP_ORI:   return op_ori;
+		case OP_XNORI: return op_xnori;
+		case OP_XORI:  return op_xori;
 		// MFHI/MFLO were dropped.
-		case 13: return op_lui;
-		case 14:
+		case OP_LUI:   return op_lui;
+		case OPS_RCOMP:
 			switch (wvm_r_func(instruction)) {
-				case 0: return op_sl;
-				case 1: return op_sle;
-				case 2: return op_seq;
-				case 3: return op_slu;
-				case 4: return op_sleu;
+				case FUNCT_SL:   return op_sl;
+				case FUNCT_SLE:  return op_sle;
+				case FUNCT_SEQ:  return op_seq;
+				case FUNCT_SLU:  return op_slu;
+				case FUNCT_SLEU: return op_sleu;
 			}
-		case 15: return op_j;
-		case 16: return op_jc;
-		case 17:
+		case OP_J:  return op_j;
+		case OP_JC: return op_jc;
+		case OPS_RJUMP:
 			switch (wvm_r_func(instruction)) {
-				case 0: return op_jr;
-				case 1: return op_jrc;
-				case 2: return op_jrl;
-				case 3: return op_jrlc;
+				case FUNCT_JR:   return op_jr;
+				case FUNCT_JRC:  return op_jrc;
+				case FUNCT_JRL:  return op_jrl;
+				case FUNCT_JRLC: return op_jrlc;
 			}
-		case 18:
+		case OPS_MEM:
 			switch (wvm_r_func(instruction)) {
-				case 0: return op_c;
-				case 1: return op_l;
-				case 2: return op_s;
-				case 3: return op_cb;
-				case 4: return op_lb;
-				case 5: return op_sb;
+				case FUNCT_C:     return op_c;
+				case FUNCT_L:     return op_l;
+				case FUNCT_S:     return op_s;
+				case FUNCT_CB:    return op_cb;
+				case FUNCT_LB:    return op_lb;
+				case FUNCT_SB:    return op_sb;
+				case FUNCT_SPUSH: return op_spush;
+				case FUNCT_SPOP:  return op_spop;
 			}
-		case 19: return op_li;
-		case 20: return op_si;
-		case 21: return op_set;
-		case 22: return op_addui;
-		case 23: return op_subui;
-		case 24: return op_multui;
-		case 25: return op_sli;
-		case 26: return op_slei;
-		case 27: return op_seqi;
-		case 28: return op_slui;
-		case 29: return op_sleui;
-		case 30: return op_modi;
-		case 31: // Are traps true R-types? The format in the ISA documentation looks strange.
+		case OP_LI:     return op_li;
+		case OP_SI:     return op_si;
+		case OP_SET:    return op_set;
+		case OP_ADDUI:  return op_addui;
+		case OP_SUBUI:  return op_subui;
+		case OP_MULTUI: return op_multui;
+		case OP_SLI:    return op_sli;
+		case OP_SLEI:   return op_slei;
+		case OP_SEQI:   return op_seqi;
+		case OP_SLUI:   return op_slui;
+		case OP_SLEUI:  return op_sleui;
+		case OP_MODI:   return op_modi;
+		case OPS_TRAP: // Are traps true R-types? The format in the ISA documentation looks strange.
 			switch (wvm_r_func(instruction)) {
-				case 1:
-					return op_pr;
-				case 2:
-					return op_halt;
-				case 3:
-					return op_eval;
-				case 4:
-					return op_prc;
-				case 5:
-					return op_prd;
-				case 6:
-					return op_prx;
+				case FUNCT_PRINTR: return op_pr;
+				case FUNCT_HALT:   return op_halt;
+				case FUNCT_EVAL:   return op_eval;
+				case FUNCT_PRC:    return op_prc;
+				case FUNCT_PRD:    return op_prd;
+				case FUNCT_PRX:    return op_prx;
 			}
-		case 32: return op_jl;
-		case 33: return op_jlc;
-		case 34: return op_slli;
-		case 35: return op_srli;
-		case 36: return op_srai;
-		case 37: return op_lbi;
-		case 38: return op_sbi;
-		case 39: return op_lni;
-		case 40: return op_lbni;
+		case OP_JL:   return op_jl;
+		case OP_JLC:  return op_jlc;
+		case OP_SLLI: return op_slli;
+		case OP_SRLI: return op_srli;
+		case OP_SRAI: return op_srai;
+		case OP_LBI:  return op_lbi;
+		case OP_SBI:  return op_sbi;
+		case OP_LNI:  return op_lni;
+		case OP_LBNI: return op_lbni;
 	}
 
 	return NULL;

@@ -80,6 +80,8 @@ void op_s(word instruction);      // 18  R 2
 void op_cb(word instruction);     // 18  R 3
 void op_lb(word instruction);     // 18  R 4
 void op_sb(word instruction);     // 18  R 5
+void op_spush(word instruction);  // 18  R 6
+void op_spop(word instruction);   // 18  R 7
 
 void op_li(word instruction);     // 19  I
 void op_si(word instruction);     // 20  I
@@ -97,6 +99,7 @@ void op_prd(word instruction);    // 31 ?R 5
 void op_prx(word instruction);    // 31 ?R 6
 void op_nop(word instruction);    // 0   X
 
+#define OP_NOP    0
 #define OP_ADD    1
 #define OP_SUB    1
 #define OP_MULT   1
@@ -149,6 +152,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_CB     18
 #define OP_LB     18
 #define OP_SB     18
+#define OP_SPUSH  18
+#define OP_SPOP   18
 #define OP_LI     19
 #define OP_SI     20
 #define OP_SET    21
@@ -220,6 +225,8 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_PRX    6
 #define FUNCT_SLL    6
 #define FUNCT_XOR    6
+#define FUNCT_SPUSH  6
+#define FUNCT_SPOP   7
 #define FUNCT_SRL    7
 #define FUNCT_SRA    8
 #define FUNCT_LAND   8
