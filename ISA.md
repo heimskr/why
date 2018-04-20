@@ -708,8 +708,8 @@ Copies the word at `rs` into the stack and adjusts the stack pointer.
 See also: <a href="#op-push">push pseudoinstruction</a>
 
 ### <a name="op-spop"></a>Stack Pop (`spop`)
-> `[ $rs`  
-> `000000010010` `0000000` `ddddddd` `sssssss` `0000000000000` `......` `000000000111`
+> `] $rd`  
+> `000000010010` `0000000` `ddddddd` `0000000` `0000000000000` `......` `000000000111`
 
 Adjusts the stack pointer and copies the word at the stack pointer into `rd`.  
 See also: <a href="#op-pop">pop pseudoinstruction</a>
