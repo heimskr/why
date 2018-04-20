@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
 	while (wvm_tick());
 
-	printf("\n\33[31mExecution halted.\33[0m\n");
+	printf("\n\33[31mExecution halted after %d cycle%s.\33[0m\n", cycles, cycles == 1? "" : "s");
 
 	wvm_free();
 

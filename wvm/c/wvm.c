@@ -15,6 +15,7 @@ bool wvm_init(word length) {
 	memsize = 0;
 	alive = 1;
 	membytes = length * 8;
+	cycles = 0;
 	return (memory = calloc(membytes, sizeof(byte))) != NULL;
 }
 
@@ -141,6 +142,7 @@ bool wvm_tick() {
 	word instruction = wvm_get_word(pc);
 	op_fn op = wvm_get_fn(instruction);
 	op(instruction);
+	cycles++;
 	return alive;
 }
 

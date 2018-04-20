@@ -32,6 +32,7 @@ word offset_code;
 word offset_end;
 word registers[128];
 word membytes;
+int cycles;
 bool alive;
 
 #endif
