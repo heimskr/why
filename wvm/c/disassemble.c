@@ -137,7 +137,7 @@ void wvm_disassemble_r(char *str, word instruction) {
 			sprintf(str, "<%s", ANSI_CYAN);
 			switch (func) {
 				case FUNCT_PRINTR:
-					sprintf(str, "%sprint%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str, "%sprint%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
 					break;
 				case FUNCT_HALT:
 					sprintf(str, "%shalt", str);
@@ -146,13 +146,13 @@ void wvm_disassemble_r(char *str, word instruction) {
 					sprintf(str, "%seval", str);
 					break;
 				case FUNCT_PRC:
-					sprintf(str, "%sprc%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str, "%sprc%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
 					break;
 				case FUNCT_PRD:
-					sprintf(str, "%sprd%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str, "%sprd%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
 					break;
 				case FUNCT_PRX:
-					sprintf(str, "%sprx%s %s%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str, "%sprx%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
 					break;
 			}
 
