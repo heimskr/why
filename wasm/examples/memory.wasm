@@ -29,12 +29,7 @@ heap_end: 0
 
 #code
 
-'\n' -> $s7
-'.' -> $s8
-
 // https://danluu.com/malloc-tutorial/
-
-
 
 :: mem_init
 
@@ -47,7 +42,7 @@ $s0 -> [ptrtoblock]
 attempt()
 
 @test_free
-<prc $s7>; <prc $s7>
+<p "\n\n">
 strprint(&msg_markfree)
 $g + 16 -> $t0
 1 -> $t1
@@ -55,7 +50,7 @@ $t1 -> [$t0]
 attempt()
 
 @test_more
-<prc $s7>; <prc $s7>
+<p "\n\n">
 strprint(&msg_reqmore1)
 60 -> $a1
 <prd $a1>
@@ -69,11 +64,11 @@ attempt()
 
 sub attempt() {
 	[$g] -> $s0
-	strprint(&msg_bsize); <prd $s0>; <prc $s7>
+	strprint(&msg_bsize); <prd $s0>; <p '\n'>
 	$g + 16 -> $s0
 	[$s0] -> $s0
-	strprint(&msg_free); <prd $t0>; <prc $s7>
-	strprint(&msg_rsize); <prd $a1>; <prc $s7>; <prc $s7>
+	strprint(&msg_free); <prd $t0>; <p '\n'>
+	strprint(&msg_rsize); <prd $a1>; <p "\n\n">
 	find_free_block()
 	<p '\n'>
 	: _checkresults_success if $r0
@@ -187,7 +182,7 @@ sub bold() {
 	strprint(&ansi_bold)
 	<prd $a0>
 	strprint(&ansi_reset)
-	<prc $s7>
+	<p '\n'>
 }
 
 {3}

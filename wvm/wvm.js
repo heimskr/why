@@ -61,9 +61,10 @@ class WVM {
 	}
 
 	tick() {
-		let instr = Parser.parseInstruction(this.loadInstruction());
+		const loaded = this.loadInstruction();
+		let instr = Parser.parseInstruction(loaded);
 		if (!instr) {
-			console.error(chalk.red("Invalid instruction:"), instr, this.loadInstruction().toString(2));
+			console.error(chalk.red("Invalid instruction:"), instr, loaded.toString(16).padStart(16, "0"), "/", loaded.toString(2).padStart(64, "0"));
 			return;
 		}
 

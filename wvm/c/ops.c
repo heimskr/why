@@ -434,6 +434,7 @@ void op_spop(word instruction) {
 	RREGS();
 	spv += 8;
 	rdv = wvm_get_word(spv);
+	INC();
 }
 
 void op_li(word instruction) {
