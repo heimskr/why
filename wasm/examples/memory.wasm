@@ -73,7 +73,7 @@ sub attempt() {
 	strprint(&msg_free); <prd $t0>; <prc $s7>
 	strprint(&msg_rsize); <prd $a1>; <prc $s7>; <prc $s7>
 	find_free_block()
-	<pr '\n'>
+	<p '\n'>
 	: _checkresults_success if $r0
 
 	strprint(&msg_cantallocate)
@@ -84,12 +84,11 @@ sub attempt() {
 	strprint(&ansi_bold)
 	<prd $r0>
 	strprint(&ansi_reset)
-	<pr ".\n">
+	<p ".\n">
 }
 
+{3}
 
-
-<>;<>;<>
 sub mem_init() {
 	&.end -> $g
 	$g -> [globalbase]
@@ -105,7 +104,7 @@ sub mem_init() {
 	$0 -> [$k0]             // magic = 0
 	$g -> [heap_end]
 }
-<>;<>;<>
+{3}
 
 /*
 	struct block_meta { // 4 words total
@@ -129,8 +128,6 @@ struct block_meta *find_free_block(struct block_meta **last, size_t size) {
 }
 */
 
-
-<>;<>;<>
 sub find_free_block() {
 	// $a0, $a1  ->  $r0
 	
@@ -181,8 +178,8 @@ sub find_free_block() {
 	@ffb_done
 		$t0 -> $r0
 }
-<>;<>;<>
 
+{3}
 
 sub bold() {
 	strprint(&ansi_bold)
@@ -190,6 +187,8 @@ sub bold() {
 	strprint(&ansi_reset)
 	<prc $s7>
 }
+
+{3}
 
 sub malloc() {
 	// $a0: number of bytes to allocate

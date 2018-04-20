@@ -401,6 +401,10 @@ class WASMC {
 				if (ld) {
 					add([getLabel(), "si", _M[1], _0, rd]);
 				}
+			} else if (op == "gap") {
+				for (let i = 0; i < args[0]; i++) {
+					add([i? null : label, "nop"]);
+				}
 			} else {
 				add(item);
 			}
@@ -472,7 +476,7 @@ class WASMC {
 	 */
 	compileInstruction(instruction) {
 		const [op, ...args] = instruction;
-		const { flags } = instruction;
+		const {flags} = instruction;
 		if (op == "trap") {
 			return this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags);
 		} else if (R_TYPES.includes(OPCODES[op])) {
