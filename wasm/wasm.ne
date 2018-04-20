@@ -260,21 +260,21 @@ op_srli			-> rv _ ">>>"  _ int into rv				{% d => ["srli",   d[0], d[6], d[4]] %
 op_srai			-> rv _ ">>"   _ int into rv				{% d => ["srai",   d[0], d[6], d[4]] %}
 				 | rv _ ">>="  _ int						{% d => ["srai",   d[0], d[0], d[4]] %}
 op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
-op_lbi			-> "[" _ int _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]] %}
+op_lbi			-> "[" _ int  _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], ["label", d[2]]] %}
 				 | "*" var into rv _ "/b"					{% d => ["lbi",      0,  d[3], ["label", d[1]]] %}
 op_sbi			-> rv into "[" _ int _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  d[4]] %}
 				 | rv into "[" _ xvar _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  ["label", d[4]]] %}
-op_lbni			-> "[" _ int _ "]" into rv _ "/b"			{% d => ["lbni",     0,  d[6], d[2]] %}
+op_lbni			-> "[" _ int  _ "]" into rv _ "/b"			{% d => ["lbni",     0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into "[" _ rv _ "]"
 				 	_ "/b"									{% d => ["lbni",     0,  d[8], ["label", d[2]]] %}
-op_li			-> "[" _ int _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
+op_li			-> "[" _ int  _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into rv					{% d => ["li",       0,  d[6], ["label", d[2]]] %}
 				 | "*" _ xvar into rv						{% d => ["li",       0,  d[4], ["label", d[2]]] %}
-op_si			-> rv into "[" _ int _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
+op_si			-> rv into "[" _ int  _ "]"					{% d => ["si",     d[0],   0,  d[4]] %}
 				 | rv into "[" _ xvar _ "]"					{% d => ["si",     d[0],   0,  ["label", d[4]]] %}
 				 | rv into "*" _ xvar						{% d => ["si",     d[0],   0,  ["label", d[4]]] %}
-op_lni			-> "[" _ int _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], d[2]] %}
+op_lni			-> "[" _ int  _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], d[2]] %}
 				 | "[" _ xvar _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], ["label", d[2]]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 				 | ptr_ref into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
@@ -282,20 +282,20 @@ op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 # J-Type instructions														   rs      addr
 op_jl			-> "::" _ int								{% d => ["jl",      0,     d[2]] %}
 				 | "::" _ xvar								{% d => ["jl",      0,     ["label", d[2]]] %}
-op_jlc			-> "::" _ int __ "if" __ reg				{% d => ["jlc",   d[6],    d[2]] %}
+op_jlc			-> "::" _ int  __ "if" __ reg				{% d => ["jlc",   d[6],    d[2]] %}
 				 | "::" _ xvar __ "if" __ reg				{% d => ["jlc",   d[6],    ["label", d[2]]] %}
 op_j			-> ":" _ int								{% d => ["j",       0,     d[2]] %}
 				 | ":" _ xvar								{% d => ["j",       0,     ["label", d[2]]] %}
-op_jc			-> ":" _ int __ "if" __ reg					{% d => ["jc",    d[6],    d[2]] %}
+op_jc			-> ":" _ int  __ "if" __ reg				{% d => ["jc",    d[6],    d[2]] %}
 				 | ":" _ xvar __ "if" __ reg				{% d => ["jc",    d[6],    ["label", d[2]]] %}
 
 op_mv			-> reg into reg								{% d => ["mv", d[0], d[2]] %}
 op_ret			-> "ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}
 op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %}
 op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
-op_jeq			-> ":" _ reg __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[2]] %}
+op_jeq			-> ":" _ reg  __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[2]] %}
 				 | ":" _ xvar __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
-				 | ":" _ reg __ "if" __ rv _ "==" _ int		{% d => ["jeq", d[10], d[6], d[2]] %}
+				 | ":" _ reg  __ "if" __ rv _ "==" _ int	{% d => ["jeq", d[10], d[6], d[2]] %}
 				 | ":" _ xvar __ "if" __ rv _ "==" _ int	{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
 op_nop			-> "<>"										{% d => ["nop"] %}
 
