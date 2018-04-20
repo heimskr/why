@@ -137,7 +137,7 @@ op				-> op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_j | op_jc | op_jr | op_jrc | op_jl | op_jlc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
-				 | call | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx
+				 | call | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx | trap_prs
 															{% d => d %}
 into			-> _ "->" _									{% d => null %}
 
@@ -305,6 +305,8 @@ trap_prc		-> "<" _ "prc" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    4
 				 | "<" _ "prc" _ char _ ">"					{% d => ["trap", 0, ["char", d[4]], 0, 4] %}
 trap_prd		-> "<" _ "prd" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    5 ] %}
 trap_prx		-> "<" _ "prx" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    6 ] %}
+trap_prs		-> "<" _ "prs" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]], 0, 4] %}
+
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
 
 call			-> "!" var _ "(" _ args _ ")"				{% d => ["call", d[1], ...d[5].map((x) => x[0])] %}

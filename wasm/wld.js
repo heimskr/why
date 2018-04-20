@@ -211,5 +211,17 @@ if (require.main === module) {
 		process.exit(0);
 	}
 
-	new Linker(options, options._[0], options._.slice(1), options.out).link();
+	try {
+		new Linker(options, options._[0], options._.slice(1), options.out).link();
+	} catch(e) {
+		if (typeof e == "string") {
+			console.error(chalk.red(e));
+		} else {
+			process.stdout.write("\x1b[31m");
+			console.error(e);
+			process.stdout.write("\x1b[0m");
+		}
+		
+		process.exit(1);
+	}
 }

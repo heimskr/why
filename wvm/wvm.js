@@ -520,7 +520,7 @@ class WVM {
 		} else if (funct == TRAPS.prx) {
 			this.flushPrcBuffer();
 			console.log(this.registers[rs].toString(16));
-		} else { // This may be changed to an exception in the future.
+		} else {
 			console.log("Unknown trap:", {rt, rs, rd, shift, funct});
 		}
 	}

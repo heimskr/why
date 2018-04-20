@@ -250,9 +250,7 @@ class WASMC {
 	 * @param {Array} expanded - The list of expanded instructions to compile and store.
 	 */
 	processCode(expanded) {
-		expanded.forEach((item) => {
-			this.addCode(item);
-		});
+		expanded.forEach((item) => this.addCode(item));
 	}
 
 	/**
@@ -326,12 +324,23 @@ class WASMC {
 				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
 			} else if (op == "trap") {
 				const funct = args[3];
-				if (funct == TRAPS.prc && args[1][0] == "char") {
-					add([label, "set", _0, _M[2], args[1][1]]);
-					add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
-				} else {
-					add([label, "trap", ...args]);
+				if (funct == TRAPS.prc) {
+					const type = args[1][0];
+					if (type == "char") {
+						add([label, "set", _0, _M[2], args[1][1]]);
+						add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
+						return;
+					} else if (type == "string") {
+						args[1][1].split("").forEach((c, i) => {
+							add([i == 0? label : null, "set", _0, _M[2], c.charCodeAt(0)]);
+							add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
+						});
+
+						return;
+					}
 				}
+				
+				add([label, "trap", ...args]);
 			} else if (op == "mv") {
 				add([label, "or", args[0], _0, args[1]]);
 			} else if (op == "push") {
@@ -419,6 +428,7 @@ class WASMC {
 	 * Mutates the input array.
 	 * @param {Object[]} expanded - An array of expanded instructions (see {@link module:wasm~WASMC#expandCode expandCode}).
 	 * @return {Object[]} The mutated input array with label references replaced with memory addresses.
+	 * @throws Throws an exception if an unknown label is encountered.
 	 */
 	expandLabels(expanded) {
 		// In the second pass, we replace label references with the corresponding
@@ -433,7 +443,12 @@ class WASMC {
 				// If the argument is a label reference,
 				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
-					item[i + 1] = this.offsets[arg[1]];
+					const offset = this.offsets[arg[1]];
+					if (typeof offset == "undefined") {
+						throw "Unknown label: " + arg[1];
+					}
+
+					item[i + 1] = offset;
 					item.flags = FLAGS.ADJUST_ADDRESS;
 				}
 			});
