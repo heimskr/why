@@ -117,11 +117,10 @@ sub strcpy() {
 
 sub bprint() {
 	: _bprint_true if $a0
-		&s_false -> $a0
-		: strprint
+		<prs "false">
+		ret
 	@_bprint_true
-		&s_true -> $a0
-		: strprint
+		<prs "true">
 }
 
 sub newline() {

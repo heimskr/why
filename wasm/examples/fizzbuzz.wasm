@@ -12,9 +12,6 @@ fizz: "Fizz"
 buzz: "Buzz"
 done: "Done.\n"
 max: 151
-colon: ':'
-space: ' '
-nl: '\n'
 
 #code
 
@@ -23,9 +20,6 @@ nl: '\n'
 
 0 -> $s0
 *max -> $s1
-*nl -> $s2
-*colon -> $s3
-*space -> $s4
 
 @fizzbuzz_loop
 	$s0 % 3 -> $t0
@@ -35,18 +29,18 @@ nl: '\n'
 	<prs ": ">
 
 	: fizzbuzz_fizz_done if $t0
-	!strprint(&fizz)
+	strprint(&fizz)
 
 	@fizzbuzz_fizz_done
 	: fizzbuzz_buzz_done if $t1
-	!strprint(&buzz)
+	strprint(&buzz)
 
 	@fizzbuzz_buzz_done
-	<prc $s2>
+	<prc '\n'>
 	$s0++
 	: fizzbuzz_done if $s0 == $s1
 	: fizzbuzz_loop
 
 @fizzbuzz_done
-	!strprint(&done)
+	strprint(&done)
 	<halt>
