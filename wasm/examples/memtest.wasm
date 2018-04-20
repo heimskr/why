@@ -1,0 +1,40 @@
+#meta
+name: "Memory Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+val: 0
+foo: 6
+
+#code
+
+
+// set
+16 -> $t0
+<prd $t0>
+<prc '\n'>
+
+// si
+$t0 -> [val]
+<prd $t0>
+
+3 -> $t1
+//$t0 + $t1 -> *val
+<>
+*val -> [$t0]
+<>
+
+// li
+[val] -> $t0
+[100] -> $t0
+
+
+// lni
+&foo -> $t0
+[val] -> [$t0]
+[64] -> [$t0]
+
+
+<halt>

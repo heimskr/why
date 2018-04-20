@@ -32,8 +32,7 @@ nl: '\n'
 	$s0 % 5 -> $t1
 
 	<prd $s0>
-	<prc $s3>
-	<prc $s4>
+	<prs ": ">
 
 	: fizzbuzz_fizz_done if $t0
 	!strprint(&fizz)

@@ -138,10 +138,10 @@
 					<ol>
 						<li><a href="#op-li">Load Immediate</a> (<code>li</code>)</li>
 						<li><a href="#op-si">Store Immediate</a> (<code>si</code>)</li>
-						<li><a href="#op-ci">Copy Immediate</a> (<code>ci</code>)</li>
+						<li><a href="#op-lni">Load Indirect Immediate</a> (<code>lni</code>)</li>
 						<li><a href="#op-lbi">Load Byte Immediate</a> (<code>lbi</code>)</li>
 						<li><a href="#op-sbi">Store Byte Immediate</a> (<code>sbi</code>)</li>
-						<li><a href="#op-cbi">Copy Byte Immediate</a> (<code>cbi</code>)</li>
+						<li><a href="#op-lbni">Load Byte Indirect Immediate</a> (<code>lbni</code>)</li>
 						<li><a href="#op-set">Set</a> (<code>set</code>)</li>
 					</ol>
 				</li>
@@ -712,12 +712,6 @@ Loads the word beginning at address `imm` into `rd`.
 
 Copies the word beginning at the memory address pointed to by `rs` into memory beginning at address `imm`.
 
-### <a name="op-ci"></a>Copy Immediate (`ci`)
-> `[imm] -> [$rs]`  
-> `000000100111` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
-
-Copies the word stored at the memory at address `imm` into the memory address pointed to by `rs`.
-
 ### <a name="op-lbi"></a>Load Byte Immediate (`lbi`)
 > `[imm] -> $rd /b`  
 > `000000100101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
@@ -730,11 +724,17 @@ Loads the byte at address `imm` into `rd`.
 
 Copies the byte stored at the memory address pointed to by `rs` into memory at address `imm`.
 
-### <a name="op-cbi"></a>Copy Byte Immediate (`cbi`)
-> `[imm] -> [$rs] /b`  
+### <a name="op-lni"></a>Load Indirect Immediate (`lni`)
+> `[imm] -> [$rd]`  
+> `000000100111` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Copies the word stored at the memory at address `imm` into the memory address pointed to by `rd`.
+
+### <a name="op-lbni"></a>Load Byte Indirect Immediate (`lbni`)
+> `[imm] -> [$rd] /b`  
 > `000000101000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Copies the byte stored at the memory at address `imm` into the memory address pointed to by `rs`.
+Copies the byte stored at the memory at address `imm` into the memory address pointed to by `rd`.
 
 ### <a name="op-set"></a>Set (`set`)
 > `imm -> $rd`  

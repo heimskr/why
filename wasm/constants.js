@@ -38,6 +38,14 @@ exports.I_TYPES = [
 	0b000000100100, // Shift Right Arithmetic Immediate
 	0b000000100101, // Load Byte Immediate
 	0b000000100110, // Store Byte Immediate
+	0b000000100111, // Load Indirect Immediate
+	0b000000101000, // Load Byte Indirect Immediate
+
+void op_set(word instruction) {
+	IRD(); IIMM();
+	rdv = imm;
+	INC();
+}
 ];
 
 exports.J_TYPES = [
@@ -117,6 +125,8 @@ exports.OPCODES = {
 	srai:   0b000000100100,
 	lbi:    0b000000100101,
 	sbi:    0b000000100110,
+	lni:    0b000000100111,
+	lbni:   0b000000101000,
 };
 
 exports.FUNCTS = {

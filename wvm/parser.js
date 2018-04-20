@@ -268,6 +268,8 @@ const Parser = module.exports = {
 		if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "lbi")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} ${chalk.yellow(rd)} /b`;
 		if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(imm)}] /b`;
+		if (op == "lni")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
+		if (op == "lbni")   return `[${chalk.magenta(imm)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	},
 

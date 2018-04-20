@@ -240,6 +240,10 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_LBI:
 			sprintf(str, "[%s%d%s] %s->%s %s$%s%s", COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 			break;
+		case OP_LNI:
+		case OP_LBNI:
+			sprintf(str, "[%s%d%s] %s->%s [%s$%s%s]", COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
+			break;
 		case OP_SI:
 		case OP_SBI:
 			sprintf(str, "%s$%s%s %s->%s [%s%d%s]", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);

@@ -150,6 +150,8 @@ op_fn wvm_get_fn(word instruction) {
 		case 36: return op_srai;
 		case 37: return op_lbi;
 		case 38: return op_sbi;
+		case 39: return op_lni;
+		case 40: return op_lbni;
 	}
 
 	return NULL;

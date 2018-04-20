@@ -434,6 +434,12 @@ void op_si(word instruction) {
 	INC();
 }
 
+void op_set(word instruction) {
+	IRD(); IIMM();
+	rdv = imm;
+	INC();
+}
+
 void op_lbi(word instruction) {
 	IRD(); IIMM();
 	rdv = wvm_get_byte(imm);
@@ -446,9 +452,15 @@ void op_sbi(word instruction) {
 	INC();
 }
 
-void op_set(word instruction) {
+void op_lni(word instruction) {
 	IRD(); IIMM();
-	rdv = imm;
+	wvm_set_word(rdv, wvm_get_word(imm));
+	INC();
+}
+
+void op_lbni(word instruction) {
+	IRD(); IIMM();
+	wvm_set_byte(rdv, wvm_get_byte(imm));
 	INC();
 }
 

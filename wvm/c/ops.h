@@ -83,9 +83,11 @@ void op_sb(word instruction);     // 18  R 5
 
 void op_li(word instruction);     // 19  I
 void op_si(word instruction);     // 20  I
+void op_set(word instruction);    // 21  I
 void op_lbi(word instruction);    // 37  I
 void op_sbi(word instruction);    // 38  I
-void op_set(word instruction);    // 21  I
+void op_lni(word instruction);    // 39  I
+void op_lbni(word instruction);   // 40  I
 
 void op_pr(word instruction);     // 31 ?R 1
 void op_halt(word instruction);   // 31 ?R 2
@@ -172,6 +174,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_SRAI   36
 #define OP_LBI    37
 #define OP_SBI    38
+#define OP_LNI    39
+#define OP_LBNI   40
 
 #define OPS_MATH   1
 #define OPS_RLOGIC 2
