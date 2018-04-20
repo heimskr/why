@@ -34,7 +34,7 @@ sub strcat($s0, $s1) {
 
 	$a0 -> $s0
 	$a1 -> $s1
-	!strlen($a0)
+	strlen($a0)
 	$s0 += $r0
 	@_strcat_loop
 		[$s1] -> $t0 /b
