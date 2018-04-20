@@ -34,7 +34,7 @@ heap_end: 0
 :: mem_init
 
 &.end -> $s0
-$s0 -> [ptrtoblock]
+$s0 -> *ptrtoblock
 &ptrtoblock -> $a0
 20 -> $a1
 
@@ -87,8 +87,8 @@ sub attempt() {
 {3}
 
 sub mem_init() {
-	&.end -> $g
-	$g -> [globalbase]
+	*.end -> $g
+	$g -> *globalbase
 
 	// Initialize first block.
 	$g -> $k0
@@ -97,9 +97,8 @@ sub mem_init() {
 	$g + 80 -> $k1          // next = end+10w
 	$k1 -> [$k0]; $k0 += 8
 	0 -> $k1                // free
-	$k1 -> [$k0]; $k0 += 8
-	$0 -> [$k0]             // magic = 0
-	$g -> [heap_end]
+	$k1 -> [$k0]
+	$g -> *heap_end
 }
 {3}
 
@@ -108,7 +107,6 @@ sub mem_init() {
 		word size;
 		ptr *next;
 		word free;
-		word magic;
 	};
 */
 
