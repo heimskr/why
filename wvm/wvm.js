@@ -98,7 +98,7 @@ class WVM {
 
 	resetRegisters() {
 		this.registers = _.range(0, 128).map(() => Long.ZERO);
-		this.registers[REGISTER_OFFSETS.stack] = Long.fromInt(8*(this.memorySize - 1), true);
+		this.sp = Long.fromInt(8*(this.memorySize - 1), true);
 	}
 
 	getWord(k, signed=false) {
@@ -467,6 +467,16 @@ class WVM {
 		this.setByte(this.registers[rd], this.registers[rs].and(0xff));
 	}
 
+	op_spush(rt, rs, rd) {
+		this.setWord(this.sp, this.registers[rs]);
+		this.sp = this.sp.subtract(8);
+	}
+
+	op_spop(rt, rs, rd) {
+		this.sp = this.sp.add(8);
+		this.registers[rd] = this.getWord(this.sp);
+	}
+
 	op_li(rs, rd, imm) {
 		this.registers[rd] = this.getWord(imm);
 	}
@@ -534,8 +544,10 @@ class WVM {
 
 	get hi() { return this.registers[REGISTER_OFFSETS.hi]; }
 	get lo() { return this.registers[REGISTER_OFFSETS.lo]; }
+	get sp() { return this.registers[REGISTER_OFFSETS.stack]; }
 	set hi(to) { this.registers[REGISTER_OFFSETS.hi] = to; }
 	set lo(to) { this.registers[REGISTER_OFFSETS.lo] = to; }
+	set sp(to) { this.registers[REGISTER_OFFSETS.stack] = to; }
 }
 
 module.exports = WVM;

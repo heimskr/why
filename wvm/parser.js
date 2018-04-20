@@ -228,6 +228,8 @@ const Parser = module.exports = {
 		if (op == "cb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "lb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd)} /b`;
 		if (op == "sb")    return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
+		if (op == "spush") return `${chalk.dim("[")} ${chalk.yellow(rs)}`;
+		if (op == "spop")  return `${chalk.dim("]")} ${chalk.yellow(rd)}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	},
 
