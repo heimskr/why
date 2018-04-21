@@ -5,7 +5,8 @@ let fs = require("fs"),
 	getline = require("get-line-from-pos"),
 	minimist = require("minimist"),
 	Long = require("long"),
-	_ = require("lodash");
+	_ = require("lodash"),
+	crypto = require("crypto");
 
 /**
  * `wasm` is the assembly language for Why.js. The `wasmc` utility parses it and compiles it to `wvm` bytecode.
@@ -16,7 +17,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const { EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, TRAPS } = require("./constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, TRAPS} = require("./constants.js");
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
@@ -57,14 +58,14 @@ class WASMC {
 		 * @type {Object}
 		 * @name module:wasm~WASMC#parsed
 	 	 */
-		this.parsed = { };
+		this.parsed = {};
 
 		/**
 		 * Contains a list of offsets/labels.
 		 * @type {Object.<string, number>}
 		 * @name module:wasm~WASMC#offsets
 		 */
-		this.offsets = { };
+		this.offsets = {};
 
 		/**
 		 * Contains the program's metadata as an array of Longs. See the ISA documentation for the layout.
@@ -86,6 +87,13 @@ class WASMC {
 		 * @name module:wasm~WASMC#code
 		 */
 		this.code = [];
+
+		/**
+		 * Contains the encoded symbol table.
+		 * @type {Long[]}
+		 * @name module:wasm~WASMC#symbolTable;
+		 */
+		this.symbolTable = [];
 	}
 
 	/**
@@ -113,7 +121,10 @@ class WASMC {
 		} catch (e) {
 			console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset)}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length}`) + ":");
 			if (this.options.dev) {
-				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset); return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})`; }));
+				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => {
+					const _line = getline(source, e.offset);
+					return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})`;
+				}));
 			}
 
 			process.exit(1);
@@ -135,15 +146,15 @@ class WASMC {
 		}
 
 		if (typeof this.parsed.metadata == "undefined") {
-			this.parsed.metadata = { };
+			this.parsed.metadata = {};
 		}
 
 		if (typeof this.parsed.data == "undefined") {
-			this.parsed.data = { };
+			this.parsed.data = {};
 		}
 
 		if (typeof this.parsed.code == "undefined") {
-			this.parsed.code = { };
+			this.parsed.code = {};
 		}
 	}
 
@@ -152,8 +163,8 @@ class WASMC {
 	 */
 	compile() {
 		this.parse();
-		this.processMetadata();
 		this.processHandlers();
+		this.processMetadata();
 		this.processData();
 		this.processCode(this.expandLabels(this.expandCode()));
 
@@ -200,18 +211,16 @@ class WASMC {
 		// Append the name-version-author string.
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
 		
-		// The beginning of the handler pointer section comes right after the end of the meta section.
+		// The beginning of the symbol table comes right after the end of the meta section.
 		this.meta[0] = Long.fromInt(this.meta.length * 8, true);
 
-		// The handlers section is exactly as large as the set of exceptions; the data section begins
-		// at the sum of the lengths of the meta section and the handlers section.
-		this.meta[1] = Long.fromInt((this.meta.length + EXCEPTIONS.length) * 8);
+		// The handlers section begins right after the symbol table.
+		this.meta[1] = this.meta[0].add(this.symbolTable.length * 8);
 
-		// Library compilation can be triggered either via inclusion of "library" in
-		// the program's #data section or by use of the --library option.
-		this.options.library = !(this.ignoreFlags = !(this.parsed.meta.library || this.options.library));
+		// The handlers section is exactly as large as the set of exceptions.
+		this.meta[2] = this.meta[1].add(this.handlers.length * 8);
 
-		this.log({ meta: this.meta, version, author });
+		this.log({meta: this.meta, version, author});
 	}
 
 	/**
@@ -430,7 +439,6 @@ class WASMC {
 	 * Mutates the input array.
 	 * @param {Object[]} expanded - An array of expanded instructions (see {@link module:wasm~WASMC#expandCode expandCode}).
 	 * @return {Object[]} The mutated input array with label references replaced with memory addresses.
-	 * @throws Throws an exception if an unknown label is encountered.
 	 */
 	expandLabels(expanded) {
 		// In the second pass, we replace label references with the corresponding
@@ -447,11 +455,12 @@ class WASMC {
 					// replace it with an address from the offsets map. 
 					const offset = this.offsets[arg[1]];
 					if (typeof offset == "undefined") {
-						throw "Unknown label: " + arg[1];
+						item[i + 1] = WASMC.encodeSymbol(arg[1]);
+						item.flags = FLAGS.UNKNOWN_SYMBOL;
+					} else {
+						item[i + 1] = offset;
+						item.flags = FLAGS.KNOWN_SYMBOL;
 					}
-
-					item[i + 1] = offset;
-					item.flags = FLAGS.ADJUST_ADDRESS;
 				}
 			});
 		});
@@ -480,14 +489,14 @@ class WASMC {
 		} else if (R_TYPES.includes(OPCODES[op])) {
 			return this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), FUNCTS[op], flags);
 		} else if (I_TYPES.includes(OPCODES[op])) {
-			return this.iType(OPCODES[op], ...args.map(this.convertValue, this), flags);
+			return this.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags);
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			return this.jType(OPCODES[op], ...args.map(this.convertValue, this), flags);
+			return this.jType(OPCODES[op], this.convertValue(args[0]), args[1], flags);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
 			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
-			return Long.fromString("deadc0de", true, 16);
+			return Long.fromString("6666deadc0de6666", true, 16);
 		}
 	}
 
@@ -497,15 +506,15 @@ class WASMC {
 	 * @return {Long} The bytecode representation of the instruction.
 	 */
 	unparseInstruction(instruction) {
-		const { op, type } = instruction;
+		const {op, type} = instruction;
 		if (type == "r") {
-			const { opcode, rt, rs, rd, funct, flags } = instruction;
+			const {opcode, rt, rs, rd, funct, flags} = instruction;
 			return this.rType(opcode, rt, rs, rd, funct, flags);
 		} else if (type == "i") {
-			const { opcode, rs, rd, imm, flags } = instruction;
+			const {opcode, rs, rd, imm, flags} = instruction;
 			return this.iType(opcode, rs, rd, imm, flags);
 		} else if (type == "j") {
-			const { opcode, rs, addr, flags } = instruction;
+			const {opcode, rs, addr, flags} = instruction;
 			return this.jType(opcode, rs, addr, flags);
 		} else if (op == "nop") {
 			return Long.UZERO;
@@ -626,7 +635,10 @@ class WASMC {
 	 * Prints a message to stderr and exits the process with return code 1.
 	 * @param {...*} args - The arguments to pass to `console.error`.
 	 */
-	static die(...a) { console.error(...a); process.exit(1); }
+	static die(...a) {
+		console.error(...a);
+		process.exit(1);
+	}
 
 	/**
 	 * Converts an array of 8 characters into a Long.
@@ -674,6 +686,18 @@ class WASMC {
 	 */
 	static convertRegister(x) {
 		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1]) : x;
+	}
+
+	/**
+	 * Encodes the name of a symbol.
+	 * @param  {string} name - A symbol name.
+	 * @return {number} The symbol name encoded as a number.
+	 */
+	static encodeSymbol(name) {
+		const hash = crypto.createHash("sha256");
+		hash.update(name);
+		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
+		return parseInt(hash.digest("hex").substr(0, 8), 16);
 	}
 }
 

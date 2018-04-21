@@ -6,6 +6,7 @@
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
+				<li><a href="#prog-symtab">Symbol Table</a></li>
 				<li><a href="#prog-ptrs">Handler Pointer Section</a></li>
 				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
@@ -69,12 +70,12 @@
 				</li>
 				<li><a href="#ops-logic-i">Logic (I-Types)</a>
 					<ol>
-						<li><a href="#op-andi">Bitwise AND Immediate</a> (<code>andi</code>)</li>
+						<li><a href="#op-andi">Bitwise AND Immediate</a>   (<code>andi</code>)</li>
 						<li><a href="#op-nandi">Bitwise NAND Immediate</a> (<code>nandi</code>)</li>
-						<li><a href="#op-nori">Bitwise NOR Immediate</a> (<code>nori</code>)</li>
-						<li><a href="#op-ori">Bitwise OR Immediate</a> (<code>ori</code>)</li>
+						<li><a href="#op-nori">Bitwise NOR Immediate</a>   (<code>nori</code>)</li>
+						<li><a href="#op-ori">Bitwise OR Immediate</a>     (<code>ori</code>)</li>
 						<li><a href="#op-xnori">Bitwise XNOR Immediate</a> (<code>xnori</code>)</li>
-						<li><a href="#op-xori">Bitwise XOR Immediate</a> (<code>xori</code>)</li>
+						<li><a href="#op-xori">Bitwise XOR Immediate</a>   (<code>xori</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-data-i">Data (I-Types)</a>
@@ -126,14 +127,14 @@
 				</li>
 				<li><a href="#ops-mem-r">Memory (R-Types)</a>
 					<ol>
-						<li><a href="#op-c">Copy</a> (<code>c</code>)</li>
-						<li><a href="#op-l">Load</a> (<code>l</code>)</li>
-						<li><a href="#op-s">Store</a> (<code>s</code>)</li>
-						<li><a href="#op-cb">Copy Byte</a> (<code>cb</code>)</li>
-						<li><a href="#op-lb">Load Byte</a> (<code>lb</code>)</li>
-						<li><a href="#op-sb">Store Byte</a> (<code>sb</code>)</li>
+						<li><a href="#op-c">Copy</a>           (<code>c</code>)</li>
+						<li><a href="#op-l">Load</a>           (<code>l</code>)</li>
+						<li><a href="#op-s">Store</a>          (<code>s</code>)</li>
+						<li><a href="#op-cb">Copy Byte</a>     (<code>cb</code>)</li>
+						<li><a href="#op-lb">Load Byte</a>     (<code>lb</code>)</li>
+						<li><a href="#op-sb">Store Byte</a>    (<code>sb</code>)</li>
 						<li><a href="#op-spush">Stack Push</a> (<code>spush</code>)</li>
-						<li><a href="#op-spop">Stack Pop</a> (<code>spop</code>)</li>
+						<li><a href="#op-spop">Stack Pop</a>   (<code>spop</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
@@ -208,12 +209,13 @@ Programs are divided into four sections: metadata, handler pointers, data and co
 ## <a name="prog-meta"></a>Metadata Section
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the handler pointer section, and is therefore equivalent to the size of the metadata section.
 
-* `0x00`: Address of the beginning of the [handler pointer section](#prog-ptrs).
-* `0x01`: Address of the beginning of the [data section](#prog-data).
+* `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
+* `0x01`: Address of the beginning of the [handler pointer section](#prog-ptrs).
 * `0x02`: Address of the beginning of the [code section](#prog-code).
-* `0x03`: Total size of the program.
-* `0x04`–`0x05`: ORCID of the author (represented with ASCII).
-* `0x06`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x03`: Address of the beginning of the [data section](#prog-data).
+* `0x04`: Total size of the program.
+* `0x05`–`0x06`: ORCID of the author (represented with ASCII).
+* `0x07`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembler syntax
@@ -225,8 +227,16 @@ name: "Example"
 version: "4"
 </pre>
 
+## <a name="prog-symtab"></a>Symbol Table Section
+The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The first is the numeric ID. The second is the symbol's offset (its position relative to the start of the code section).
+The third is the length (in words) of the symbol's name. The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling
+of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+
 ## <a name="prog-ptrs"></a>Handler Pointer Section
 As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero). Its size is exactly equal to 256 words, but this may change if more than that many exceptions are eventually defined (an exceedingly unlikely possibility).
+
+## <a name="prog-code"></a>Code Section
+The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
 
 ## <a name="prog-data"></a>Data Section
 The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
@@ -239,9 +249,6 @@ Variables and their values are declared (once again) with JSON-like markup:
 some_string: "this is an example."
 some_number: 42
 </pre>
-
-## <a name="prog-code"></a>Code Section
-The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
 
 # <a name="exceptions"></a>Exceptions
 Exceptions occur when invalid code is executed. For example, trying to divide by zero will cause a division by zero error. When an exception occurs, the VM will search for a handler in the [handler pointer section](#prog-ptrs) and, if one is found, jump to it. If no handler is found in the handler pointer section, code will continue, which may result in undefined behavior. For example, unhandled division by zero may or may not store a result in `rd`, and if it does, the value it stores isn't guaranteed to be defined. (Note that division isn't currently implemented because support for floating point numbers hasn't been implemented.)
