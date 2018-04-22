@@ -191,8 +191,6 @@ class WASMC {
 		this.setDataOffsets(this.meta[3].toInt());
 		this.processCode(this.expandLabels(expanded));
 
-
-		// this.meta[3] = Long.fromInt(this.getEnd(this.code.length), true);
 		const out = [...this.meta, ...this.handlers, ...this.code, ...this.data];
 
 		if (0&&this.options.debug) {
@@ -271,14 +269,20 @@ class WASMC {
 		});
 	}
 
+	/**
+	 * Adds an offset to each data offset and inserts the results into the offsets object.
+	 * @param {number} dataSectionStart The start offset of the data section.
+	 */
 	setDataOffsets(dataSectionStart) {
 		Object.keys(this.dataOffsets).forEach((key) => this.offsets[key] = this.dataOffsets[key] + dataSectionStart);
 	}
 
-	get dataLength() {
-		return Object.values(this.parsed.data).reduce((a, b) => a + this.convertDataPieces(b[0], b[1]).length, 0);
-	}
-
+	/**
+	 * Converts a data entry to an array of longs.
+	 * @param {string} type A data type.
+	 * @param {number|string} value A data value.
+	 * @return {Long[]} The encoded form of the entry.
+	 */
 	convertDataPieces(type, value) {
 		if (type.match(/^(in|floa)t$/)) {
 			return [Long.fromValue(value)];
@@ -290,7 +294,6 @@ class WASMC {
 
 		WASMC.die(`Error: unknown data type "${type}".`);
 	}
-
 
 	/**
 	 * Copies an array of expanded code into the {@link module:wasm~WASMC#code main code array}.
@@ -456,19 +459,6 @@ class WASMC {
 		});
 
 		return expanded;
-	}
-
-	/**
-	 * Returns the address of the beginning of the program memory section.
-	 * @param  {number} instructionCount The number of code instructions. 
-	 * @return {number} The address of the first byte after the end of the code section.
-	 */
-	getEnd(instructionCount) {
-		if (!this.handlers) {
-			this.processHandlers();
-		}
-		
-		return 8 * (this.symbolTableLength + [this.meta, this.handlers].reduce((a, b) => a + b.length, 0) + instructionCount);
 	}
 
 	/**
@@ -672,12 +662,23 @@ class WASMC {
 	}
 
 	/**
+	 * Finds an array of all labels found in the program's data and code sections.
+	 * @return {string[]} An array of labels.
+	 */
+	findAllLabels() {
+		return _.uniq([
+			...Object.keys(this.parsed.data),
+			...this.parsed.code.map(([label]) => label).filter((label) => label)
+		]);
+	}
+
+	/**
 	 * 
 	 * @param  {name} name The name of a symbol.
 	 * @return {number} The absolute position of the symbol relative to 0 after accounting for the symbol table.
 	 */
 	readjustedOffset(name) {
-		// return this
+		
 	}
 
 	/**
@@ -686,6 +687,14 @@ class WASMC {
 	 */
 	get symbolTableLength() {
 		return _.without(_.keys(this.offsets), ".end", ".start").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
+	}
+
+	/**
+	 * Returns the length in words of the data section.
+	 * @type {number}
+	 */
+	get dataLength() {
+		return Object.values(this.parsed.data).reduce((a, b) => a + this.convertDataPieces(b[0], b[1]).length, 0);
 	}
 
 	/**
