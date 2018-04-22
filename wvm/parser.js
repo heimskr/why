@@ -4,6 +4,10 @@ let fs = require("fs"),
 	_ = require("lodash"),
 	minimist = require("minimist");
 
+/**
+ * @module wasm
+ */
+
 const chalk = new (require("chalk")).constructor({enabled: true});
 
 require("../util.js").mixins(_);
@@ -15,31 +19,52 @@ const SEDOCPO = _.multiInvert(OPCODES);
 const STESFFO = _.multiInvert(REGISTER_OFFSETS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
 
-module.exports = class Parser {
+/**
+ * Contains code for parsing compiled wvm bytecode.
+ */
+class Parser {
+	/**
+	 * Constructs a new `Parser` instance.
+	 * @param {Long[]} [longs] An optional array of Longs that will be passed to {@link module:wasm~Parser#load load} if specified.
+	 */
 	constructor(longs) {
 		if (longs instanceof Array) {
 			this.load(longs);
 		}
 	}
 
-	open(filename, silent = true) {
-		return this.read(fs.readFileSync(filename, "utf8"), silent);
+	/**
+	 * Loads a program from a file and parses it.
+	 * @param {string} filename The filename of the program to load.
+	 * @param {boolean} [silent=true] Whether to suppress debug output.
+	 */
+	open(filename, silent=true) {
+		this.read(fs.readFileSync(filename, "utf8"), silent);
 	}
 
+	/**
+	 * Parses a string representation of a program.
+	 * @param {string} text A text representation (\n-separated hexadecimal numbers) of a program.
+	 * @param {boolean} [silent=true] Whether to suppress debug output.
+	 */
 	read(text, silent=true) {
-		return this.load(text.split("\n").map((s) => Long.fromString(s, true, 16)));
+		this.load(text.split("\n").map((s) => Long.fromString(s, true, 16)));
 	}
 
+	/**
+	 * Stores an array of longs and {@link module:wasm~Parser#parse parses} them.
+	 * @param {Long[]} longs An array of Longs.
+	 * @param {boolean} [silent=true] Whether to suppress debug output.
+	 */
 	load(longs, silent=true) {
 		this.raw = [...longs];
 		this.parsed = this.parse(longs, silent);
-
-		return {
-			parsed: this.parsed,
-			raw: this.raw
-		};
 	}
 
+	/**
+	 * Parses the stored raw longs.
+	 * @param {boolean} [silent=true] Whether to suppress debug output.
+	 */
 	parse(silent=true) {
 		const longs = this.raw;
 
@@ -85,7 +110,7 @@ module.exports = class Parser {
 
 	/**
 	 * Reads the program's symbol table.
-	 * @return {Object.<string, [number, Long]>} An object mapping a symbol name to tuple of its ID and its address.
+	 * @return {Object<string, Array<number, Long>>} An object mapping a symbol name to tuple of its ID and its address.
 	 */
 	getSymbols() {
 		const longs = this.raw;
@@ -140,6 +165,12 @@ module.exports = class Parser {
 		return this.raw[4].subtract(this.raw[3]).toNumber() / 8;
 	}
 
+	/**
+	 * Parses a single instruction.
+	 * @param  {Long|string} instruction An instruction represented as either a Long of a 64-long string of binary digits.
+	 * @return {Object} An object containing information about the instruction. Always contains `op`, `opcode`, `rs`,
+	 *                  `flags` and `type` for non-NOPs; other output varies depending on the type of the instruction.
+	 */
 	static parseInstruction(instruction) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
@@ -185,10 +216,20 @@ module.exports = class Parser {
 		}
 	}
 
+	/**
+	 * Styles an operator.
+	 * @param  {string} oper An operator.
+	 * @return {string} A styled operator.
+	 */
 	static colorOper(oper) {
 		return chalk.bold(oper);
 	}
 
+	/**
+	 * Decompiles an instruction to the corresponding wasm source.
+	 * @param  {Long|string} instruction An instruction represented as either a Long of a 64-long string of binary digits.
+	 * @return {string} The wasm equivalent of the instruction.
+	 */
 	static formatInstruction(instruction) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
@@ -212,6 +253,11 @@ module.exports = class Parser {
 		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
 	}
 
+	/**
+	 * Returns the instruction type corresponding to an opcode.
+	 * @param  {number} opcode An opcode.
+	 * @return {?("r"|"i"|"j")} One of the operation types (r, i, j) if the opcode was recognized; `undefined` otherwise.
+	 */
 	static instructionType(opcode) {
 		if (R_TYPES.includes(opcode)) return "r";
 		if (I_TYPES.includes(opcode)) return "i";
@@ -359,6 +405,8 @@ module.exports = class Parser {
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
 	}
 }
+
+module.exports = Parser;
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {

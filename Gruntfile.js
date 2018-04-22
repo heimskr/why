@@ -82,7 +82,7 @@ module.exports = function(grunt) {
 			dist: {
 				src: jsdoc_files,
 				options: {
-					destination: "doc",
+					destination: "wvm/dist/doc",
 					config: "jsdoc.json",
 					template: "./node_modules/docdash"
 				}

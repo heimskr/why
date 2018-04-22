@@ -7,8 +7,7 @@
 /exclude
 /**/npm-debug.log
 /**/*.map
-/wvm/dist/app.css
-/wvm/dist/app.js
+/wvm/dist
 /wasm/compiled/*
 /doc
 /llvm/llvm.js
