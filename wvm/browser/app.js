@@ -236,7 +236,7 @@ let App = window.App = class App {
 			[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
 		].map((x) => x.join("-")).join(";");
 
-		this.displayRegisters();		
+		this.displayRegisters();
 
 		(this.vm.onTick = this.onTick.bind(this))();
 		this.vm.onSetWord = this.onSetWord.bind(this);
@@ -471,20 +471,11 @@ function initializeUI(app) {
 	app.initializeText();
 }
 
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wvm/c/ctest.why", "utf8"));
-let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memory.why", "utf8"));
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/ops.why", "utf8"));
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/stringtest.why", "utf8"));
-// let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/fizzbuzz.why", "utf8"));
+let parser = new Parser();
+parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memory.why", "utf8"));
 
-let {offsets, handlers, meta, code, symbols} = opened.parsed;
-let vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: opened.raw});
-if (opened.data) {
-	vm.data = opened.data;
-}
-
-window.vm = vm;
-let app;
+let {offsets, handlers, meta, code, symbols} = parser;
+let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
 
 $(() => {
 	app = window.app = new App(vm, {});

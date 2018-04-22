@@ -16,29 +16,34 @@ const STESFFO = _.multiInvert(REGISTER_OFFSETS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
 
 module.exports = class Parser {
-	static open(filename, silent=true) {
-		return Parser.read(fs.readFileSync(filename, "utf8"), silent);
-	}
-
-	static read(text, silent=true) {
-		if (text.match(/{/)) {
-			const data = JSON.parse(text);
-			const raw = data.program.split(/\s+/).map((s) => Long.fromString(s, true, 16));
-			return {
-				raw,
-				data,
-				parsed: Parser.parse(raw, silent)
-			};
-		} else {
-			return {
-				parsed: Parser.parse(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent),
-				raw: text.split("\n").map((s) => Long.fromString(s, true, 16))
-			};
+	constructor(longs) {
+		if (longs instanceof Array) {
+			this.load(longs);
 		}
 	}
 
-	static parse(longs, silent=true) {
-		let offsets = {
+	open(filename, silent = true) {
+		return this.read(fs.readFileSync(filename, "utf8"), silent);
+	}
+
+	read(text, silent=true) {
+		return this.load(text.split("\n").map((s) => Long.fromString(s, true, 16)));
+	}
+
+	load(longs, silent=true) {
+		this.raw = [...longs];
+		this.parsed = this.parse(longs, silent);
+
+		return {
+			parsed: this.parsed,
+			raw: this.raw
+		};
+	}
+
+	parse(silent=true) {
+		const longs = this.raw;
+
+		this.offsets = {
 			$symtab: longs[0].toInt(),
 			$handlers: longs[1].toInt(),
 			$code: longs[2].toInt(),
@@ -46,20 +51,28 @@ module.exports = class Parser {
 			$end: longs[4].toInt()
 		};
 
-		let handlers = longs.slice(offsets.$handlers, offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);
+		this.handlers = longs.slice(this.offsets.$handlers, this.offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);
 
-		let meta = {
+		this.rawMeta = longs.slice(0, this.offsets.$symtab / 8);
+		this.meta = {
 			orcid: _.chain([4, 5]).map((n) => longs[n]).longString().join("").chunk(4).map((n) => n.join("")).join("-").value()
 		};
+		[this.meta.name, this.meta.version, this.meta.author] = _(longs).slice(6, this.offsets.$handlers).longStrings();
 
-		[meta.name, meta.version, meta.author] = _(longs).slice(6, offsets.$handlers).longStrings();
+		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$handlers / 8);
+		this.symbols = this.getSymbols();
 
-		let code = longs.slice(offsets.$code / 8, offsets.$end / 8);
+		this.rawCode = longs.slice(this.offsets.$code / 8, this.offsets.$end / 8);
+		this.code = this.rawCode.map(Parser.parseInstruction);
+
+		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
+
+
 
 		if (!silent) {
 			console.log(chalk.dim("/*"));
 			console.log(chalk.green.dim("#offsets"));
-			console.log(Object.keys(offsets).map((k) => `${chalk.dim(`${k}:`)} ${chalk.magenta.dim(offsets[k])}`).join("\n"));
+			console.log(Object.keys(this.offsets).map((k) => `${chalk.dim(`${k}:`)} ${chalk.magenta.dim(this.offsets[k])}`).join("\n"));
 			console.log(chalk.dim("*/") + "\n");
 
 			console.log(chalk.green("#meta"));
@@ -68,20 +81,12 @@ module.exports = class Parser {
 			console.log(chalk.green("#handlers"));
 			console.log(handlers.map(([k, v]) => `${k}: ${chalk.magenta(v)}`).join("\n"));
 
-			console.log([, chalk.green("#code"), ...code.map(Parser.formatInstruction)].join("\n"));
+			console.log([, chalk.green("#code"), ...code].join("\n"));
 		}
-
-		return {
-			offsets,
-			handlers,
-			meta,
-			code: code.map(Parser.parseInstruction),
-			symbols: Parser.getSymbols(longs),
-			rawSymbols: longs.slice(longs[0].toInt() / 8, longs[1].toInt() / 8)
-		};
 	}
 
-	static getSymbols(longs) {
+	getSymbols() {
+		const longs = this.raw;
 		const start = longs[0].toInt() / 8;
 		const end = longs[1].toInt() / 8;
 		const out = {};
@@ -318,6 +323,42 @@ module.exports = class Parser {
 		if (funct == TRAPS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
+	}
+
+	/**
+	 * Finds the length of the symbol table of a program.
+	 * @param  {Long[]} longs An array of Longs.
+	 * @return {number} The length of the symbol table in words.
+	 */
+	static getSymbolTableLength(longs) {
+		return longs[1].subtract(longs[0]).toNumber() / 8;
+	}
+
+	/**
+	 * Finds the length of the handlers section of a program.
+	 * @param  {Long[]} longs An array of Longs.
+	 * @return {number} The length of the handlers section in words.
+	 */
+	static getHandlersLength(longs) {
+		return longs[2].subtract(longs[1]).toNumber() / 8;
+	}
+
+	/**
+	 * Finds the length of the code section of a program.
+	 * @param  {Long[]} longs An array of Longs.
+	 * @return {number} The length of the code section in words.
+	 */
+	static getCodeLength(longs) {
+		return longs[3].subtract(longs[2]).toNumber() / 8;
+	}
+
+	/**
+	 * Finds the length of the data section of a program.
+	 * @param  {Long[]} longs An array of Longs.
+	 * @return {number} The length of the data section in words.
+	 */
+	static getDataLength(longs) {
+		return longs[4].subtract(longs[3]).toNumber() / 8;
 	}
 }
 
