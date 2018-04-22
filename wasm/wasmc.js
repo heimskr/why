@@ -91,9 +91,16 @@ class WASMC {
 		/**
 		 * Contains the encoded symbol table.
 		 * @type {Long[]}
-		 * @name module:wasm~WASMC#symbolTable;
+		 * @name module:wasm~WASMC#symbolTable
 		 */
 		this.symbolTable = [];
+		
+		/**
+		 * An array of unknown symbols while compiling.
+		 * @type {string[]}
+		 * @name module:wasm~WASMC#unknownSymbols
+		 */
+		this.unknownSymbols = [];
 	}
 
 	/**
@@ -191,6 +198,13 @@ class WASMC {
 
 			fs.writeFileSync(outname, frozen);
 			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
+			if (this.unknownSymbols.length == 0) {
+				console.log(chalk.yellow("?"), "No unknown symbols found.");
+			} else {
+				console.log(chalk.yellow("?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
+			}
+
+			console.log("Length:", this.symbolTableLength);
 		}
 	}
 
@@ -457,6 +471,9 @@ class WASMC {
 					if (typeof offset == "undefined") {
 						item[i + 1] = WASMC.encodeSymbol(arg[1]);
 						item.flags = FLAGS.UNKNOWN_SYMBOL;
+						if (!this.unknownSymbols.includes(arg[1])) {
+							this.unknownSymbols.push(arg[1]);
+						}
 					} else {
 						item[i + 1] = offset;
 						item.flags = FLAGS.KNOWN_SYMBOL;
@@ -629,6 +646,14 @@ class WASMC {
 		if (this.options.debug) {
 			console.log(...args);
 		}
+	}
+
+	/**
+	 * Returns the number of words in the symbol table, regardless of whether the symbol table has been made yet.
+	 * @type {number}
+	 */
+	get symbolTableLength() {
+		return _.without(_.keys(this.offsets), ".end").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
 	}
 
 	/**

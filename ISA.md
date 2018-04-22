@@ -228,9 +228,7 @@ version: "4"
 </pre>
 
 ## <a name="prog-symtab"></a>Symbol Table Section
-The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The first is the numeric ID. The second is the symbol's offset (its position relative to the start of the code section).
-The third is the length (in words) of the symbol's name. The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling
-of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID, while the lower half is the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
 ## <a name="prog-ptrs"></a>Handler Pointer Section
 As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero). Its size is exactly equal to 256 words, but this may change if more than that many exceptions are eventually defined (an exceedingly unlikely possibility).
