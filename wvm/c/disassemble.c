@@ -53,10 +53,10 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_MULT:
 					sprintf(str, "%s$%s%s %s*%s %s$%s%s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_REG, srt, ANSI_RESET);
 					return;
-				case FUNCT_SLL: oper = "<<"; break;
+				case FUNCT_SLL: oper = "<<";  break;
 				case FUNCT_SRL: oper = ">>>"; break;
-				case FUNCT_SRA: oper = ">>"; break;
-				case FUNCT_MOD: oper = "%"; break;
+				case FUNCT_SRA: oper = ">>";  break;
+				case FUNCT_MOD: oper = "%";   break;
 			}
 
 			wvm_disassemble_r_alt_op(str, rs, rt, rd, oper);
@@ -64,16 +64,16 @@ void wvm_disassemble_r(char *str, word instruction) {
 
 		case OPS_RLOGIC:
 			switch (func) {
-				case FUNCT_AND: oper = "&"; break;
-				case FUNCT_NAND: oper = "~&"; break;
-				case FUNCT_NOR: oper = "~|"; break;
-				case FUNCT_XNOR: oper = "~x"; break;
-				case FUNCT_XOR: oper = "x"; break;
-				case FUNCT_LAND: oper = "&&"; break;
+				case FUNCT_AND:   oper = "&";   break;
+				case FUNCT_NAND:  oper = "~&";  break;
+				case FUNCT_NOR:   oper = "~|";  break;
+				case FUNCT_XNOR:  oper = "~x";  break;
+				case FUNCT_XOR:   oper = "x";   break;
+				case FUNCT_LAND:  oper = "&&";  break;
 				case FUNCT_LNAND: oper = "~&&"; break;
-				case FUNCT_LNOR: oper = "~||"; break;
+				case FUNCT_LNOR:  oper = "~||"; break;
 				case FUNCT_LXNOR: oper = "~xx"; break;
-				case FUNCT_LXOR: oper = "xx"; break;
+				case FUNCT_LXOR:  oper = "xx";  break;
 				case FUNCT_OR:
 				case FUNCT_LOR:
 					if (rs == R_0) {
@@ -98,12 +98,9 @@ void wvm_disassemble_r(char *str, word instruction) {
 
 		case OPS_RCOMP:
 			sprintf(str, "%s$%s%s %s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD);
-			if (func ==  FUNCT_SL || func ==  FUNCT_SLU)
-				strcat(str, "<");
-			if (func ==  FUNCT_SLE || func ==  FUNCT_SLEU)
-				strcat(str, "<=");
-			if (func ==  FUNCT_SEQ || func ==  FUNCT_SEQU)
-				strcat(str, "==");
+			if (func ==  FUNCT_SL || func ==  FUNCT_SLU)   strcat(str, "<");
+			if (func ==  FUNCT_SLE || func ==  FUNCT_SLEU) strcat(str, "<=");
+			if (func ==  FUNCT_SEQ || func ==  FUNCT_SEQU) strcat(str, "==");
 			sprintf(str + strlen(str), "%s %s$%s%s %s->%s %s$%s%s", ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
 			if (func == FUNCT_SLU || func == FUNCT_SLEU || func == FUNCT_SEQU)
 				strcat(str, " /u");
@@ -140,21 +137,11 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_PRINTR:
 					sprintf(str + strlen(str), "print%s %s$%s", ANSI_RESET, COLOR_REG, srs);
 					break;
-				case FUNCT_HALT:
-					sprintf(str + strlen(str), "halt");
-					break;
-				case FUNCT_EVAL:
-					sprintf(str + strlen(str), "eval");
-					break;
-				case FUNCT_PRC:
-					sprintf(str + strlen(str), "prc%s %s$%s", ANSI_RESET, COLOR_REG, srs);
-					break;
-				case FUNCT_PRD:
-					sprintf(str + strlen(str), "prd%s %s$%s", ANSI_RESET, COLOR_REG, srs);
-					break;
-				case FUNCT_PRX:
-					sprintf(str + strlen(str), "prx%s %s$%s", ANSI_RESET, COLOR_REG, srs);
-					break;
+				case FUNCT_HALT: sprintf(str + strlen(str), "halt"); break;
+				case FUNCT_EVAL: sprintf(str + strlen(str), "eval"); break;
+				case FUNCT_PRC:  sprintf(str + strlen(str), "prc%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
+				case FUNCT_PRD:  sprintf(str + strlen(str), "prd%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
+				case FUNCT_PRX:  sprintf(str + strlen(str), "prx%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
 			}
 
 			sprintf(str + strlen(str), "%s>", ANSI_RESET);
@@ -204,36 +191,16 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_MULTUI:
 			sprintf(str, "%s$%s%s %s*%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
 			break;
-		case OP_MODI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "%");
-			break;
-		case OP_ANDI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "&");
-			break;
-		case OP_NANDI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "~&");
-			break;
-		case OP_NORI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "~|");
-			break;
-		case OP_ORI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "|");
-			break;
-		case OP_XNORI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "~x");
-			break;
-		case OP_XORI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "x");
-			break;
-		case OP_SLLI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, "<<");
-			break;
-		case OP_SRLI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>>");
-			break;
-		case OP_SRAI:
-			wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>");
-			break;
+		case OP_MODI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "%"); break;
+		case OP_ANDI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "&"); break;
+		case OP_NANDI: wvm_disassemble_i_alt_op(str, rs, rd, imm, "~&"); break;
+		case OP_NORI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "~|"); break;
+		case OP_ORI:   wvm_disassemble_i_alt_op(str, rs, rd, imm, "|"); break;
+		case OP_XNORI: wvm_disassemble_i_alt_op(str, rs, rd, imm, "~x"); break;
+		case OP_XORI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "x"); break;
+		case OP_SLLI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "<<"); break;
+		case OP_SRLI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>>"); break;
+		case OP_SRAI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>"); break;
 		case OP_LUI:
 			sprintf(str, "%slui:%s %s%d%s %s->%s %s$%s%s", ANSI_DIM, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 			break;
@@ -288,8 +255,10 @@ void wvm_disassemble_i_math(char *str, reg_t rs, reg_t rd, imm_t imm, char oper)
 	if (rs == rd) {
 		if (imm == 1)
 			sprintf(str, "%s$%s%s%c%c%s", COLOR_REG, wvm_decode_reg(rs), ANSI_DIM, oper, oper, ANSI_RESET);
-		else sprintf(str, "%s$%s%s %s%c=%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
-	} else sprintf(str, "%s$%s%s %s%c%s %s%d%s %s->%s %s$%s%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
+		else
+			sprintf(str, "%s$%s%s %s%c=%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
+	} else
+		sprintf(str, "%s$%s%s %s%c%s %s%d%s %s->%s %s$%s%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 }
 
 void wvm_disassemble_j(char *str, word instruction) {
