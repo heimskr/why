@@ -177,7 +177,8 @@ class WASMC {
 	 */
 	compile() {
 		this.parse();
-		this.symbolTable = this.symbolTableSkeleton(this.findAllLabels());
+		const labels = this.findAllLabels();
+		this.symbolTable = this.createSymbolTable(labels, true);
 		this.processHandlers();
 		this.processMetadata();
 		this.processData();
@@ -191,6 +192,7 @@ class WASMC {
 
 		this.setDataOffsets(this.metaOffsetData.toInt());
 		this.processCode(this.expandLabels(expanded));
+		this.symbolTable = this.createSymbolTable(labels, false);
 
 		const out = [...this.meta, ...this.symbolTable, ...this.handlers, ...this.code, ...this.data];
 
@@ -691,14 +693,15 @@ class WASMC {
 	}
 
 	/**
-	 * Returns a symbol table with all addresses set to zero.
+	 * Returns a symbol table.
+	 * @param  {boolean} [skeleton=true] Whether to set all addresses to zero at first.
 	 * @param  {string[]} labels An array of labels.
-	 * @return {Long[]} An encoded initial symbol table.
+	 * @return {Long[]} An encoded symbol table.
 	 */
-	symbolTableSkeleton(labels) {
+	createSymbolTable(labels, skeleton = true) {
 		return _.flatten(_.without(labels, ".end").map((label) => [
 			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
-			Long.UZERO,
+			skeleton? Long.UZERO : Long.fromInt(this.offsets[label], true),
 			...WASMC.str2longs(label)
 		]));
 	}

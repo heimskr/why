@@ -29,7 +29,7 @@ class WVM {
 			throw "Unable to load memory.";
 		}
 
-		({ offsets: this.offsets, handlers: this.handlers, meta: this.meta, code: this.code} = program);
+		({ offsets: this.offsets, handlers: this.handlers, meta: this.meta, code: this.code, symbols: this.symbols} = program);
 		this.initial = initial;
 		this.memorySize = memorySize;
 		this.resetMemory();
