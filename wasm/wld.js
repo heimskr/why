@@ -25,20 +25,27 @@ class Linker {
 	}
 
 	link() {
-		let main = new Parser();
+		const main = new Parser();
 		main.open(this.objectFilenames[0]);
-		const {raw, parsed} = main;
-		console.log(raw);
 
+		const {raw, parsed} = main;
 		const codeLength = main.getCodeLength();
 		const dataLength = main.getDataLength();
 		const mainSymbols = main.getSymbols();
 
-		console.log({codeLength, dataLength, mainSymbols});
-
-
 		// fs.writeFileSync(this.options.out, WASMC.longs2strs(this.finalizeOutput()).join("\n"));
 		// console.log(`${chalk.green("\u2714")} Successfully linked ${chalk.bold(this.filename)} and saved the output to ${chalk.bold(this.options.out)}.`);
+	}
+
+	/**
+	 * Converts the imm/addr values of the I-/J-type instructions in a list of Longs to their symbol representations
+	 * @param {Long} longs An array of compiled code.
+	 * @param {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 */
+	desymbolize(longs, symbolTable) {
+		for (let i = 0; i < longs.length; i++) {
+			
+		}
 	}
 
 	warn(...args) {
@@ -81,7 +88,7 @@ if (require.main === module) {
 			console.error(e);
 			process.stdout.write("\x1b[0m");
 		}
-		
+
 		process.exit(1);
 	}
 }

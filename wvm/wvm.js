@@ -468,7 +468,7 @@ class WVM {
 		this.setByte(this.registers[rd], this.registers[rs].and(0xff));
 	}
 
-	op_spush(rt, rs, rd) {
+	op_spush(rt, rs) {
 		this.setWord(this.sp, this.registers[rs]);
 		this.sp = this.sp.subtract(8);
 	}

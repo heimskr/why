@@ -675,15 +675,6 @@ class WASMC {
 	}
 
 	/**
-	 * 
-	 * @param  {name} name The name of a symbol.
-	 * @return {number} The absolute position of the symbol relative to 0 after accounting for the symbol table.
-	 */
-	readjustedOffset(name) {
-		
-	}
-
-	/**
 	 * Returns the number of words in the symbol table, regardless of whether the symbol table has been made yet.
 	 * @param  {string[]} labels An array of labels.
 	 * @return {number} The length of the symbol table.

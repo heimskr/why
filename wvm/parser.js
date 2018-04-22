@@ -48,7 +48,7 @@ class Parser {
 	 * @param {boolean} [silent=true] Whether to suppress debug output.
 	 */
 	read(text, silent=true) {
-		this.load(text.split("\n").map((s) => Long.fromString(s, true, 16)));
+		this.load(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent);
 	}
 
 	/**
@@ -99,12 +99,12 @@ class Parser {
 			console.log(chalk.dim("*/") + "\n");
 
 			console.log(chalk.green("#meta"));
-			console.log(Object.keys(meta).map((k) => `${chalk.cyan(k)}: ${chalk.yellow(`"${meta[k]}"`)}`).concat([""]).join("\n"));
+			console.log(Object.keys(this.meta).map((k) => `${chalk.cyan(k)}: ${chalk.yellow(`"${this.meta[k]}"`)}`).concat([""]).join("\n"));
 
 			console.log(chalk.green("#handlers"));
-			console.log(handlers.map(([k, v]) => `${k}: ${chalk.magenta(v)}`).join("\n"));
+			console.log(this.handlers.map(([k, v]) => `${k}: ${chalk.magenta(v)}`).join("\n"));
 
-			console.log([, chalk.green("#code"), ...code].join("\n"));
+			console.log([, chalk.green("#code"), ...this.code].join("\n"));
 		}
 	}
 
