@@ -17,7 +17,7 @@ require("jquery.splitter");
 const {REGISTER_OFFSETS} = require("../../wasm/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
-const UNPRINTABLE = [...[[0, 32]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
+const UNPRINTABLE = [...[[0, 32], [127, 159], [173, 173]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
 let App = window.App = class App {
 
 	constructor(vm, config={}) {
@@ -113,17 +113,18 @@ let App = window.App = class App {
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
 				const long = this.vm.getWord(8*i);
-				
+
 				const classes = [`addr-${i}`];
 				const dataStart = vm.offsets.$data == i * 8 && vm.offsets.$data != vm.offsets.$code;
+				const symtabStart = vm.offsets.$symtab == i * 8;
 				const handlersStart = vm.offsets.$handlers == i * 8;
 				const codeStart = vm.offsets.$code == i * 8;
 				const stackStart = vm.memorySize - 16 == i;
 				const globalStart = vm.offsets.$end == i * 8;
 
-				if (dataStart || stackStart)
+				if (dataStart || stackStart || handlersStart)
 					classes.push("dashed");
-				if (handlersStart || codeStart || globalStart)
+				if (symtabStart || codeStart || globalStart)
 					classes.push("solid");
 
 				const tr = $("<tr></tr>").addClass(classes.join(" ")).appendTo($("#memory"))
@@ -145,7 +146,7 @@ let App = window.App = class App {
 	}
 
 	hexCell(long) {
-		return _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
+		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
 	}
 
 	decompiledCell(long, addr) {
@@ -184,7 +185,7 @@ let App = window.App = class App {
 			}
 		}
 
-		return _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => {
+		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).map((x) => {
 			const parsed = parseInt(x.join(""), 16);
 			if (this.config.displayWhitespace) {
 				switch (parsed) {

@@ -177,9 +177,7 @@ class WASMC {
 	 */
 	compile() {
 		this.parse();
-		const labels = this.findAllLabels();
-		console.log(this.symbolTableSkeleton(labels));
-		console.log(this.symbolTableSkeleton(labels).length, this.symbolTableLength(labels));
+		this.symbolTable = this.symbolTableSkeleton(this.findAllLabels());
 		this.processHandlers();
 		this.processMetadata();
 		this.processData();
@@ -194,9 +192,9 @@ class WASMC {
 		this.setDataOffsets(this.metaOffsetData.toInt());
 		this.processCode(this.expandLabels(expanded));
 
-		const out = [...this.meta, ...this.handlers, ...this.code, ...this.data];
+		const out = [...this.meta, ...this.symbolTable, ...this.handlers, ...this.code, ...this.data];
 
-		if (0&&this.options.debug) {
+		if (this.options.debug) {
 			console.log({
 				meta: WASMC.longs2strs(this.meta),
 				handlers: WASMC.longs2strs(this.handlers),
@@ -206,9 +204,8 @@ class WASMC {
 				offsets: this.offsets
 			});
 		} else {
-			let outname = typeof this.options.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.options.out;
-
-			let frozen = this.options.library? JSON.stringify({
+			const outname = typeof this.options.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.options.out;
+			const frozen = this.options.library? JSON.stringify({
 				meta: this.parsed.meta,
 				labels: _.omitBy(this.offsets, (val, key) => key[0] == "_"),
 				program: WASMC.longs2strs(out).join(" ")
@@ -228,7 +225,7 @@ class WASMC {
 	 * Extracts and processes the program's metadata and stores it in {@link module:wasm~WASMC#meta meta}.
 	 */
 	processMetadata() {
-		let [name, version, author] = [this.parsed.meta.name || "?", this.parsed.meta.version || "?", this.parsed.meta.author || "?"];
+		const [name, version, author] = [this.parsed.meta.name || "?", this.parsed.meta.version || "?", this.parsed.meta.author || "?"];
 		
 		const orcid = typeof this.parsed.meta.orcid == "undefined"? "0000000000000000" : this.parsed.meta.orcid.replace(/\D/g, "");
 		if (orcid.length != 16) {
