@@ -101,6 +101,13 @@ class WASMC {
 		 * @name module:wasm~WASMC#unknownSymbols
 		 */
 		this.unknownSymbols = [];
+
+		/**
+		 * An array of offsets of data values relative to the start of the data section.
+		 * @type {Object.<string, number>}
+		 * @name module:wasm~WASMC#dataOffsets
+		 */
+		this.dataOffsets = {};
 	}
 
 	/**
@@ -175,8 +182,15 @@ class WASMC {
 		this.processData();
 
 		const expanded = this.expandCode();
-		this.offsets[".end"] = this.getEnd(expanded.length);
+		this.meta[3] = this.meta[2].add(expanded.length * 8);
+
+		const end = this.meta[3].toInt() + this.dataLength * 8;
+		this.offsets[".end"] = end;
+		this.meta[4] = Long.fromInt(end);
+
+		this.setDataOffsets(this.meta[3].toInt());
 		this.processCode(this.expandLabels(expanded));
+
 
 		// this.meta[3] = Long.fromInt(this.getEnd(this.code.length), true);
 		const out = [...this.meta, ...this.handlers, ...this.code, ...this.data];
@@ -206,9 +220,6 @@ class WASMC {
 			} else {
 				console.log(chalk.yellow("?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
 			}
-
-			console.log(this.offsets);
-			console.log("meta[3]:", this.meta[3]);
 		}
 	}
 	
@@ -250,27 +261,36 @@ class WASMC {
 	 * Extracts and processes the program's data and stores it in {@link module:wasm~WASMC#data data}.
 	 */
 	processData() {
-		let dataLength = this.meta[1].toInt();
+		let length = 0;
 		_(this.parsed.data).forEach(([type, value], key) => {
-			let pieces;
-			if (type.match(/^(in|floa)t$/)) {
-				pieces = [Long.fromValue(value)];
-			} else if (type == "string") {
-				pieces = WASMC.str2longs(value);
-			} else {
-				WASMC.die(`Error: unknown data type "${type}" for "${key}".`);
-			}
-
-			this.offsets[key] = dataLength;
-			this.log(chalk.yellow("Assigning"), chalk.bold(dataLength), "to", chalk.bold(key));
+			const pieces = this.convertDataPieces(type, value);
+			this.dataOffsets[key] = length;
+			this.log(chalk.yellow("Assigning"), "[" + chalk.bold(length) + "]", "to", chalk.bold(key));
 			this.data = this.data.concat(pieces);
-			dataLength += pieces.length * 8;
+			length += pieces.length * 8;
 		});
-
-		console.log("New:", dataLength);
-		this.meta[3] = this.meta[2].add(Long.fromInt(dataLength));
-		// this.meta[4] = this.meta[3].add(Long.fromInt
 	}
+
+	setDataOffsets(dataSectionStart) {
+		Object.keys(this.dataOffsets).forEach((key) => this.offsets[key] = this.dataOffsets[key] + dataSectionStart);
+	}
+
+	get dataLength() {
+		return Object.values(this.parsed.data).reduce((a, b) => a + this.convertDataPieces(b[0], b[1]).length, 0);
+	}
+
+	convertDataPieces(type, value) {
+		if (type.match(/^(in|floa)t$/)) {
+			return [Long.fromValue(value)];
+		}
+		
+		if (type == "string") {
+			return WASMC.str2longs(value);
+		}
+
+		WASMC.die(`Error: unknown data type "${type}" for "${key}".`);
+	}
+
 
 	/**
 	 * Copies an array of expanded code into the {@link module:wasm~WASMC#code main code array}.
@@ -435,7 +455,6 @@ class WASMC {
 			}
 		});
 
-		console.log(".end ->", this.offsets[".end"], expanded.length)
 		return expanded;
 	}
 

@@ -43,7 +43,7 @@ const Parser = module.exports = {
 			$handlers: longs[1].toInt(),
 			$code: longs[2].toInt(),
 			$data: longs[3].toInt(),
-			$end: longs[3].toInt()
+			$end: longs[4].toInt()
 		};
 
 		let handlers = longs.slice(offsets.$handlers, offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);

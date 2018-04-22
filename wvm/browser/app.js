@@ -149,7 +149,7 @@ let App = window.App = class App {
 	}
 
 	decompiledCell(long, addr) {
-		if (addr < 32 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$code) {
+		if (addr < 40 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$code) {
 			return $("<a></a>").attr({href: "#"}).addClass("handler").text(long.toString()).click(() => {
 				this.vm.programCounter = long.toInt();
 				this.highlightProgramCounter();
