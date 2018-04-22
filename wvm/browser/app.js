@@ -230,7 +230,12 @@ let App = window.App = class App {
 
 		this.vm.enabled = false;
 
-		this.range = `0-${this.vm.offsets.$end + (32 - 1) * 8}; ${8*(this.vm.memorySize - 16)}-${8*(this.vm.memorySize - 1)}`;
+		this.range = [
+			[0, this.vm.offsets.$symtab - 8],
+			[this.vm.offsets.$handlers, this.vm.offsets.$end + (32 - 1) * 8],
+			[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
+		].map((x) => x.join("-")).join(";");
+
 		this.displayRegisters();		
 
 		(this.vm.onTick = this.onTick.bind(this))();
