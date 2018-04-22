@@ -110,39 +110,55 @@ let App = window.App = class App {
 
 	displayMemory() {
 		$("#memory tr").remove();
+		
+		const edges = this.symbolTableEdges();
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
-				const long = this.vm.getWord(8*i);
+				const byte = i * 8;
+				const long = this.vm.getWord(byte);
 
 				const classes = [`addr-${i}`];
-				const dataStart = vm.offsets.$data == i * 8 && vm.offsets.$data != vm.offsets.$code;
-				const symtabStart = vm.offsets.$symtab == i * 8;
-				const handlersStart = vm.offsets.$handlers == i * 8;
-				const codeStart = vm.offsets.$code == i * 8;
+				const dataStart = vm.offsets.$data == byte && vm.offsets.$data != vm.offsets.$code;
+				const symtabStart = vm.offsets.$symtab == byte;
+				const handlersStart = vm.offsets.$handlers == byte;
+				const codeStart = vm.offsets.$code == byte;
 				const stackStart = vm.memorySize - 16 == i;
-				const globalStart = vm.offsets.$end == i * 8;
+				const globalStart = vm.offsets.$end == byte;
 
-				if (dataStart || stackStart || handlersStart)
+				if (dataStart || stackStart || edges.includes(byte))
 					classes.push("dashed");
-				if (symtabStart || codeStart || globalStart)
+				if (handlersStart || symtabStart || codeStart || globalStart)
 					classes.push("solid");
 
 				const tr = $("<tr></tr>").addClass(classes.join(" ")).appendTo($("#memory"))
-					.append($("<td></td>").text(8*i))
+					.append($("<td></td>").text(byte))
 					.append($("<td></td>").html(this.hexCell(long)))
-					.append($("<td></td>").html(this.decompiledCell(long, 8*i)))
+					.append($("<td></td>").html(this.decompiledCell(long, byte)))
 					.click((event) => {
 						if (!$(event.target).hasClass("handler")) {
-							vm.programCounter = 8*i;
+							vm.programCounter = byte;
 							this.onTick();
 						}
 					});
 
 				if (this.vm.data && this.vm.data.labels) {
-					tr.append($("<td></td>").text(Object.keys(this.vm.data.labels).filter((label) => this.vm.data.labels[label] == 8 * i)[0] || ""));
+					tr.append($("<td></td>").text(Object.keys(this.vm.data.labels).filter((label) => this.vm.data.labels[label] == byte)[0] || ""));
 				}
 			});
 		});
+	}
+
+	symbolTableEdges() {
+		const out = [];
+
+		for (let i = this.vm.offsets.$symtab / 8, j = 0; i < this.vm.offsets.$handlers / 8 && j < 10000; j++) {
+			i += 2 + this.vm.initial[i].toUnsigned().low;
+			if (i * 8 < this.vm.offsets.$handlers) {
+				out.push(i * 8);
+			}
+		}
+
+		return out;
 	}
 
 	hexCell(long) {
