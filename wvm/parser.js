@@ -264,6 +264,11 @@ class Parser {
 		if (J_TYPES.includes(opcode)) return "j";
 	}
 
+	/**
+	 * Converts a numeric register ID to its string representation.
+	 * @param  {number} n A register ID.
+	 * @return {string} A register name.
+	 */
 	static getRegister(n) {
 		if (n == REGISTER_OFFSETS.return) {
 			return "$rt";
@@ -279,19 +284,15 @@ class Parser {
 		return null;
 	}
 
-	static format(instruction) {
-		const {type, op, rt, rs, rd, funct, imm, addr} = instruction;
-		if (type == "r") {
-			return Parser.formatR(op, rt, rs, rd, funct);
-		} else if (type == "i") {
-			return Parser.formatI(op, rs, rd, imm);
-		} else if (type == "j") {
-			return Parser.formatJ(op, rs, addr);
-		}
-
-		return "?";
-	}
-
+	/**
+	 * Converts an R-type instruction to its original wasm source.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rt The name of the `rt` register.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {string} rd The name of the `rt` register.
+	 * @param  {number} funct The ID of the function.
+	 * @return {string} A line of wasm source.
+	 */
 	static formatR(op, rt, rs, rd, funct) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;
@@ -346,6 +347,14 @@ class Parser {
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 
+	/**
+	 * Converts an I-type instruction to its original wasm source.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {string} rd The name of the `rt` register.
+	 * @param  {number} imm An immediate value.
+	 * @return {string} A line of wasm source.
+	 */
 	static formatI(op, rs, rd, imm) {
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
@@ -388,6 +397,13 @@ class Parser {
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 
+	/**
+	 * Converts a J-type instruction to its original wasm source.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {number} addr An immediate value.
+	 * @return {string} A line of wasm source.
+	 */
 	static formatJ(op, rs, addr) {
 		if (op == "j")   return `${chalk.dim(":") } ${chalk.magenta(addr)}`;
 		if (op == "jc")  return `${chalk.dim(":") } ${chalk.magenta(addr)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
@@ -396,6 +412,14 @@ class Parser {
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 
+	/**
+	 * Converts a trap instruction to its original wasm source.
+	 * @param  {string} rt The name of the `rt` register.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {string} rd The name of the `rt` register.
+	 * @param  {number} funct The ID of the function.
+	 * @return {string} A line of wasm source.
+	 */
 	static formatTrap(rt, rs, rd, funct) {
 		if (funct == TRAPS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.prc)    return `<${chalk.cyan("prc")} ${chalk.yellow(rs)}>`;
