@@ -67,8 +67,6 @@ module.exports = class Parser {
 
 		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
 
-
-
 		if (!silent) {
 			console.log(chalk.dim("/*"));
 			console.log(chalk.green.dim("#offsets"));
@@ -85,6 +83,10 @@ module.exports = class Parser {
 		}
 	}
 
+	/**
+	 * Reads the program's symbol table.
+	 * @return {Object.<string, [number, Long]>} An object mapping a symbol name to tuple of its ID and its address.
+	 */
 	getSymbols() {
 		const longs = this.raw;
 		const start = longs[0].toInt() / 8;
@@ -104,6 +106,38 @@ module.exports = class Parser {
 		}
 
 		return out;
+	}
+
+	/**
+	 * Finds the length of the symbol table of the program.
+	 * @return {number} The length of the symbol table in words.
+	 */
+	getSymbolTableLength() {
+		return this.raw[1].subtract(this.raw[0]).toNumber() / 8;
+	}
+
+	/**
+	 * Finds the length of the handlers section of the program.
+	 * @return {number} The length of the handlers section in words.
+	 */
+	getHandlersLength() {
+		return this.raw[2].subtract(this.raw[1]).toNumber() / 8;
+	}
+
+	/**
+	 * Finds the length of the code section of the program.
+	 * @return {number} The length of the code section in words.
+	 */
+	getCodeLength() {
+		return this.raw[3].subtract(this.raw[2]).toNumber() / 8;
+	}
+
+	/**
+	 * Finds the length of the data section of the program.
+	 * @return {number} The length of the data section in words.
+	 */
+	getDataLength() {
+		return this.raw[4].subtract(this.raw[3]).toNumber() / 8;
 	}
 
 	static parseInstruction(instruction) {
@@ -323,42 +357,6 @@ module.exports = class Parser {
 		if (funct == TRAPS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
-	}
-
-	/**
-	 * Finds the length of the symbol table of a program.
-	 * @param  {Long[]} longs An array of Longs.
-	 * @return {number} The length of the symbol table in words.
-	 */
-	static getSymbolTableLength(longs) {
-		return longs[1].subtract(longs[0]).toNumber() / 8;
-	}
-
-	/**
-	 * Finds the length of the handlers section of a program.
-	 * @param  {Long[]} longs An array of Longs.
-	 * @return {number} The length of the handlers section in words.
-	 */
-	static getHandlersLength(longs) {
-		return longs[2].subtract(longs[1]).toNumber() / 8;
-	}
-
-	/**
-	 * Finds the length of the code section of a program.
-	 * @param  {Long[]} longs An array of Longs.
-	 * @return {number} The length of the code section in words.
-	 */
-	static getCodeLength(longs) {
-		return longs[3].subtract(longs[2]).toNumber() / 8;
-	}
-
-	/**
-	 * Finds the length of the data section of a program.
-	 * @param  {Long[]} longs An array of Longs.
-	 * @return {number} The length of the data section in words.
-	 */
-	static getDataLength(longs) {
-		return longs[4].subtract(longs[3]).toNumber() / 8;
 	}
 }
 

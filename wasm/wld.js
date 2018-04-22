@@ -25,6 +25,17 @@ class Linker {
 	}
 
 	link() {
+		let main = new Parser();
+		main.open(this.objectFilenames[0]);
+		const {raw, parsed} = main;
+		console.log(raw);
+
+		const codeLength = main.getCodeLength();
+		const dataLength = main.getDataLength();
+		const mainSymbols = main.getSymbols();
+
+		console.log({codeLength, dataLength, mainSymbols});
+
 
 		// fs.writeFileSync(this.options.out, WASMC.longs2strs(this.finalizeOutput()).join("\n"));
 		// console.log(`${chalk.green("\u2714")} Successfully linked ${chalk.bold(this.filename)} and saved the output to ${chalk.bold(this.options.out)}.`);
