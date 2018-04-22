@@ -141,8 +141,8 @@ let App = window.App = class App {
 						}
 					});
 
-				if (this.vm.data && this.vm.data.labels) {
-					tr.append($("<td></td>").text(Object.keys(this.vm.data.labels).filter((label) => this.vm.data.labels[label] == byte)[0] || ""));
+				if (this.vm.symbols) {
+					tr.append($("<td></td>").text(Object.keys(this.vm.symbols).filter((symbol) => this.vm.symbols[symbol][1].toInt() == byte)[0] || ""));
 				}
 			});
 		});
@@ -472,8 +472,8 @@ let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memor
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/stringtest.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/fizzbuzz.why", "utf8"));
 
-let {offsets, handlers, meta, code} = opened.parsed;
-let vm = new WVM({program: {offsets, handlers, meta, code}, memory: opened.raw});
+let {offsets, handlers, meta, code, symbols} = opened.parsed;
+let vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: opened.raw});
 if (opened.data) {
 	vm.data = opened.data;
 }
