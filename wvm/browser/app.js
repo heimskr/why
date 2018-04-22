@@ -172,7 +172,7 @@ let App = window.App = class App {
 						   // .replace(/<span style="[^"]*">\$sp<\/span>/, `<span class="reg-sp">$sp</span>`)
 				return html;
 			} catch(e) {
-				return "❓";
+				return `<span class="what">?</span>`;
 			}
 		}
 
