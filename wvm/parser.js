@@ -71,7 +71,27 @@ const Parser = module.exports = {
 			console.log([, chalk.green("#code"), ...code.map(Parser.formatInstruction)].join("\n"));
 		}
 
-		return {offsets, handlers, meta, code: code.map(Parser.parseInstruction)};
+		return {offsets, handlers, meta, code: code.map(Parser.parseInstruction), symbols: Parser.getSymbols(longs)};
+	},
+
+	getSymbols(longs) {
+		const start = longs[0].toInt() / 8;
+		const end = longs[1].toInt() / 8;
+		const out = {};
+		for (let i = start, j = 0; i < end && j < 1000; j++) {
+			const id = longs[i].high;
+			const len = longs[i].low;
+			const addr = longs[i + 1];
+
+			const encodedName = longs.slice(i + 2, i + 2 + len).map((l) => l.toString(16).padStart(16, "0")).join("").replace(/(00)+$/, "");
+			const name = _.chunk(encodedName, 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
+
+			out[name] = [id, addr];
+
+			i += 2 + len;
+		}
+
+		return out;
 	},
 
 	parseInstruction(instruction) {
