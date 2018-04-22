@@ -15,12 +15,12 @@ const SEDOCPO = _.multiInvert(OPCODES);
 const STESFFO = _.multiInvert(REGISTER_OFFSETS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
 
-const Parser = module.exports = {
-	open(filename, silent=true) {
+module.exports = class Parser {
+	static open(filename, silent=true) {
 		return Parser.read(fs.readFileSync(filename, "utf8"), silent);
-	},
+	}
 
-	read(text, silent=true) {
+	static read(text, silent=true) {
 		if (text.match(/{/)) {
 			const data = JSON.parse(text);
 			const raw = data.program.split(/\s+/).map((s) => Long.fromString(s, true, 16));
@@ -35,9 +35,9 @@ const Parser = module.exports = {
 				raw: text.split("\n").map((s) => Long.fromString(s, true, 16))
 			};
 		}
-	},
+	}
 
-	parse(longs, silent=true) {
+	static parse(longs, silent=true) {
 		let offsets = {
 			$symtab: longs[0].toInt(),
 			$handlers: longs[1].toInt(),
@@ -79,9 +79,9 @@ const Parser = module.exports = {
 			symbols: Parser.getSymbols(longs),
 			rawSymbols: longs.slice(longs[0].toInt() / 8, longs[1].toInt() / 8)
 		};
-	},
+	}
 
-	getSymbols(longs) {
+	static getSymbols(longs) {
 		const start = longs[0].toInt() / 8;
 		const end = longs[1].toInt() / 8;
 		const out = {};
@@ -99,9 +99,9 @@ const Parser = module.exports = {
 		}
 
 		return out;
-	},
+	}
 
-	parseInstruction(instruction) {
+	static parseInstruction(instruction) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
@@ -144,13 +144,13 @@ const Parser = module.exports = {
 		} else if (opcode == 0) {
 			return {op: "nop", opcode};
 		}
-	},
+	}
 
-	colorOper(oper) {
+	static colorOper(oper) {
 		return chalk.bold(oper);
-	},
+	}
 
-	formatInstruction(instruction) {
+	static formatInstruction(instruction) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
@@ -171,15 +171,15 @@ const Parser = module.exports = {
 		}
 
 		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
-	},
+	}
 
-	instructionType(opcode) {
+	static instructionType(opcode) {
 		if (R_TYPES.includes(opcode)) return "r";
 		if (I_TYPES.includes(opcode)) return "i";
 		if (J_TYPES.includes(opcode)) return "j";
-	},
+	}
 
-	getRegister(n) {
+	static getRegister(n) {
 		if (n == REGISTER_OFFSETS.return) {
 			return "$rt";
 		}
@@ -192,9 +192,9 @@ const Parser = module.exports = {
 		}
 
 		return null;
-	},
+	}
 
-	format(instruction) {
+	static format(instruction) {
 		const {type, op, rt, rs, rd, funct, imm, addr} = instruction;
 		if (type == "r") {
 			return Parser.formatR(op, rt, rs, rd, funct);
@@ -205,9 +205,9 @@ const Parser = module.exports = {
 		}
 
 		return "?";
-	},
+	}
 
-	formatR(op, rt, rs, rd, funct) {
+	static formatR(op, rt, rs, rd, funct) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;
 			if (rt == rd) return `${chalk.yellow(rt)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rs)}`;
@@ -252,16 +252,16 @@ const Parser = module.exports = {
 		if (op == "multu") return `${chalk.yellow(rs)} ${Parser.colorOper("*") } ${chalk.yellow(rt)} /u`;
 		if (op == "slu")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "sleu")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "trap")  return this.formatTrap(rt, rs, rd, funct);
+		if (op == "trap")  return Parser.formatTrap(rt, rs, rd, funct);
 		if (op == "cb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "lb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd)} /b`;
 		if (op == "sb")    return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "spush") return `${chalk.dim("[")} ${chalk.yellow(rs)}`;
 		if (op == "spop")  return `${chalk.dim("]")} ${chalk.yellow(rd)}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
-	},
+	}
 
-	formatI(op, rs, rd, imm) {
+	static formatI(op, rs, rd, imm) {
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
 				return imm == 1? chalk.yellow(rd) + chalk.yellow.dim(increment) : `${chalk.yellow(rs)} ${Parser.colorOper(opequals)} ${chalk.magenta(imm)}`;
@@ -301,17 +301,17 @@ const Parser = module.exports = {
 		if (op == "lni")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
 		if (op == "lbni")   return `[${chalk.magenta(imm)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
-	},
+	}
 
-	formatJ(op, rs, addr) {
+	static formatJ(op, rs, addr) {
 		if (op == "j")   return `${chalk.dim(":") } ${chalk.magenta(addr)}`;
 		if (op == "jc")  return `${chalk.dim(":") } ${chalk.magenta(addr)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
 		if (op == "jl")  return `${chalk.dim("::")} ${chalk.magenta(addr)}`;
 		if (op == "jlc") return `${chalk.dim("::")} ${chalk.magenta(addr)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
-	},
+	}
 
-	formatTrap(rt, rs, rd, funct) {
+	static formatTrap(rt, rs, rd, funct) {
 		if (funct == TRAPS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.prc)    return `<${chalk.cyan("prc")} ${chalk.yellow(rs)}>`;
 		if (funct == TRAPS.prd)    return `<${chalk.cyan("prd")} ${chalk.yellow(rs)}>`;
@@ -319,7 +319,7 @@ const Parser = module.exports = {
 		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
 	}
-};
+}
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {
