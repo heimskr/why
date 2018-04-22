@@ -47,6 +47,8 @@ int wvm_load(char *filename) {
 		wvm_set_word(memsize++ * 8, instr);
 	}
 
+	fclose(file);
+
 	offset_handlers = wvm_get_word(0);
 	offset_data = wvm_get_word(8);
 	offset_code = wvm_get_word(16);
@@ -202,7 +204,9 @@ void wvm_print_memory() {
 			printf(" Data");
 
 		if (offset_code <= boffset) {
-			printf(" %s", wvm_disassemble(word));
+			char *disassembled = wvm_disassemble(word);
+			printf(" %s", disassembled);
+			free(disassembled);
 			printf("%s│", jump);
 		
 		}

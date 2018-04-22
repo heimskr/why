@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
 		sprintf(path, "../../wasm/examples/%s.why", argv[2]);
 		wvm_load(path);
 	}
+
 	wvm_init_vm();
 
 	wvm_print_memory();

@@ -20,3 +20,6 @@ link:
 	../../wasm/wld.js ../../wasm/examples/memory.wasm ../../wasm/examples/string.why -o ../../wasm/examples/memory.why
 
 ltest: link test
+
+grind: wvm stringtest.why
+	valgrind --leak-check=full --show-leak-kinds=all ./wvm stringtest.why

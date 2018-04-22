@@ -98,23 +98,23 @@ void wvm_disassemble_r(char *str, word instruction) {
 		case OPS_RCOMP:
 			sprintf(str, "%s$%s%s %s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD);
 			if (func ==  FUNCT_SL || func ==  FUNCT_SLU)
-				sprintf(str, "%s<", str);
+				strcat(str, "<");
 			if (func ==  FUNCT_SLE || func ==  FUNCT_SLEU)
-				sprintf(str, "%s<=", str);
+				strcat(str, "<=");
 			if (func ==  FUNCT_SEQ || func ==  FUNCT_SEQU)
-				sprintf(str, "%s==", str);
-			sprintf(str, "%s%s %s$%s%s %s->%s %s$%s%s", str, ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
+				strcat(str, "==");
+			sprintf(str + strlen(str), "%s %s$%s%s %s->%s %s$%s%s", ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
 			if (func == FUNCT_SLU || func == FUNCT_SLEU || func == FUNCT_SEQU)
-				sprintf(str, "%s /u", str);
+				strcat(str, " /u");
 			return;
 
 		case OPS_RJUMP:
 			sprintf(str, "%s:", ANSI_DIM);
 			if (func == FUNCT_JRL || func == FUNCT_JRLC)
-				sprintf(str, "%s:", str);
+				strcat(str, ":");
 			sprintf(str, "%s%s %s$%s%s", str, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
 			if (func == FUNCT_JRC || func == FUNCT_JRLC)
-				sprintf(str, "%s %sif%s %s$%s%s", str, ANSI_RED, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
+				sprintf(str + strlen(str), " %sif%s %s$%s%s", ANSI_RED, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
 			return;
 
 		case OPS_MEM:
@@ -137,26 +137,26 @@ void wvm_disassemble_r(char *str, word instruction) {
 			sprintf(str, "<%s", ANSI_CYAN);
 			switch (func) {
 				case FUNCT_PRINTR:
-					sprintf(str, "%sprint%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str + strlen(str), "print%s %s$%s", ANSI_RESET, COLOR_REG, srs);
 					break;
 				case FUNCT_HALT:
-					sprintf(str, "%shalt", str);
+					sprintf(str + strlen(str), "halt");
 					break;
 				case FUNCT_EVAL:
-					sprintf(str, "%seval", str);
+					sprintf(str + strlen(str), "eval");
 					break;
 				case FUNCT_PRC:
-					sprintf(str, "%sprc%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str + strlen(str), "prc%s %s$%s", ANSI_RESET, COLOR_REG, srs);
 					break;
 				case FUNCT_PRD:
-					sprintf(str, "%sprd%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str + strlen(str), "prd%s %s$%s", ANSI_RESET, COLOR_REG, srs);
 					break;
 				case FUNCT_PRX:
-					sprintf(str, "%sprx%s %s$%s", str, ANSI_RESET, COLOR_REG, srs);
+					sprintf(str + strlen(str), "prx%s %s$%s", ANSI_RESET, COLOR_REG, srs);
 					break;
 			}
 
-			sprintf(str, "%s%s>", str, ANSI_RESET);
+			sprintf(str + strlen(str), "%s>", ANSI_RESET);
 			return;
 	}
 
@@ -268,9 +268,9 @@ void wvm_disassemble_i(char *str, word instruction) {
 	}
 
 	if (opcode == OP_ADDUI || opcode == OP_SUBUI || opcode == OP_MULTUI || opcode == OP_SLUI || opcode == OP_SLEUI)
-		sprintf(str, "%s /u", str);
+		strcat(str, " /u");
 	else if (opcode == OP_LBI || opcode == OP_SBI)
-		sprintf(str, "%s /b", str);
+		strcat(str, " /b");
 }
 
 void wvm_disassemble_i_comp(char *str, reg_t rs, reg_t rd, imm_t imm, char *oper) {
@@ -280,7 +280,7 @@ void wvm_disassemble_i_comp(char *str, reg_t rs, reg_t rd, imm_t imm, char *oper
 void wvm_disassemble_i_alt_op(char *str, reg_t rs, reg_t rd, imm_t imm, char *oper) {
 	sprintf(str, "%s$%s%s %s%s%s%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, oper, rs == rd? "=" : "", ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
 	if (rs != rd)
-		sprintf(str, "%s %s->%s %s$%s%s", str, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
+		sprintf(str + strlen(str), " %s->%s %s$%s%s", ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 }
 
 void wvm_disassemble_i_math(char *str, reg_t rs, reg_t rd, imm_t imm, char oper) {
@@ -300,7 +300,7 @@ void wvm_disassemble_j(char *str, word instruction) {
 
 	if (opcode == OP_JL || opcode == OP_JLC)
 		sprintf(str, "%s:", str);
-	sprintf(str, "%s %s%d%s", str, COLOR_IMM, addr, ANSI_RESET);
+	sprintf(str + strlen(str), " %s%d%s", COLOR_IMM, addr, ANSI_RESET);
 	if (opcode == OP_JC || opcode == OP_JLC)
-		sprintf(str, "%s %sif%s %s$%s%s", str, COLOR_IF, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
+		sprintf(str + strlen(str), " %sif%s %s$%s%s", COLOR_IF, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
 }
