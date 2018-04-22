@@ -177,18 +177,19 @@ class WASMC {
 	 */
 	compile() {
 		this.parse();
+		console.log(this.symbolTableSkeleton(this.findAllLabels()));
 		this.processHandlers();
 		this.processMetadata();
 		this.processData();
 
 		const expanded = this.expandCode();
-		this.meta[3] = this.meta[2].add(expanded.length * 8);
+		this.metaOffsetData = this.metaOffsetCode.add(expanded.length * 8);
 
-		const end = this.meta[3].toInt() + this.dataLength * 8;
+		const end = this.metaOffsetData.toInt() + this.dataLength * 8;
 		this.offsets[".end"] = end;
-		this.meta[4] = Long.fromInt(end);
+		this.metaOffsetEnd = end;
 
-		this.setDataOffsets(this.meta[3].toInt());
+		this.setDataOffsets(this.metaOffsetData.toInt());
 		this.processCode(this.expandLabels(expanded));
 
 		const out = [...this.meta, ...this.handlers, ...this.code, ...this.data];
@@ -239,13 +240,13 @@ class WASMC {
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
 		
 		// The beginning of the symbol table comes right after the end of the meta section.
-		this.meta[0] = Long.fromInt(this.meta.length * 8, true);
+		this.metaOffsetSymbols = Long.fromInt(this.meta.length * 8, true);
 		
 		// The handlers section begins right after the symbol table.
-		this.meta[1] = this.meta[0].add(this.symbolTable.length * 8);
+		this.metaOffsetHandlers = this.metaOffsetSymbols.add(this.symbolTable.length * 8);
 
 		// The handlers section is exactly as large as the set of exceptions.
-		this.meta[2] = this.meta[1].add(this.handlers.length * 8);
+		this.metaOffsetCode = this.metaOffsetHandlers.add(this.handlers.length * 8);
 	}
 
 	/**
@@ -314,7 +315,7 @@ class WASMC {
 		this.parsed.code.forEach((item) => {
 			let [label, op, ...args] = item;
 			if (label) {
-				this.offsets[label] = this.meta[2].toInt() + expanded.length * 8;
+				this.offsets[label] = this.metaOffsetCode.toInt() + expanded.length * 8;
 				this.log(chalk.magenta("Assigning"), chalk.bold(this.offsets[label]), "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
 			}
 
@@ -459,6 +460,14 @@ class WASMC {
 		});
 
 		return expanded;
+	}
+
+	symbolTableSkeleton(labels) {
+		return _.flatten(labels.map((label) => [
+			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
+			Long.UZERO,
+			...WASMC.str2longs(label)
+		]));
 	}
 
 	/**
@@ -696,6 +705,17 @@ class WASMC {
 	get dataLength() {
 		return Object.values(this.parsed.data).reduce((a, b) => a + this.convertDataPieces(b[0], b[1]).length, 0);
 	}
+
+	get metaOffsetSymbols()  { return this.meta[0]; }
+	get metaOffsetHandlers() { return this.meta[1]; }
+	get metaOffsetCode()     { return this.meta[2]; }
+	get metaOffsetData()     { return this.meta[3]; }
+	get metaOffsetEnd()      { return this.meta[4]; }
+	set metaOffsetSymbols(to)  { this.meta[0] = Long.fromInt(to, true); }
+	set metaOffsetHandlers(to) { this.meta[1] = Long.fromInt(to, true); }
+	set metaOffsetCode(to)     { this.meta[2] = Long.fromInt(to, true); }
+	set metaOffsetData(to)     { this.meta[3] = Long.fromInt(to, true); }
+	set metaOffsetEnd(to)      { this.meta[4] = Long.fromInt(to, true); }
 
 	/**
 	 * Prints a message to stderr and exits the process with return code 1.
