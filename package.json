@@ -43,7 +43,7 @@
 	},
 	"scripts": {
 		"start": "node_modules/http-server/bin/http-server wvm/dist",
-		"eslint": "eslint -c .eslintrc.json --ext jsx,js wasm/ wvm/",
+		"eslint": "eslint -c .eslintrc.json --ext jsx,js wasm/ wvm/; true",
 		"eslint-fix": "eslint -c .eslintrc.json --fix --ext jsx,js wasm/ wvm/",
 		"build": "grunt"
 	}

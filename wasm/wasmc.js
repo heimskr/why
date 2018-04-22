@@ -288,7 +288,7 @@ class WASMC {
 			return WASMC.str2longs(value);
 		}
 
-		WASMC.die(`Error: unknown data type "${type}" for "${key}".`);
+		WASMC.die(`Error: unknown data type "${type}".`);
 	}
 
 
@@ -762,7 +762,6 @@ module.exports = WASMC;
 const _A = _.range(0, 16).map((n) => ["register", "a", n]);
 const _RA = ["register", "return", 0];
 const _M = _.range(0, 16).map((n) => ["register", "m", n]);
-const _SP = ["register", "stack", 0];
 const _0  = ["register", "zero",  0];
 
 if (require.main === module) {

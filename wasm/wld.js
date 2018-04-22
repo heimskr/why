@@ -178,7 +178,7 @@ class Linker {
 
 	getLength() {
 		const {compiler: {meta, handlers, code}, data} = this;
-		return Long.fromInt([meta, handlers, data, code].reduce((a, b) => a + 8*b.length, 0), true)
+		return Long.fromInt([meta, handlers, data, code].reduce((a, b) => a + 8*b.length, 0), true);
 	}
 
 	warn(...args) {
