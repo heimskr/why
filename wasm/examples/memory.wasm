@@ -6,7 +6,7 @@ version: "1"
 library
 
 #includes
-"examples/string.why"
+string.why
 
 #data
 heap_limit: 100000

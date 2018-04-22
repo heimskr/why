@@ -105,8 +105,8 @@ sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] 
 
 include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}
 include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}
-inclusion		-> _ string _ sep							{% d => d[1] %}
-				 | _ sep									{% d => null %}
+inclusion		-> .:+ "\n"									{% (d, l, r) => { const t = d[0].join("").trim(); return ["", "#data"].includes(t)? r : t } %}
+				 | _ "\n" 									{% d => null %}
 
 label			-> "@" var									{% d => d[1] %}
 xvar			-> (var | ".end")							{% d => d[0][0] %}

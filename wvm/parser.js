@@ -71,14 +71,21 @@ const Parser = module.exports = {
 			console.log([, chalk.green("#code"), ...code.map(Parser.formatInstruction)].join("\n"));
 		}
 
-		return {offsets, handlers, meta, code: code.map(Parser.parseInstruction), symbols: Parser.getSymbols(longs)};
+		return {
+			offsets,
+			handlers,
+			meta,
+			code: code.map(Parser.parseInstruction),
+			symbols: Parser.getSymbols(longs),
+			rawSymbols: longs.slice(longs[0].toInt() / 8, longs[1].toInt() / 8)
+		};
 	},
 
 	getSymbols(longs) {
 		const start = longs[0].toInt() / 8;
 		const end = longs[1].toInt() / 8;
 		const out = {};
-		for (let i = start, j = 0; i < end && j < 1000; j++) {
+		for (let i = start, j = 0; i < end && j < 10000; j++) {
 			const id = longs[i].high;
 			const len = longs[i].low;
 			const addr = longs[i + 1];
