@@ -4,6 +4,7 @@
  ************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include "registers.h"
 #include "instruction.h"
 #include "ansi.h"
