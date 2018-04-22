@@ -20,7 +20,7 @@ window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WAS
 const UNPRINTABLE = [...[[0, 32]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
 let App = window.App = class App {
 
-	constructor(vm, config={ }) {
+	constructor(vm, config={}) {
 		this.vm = vm;
 		this.heartbeatActive = false;
 		this.active = false;
@@ -149,14 +149,14 @@ let App = window.App = class App {
 	}
 
 	decompiledCell(long, addr) {
-		if (addr < 32 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$data) {
-			return $("<a></a>").attr({ href: "#" }).addClass("handler").text(long.toString()).click(() => {
+		if (addr < 32 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$code) {
+			return $("<a></a>").attr({href: "#"}).addClass("handler").text(long.toString()).click(() => {
 				this.vm.programCounter = long.toInt();
 				this.highlightProgramCounter();
 			});
 		}
 
-		if (this.vm.offsets.$code <= addr) {
+		if (this.vm.offsets.$code <= addr && addr < this.vm.offsets.$data) {
 			if (long.equals(0)) {
 				return "";
 			}
@@ -377,7 +377,7 @@ function initializeUI(app) {
 				return;
 			}
 
-			const radix = { b: 2, t: 3, q: 4, o: 8, h: 16, x: 16 }[input[0]] || 10;
+			const radix = {b: 2, t: 3, q: 4, o: 8, h: 16, x: 16}[input[0]] || 10;
 			const unsigned = input[input.length - 1] == "u";
 			const long = app.vm.registers[i] = Long.fromString(input.substring(radix != 10, input.length - (unsigned? 1 : 0)), unsigned, radix);
 			valcell.text(long.toString(10));
@@ -390,7 +390,7 @@ function initializeUI(app) {
 		row.append(namecell).append(valcell).click(() => row.toggleClass("active-register"));
 	}
 
-	$("#top").split({ orientation: "vertical", limit: 210, position: "81.5%" });
+	$("#top").split({orientation: "vertical", limit: 210, position: "81.5%"});
 	$(".hsplitter").height(4);
 	$(".vsplitter").width(4);
 
@@ -455,8 +455,8 @@ let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/memor
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/stringtest.why", "utf8"));
 // let opened = Parser.read(fs.readFileSync(__dirname + "/../../wasm/examples/fizzbuzz.why", "utf8"));
 
-let { offsets, handlers, meta, code } = opened.parsed;
-let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: opened.raw });
+let {offsets, handlers, meta, code} = opened.parsed;
+let vm = new WVM({program: {offsets, handlers, meta, code}, memory: opened.raw});
 if (opened.data) {
 	vm.data = opened.data;
 }
@@ -465,7 +465,7 @@ window.vm = vm;
 let app;
 
 $(() => {
-	app = window.app = new App(vm, { });
+	app = window.app = new App(vm, {});
 	app.config.consoleSize[0] = Math.max(10, Math.floor(($("#console").width()) / 8));
 	app.config.consoleSize[1] = Math.max(10, Math.floor(($("#console").height() - 16) / 16 - 3));
 	initializeUI(app);

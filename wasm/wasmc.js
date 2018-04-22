@@ -51,7 +51,7 @@ class WASMC {
 		 * @name module:wasm~WASMC#ignoreFlags
 		 * @default
 		 */
-		this.ignoreFlags = true;
+		this.ignoreFlags = false;
 
 		/**
 		 * Contains the abstract syntax tree once {@link module:wasm~WASMC#parse WASMC.parse()} is called.
@@ -173,12 +173,15 @@ class WASMC {
 		this.processHandlers();
 		this.processMetadata();
 		this.processData();
-		this.processCode(this.expandLabels(this.expandCode()));
 
-		this.meta[3] = Long.fromInt(this.getEnd(this.code.length), true);
-		const out = this.meta.concat(this.handlers).concat(this.data).concat(this.code);
+		const expanded = this.expandCode();
+		this.offsets[".end"] = this.getEnd(expanded.length);
+		this.processCode(this.expandLabels(expanded));
 
-		if (this.options.debug) {
+		// this.meta[3] = Long.fromInt(this.getEnd(this.code.length), true);
+		const out = [...this.meta, ...this.handlers, ...this.code, ...this.data];
+
+		if (0&&this.options.debug) {
 			console.log({
 				meta: WASMC.longs2strs(this.meta),
 				handlers: WASMC.longs2strs(this.handlers),
@@ -204,37 +207,36 @@ class WASMC {
 				console.log(chalk.yellow("?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
 			}
 
-			console.log("Length:", this.symbolTableLength);
+			console.log(this.offsets);
+			console.log("meta[3]:", this.meta[3]);
 		}
 	}
-
+	
 	/**
 	 * Extracts and processes the program's metadata and stores it in {@link module:wasm~WASMC#meta meta}.
 	 */
 	processMetadata() {
 		let [name, version, author] = [this.parsed.meta.name || "?", this.parsed.meta.version || "?", this.parsed.meta.author || "?"];
-
+		
 		const orcid = typeof this.parsed.meta.orcid == "undefined"? "0000000000000000" : this.parsed.meta.orcid.replace(/\D/g, "");
 		if (orcid.length != 16) {
 			WASMC.die("Error: invalid ORCID.");
 		}
-
+		
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
-		[this.meta[4], this.meta[5]] = [orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")));
-
+		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, ...[orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")))];
+		
 		// Append the name-version-author string.
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
 		
 		// The beginning of the symbol table comes right after the end of the meta section.
 		this.meta[0] = Long.fromInt(this.meta.length * 8, true);
-
+		
 		// The handlers section begins right after the symbol table.
 		this.meta[1] = this.meta[0].add(this.symbolTable.length * 8);
 
 		// The handlers section is exactly as large as the set of exceptions.
 		this.meta[2] = this.meta[1].add(this.handlers.length * 8);
-
-		this.log({meta: this.meta, version, author});
 	}
 
 	/**
@@ -248,7 +250,7 @@ class WASMC {
 	 * Extracts and processes the program's data and stores it in {@link module:wasm~WASMC#data data}.
 	 */
 	processData() {
-		let offset = this.meta[1].toInt();
+		let dataLength = this.meta[1].toInt();
 		_(this.parsed.data).forEach(([type, value], key) => {
 			let pieces;
 			if (type.match(/^(in|floa)t$/)) {
@@ -259,13 +261,15 @@ class WASMC {
 				WASMC.die(`Error: unknown data type "${type}" for "${key}".`);
 			}
 
-			this.offsets[key] = offset;
-			this.log(chalk.yellow("Assigning"), offset, "to", key);
+			this.offsets[key] = dataLength;
+			this.log(chalk.yellow("Assigning"), chalk.bold(dataLength), "to", chalk.bold(key));
 			this.data = this.data.concat(pieces);
-			offset += pieces.length * 8;
+			dataLength += pieces.length * 8;
 		});
 
-		this.meta[2] = Long.fromInt(offset);
+		console.log("New:", dataLength);
+		this.meta[3] = this.meta[2].add(Long.fromInt(dataLength));
+		// this.meta[4] = this.meta[3].add(Long.fromInt
 	}
 
 	/**
@@ -288,7 +292,7 @@ class WASMC {
 			let [label, op, ...args] = item;
 			if (label) {
 				this.offsets[label] = this.meta[2].toInt() + expanded.length * 8;
-				this.log(chalk.magenta("Assigning"), this.offsets[label], "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
+				this.log(chalk.magenta("Assigning"), chalk.bold(this.offsets[label]), "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
 			}
 
 			const add = (x) => expanded.push(x);
@@ -431,7 +435,7 @@ class WASMC {
 			}
 		});
 
-		this.offsets[".end"] = this.getEnd(expanded.length);
+		console.log(".end ->", this.offsets[".end"], expanded.length)
 		return expanded;
 	}
 
@@ -445,7 +449,7 @@ class WASMC {
 			this.processHandlers();
 		}
 		
-		return 8 * ([this.meta, this.handlers, this.data].reduce((a, b) => a + b.length, 0) + instructionCount);
+		return 8 * (this.symbolTableLength + [this.meta, this.handlers].reduce((a, b) => a + b.length, 0) + instructionCount);
 	}
 
 	/**
@@ -649,11 +653,20 @@ class WASMC {
 	}
 
 	/**
+	 * 
+	 * @param  {name} name The name of a symbol.
+	 * @return {number} The absolute position of the symbol relative to 0 after accounting for the symbol table.
+	 */
+	readjustedOffset(name) {
+		// return this
+	}
+
+	/**
 	 * Returns the number of words in the symbol table, regardless of whether the symbol table has been made yet.
 	 * @type {number}
 	 */
 	get symbolTableLength() {
-		return _.without(_.keys(this.offsets), ".end").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
+		return _.without(_.keys(this.offsets), ".end", ".start").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
 	}
 
 	/**

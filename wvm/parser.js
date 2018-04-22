@@ -39,9 +39,10 @@ const Parser = module.exports = {
 
 	parse(longs, silent=true) {
 		let offsets = {
-			$handlers: longs[0].toInt(),
-			$data: longs[1].toInt(),
+			$symtab: longs[0].toInt(),
+			$handlers: longs[1].toInt(),
 			$code: longs[2].toInt(),
+			$data: longs[3].toInt(),
 			$end: longs[3].toInt()
 		};
 
