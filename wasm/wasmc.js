@@ -177,7 +177,9 @@ class WASMC {
 	 */
 	compile() {
 		this.parse();
-		console.log(this.symbolTableSkeleton(this.findAllLabels()));
+		const labels = this.findAllLabels();
+		console.log(this.symbolTableSkeleton(labels));
+		console.log(this.symbolTableSkeleton(labels).length, this.symbolTableLength(labels));
 		this.processHandlers();
 		this.processMetadata();
 		this.processData();
@@ -462,14 +464,6 @@ class WASMC {
 		return expanded;
 	}
 
-	symbolTableSkeleton(labels) {
-		return _.flatten(labels.map((label) => [
-			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
-			Long.UZERO,
-			...WASMC.str2longs(label)
-		]));
-	}
-
 	/**
 	 * Replaces all label references in a given array of expanded instructions with the corresponding memory addresses.
 	 * Mutates the input array.
@@ -692,10 +686,24 @@ class WASMC {
 
 	/**
 	 * Returns the number of words in the symbol table, regardless of whether the symbol table has been made yet.
-	 * @type {number}
+	 * @param  {string[]} labels An array of labels.
+	 * @return {number} The length of the symbol table.
 	 */
-	get symbolTableLength() {
-		return _.without(_.keys(this.offsets), ".end", ".start").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
+	symbolTableLength(labels) {
+		return _.without(labels, ".end").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
+	}
+
+	/**
+	 * Returns a symbol table with all addresses set to zero.
+	 * @param  {string[]} labels An array of labels.
+	 * @return {Long[]} An encoded initial symbol table.
+	 */
+	symbolTableSkeleton(labels) {
+		return _.flatten(_.without(labels, ".end").map((label) => [
+			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
+			Long.UZERO,
+			...WASMC.str2longs(label)
+		]));
 	}
 
 	/**
@@ -737,7 +745,7 @@ class WASMC {
 
 	/**
 	 * Adds nulls to the end of the string to lengthen it to a multiple of 8.
-	 * If the string is already a multiple of eight, add one null at the end.
+	 * If the length is already a multiple of eight, add one null at the end.
 	 * @param {string} str - The string to be nullpadded.
 	 * @return {string} The concatenation of the given string and a number of null characters.
 	 */
@@ -751,7 +759,11 @@ class WASMC {
 	 * @return {Array.<Long>} An array of Longs representing the input string.
 	 */
 	static str2longs(str) {
-		return str == ""? [Long.UZERO] : _.chunk(WASMC.nullpad(str).split(""), 8).map(WASMC.chunk2long);
+		if (str == "") {
+			return [Long.UZERO];
+		}
+
+		return _.chunk(str.padEnd(Math.ceil(str.length / 8) * 8, "\0").split(""), 8).map(WASMC.chunk2long);
 	}
 
 	/**
