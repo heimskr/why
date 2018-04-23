@@ -705,6 +705,19 @@ class WASMC {
 	}
 
 	/**
+	 * Encodes a parsed symbol table into an array of Longs.
+	 * @param  {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @return {Long[]} An encoded symbol table.
+	 */
+	static encodeSymbolTable(symbolTable) {
+		return _.flatten(Object.keys(symbolTable).map((label) => [
+			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
+			Long.fromInt(symbolTable[label], true),
+			...WASMC.str2longs(label)
+		]));
+	}
+
+	/**
 	 * Returns the length in words of the data section.
 	 * @type {number}
 	 */
