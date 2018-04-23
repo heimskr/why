@@ -706,7 +706,7 @@ class WASMC {
 
 	/**
 	 * Encodes a parsed symbol table into an array of Longs.
-	 * @param  {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @return {Long[]} An encoded symbol table.
 	 */
 	static encodeSymbolTable(symbolTable) {
@@ -840,3 +840,13 @@ if (require.main === module) {
 
 	new WASMC(options, filename).compile();
 }
+
+/**
+ * Represents an object mapping a symbol name to a tuple of its ID and its address.
+ * @typedef {Object<string, Array<number, Long>>} SymbolTable
+ */
+
+/**
+ * Represents a symbol type.
+ * @typedef {"code"|"data"|"other"} SymbolType
+ */

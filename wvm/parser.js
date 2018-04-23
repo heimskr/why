@@ -134,25 +134,6 @@ class Parser {
 	}
 
 	/**
-	 * Returns the type of a symbol (i.e., the name of the section it occurs in).
-	 * @param  {string} symbol A symbol name.
-	 * @return {"code"|"data"|"other"} The type of the symbol.
-	 */
-	getSymbolType(symbol) {
-		const addr = this.symbols[symbol][1].toInt();
-		const {$code, $data, $end} = this.offsets;
-		if ($code <= addr && addr < $data) {
-			return "code";
-		}
-
-		if ($data <= addr && addr < $end) {
-			return "data";
-		}
-
-		return "other";
-	}
-
-	/**
 	 * Finds the length of the metadata section of the program.
 	 * @return {number} The length of the metadata section in bytes.
 	 */

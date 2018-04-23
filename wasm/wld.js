@@ -27,7 +27,7 @@ class Linker {
 		this.outputFilename = out;
 
 		this.parser = null;
-		this.symbolTable = {};
+		this.combinedSymbols = {};
 	}
 
 	link() {
@@ -41,20 +41,25 @@ class Linker {
 		this.parser.open(this.objectFilenames[0]);
 
 		const {raw, parsed} = this.parser;
-		
+
 		// Step 2
 		const metaLength = this.parser.getMetaLength();
 		const codeLength = this.parser.getCodeLength();
 		const dataLength = this.parser.getDataLength();
 		const mainSymbols = this.parser.getSymbols();
 		const symtabLength = this.parser.rawSymbols.length;
-		this.symbolTable = _.cloneDeep(mainSymbols);
-		
+		this.combinedSymbols = _.cloneDeep(mainSymbols);
+
+		// We need to keep track of symbol types separately because it becomes difficult to recompute them
+		// after the symbol table has been expanded with new symbols from included binaries, as the boundaries
+		// between code sections and data sections become murky.
+		const symbolTypes = Linker.collectSymbolTypes(this.parser.offsets, this.combinedSymbols);
+
 		// Step 3
 		Linker.desymbolize(this.parser.rawCode, mainSymbols, this.parser.offsets);
 
 		// Steps 4–6
-		let extraSymbolLength = this.symbolTable.length;
+		let extraSymbolLength = this.combinedSymbols.length;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
 
@@ -70,10 +75,21 @@ class Linker {
 			subparser.open(infile);
 
 			const {raw: subraw, parsed: subparsed} = subparser;
-			const subtable = subparser.getSymbols();
-			const subtableLength = subparser.rawSymbols.length;
 			const subcodeLength = subparser.getCodeLength();
 			const subdataLength = subparser.getDataLength();
+
+			const subtable = subparser.getSymbols();
+			let subtableLength = subparser.rawSymbols.length;
+			// We can't have multiple .end labels! This is the only collision we account for;
+			// other collisions will cause an exception, though it could be possible to issue
+			// only a warning, in which case any collisions won't be added due to the behavior
+			// of Object.assign.
+			if (".end" in subtable) {
+				delete subtable[".end"];
+				subtableLength -= 3; // The .end entry is always 3 words long.
+			}
+
+			Linker.detectSymbolCollisions(this.combinedSymbols, subtable);
 
 			// Step 7b: Note the difference between the original metadata section's length and the included binary's metadata section's length.
 			const metaDifference = metaLength - subparser.getMetaLength();
@@ -82,7 +98,7 @@ class Linker {
 			Linker.desymbolize(subparser.rawCode, subtable, subparser.offsets);
 
 			for (const symbol of Object.keys(subtable)) {
-				const type = subparser.getSymbolType(symbol);
+				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
@@ -96,27 +112,87 @@ class Linker {
 				}
 			}
 
-			for (const symbol of Object.keys(this.symbolTable)) {
-				const type = subparser.getSymbolType(symbol);
+			for (const label of Object.keys(this.combinedSymbols)) {
+				const symbol = this.combinedSymbols[label];
+				const type = symbolTypes[label];
 				if (type == "code") {
 					// Step 7f: For each code symbol in the global symbol table, increase its address by the included symbol table's length.
-					subtable[symbol][1] = subtable[symbol][1].add(subtableLength);
+					symbol[1] = symbol[1].add(subtableLength);
 				} else if (type == "data" || symbol == ".end") {
 					// Step 7g: For each data symbol in the global symbol table, increase its address
 					// by the included data section's length + the included code section's length.
-					subtable[symbol][1] = subtable[symbol][1].add(subtableLength + subcodeLength);
+					symbol[1] = symbol[1].add(subtableLength + subcodeLength);
 				}
 			}
 
 			// Step 7h: Add the symbol table’s length to extraSymbolLength.
 			extraSymbolLength += subtableLength;
+
+			// Step 7i: Add code.length to extraCodeLength.
+			extraCodeLength += subcodeLength;
+
+			// Step 7j: Add data.length to extraDataLength.
+			extraDataLength += subdataLength;
+
+			// Step 7k: Append the symbol table to the combined symbol table.
+			console.log("Old:", Object.keys(this.combinedSymbols).length, this.combinedSymbols);
+			this.combinedSymbols = Object.assign(subtable, this.combinedSymbols);
+			console.log("New:", Object.keys(this.combinedSymbols).length, this.combinedSymbols);
+
+			// Step 7l: Append the code to the global code.
+			// Step 7m: Append the data to the global data.
+		}
+	}
+
+	/**
+	 * Collects all the symbols in a symbol table and returns
+	 * an object mapping each symbol name to its type.
+	 * @param  {Object} offsets An offsets object (as made by {@link module:wasm~Parser parsers}).
+	 * @param  {SymbolTable} symbolTable A symbol table.
+	 * @return {Object<string, SymbolType>} A map between symbol names and symbol types.
+	 */
+	static collectSymbolTypes(offsets, symbolTable) {
+		return _.fromPairs(Object.keys(symbolTable).map((key) => [key, Linker.getSymbolType(offsets, symbolTable, key)]));
+	}
+
+	/**
+	 * Returns the type of a symbol (i.e., the name of the section it occurs in).
+	 * @param  {Object} offsets An offsets object (as made by {@link module:wasm~Parser parsers}).
+	 * @param  {SymbolTable} symbolTable A symbol table.
+	 * @param  {string} symbol A symbol name.
+	 * @return {SymbolType} The type of the symbol.
+	 */
+	static getSymbolType(offsets, symbolTable, symbol) {
+		const addr = symbolTable[symbol][1].toInt();
+		const {$code, $data, $end} = offsets;
+		if ($code <= addr && addr < $data) {
+			return "code";
+		}
+
+		if ($data <= addr && addr < $end) {
+			return "data";
+		}
+
+		return "other";
+	}
+
+	/**
+	 * Checks two symbol tables and throws an exception if the second contains any labels already defined in the first.
+	 * @param {SymbolTable} tableOne The first symbol table.
+	 * @param {SymbolTable} tableTwo The second symbol table.
+	 */
+	static detectSymbolCollisions(tableOne, tableTwo) {
+		for (const key in tableTwo) {
+			if (key != ".end" && key in tableOne) {
+				throw `Encountered a symbol collision: "${key}"`;
+			}
 		}
 	}
 
 	/**
 	 * Converts the imm/addr values of the I-/J-type instructions in a list of Longs to their symbol representations
 	 * @param {Long} longs An array of compiled code.
-	 * @param {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @param {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @param {Object} offsets An an object of offsets.
 	 */
 	static desymbolize(longs, symbolTable, offsets) {
@@ -125,10 +201,10 @@ class Linker {
 			const {opcode, type, flags, rs, rd, imm, addr} = parsedInstruction;
 			if (flags == FLAGS.KNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
-					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i*8 + offsets.$code}\x1b[22m.`;
+					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
 				}
 
-				const name = Linker.findSymbolFromAddress(type == "i"? imm : addr, symbolTable, offsets.$end);
+				const name = Linker.findSymbolFromAddress(type == "i" ? imm : addr, symbolTable, offsets.$end);
 				if (!name || !symbolTable[name]) {
 					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${imm}\x1b[0m.`;
 				}
@@ -147,7 +223,7 @@ class Linker {
 	/**
 	 * Finds a symbol name based on its ID.
 	 * @param  {number} id A numeric ID.
-	 * @param  {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
 	static findSymbolFromID(id, symbolTable) {
@@ -163,7 +239,7 @@ class Linker {
 	/**
 	 * Finds a symbol name based on its address.
 	 * @param  {number} addr An address.
-	 * @param  {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @param  {number} endOffset The address of the start of the heap.
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
@@ -220,7 +296,7 @@ if (require.main === module) {
 		},
 		boolean: ["debug"],
 		default: {
-			debug: false 
+			debug: false
 		}
 	});
 
