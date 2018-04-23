@@ -517,17 +517,17 @@ class WASMC {
 		const [op, ...args] = instruction;
 		const {flags} = instruction;
 		if (op == "trap") {
-			return this.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags);
+			return WASMC.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags);
 		} else if (R_TYPES.includes(OPCODES[op])) {
-			return this.rType(OPCODES[op], ...args.map(WASMC.convertRegister), FUNCTS[op], flags);
+			return WASMC.rType(OPCODES[op], ...args.map(WASMC.convertRegister), FUNCTS[op], flags);
 		} else if (I_TYPES.includes(OPCODES[op])) {
-			return this.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags);
+			return WASMC.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags);
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			return this.jType(OPCODES[op], this.convertValue(args[0]), args[1], flags);
+			return WASMC.jType(OPCODES[op], this.convertValue(args[0]), args[1], flags);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
+			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
 			return Long.fromString("6666deadc0de6666", true, 16);
 		}
 	}
@@ -537,21 +537,21 @@ class WASMC {
 	 * @param {Object} instruction - An uncompiled instruction.
 	 * @return {Long} The bytecode representation of the instruction.
 	 */
-	unparseInstruction(instruction) {
+	static unparseInstruction(instruction) {
 		const {op, type} = instruction;
 		if (type == "r") {
 			const {opcode, rt, rs, rd, funct, flags} = instruction;
-			return this.rType(opcode, rt, rs, rd, funct, flags);
+			return WASMC.rType(opcode, rt, rs, rd, funct, flags);
 		} else if (type == "i") {
 			const {opcode, rs, rd, imm, flags} = instruction;
-			return this.iType(opcode, rs, rd, imm, flags);
+			return WASMC.iType(opcode, rs, rd, imm, flags);
 		} else if (type == "j") {
 			const {opcode, rs, addr, flags} = instruction;
-			return this.jType(opcode, rs, addr, flags);
+			return WASMC.jType(opcode, rs, addr, flags);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			this.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
+			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
 			return Long.fromString("deadc0de", true, 16);
 		}
 	}
@@ -589,14 +589,14 @@ class WASMC {
 	 * @param {number} [flags=0] - The linker flags to embed in the instruction.
 	 * @return {Long} The compiled instruction.
 	 */
-	rType(opcode, rt, rs, rd, func, flags=0) {
+	static rType(opcode, rt, rs, rd, func, flags=0) {
 		if (!R_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid r-type`);
-		if (rt < 0 || 127 < rt) this.warn(`rt (${rt}) not within the valid range (0–127)`);
-		if (rs < 0 || 127 < rs) this.warn(`rs (${rs}) not within the valid range (0–127)`);
-		if (rd < 0 || 127 < rd) this.warn(`rd (${rd}) not within the valid range (0–127)`);
-		if (func < 0 || 4095 < func) this.warn(`func (${func}) not within the valid range (0–4095)`);
+		if (rt < 0 || 127 < rt) WASMC.warn(`rt (${rt}) not within the valid range (0–127)`);
+		if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
+		if (rd < 0 || 127 < rd) WASMC.warn(`rd (${rd}) not within the valid range (0–127)`);
+		if (func < 0 || 4095 < func) WASMC.warn(`func (${func}) not within the valid range (0–4095)`);
 
-		let lower = func | (this.ignoreFlags? 0 : flags << 12) | ((rd & 1) << 31);
+		let lower = func | (flags << 12) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
@@ -612,11 +612,11 @@ class WASMC {
 	 * @param {number} [flags=0] - The linker flags to embed in the instruction.
 	 * @return {Long} The compiled instruction.
 	 */
-	iType(opcode, rs, rd, imm, flags=0) {
+	static iType(opcode, rs, rd, imm, flags=0) {
 		if (!I_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid i-type`);
-		if (rs < 0 || 127 < rs) this.warn(`rs (${rs}) not within the valid range (0–127)`);
-		if (rd < 0 || 127 < rd) this.warn(`rd (${rd}) not within the valid range (0–127)`);
-		if (imm < -2147483648 || 2147483647 < imm) this.warn(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
+		if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
+		if (rd < 0 || 127 < rd) WASMC.warn(`rd (${rd}) not within the valid range (0–127)`);
+		if (imm < -2147483648 || 2147483647 < imm) WASMC.warn(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
 
 		let lower = imm;
 		let upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) | (opcode << 20);
@@ -633,10 +633,10 @@ class WASMC {
 	 * @param {number} [flags=0] - The linker flags to embed in the instruction.
 	 * @return {Long} The compiled instruction.
 	 */
-	jType(opcode, rs, addr, flags=0) {
+	static jType(opcode, rs, addr, flags=0) {
 		if (!J_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid j-type`);
-		if (rs < 0 || 127 < rs) this.warn(`rs (${rs}) not within the valid range (0–127)`);
-		if (addr < 0 || 4294967295 < addr) this.warn(`addr (${addr}) not within the valid range (0–4294967295)`);
+		if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
+		if (addr < 0 || 4294967295 < addr) WASMC.warn(`addr (${addr}) not within the valid range (0–4294967295)`);
 
 		let lower = addr;
 		let upper = (this.ignoreFlags? 0 : flags) | (rs << 13) | (opcode << 20);
@@ -649,7 +649,7 @@ class WASMC {
 	 * Prints a warning.
 	 * @param {...*} args - The arguments to pass to console.log.
 	 */
-	warn(...args) {
+	static warn(...args) {
 		console.log(...args);
 	}
 
@@ -679,8 +679,8 @@ class WASMC {
 	 * @param  {string[]} labels An array of labels.
 	 * @return {number} The length of the symbol table.
 	 */
-	symbolTableLength(labels) {
-		return _.without(labels, ".end").reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
+	static symbolTableLength(labels) {
+		return _.uniq([...labels, ".end"]).reduce((a, b) => a + 2 + Math.ceil(b.length / 8), 0);
 	}
 
 	/**
@@ -690,7 +690,7 @@ class WASMC {
 	 * @return {Long[]} An encoded symbol table.
 	 */
 	createSymbolTable(labels, skeleton = true) {
-		return _.flatten(_.without(labels, ".end").map((label) => [
+		return _.flatten(_.uniq([...labels, ".end"]).map((label) => [
 			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
 			skeleton? Long.UZERO : Long.fromInt(this.offsets[label], true),
 			...WASMC.str2longs(label)
