@@ -149,7 +149,7 @@ class Linker {
 			Linker.desymbolize(subcode, subtable, subparser.offsets);
 
 			// Steps 7d–e
-			for (const symbol of Object.keys(subtable)) {
+			for (const symbol in subtable) {
 				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
@@ -167,7 +167,7 @@ class Linker {
 			}
 
 			// Steps 7f–7g
-			for (const label of Object.keys(this.combinedSymbols)) {
+			for (const label in this.combinedSymbols) {
 				const symbol = this.combinedSymbols[label];
 				const type = symbolTypes[label];
 				if (type == "code") {

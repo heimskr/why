@@ -5,7 +5,7 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #includes
-"examples/string.why"
+../compiled/string.why
 
 #data
 zero: ""
@@ -25,25 +25,25 @@ w7: 0
 #code
 
 'w' -> $t0
-!strchr(&eight, $t0)
+strchr(&eight, $t0)
 <print $r0>
 [$r0] -> $t0 /b
-!strcat(&w0, &nineteen)
-!strcat(&w0, &sixteen)
-!strcat(&w0, &eight)
-!strcat(&w0, &five)
-!strcat(&w0, &zero)
-!strlen(&zero)
+strcat(&w0, &nineteen)
+strcat(&w0, &sixteen)
+strcat(&w0, &eight)
+strcat(&w0, &five)
+strcat(&w0, &zero)
+strlen(&zero)
 <print $r0>
-!strlen(&five)
+strlen(&five)
 <print $r0>
-!strlen(&eight)
+strlen(&eight)
 <print $r0>
-!strlen(&sixteen)
+strlen(&sixteen)
 <print $r0>
-!strlen(&nineteen)
+strlen(&nineteen)
 <print $r0>
-!strlen(&w0)
+strlen(&w0)
 <print $r0>
 
 <halt>
