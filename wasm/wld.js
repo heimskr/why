@@ -77,14 +77,12 @@ class Linker {
 		const symbolTypes = Linker.collectSymbolTypes(this.parser.offsets, this.combinedSymbols);
 
 		// Step 3
-		Linker.desymbolize(this.parser.rawCode, mainSymbols, this.parser.offsets);
+		Linker.desymbolize(this.combinedCode, mainSymbols, this.parser.offsets);
 
 		// Steps 4–6
 		let extraSymbolLength = this.combinedSymbols.length;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
-
-		console.log(this.combinedCode.length, this.combinedData.length);
 
 		// Step 7: Loop over every inclusion.
 		for (const infile of this.objectFilenames.slice(1)) {
@@ -169,7 +167,8 @@ class Linker {
 			this.combinedData = [...this.combinedData, ...subdata];
 		}
 
-		console.log(this.combinedCode.length, this.combinedData.length);
+		// Step 8: Replace all symbols in the code with the new addresses.
+		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
 	}
 
 	/**
@@ -218,7 +217,7 @@ class Linker {
 	}
 
 	/**
-	 * Converts the imm/addr values of the I-/J-type instructions in a list of Longs to their symbol representations
+	 * Converts the imm/addr values of the I-/J-type instructions marked with the KNOWN_SYMBOL flag in a list of Longs to their symbol representations.
 	 * @param {Long} longs An array of compiled code.
 	 * @param {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @param {Object} offsets An an object of offsets.
@@ -226,23 +225,60 @@ class Linker {
 	static desymbolize(longs, symbolTable, offsets) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
-			const {opcode, type, flags, rs, rd, imm, addr} = parsedInstruction;
+			const {opcode, type, flags, rs, rd} = parsedInstruction;
 			if (flags == FLAGS.KNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
 					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
 				}
 
-				const name = Linker.findSymbolFromAddress(type == "i" ? imm : addr, symbolTable, offsets.$end);
+				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
+				const name = Linker.findSymbolFromAddress(val, symbolTable, offsets.$end);
+
 				if (!name || !symbolTable[name]) {
-					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${imm}\x1b[0m.`;
+					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${val}\x1b[0m.`;
 				}
 
 				const id = symbolTable[name][0];
-				// We disable warnings because the encoded IDs are somehow negative (even if I add a Math.abs() call in WASMC.encodeSymbol, strangely).
 				if (type == "i") {
-					longs[i] = WASMC.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID, false);
+					longs[i] = WASMC.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID);
 				} else {
-					longs[i] = WASMC.jType(opcode, rs, id, FLAGS.SYMBOL_ID, false);
+					longs[i] = WASMC.jType(opcode, rs, id, FLAGS.SYMBOL_ID);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Undoes desymbolization; converts the imm/addr values of the I-/J-type instructions marked with
+	 * the SYMBOL_ID or UNKNOWN_SYMBOL flags in a list of Longs from symbol IDs to absolute addresses.
+	 * @param {Long} longs An array of compiled code.
+	 * @param {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
+	 */
+	static resymbolize(longs, symbolTable) {
+		for (let i = 0; i < longs.length; i++) {
+			const parsedInstruction = Parser.parseInstruction(longs[i]);
+			const {opcode, type, flags, rs, rd, imm, addr} = parsedInstruction;
+			if (flags == FLAGS.SYMBOL_ID || flags == FLAGS.UNKNOWN_SYMBOL) {
+				if (type != "i" && type != "j") {
+					throw `Found an instruction not of type I or J with \x1b[1m${flags == FLAGS.UNKNOWN_SYMBOL? "UNKNOWN_SYMBOL" : "SYMBOL_ID"}\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
+				}
+
+				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
+				const name = Linker.findSymbolFromID(val, symbolTable);
+				if (!name || !symbolTable[name]) {
+					console.log(parsedInstruction);
+					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x${val.toString(16).padStart(16, "0")}\x1b[0m.`;
+				}
+
+				const addr = symbolTable[name][1];
+				if (addr.high != 0) {
+					console.warn(`Truncating address of label ${chalk.bold(name)} from ${chalk.bold(`0x${addr.toString(16).padStart(16, "0")}`)} to ${chalk.bold(`0x${addr.low.toString(16).padStart(16, "0")}`)}.`);
+				}
+
+				if (type == "i") {
+					longs[i] = WASMC.iType(opcode, rs, rd, addr.toInt(), FLAGS.KNOWN_SYMBOL, false);
+				} else {
+					longs[i] = WASMC.jType(opcode, rs, addr.toInt(), FLAGS.KNOWN_SYMBOL, false);
 				}
 			}
 		}
@@ -255,7 +291,7 @@ class Linker {
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
 	static findSymbolFromID(id, symbolTable) {
-		for (let name of Object.keys(symbolTable)) {
+		for (const name in symbolTable) {
 			if (symbolTable[name][0] == id) {
 				return name;
 			}
@@ -272,7 +308,7 @@ class Linker {
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
 	static findSymbolFromAddress(addr, symbolTable, endOffset) {
-		for (let name of Object.keys(symbolTable)) {
+		for (const name in symbolTable) {
 			if (symbolTable[name][1].eq(addr)) {
 				return name;
 			}
@@ -329,7 +365,7 @@ if (require.main === module) {
 	});
 
 	if (options._.length == 0 || !options.out) {
-		console.log("Usage: node wld.js ...[compiled.why] -o out");
+		console.log("Usage: node wld.js [main.why] [compiled.why]... -o out");
 		process.exit(0);
 	}
 
