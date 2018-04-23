@@ -111,9 +111,10 @@ class WASMC {
 	}
 
 	/**
-	 * Loads the Nearley grammar, parses the source file and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
+	 * Loads the Nearley grammar, parses a source string and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
+	 * @param {string} source Source code of a wasm program.
 	 */
-	parse() {
+	parse(source) {
 		let grammar;
 		try {
 			grammar = require("./wasm.js");
@@ -127,7 +128,7 @@ class WASMC {
 		}
 
 		const parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
-		const source = fs.readFileSync(this.filename, "utf8") + "\n";
+		source += "\n";
 
 		let trees;
 		try {
@@ -176,7 +177,7 @@ class WASMC {
 	 * {@link module:wasm~WASMC#parse Parses} and processes the source code and writes the output.
 	 */
 	compile() {
-		this.parse();
+		this.parse(fs.readFileSync(this.filename, "utf8"));
 		const labels = this.findAllLabels();
 		this.symbolTable = this.createSymbolTable(labels, true);
 		this.processHandlers();
@@ -207,14 +208,10 @@ class WASMC {
 			});
 		} else {
 			const outname = typeof this.options.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.options.out;
-			const frozen = this.options.library? JSON.stringify({
-				meta: this.parsed.meta,
-				labels: _.omitBy(this.offsets, (val, key) => key[0] == "_"),
-				program: WASMC.longs2strs(out).join(" ")
-			}) : WASMC.longs2strs(out).join("\n");
+			const frozen = WASMC.longs2strs(out).join("\n");
 
 			fs.writeFileSync(outname, frozen);
-			console.log(chalk.green.bold(" \u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
+			console.log(chalk.green.bold(" \u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the output to", chalk.bold(outname) + ".");
 			if (0 < this.unknownSymbols.length) {
 				console.log(chalk.yellow.bold(" ?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
 			}
@@ -820,14 +817,12 @@ if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
 			alias: {
 				b: "binary",
-				l: "library",
 				d: "debug"
 			},
-			boolean: ["binary", "debug", "library"],
+			boolean: ["binary", "debug"],
 			default: {
 				binary: false,
-				debug: false,
-				library: false
+				debug: false
 			}
 		}), filename = options._[0];
 
