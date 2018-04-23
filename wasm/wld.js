@@ -7,7 +7,7 @@ let fs = require("fs"),
 	Parser = require("../wvm/parser.js"),
 	_ = require("lodash");
 
-const {FLAGS} = require("./constants.js");
+const {FLAGS, EXCEPTIONS} = require("./constants.js");
 
 /**
  * @module wasm
@@ -80,7 +80,7 @@ class Linker {
 		Linker.desymbolize(this.combinedCode, mainSymbols, this.parser.offsets);
 
 		// Steps 4–6
-		let extraSymbolLength = this.combinedSymbols.length;
+		let extraSymbolLength = symtabLength;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
 
@@ -167,8 +167,57 @@ class Linker {
 			this.combinedData = [...this.combinedData, ...subdata];
 		}
 
-		// Step 8: Replace all symbols in the code with the new addresses.
+		// Step 8a: Readjust the .end entry in the symbol table.
+		if (!(".end" in this.combinedSymbols)) {
+			this.combinedSymbols[".end"] = [WASMC.encodeSymbol(".end"), Long.UZERO];
+		}
+		
+		const end = 8 * (this.parser.rawMeta.length + WASMC.encodeSymbolTable(this.combinedSymbols).length
+		+ this.parser.rawHandlers.length + this.combinedCode.length + this.combinedData.length);
+		this.combinedSymbols[".end"][1] = Long.fromInt(end, true);
+		
+		// Step 8b: Replace all symbols in the code with the new addresses.
 		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
+
+		// Step 9: Update the handlers section.
+		// All the handler pointers have been pushed forward by the addition of other symbol tables, so we need to increase them to compensate.
+		const encodedCombinedSymbols = WASMC.encodeSymbolTable(this.combinedSymbols);
+		const {handlers} = this.parser;
+		const handlerOffset = (encodedCombinedSymbols.length - symtabLength) * 8;
+		for (const handler in handlers) {
+			handlers[handler] = handlers[handler].add(handlerOffset);
+		}
+
+		const encodedHandlers = Linker.encodeHandlers(handlers);
+
+		// Step 10: Update the offset section in the metadata.
+		const meta = this.parser.rawMeta;
+		meta[1] = meta[1].add(handlerOffset); // Beginning of handlers
+		meta[2] = meta[1].add(encodedHandlers.length * 8); // Beginning of code
+		meta[3] = meta[2].add(this.combinedCode.length * 8); // Beginning of data
+		meta[4] = meta[3].add(this.combinedData.length * 8); // Beginning of heap
+
+		// Step 11: Concatenate all the combined sections and write the result to the output file.
+		const combined = [
+			...this.parser.rawMeta,
+			...encodedCombinedSymbols,
+			...encodedHandlers,
+			...this.combinedCode,
+			...this.combinedData
+		];
+
+		this.writeOutput(combined);
+		this.printSuccess();
+	}
+
+	/**
+	 * Encodes a handlers object.
+	 * @param  {Object<string, number>} handlers An object mapping handler names to addresses.
+	 * @return {Long[]} An encoded handlers section.
+	 */
+	static encodeHandlers(handlers) {
+		const obj = _.fromPairs(_.keys(handlers).map((key) => [EXCEPTIONS.indexOf(key), handlers[key]]));
+		return _.keys(obj).sort((a, b) => a < b? -1 : 1).map((key) => obj[key]);
 	}
 
 	/**
@@ -335,7 +384,7 @@ class Linker {
 	 * @param {string} infile The input filename.
 	 * @param {string} outfile The output filename.
 	 */
-	printSuccess(infile, outfile) {
+	printSuccess(infile=this.objectFilenames[0], outfile=this.options.out) {
 		console.log(chalk.green.bold(" \u2714"), `Successfully linked ${chalk.bold(infile)} and saved the output to ${chalk.bold(outfile)}.`);
 	}
 

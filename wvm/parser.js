@@ -81,10 +81,16 @@ class Parser {
 		};
 
 		/**
+		 * Contains all the unparsed Longs in the handlers section.
+		 * @type {Long[]}
+		 */
+		this.rawHandlers = longs.slice(this.offsets.$handlers / 8, this.offsets.$code / 8);
+
+		/**
 		 * An object mapping handler names to addresses.
 		 * @type {Object<string, number>}
 		 */
-		this.handlers = longs.slice(this.offsets.$handlers, this.offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);
+		this.handlers = _.fromPairs(this.rawHandlers.map((x, i) => [EXCEPTIONS[i], x]));
 
 		/**
 		 * Contains all the unparsed Longs in the metadata section.
