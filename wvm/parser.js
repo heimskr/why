@@ -153,35 +153,43 @@ class Parser {
 	}
 
 	/**
+	 * Finds the length of the metadata section of the program.
+	 * @return {number} The length of the metadata section in bytes.
+	 */
+	getMetaLength() {
+		return this.raw[0];
+	}
+
+	/**
 	 * Finds the length of the symbol table of the program.
-	 * @return {number} The length of the symbol table in words.
+	 * @return {number} The length of the symbol table in bytes.
 	 */
 	getSymbolTableLength() {
-		return this.raw[1].subtract(this.raw[0]).toNumber() / 8;
+		return this.raw[1].subtract(this.raw[0]).toNumber();
 	}
 
 	/**
 	 * Finds the length of the handlers section of the program.
-	 * @return {number} The length of the handlers section in words.
+	 * @return {number} The length of the handlers section in bytes.
 	 */
 	getHandlersLength() {
-		return this.raw[2].subtract(this.raw[1]).toNumber() / 8;
+		return this.raw[2].subtract(this.raw[1]).toNumber();
 	}
 
 	/**
 	 * Finds the length of the code section of the program.
-	 * @return {number} The length of the code section in words.
+	 * @return {number} The length of the code section in bytes.
 	 */
 	getCodeLength() {
-		return this.raw[3].subtract(this.raw[2]).toNumber() / 8;
+		return this.raw[3].subtract(this.raw[2]).toNumber();
 	}
 
 	/**
 	 * Finds the length of the data section of the program.
-	 * @return {number} The length of the data section in words.
+	 * @return {number} The length of the data section in bytes.
 	 */
 	getDataLength() {
-		return this.raw[4].subtract(this.raw[3]).toNumber() / 8;
+		return this.raw[4].subtract(this.raw[3]).toNumber();
 	}
 
 	/**
