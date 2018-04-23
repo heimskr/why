@@ -98,10 +98,9 @@ class Linker {
 			const {raw: subraw, parsed: subparsed} = subparser;
 			const subcode = subparser.rawCode;
 			const subdata = subparser.rawData;
+			const subtable = subparser.getSymbols();
 			const subcodeLength = subparser.getCodeLength();
 			const subdataLength = subparser.getDataLength();
-
-			const subtable = subparser.getSymbols();
 			let subtableLength = subparser.rawSymbols.length;
 			// We can't have multiple .end labels! This is the only collision we account for;
 			// other collisions will cause an exception, though it could be possible to issue
@@ -120,23 +119,17 @@ class Linker {
 			// Step 7c: Replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols.
 			Linker.desymbolize(subcode, subtable, subparser.offsets);
 
-
-			console.log({extraSymbolLength, extraCodeLength, extraDataLength, metaDifference});
-
+			// Steps 7d–e
 			for (const symbol of Object.keys(subtable)) {
 				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
-					console.log(`(c) ${symbol}: ${subtable[symbol][1].toInt()}`);
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference);
-					console.log(`    -> ${subtable[symbol][1].toInt()}, ${subtable[symbol][1].toInt() % 8}`);
 				} else if (type == "data" || symbol == ".end") {
 					// Step 7e: For each data symbol in the included symbol table, increase
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
-					console.log(`(d) ${symbol}: ${subtable[symbol][1].toInt()}`);
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength + metaDifference);
-					console.log(`    -> ${subtable[symbol][1].toInt()}, ${subtable[symbol][1].toInt() % 8}`);
 				} else {
 					throw `Encountered a symbol other than .end of type "${type}": "${symbol}"`;
 				}
@@ -144,6 +137,7 @@ class Linker {
 				symbolTypes[symbol] = type;
 			}
 
+			// Steps 7f–7g
 			for (const label of Object.keys(this.combinedSymbols)) {
 				const symbol = this.combinedSymbols[label];
 				const type = symbolTypes[label];
@@ -324,7 +318,6 @@ class Linker {
 				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
 				const name = Linker.findSymbolFromID(val, symbolTable);
 				if (!name || !symbolTable[name]) {
-					console.log(parsedInstruction);
 					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x${val.toString(16).padStart(16, "0")}\x1b[0m.`;
 				}
 

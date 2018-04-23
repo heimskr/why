@@ -712,7 +712,7 @@ class WASMC {
 	static encodeSymbolTable(symbolTable) {
 		return _.flatten(Object.keys(symbolTable).map((label) => [
 			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
-			Long.fromInt(symbolTable[label], true),
+			symbolTable[label][1],
 			...WASMC.str2longs(label)
 		]));
 	}
