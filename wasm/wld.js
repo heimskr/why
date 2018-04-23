@@ -80,7 +80,7 @@ class Linker {
 		Linker.desymbolize(this.combinedCode, mainSymbols, this.parser.offsets);
 
 		// Steps 4–6
-		let extraSymbolLength = symtabLength;
+		let extraSymbolLength = symtabLength * 8;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
 
@@ -115,24 +115,33 @@ class Linker {
 			Linker.detectSymbolCollisions(this.combinedSymbols, subtable);
 
 			// Step 7b: Note the difference between the original metadata section's length and the included binary's metadata section's length.
-			const metaDifference = metaLength - subparser.getMetaLength();
+			const metaDifference = metaLength - subparser.getMetaLength(); // in bytes!
 
 			// Step 7c: Replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols.
 			Linker.desymbolize(subcode, subtable, subparser.offsets);
+
+
+			console.log({extraSymbolLength, extraCodeLength, extraDataLength, metaDifference});
 
 			for (const symbol of Object.keys(subtable)) {
 				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
+					console.log(`(c) ${symbol}: ${subtable[symbol][1].toInt()}`);
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference);
+					console.log(`    -> ${subtable[symbol][1].toInt()}, ${subtable[symbol][1].toInt() % 8}`);
 				} else if (type == "data" || symbol == ".end") {
 					// Step 7e: For each data symbol in the included symbol table, increase
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
+					console.log(`(d) ${symbol}: ${subtable[symbol][1].toInt()}`);
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength + metaDifference);
+					console.log(`    -> ${subtable[symbol][1].toInt()}, ${subtable[symbol][1].toInt() % 8}`);
 				} else {
 					throw `Encountered a symbol other than .end of type "${type}": "${symbol}"`;
 				}
+
+				symbolTypes[symbol] = type;
 			}
 
 			for (const label of Object.keys(this.combinedSymbols)) {
@@ -140,16 +149,16 @@ class Linker {
 				const type = symbolTypes[label];
 				if (type == "code") {
 					// Step 7f: For each code symbol in the global symbol table, increase its address by the included symbol table's length.
-					symbol[1] = symbol[1].add(subtableLength);
+					symbol[1] = symbol[1].add(subtableLength * 8);
 				} else if (type == "data" || symbol == ".end") {
 					// Step 7g: For each data symbol in the global symbol table, increase its address
 					// by the included data section's length + the included code section's length.
-					symbol[1] = symbol[1].add(subtableLength + subcodeLength);
+					symbol[1] = symbol[1].add(subtableLength * 8 + subcodeLength);
 				}
 			}
 
 			// Step 7h: Add the symbol table’s length to extraSymbolLength.
-			extraSymbolLength += subtableLength;
+			extraSymbolLength += subtableLength * 8;
 
 			// Step 7i: Add code.length to extraCodeLength.
 			extraCodeLength += subcodeLength;
