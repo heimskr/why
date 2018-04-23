@@ -11,9 +11,9 @@ redherring: 2
 
 #code
 
-[&iterations] -> $a0
-!fibonacci()
-<print $r0>
+*iterations -> $a0
+fibonacci()
+<prd $r0>
 <halt>
 
 @fibonacci // $a0 -> $r0
@@ -23,11 +23,11 @@ redherring: 2
 	1 -> $t1
 	0 -> $r0
 	@fibonacci_loop
-		: &fibonacci_loop_done if $a0 == $0
+		: fibonacci_loop_done if $a0 == $0
 		$a0--
 		$t0 + $t1 -> $r0
 		$t1 -> $t0
 		$r0 -> $t1
-		: &fibonacci_loop
+		: fibonacci_loop
 	@fibonacci_loop_done
 ] $t1 $t0; ret

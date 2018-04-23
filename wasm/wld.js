@@ -57,6 +57,11 @@ class Linker {
 				this.objectFilenames = _.uniq(this.objectFilenames);
 			}
 		} else {
+			if (this.objectFilenames.length < 2) {
+				console.error(chalk.yellow.bold(" ?"), `Multiple input files are needed.`);
+				process.exit(1);
+			}
+
 			bytecode = text;
 		}
 
@@ -68,12 +73,6 @@ class Linker {
 	link() {
 		// Step 1
 		this.parser = this.openMain(this.objectFilenames[0]);
-		
-		if (this.objectFilenames.length < 2) {
-			console.error(chalk.yellow.bold(" ?"), `Multiple input files are needed.`);
-			process.exit(1);
-		}
-
 		const {raw, parsed} = this.parser;
 
 		// Step 2

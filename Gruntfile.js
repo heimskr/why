@@ -114,13 +114,13 @@ module.exports = function(grunt) {
 	grunt.event.on("watch", (action, file, name) => {
 		// There's almost certainly a better way to do this.
 		if (name == "wasm") {
-			child_process.exec(shellescape(["node", "wasm/wasmc.js", file, "-o", `wasm/compiled/${path.basename(file).replace(/\.wasm$/i, "")}.why`]), (error, stdout, stderr) => {
+			child_process.exec(shellescape(["node", "wasm/wld.js", file, "-o", `wasm/compiled/${path.basename(file).replace(/\.wasm$/i, "")}.why`]), (error, stdout, stderr) => {
 				if (error) {
 					console.error(chalk.red(`Couldn't compile ${file}:`));
 					console.error(chalk.red.dim(error.message));
 				} else if (stderr) {
 					console.error(`Error during compilation:`, stderr);
-				} else if (stdout.match(/Successfully assembled/)) {
+				} else if (stdout.match(/Successfully linked/)) {
 					console.log(chalk.green(stdout));
 				} else {
 					console.log("???", stdout);
