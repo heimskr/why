@@ -46,28 +46,47 @@ class Linker {
 		const codeLength = this.parser.getCodeLength();
 		const dataLength = this.parser.getDataLength();
 		const mainSymbols = this.parser.getSymbols();
+		const symtabLength = this.parser.rawSymbols.length;
 		this.symbolTable = _.cloneDeep(mainSymbols);
 		
 		// Step 3
-		this.desymbolize(this.parser.rawCode, mainSymbols);
+		Linker.desymbolize(this.parser.rawCode, mainSymbols, this.parser.offsets);
 
 		// Steps 4–6
 		let extraSymbolLength = this.symbolTable.length;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
 
+		// Step 7: loop over every inclusion
 		for (const infile of this.objectFilenames.slice(1)) {
 			if (!fs.existsSync(infile)) {
 				console.error(chalk.red.bold(" !"), `Couldn't find ${chalk.bold(infile)}.`);
 				process.exit(1);
 			}
 
+			// Step 7a
 			const subparser = new Parser();
 			subparser.open(infile);
 
 			const {raw: subraw, parsed: subparsed} = subparser;
+			const subtable = subparser.getSymbols();
+			const subtableLength = subparser.rawSymbols.length;
 
-			console.log(subraw);
+			// Step 7b: replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols
+			Linker.desymbolize(subparser.rawCode, subtable, subparser.offsets);
+
+			for (const symbol of Object.keys(subtable)) {
+				const type = subparser.getSymbolType(symbol);
+				if (type == "code") {
+					// Step 7c: for each code symbol in the included symbol table, increase its address by extraSymbolLength + extraCodeLength
+					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength);
+				} else if (type == "data" || symbol == ".end") {
+					// Step 7d: for each data symbol in the included symbol table, increase its address by extraSymbolLength + extraCodeLength + extraDataLength
+					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength);
+				} else {
+					throw `Encountered a symbol other than .end of type "${type}": "${symbol}"`;
+				}
+			}
 		}
 	}
 
@@ -75,17 +94,18 @@ class Linker {
 	 * Converts the imm/addr values of the I-/J-type instructions in a list of Longs to their symbol representations
 	 * @param {Long} longs An array of compiled code.
 	 * @param {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @param {Object} offsets An an object of offsets.
 	 */
-	desymbolize(longs, symbolTable) {
+	static desymbolize(longs, symbolTable, offsets) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
 			const {opcode, type, flags, rs, rd, imm, addr} = parsedInstruction;
 			if (flags == FLAGS.KNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
-					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i*8 + this.parser.offsets.$code}\x1b[22m.`;
+					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i*8 + offsets.$code}\x1b[22m.`;
 				}
 
-				const name = this.findSymbolFromAddress(type == "i"? imm : addr);
+				const name = Linker.findSymbolFromAddress(type == "i"? imm : addr, symbolTable, offsets.$end);
 				if (!name || !symbolTable[name]) {
 					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${imm}\x1b[0m.`;
 				}
@@ -104,11 +124,12 @@ class Linker {
 	/**
 	 * Finds a symbol name based on its ID.
 	 * @param  {number} id A numeric ID.
+	 * @param  {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
-	findSymbolFromID(id) {
-		for (let name of Object.keys(this.symbolTable)) {
-			if (this.symbolTable[name][0] == id) {
+	static findSymbolFromID(id, symbolTable) {
+		for (let name of Object.keys(symbolTable)) {
+			if (symbolTable[name][0] == id) {
 				return name;
 			}
 		}
@@ -119,16 +140,18 @@ class Linker {
 	/**
 	 * Finds a symbol name based on its address.
 	 * @param  {number} addr An address.
+	 * @param  {Object<string, Array<number, Long>>} symbolTable An object mapping a symbol name to tuple of its ID and its address.
+	 * @param  {number} endOffset The address of the start of the heap.
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
-	findSymbolFromAddress(addr) {
-		for (let name of Object.keys(this.symbolTable)) {
-			if (this.symbolTable[name][1].eq(addr)) {
+	static findSymbolFromAddress(addr, symbolTable, endOffset) {
+		for (let name of Object.keys(symbolTable)) {
+			if (symbolTable[name][1].eq(addr)) {
 				return name;
 			}
 		}
 
-		if (addr == this.parser.offsets.$end) {
+		if (addr == endOffset) {
 			return ".end";
 		}
 
