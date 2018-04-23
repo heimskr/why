@@ -838,7 +838,7 @@ if (require.main === module) {
 
 	const asm = new WASMC(options);
 	asm.compile(fs.readFileSync(filename, "utf8"));
-	asm.writeOutput(filename.replace(/\.wasm$/i, "") + ".why", filename);
+	asm.writeOutput(!options.out? filename.replace(/\.wasm$/i, "") + ".why" : options.out, filename);
 }
 
 /**

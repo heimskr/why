@@ -14,9 +14,9 @@ int main(int argc, char *argv[]) {
 		wvm_load("../../wasm/examples/memory.why");
 	} else if (argc == 2) {
 		wvm_load(argv[1]);
-	} else if (argc == 3 && strcmp(argv[1], "-e") == 0) {
+	} else if (argc == 3 && (strcmp(argv[1], "-e") == 0 || strcmp(argv[1], "-c") == 0)) {
 		char *path = calloc(strlen("../../wasm/examples/") + strlen(argv[2]) + strlen(".why") + 1, sizeof(char));
-		sprintf(path, "../../wasm/examples/%s.why", argv[2]);
+		sprintf(path, "../../wasm/%s/%s.why", argv[1][1] == 'e'? "examples" : "compiled", argv[2]);
 		wvm_load(path);
 	}
 

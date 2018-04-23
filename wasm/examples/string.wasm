@@ -127,3 +127,5 @@ sub newline() {
 	'\n' -> $t0
 	<prc $t0>
 }
+
+<halt>
