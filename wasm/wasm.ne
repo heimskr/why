@@ -10,13 +10,13 @@ const filter = (arr, index=null, ...remove) => arr.filter((item) => !(remove.len
 const select = (arr, ...indices) => indices.map((i) => arr[i]);
 
 const compileObject = (entries) => {
-	let obj = { };
+	let obj = {};
 	filter(entries).forEach((entry) => obj[entry[0]] = entry[1]);
 	return obj;
 };
 
 const compileData = (entries) => {
-	let obj = { };
+	let obj = {};
 	filter(entries).forEach((entry) => obj[entry[1]] = select(entry, 0, 2));
 	return obj;
 };

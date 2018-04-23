@@ -28,7 +28,7 @@ class WASMC {
 	 * Creates a new wasmc instance.
 	 * @param {Object} options - An object containing options for the compiler (from the command line, for example).
 	 */
-	constructor(options) {
+	constructor(options={}) {
 		/**
 		 * An object containing options for the compiler (from the command line, for example).
 		 * @type {Object.<string, *>}
@@ -42,7 +42,7 @@ class WASMC {
 		 * @name module:wasm~WASMC#ignoreFlags
 		 * @default
 		 */
-		this.ignoreFlags = false;
+		this.ignoreFlags = "ignoreFlags" in options? options.ignoreFlags : false;
 
 		/**
 		 * Contains the abstract syntax tree once {@link module:wasm~WASMC#parse WASMC.parse()} is called.
@@ -166,7 +166,8 @@ class WASMC {
 
 	/**
 	 * {@link module:wasm~WASMC#parse Parses} and processes the source code and writes the output.
-	 * @param {string} source Source code of a wasm program.
+	 * @param  {string} source Source code of a wasm program.
+	 * @return {Long[]} The assembled output of the program.
 	 */
 	compile(source) {
 		this.parse(source);
@@ -199,6 +200,8 @@ class WASMC {
 				offsets: this.offsets
 			});
 		}
+
+		return this.assembled;
 	}
 
 	/**

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 let fs = require("fs"),
+	path = require("path"),
 	chalk = require("chalk"),
 	minimist = require("minimist"),
 	Long = require("long"),
@@ -33,16 +34,45 @@ class Linker {
 		this.parser = null;
 	}
 
+	/**
+	 * Opens the main file and handles it depending on whether it's wasm source or wvm bytecode.
+	 * @param  {string} filename The filename of the main file.
+	 * @return {Parser} A Parser instance that has been fed the main file.
+	 */
+	openMain(filename) {
+		const text = fs.readFileSync(filename, "utf8");
+		let bytecode;
+		
+		if (text.match(/#(meta|data|includes|code)/)) {
+			// The file is probably wasm source code.
+			// We take note of its #includes section and add the listed files to `objectFilenames`.
+			// We then compile it and create a parser from the compiled code.
+			const asm = new WASMC();
+			asm.compile(text);
+			bytecode = WASMC.longs2strs(asm.assembled).join("\n");
+			if (asm.parsed.includes) {
+				// Included files are relative to the source file, so we need to resolve the paths.
+				this.objectFilenames.splice(1, 0, ...asm.parsed.includes.map((f) => path.resolve(path.dirname(filename), f)));
+				// In case the main source includes a file already specified as an input from the command line, we need to remove duplicates.
+				this.objectFilenames = _.uniq(this.objectFilenames);
+			}
+		} else {
+			bytecode = text;
+		}
+
+		const parser = new Parser();
+		parser.read(bytecode);
+		return parser;
+	}
+
 	link() {
+		// Step 1
+		this.parser = this.openMain(this.objectFilenames[0]);
+		
 		if (this.objectFilenames.length < 2) {
 			console.error(chalk.yellow.bold(" ?"), `Multiple input files are needed.`);
 			process.exit(1);
 		}
-
-		// Step 1
-
-		this.parser = new Parser();
-		this.parser.open(this.objectFilenames[0]);
 
 		const {raw, parsed} = this.parser;
 
@@ -387,7 +417,7 @@ class Linker {
 	 * @param {string} outfile The output filename.
 	 */
 	printSuccess(infile=this.objectFilenames[0], outfile=this.options.out) {
-		console.log(chalk.green.bold(" \u2714"), `Successfully linked ${chalk.bold(infile)} and saved the output to ${chalk.bold(outfile)}.`);
+		console.log(chalk.green.bold(" \u2714"), `Successfully linked ${chalk.bold(path.relative(".", infile))} and saved the output to ${chalk.bold(path.relative(".", outfile))}.`);
 	}
 
 	warn(...args) {
@@ -421,7 +451,7 @@ if (require.main === module) {
 	}
 
 	try {
-		new Linker(options, options._, options.out).link();
+		new Linker(options, options._.map((f) => path.resolve(f)), options.out).link();
 	} catch(e) {
 		if (typeof e == "string") {
 			console.error(chalk.red(e));
