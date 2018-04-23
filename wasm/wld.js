@@ -26,8 +26,11 @@ class Linker {
 		this.objectFilenames = objects;
 		this.outputFilename = out;
 
+		/**
+		 * The parser used to parse the main object file.
+		 * @type {Parser}
+		 */
 		this.parser = null;
-		this.combinedSymbols = {};
 	}
 
 	link() {
@@ -37,6 +40,7 @@ class Linker {
 		}
 
 		// Step 1
+
 		this.parser = new Parser();
 		this.parser.open(this.objectFilenames[0]);
 
@@ -48,7 +52,24 @@ class Linker {
 		const dataLength = this.parser.getDataLength();
 		const mainSymbols = this.parser.getSymbols();
 		const symtabLength = this.parser.rawSymbols.length;
+		
+		/**
+		 * Contains the combination of all parsed symbol tables.
+		 * @type {SymbolTable}
+		 */
 		this.combinedSymbols = _.cloneDeep(mainSymbols);
+		
+		/**
+		 * Contains the combination of all parsed code sections.
+		 * @type {Long[]}
+		 */
+		this.combinedCode = _.cloneDeep(this.parser.rawCode);
+
+		/**
+		 * Contains the combination of all parsed data sections.
+		 * @type {Long[]}
+		 */
+		this.combinedData = _.cloneDeep(this.parser.rawData);
 
 		// We need to keep track of symbol types separately because it becomes difficult to recompute them
 		// after the symbol table has been expanded with new symbols from included binaries, as the boundaries
@@ -63,6 +84,8 @@ class Linker {
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
 
+		console.log(this.combinedCode.length, this.combinedData.length);
+
 		// Step 7: Loop over every inclusion.
 		for (const infile of this.objectFilenames.slice(1)) {
 			if (!fs.existsSync(infile)) {
@@ -75,6 +98,8 @@ class Linker {
 			subparser.open(infile);
 
 			const {raw: subraw, parsed: subparsed} = subparser;
+			const subcode = subparser.rawCode;
+			const subdata = subparser.rawData;
 			const subcodeLength = subparser.getCodeLength();
 			const subdataLength = subparser.getDataLength();
 
@@ -95,7 +120,7 @@ class Linker {
 			const metaDifference = metaLength - subparser.getMetaLength();
 
 			// Step 7c: Replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols.
-			Linker.desymbolize(subparser.rawCode, subtable, subparser.offsets);
+			Linker.desymbolize(subcode, subtable, subparser.offsets);
 
 			for (const symbol of Object.keys(subtable)) {
 				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
@@ -135,13 +160,16 @@ class Linker {
 			extraDataLength += subdataLength;
 
 			// Step 7k: Append the symbol table to the combined symbol table.
-			console.log("Old:", Object.keys(this.combinedSymbols).length, this.combinedSymbols);
 			this.combinedSymbols = Object.assign(subtable, this.combinedSymbols);
-			console.log("New:", Object.keys(this.combinedSymbols).length, this.combinedSymbols);
 
 			// Step 7l: Append the code to the global code.
+			this.combinedCode = [...this.combinedCode, ...subcode];
+
 			// Step 7m: Append the data to the global data.
+			this.combinedData = [...this.combinedData, ...subdata];
 		}
+
+		console.log(this.combinedCode.length, this.combinedData.length);
 	}
 
 	/**

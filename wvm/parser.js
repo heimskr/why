@@ -68,6 +68,10 @@ class Parser {
 	parse(silent=true) {
 		const longs = this.raw;
 
+		/**
+		 * The offsets defined in the program's metadata section.
+		 * @type {Object<string, number>}
+		 */
 		this.offsets = {
 			$symtab: longs[0].toInt(),
 			$handlers: longs[1].toInt(),
@@ -76,20 +80,55 @@ class Parser {
 			$end: longs[4].toInt()
 		};
 
+		/**
+		 * An object mapping handler names to addresses.
+		 * @type {Object<string, number>}
+		 */
 		this.handlers = longs.slice(this.offsets.$handlers, this.offsets.$data).map((x, i) => [EXCEPTIONS[i], x.toInt()]);
 
+		/**
+		 * Contains all the unparsed Longs in the metadata section.
+		 * @type {Long[]}
+		 */
 		this.rawMeta = longs.slice(0, this.offsets.$symtab / 8);
+
+		/**
+		 * The parsed metadata section.
+		 * @type {Object}
+		 */
 		this.meta = {
 			orcid: _.chain([4, 5]).map((n) => longs[n]).longString().join("").chunk(4).map((n) => n.join("")).join("-").value()
 		};
 		[this.meta.name, this.meta.version, this.meta.author] = _(longs).slice(6, this.offsets.$handlers).longStrings();
 
+		/**
+		 * Contains all the unparsed Longs in the symbol table.
+		 * @type {Long[]}
+		 */
 		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$handlers / 8);
+
+		/**
+		 * Contains the parsed symbol table.
+		 * @type {SymbolTable}
+		 */
 		this.symbols = this.getSymbols();
 
+		/**
+		 * Contains all the unparsed Longs in the code section.
+		 * @type {Long[]}
+		 */
 		this.rawCode = longs.slice(this.offsets.$code / 8, this.offsets.$data / 8);
+
+		/**
+		 * Contains all the parsed instructions.
+		 * @type {Object}
+		 */
 		this.code = this.rawCode.map(Parser.parseInstruction);
 
+		/**
+		 * Contains all the unparsed Longs in the data section.
+		 * @type {Long[]}
+		 */
 		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
 
 		if (!silent) {
@@ -110,7 +149,7 @@ class Parser {
 
 	/**
 	 * Reads the program's symbol table.
-	 * @return {Object<string, Array<number, Long>>} An object mapping a symbol name to tuple of its ID and its address.
+	 * @return {SymbolTable} An object mapping a symbol name to tuple of its ID and its address.
 	 */
 	getSymbols() {
 		const longs = this.raw;
