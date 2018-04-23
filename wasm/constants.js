@@ -205,6 +205,7 @@ exports.MAX_ARGS = exports.REGISTER_OFFSETS.t - exports.REGISTER_OFFSETS.a;
 
 exports.FLAGS = {
 	IGNORE: 0,
-	KNOWN_SYMBOL: 1,
-	UNKNOWN_SYMBOL: 2
+	KNOWN_SYMBOL: 1,   // During compilation, indicates that the imm/addr refers to a label and isn't a hardcoded number.
+	UNKNOWN_SYMBOL: 2, // During compilation, indicates that the imm/addr is the ID of a symbol that wasn't defined in the program's source code.
+	SYMBOL_ID: 3,      // During linking, indicates that the imm/addr of the instruction has been replaced with the corresponding label ID.
 };
