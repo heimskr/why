@@ -87,7 +87,7 @@ class Parser {
 		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$handlers / 8);
 		this.symbols = this.getSymbols();
 
-		this.rawCode = longs.slice(this.offsets.$code / 8, this.offsets.$end / 8);
+		this.rawCode = longs.slice(this.offsets.$code / 8, this.offsets.$data / 8);
 		this.code = this.rawCode.map(Parser.parseInstruction);
 
 		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
