@@ -4,7 +4,10 @@ let fs = require("fs"),
 	minimist = require("minimist"),
 	Long = require("long"),
 	WASMC = require("./wasmc.js"),
-	Parser = require("../wvm/parser.js");
+	Parser = require("../wvm/parser.js"),
+	_ = require("lodash");
+
+const {FLAGS} = require("./constants.js");
 
 /**
  * @module wasm
@@ -22,16 +25,22 @@ class Linker {
 		this.options = options;
 		this.objectFilenames = objects;
 		this.outputFilename = out;
+
+		this.parser = null;
+		this.symbolTable = {};
 	}
 
 	link() {
-		const main = new Parser();
-		main.open(this.objectFilenames[0]);
+		this.parser = new Parser();
+		this.parser.open(this.objectFilenames[0]);
 
-		const {raw, parsed} = main;
-		const codeLength = main.getCodeLength();
-		const dataLength = main.getDataLength();
-		const mainSymbols = main.getSymbols();
+		const {raw, parsed} = this.parser;
+		const codeLength = this.parser.getCodeLength();
+		const dataLength = this.parser.getDataLength();
+		const mainSymbols = this.parser.getSymbols();
+		this.symbolTable = _.cloneDeep(mainSymbols);
+		
+		this.desymbolize(this.parser.rawCode, mainSymbols);
 
 		// fs.writeFileSync(this.options.out, WASMC.longs2strs(this.finalizeOutput()).join("\n"));
 		// console.log(`${chalk.green("\u2714")} Successfully linked ${chalk.bold(this.filename)} and saved the output to ${chalk.bold(this.options.out)}.`);
@@ -44,8 +53,61 @@ class Linker {
 	 */
 	desymbolize(longs, symbolTable) {
 		for (let i = 0; i < longs.length; i++) {
-			
+			const parsedInstruction = Parser.parseInstruction(longs[i]);
+			const {opcode, type, flags, rs, rd, imm, addr} = parsedInstruction;
+			if (flags == FLAGS.KNOWN_SYMBOL) {
+				if (type != "i" && type != "j") {
+					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i*8 + this.parser.offsets.$code}\x1b[22m.`;
+				}
+
+				const name = this.findSymbolFromAddress(type == "i"? imm : addr);
+				if (!name || !symbolTable[name]) {
+					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${imm}\x1b[0m.`;
+				}
+
+				const id = symbolTable[name][0];
+				// We disable warnings because the encoded IDs are somehow negative (even if I add a Math.abs() call in WASMC.encodeSymbol, strangely).
+				if (type == "i") {
+					longs[i] = WASMC.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID, false);
+				} else {
+					longs[i] = WASMC.jType(opcode, rs, id, FLAGS.SYMBOL_ID, false);
+				}
+			}
 		}
+	}
+
+	/**
+	 * Finds a symbol name based on its ID.
+	 * @param  {number} id A numeric ID.
+	 * @return {?string} A symbol name if one was found; `null` otherwise.
+	 */
+	findSymbolFromID(id) {
+		for (let name of Object.keys(this.symbolTable)) {
+			if (this.symbolTable[name][0] == id) {
+				return name;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Finds a symbol name based on its address.
+	 * @param  {number} addr An address.
+	 * @return {?string} A symbol name if one was found; `null` otherwise.
+	 */
+	findSymbolFromAddress(addr) {
+		for (let name of Object.keys(this.symbolTable)) {
+			if (this.symbolTable[name][1].eq(addr)) {
+				return name;
+			}
+		}
+
+		if (addr == this.parser.offsets.$end) {
+			return ".end";
+		}
+
+		return null;
 	}
 
 	warn(...args) {
