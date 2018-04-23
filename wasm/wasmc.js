@@ -581,20 +581,23 @@ class WASMC {
 
 	/**
 	 * Compiles an R-type instruction into bytecode.
-	 * @param {number} opcode - The instruction's opcode.
-	 * @param {number} rt - The instruction's secondary source register.
-	 * @param {number} rs - The instruction's primary source register.
-	 * @param {number} rd - The instruction's destination register.
-	 * @param {number} func - The instruction's function field.
-	 * @param {number} [flags=0] - The linker flags to embed in the instruction.
+	 * @param {number} opcode The instruction's opcode.
+	 * @param {number} rt     The instruction's secondary source register.
+	 * @param {number} rs     The instruction's primary source register.
+	 * @param {number} rd     The instruction's destination register.
+	 * @param {number} func   The instruction's function field.
+	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
+	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static rType(opcode, rt, rs, rd, func, flags=0) {
-		if (!R_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid r-type`);
-		if (rt < 0 || 127 < rt) WASMC.warn(`rt (${rt}) not within the valid range (0–127)`);
-		if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
-		if (rd < 0 || 127 < rd) WASMC.warn(`rd (${rd}) not within the valid range (0–127)`);
-		if (func < 0 || 4095 < func) WASMC.warn(`func (${func}) not within the valid range (0–4095)`);
+	static rType(opcode, rt, rs, rd, func, flags=0, warn=true) {
+		if (!R_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid r-type`);
+		if (warn) {
+			if (rt < 0 || 127 < rt) WASMC.warn(`rt (${rt}) not within the valid range (0–127)`);
+			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
+			if (rd < 0 || 127 < rd) WASMC.warn(`rd (${rd}) not within the valid range (0–127)`);
+			if (func < 0 || 4095 < func) WASMC.warn(`func (${func}) not within the valid range (0–4095)`);
+		}
 
 		let lower = func | (flags << 12) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
@@ -605,18 +608,21 @@ class WASMC {
 
 	/**
 	 * Compiles an I-type instruction into bytecode.
-	 * @param {number} opcode - The instruction's opcode.
-	 * @param {number} rs - The instruction's source register.
-	 * @param {number} rd - The instruction's destination register.
-	 * @param {number} imm - The instruction's immediate value.
-	 * @param {number} [flags=0] - The linker flags to embed in the instruction.
+	 * @param {number} opcode The instruction's opcode.
+	 * @param {number} rs     The instruction's source register.
+	 * @param {number} rd     The instruction's destination register.
+	 * @param {number} imm    The instruction's immediate value.
+	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
+	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static iType(opcode, rs, rd, imm, flags=0) {
-		if (!I_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid i-type`);
-		if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
-		if (rd < 0 || 127 < rd) WASMC.warn(`rd (${rd}) not within the valid range (0–127)`);
-		if (imm < -2147483648 || 2147483647 < imm) WASMC.warn(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
+	static iType(opcode, rs, rd, imm, flags=0, warn=true) {
+		if (!I_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid i-type`);
+		if (warn) {
+			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
+			if (rd < 0 || 127 < rd) WASMC.warn(`rd (${rd}) not within the valid range (0–127)`);
+			if (imm < -2147483648 || 2147483647 < imm) WASMC.warn(`imm (${imm}) not within the valid range (-2147483648–2147483647)`);
+		}
 
 		let lower = imm;
 		let upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) | (opcode << 20);
@@ -627,16 +633,19 @@ class WASMC {
 
 	/**
 	 * Compiles a J-type instruction into bytecode.
-	 * @param {number} opcode - The instruction's opcode.
-	 * @param {number} rs - The instruction's source register.
-	 * @param {number} addr - The instruction's address field.
-	 * @param {number} [flags=0] - The linker flags to embed in the instruction.
+	 * @param {number} opcode The instruction's opcode.
+	 * @param {number} rs     The instruction's source register.
+	 * @param {number} addr   The instruction's address field.
+	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
+	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static jType(opcode, rs, addr, flags=0) {
-		if (!J_TYPES.includes(opcode)) throw new Error(`opcode ${opcode} isn't a valid j-type`);
-		if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
-		if (addr < 0 || 4294967295 < addr) WASMC.warn(`addr (${addr}) not within the valid range (0–4294967295)`);
+	static jType(opcode, rs, addr, flags=0, warn=true) {
+		if (!J_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid j-type`);
+		if (warn) {
+			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
+			if (addr < 0 || 4294967295 < addr) WASMC.warn(`addr (${addr}) not within the valid range (0–4294967295)`);
+		}
 
 		let lower = addr;
 		let upper = (this.ignoreFlags? 0 : flags) | (rs << 13) | (opcode << 20);
