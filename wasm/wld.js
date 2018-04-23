@@ -32,7 +32,7 @@ class Linker {
 
 	link() {
 		if (this.objectFilenames.length < 2) {
-			console.error(`${chalk.yellow("?")} Multiple input files are needed.`);
+			console.error(chalk.yellow.bold(" ?"), `Multiple input files are needed.`);
 			process.exit(1);
 		}
 
@@ -55,6 +55,20 @@ class Linker {
 		let extraSymbolLength = this.symbolTable.length;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
+
+		for (const infile of this.objectFilenames.slice(1)) {
+			if (!fs.existsSync(infile)) {
+				console.error(chalk.red.bold(" !"), `Couldn't find ${chalk.bold(infile)}.`);
+				process.exit(1);
+			}
+
+			const subparser = new Parser();
+			subparser.open(infile);
+
+			const {raw: subraw, parsed: subparsed} = subparser;
+
+			console.log(subraw);
+		}
 	}
 
 	/**
@@ -136,7 +150,7 @@ class Linker {
 	 * @param {string} outfile The output filename.
 	 */
 	printSuccess(infile, outfile) {
-		console.log(`${chalk.green("\u2714")} Successfully linked ${chalk.bold(infile)} and saved the output to ${chalk.bold(outfile)}.`);
+		console.log(chalk.green.bold(" \u2714"), `Successfully linked ${chalk.bold(infile)} and saved the output to ${chalk.bold(outfile)}.`);
 	}
 
 	warn(...args) {

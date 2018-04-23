@@ -214,11 +214,9 @@ class WASMC {
 			}) : WASMC.longs2strs(out).join("\n");
 
 			fs.writeFileSync(outname, frozen);
-			console.log(chalk.green("\u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
-			if (this.unknownSymbols.length == 0) {
-				console.log(chalk.yellow("?"), "No unknown symbols found.");
-			} else {
-				console.log(chalk.yellow("?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
+			console.log(chalk.green.bold(" \u2714"), "Successfully assembled", chalk.bold(this.filename), `${this.options.library? "(library) " : ""}and saved the output to`, chalk.bold(outname) + ".");
+			if (0 < this.unknownSymbols.length) {
+				console.log(chalk.yellow.bold(" ?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
 			}
 		}
 	}
