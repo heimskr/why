@@ -24,26 +24,17 @@ const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label"
  * Represents a `wasmc` instance.
  */
 class WASMC {
-	
 	/**
 	 * Creates a new wasmc instance.
 	 * @param {Object} options - An object containing options for the compiler (from the command line, for example).
-	 * @param {string} filename - The filename to read the wasm source from.
 	 */
-	constructor(options, filename) {
+	constructor(options) {
 		/**
 		 * An object containing options for the compiler (from the command line, for example).
 		 * @type {Object.<string, *>}
 		 * @name module:wasm~WASMC#options
 		 */
 		this.options = options;
-
-		/**
-		 * The filename to read the wasm source from.
-		 * @type {string}
-		 * @name module:wasm~WASMC#filename
-		 */
-		this.filename = filename;
 
 		/**
 		 * Whether to prevent adding linker flags to the bytecode.
@@ -175,9 +166,10 @@ class WASMC {
 
 	/**
 	 * {@link module:wasm~WASMC#parse Parses} and processes the source code and writes the output.
+	 * @param {string} source Source code of a wasm program.
 	 */
-	compile() {
-		this.parse(fs.readFileSync(this.filename, "utf8"));
+	compile(source) {
+		this.parse(source);
 		const labels = this.findAllLabels();
 		this.symbolTable = this.createSymbolTable(labels, true);
 		this.processHandlers();
@@ -195,7 +187,7 @@ class WASMC {
 		this.processCode(this.expandLabels(expanded));
 		this.symbolTable = this.createSymbolTable(labels, false);
 
-		const out = [...this.meta, ...this.symbolTable, ...this.handlers, ...this.code, ...this.data];
+		this.assembled = [...this.meta, ...this.symbolTable, ...this.handlers, ...this.code, ...this.data];
 
 		if (this.options.debug) {
 			console.log({
@@ -206,15 +198,22 @@ class WASMC {
 				out: WASMC.longs2strs(out),
 				offsets: this.offsets
 			});
-		} else {
-			const outname = typeof this.options.out != "string"? this.filename.replace(/\.wasm$/i, "") + ".why" : this.options.out;
-			const frozen = WASMC.longs2strs(out).join("\n");
+		}
+	}
 
-			fs.writeFileSync(outname, frozen);
-			console.log(chalk.green.bold(" \u2714"), "Successfully assembled", chalk.bold(this.filename), "and saved the output to", chalk.bold(outname) + ".");
-			if (0 < this.unknownSymbols.length) {
-				console.log(chalk.yellow.bold(" ?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
-			}
+	/**
+	 * Writes the output to a file.
+	 * @param {string} outfile The name of the output file.
+	 * @param {string} [infile] The name of the input file.
+	 */
+	writeOutput(outfile, infile) {
+		const frozen = WASMC.longs2strs(this.assembled).join("\n");
+
+		fs.writeFileSync(outfile, frozen);
+		console.log(chalk.green.bold(" \u2714"), "Successfully assembled", infile? chalk.bold(infile) : "the program", "and saved the output to", chalk.bold(outfile) + ".");
+
+		if (0 < this.unknownSymbols.length) {
+			console.log(chalk.yellow.bold(" ?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
 		}
 	}
 	
@@ -808,6 +807,7 @@ class WASMC {
 }
 
 module.exports = WASMC;
+
 const _A = _.range(0, 16).map((n) => ["register", "a", n]);
 const _RA = ["register", "return", 0];
 const _M = _.range(0, 16).map((n) => ["register", "m", n]);
@@ -833,7 +833,9 @@ if (require.main === module) {
 
 	options.out = options._[1];
 
-	new WASMC(options, filename).compile();
+	const asm = new WASMC(options);
+	asm.compile(fs.readFileSync(filename, "utf8"));
+	asm.writeOutput(filename.replace(/\.wasm$/i, "") + ".why", filename);
 }
 
 /**
