@@ -157,7 +157,7 @@ class Parser {
 		const end = longs[1].toInt() / 8;
 		const out = {};
 		for (let i = start, j = 0; i < end && j < 10000; j++) {
-			const id = longs[i].high;
+			const id = Math.abs(longs[i].high);
 			const len = longs[i].low;
 			const addr = longs[i + 1];
 

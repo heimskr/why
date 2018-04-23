@@ -806,7 +806,7 @@ class WASMC {
 		const hash = crypto.createHash("sha256");
 		hash.update(name);
 		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
-		return parseInt(hash.digest("hex").substr(0, 8), 16);
+		return Math.abs(parseInt(hash.digest("hex").substr(0, 8), 16));
 	}
 }
 
