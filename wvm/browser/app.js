@@ -186,7 +186,6 @@ let App = window.App = class App {
 						   .replace(/#ff0000/g, "#a00")
 						   .replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
 						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`);
-						   // .replace(/<span style="[^"]*">\$sp<\/span>/, `<span class="reg-sp">$sp</span>`)
 				return html;
 			} catch(e) {
 				return "<span class=\"what\">?</span>";
@@ -423,6 +422,8 @@ function initializeUI(app) {
 			app.range = input;
 		}
 	});
+
+	$("#flush_buffer").click(() => app.vm.flushPrcBuffer(true));
 
 	$("#run").click(() => {
 		$("#run")[app.toggleActive()? "addClass" : "removeClass"]("active");
