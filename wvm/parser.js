@@ -415,6 +415,8 @@ class Parser {
 	 * @return {string} A line of wasm source.
 	 */
 	static formatI(op, rs, rd, imm, flags=0, symbols={}) {
+		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;
+
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
 				return imm == 1? chalk.yellow(rd) + chalk.yellow.dim(increment) : `${chalk.yellow(rs)} ${Parser.colorOper(opequals)} ${chalk.magenta(imm)}`;
@@ -423,13 +425,13 @@ class Parser {
 			return `${chalk.yellow(rs)} ${Parser.colorOper(op)} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		};
 
-		const alt_op = (oper) => `${chalk.yellow(rs)} ${Parser.colorOper(oper + (rs == rd? "=" : ""))} ${chalk.magenta(imm) + (rs != rd? chalk.dim(" -> ") + chalk.yellow(rd) : "")}`;
+		const alt_op = (oper) => `${chalk.yellow(rs)} ${Parser.colorOper(oper + (rs == rd? "=" : ""))} ${chalk.magenta(target) + (rs != rd? chalk.dim(" -> ") + chalk.yellow(rd) : "")}`;
 		if (op == "addi")   return mathi("++", "+=", "+");
 		if (op == "subi")   return mathi("--", "-=", "-");
 		if (op == "addui")  return `${mathi("++", "+=", "+")} /u`;
 		if (op == "subui")  return `${mathi("--", "-=", "-")} /u`;
-		if (op == "multi")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(imm)}`;
-		if (op == "multui") return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(imm)} /u`;
+		if (op == "multi")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(target)}`;
+		if (op == "multui") return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(target)} /u`;
 		if (op == "modi")   return alt_op("%");
 		if (op == "andi")   return alt_op("&");
 		if (op == "nandi")  return alt_op("~&");
@@ -440,19 +442,19 @@ class Parser {
 		if (op == "slli")   return alt_op("<<");
 		if (op == "srli")   return alt_op(">>>");
 		if (op == "srai")   return alt_op(">>");
-		if (op == "lui")    return `${chalk.dim("lui:")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "li")     return `[${chalk.magenta(imm)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "si")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(imm)}]`;
-		if (op == "set")    return `${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "sli")    return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "slei")   return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "seqi")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "slui")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(imm)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "lbi")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} ${chalk.yellow(rd)} /b`;
-		if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(imm)}] /b`;
-		if (op == "lni")    return `[${chalk.magenta(imm)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
-		if (op == "lbni")   return `[${chalk.magenta(imm)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
+		if (op == "lui")    return `${chalk.dim("lui:")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "li")     return `[${chalk.magenta(target)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "si")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(target)}]`;
+		if (op == "set")    return `${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sli")    return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "slei")   return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "seqi")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "slui")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
+		if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
+		if (op == "lbi")    return `[${chalk.magenta(target)}] ${chalk.dim("->")} ${chalk.yellow(rd)} /b`;
+		if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(target)}] /b`;
+		if (op == "lni")    return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
+		if (op == "lbni")   return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 
@@ -466,7 +468,7 @@ class Parser {
 	 * @return {string} A line of wasm source.
 	 */
 	static formatJ(op, rs, addr, flags=0, symbols={}) {
-		const target = chalk.magenta(_.findKey(symbols, (s) => s[1].eq(addr)) || addr);
+		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
 		if (op == "j")   return `${chalk.dim(":") } ${target}`;
 		if (op == "jc")  return `${chalk.dim(":") } ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
 		if (op == "jl")  return `${chalk.dim("::")} ${target}`;

@@ -68,7 +68,6 @@ sub attempt() {
 	$g + 16 -> $s0
 	[$s0] -> $s0
 	strprint(&msg_free); <prd $t0>; <p '\n'>
-	@bug_here
 	strprint(&msg_rsize); <prd $a1>; <p "\n\n">
 	find_free_block()
 	<p '\n'>
