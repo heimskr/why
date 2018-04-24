@@ -44,7 +44,6 @@ const compileCode = (statements) => {
 };
 %}
 
-@builtin "string.ne"
 @builtin "postprocessors.ne"
 
 main			-> program									{% d => compileObject(d[0]) %}
@@ -350,3 +349,18 @@ varchar -> . {% (d, location, reject) => d[0] && special.chars.indexOf(d[0]) ===
 newline -> "\r" "\n" | "\r" | "\n"
 _		-> [\t ]:* {% d => null %}
 __		-> [\t ]:+ {% d => null %}
+
+dqstring	-> "\"" dstrchar:* "\""									{% d => d[1].join("") %}
+sqstring	-> "'"  sstrchar:* "'"									{% d => d[1].join("") %}
+btstring	-> "`"  [^`]:*     "`"									{% d => d[1].join("") %}
+
+dstrchar	-> [^\\"\n]												{% id %}
+			 | "\\0" 												{% d => "\0" %}
+			 | "\\" strescape										{% d => JSON.parse(`"${d.join("")}"`) %}
+
+sstrchar	-> [^\\'\n]												{% id %}
+			 | "\\" strescape										{% d => JSON.parse(`"${d.join("")}"`) %}
+			 | "\\'"												{% d => "'" %}
+
+strescape	-> ["\\/bfnrt]											{% id %}
+			 | "u" [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9]	{% d => d.join("") %}
