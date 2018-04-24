@@ -49,10 +49,11 @@ int wvm_load(char *filename) {
 
 	fclose(file);
 
-	offset_handlers = wvm_get_word(0);
-	offset_data = wvm_get_word(8);
+	offset_symtab = wvm_get_word(0);
+	offset_handlers = wvm_get_word(8);
 	offset_code = wvm_get_word(16);
-	offset_end = wvm_get_word(24);
+	offset_data = wvm_get_word(24);
+	offset_end = wvm_get_word(32);
 
 	return memsize;
 }
@@ -161,9 +162,7 @@ void wvm_print_memory() {
 	for (int i = 0; i < memsize; i++) {
 		word boffset = i << 3;
 		word word = wvm_get_word(boffset);
-		if (boffset == offset_handlers || boffset == offset_data)
-			printf("├──────┼────────────────────┼%s┤\n", sep);
-		else if (boffset == offset_code)
+		if (boffset == offset_handlers || boffset == offset_data || boffset == offset_code || boffset == offset_symtab)
 			printf("├──────┼────────────────────┼%s┤\n", sep);
 
 		printf("│\33[38;5;8m");
@@ -171,9 +170,9 @@ void wvm_print_memory() {
 			printf("\33[7m");
 		
 		printf(" %04lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │\33[38;5;250m", boffset, word);
-		if (i < 4)
+		if (i < 5)
 			printf(" %s%lld%s", ANSI_MAGENTA, word, ANSI_RESET);
-		else if (boffset < offset_handlers || (offset_data <= boffset && boffset < offset_code)) {
+		else if (boffset < offset_handlers || (offset_data <= boffset)) {
 			printf(" ");
 			for (char j = 56; j >= 0; j -= 8) {
 				char byte = (char) (word >> j) & 0xff;
@@ -185,25 +184,29 @@ void wvm_print_memory() {
 		}
 
 		if (i == 0)
-			printf("\33[45G%shandlers%s", ANSI_DIM, ANSI_RESET);
+			printf("\33[47G%ssymtab%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 1)
-			printf("\33[49G%sdata%s", ANSI_DIM, ANSI_RESET);
+			printf("\33[45G%shandlers%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 2)
 			printf("\33[49G%scode%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 3)
+			printf("\33[49G%sdata%s", ANSI_DIM, ANSI_RESET);
+		else if (i == 4)
 			printf("\33[50G%send%s", ANSI_DIM, ANSI_RESET);
 
-		if (boffset < offset_code)
+		if (boffset < offset_code || offset_data <= boffset)
 			printf("%s│", jump);
 
 		if (boffset == 0)
 			printf(" Metadata");
+		else if (boffset == offset_symtab)
+			printf("Symbol Table");
 		else if (boffset == offset_handlers)
 			printf(" Handlers");
 		else if (boffset == offset_data)
 			printf(" Data");
 
-		if (offset_code <= boffset) {
+		if (offset_code <= boffset && boffset < offset_data) {
 			char *disassembled = wvm_disassemble(word);
 			printf(" %s", disassembled);
 			free(disassembled);
