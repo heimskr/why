@@ -1,0 +1,30 @@
+#meta
+name: "B"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+b1d: "hello world"
+b2d: "hmmmmmmm........."
+b3d: ":~|"
+
+#code
+
+<>
+@b1c_secondnop
+<>
+<>
+
+<halt>
+
+@b2c_prd
+<prd $r1>
+<prc $r1>
+<prx $r3>
+
+@b3c_nop
+<>
+
+@b_to_c_pr
+: c2c_print

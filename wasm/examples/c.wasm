@@ -1,0 +1,22 @@
+#meta
+name: "C"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1.00000000000000000000000000000000000000000000000000"
+
+#include
+../compiled/d.why
+
+#data
+c1d: "yikes"
+
+#code
+
+@c1c_mem
+$t0 += 42
+
+@c2c_print
+<p "hello">
+
+@c_jump_to_cmem
+: c1c_mem

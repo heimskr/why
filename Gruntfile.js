@@ -117,7 +117,7 @@ module.exports = function(grunt) {
 			child_process.exec(shellescape(["node", "wasm/wld.js", file, "-o", `wasm/compiled/${path.basename(file).replace(/\.wasm$/i, "")}.why`]), (error, stdout, stderr) => {
 				if (error) {
 					console.error(chalk.red(`Couldn't compile ${file}:`));
-					console.error(chalk.red.dim(error.message));
+					console.error(chalk.red(error.message));
 				} else if (stderr) {
 					console.error(`Error during compilation:`, stderr);
 				} else if (stdout.match(/Successfully linked/)) {

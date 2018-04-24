@@ -154,13 +154,15 @@ class Linker {
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
-					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference);
-				} else if (type == "data" || symbol == ".end") {
+					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference - 24);
+				} else {
 					// Step 7e: For each data symbol in the included symbol table, increase
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
-					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength + metaDifference);
-				} else {
-					throw `Encountered a symbol other than .end of type "${type}": "${symbol}"`;
+					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength + metaDifference - 24);
+
+					if (type != "data" && symbol != ".end") {
+						console.warn(chalk.yellow.bold(" !"), `Encountered a symbol other than .end of type ${chalk.bold(type)}: ${chalk.bold(symbol)}`);
+					}
 				}
 
 				symbolTypes[symbol] = type;
@@ -316,7 +318,7 @@ class Linker {
 				const name = Linker.findSymbolFromAddress(val, symbolTable, offsets.$end);
 
 				if (!name || !symbolTable[name]) {
-					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${val}\x1b[0m.`;
+					throw `desymbolize: Couldn't find a symbol corresponding to \x1b[0m\x1b[1m${val}\x1b[0m.`;
 				}
 
 				const id = symbolTable[name][0];
@@ -347,9 +349,18 @@ class Linker {
 				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
 				const name = Linker.findSymbolFromID(val, symbolTable);
 				if (!name || !symbolTable[name]) {
-					throw `Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x${val.toString(16).padStart(16, "0")}\x1b[0m.`;
+					if (flags == FLAGS.UNKNOWN_SYMBOL) {
+						// Unknown labels in included binaries are okay if they're resolved later.
+						// For example, B could reference symbols defined in C without including C,
+						// but if A includes B and C, then the symbols will be resolved in the compiled
+						// output for A.
+						continue;
+					}
+
+					throw `resymbolize: Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x${val.toString(16).padStart(16, "0")}\x1b[0m.`;
 				}
 
+				
 				const addr = symbolTable[name][1];
 				if (addr.high != 0) {
 					console.warn(`Truncating address of label ${chalk.bold(name)} from ${chalk.bold(`0x${addr.toString(16).padStart(16, "0")}`)} to ${chalk.bold(`0x${addr.low.toString(16).padStart(16, "0")}`)}.`);

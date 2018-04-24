@@ -24,8 +24,10 @@ w7: 0
 
 #code
 
+@loadintot0
 'w' -> $t0
 strchr(&eight, $t0)
+@printr0
 <print $r0>
 [$r0] -> $t0 /b
 strcat(&w0, &nineteen)
@@ -45,7 +47,7 @@ strlen(&nineteen)
 <print $r0>
 strlen(&w0)
 <print $r0>
-
+@halt
 <halt>
 
 /*

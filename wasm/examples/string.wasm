@@ -3,7 +3,6 @@ name: "Strings"
 author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
 version: "2"
-library
 
 #data
 s_true: "true"
@@ -11,6 +10,7 @@ s_false: "false"
 
 #code
 
+@stringstart
 <halt>
 
 sub strlen() {

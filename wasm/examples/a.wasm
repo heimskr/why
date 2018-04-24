@@ -1,0 +1,26 @@
+#meta
+name: "A"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#includes
+../compiled/b.why
+../compiled/c.why
+
+#data
+a1d: "hello"
+a2d: "hi"
+
+#code
+
+@a1c
+<>
+
+@jump_to_b_prd
+: b2c_prd
+
+<halt>
+
+@a2c
+<prd $r0>
