@@ -129,6 +129,12 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_SB:
 					sprintf(str, "%s$%s%s %s->%s [%s$%s%s]%s", COLOR_REG, srs, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET, func == FUNCT_SB? " /b" : "");
 					return;
+				case FUNCT_SPUSH:
+					sprintf(str, "[ %s$%s%s", COLOR_REG, srs, ANSI_RESET);
+					return;
+				case FUNCT_SPOP:
+					sprintf(str, "  %s$%s%s ]", COLOR_REG, srd, ANSI_RESET);
+					return;
 			}
 
 		case OPS_TRAP:
