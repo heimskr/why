@@ -125,12 +125,15 @@ let App = window.App = class App {
 				const stackStart = vm.memorySize - 16 == i;
 				const globalStart = vm.offsets.$end == byte;
 
-				if (dataStart || stackStart || edges.includes(byte))
+				if (stackStart || edges.includes(byte))
 					classes.push("dashed");
-				if (handlersStart || symtabStart || codeStart || globalStart)
+				if (handlersStart || symtabStart || codeStart || dataStart || globalStart)
 					classes.push("solid");
 
-				const tr = $("<tr></tr>").addClass(classes.join(" ")).appendTo($("#memory"))
+				if (vm.offsets.$data <= byte && this.vm.symbols && _.keys(this.vm.symbols).filter((s) => this.vm.symbols[s][1].toInt() == byte).length)
+					classes.push("dashed");
+
+				const tr = $("<tr></tr>").addClass(_.uniq(classes).join(" ")).appendTo($("#memory"))
 					.append($("<td></td>").text(byte))
 					.append($("<td></td>").html(this.hexCell(long)))
 					.append($("<td></td>").html(this.decompiledCell(long, byte)))
