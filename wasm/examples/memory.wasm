@@ -85,7 +85,7 @@ sub attempt() {
 } {3}
 
 sub mem_init() {
-	*.end -> $g
+	&.end -> $g
 	$g -> *globalbase
 
 	// Initialize first block.
