@@ -289,21 +289,27 @@ class Parser {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
 
-		const get = (...args) => parseInt(instruction.substr(...args), 2);
-		const opcode = get(0, 12);
-		const type = Parser.instructionType(opcode);
+		const {opcode, flags, type, funct, rt, rs, rd, imm, addr} = Parser.parseInstruction(instruction);
 
-		const {flags} = Parser.parseInstruction(instruction);
+		if (opcode == 0) {
+			return "<>";
+		}
+
+		const srs = Parser.getRegister(rs);
+
+		if (type == "j") {
+			return Parser.formatJ(SEDOCPO[opcode][0], srs, addr, flags, symbols);
+		}
+
+		const srd = Parser.getRegister(rd);
 
 		if (type == "r") {
-			const funct = get(52);
-			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && (opcode == OPCODES.trap || FUNCTS[op] == funct))[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), funct, flags);
-		} else if (type == "i") {
-			return Parser.formatI(SEDOCPO[opcode][0], Parser.getRegister(get(18, 7)), Parser.getRegister(get(25, 7)), Long.fromString(instruction.substr(32), false, 2).toInt(), flags, symbols);
-		} else if (type == "j") {
-			return Parser.formatJ(SEDOCPO[opcode][0], Parser.getRegister(get(12, 7)), get(32), flags, symbols);
-		} else if (opcode == 0) {
-			return "<>";
+			const srt = Parser.getRegister(rt);
+			return Parser.formatR(SEDOCPO[opcode].filter((op) => op == "trap" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags);
+		}
+		
+		if (type == "i") {
+			return Parser.formatI(SEDOCPO[opcode][0], srs, srd, imm, flags, symbols);
 		}
 
 		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
