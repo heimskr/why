@@ -281,9 +281,10 @@ class Parser {
 	/**
 	 * Decompiles an instruction to the corresponding wasm source.
 	 * @param  {Long|string} instruction An instruction represented as either a Long of a 64-long string of binary digits.
+	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} The wasm equivalent of the instruction.
 	 */
-	static formatInstruction(instruction) {
+	static formatInstruction(instruction, symbols) {
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
@@ -292,13 +293,15 @@ class Parser {
 		const opcode = get(0, 12);
 		const type = Parser.instructionType(opcode);
 
+		const {flags} = Parser.parseInstruction(instruction);
+
 		if (type == "r") {
 			const funct = get(52);
-			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && (opcode == OPCODES.trap || FUNCTS[op] == funct))[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), funct);
+			return Parser.formatR(SEDOCPO[opcode].filter((op) => Parser.instructionType(opcode) == "r" && (opcode == OPCODES.trap || FUNCTS[op] == funct))[0], Parser.getRegister(get(12, 7)), Parser.getRegister(get(19, 7)), Parser.getRegister(get(26, 7)), funct, flags);
 		} else if (type == "i") {
-			return Parser.formatI(SEDOCPO[opcode][0], Parser.getRegister(get(18, 7)), Parser.getRegister(get(25, 7)), Long.fromString(instruction.substr(32), false, 2).toInt());
+			return Parser.formatI(SEDOCPO[opcode][0], Parser.getRegister(get(18, 7)), Parser.getRegister(get(25, 7)), Long.fromString(instruction.substr(32), false, 2).toInt(), flags, symbols);
 		} else if (type == "j") {
-			return Parser.formatJ(SEDOCPO[opcode][0], Parser.getRegister(get(12, 7)), get(32));
+			return Parser.formatJ(SEDOCPO[opcode][0], Parser.getRegister(get(12, 7)), get(32), flags, symbols);
 		} else if (opcode == 0) {
 			return "<>";
 		}
@@ -344,9 +347,10 @@ class Parser {
 	 * @param  {string} rs The name of the `rs` register.
 	 * @param  {string} rd The name of the `rt` register.
 	 * @param  {number} funct The ID of the function.
+	 * @param  {number} [flags=0] The assembler flags.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatR(op, rt, rs, rd, funct) {
+	static formatR(op, rt, rs, rd, funct, flags=0) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;
 			if (rt == rd) return `${chalk.yellow(rt)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rs)}`;
@@ -406,9 +410,11 @@ class Parser {
 	 * @param  {string} rs The name of the `rs` register.
 	 * @param  {string} rd The name of the `rt` register.
 	 * @param  {number} imm An immediate value.
+	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatI(op, rs, rd, imm) {
+	static formatI(op, rs, rd, imm, flags=0, symbols={}) {
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
 				return imm == 1? chalk.yellow(rd) + chalk.yellow.dim(increment) : `${chalk.yellow(rs)} ${Parser.colorOper(opequals)} ${chalk.magenta(imm)}`;
@@ -455,13 +461,16 @@ class Parser {
 	 * @param  {string} op The name of the operation.
 	 * @param  {string} rs The name of the `rs` register.
 	 * @param  {number} addr An immediate value.
+	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatJ(op, rs, addr) {
-		if (op == "j")   return `${chalk.dim(":") } ${chalk.magenta(addr)}`;
-		if (op == "jc")  return `${chalk.dim(":") } ${chalk.magenta(addr)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
-		if (op == "jl")  return `${chalk.dim("::")} ${chalk.magenta(addr)}`;
-		if (op == "jlc") return `${chalk.dim("::")} ${chalk.magenta(addr)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
+	static formatJ(op, rs, addr, flags=0, symbols={}) {
+		const target = chalk.magenta(_.findKey(symbols, (s) => s[1].eq(addr)) || addr);
+		if (op == "j")   return `${chalk.dim(":") } ${target}`;
+		if (op == "jc")  return `${chalk.dim(":") } ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
+		if (op == "jl")  return `${chalk.dim("::")} ${target}`;
+		if (op == "jlc") return `${chalk.dim("::")} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 

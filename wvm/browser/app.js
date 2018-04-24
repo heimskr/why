@@ -179,7 +179,7 @@ let App = window.App = class App {
 			}
 
 			try {
-				let html = ansiHTML(Parser.formatInstruction(long));
+				let html = ansiHTML(Parser.formatInstruction(long, this.vm.symbols));
 				html = html.replace(/#e8bf03/g, "orange")
 						   .replace(/#ff00ff/g, "#f08")
 						   .replace(/#00ffee/g, "#00bfff")
