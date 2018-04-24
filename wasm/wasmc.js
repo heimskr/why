@@ -288,7 +288,7 @@ class WASMC {
 		}
 		
 		if (type == "string") {
-			return WASMC.str2longs(value);
+			return WASMC.str2longs(value + "\0");
 		}
 
 		WASMC.die(`Error: unknown data type "${type}".`);

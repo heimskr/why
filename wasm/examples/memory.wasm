@@ -11,20 +11,20 @@ library
 #data
 heap_limit: 100000
 globalbase: 0 // pointer to first block in the list.
-msg_cantallocate: "\u001b[38;5;9mCouldn't find a free block.\u001b[0m\0"
+msg_cantallocate: "\u001b[38;5;9mCouldn't find a free block.\u001b[0m"
 ptrtoblock: 0
-msg_addr: "Address of current block: \0"
-msg_cond: "Block is unfree or too small? \0"
-msg_done: "Mission accomplished? \0"
-msg_bsize: "Size of first block: \0"
-msg_free: "First block free? \0"
-msg_rsize: "Requested size: \0"
-msg_success: "\u001b[32mFound a free block at \u001b[0m\0"
-msg_markfree: "\u001b[38;5;226mMarking first block as free and retrying allocation.\u001b[0m\n\n\0"
-msg_reqmore1: "\u001b[38;5;226mIncreasing request size to \u001b[0m\u001b[1m\0"
-msg_reqmore2: "\u001b[0m \u001b[38;5;226mand retrying allocation.\u001b[0m\n\n\0"
-ansi_reset: "\u001b[0m\0"
-ansi_bold: "\u001b[1m\0"
+msg_addr: "Address of current block: "
+msg_cond: "Block is unfree or too small? "
+msg_done: "Mission accomplished? "
+msg_bsize: "Size of first block: "
+msg_free: "First block free? "
+msg_rsize: "Requested size: "
+msg_success: "\u001b[32mFound a free block at \u001b[0m"
+msg_markfree: "\u001b[38;5;226mMarking first block as free and retrying allocation.\u001b[0m\n\n"
+msg_reqmore1: "\u001b[38;5;226mIncreasing request size to \u001b[0m\u001b[1m"
+msg_reqmore2: "\u001b[0m \u001b[38;5;226mand retrying allocation.\u001b[0m\n\n"
+ansi_reset: "\u001b[0m"
+ansi_bold: "\u001b[1m"
 heap_end: 0
 
 #code
