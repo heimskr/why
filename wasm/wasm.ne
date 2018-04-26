@@ -24,7 +24,7 @@ const compileData = (entries) => {
 const compileSubroutine = (name, args, code) => {
 	return [
 		[name, "push", ...args],
-		...code.map((item) => item == Symbol.for("done")? [null, "j", 0, ["label", `${name}$done`]] : item),
+		...code.map((item) => item[1] == Symbol.for("done")? [item[0], "j", 0, ["label", `${name}$done`]] : item),
 		[`${name}$done`, "pop", ...args.reverse()],
 		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
 	];
@@ -99,7 +99,8 @@ subroutine		-> "sub" __ var _ "(" _ sub_saved _ ")" _ "{" _ subroutine_code:* _ 
 subroutine_code -> _ op										{% d => [null, ...d[1][0]] %}
 				 | _ label (_ lineend):* _ op				{% d => [d[1], ...d[4][0]] %}
 				 | _ sep									{% d => null %}
-				 | _ "done"									{% d => Symbol.for("done") %}
+				 | _ "done"									{% d => [null, Symbol.for("done")] %}
+				 | _ label (lineend | __):+ "done"			{% d => [d[1], Symbol.for("done")] %}
 sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 
 include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}

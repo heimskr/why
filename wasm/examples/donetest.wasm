@@ -1,0 +1,13 @@
+#meta
+name: "Kai"
+
+#code
+
+<halt>
+
+sub foo() {
+	@label
+	done
+
+	$t0++
+}

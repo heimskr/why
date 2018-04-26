@@ -107,10 +107,13 @@ sub memset() {
 	$a2 += $a0
 
 	@_memset_loop
-	: memset$done if $a0 == $a2
+	: _memset_done if $a0 == $a2
 		$a1 -> [$a0] /b
 		$a0++
 	: _memset_loop
+
+	@_memset_done
+	done
 } {3}
 
 /*
@@ -119,19 +122,6 @@ sub memset() {
 		ptr *next;
 		word free;
 	};
-*/
-
-
-
-/*
-struct block_meta *find_free_block(struct block_meta **last, size_t size) {
-	struct block_meta *current = global_base;
-	while (current && !(current->free && current->size >= size)) {
-		*last = current;
-		current = current->next;
-	}
-	return current;
-}
 */
 
 sub find_free_block() {
@@ -183,13 +173,6 @@ sub find_free_block() {
 		
 	@ffb_done
 		$t0 -> $r0
-} {3}
-
-sub bold() {
-	strprint(&ansi_bold)
-	<prd $a0>
-	strprint(&ansi_reset)
-	<p '\n'>
 } {3}
 
 sub malloc() {

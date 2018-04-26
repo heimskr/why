@@ -128,4 +128,12 @@ sub newline() {
 	<prc $t0>
 }
 
+
+sub bold() {
+	strprint(&ansi_bold)
+	<prd $a0>
+	strprint(&ansi_reset)
+	<p '\n'>
+}
+
 <halt>
