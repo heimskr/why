@@ -335,6 +335,18 @@ void op_sleui(word instruction) {
 	INC();
 }
 
+void op_sgi(word instruction) {
+	IREGS();
+	rdv = rsv > (word) imm;
+	INC();
+}
+
+void op_sgei(word instruction) {
+	IREGS();
+	rdv = rsv >= (word) imm;
+	INC();
+}
+
 void op_j(word instruction) {
 	JADDR();
 	wvm_jump(addr);

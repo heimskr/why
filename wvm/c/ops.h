@@ -63,6 +63,8 @@ void op_slei(word instruction);   // 26  I
 void op_seqi(word instruction);   // 27  I
 void op_slui(word instruction);   // 28  I
 void op_sleui(word instruction);  // 29  I
+void op_sgi(word instruction);    // 41  I
+void op_sgei(word instruction);   // 42  I
 
 void op_j(word instruction);      // 15  J
 void op_jc(word instruction);     // 16  J
@@ -181,6 +183,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_SBI    38
 #define OP_LNI    39
 #define OP_LBNI   40
+#define OP_SGI    41
+#define OP_SGEI   42
 
 #define OPS_MATH   1
 #define OPS_RLOGIC 2

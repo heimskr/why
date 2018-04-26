@@ -233,6 +233,12 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_SLEUI:
 			wvm_disassemble_i_comp(str, rs, rd, imm, "<=");
 			break;
+		case OP_SGI:
+			wvm_disassemble_i_comp(str, rs, rd, imm, ">");
+			break;
+		case OP_SGEI:
+			wvm_disassemble_i_comp(str, rs, rd, imm, ">=");
+			break;
 		case OP_SEQI:
 			wvm_disassemble_i_comp(str, rs, rd, imm, "==");
 			break;
