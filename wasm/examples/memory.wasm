@@ -11,7 +11,7 @@ library
 #data
 heap_limit: 100000
 globalbase: 0 // pointer to first block in the list.
-msg_cantallocate: "\u001b[38;5;9mCouldn't find a free block.\u001b[0m"
+msg_cantallocate: "\A38;5;9mCouldn't find a free block.\A0m"
 ptrtoblock: 0
 msg_addr: "Address of current block: "
 msg_cond: "Block is unfree or too small? "
@@ -19,12 +19,14 @@ msg_done: "Mission accomplished? "
 msg_bsize: "Size of first block: "
 msg_free: "First block free? "
 msg_rsize: "Requested size: "
-msg_success: "\u001b[32mFound a free block at \u001b[0m"
-msg_markfree: "\u001b[38;5;226mMarking first block as free and retrying allocation.\u001b[0m\n\n"
-msg_reqmore1: "\u001b[38;5;226mIncreasing request size to \u001b[0m\u001b[1m"
-msg_reqmore2: "\u001b[0m \u001b[38;5;226mand retrying allocation.\u001b[0m\n\n"
-ansi_reset: "\u001b[0m"
-ansi_bold: "\u001b[1m"
+msg_success: "\A32mFound a free block at \A0m"
+msg_markfree: "\A38;5;226mMarking first block as free and retrying allocation.\A0m\n\n"
+msg_reqmore1: "\A38;5;226mIncreasing request size to \A0m\A1m"
+msg_reqmore2: "\A0m \A38;5;226mand retrying allocation.\A0m\n\n"
+msg_created_block: "\A1mCreated\A0m a new block at "
+msg_trying_malloc "\nTesting malloc.\n"
+ansi_reset: "\A0m"
+ansi_bold: "\A1m"
 heap_end: 0
 mem_align: 32
 temp_ptr: 0
@@ -35,6 +37,7 @@ temp_ptr: 0
 
 :: mem_init
 
+/*
 &.end -> $s0
 $s0 -> *ptrtoblock
 &ptrtoblock -> $a0
@@ -58,15 +61,24 @@ strprint(&msg_reqmore1)
 <prd $a1>
 strprint(&msg_reqmore2)
 attempt()
+*/
 
+strprint(&msg_trying_malloc)
+
+malloc(100)
+
+<p "Addr: ">
+<p $r0>
 
 <halt>
 
 {5}
 
 sub attempt() {
+	!done
+
 	[$g] -> $s0
-	strprint(&msg_bsize); <prd $s0>; <p '\n'>
+	//strprint(&msg_bsize); <prd $s0>; <p '\n'>
 	$g + 16 -> $s0
 	[$s0] -> $s0
 	strprint(&msg_free); <prd $t0>; <p '\n'>
@@ -214,6 +226,10 @@ sub mem_request_space() {
 	$t0 + $a0 -> $t2 // end = (char *) block + block->size
 	$t2 += 25        //     + sizeof(struct block_meta) + 1
 
+	strprint(&msg_created_block)
+	<p $t0>
+	<p "\n">
+
 	// return block
 	$t0 -> $r0
 } {3}
@@ -264,9 +280,11 @@ sub malloc() {
 
 		// global_base = block
 		$t0 -> *globalbase
+
 	: _malloc_ret
 	@_malloc_global
 	// } else {
+
 		// block_meta *last = global_base
 		*globalbase -> $t2
 		$t2 -> *temp_ptr
@@ -277,6 +295,7 @@ sub malloc() {
 
 		: _malloc_memsplit if $t0
 		// if (!block) {
+
 			// block = request_space(last, size)
 			mem_request_space($t0, $a0)
 			$r0 -> $t0
@@ -285,14 +304,17 @@ sub malloc() {
 			: _malloc_ret if $t0
 			0 -> $r0
 			!done
+
 		: _malloc_ret
 		@_malloc_memsplit
 		// } else {
+
 			//// memsplit($t0, $a0)
 
 			// block->free = 0
 			$t0 + 16 -> $t1
 			$0 -> [$t1]
+
 		// }
 	// }
 	: _malloc_ret

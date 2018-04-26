@@ -23,9 +23,10 @@ let App = window.App = class App {
 	constructor(vm, config={}) {
 		this.vm = vm;
 		this.heartbeatActive = false;
-		this.active = false;
+		this._active = false;
 		this.interval = null;
 		this.cursor = [0, 0];
+		this.breakpoints = [];
 
 		this.config = {
 			range: [[0, 100]],
@@ -36,6 +37,24 @@ let App = window.App = class App {
 		};
 
 		_.each(config, (val, key) => this.config[key] = val);
+		this.loadBreakpoints();
+	}
+
+	get active() {
+		return this._active;
+	}
+
+	set active(to) {
+		this._active = to;
+
+		if (to) {
+			$("#run").addClass("active");
+			this.vm.active = true;
+			this.startHeartbeat();
+		} else {
+			$("#run").removeClass("active");
+		}
+
 	}
 
 	get range() {
@@ -133,8 +152,20 @@ let App = window.App = class App {
 				if (vm.offsets.$data <= byte && this.vm.symbols && _.keys(this.vm.symbols).filter((s) => this.vm.symbols[s][1].toInt() == byte).length)
 					classes.push("dashed");
 
+				let addrcell;
 				const tr = $("<tr></tr>").addClass(_.uniq(classes).join(" ")).appendTo($("#memory"))
-					.append($("<td></td>").text(byte))
+					.append(addrcell = $("<td></td>").addClass(`addr-cell addr-cell-${byte}`).text(byte).on("contextmenu", (event) => {
+						if (this.breakpoints.includes(byte)) {
+							this.breakpoints = _.without(this.breakpoints, byte);
+							addrcell.removeClass("breakpoint");
+						} else {
+							this.breakpoints = _.uniq([...this.breakpoints, byte]);
+							addrcell.addClass("breakpoint");
+						}
+
+						this.saveBreakpoints();
+						event.preventDefault();
+					}))
 					.append($("<td></td>").html(this.hexCell(long)))
 					.append($("<td></td>").html(this.decompiledCell(long, byte)))
 					.click((event) => {
@@ -297,6 +328,12 @@ let App = window.App = class App {
 
 		if (this.active) {
 			this.vm.tick();
+
+			if (this.breakpoints.includes(this.vm.programCounter)) {
+				this.vm.active = false;
+				this.toggleActive();
+			}
+			
 			if (!this.vm.active) {
 				this.active = false;
 				if (this.heartrate < 0) {
@@ -323,6 +360,10 @@ let App = window.App = class App {
 			this.vm.onTick = () => {};
 			while (this.vm.active) {
 				this.vm.tick();
+
+				if (this.breakpoints.includes(this.vm.programCounter)) {
+					this.toggleActive();
+				}
 			}
 
 			this.active = false;
@@ -386,6 +427,36 @@ let App = window.App = class App {
 
 	initializeText() {
 		$("#console").text(this.consoleText = [...Array(app.config.consoleSize[1])].map(() => " ".repeat(app.config.consoleSize[0])).join("\n"));
+	}
+
+	loadBreakpoints() {
+		try {
+			const bp = JSON.parse(localStorage.getItem("breakpoints"));
+			if (bp instanceof Array) {
+				return this.breakpoints = bp;
+			}
+		} catch(e) { }
+
+		localStorage.setItem("breakpoints", "[]");
+		return this.breakpoints = [];
+	}
+
+	saveBreakpoints() {
+		if (this.breakpoints instanceof Array) {
+			localStorage.setItem("breakpoints", JSON.stringify(this.breakpoints));
+			return true;
+		}
+		
+		return false;
+	}
+
+	applyBreakpoints() {
+		$(".addr-cell").removeClass("breakpoint");
+		if (this.breakpoints) {
+			for (const bp of this.breakpoints) {
+				$(`.addr-cell-${bp}`).addClass("breakpoint");
+			}
+		}
 	}
 };
 
@@ -473,6 +544,7 @@ function initializeUI(app) {
 	});
 
 	app.initializeText();
+	app.applyBreakpoints();
 }
 
 let parser = new Parser();
@@ -482,9 +554,14 @@ let {offsets, handlers, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
 
 $(() => {
+	let bp = [];
+	try {
+		bp = JSON.parse(window.localStorage.breakpoints);
+	} catch(e) { }
 	app = window.app = new App(vm, {});
 	app.config.consoleSize[0] = Math.max(10, Math.floor(($("#console").width()) / 8));
 	app.config.consoleSize[1] = Math.max(10, Math.floor(($("#console").height() - 16) / 16 - 3));
 	initializeUI(app);
+	setTimeout(() => app.applyBreakpoints());
 	app.initializeVM();
 });
