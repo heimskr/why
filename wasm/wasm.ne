@@ -251,8 +251,8 @@ op_sgui			-> rv _ ">=" _ int into rv _ "/u"			{% d => ["sgui",   d[6], d[0], d[4
 op_sli			-> rv _ "<"  _ int into rv					{% d => ["sli",    d[0], d[6], d[4]] %}
 op_slei			-> rv _ "<=" _ int into rv					{% d => ["slei",   d[0], d[6], d[4]] %}
 op_seqi			-> rv _ "==" _ int into rv					{% d => ["seqi",   d[0], d[6], d[4]] %}
-op_sgei			-> rv _ ">"  _ int into rv					{% d => ["slei",   d[6], d[0], d[4]] %}
-op_sgi			-> rv _ ">=" _ int into rv					{% d => ["sli",    d[6], d[0], d[4]] %}
+op_sgei			-> rv _ ">"  _ int into rv					{% d => ["sgei",   d[0], d[6], d[4]] %}
+op_sgi			-> rv _ ">=" _ int into rv					{% d => ["sgi",    d[0], d[6], d[4]] %}
 op_slli			-> rv _ "<<"   _ int into rv				{% d => ["slli",   d[0], d[6], d[4]] %}
 				 | rv _ "<<="  _ int						{% d => ["slli",   d[0], d[0], d[4]] %}
 op_srli			-> rv _ ">>>"  _ int into rv				{% d => ["srli",   d[0], d[6], d[4]] %}

@@ -392,6 +392,14 @@ class WVM {
 		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
 	}
 
+	op_sgi(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().greaterThan(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+	}
+
+	op_sgei(rs, rd, imm) {
+		this.registers[rd] = this.registers[rs].toSigned().greaterThanOrEqual(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+	}
+
 	op_slui(rs, rd, imm) {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
 	}

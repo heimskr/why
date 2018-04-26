@@ -33,7 +33,7 @@ let App = window.App = class App {
 			displayWhitespace: false,
 			attemptUTF8: false, // seems to be buggy.
 			consoleSize: [120, 40],
-			heartrate: 500
+			heartrate: 0
 		};
 
 		_.each(config, (val, key) => this.config[key] = val);

@@ -454,6 +454,8 @@ class Parser {
 		if (op == "set")    return `${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "sli")    return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "slei")   return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sgi")    return `${chalk.yellow(rs)} ${Parser.colorOper(">") } ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		if (op == "sgei")   return `${chalk.yellow(rs)} ${Parser.colorOper(">=")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "seqi")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 		if (op == "slui")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;

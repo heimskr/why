@@ -65,10 +65,14 @@ attempt()
 
 strprint(&msg_trying_malloc)
 
-malloc(100)
+<p "heap_end: ">
+*heap_end -> $t0
+<p $t0>
+<p "\n">
 
-<p "Addr: ">
-<p $r0>
+malloc(100); <p "Addr: ">; <p $r0>; <p "\n">
+malloc(1000); <p "Addr: ">; <p $r0>; <p "\n">
+malloc(500); <p "Addr: ">; <p $r0>; <p "\n">
 
 <halt>
 

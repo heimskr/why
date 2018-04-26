@@ -40,6 +40,8 @@ exports.I_TYPES = [
 	0b000000100110, // Store Byte Immediate
 	0b000000100111, // Load Indirect Immediate
 	0b000000101000, // Load Byte Indirect Immediate
+	0b000000101001, // Set on Greater Than Immediate
+	0b000000101010, // Set on Greater Than or Equal Immediate
 ];
 
 exports.J_TYPES = [
@@ -123,6 +125,8 @@ exports.OPCODES = {
 	sbi:    0b000000100110,
 	lni:    0b000000100111,
 	lbni:   0b000000101000,
+	sgi:    0b000000101001,
+	sgei:   0b000000101010,
 };
 
 exports.FUNCTS = {

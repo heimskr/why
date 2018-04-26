@@ -101,8 +101,8 @@
 						<li><a href="#op-sli">Set on Less Than Immediate</a> (<code>sli</code>)</li>
 						<li><a href="#op-slei">Set on Less Than or Equal Immediate</a> (<code>slei</code>)</li>
 						<li><a href="#op-seqi">Set on Equal Immediate</a> (<code>seqi</code>)</li>
-						<li><s><a href="#op-sgei">Set on Greater Than or Equal Immediate</a> (<code>sgei</code>)</s></li>
-						<li><s><a href="#op-sgi">Set on Greater Than Immediate</a> (<code>sgi</code>)</s></li>
+						<li><a href="#op-sgei">Set on Greater Than or Equal Immediate</a> (<code>sgei</code>)</li>
+						<li><a href="#op-sgi">Set on Greater Than Immediate</a> (<code>sgi</code>)</li>
 						<li><a href="#op-slui">Set on Less Than Unsigned Immediate</a> (<code>slui</code>)</li>
 						<li><a href="#op-sleui">Set on Less Than or Equal Unsigned Immediate</a> (<code>sleui</code>)</li>
 						<li><s><a href="#op-sgeui">Set on Greater Than or Equal Unsigned Immediate</a> (<code>sgeui</code>)</s></li>
@@ -595,9 +595,17 @@ If the value in `rs` is equal to `imm`, `rd` is set to 1; otherwise, `rd` is set
 
 ### <a href="#op-sgu">Set on Greater Than Unsigned</a> (`sgu`)
 
-### <a href="#op-sgei">Set on Greater Than or Equal Immediate</a> (`sgei`)
+### <a name="op-sgi"></a>Set on Greater Than Immediate (`sgi`)
+> `$rs > imm -> $rd`  
+> `000000101001` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-### <a href="#op-sgi">Set on Greater Than Immediate</a> (`sgi`)
+If the value in `rs` is greater than `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sgei"></a>Set on Greater Than or Equal Immediate (`sgei`)
+> `$rs >= imm -> $rd`  
+> `000000101010` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+If the value in `rs` is greater than or equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ### <a name="op-slui"></a>Set on Less Than Unsigned Immediate (`slui`)
 > `$rs < imm -> $rd /u`  
@@ -856,16 +864,6 @@ If the value in `rs` is greather than the value in `rt` (treating both as unsign
 
 Translation:  
 <code>$rt [<](#op-slu) $rs -> $rd /u</code>
-
-### <a name="op-sgei"></a><s>Set on Greater Than or Equal Immediate</s> (`sgei`)
-> `$rs >= imm -> $rd`
-
-If the value in `rs` is greather than or equal to `imm`, `rd` is set to 1; otherwise, `rd` is set to 0. Currently unimplemented.
-
-### <a name="op-sgi"></a><s>Set on Greater Than Immediate</s> (`sgi`)
-> `$rs > imm -> $rd`
-
-If the value in `rs` is greather than `imm`, `rd` is set to 1; otherwise, `rd` is set to 0. Currently unimplemented.
 
 ### <a name="op-sgeui"></a><s>Set on Greater Than or Equal Unsigned Immediate</s> (`sgeui`)
 > `$rs >= imm -> $rd /u`
