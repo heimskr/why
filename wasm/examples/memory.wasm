@@ -99,6 +99,20 @@ sub mem_init() {
 	$g -> *heap_end
 } {3}
 
+sub memset() {
+	// $a0: start address (modified)
+	// $a1: value (only the first 8 bits will be used)
+	// $a2: length (in bytes) (modified)
+
+	$a2 += $a0
+
+	@_memset_loop
+	: memset$done if $a0 == $a2
+		$a1 -> [$a0] /b
+		$a0++
+	: _memset_loop
+} {3}
+
 /*
 	struct block_meta { // 3 words total
 		word size;
