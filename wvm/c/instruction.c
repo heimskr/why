@@ -126,6 +126,8 @@ op_fn wvm_get_fn(word instruction) {
 		case OP_MULTUI: return op_multui;
 		case OP_SLI:    return op_sli;
 		case OP_SLEI:   return op_slei;
+		case OP_SGI:    return op_sgi;
+		case OP_SGEI:   return op_sgei;
 		case OP_SEQI:   return op_seqi;
 		case OP_SLUI:   return op_slui;
 		case OP_SLEUI:  return op_sleui;
