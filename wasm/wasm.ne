@@ -99,8 +99,8 @@ subroutine		-> "sub" __ var _ "(" _ sub_saved _ ")" _ "{" _ subroutine_code:* _ 
 subroutine_code -> _ op										{% d => [null, ...d[1][0]] %}
 				 | _ label (_ lineend):* _ op				{% d => [d[1], ...d[4][0]] %}
 				 | _ sep									{% d => null %}
-				 | ___ "done"								{% d => [null, Symbol.for("done")] %}
-				 | _ label (lineend | __):+ "done"			{% d => [d[1], Symbol.for("done")] %}
+				 | ___ "!done"								{% d => [null, Symbol.for("done")] %}
+				 | _ label (lineend | __):+ "!done"			{% d => [d[1], Symbol.for("done")] %}
 sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 
 include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}
@@ -290,7 +290,7 @@ op_jc			-> ":" _ int  __ "if" __ reg				{% d => ["jc",    d[6],    d[2]] %}
 				 | ":" _ xvar __ "if" __ reg				{% d => ["jc",    d[6],    ["label", d[2]]] %}
 
 op_mv			-> reg into reg								{% d => ["mv", d[0], d[2]] %}
-op_ret			-> "ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}
+op_ret			-> "!ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}
 op_push			-> "[" (_ (reg)):+							{% d => ["push", ...d[1].map(x => x[1][0])] %}
 op_pop			-> "]" (_ (reg)):+							{% d => ["pop",  ...d[1].map(x => x[1][0])] %}
 op_jeq			-> ":" _ reg  __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d[2]] %}
