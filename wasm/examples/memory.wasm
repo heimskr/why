@@ -27,6 +27,7 @@ ansi_reset: "\u001b[0m"
 ansi_bold: "\u001b[1m"
 heap_end: 0
 mem_align: 32
+temp_ptr: 0
 
 #code
 
@@ -75,7 +76,7 @@ sub attempt() {
 	: _checkresults_success if $r0
 
 	strprint(&msg_cantallocate)
-	ret
+	!ret
 
 	@_checkresults_success
 	strprint(&msg_success)
@@ -115,7 +116,7 @@ sub memset() {
 	: _memset_loop
 
 	@_memset_done
-	done
+	!done
 } {3}
 
 /*
@@ -161,7 +162,7 @@ sub mem_find_free_block() {
 		!$t2.
 		strprint(&msg_done); bold($t2)
 		: ffb_done if $t2
-		ret
+		!ret
 
 	@ffb_loop
 		: ffb_condition
@@ -227,17 +228,78 @@ sub mem_realign($t0) {
 
 	@_mem_realign_done
 	$a0 -> $r0
-	done
-}
+	!done
+} {3}
 
 sub malloc() {
 	// $a0: number of bytes to allocate
 	// $r0: pointer to allocated memory; 0 if unsuccessful.
-	<>
+
+	// $t0 block_meta *block
+	// $t1 globalbase
+	// $t2 block_meta *last
+
+	// struct block_meta *block
+	0 -> $t0
+
+	// if (size <= 0) return NULL
+	$a0 > 0 -> $t3
+	: _malloc_continue if $t3
+	!done
+	@_malloc_continue
+
+	*globalbase -> $t1
+	: _malloc_global if $t1
+	// if (!global_base) {
+
+		// block = request_space(NULL, size);
+		mem_request_space(0, $a0)
+		$r0 -> $t0
+
+		// if (!block) return NULL
+		: _malloc_set_gb if $t0
+		0 -> $r0
+		!done
+		@_malloc_set_gb
+
+		// global_base = block
+		$t0 -> *globalbase
+	: _malloc_ret
+	@_malloc_global
+	// } else {
+		// block_meta *last = global_base
+		*globalbase -> $t2
+		$t2 -> *temp_ptr
+
+		// block = find_free_block(&last, size)
+		mem_find_free_block(&temp_ptr, $a0)
+		$r0 -> $t0
+
+		: _malloc_memsplit if $t0
+		// if (!block) {
+			// block = request_space(last, size)
+			mem_request_space($t0, $a0)
+			$r0 -> $t0
+
+			// if (!block) return NULL
+			: _malloc_ret if $t0
+			0 -> $r0
+			!done
+		: _malloc_ret
+		@_malloc_memsplit
+		// } else {
+			//// memsplit($t0, $a0)
+
+			// block->free = 0
+			$t0 + 16 -> $t1
+			$0 -> [$t1]
+		// }
+	// }
+	: _malloc_ret
+	@_malloc_ret
+	// return block + 1
+	$t0 + 1 -> $r0
+	!done
 } {3}
-
-@foo
-$s0 + $s2 -> $m5
-
 
 //*/
