@@ -99,7 +99,7 @@ subroutine		-> "sub" __ var _ "(" _ sub_saved _ ")" _ "{" _ subroutine_code:* _ 
 subroutine_code -> _ op										{% d => [null, ...d[1][0]] %}
 				 | _ label (_ lineend):* _ op				{% d => [d[1], ...d[4][0]] %}
 				 | _ sep									{% d => null %}
-				 | _ "done"									{% d => [null, Symbol.for("done")] %}
+				 | ___ "done"								{% d => [null, Symbol.for("done")] %}
 				 | _ label (lineend | __):+ "done"			{% d => [d[1], Symbol.for("done")] %}
 sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 
@@ -344,6 +344,7 @@ var -> varchar:+ {%
 	}
 %}
 
+___		-> (lineend:+ | __)									{% d => null %}
 single	-> "//" [^\n]:*										{% d => null %}
 multi	-> "/*" [^*]:* ("*":+ [^*/] [^*]:*):* "*":* "*/"	{% d => null %}
 varchar -> . {% (d, location, reject) => d[0] && special.chars.indexOf(d[0]) === -1 ? d[0] : reject %}
