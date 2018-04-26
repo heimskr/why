@@ -358,6 +358,7 @@ btstring	-> "`"  [^`]:*     "`"									{% d => d[1].join("") %}
 
 dstrchar	-> [^\\"\n]												{% id %}
 			 | "\\0" 												{% d => "\0" %}
+			 | "\\A" 												{% d => "\u001b[" %}
 			 | "\\" strescape										{% d => JSON.parse(`"${d.join("")}"`) %}
 
 sstrchar	-> [^\\'\n]												{% id %}
