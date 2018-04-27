@@ -70,9 +70,9 @@ strprint(&msg_trying_malloc)
 <p $t0>
 <p "\n">
 
-malloc(100); <p "Addr: ">; <p $r0>; <p "\n">
-malloc(1000); <p "Addr: ">; <p $r0>; <p "\n">
-malloc(500); <p "Addr: ">; <p $r0>; <p "\n">
+malloc(100); <p "\A35m\A1mAddr\A0m: ">; <p $r0>; <p "\n">
+malloc(1000); <p "\A35m\A1mAddr\A0m: ">; <p $r0>; <p "\n">
+malloc(500); <p "\A35m\A1mAddr\A0m: ">; <p $r0>; <p "\n">
 
 <halt>
 
@@ -204,10 +204,13 @@ sub mem_request_space() {
 	// $t1, $t2: temp
 
 	mem_realign(*heap_end)
+	@LoadRealignment
 	$r0 -> *heap_end
+	@SetBlock
 	$r0 -> $t0
 
 	// if (last) last->next = block
+	@if_(last)_last->next_=_block
 	: _mrs_set_last if $a0
 	: _mrs_set_last_done
 	@_mrs_set_last
@@ -217,23 +220,29 @@ sub mem_request_space() {
 	<>
 
 	// block->size = size
+	@MRS_block->size_=_size
 	$a1 -> [$t0]
 
 	// block->next = NULL
+	@MRS_block->next_=_null
 	$t0 + 8 -> $t1
 	$0 -> [$t1]
 
 	// block->free = 0
+	@MRS_block->free=0
 	$t0 + 16 -> $t1
 	$0 -> [$t1]
 
+	@set_end
 	$t0 + $a0 -> $t2 // end = (char *) block + block->size
 	$t2 += 25        //     + sizeof(struct block_meta) + 1
 
+	@print_created_block
 	strprint(&msg_created_block)
 	<p $t0>
 	<p "\n">
 
+	@return_block
 	// return block
 	$t0 -> $r0
 } {3}
@@ -260,57 +269,74 @@ sub malloc() {
 	// $t2 block_meta *last
 
 	// struct block_meta *block
+	@SetBlock0
 	0 -> $t0
 
 	// if (size <= 0) return NULL
+	@if_(size_<=_0)_return_NULL
 	$a0 > 0 -> $t3
 	: _malloc_continue if $t3
 	!done
 	@_malloc_continue
+	<>
 
+	@if_(!global_base)_{
 	*globalbase -> $t1
 	: _malloc_global if $t1
 	// if (!global_base) {
 
 		// block = request_space(NULL, size);
+		@block_=_request_space(NULL,_size)
 		mem_request_space(0, $a0)
 		$r0 -> $t0
 
 		// if (!block) return NULL
+		@if_(!block)_return_NULL
 		: _malloc_set_gb if $t0
 		0 -> $r0
 		!done
 		@_malloc_set_gb
+		<>
 
+		@global_base_=_block
 		// global_base = block
 		$t0 -> *globalbase
 
 	: _malloc_ret
 	@_malloc_global
+	<>
+	@}_else_{ <>
 	// } else {
 
 		// block_meta *last = global_base
+		@block_meta_Slast_=_globalbase
 		*globalbase -> $t2
 		$t2 -> *temp_ptr
 
 		// block = find_free_block(&last, size)
+		@block_=_findfreeblock(Alast,_size)
 		mem_find_free_block(&temp_ptr, $a0)
 		$r0 -> $t0
 
+		@if_(!block)_{
 		: _malloc_memsplit if $t0
 		// if (!block) {
 
 			// block = request_space(last, size)
+			@block_=_requestspace(last,_size)
 			mem_request_space($t0, $a0)
 			$r0 -> $t0
 
 			// if (!block) return NULL
+			@if_(!block)_return_NULL_
 			: _malloc_ret if $t0
 			0 -> $r0
 			!done
 
 		: _malloc_ret
 		@_malloc_memsplit
+		<>
+		@}_else_{_
 		// } else {
 
 			//// memsplit($t0, $a0)
@@ -319,11 +345,14 @@ sub malloc() {
 			$t0 + 16 -> $t1
 			$0 -> [$t1]
 
+		@} <>
+		@}_ <>
 		// }
 	// }
 	: _malloc_ret
-	@_malloc_ret
+	@_malloc_ret <>
 	// return block + 1
+	@return_block_+_1
 	$t0 + 1 -> $r0
 	!done
 } {3}

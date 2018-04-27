@@ -27,13 +27,15 @@ let App = window.App = class App {
 		this.interval = null;
 		this.cursor = [0, 0];
 		this.breakpoints = [];
+		this.tempHeartrate = null;
 
 		this.config = {
 			range: [[0, 100]],
 			displayWhitespace: false,
 			attemptUTF8: false, // seems to be buggy.
 			consoleSize: [120, 40],
-			heartrate: 0
+			heartrate: 0,
+			skipStrprint: true
 		};
 
 		_.each(config, (val, key) => this.config[key] = val);
@@ -171,12 +173,12 @@ let App = window.App = class App {
 					.click((event) => {
 						if (!$(event.target).hasClass("handler")) {
 							vm.programCounter = byte;
-							this.onTick();
+							this.onTickUI();
 						}
 					});
 
 				if (this.vm.symbols) {
-					tr.append($("<td></td>").text(Object.keys(this.vm.symbols).filter((symbol) => this.vm.symbols[symbol][1].toInt() == byte)[0] || ""));
+					tr.append($("<td></td>").text((Object.keys(this.vm.symbols).filter((symbol) => this.vm.symbols[symbol][1].toInt() == byte)[0] || "").replace(/(.)_/g, "$1\u00a0")));
 				}
 			});
 		});
@@ -271,14 +273,14 @@ let App = window.App = class App {
 
 		this.displayRegisters();
 
-		(this.vm.onTick = this.onTick.bind(this))();
+		(this.vm.onTick = this.onTickUI.bind(this))();
 		this.vm.onSetWord = this.onSetWord.bind(this);
 		this.vm.onSetByte = this.onSetByte.bind(this);
 		this.vm.log = this.log.bind(this);
 		this.vm.stop = this.stop.bind(this);
 	}
 
-	onTick() {
+	onTickUI() {
 		this.displayRegisters();
 		this.highlightProgramCounter();
 		this.highlightStackPointer();
@@ -328,18 +330,38 @@ let App = window.App = class App {
 
 		if (this.active) {
 			this.vm.tick();
-
-			if (this.breakpoints.includes(this.vm.programCounter)) {
-				this.vm.active = false;
-				this.toggleActive();
-			}
 			
+			let breakFn;
+			if (breakFn = this.onTick()) {
+				breakFn();
+			}
+
 			if (!this.vm.active) {
 				this.active = false;
-				if (this.heartrate < 0) {
-					this.vm.onTick = this.onTick.bind(this);
+				if (this.heartrate >= 0) {
+					this.vm.onTick = this.onTickUI.bind(this);
 				}
 			}
+		}
+	}
+
+	onTick() {
+		if (this.breakpoints.includes(this.vm.programCounter)) {
+			this.vm.active = false;
+			this.toggleActive();
+		}
+
+		if (this.currentLabel == "strprint" && -1000 <= this.heartrate) {
+			this.tempHeartrate = this.heartrate;
+			this.heartrate = -2000;
+			return () => this.startHeartbeat();
+		}
+		
+		if (this.currentLabel == "strprint$end" && this.tempHeartrate != null) {
+			this.heartrate = this.tempHeartrate;
+			this.tempHeartrate = null;
+			this.resetOnTickUI()();
+			return () => this.startHeartbeat();
 		}
 	}
 
@@ -358,19 +380,28 @@ let App = window.App = class App {
 			// If the heartrate is really negative, don't even bother with the event loop.
 			// Hopefully you're not planning on executing an infinite loop.
 			this.vm.onTick = () => {};
+			let breakFn;
 			while (this.vm.active) {
 				this.vm.tick();
-
-				if (this.breakpoints.includes(this.vm.programCounter)) {
-					this.toggleActive();
+				
+				if (breakFn = this.onTick()) {
+					break;
 				}
 			}
 
-			this.active = false;
-			(this.vm.onTick = this.onTick.bind(this))();
+			if (breakFn) {
+				breakFn();
+			} else {
+				this.active = false;
+				this.resetOnTickUI()();
+			}
 		} else {
 			this.interval = setInterval(() => this.heartbeat(), rate);
 		}
+	}
+
+	get currentLabel() {
+		return _.findKey(this.vm.symbols, (v) => v[1].toInt() == this.vm.programCounter);
 	}
 
 	get heartrate() {
@@ -384,6 +415,14 @@ let App = window.App = class App {
 				this.startHeartbeat();
 			}
 		}
+	}
+
+	resetOnTickUI(force=false) {
+		if (force || 0 <= this.heartrate) {
+			return this.vm.onTick = this.onTickUI.bind(this);
+		}
+
+		return () => {};
 	}
 
 	toggleActive() {
