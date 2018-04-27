@@ -14,7 +14,7 @@ let WVM = require("../wvm.js"),
 
 require("jquery.splitter");
 
-const {REGISTER_OFFSETS} = require("../../wasm/constants.js");
+const {REGISTER_OFFSETS, FLAGS} = require("../../wasm/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
 const UNPRINTABLE = [...[[0, 32], [127, 159], [173, 173]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
@@ -28,6 +28,7 @@ let App = window.App = class App {
 		this.cursor = [0, 0];
 		this.breakpoints = [];
 		this.tempHeartrate = null;
+		this.skippedSubroutine = null;
 
 		this.config = {
 			range: [[0, 100]],
@@ -348,24 +349,46 @@ let App = window.App = class App {
 	onTick() {
 		if (this.breakpoints.includes(this.vm.programCounter)) {
 			this.vm.active = false;
+			this.onTickUI();
 			this.toggleActive();
 		}
 
-		if (this.currentLabel == "strprint" && -1000 <= this.heartrate) {
-			this.tempHeartrate = this.heartrate;
-			this.heartrate = -2000;
-			return () => this.startHeartbeat();
+		if (this.isAtSubroutineEnd()) {
+			this.vm.tick();
+			this.active = false;
+			this.skippedSubroutine = null;
+			return this.restoreHeartrate();
 		}
-		
-		if (this.currentLabel == "strprint$end" && this.tempHeartrate != null) {
-			this.heartrate = this.tempHeartrate;
-			this.tempHeartrate = null;
-			this.resetOnTickUI()();
-			return () => this.startHeartbeat();
+
+		if (!this.skippedSubroutine && this.config.skipStrprint) {
+			if (this.currentLabel == "strprint" && -1000 <= this.heartrate) {
+				return this.stashHeartrate();
+			}
+			
+			if (this.currentLabel == "strprint$end" && this.tempHeartrate != null) {
+				return this.restoreHeartrate();
+			}
 		}
 	}
 
+	stashHeartrate() {
+		this.tempHeartrate = this.heartrate;
+		this.heartrate = -2000;
+		return () => this.startHeartbeat();
+	}
+
+	restoreHeartrate() {
+		this.heartrate = this.tempHeartrate;
+		this.tempHeartrate = null;
+		this.resetOnTickUI()();
+		return () => this.startHeartbeat();
+	}
+
 	startHeartbeat() {
+		if (!this.active) {
+			return;
+		}
+
 		clearInterval(this.interval);
 		this.heartbeatActive = true;
 		let rate = this.heartrate;
@@ -423,6 +446,30 @@ let App = window.App = class App {
 		}
 
 		return () => {};
+	}
+
+	isAtSubroutineCall() {
+		const {op, flags, addr} = Parser.parseInstruction(this.vm.loadInstruction());
+		if (op == "jl" && flags == FLAGS.KNOWN_SYMBOL) {
+			const label = _.findKey(this.vm.symbols, (v) => v[1].toInt() == addr);
+			return !!label && label + "$end" in this.vm.symbols && label;
+		}
+
+		return false;
+	}
+
+	isAtSubroutineEnd() {
+		const label = this.currentLabel;
+		const sub = this.skippedSubroutine;
+		if (!sub || !label) {
+			return false;
+		}
+
+		if (sub + "$end" in app.vm.symbols) {
+			return app.vm.symbols[sub + "$end"][1].eq(this.vm.programCounter);
+		}
+		
+		return app.vm.symbols[sub + "$done"][1].eq(this.vm.programCounter);
 	}
 
 	toggleActive() {
@@ -552,6 +599,19 @@ function initializeUI(app) {
 		}
 
 		app.active = old;
+	});
+
+	$("#step_over").click(() => {
+		const sr = app.isAtSubroutineCall();
+		if (sr) {
+			app.skippedSubroutine = sr;
+			app.stashHeartrate();
+			app.active = true;
+			app.vm.active = true;
+			app.startHeartbeat();
+		} else {
+			app.vm.tick();
+		}
 	});
 
 	$(document.body).keydown((event) => {
