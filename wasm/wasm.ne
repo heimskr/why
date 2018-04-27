@@ -2,7 +2,7 @@
 "use strict";
 
 const special = {
-	chars: "@$&*\t \":()`./%",
+	chars: "@$&*\t \":`./%",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
@@ -244,15 +244,15 @@ op_nori			-> reg _ "~|"  _ int into reg				{% d => ["nori",   d[0], d[6], d[4]] 
 				 | reg _ "~|=" _ int						{% d => ["nori",   d[0], d[0], d[4]] %}
 op_xnori		-> reg _ "~x"  _ int into reg				{% d => ["xnori",  d[0], d[6], d[4]] %}
 				 | reg _ "~x=" _ int						{% d => ["xnori",  d[0], d[0], d[4]] %}
-op_slui			-> rv _ "<"  _ int into rv _ "/u"			{% d => ["slui",   d[0], d[6], d[4]] %}
-op_sleui		-> rv _ "<=" _ int into rv _ "/u"			{% d => ["sleui",  d[0], d[6], d[4]] %}
-op_sgeui		-> rv _ ">"  _ int into rv _ "/u"			{% d => ["sgeui",  d[6], d[0], d[4]] %}
-op_sgui			-> rv _ ">=" _ int into rv _ "/u"			{% d => ["sgui",   d[6], d[0], d[4]] %}
-op_sli			-> rv _ "<"  _ int into rv					{% d => ["sli",    d[0], d[6], d[4]] %}
-op_slei			-> rv _ "<=" _ int into rv					{% d => ["slei",   d[0], d[6], d[4]] %}
-op_seqi			-> rv _ "==" _ int into rv					{% d => ["seqi",   d[0], d[6], d[4]] %}
-op_sgei			-> rv _ ">"  _ int into rv					{% d => ["sgei",   d[0], d[6], d[4]] %}
-op_sgi			-> rv _ ">=" _ int into rv					{% d => ["sgi",    d[0], d[6], d[4]] %}
+op_slui			-> rv _ "<"    _ int into rv _ "/u"			{% d => ["slui",   d[0], d[6], d[4]] %}
+op_sleui		-> rv _ "<="   _ int into rv _ "/u"			{% d => ["sleui",  d[0], d[6], d[4]] %}
+op_sgeui		-> rv _ ">"    _ int into rv _ "/u"			{% d => ["sgeui",  d[6], d[0], d[4]] %}
+op_sgui			-> rv _ ">="   _ int into rv _ "/u"			{% d => ["sgui",   d[6], d[0], d[4]] %}
+op_sli			-> rv _ "<"    _ int into rv				{% d => ["sli",    d[0], d[6], d[4]] %}
+op_slei			-> rv _ "<="   _ int into rv				{% d => ["slei",   d[0], d[6], d[4]] %}
+op_seqi			-> rv _ "=="   _ int into rv				{% d => ["seqi",   d[0], d[6], d[4]] %}
+op_sgei			-> rv _ ">="   _ int into rv				{% d => ["sgei",   d[0], d[6], d[4]] %}
+op_sgi			-> rv _ ">"    _ int into rv				{% d => ["sgi",    d[0], d[6], d[4]] %}
 op_slli			-> rv _ "<<"   _ int into rv				{% d => ["slli",   d[0], d[6], d[4]] %}
 				 | rv _ "<<="  _ int						{% d => ["slli",   d[0], d[0], d[4]] %}
 op_srli			-> rv _ ">>>"  _ int into rv				{% d => ["srli",   d[0], d[6], d[4]] %}
