@@ -7,7 +7,13 @@ module.exports = function printansi(str) {
 	let fmt = "", args = [], buffer = [];
 	let i = 0;
 	let unflushed = true;
-	const remove = (...a) => buffer = _.without(buffer, ...a);
+	const add = (...a) => { buffer.push(...a); unflushed = true };
+	const remove = (...a) => {
+		const l = buffer.length;
+		buffer = _.without(buffer, ...a);
+		return unflushed = l > buffer.length || unflushed;
+	};
+
 	while (str.length && ++i < 1000) {
 		const matches = str.match(/^\x1b\[([^a-z]*)([a-z])/i);
 		let submatches;
@@ -15,15 +21,45 @@ module.exports = function printansi(str) {
 			const [, inner, action] = matches;
 			str = str.substr(matches[0].length);
 			if (action == "m") {
-				if (inner == "1") {
-					buffer.push("font-weight:bold");
-					unflushed = true;
-				} else if (inner == "0") {
+				if (inner == "0") {
 					buffer = [];
 					unflushed = true;
+				} else if (inner == "1") {
+					add("font-weight:bold");
+				} else if (inner == "2") {
+					add("opacity:0.666");
+				} else if (inner == "3") {
+					add("font-style:italic");
+				} else if (inner == "3") {
+					if (remove("text-decoration:line-through")) {
+						add("text-decoration:underline,line-through");
+					} else {
+						add("text-decoration:underline");
+					}
+				} else if (inner == "9") {
+					if (remove("text-decoration:underline")) {
+						add("text-decoration:underline,line-through");
+					} else {
+						add("text-decoration:line-through");
+					}
+				} else if (inner == "22") {
+					remove("font-weight:bold");
+				} else if (inner == "23") {
+					remove("font-style:italic");
+				} else if (inner == "24") {
+					if (remove("text-decoration:underline,line-through")) {
+						add("text-decoration:line-through");
+					} else {
+						remove("text-decoration:underline");
+					}
+				} else if (inner == "29") {
+					if (remove("text-decoration:underline,line-through")) {
+						add("text-decoration:underline");
+					} else {
+						remove("text-decoration:line-through");
+					}
 				} else if (inner.match(/^[349][0-7]$/)) {
-					buffer.push((inner[0] == "4"? "background-" : "") + "color:" + {3: normal, 4: normal, 9: bright}[inner[0]][inner[1]]);
-					unflushed = true;
+					add((inner[0] == "4"? "background-" : "") + "color:" + {3: normal, 4: normal, 9: bright}[inner[0]][inner[1]]);
 				} else if (submatches = inner.match(/^([34])8;5;(\d+)$/)) {
 					const attr = submatches[1] == "3"? "color" : "background-color";
 					const n = submatches[2];
@@ -39,16 +75,15 @@ module.exports = function printansi(str) {
 					}
 
 					if (color) {
-						buffer.push(attr + ":" + color);
-						unflushed = true;
+						add(attr + ":" + color);
 					}
 				}
 			}
 		} else {
 			if (unflushed) {
 				args.push(buffer.join(";"));
-				fmt += "%c";
 				unflushed = false;
+				fmt += "%c";
 			}
 
 			fmt += str[0];
@@ -66,12 +101,5 @@ function cubecolor(n) {
 }
 
 if (process.browser) {
-	const {exports: printansi} = module;
-	window.printansi = printansi;
-	window.cubecolor = cubecolor;
-	// printansi("\x1b[1mfoo\x1b[0mbar\x1b[32mbaz\x1b[0m...\x1b[34m\x1b[1mhel\x1b[43mlo\x1b[0m");
-	// printansi("\x1b[38;5;220mhello.");
-	for (let n = 0; n < 256; n++) {
-		printansi(`\x1b[48;5;${n}m        \x1b[0m ${n}`);
-	}
+	window.printansi = module.exports;
 }
