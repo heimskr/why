@@ -3,7 +3,8 @@ let Long = require("long"),
 	_ = require("lodash"),
 	minimist = require("minimist"),
 	chalk = require("chalk"),
-	Parser = require("./parser.js");
+	Parser = require("./parser.js"),
+	printansi = require("./printansi.js");
 
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
@@ -40,8 +41,6 @@ class WVM {
 
 		this.prcBuffer = "";
 		this.noBuffer = false;
-		this.filterANSI = true;
-		this.receivingANSI = false;
 
 		this.onPrintChar /* (val) */ = null;
 	}
@@ -525,20 +524,12 @@ class WVM {
 			} else if (c == "\n") {
 				this.flushPrcBuffer(true);
 			} else {
-				if (this.filterANSI && c == "\u001b") {
-					this.receivingANSI = true;
-				} else if (this.receivingANSI && c.match(/[a-z]/i)) {
-					this.receivingANSI = false;
-				} else if (!this.receivingANSI) {
-					this.prcBuffer += c;
-				}
+				this.prcBuffer += c;
 			}
 		} else if (funct == TRAPS.prd) {
-			this.flushPrcBuffer();
-			console.log(this.registers[rs].toString());
+			this.prcBuffer += this.registers[rs].toString();
 		} else if (funct == TRAPS.prx) {
-			this.flushPrcBuffer();
-			console.log(this.registers[rs].toString(16));
+			this.prcBuffer += "0x" + this.registers[rs].toString(16);
 		} else {
 			console.log("Unknown trap:", {rt, rs, rd, shift, funct});
 		}
@@ -546,7 +537,7 @@ class WVM {
 
 	flushPrcBuffer(force = false) {
 		if (force || this.prcBuffer) {
-			console.log(this.prcBuffer);
+			printansi(this.prcBuffer);
 			this.prcBuffer = "";
 		}
 	}
