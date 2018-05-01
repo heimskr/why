@@ -155,6 +155,15 @@ class WVM {
 		return true;
 	}
 
+	/**
+	 * Finds all symbols present at a given address.
+	 * @param {number|Long} addr An address.
+	 * @return {string[]} An array of symbol names.
+	 */
+	symbolsAt(addr) {
+		return _.keys(this.symbols).filter((k) => this.symbols[k][1].eq(addr));
+	}
+
 	log(...args) {
 		console.log(...args);
 	}

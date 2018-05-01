@@ -179,7 +179,14 @@ let App = window.App = class App {
 					});
 
 				if (this.vm.symbols) {
-					tr.append($("<td></td>").text((Object.keys(this.vm.symbols).filter((symbol) => this.vm.symbols[symbol][1].toInt() == byte)[0] || "").replace(/(.)_/g, "$1\u00a0")));
+					const labels = this.vm.symbolsAt(byte).sort();
+					const cell = $("<td></td>").appendTo(tr);
+					if (labels.length != 0) {
+						cell.text(labels[0].replace(/(.)_/g, "$1\u00a0"));
+						if (labels.length > 1) {
+							cell.attr("title", labels.slice(1).join(", "));
+						}
+					}
 				}
 			});
 		});
