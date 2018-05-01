@@ -378,8 +378,14 @@ class WASMC {
 						add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
 						return;
 					} else if (type == "string") {
+						let lastChar;
 						args[1][1].split("").forEach((c, i) => {
-							add([i == 0? label : null, "set", _0, _M[2], c.charCodeAt(0)]);
+							const char = c.charCodeAt(0);
+							if (char != lastChar) {
+								add([i == 0? label : null, "set", _0, _M[2], char]);
+								lastChar = char;
+							}
+							
 							add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
 						});
 
