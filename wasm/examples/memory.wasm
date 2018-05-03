@@ -25,6 +25,8 @@ msg_reqmore1: "\A38;5;226mIncreasing request size to \A0m\A1m"
 msg_reqmore2: "\A0m \A38;5;226mand retrying allocation.\A0m\n\n"
 msg_created_block: "\A1mCreated\A0m a new block at "
 msg_trying_malloc "\nTesting malloc.\n"
+msg_heapend: "heap_end: "
+msg_addr: "\A35m\A1mAddr\A0m: "
 ansi_reset: "\A0m"
 ansi_bold: "\A1m"
 heap_end: 0
@@ -65,14 +67,16 @@ attempt()
 
 strprint(&msg_trying_malloc)
 
-<p "heap_end: ">
+strprint(&msg_heapend)
 *heap_end -> $t0
 <p $t0>
 <p "\n">
 
-malloc(100); <p "\A35m\A1mAddr\A0m: ">; <p $r0>; <p "\n">
-malloc(1000); <p "\A35m\A1mAddr\A0m: ">; <p $r0>; <p "\n">
-malloc(500); <p "\A35m\A1mAddr\A0m: ">; <p $r0>; <p "\n">
+//malloc(100);  strprint(&msg_addr); <p $r0>; <p "\n">
+//malloc(1000); strprint(&msg_addr); <p $r0>; <p "\n">
+//malloc(500);  strprint(&msg_addr); <p $r0>; <p "\n">
+
+
 
 <halt>
 
@@ -110,7 +114,7 @@ sub mem_init() {
 	$g -> $k0
 	40 -> $k1               // size = 5w
 	$k1 -> [$k0]; $k0 += 8
-	$g + 80 -> $k1          // next = end+10w
+	$g + 80 -> $k1          // next = g+10w
 	$k1 -> [$k0]; $k0 += 8
 	0 -> $k1                // free
 	$k1 -> [$k0]
@@ -249,7 +253,7 @@ sub mem_request_space() {
 
 sub mem_realign($t0) {
 	@_mem_realign_loop
-	$a0 % $s16 -> $t0
+	$a0 % $s16 -> $t0 // $s16: global variable, stores the alignment size
 	!$t0.
 	: _mem_realign_done if $t0
 	$a0++
