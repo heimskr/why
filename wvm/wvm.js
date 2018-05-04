@@ -49,16 +49,26 @@ class WVM {
 	onSetWord(/*addr, val*/) { }
 	onSetByte(/*addr, val*/) { }
 
+	/**
+	 * Returns the instruction currently pointed to by the program counter.
+	 * @return {Long} A word containing an instruction.
+	 */
 	loadInstruction() {
 		return this.getWord(this.programCounter);
 	}
 
+	/**
+	 * Starts executing instructions in a loop until the VM is no longer active.
+	 */
 	start() {
 		while (this.active) {
 			this.tick();
 		}
 	}
 
+	/**
+	 * Loads and executes a single instruction.
+	 */
 	tick() {
 		const loaded = this.loadInstruction();
 		let instr = Parser.parseInstruction(loaded);
@@ -91,16 +101,27 @@ class WVM {
 		this.onTick();
 	}
 
+	/**
+	 * Resets all values in the memory to zero.
+	 */
 	resetMemory() {
 		this.memory = new Uint8Array(this.memorySize * 8);
 		this.initial.forEach((long, i) => this.setWord(8*i, long));
 	}
 
+	/**
+	 * Resets all registers to zero, except the stack pointer, which is set to point at the end of the memory.
+	 */
 	resetRegisters() {
 		this.registers = _.range(0, 128).map(() => Long.ZERO);
 		this.sp = Long.fromInt(8*(this.memorySize - 1), true);
 	}
 
+	/**
+	 * Gets a word from memory.
+	 * @param {number} k The index of the word to get.
+	 * @return {number} The word at the given address.
+	 */
 	getWord(k, signed=false) {
 		k = k instanceof Long? k.toInt() : k;
 
@@ -112,7 +133,11 @@ class WVM {
 		return new Long(this.memory[k+7] | this.memory[k+6] << 8 | this.memory[k+5] << 16 | this.memory[k+4] << 24, this.memory[k+3] << 32 | this.memory[k+2] << 40 | this.memory[k+1] << 48 | this.memory[k] << 56, signed);
 	}
 
-
+	/**
+	 * @param {number} k The index of the byte to set.
+	 * @param {number} v The word to write to memory.
+	 * @return {boolean} A boolean representing whether the word was successfully set.
+	 */
 	setWord(k, v) {
 		k = k instanceof Long? k.toInt() : k;
 		v = v instanceof Long? v : Long.fromInt(v);
