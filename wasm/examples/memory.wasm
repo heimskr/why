@@ -27,6 +27,7 @@ msg_created_block: "\A1mCreated\A0m a new block at "
 msg_trying_malloc "\nTesting malloc.\n"
 msg_heapend: "heap_end: "
 msg_addr: "\A35m\A1mAddr\A0m: "
+msg_block: "\A35m\A1mBlock\A0m: \A1m"
 ansi_reset: "\A0m"
 ansi_bold: "\A1m"
 heap_end: 0
@@ -72,9 +73,9 @@ strprint(&msg_heapend)
 <p $t0>
 <p "\n">
 
-//malloc(100);  strprint(&msg_addr); <p $r0>; <p "\n">
-//malloc(1000); strprint(&msg_addr); <p $r0>; <p "\n">
-//malloc(500);  strprint(&msg_addr); <p $r0>; <p "\n">
+malloc(100);  strprint(&msg_block); <p $r0>; <p "\A0m\n\n">
+malloc(1000); strprint(&msg_block); <p $r0>; <p "\A0m\n\n">
+malloc(500);  strprint(&msg_block); <p $r0>; <p "\A0m\n\n">
 
 
 
