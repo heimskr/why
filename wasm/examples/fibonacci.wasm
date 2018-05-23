@@ -5,29 +5,33 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #data
-iterations: 50
-empty: ""
-redherring: 2
+iterations: 10
 
 #code
 
 *iterations -> $a0
 fibonacci()
-<prd $r0>
 <halt>
 
-@fibonacci // $a0 -> $r0
-[ $t0 $t1
+// $a0 -> $r0
+sub fibonacci() {
 	$a0 -= 2
 	1 -> $t0
 	1 -> $t1
 	0 -> $r0
+	<prd $t0>
+	<prc '\n'>
+	<prd $t1>
+	<prc '\n'>
 	@fibonacci_loop
 		: fibonacci_loop_done if $a0 == $0
 		$a0--
 		$t0 + $t1 -> $r0
+		<prd $r0>
+		<prc '\n'>
 		$t1 -> $t0
 		$r0 -> $t1
 		: fibonacci_loop
 	@fibonacci_loop_done
-] $t1 $t0; ret
+	!done
+}

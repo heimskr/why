@@ -5,7 +5,7 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #includes
-"examples/string.why"
+../compiled/string.why
 
 #data
 fizz: "Fizz"

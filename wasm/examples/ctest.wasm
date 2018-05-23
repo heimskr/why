@@ -5,7 +5,7 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #includes
-"examples/string.why"
+../compiled/string.why
 
 #data
 hw: "Hello World!\n"
@@ -15,49 +15,49 @@ hw: "Hello World!\n"
 <>
 
 1 -> $a0
-:: &bnl
+:: bnl
 !$a0.
-:: &bnl
-:: &newline
+:: bnl
+:: newline
 
 <>
 
 2 -> $a0
-:: &bnl
+:: bnl
 !$a0 -> $a0
-:: &bnl
-:: &newline
+:: bnl
+:: newline
 
 <>
 
 0 -> $s0
 $s0 -> $a0
-:: &bnl
+:: bnl
 !$s0 -> $a0
-:: &bnl
-:: &newline
+:: bnl
+:: newline
 
 <>
 
 &hw -> $a0
 &.end -> $a1
-//:: &strcpy
+//:: strcpy
 
 <>
 
-: &strprint_test
+: strprint_test
 
 <>
 
 @bnl
-	!bprint()
-	!newline()
-	ret
+	bprint()
+	newline()
+	!ret
 
 <>
 
 @strprint_test
-!strprint(&hw)
+strprint(&hw)
 
 <>
 

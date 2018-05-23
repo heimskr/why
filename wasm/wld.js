@@ -182,7 +182,7 @@ class Linker {
 				}
 			}
 
-			// Step 7h: Add the symbol table’s length to extraSymbolLength.
+			// Step 7h: Add the symbol table's length to extraSymbolLength.
 			extraSymbolLength += subtableLength * 8;
 
 			// Step 7i: Add code.length to extraCodeLength.
