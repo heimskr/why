@@ -7,7 +7,7 @@
 /exclude
 /**/npm-debug.log
 /**/*.map
-/wvm/dist
+/wvm/dist/*
 /wasm/compiled/*
 /doc
 /llvm/llvm.js
@@ -15,3 +15,4 @@
 /wvm/c/wvm
 /.vscode
 /yarn-error.log
+!/wvm/dist/index.html

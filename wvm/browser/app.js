@@ -196,11 +196,7 @@ let App = window.App = class App {
 	}
 
 	set symbolTableEdges(to) {
-		this._symbolTableWords = this._symbolTableEdges = to;
-
-		if (to && to.map) {
-			this._symbolTableWords = to.map((x) => x >> 3);
-		}
+		this._symbolTableEdges = to;
 	}
 
 	get symbolTableEdges() { // returns byte addresses.
@@ -218,14 +214,6 @@ let App = window.App = class App {
 		}
 
 		return this._symbolTableEdges;
-	}
-
-	get symbolTableWords() { // same as symbolTableEdges, but word-addressed
-		if (this._symbolTableWords) {
-			return this._symbolTableWords;
-		}
-
-		return this._symbolTableWords = this.symbolTableEdges.map((x) => x >> 3);
 	}
 
 	hexCell(long) {
@@ -247,9 +235,24 @@ let App = window.App = class App {
 			});
 		}
 
-		const word = addr / 8;
+		const edges = [$symtab, ...this.symbolTableEdges];
 		if (inSymtab) {
-			console.log(addr);
+			if (edges.includes(addr)) { // first word: hash, length
+				return `<span class="hash">${long.high.toString(16)}</span> ${long.low}`;
+			} else if (edges.includes(addr - 8)) { // first word: position
+				return `<span class="handler">${long.toString()}</span>`;
+			} else if (edges.includes(addr - 16)) { // at the first word of the symbol name
+				const words = [];
+				for (let i = addr; !edges.includes(i) && i < $handlers; i += 8) {
+					words.push(this.vm.getWord(i));
+				}
+
+				// Include the entire symbol name in the first row.
+				return `<span class="symbol-name">${words.map((w) => this.long2str(w)).join("")}</span>`;
+			}
+
+			// Don't show anything on subsequent rows.
+			return "";
 		}
 
 		if (inCode) {
@@ -267,7 +270,7 @@ let App = window.App = class App {
 						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`);
 				return html;
 			} catch(e) {
-				return "<span class=\"what\">?</span>";
+				return `<span class="what">?</span>`;
 			}
 		}
 
@@ -275,10 +278,14 @@ let App = window.App = class App {
 			try {
 				return decodeURIComponent(escape(atob(String.fromCharCode(..._.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => parseInt(x.join(""), 16) || ".".charCodeAt(0))))));
 			} catch(e) {
-				// Couldn't decode
+				// Couldn't decode; just try to asciify it
 			}
 		}
 
+		return this.long2str(long, false);
+	}
+
+	long2str(long, noDim=true) {
 		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).map((x) => {
 			const parsed = parseInt(x.join(""), 16);
 			if (this.config.displayWhitespace) {
@@ -293,7 +300,7 @@ let App = window.App = class App {
 				return "&nbsp;";
 			}
 
-			return UNPRINTABLE.includes(parsed)? "<span class=\"dim\">.</span>" : String.fromCharCode(parsed);
+			return UNPRINTABLE.includes(parsed) && noDim === false? `<span class="dim">.</span>` : String.fromCharCode(parsed);
 		}).join("");
 	}
 
