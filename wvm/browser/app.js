@@ -248,11 +248,11 @@ let App = window.App = class App {
 				}
 
 				// Include the entire symbol name in the first row.
-				return `<span class="symbol-name">${words.map((w) => this.long2str(w)).join("")}</span>`;
+				// return `<span class="symbol-name">${words.map((w) => this.long2str(w)).join("")}</span>`;
 			}
 
 			// Don't show anything on subsequent rows.
-			return "";
+			// return "";
 		}
 
 		if (inCode) {
