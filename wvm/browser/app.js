@@ -36,7 +36,8 @@ let App = window.App = class App {
 			attemptUTF8: false, // seems to be buggy.
 			consoleSize: [120, 40],
 			heartrate: 0,
-			skipStrprint: true
+			skipStrprint: true,
+			excludeSymtab: false
 		};
 
 		_.each(config, (val, key) => this.config[key] = val);
@@ -316,11 +317,18 @@ let App = window.App = class App {
 		this.vm.enabled = false;
 		this._symbolTableEdges = null;
 
-		this.range = [
-			[0, this.vm.offsets.$symtab - 8],
-			[this.vm.offsets.$handlers, this.vm.offsets.$end + (32 - 1) * 8],
-			[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
-		].map((x) => x.join("-")).join(";");
+		if (this.config.excludeSymtab) {
+			this.range = [
+				[0, this.vm.offsets.$symtab - 8],
+				[this.vm.offsets.$handlers, this.vm.offsets.$end + (32 - 1) * 8],
+				[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
+			].map((x) => x.join("-")).join(";");
+		} else {
+			this.range = [
+				[0, this.vm.offsets.$end + (32 - 1) * 8],
+				[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
+			].map((x) => x.join("-")).join(";");
+		}
 
 		this.displayRegisters();
 
