@@ -2,8 +2,6 @@ $border: 1px solid #444;
 $padding: 10px;
 $font: 10pt Consolas, monospace;
 $navbar-height: 28px;
-// $row-border-color: #777;
-$row-border-color: #aaa;
 
 @import "navbar.scss";
 
@@ -61,6 +59,10 @@ body.light {
 
 		tr.stack-pointer {
 			background: #bbb;
+		}
+
+		tr.dashed, tr.solid {
+			border-top-color: #aaa;
 		}
 	}
 
