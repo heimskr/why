@@ -2,6 +2,8 @@ $border: 1px solid #444;
 $padding: 10px;
 $font: 10pt Consolas, monospace;
 $navbar-height: 28px;
+// $row-border-color: #777;
+$row-border-color: #aaa;
 
 @import "navbar.scss";
 
@@ -32,4 +34,39 @@ tr {
 	&:nth-child(even) {
 		background: #1d1d1d;
 	}
+}
+
+body.light {
+	background: white;
+	color: black;
+
+	tr {
+		background: #eee;
+		// background: #f7f7f7;
+		&:nth-child(even) {
+			background: white;
+		}
+	}
+
+	#container {
+		.hsplitter, .vsplitter {
+			background: #aaa;
+		}
+	}
+
+	#memory_container #memory {
+		tr.program-counter {
+			background: #ccc;
+		}
+
+		tr.stack-pointer {
+			background: #bbb;
+		}
+	}
+
+	#registers td:last-child {
+		color: black;
+	}
+
+	@include register(tx, #eeda00);
 }

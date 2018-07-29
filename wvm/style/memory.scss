@@ -46,7 +46,7 @@
 
 		tr.dashed, tr.solid {
 			border-top-width: 1px;
-			border-top-color: #777;
+			border-top-color: $row-border-color;
 
 			> td, > th {
 				padding-top: 2.5px;

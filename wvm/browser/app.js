@@ -133,26 +133,29 @@ let App = window.App = class App {
 	displayMemory() {
 		$("#memory tr").remove();
 		
-		const edges = this.symbolTableEdges();
+		const edges = this.symbolTableEdges;
+
+		const {$symtab, $handlers, $code, $data, $end} = vm.offsets;
+
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
 				const byte = i * 8;
 				const long = this.vm.getWord(byte);
 
 				const classes = [`addr-${i}`];
-				const dataStart = vm.offsets.$data == byte && vm.offsets.$data != vm.offsets.$code;
-				const symtabStart = vm.offsets.$symtab == byte;
-				const handlersStart = vm.offsets.$handlers == byte;
-				const codeStart = vm.offsets.$code == byte;
+				const dataStart = $data == byte && $data != $code;
+				const symtabStart = $symtab == byte;
+				const handlersStart = $handlers == byte;
+				const codeStart = $code == byte;
 				const stackStart = vm.memorySize - 16 == i;
-				const globalStart = vm.offsets.$end == byte;
+				const globalStart = $end == byte;
 
 				if (stackStart || edges.includes(byte))
 					classes.push("dashed");
 				if (handlersStart || symtabStart || codeStart || dataStart || globalStart)
 					classes.push("solid");
 
-				if (vm.offsets.$data <= byte && this.vm.symbols && _.keys(this.vm.symbols).filter((s) => this.vm.symbols[s][1].toInt() == byte).length)
+				if ($data <= byte && this.vm.symbols && _.keys(this.vm.symbols).filter((s) => this.vm.symbols[s][1].toInt() == byte).length)
 					classes.push("dashed");
 
 				let addrcell;
@@ -192,17 +195,37 @@ let App = window.App = class App {
 		});
 	}
 
-	symbolTableEdges() {
-		const out = [];
+	set symbolTableEdges(to) {
+		this._symbolTableWords = this._symbolTableEdges = to;
+
+		if (to && to.map) {
+			this._symbolTableWords = to.map((x) => x >> 3);
+		}
+	}
+
+	get symbolTableEdges() { // returns byte addresses.
+		if (this._symbolTableEdges) {
+			return this._symbolTableEdges;
+		}
+
+		this._symbolTableEdges = [];
 
 		for (let i = this.vm.offsets.$symtab / 8, j = 0; i < this.vm.offsets.$handlers / 8 && j < 10000; j++) {
 			i += 2 + this.vm.initial[i].toUnsigned().low;
 			if (i * 8 < this.vm.offsets.$handlers) {
-				out.push(i * 8);
+				this._symbolTableEdges.push(i * 8);
 			}
 		}
 
-		return out;
+		return this._symbolTableEdges;
+	}
+
+	get symbolTableWords() { // same as symbolTableEdges, but word-addressed
+		if (this._symbolTableWords) {
+			return this._symbolTableWords;
+		}
+
+		return this._symbolTableWords = this.symbolTableEdges.map((x) => x >> 3);
 	}
 
 	hexCell(long) {
@@ -210,14 +233,26 @@ let App = window.App = class App {
 	}
 
 	decompiledCell(long, addr) {
-		if (addr < 40 || this.vm.offsets.$handlers <= addr && addr < this.vm.offsets.$code) {
+		const {$symtab, $handlers, $code, $data} = this.vm.offsets;
+
+		const inMeta = addr < 40;
+		const inSymtab = $symtab <= addr && addr < $handlers;
+		const inHandlers = $handlers <= addr && addr < $code;
+		const inCode = $code <= addr && addr < $data;
+
+		if (inMeta || inHandlers) {
 			return $("<a></a>").attr({href: "#"}).addClass("handler").text(long.toString()).click(() => {
 				this.vm.programCounter = long.toInt();
 				this.highlightProgramCounter();
 			});
 		}
 
-		if (this.vm.offsets.$code <= addr && addr < this.vm.offsets.$data) {
+		const word = addr / 8;
+		if (inSymtab) {
+			console.log(addr);
+		}
+
+		if (inCode) {
 			if (long.equals(0)) {
 				return "";
 			}
@@ -272,6 +307,7 @@ let App = window.App = class App {
 		}
 
 		this.vm.enabled = false;
+		this._symbolTableEdges = null;
 
 		this.range = [
 			[0, this.vm.offsets.$symtab - 8],
