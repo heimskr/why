@@ -239,7 +239,15 @@ let App = window.App = class App {
 		const edges = [$symtab, ...this.symbolTableEdges];
 		if (inSymtab) {
 			if (edges.includes(addr)) { // first word: hash, length
-				return `<span class="hash">${long.high.toString(16)}</span> ${long.low}`;
+				const hash = long.high.toString(16);
+				const lengthNum = long.low;
+				let lengthStr = lengthNum.toString();
+				if (lengthNum < 5) {
+					const pad = `<span class="glyphicon glyphicon-flash"></span>`;
+					lengthStr = "".padEnd(pad.length * lengthNum, pad);
+				}
+
+				return `<span class="hash">${hash}</span> ${lengthStr}`;
 			} else if (edges.includes(addr - 8)) { // first word: position
 				return `<span class="handler">${long.toString()}</span>`;
 			} else if (edges.includes(addr - 16)) { // at the first word of the symbol name
