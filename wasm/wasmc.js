@@ -697,8 +697,8 @@ class WASMC {
 
 	/**
 	 * Returns a symbol table.
-	 * @param  {boolean} [skeleton=true] Whether to set all addresses to zero at first.
 	 * @param  {string[]} labels An array of labels.
+	 * @param  {boolean} [skeleton=true] Whether to set all addresses to zero at first.
 	 * @return {Long[]} An encoded symbol table.
 	 */
 	createSymbolTable(labels, skeleton = true) {
