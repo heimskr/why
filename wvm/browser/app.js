@@ -639,7 +639,7 @@ function initializeUI(app) {
 
 	$("#top").split({orientation: "vertical", limit: 210, position: "81.5%"});
 	$(".hsplitter").height(4);
-	$(".vsplitter").width(4);
+	$(".vsplitter").width(2);
 
 	$("#step").click(() => app.vm.tick());
 	$("#set_range").click(() => {

@@ -18,7 +18,7 @@ sub strlen() {
 	@_strlen_loop
 		[$a0] -> $t0 /b
 		: _strlen_next if $t0
-		done
+		!done
 		@_strlen_next
 			$a0++
 			$r0++
@@ -39,7 +39,7 @@ sub strcat($s0, $s1) {
 	@_strcat_loop
 		[$s1] -> $t0 /b
 		: _strcat_next if $t0
-		done
+		!done
 		@_strcat_next
 			$t0 -> [$s0] /b
 			$s0++
@@ -66,11 +66,11 @@ sub strchr() {
 	@_strchr_found
 		$a0 -> $r0
 		1 -> $r1
-		done
+		!done
 	@_strchr_failed
 		0 -> $r0
 		0 -> $r1
-		done
+		!done
 }
 
 sub strprint($s0) {
@@ -80,7 +80,7 @@ sub strprint($s0) {
 	@_strprint_loop
 		[$a0] -> $s0 /b
 		: _strprint_print if $s0
-		done
+		!done
 		@_strprint_print
 		<prc $s0>
 		$a0++
@@ -107,7 +107,7 @@ sub strcpy() {
 	@_strcpy_loop
 		[$a0] -> $t0 /b
 		: _strcpy_copy if $t0
-		done
+		!done
 		@_strcpy_copy
 		$t0 -> [$a1] /b
 		$a0++
@@ -118,7 +118,7 @@ sub strcpy() {
 sub bprint() {
 	: _bprint_true if $a0
 		<prs "false">
-		ret
+		!ret
 	@_bprint_true
 		<prs "true">
 }
