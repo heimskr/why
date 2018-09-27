@@ -19,7 +19,7 @@ test: wvm
 link:
 	../../wasm/wld.js ../../wasm/examples/memory.wasm ../../wasm/examples/string.why -o ../../wasm/compiled/memory.why
 
-../../wasm/compiled/string.why: ../../wasm/compiled/string.why ../../wasm/examples/string.wasm
+../../wasm/compiled/string.why: ../../wasm/examples/string.wasm
 	../../wasm/wld.js ../../wasm/examples/string.wasm -o ../../wasm/compiled/string.why
 
 ../../wasm/compiled/stringtest.why: ../../wasm/compiled/string.why ../../wasm/examples/stringtest.wasm
