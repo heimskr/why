@@ -17,9 +17,12 @@ test: wvm
 	./wvm
 
 link:
-	../../wasm/wld.js ../../wasm/examples/memory.wasm ../../wasm/examples/string.why -o ../../wasm/examples/memory.why
+	../../wasm/wld.js ../../wasm/examples/memory.wasm ../../wasm/examples/string.why -o ../../wasm/compiled/memory.why
+
+../../wasm/compiled/stringtest.why:
+	../../wasm/wld.js ../../wasm/examples/stringtest.wasm -o ../../wasm/compiled/stringtest.why
 
 ltest: link test
 
-grind: wvm stringtest.why
-	valgrind --leak-check=full --show-leak-kinds=all ./wvm stringtest.why
+grind: wvm ../../wasm/compiled/stringtest.why
+	valgrind --leak-check=full --show-leak-kinds=all ./wvm ../../wasm/compiled/stringtest.why
