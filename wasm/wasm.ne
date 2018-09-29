@@ -53,7 +53,7 @@ lineend			-> (single newline | multi | newline) 		{% d => null %}
 sep				-> ";"										{% d => null %}
 				 | lineend									{% d => null %}
 
-string			-> dqstring									{% d => d[0] %}
+string			-> dqstring									{% nth(0) %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
 int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
 int_dec			-> "-":? [0-9]:+							{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
@@ -70,7 +70,7 @@ meta_header		-> "#meta" | "#m"							{% d => null %}
 meta			-> _ metakey _ [:=] _ string				{% d => [d[1][0], d[5]] %}
 				 | _ "library"								{% d => ["library", true] %}
 				 | _ sep									{% d => null %}
-metakey			-> ("orcid" | "version" | "author" | "name"){% d => d[0] %}
+metakey			-> ("orcid" | "version" | "author" | "name"){% nth(0) %}
 
 handlers_section-> _ handlers_header _ sep handler:*		{% d => ["handlers", compileObject(d[4])] %}
 handlers_header	-> "#handlers" | "#h"						{% d => null %}
@@ -108,13 +108,13 @@ include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}
 inclusion		-> .:+ "\n"									{% (d, l, r) => { const t = d[0].join("").trim(); return ["", "#data"].includes(t)? r : t } %}
 				 | _ "\n" 									{% d => null %}
 
-label			-> "@" var									{% d => d[1] %}
+label			-> "@" var									{% nth(1) %}
 xvar			-> (var | ".end")							{% d => d[0][0] %}
-ptr_ref			-> "&" xvar									{% d => d[1] %}
+ptr_ref			-> "&" xvar									{% nth(1) %}
 var_addr		-> ptr_ref									{% d => ["address", d[0]] %}
 
 # Matches either a register or a variable dereference (*var) and returns ["register", ...] or ["label", ...] respectively.
-rv				-> reg										{% d => d[0] %}
+rv				-> reg										{% nth(0) %}
 				 | "*" var									{% d => ["label", d[1]] %}
 
 # Represents an unordered pair of registers and/or variable dereferences with an operator between them.
@@ -139,7 +139,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
 				 | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx | trap_prs | trap_pr
 				 | gap
-															{% d => d %}
+
 into			-> _ "->" _									{% d => null %}
 
 # R-Type instructions														   rt    rs    rd
@@ -318,7 +318,7 @@ gap				-> "{" _ int _ "}"							{% d => ["gap", d[2]] %}
 
 call			-> var _ "(" _ args _ ")"					{% d => ["call", d[0], ...d[4].map((x) => x[0])] %}
 				 | var _ "(" _ ")"							{% d => ["call", d[0]] %}
-arg				-> (rv | int | var_addr)					{% d => d[0] %}
+arg				-> (rv | int | var_addr)					{% nth(0) %}
 args			-> delimited[arg, ("," _)]					{% d => d[0][0] %}
 
 reg_temp		-> "$t" ([0-9a-f] | "1" [0-6])				{% d => ["t", parseInt(d[1].join(""), 16)] %}
