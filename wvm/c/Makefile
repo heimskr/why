@@ -1,8 +1,14 @@
-SOURCES			= main.c wvm.c instruction.c ops.c registers.c disassemble.c
-HEADERS			= ansi.h wvm.h instruction.h ops.h registers.h disassemble.h
-OBJECTS			= main.o wvm.o instruction.o ops.o registers.o disassemble.o
+SOURCES			= main.c wvm.c instruction.c ops.c registers.c disassemble.c ext/net.c
+HEADERS			= ansi.h wvm.h instruction.h ops.h registers.h disassemble.h ext/net.h
+OBJECTS			= main.o wvm.o instruction.o ops.o registers.o disassemble.o net.o
 COMPILE			= gcc -g -c -std=c99 -Wall
 LINK			= gcc -g -o
+
+WASM			= ../../wasm
+WASMC			= $(WASM)/wasmc.js
+WLD				= $(WASM)/wld.js
+COMPILED		= $(WASM)/compiled
+EXAMPLES		= $(WASM)/examples
 
 wvm: $(OBJECTS)
 	$(LINK) wvm $(OBJECTS)
@@ -17,15 +23,15 @@ test: wvm
 	./wvm
 
 link:
-	../../wasm/wld.js ../../wasm/examples/memory.wasm ../../wasm/examples/string.why -o ../../wasm/compiled/memory.why
+	$(WLD) $(EXAMPLES)/memory.wasm $(EXAMPLES)/string.why -o $(COMPILED)/memory.why
 
-../../wasm/compiled/string.why: ../../wasm/examples/string.wasm
-	../../wasm/wasmc.js ../../wasm/examples/string.wasm ../../wasm/compiled/string.why
+$(COMPILED)/string.why: $(EXAMPLES)/string.wasm
+	$(WASMC) $(EXAMPLES)/string.wasm $(COMPILED)/string.why
 
-../../wasm/compiled/stringtest.why: ../../wasm/compiled/string.why ../../wasm/examples/stringtest.wasm
-	../../wasm/wld.js ../../wasm/examples/stringtest.wasm -o ../../wasm/compiled/stringtest.why
+$(COMPILED)/stringtest.why: $(COMPILED)/string.why $(EXAMPLES)/stringtest.wasm
+	$(WLD) $(EXAMPLES)/stringtest.wasm -o $(COMPILED)/stringtest.why
 
 ltest: link test
 
-grind: wvm ../../wasm/compiled/stringtest.why
-	valgrind --leak-check=full --show-leak-kinds=all ./wvm ../../wasm/compiled/stringtest.why
+grind: wvm $(COMPILED)/stringtest.why
+	valgrind --leak-check=full --show-leak-kinds=all ./wvm $(COMPILED)/stringtest.why

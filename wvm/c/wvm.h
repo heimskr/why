@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+
+#define DIE(s) { fprintf(stderr, s); exit(1); }
 
 typedef int64_t word;
 typedef uint64_t uword;
@@ -17,6 +20,7 @@ word wvm_get_word(word addr);
 void wvm_set_word(word addr, word value);
 byte wvm_get_byte(word addr);
 void wvm_set_byte(word addr, byte value);
+char * wvm_get_string(word addr);
 void wvm_jump(word addr);
 void wvm_link();
 void wvm_increment_pc();

@@ -116,6 +116,24 @@ void wvm_set_byte(word addr, byte value) {
 }
 
 /**
+ * Retrieves a string from the VM memory.
+ * Reads bytes starting at the given address until a null byte is reached.
+ * @param addr The byte-indexed address of the string to retrieve.
+ * @return A copy of the string stored at the given index.
+ */
+char * wvm_get_string(word addr) {
+	int length;
+	for (length = 0; memory[addr + length] != '\0'; length++);
+
+	char *out = calloc(length + 1, sizeof(char));
+	for (int i = 0; i < length; i++)
+		out[i] = memory[addr + i];
+
+	out[length] = '\0';
+	return out;
+}
+
+/**
  * Jumps to a given (byte-indexed) address.
  * @param addr An address in memory.
  */

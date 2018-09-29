@@ -195,12 +195,16 @@ exports.REGISTER_OFFSETS = {
 };
 
 exports.TRAPS = {
-	printr: 0b0000000000000001, // prints contents of register whose ID is stored in $rs.
-	halt:   0b0000000000000010, // tells the vm to stop
-	eval:   0b0000000000000011, // executes the string starting at a given address as JS
-	prc:    0b0000000000000100, // prints the character stored in an address to the console 
-	prd:    0b0000000000000101, // prints contents of register whose ID is stored in $rs as a decimal.
-	prx:    0b0000000000000110, // prints contents of register whose ID is stored in $rs as a hexadecimal.
+	printr: 0b000000000001, // prints contents of register whose ID is stored in $rs.
+	halt:   0b000000000010, // tells the vm to stop
+	eval:   0b000000000011, // executes the string starting at a given address as JS
+	prc:    0b000000000100, // prints the character stored in an address to the console 
+	prd:    0b000000000101, // prints contents of register whose ID is stored in $rs as a decimal.
+	prx:    0b000000000110, // prints contents of register whose ID is stored in $rs as a hexadecimal.
+
+	xn_init:    0b000010000000, // sets up the program for socket communication.
+	xn_connect: 0b000010000001, // connects the socket.
+	xn_send:    0b000010000010, // sends data through the socket.
 };
 
 // largest number of arguments allowed for a subroutine call.
