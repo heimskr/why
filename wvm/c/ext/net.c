@@ -2,6 +2,7 @@
  * Defines operations allowing socket communications. *
  ******************************************************/
 
+#include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
 #include "../wvm.h"
@@ -29,11 +30,11 @@ void op_xn_connect(word instruction) {
 	struct sockaddr_in *addr;
 
 	if (xn_socket == -1)
-		DIE("ERROR: Networking not initialized.\n");
+		DIE("\033[31mERROR\033[0m: Networking not initialized.\n");
 	
 	char *addr_str = wvm_get_string(rsv);
 
-	printf("Addr: \"%s\"\n", addr_str);
+	printf("Connecting to \033[1m%s:%d\033[0m.\n", addr_str, (uint16_t) rtv);
 
 	int error = getaddrinfo(addr_str, NULL, NULL, &result);
 	free(addr_str);
@@ -41,18 +42,23 @@ void op_xn_connect(word instruction) {
 	if (error == EAI_SYSTEM) {
 		perror("getaddrinfo");
 		exit(1);
-	} else if (error)
-		DIE("ERROR: Unable to parse address.\n");
+	} else if (error) {
+		fprintf(stderr, "\033[31mERROR\033[0m: Unable to parse address. %s\n", strerror(error));
+		exit(1);
+	}
 
 	if (result == NULL)
-		DIE("ERROR: Unable to resolve address.\n");
+		DIE("\033[31mERROR\033[0m: Unable to resolve address.\n");
 
 	addr = (struct sockaddr_in *) result->ai_addr;
 	addr->sin_port = htons((uint16_t) rtv);
 	freeaddrinfo(result);
 
-	if (connect(xn_socket, (struct sockaddr *) addr, sizeof(struct sockaddr_in)))
-		DIE("ERROR: Unable to connect.\n");
+	error = connect(xn_socket, (struct sockaddr *) addr, sizeof(struct sockaddr_in));
+	if (error) {
+		fprintf(stderr, "\033[31mERROR\033[0m: Unable to connect. %s\n", strerror(errno));
+		exit(1);
+	}
 
 	free(addr);
 
@@ -69,7 +75,7 @@ void op_xn_send(word instruction) {
 	printf("Attempting op_xn_send.\n");
 
 	if (!xn_connected)
-		DIE("ERROR: Socket not connected.\n");
+		DIE("\033[31mERROR\033[0m: Socket not connected.\n");
 
 	char *str = wvm_get_string(rsv);
 	int len = strlen(str);
