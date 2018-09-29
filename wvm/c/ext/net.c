@@ -29,9 +29,11 @@ void op_xn_connect(word instruction) {
 	struct sockaddr_in *addr;
 
 	if (xn_socket == -1)
-		DIE("Networking not initialized.\n");
+		DIE("ERROR: Networking not initialized.\n");
 	
 	char *addr_str = wvm_get_string(rsv);
+
+	printf("Addr: \"%s\"\n", addr_str);
 
 	int error = getaddrinfo(addr_str, NULL, NULL, &result);
 	free(addr_str);
@@ -40,17 +42,17 @@ void op_xn_connect(word instruction) {
 		perror("getaddrinfo");
 		exit(1);
 	} else if (error)
-		DIE("Unable to parse address.\n");
+		DIE("ERROR: Unable to parse address.\n");
 
 	if (result == NULL)
-		DIE("Unable to resolve address.\n");
+		DIE("ERROR: Unable to resolve address.\n");
 
 	addr = (struct sockaddr_in *) result->ai_addr;
 	addr->sin_port = htons((uint16_t) rtv);
 	freeaddrinfo(result);
 
 	if (connect(xn_socket, (struct sockaddr *) addr, sizeof(struct sockaddr_in)))
-		DIE("Unable to connect.\n");
+		DIE("ERROR: Unable to connect.\n");
 
 	free(addr);
 
@@ -67,7 +69,7 @@ void op_xn_send(word instruction) {
 	printf("Attempting op_xn_send.\n");
 
 	if (!xn_connected)
-		DIE("Socket not connected.\n");
+		DIE("ERROR: Socket not connected.\n");
 
 	char *str = wvm_get_string(rsv);
 	int len = strlen(str);

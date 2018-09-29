@@ -10,16 +10,13 @@ port: 6666
 message: "Hello, world!"
 
 #code
-&host -> $t0
-*port -> $t1
-&message -> $t2
-
-<p $t0>
-
 <xn init>
 
-// <xn connect $t0 $t1>
+&host -> $t0
+*port -> $t1
+<xn connect $t0 $t1>
 
-// <xn send $t2>
+&message -> $t2
+<xn send $t2>
 
 <halt>
