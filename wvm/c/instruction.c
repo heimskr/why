@@ -5,6 +5,7 @@
 #include "wvm.h"
 #include "instruction.h"
 #include "ops.h"
+#include "ext/net.h"
 
 /**
  * Returns an instruction's opcode.
@@ -140,6 +141,10 @@ op_fn wvm_get_fn(word instruction) {
 				case FUNCT_PRC:    return op_prc;
 				case FUNCT_PRD:    return op_prd;
 				case FUNCT_PRX:    return op_prx;
+
+				case FUNCT_XN_INIT:    return op_xn_init;
+				case FUNCT_XN_CONNECT: return op_xn_connect;
+				case FUNCT_XN_SEND:    return op_xn_send;
 			}
 		case OP_JL:   return op_jl;
 		case OP_JLC:  return op_jlc;
@@ -209,7 +214,7 @@ char wvm_r_flags(word instruction) {
  * @param instruction An R-type instruction.
  * @return A function ID.
  */
-char wvm_r_func(word instruction) {
+int wvm_r_func(word instruction) {
 	return instruction & 4095;
 }
 

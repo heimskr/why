@@ -264,4 +264,8 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_LXNOR  13
 #define FUNCT_LXOR   14
 
+#define FUNCT_XN_INIT    128
+#define FUNCT_XN_CONNECT 129
+#define FUNCT_XN_SEND    130
+
 #endif

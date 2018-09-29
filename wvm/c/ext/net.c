@@ -11,14 +11,19 @@ int xn_socket = -1;
 bool xn_connected = false;
 
 void op_xn_init(word instruction) {
+	printf("Attempting op_xn_init.\n");
 	xn_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	xn_connected = false;
 	INC();
+
+	printf("op_xn_init successful.\n");
 }
 
 void op_xn_connect(word instruction) {
 	// TODO: implement exceptions :~)
 	RREGS();
+
+	printf("Attempting op_xn_connect.\n");
 
 	struct addrinfo *result;
 	struct sockaddr_in *addr;
@@ -49,6 +54,8 @@ void op_xn_connect(word instruction) {
 
 	free(addr);
 
+	printf("op_xn_connect successful.\n");
+
 	xn_connected = true;
 
 	INC();
@@ -56,6 +63,8 @@ void op_xn_connect(word instruction) {
 
 void op_xn_send(word instruction) {
 	RREGS();
+
+	printf("Attempting op_xn_send.\n");
 
 	if (!xn_connected)
 		DIE("Socket not connected.\n");

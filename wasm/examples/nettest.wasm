@@ -1,0 +1,25 @@
+#meta
+name: "Networking Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+host: "localhost"
+port: 6666
+message: "Hello, world!"
+
+#code
+&host -> $t0
+*port -> $t1
+&message -> $t2
+
+<p $t0>
+
+<xn init>
+
+// <xn connect $t0 $t1>
+
+// <xn send $t2>
+
+<halt>

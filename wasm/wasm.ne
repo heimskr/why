@@ -1,6 +1,8 @@
 @{%
 "use strict";
 
+const {TRAPS} = require("./constants.js");
+
 const special = {
 	chars: "@$&*\t \":`./%",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
@@ -137,8 +139,8 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_j | op_jc | op_jr | op_jrc | op_jl | op_jlc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
-				 | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx | trap_prs | trap_pr
-				 | gap
+				 | gap | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx | trap_prs | trap_pr
+				 | trap_xn_init | trap_xn_connect | trap_xn_send
 
 into			-> _ "->" _									{% d => null %}
 
@@ -311,8 +313,12 @@ trap_prs		-> "<" _ "prs" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]
 trap_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    5 ] %}
 				 | "<" _ "p" _ char _ ">"					{% d => ["trap", 0, ["char", d[4]], 0, 4] %}
 				 | "<" _ "p" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]], 0, 4] %}
-
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
+
+trap_xn_init	-> "<" _ "xn" __ "init" _ ">"				{% d => ["trap", 0, 0, 0, TRAPS.xn_init] %}
+trap_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["trap", d[8], d[6], 0, TRAPS.xn_connect] %}
+trap_xn_send	-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["trap", 0, d[6], 0, TRAPS.xn_send] %}
+
 
 gap				-> "{" _ int _ "}"							{% d => ["gap", d[2]] %}
 
