@@ -201,10 +201,12 @@ exports.TRAPS = {
 	prc:    0b000000000100, // prints the character stored in an address to the console 
 	prd:    0b000000000101, // prints contents of register whose ID is stored in $rs as a decimal.
 	prx:    0b000000000110, // prints contents of register whose ID is stored in $rs as a hexadecimal.
+	sleep:  0b000000000111, // pauses execution for a given number of milliseconds.
 
 	xn_init:    0b000010000000, // sets up the program for socket communication.
 	xn_connect: 0b000010000001, // connects the socket.
 	xn_send:    0b000010000010, // sends data through the socket.
+	xn_recv:    0b000010000011, // receives data from the socket.
 };
 
 // largest number of arguments allowed for a subroutine call.

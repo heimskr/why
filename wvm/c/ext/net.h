@@ -10,5 +10,6 @@
 void op_xn_init(word instruction);
 void op_xn_connect(word instruction);
 void op_xn_send(word instruction);
+void op_xn_recv(word instruction);
 
 #endif

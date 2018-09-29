@@ -291,6 +291,10 @@ class WASMC {
 			return WASMC.str2longs(value + "\0");
 		}
 
+		if (type == "bytes") {
+			return [...Array(Math.ceil(value / 8))].map(() => Long.fromInt(0));
+		}
+
 		WASMC.die(`Error: unknown data type "${type}".`);
 	}
 

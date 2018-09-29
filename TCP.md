@@ -24,3 +24,9 @@ Syntax: `<xn send rs>`
 Function value: `000010000010`
 
 Sends the string starting at the address stored in `rs` through the socket.
+
+### <a name="op-xn-recv"></a>Net Receive (`xn_recv`)
+Syntax: `<xn recv rd rs>`
+Function value: `000010000011`
+
+Receives `rs` bytes from the socket and stores them as a string starting at the address stored in `rd`.

@@ -4,10 +4,26 @@ author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
 version: "1"
 
+#includes
+../compiled/string.why
+
 #data
-host: "localhost"
-port: 6666
-message: "Hello, world!"
+host: "irc.subluminal.net"
+port: 6667
+
+user: "USER foo _ _ :hey\nNICK wasmbot\n"
+join: "JOIN #bots\n"
+msg: "PRIVMSG #bots :what hath god wrought\n"
+quit: "QUIT :nope bye\n"
+
+pong: "PONG :"
+
+delay: 1000
+
+longdelay: 20000
+
+buffer: (100)
+length: 100
 
 #code
 <xn init>
@@ -16,7 +32,65 @@ message: "Hello, world!"
 *port -> $t1
 <xn connect $t0 $t1>
 
-&message -> $t2
-<xn send $t2>
+*delay -> $t3
+*longdelay -> $t4
+
+<p "Sending USER.\n">
+&user -> $t2; <xn send $t2>; <sleep $t3>
+
+&buffer -> $t5
+*length -> $t6
+
+<xn recv $t5 $t6>
+<sleep $t3>
+
+@check_ping
+<xn recv $t5 $t6>
+<p '{'>; strprint($t5); <p "}\n">
+
+$t5 + 28 -> $t8 // assumes the message contains "found your hostname (cached)"
+[$t8] -> $t9
+
+<p "$t5: (">; <prd $t5>; <p ")\n">
+<p "$t8: (">; <prd $t8>; <p ")\n">
+
+<p "$t9: '">; <prc $t9>; <p "'\n">
+
+$t9 &= 0xff
+$t9 == 'P' -> $t9
+
+$t8++
+[$t8] -> $ta
+
+<p "$ta: '">; <prc $ta>; <p "'\n">
+$ta &= 0xff
+$ta == 'I' -> $ta
+
+$t9 &&= $ta
+: ping_done if $t9
+<p ":(\n">
+<sleep $t3>
+<sleep $t3>
+<sleep $t3>
+: check_ping
+
+@ping_done
+<p "Ping done!\n">
+
+$t5 += 36
+'O' -> $t7
+$t7 -> [$t5] /b
+$t5--
+<xn send $t5>
+<sleep $t3>
+
+<p "Joining.\n">
+&join -> $t2; <xn send $t2>; <sleep $t3>
+
+<p "Messaging.\n">
+&msg  -> $t2; <xn send $t2>; <sleep $t3>
+
+<p "Quitting.\n">
+&quit -> $t2; <xn send $t2>
 
 <halt>

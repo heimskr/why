@@ -141,10 +141,12 @@ op_fn wvm_get_fn(word instruction) {
 				case FUNCT_PRC:    return op_prc;
 				case FUNCT_PRD:    return op_prd;
 				case FUNCT_PRX:    return op_prx;
+				case FUNCT_SLEEP:  return op_sleep;
 
 				case FUNCT_XN_INIT:    return op_xn_init;
 				case FUNCT_XN_CONNECT: return op_xn_connect;
 				case FUNCT_XN_SEND:    return op_xn_send;
+				case FUNCT_XN_RECV:    return op_xn_recv;
 			}
 		case OP_JL:   return op_jl;
 		case OP_JLC:  return op_jlc;

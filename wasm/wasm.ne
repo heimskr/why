@@ -85,6 +85,7 @@ data_header		-> "#data" | "#d"							{% d => null %}
 datadef			-> _ var (_ ":" _ | __) float  _ sep		{% d => ["float",  d[1], d[3]] %}
 				 | _ var (_ ":" _ | __) int    _ sep		{% d => ["int",    d[1], d[3]] %}
 				 | _ var (_ ":" _ | __) string _ sep		{% d => ["string", d[1], d[3]] %}
+				 | _ var (_ ":" _ | __) "(" _ int _ ")" _ sep	{% d => ["bytes", d[1], d[5]] %}
 				 | _ sep 									{% d => null %}
 
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
@@ -140,7 +141,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
 				 | gap | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx | trap_prs | trap_pr
-				 | trap_xn_init | trap_xn_connect | trap_xn_send
+				 | trap_sleep | trap_xn_init | trap_xn_connect | trap_xn_send | trap_xn_recv
 
 into			-> _ "->" _									{% d => null %}
 
@@ -313,11 +314,13 @@ trap_prs		-> "<" _ "prs" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]
 trap_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    5 ] %}
 				 | "<" _ "p" _ char _ ">"					{% d => ["trap", 0, ["char", d[4]], 0, 4] %}
 				 | "<" _ "p" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]], 0, 4] %}
+trap_sleep		-> "<" _ ("sleep" | "wait") _ reg _ ">"		{% d => ["trap", 0, d[4], 0, TRAPS.sleep] %}
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
 
 trap_xn_init	-> "<" _ "xn" __ "init" _ ">"				{% d => ["trap", 0, 0, 0, TRAPS.xn_init] %}
-trap_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["trap", d[8], d[6], 0, TRAPS.xn_connect] %}
-trap_xn_send	-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["trap", 0, d[6], 0, TRAPS.xn_send] %}
+trap_xn_connect	-> "<" _ "xn" __ "connect" _ rv _ rv _ ">"{% d => ["trap", d[8], d[6], 0, TRAPS.xn_connect] %}
+trap_xn_send	-> "<" _ "xn" __ "send" _ rv _ ">"			{% d => ["trap", 0, d[6], 0, TRAPS.xn_send] %}
+trap_xn_recv	-> "<" _ "xn" __ "recv" _ rv _ rv _ ">"	{% d => ["trap", 0, d[8], d[6], TRAPS.xn_recv] %}
 
 
 gap				-> "{" _ int _ "}"							{% d => ["gap", d[2]] %}

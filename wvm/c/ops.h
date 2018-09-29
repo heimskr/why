@@ -121,6 +121,7 @@ void op_eval(word instruction);   // 31 ?R 3
 void op_prc(word instruction);    // 31 ?R 4
 void op_prd(word instruction);    // 31 ?R 5
 void op_prx(word instruction);    // 31 ?R 6
+void op_sleep(word instruction);  // 31 ?R 7
 void op_nop(word instruction);    // 0   X
 
 #define OP_NOP    0
@@ -254,6 +255,7 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_SPUSH  6
 #define FUNCT_SPOP   7
 #define FUNCT_SRL    7
+#define FUNCT_SLEEP  7
 #define FUNCT_SRA    8
 #define FUNCT_LAND   8
 #define FUNCT_LNAND  9
@@ -267,5 +269,6 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_XN_INIT    128
 #define FUNCT_XN_CONNECT 129
 #define FUNCT_XN_SEND    130
+#define FUNCT_XN_RECV    131
 
 #endif

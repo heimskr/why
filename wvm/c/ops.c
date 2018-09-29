@@ -3,6 +3,7 @@
  ***********************************************/
 
 #include <stdio.h>
+#include <unistd.h>
 #include "ops.h"
 #include "instruction.h"
 
@@ -500,5 +501,11 @@ void op_prd(word instruction) {
 void op_prx(word instruction) {
 	RRS();
 	printf("%llx", rsv);
+	INC();
+}
+
+void op_sleep(word instruction) {
+	RRS();
+	usleep(rsv * 1000);
 	INC();
 }
