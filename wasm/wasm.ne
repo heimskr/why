@@ -318,9 +318,9 @@ trap_sleep		-> "<" _ ("sleep" | "wait") _ reg _ ">"		{% d => ["trap", 0, d[4], 0
 trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
 
 trap_xn_init	-> "<" _ "xn" __ "init" _ ">"				{% d => ["trap", 0, 0, 0, TRAPS.xn_init] %}
-trap_xn_connect	-> "<" _ "xn" __ "connect" _ rv _ rv _ ">"{% d => ["trap", d[8], d[6], 0, TRAPS.xn_connect] %}
-trap_xn_send	-> "<" _ "xn" __ "send" _ rv _ ">"			{% d => ["trap", 0, d[6], 0, TRAPS.xn_send] %}
-trap_xn_recv	-> "<" _ "xn" __ "recv" _ rv _ rv _ ">"	{% d => ["trap", 0, d[8], d[6], TRAPS.xn_recv] %}
+trap_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["trap", d[8], d[6], 0, TRAPS.xn_connect] %}
+trap_xn_send	-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["trap", 0, d[6], 0, TRAPS.xn_send] %}
+trap_xn_recv	-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["trap", 0, d[8], d[6], TRAPS.xn_recv] %}
 
 
 gap				-> "{" _ int _ "}"							{% d => ["gap", d[2]] %}
