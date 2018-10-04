@@ -25,6 +25,18 @@ test: wvm
 link:
 	$(WLD) $(EXAMPLES)/memory.wasm $(EXAMPLES)/string.why -o $(COMPILED)/memory.why
 
+ir: $(SOURCES) $(HEADERS)
+	clang -S -emit-llvm $(SOURCES)
+
+ir1: $(SOURCES) $(HEADERS)
+	clang -O1 -S -emit-llvm $(SOURCES)
+
+ir2: $(SOURCES) $(HEADERS)
+	clang -O2 -S -emit-llvm $(SOURCES)
+
+ir3: $(SOURCES) $(HEADERS)
+	clang -O3 -S -emit-llvm $(SOURCES)
+
 $(COMPILED)/string.why: $(EXAMPLES)/string.wasm
 	$(WASMC) $(EXAMPLES)/string.wasm $(COMPILED)/string.why
 
