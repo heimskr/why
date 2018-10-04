@@ -533,7 +533,7 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 > `lui: imm -> $rd`  
 > `000000001101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Loads an immediate value into the upper half of the word at `rd`. The lower half is replaced with zeroes.
+Loads an immediate value into the upper half of the word at `rd`. The lower half is not affected.
 
 ## <a name="ops-comp-r"></a>Comparisons (R-Types)
 

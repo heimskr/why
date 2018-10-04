@@ -248,7 +248,7 @@ void op_xori(word instruction) {
 
 void op_lui(word instruction) {
 	IRD(); IIMM();
-	rdv = ((word) imm) << 32;
+	rdv = (((word) imm) << 32) | (rdv & 0xfffffff);
 	INC();
 }
 

@@ -390,7 +390,6 @@ class WVM {
 
 	op_lui(rs, rd, imm) {
 		this.registers[rd].high = imm;
-		this.registers[rd].low = 0;
 	}
 
 	op_sl(rt, rs, rd) {
