@@ -308,7 +308,7 @@ class Linker {
 	static desymbolize(longs, symbolTable, offsets) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
-			const {opcode, type, flags, rs, rd} = parsedInstruction;
+			const {opcode, type, flags, rs, rd, link} = parsedInstruction;
 			if (flags == FLAGS.KNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
 					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
@@ -325,7 +325,7 @@ class Linker {
 				if (type == "i") {
 					longs[i] = WASMC.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID);
 				} else {
-					longs[i] = WASMC.jType(opcode, rs, id, FLAGS.SYMBOL_ID);
+					longs[i] = WASMC.jType(opcode, rs, id, link, FLAGS.SYMBOL_ID);
 				}
 			}
 		}
@@ -340,7 +340,7 @@ class Linker {
 	static resymbolize(longs, symbolTable) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
-			const {opcode, type, flags, rs, rd, imm, addr} = parsedInstruction;
+			const {opcode, type, flags, rs, rd, imm, addr, link} = parsedInstruction;
 			if (flags == FLAGS.SYMBOL_ID || flags == FLAGS.UNKNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
 					throw `Found an instruction not of type I or J with \x1b[1m${flags == FLAGS.UNKNOWN_SYMBOL? "UNKNOWN_SYMBOL" : "SYMBOL_ID"}\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
@@ -369,7 +369,7 @@ class Linker {
 				if (type == "i") {
 					longs[i] = WASMC.iType(opcode, rs, rd, addr.toInt(), FLAGS.KNOWN_SYMBOL, false);
 				} else {
-					longs[i] = WASMC.jType(opcode, rs, addr.toInt(), FLAGS.KNOWN_SYMBOL, false);
+					longs[i] = WASMC.jType(opcode, rs, addr.toInt(), link, FLAGS.KNOWN_SYMBOL, false);
 				}
 			}
 		}

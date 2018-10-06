@@ -89,7 +89,7 @@ class WVM {
 			} else if (instr.type == "i") {
 				skipPC = fn(instr.rs, instr.rd, instr.imm);
 			} else if (instr.type == "j") {
-				skipPC = fn(instr.rs, instr.addr);
+				skipPC = fn(instr.rs, instr.addr, instr.link);
 			}
 		}
 
@@ -440,26 +440,18 @@ class WVM {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
 	}
 
-	op_j(rs, addr) {
+	op_j(rs, addr, link) {
+		if (link) this.link();
 		this.programCounter = Long.fromInt(addr, true).toInt();
 		return true;
 	}
 
-	op_jc(rs, addr) {
+	op_jc(rs, addr, link) {
+		if (link) this.link();
 		if (!this.registers[rs].equals(0)) {
 			this.programCounter = Long.fromInt(addr, true).toInt();
 			return true;
 		}
-	}
-
-	op_jl(rs, addr) {
-		this.link();
-		return this.op_j(rs, addr);
-	}
-
-	op_jlc(rs, addr) {
-		this.link();
-		return this.op_jc(rs, addr);
 	}
 
 	op_jr(rt, rs, rd) {

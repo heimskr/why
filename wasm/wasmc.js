@@ -369,7 +369,7 @@ class WASMC {
 				});
 
 				// Store the program counter in $rt and jump to the subroutine.
-				add([null, "jl", _0, ["label", name]]);
+				add([null, "j", _0, ["label", name], true]);
 
 				// Now that we've returned from the subroutine, pop the values we pushed earlier, but in reverse order.
 				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
@@ -530,7 +530,7 @@ class WASMC {
 		} else if (I_TYPES.includes(OPCODES[op])) {
 			return WASMC.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags);
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			return WASMC.jType(OPCODES[op], this.convertValue(args[0]), args[1], flags);
+			return WASMC.jType(OPCODES[op], this.convertValue(args[0]), args[1], args[2], flags);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
@@ -553,8 +553,8 @@ class WASMC {
 			const {opcode, rs, rd, imm, flags} = instruction;
 			return WASMC.iType(opcode, rs, rd, imm, flags);
 		} else if (type == "j") {
-			const {opcode, rs, addr, flags} = instruction;
-			return WASMC.jType(opcode, rs, addr, flags);
+			const {opcode, rs, addr, link, flags} = instruction;
+			return WASMC.jType(opcode, rs, addr, link, flags);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
@@ -643,11 +643,12 @@ class WASMC {
 	 * @param {number} opcode The instruction's opcode.
 	 * @param {number} rs     The instruction's source register.
 	 * @param {number} addr   The instruction's address field.
+	 * @param {boolean} link  The instruction's link bit.
 	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
 	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static jType(opcode, rs, addr, flags=0, warn=true) {
+	static jType(opcode, rs, addr, link=false, flags=0, warn=true) {
 		if (!J_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid j-type`);
 		if (warn) {
 			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
@@ -655,7 +656,7 @@ class WASMC {
 		}
 
 		let lower = addr;
-		let upper = (this.ignoreFlags? 0 : flags) | (rs << 13) | (opcode << 20);
+		let upper = (this.ignoreFlags? 0 : flags) | (+link << 12) | (rs << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;

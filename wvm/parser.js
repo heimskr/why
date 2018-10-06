@@ -260,6 +260,7 @@ class Parser {
 				op: SEDOCPO[opcode][0],
 				opcode,
 				rs: get(12, 7),
+				link: get(19, 1),
 				addr: get(32),
 				flags: get(29, 3),
 				type: "j"
@@ -289,7 +290,7 @@ class Parser {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
 
-		const {opcode, flags, type, funct, rt, rs, rd, imm, addr} = Parser.parseInstruction(instruction);
+		const {opcode, flags, type, funct, rt, rs, rd, imm, addr, link} = Parser.parseInstruction(instruction);
 
 		if (opcode == 0) {
 			return "<>";
@@ -298,7 +299,7 @@ class Parser {
 		const srs = Parser.getRegister(rs);
 
 		if (type == "j") {
-			return Parser.formatJ(SEDOCPO[opcode][0], srs, addr, flags, symbols);
+			return Parser.formatJ(SEDOCPO[opcode][0], srs, addr, link, flags, symbols);
 		}
 
 		const srd = Parser.getRegister(rd);
@@ -471,16 +472,20 @@ class Parser {
 	 * @param  {string} op The name of the operation.
 	 * @param  {string} rs The name of the `rs` register.
 	 * @param  {number} addr An immediate value.
+	 * @param  {boolean} link Whether the link bit is set.
 	 * @param  {number} [flags=0] The assembler flags.
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatJ(op, rs, addr, flags=0, symbols={}) {
+	static formatJ(op, rs, addr, link, flags=0, symbols={}) {
 		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
-		if (op == "j")   return `${chalk.dim(":") } ${target}`;
-		if (op == "jc")  return `${chalk.dim(":") } ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
-		if (op == "jl")  return `${chalk.dim("::")} ${target}`;
-		if (op == "jlc") return `${chalk.dim("::")} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
+		const sym = link? "::" : ":";
+		if (op == "j")   return `${chalk.dim(sym)} ${target}`;
+		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
+		if (op == "jp")  return `${chalk.dim("+"  + sym)} ${target}`;
+		if (op == "jn")  return `${chalk.dim("-"  + sym)} ${target}`;
+		if (op == "jz")  return `${chalk.dim("0"  + sym)} ${target}`;
+		if (op == "jnz") return `${chalk.dim("!0" + sym)} ${target}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 
