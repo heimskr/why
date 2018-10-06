@@ -8,10 +8,11 @@ version: "1"
 ../compiled/string.why
 
 #data
-s_p: "Positive\n"
-s_n: "Negative\n"
-s_z: "Zero\n"
-s_nz: "Nonzero\n"
+s_c: "Checking "
+s_p: "positive\n"
+s_n: "negative\n"
+s_z: "zero\n"
+s_nz: "zonzero\n"
 
 #code
 
@@ -23,19 +24,33 @@ s_nz: "Nonzero\n"
 !ret
 
 @next
+1 -> $t1
 
-$0 - 5 -> $t0
-<p $t0>
+@postest
+strprint(&s_c); strprint(&s_p);
+$0 + 3 -> $t0; <p $t0>; <p '\n'>
+&negtest -> $s0; : check
 
+@negtest
+strprint(&s_c); strprint(&s_n);
+$0 - 3 -> $t0; <p $t0>; <p '\n'>
+&zerotest -> $s0; : check
+
+@zerotest
+strprint(&s_c); strprint(&s_z);
+$t1 - 1 -> $t0; <p $t0>; <p '\n'>
+&next2 -> $s0; : check
+
+@check
 +: positive
 -: negative
 0: zero
 *: nzero
 
-@positive strprint(&s_p); : next2
-@negative strprint(&s_n); : next2
-@zero  strprint(&s_z);  : next2
-@nzero strprint(&s_nz); : next2
+@positive strprint(&s_p);  : $s0
+@negative strprint(&s_n);  : $s0
+@zero     strprint(&s_z);  : $s0
+@nzero    strprint(&s_nz); : $s0
 
 @next2
 <p "Done.\n">

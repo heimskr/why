@@ -203,15 +203,23 @@ class WVM {
 	}
 
 	clearFlags() {
-		this.st &= ~0b1111;
+		this.st = this.st.and(~0b1111);
 	}
 
 	updateFlags(n) {
 		this.clearFlags();
-		if (n == 0) {
-			this.st |= ALU_MASKS.z;
-		} else if (n < 0) {
-			this.st |= ALU_MASKS.n;
+		if (n instanceof Long) {
+			if (n.isZero()) {
+				this.st = this.st.or(ALU_MASKS.z);
+			} else if (n.isNegative()) {
+				this.st = this.st.or(ALU_MASKS.n);
+			}
+		} else {
+			if (n == 0) {
+				this.st = this.st.or(ALU_MASKS.z);
+			} else if (n < 0) {
+				this.st = this.st.or(ALU_MASKS.n);
+			}
 		}
 	}
 
@@ -232,119 +240,121 @@ class WVM {
 	}
 
 	op_add(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().add(this.registers[rt].toSigned());
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(this.registers[rt].toSigned()));
 	}
 
 	op_addu(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toUnsigned().add(this.registers[rt].toUnsigned());
+		this.updateFlags(this.registers[rd] = this.registers[rs].toUnsigned().add(this.registers[rt].toUnsigned()));
 	}
 
 	// mult
 
 	op_sub(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().subtract(this.registers[rt].toSigned());
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().subtract(this.registers[rt].toSigned()));
 	}
 
 	op_subu(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toUnsigned().subtract(this.registers[rt].toUnsigned());
+		this.updateFlags(this.registers[rd] = this.registers[rs].toUnsigned().subtract(this.registers[rt].toUnsigned()));
 	}
 
 	// multu
 
 	op_sll(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().shiftLeft(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(this.registers[rt]));
 	}
 
 	op_srl(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(this.registers[rt]));
 	}
 
 	op_sra(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().shiftRight(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRight(this.registers[rt]));
 	}
 
 	op_mod(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().mod(this.registers[rt].toSigned());
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(this.registers[rt].toSigned()));
 	}
 
 	op_and(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].and(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]));
 	}
 
 	op_nand(rt, rs, rd) {
-		let { low, high, unsigned } = this.registers[rs].and(this.registers[rt]); this.registers[rd] = new Long(~low, ~high, unsigned);
+		let { low, high, unsigned } = this.registers[rs].and(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_nor(rt, rs, rd) {
 		let { low, high, unsigned } = this.registers[rs].or(this.registers[rt]);
-		this.registers[rd] = new Long(~low, ~high, unsigned);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_not(rt, rs, rd) {
 		let { low, high, unsigned } = this.registers[rs];
-		this.registers[rd] = new Long(~low, ~high, unsigned);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_or(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].or(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = this.registers[rs].or(this.registers[rt]));
 	}
 
 	op_xnor(rt, rs, rd) {
-		let { low, high, unsigned } = this.registers[rs].xor(this.registers[rt]); this.registers[rd] = new Long(~low, ~high, unsigned);
+		let { low, high, unsigned } = this.registers[rs].xor(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_xor(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].xor(this.registers[rt]);
+		this.updateFlags(this.registers[rd] = this.registers[rs].xor(this.registers[rt]));
 	}
 
 	op_land(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE;
+		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE);
 	}
 
 	op_lnand(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO;
+		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO);
 	}
 
 	op_lnor(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO;
+		this.updateFlags(this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO);
 	}
 
 	op_lnot(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].eq(0)? Long.ONE : Long.ZERO;
+		this.updateFlags(this.registers[rd] = this.registers[rs].eq(0)? Long.ONE : Long.ZERO);
 	}
 
 	op_lor(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE;
+		this.updateFlags(this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE);
 	}
 
 	op_lxnor(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO;
+		this.updateFlags(this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO);
 	}
 
 	op_lxor(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE;
+		this.updateFlags(this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE);
 	}
 
 	op_addi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().add(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	op_subi(rs, rd, imm) {
-		this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
+		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	op_modi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().mod(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	// multi
 
 	op_addui(rs, rd, imm) {
-		this.registers[rd] = Long.fromInt(this.registers[rs], true).add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true));
+		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], true).add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)));
 	}
 
 	op_subui(rs, rd, imm) {
-		this.registers[rd] = Long.fromInt(this.registers[rs], true).subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true));
+		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], true).subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)));
 	}
 
 	op_multui(rs, rd, imm) {
@@ -368,53 +378,53 @@ class WVM {
 
 		this.hi = nhiihi.add(abhi);
 		this.lo = new Long(nloilo.toInt(), ablo.toInt(), true);
+
+		if (this.hi.isZero() && this.lo.isZero()) {
+			this.updateFlags(0);
+		} else if (this.hi.toSigned().isNegative) {
+			this.updateFlags(-1);
+		} else {
+			this.updateFlags(1);
+		}
 	}
 
 	op_slli(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().shiftLeft(imm instanceof Long? imm.toUnsigned() : imm);
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
 	op_srli(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(imm instanceof Long? imm.toUnsigned() : imm);
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
 	op_srai(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().shiftRight(imm instanceof Long? imm.toUnsigned() : imm);
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRight(imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
 	op_andi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].and(imm);
+		this.updateFlags(this.registers[rd] = this.registers[rs].and(imm));
 	}
 
 	op_nandi(rs, rd, imm) {
 		let { low, high, unsigned } = this.registers[rs].and(imm);
-		this.registers[rd] = new Long(~low, ~high, unsigned);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_nori(rs, rd, imm) {
 		let { low, high, unsigned } = this.registers[rs].or(imm);
-		this.registers[rd] = new Long(~low, ~high, unsigned);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_ori(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].or(imm);
+		this.updateFlags(this.registers[rd] = this.registers[rs].or(imm));
 	}
 
 	op_xnori(rs, rd, imm) {
 		let { low, high, unsigned } = this.registers[rs].xor(imm);
-		this.registers[rd] = new Long(~low, ~high, unsigned);
+		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
 	op_xori(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].xor(imm);
-	}
-
-	op_mfhi(rt, rs, rd) {
-		this.registers[rd] = this.hi;
-	}
-
-	op_mflo(rt, rs, rd) {
-		this.registers[rd] = this.lo;
+		this.updateFlags(this.registers[rd] = this.registers[rs].xor(imm));
 	}
 
 	op_lui(rs, rd, imm) {
