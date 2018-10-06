@@ -30,7 +30,7 @@ $0 - 5 -> $t0
 +: positive
 -: negative
 0: zero
-!0: nzero
+*: nzero
 
 @positive strprint(&s_p); : next2
 @negative strprint(&s_n); : next2

@@ -487,7 +487,7 @@ class Parser {
 	static formatJ(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
 		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
 		const sym = link? "::" : ":";
-		const cond = {"p": "+", "n": "-", "z": "0", "nz": "!0"}[conditions] || "";
+		const cond = {"p": "+", "n": "-", "z": "0", "nz": "*"}[conditions] || "";
 		if (op == "j")   return `${chalk.dim(cond + sym)} ${target}`;
 		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
