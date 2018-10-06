@@ -145,7 +145,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 
 into			-> _ "->" _									{% d => null %}
 
-# R-Type instructions														   rt    rs    rd
+# R-Type instructions										                   rt    rs    rd
 op_addu			-> riap["+"]  into reg _ "/u"				{% d => ["addu",     ...d[0], d[2]] %}
 				 | rv _ "+="  _ rv _     "/u"				{% d => ["addu",  d[4], d[0], d[0]] %}
 op_subu			-> riap["-"]  into reg _ "/u"				{% d => ["subu",     ...d[0], d[2]] %}
@@ -222,7 +222,7 @@ op_srl			-> riap[">>>"] into rv						{% d => ["srl",      ...d[0], d[2]] %}
 op_sra			-> riap[">>"]  into rv						{% d => ["sra",      ...d[0], d[2]] %}
 				 | rv _ ">>="  _ rv							{% d => ["sra",   d[4], d[0], d[0]] %}
 
-# I-Type instructions														    rs    rd    imm
+# I-Type instructions										                   rs    rd    imm
 op_addiu		-> reg _ "+"  _ int into reg _ "/u"			{% d => ["addiu",  d[0], d[6], d[4]] %}
 				 | reg _ "++" _ "/u"						{% d => ["addiu",  d[0], d[0],   1 ] %}
 				 | _ "++" _ reg _ "/u"						{% d => ["addiu",  d[3], d[3],   1 ] %}
@@ -290,32 +290,32 @@ op_lni			-> "[" _ int  _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8],
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 				 | ptr_ref into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
 
-# J-Type instructions													   rs     addr             link   condition
+# J-Type instructions										               rs     addr             link   condition
 op_jc			-> ":" _ int   __ "if" __ reg				{% d => ["jc", d[6],  d[2],            false, null] %}
 				 | ":" _ xvar  __ "if" __ reg				{% d => ["jc", d[6],  ["label", d[2]], false, null] %}
-				 | "::" _ int  __ "if" __ reg				{% d => ["jc",   0,   d[2],             true, null] %}
-				 | "::" _ xvar __ "if" __ reg				{% d => ["jc",   0,   ["label", d[2]],  true, null] %}
+				 | "::" _ int  __ "if" __ reg				{% d => ["jc", d[6],   d[2],             true, null] %}
+				 | "::" _ xvar __ "if" __ reg				{% d => ["jc", d[6],   ["label", d[2]],  true, null] %}
 
 op_j			-> ":"  _ int								{% d => ["j",    0,   d[2],            false, null] %}
 				 | ":"  _ xvar								{% d => ["j",    0,   ["label", d[2]], false, null] %}
 				 | "::" _ int								{% d => ["j",    0,   d[2],             true, null] %}
 				 | "::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true, null] %}
-				 | "+:" _ int   __ "if" __ reg				{% d => ["j",  d[6],  d[2],            false,  "p"] %}
-				 | "+:" _ xvar  __ "if" __ reg				{% d => ["j",  d[6],  ["label", d[2]], false,  "p"] %}
-				 | "+::" _ int  __ "if" __ reg				{% d => ["j",    0,   d[2],             true,  "p"] %}
-				 | "+::" _ xvar __ "if" __ reg				{% d => ["j",    0,   ["label", d[2]],  true,  "p"] %}
-				 | "-:" _ int   __ "if" __ reg				{% d => ["j",  d[6],  d[2],            false,  "n"] %}
-				 | "-:" _ xvar  __ "if" __ reg				{% d => ["j",  d[6],  ["label", d[2]], false,  "n"] %}
-				 | "-::" _ int  __ "if" __ reg				{% d => ["j",    0,   d[2],             true,  "n"] %}
-				 | "-::" _ xvar __ "if" __ reg				{% d => ["j",    0,   ["label", d[2]],  true,  "n"] %}
-				 | "0:" _ int   __ "if" __ reg				{% d => ["j",  d[6],  d[2],            false,  "z"] %}
-				 | "0:" _ xvar  __ "if" __ reg				{% d => ["j",  d[6],  ["label", d[2]], false,  "z"] %}
-				 | "0::" _ int  __ "if" __ reg				{% d => ["j",    0,   d[2],             true,  "z"] %}
-				 | "0::" _ xvar __ "if" __ reg				{% d => ["j",    0,   ["label", d[2]],  true,  "z"] %}
-				 | "!0:" _ int   __ "if" __ reg				{% d => ["j",  d[6],  d[2],            false, "nz"] %}
-				 | "!0:" _ xvar  __ "if" __ reg				{% d => ["j",  d[6],  ["label", d[2]], false, "nz"] %}
-				 | "!0::" _ int  __ "if" __ reg				{% d => ["j",    0,   d[2],             true, "nz"] %}
-				 | "!0::" _ xvar __ "if" __ reg				{% d => ["j",    0,   ["label", d[2]],  true, "nz"] %}
+				 | "+:" _ int								{% d => ["j",    0,  d[2],            false,  "p"] %}
+				 | "+:" _ xvar								{% d => ["j",    0,  ["label", d[2]], false,  "p"] %}
+				 | "+::" _ int								{% d => ["j",    0,   d[2],             true,  "p"] %}
+				 | "+::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true,  "p"] %}
+				 | "-:" _ int								{% d => ["j",    0,  d[2],            false,  "n"] %}
+				 | "-:" _ xvar								{% d => ["j",    0,  ["label", d[2]], false,  "n"] %}
+				 | "-::" _ int								{% d => ["j",    0,   d[2],             true,  "n"] %}
+				 | "-::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true,  "n"] %}
+				 | "0:" _ int								{% d => ["j",    0,  d[2],            false,  "z"] %}
+				 | "0:" _ xvar								{% d => ["j",    0,  ["label", d[2]], false,  "z"] %}
+				 | "0::" _ int								{% d => ["j",    0,   d[2],             true,  "z"] %}
+				 | "0::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true,  "z"] %}
+				 | "!0:" _ int								{% d => ["j",    0,  d[2],            false, "nz"] %}
+				 | "!0:" _ xvar								{% d => ["j",    0,  ["label", d[2]], false, "nz"] %}
+				 | "!0::" _ int								{% d => ["j",    0,   d[2],             true, "nz"] %}
+				 | "!0::" _ xvar							{% d => ["j",    0,   ["label", d[2]],  true, "nz"] %}
 
 op_mv			-> reg into reg								{% d => ["mv", d[0], d[2]] %}
 op_ret			-> "!ret"									{% d => ["jr", 0, 0, ["register", "return", 0]] %}
