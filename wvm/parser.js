@@ -17,7 +17,7 @@ require("string.prototype.padend").shim();
 const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS, CONDITIONS} = require("../wasm/constants.js");
 const OPCODES_INV = _.multiInvert(OPCODES);
 const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
-const CONDITIONS_INV = _.multiInvert(CONDITIONS);
+const CONDITIONS_INV = _.invert(CONDITIONS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
 
 /**

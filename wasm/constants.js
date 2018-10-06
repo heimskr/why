@@ -236,7 +236,7 @@ exports.CONDITIONS = {
 	p:  0b1000,
 	n:  0b1001,
 	z:  0b1010,
-	zn: 0b1011,
+	nz: 0b1011,
 };
 
 exports.ALU_MASKS = {
