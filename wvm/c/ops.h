@@ -16,8 +16,8 @@
 
 #define JRS() reg_t rs = wvm_j_rs(instruction);
 #define JADDR() imm_t addr = wvm_j_addr(instruction);
-#define JREGS() JRS(); JADDR();
 #define JLINK() char link = wvm_j_link(instruction);
+#define JREGS() JRS(); JADDR(); JLINK();
 
 #define INC() wvm_increment_pc();
 

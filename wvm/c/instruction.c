@@ -33,8 +33,10 @@ ins_type wvm_get_type(opcode_t opcode) {
 
 		case 15:
 		case 16:
-		case 32:
-		case 33:
+		case 44:
+		case 45:
+		case 46:
+		case 47:
 			return J;
 	}
 
@@ -99,8 +101,12 @@ op_fn wvm_get_fn(word instruction) {
 				case FUNCT_SLU:  return op_slu;
 				case FUNCT_SLEU: return op_sleu;
 			}
-		case OP_J:  return op_j;
-		case OP_JC: return op_jc;
+		case OP_J:   return op_j;
+		case OP_JC:  return op_jc;
+		case OP_JP:  return op_jp;
+		case OP_JN:  return op_jn;
+		case OP_JZ:  return op_jz;
+		case OP_JNZ: return op_jnz;
 		case OPS_RJUMP:
 			switch (wvm_r_func(instruction)) {
 				case FUNCT_JR:   return op_jr;

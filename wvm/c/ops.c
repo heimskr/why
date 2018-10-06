@@ -349,6 +349,42 @@ void op_jc(word instruction) {
 	} else INC();
 }
 
+void op_jp(word instruction) {
+	JADDR(); JLINK();
+	if (!FLAG_N && !FLAG_Z) {
+		if (link)
+			wvm_link();
+		wvm_jump(addr);
+	} else INC();
+}
+
+void op_jn(word instruction) {
+	JADDR(); JLINK();
+	if (FLAG_N) {
+		if (link)
+			wvm_link();
+		wvm_jump(addr);
+	} else INC();
+}
+
+void op_jz(word instruction) {
+	JADDR(); JLINK();
+	if (FLAG_Z) {
+		if (link)
+			wvm_link();
+		wvm_jump(addr);
+	} else INC();
+}
+
+void op_jnz(word instruction) {
+	JADDR(); JLINK();
+	if (!FLAG_Z) {
+		if (link)
+			wvm_link();
+		wvm_jump(addr);
+	} else INC();
+}
+
 void op_jr(word instruction) {
 	RREGS();
 	wvm_jump(rdv);
