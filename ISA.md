@@ -293,9 +293,11 @@ I-type instructions perform computations with registers and an immediate value.
 ## <a name="format-j"></a>J-Type Instructions
 J-type instructions point the program counter to a given address under certain circumstances.
 
-|   Range | 63–52 (12) | 51–45 (7) | 44–38 (7) | 37–32 (6)    | 31–0 (32) |
-|--------:|:----------:|:---------:|:---------:|:------------:|:---------:|
-| Purpose | Opcode     | rs        | Unused    | Linker flags | Address   |
+|   Range | 63–52 (12) | 51–45 (7) | 44   | 43–38 (6) | 37–32 (6)    | 31–0 (32) |
+|--------:|:----------:|:---------:|:----:|:---------:|:------------:|:---------:|
+| Purpose | Opcode     | rs        | Link | Unused    | Linker flags | Address   |
+
+If the link bit is set, the current value of the program counter will be stored in `$rt`, the return address register.
 
 # <a name="operations"></a>Operations
 
@@ -654,48 +656,42 @@ If the value in `rs` is less than or equal to `imm` (treating both as unsigned v
 
 ### <a name="op-j"></a>Jump (`j`)
 > `: label` or `: imm`  
+> `:: label` or `:: imm` (linking variant)  
 > `000000001111` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional (`jc`)
 > `: label if $rs` or `: imm if $rs`  
+> `:: label if $rs` or `:: imm if $rs` (linking variant)  
 > `000000010000` `sssssss` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
-### <a name="op-jl"></a>Jump and Link (`jl`)
-> `:: label` or `:: imm`  
-> `000000100000` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-
-Stores the address of the next instruction in `$rt` and then <a href="#op-j">jumps</a> to the target.
-
-### <a name="op-jlc"></a>Jump and Link Conditional (`jlc`)
-> `:: label if $rs` or `:: imm if $rs`  
-> `000000100001` `sssssss` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-
-Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero, after storing the address of the next instruction in `rt`.
-
 ### <a name="op-jp"></a>Jump If Positive (`jp`)
 > `+: label` or `+: imm`  
+> `+:: label` or `+:: imm` (linking variant)  
 > `0b000000101100` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided neither the [negative bit](#reg-st) nor zero bit is set.
 
 ### <a name="op-jn"></a>Jump If Negative (`jn`)
 > `-: label` or `-: imm`  
+> `-:: label` or `-:: imm` (linking variant)  
 > `0b000000101101` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the [negative bit](#reg-st) is set.
 
 ### <a name="op-jz"></a>Jump If Zero (`jz`)
 > `0: label` or `0: imm`  
+> `0:: label` or `0:: imm` (linking variant)  
 > `0b000000101110` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the [zero bit](#reg-st) is set.
 
 ### <a name="op-jnz"></a>Jump If Nonzero (`jnz`)
 > `!0: label` or `!0: imm`  
+> `!0:: label` or `!0:: imm` (linking variant)  
 > `0b000000101111` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the [zero bit](#reg-st) isn't set.

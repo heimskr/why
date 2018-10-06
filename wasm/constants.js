@@ -47,8 +47,6 @@ exports.I_TYPES = [
 exports.J_TYPES = [
 	0b000000001111, // Jump
 	0b000000010000, // Jump Conditional
-	0b000000100000, // Jump and Link
-	0b000000100001, // Jump and Link Conditional
 	0b000000101011, // Jump If Negative
 	0b000000101100, // Jump If Positive
 	0b000000101101, // Jump If Zero
@@ -121,8 +119,8 @@ exports.OPCODES = {
 	sleui:  0b000000011101,
 	modi:   0b000000011110,
 	trap:   0b000000011111,
-	jl:     0b000000100000,
-	jlc:    0b000000100001,
+	//      0b000000100000,
+	//      0b000000100001,
 	slli:   0b000000100010,
 	srli:   0b000000100011,
 	srai:   0b000000100100,
