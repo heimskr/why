@@ -198,6 +198,7 @@ exports.REGISTER_OFFSETS = {
 	t:     39,
 	s:     62,
 	k:     85,
+	st:   101,
 	m:    102,
 	f:    118,
 	e:    122,
