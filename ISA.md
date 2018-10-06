@@ -118,12 +118,6 @@
 					<ol>
 						<li><a href="#op-j">Jump</a> (<code>j</code>)</li>
 						<li><a href="#op-jc">Jump Conditional</a> (<code>jc</code>)</li>
-						<li><a href="#op-jl">Jump and Link</a> (<code>jl</code>)</li>
-						<li><a href="#op-jlc">Jump and Link Conditional</a> (<code>jlc</code>)</li>
-						<li><a href="#op-jp">Jump If Positive</a> (<code>jp</code>)</li>
-						<li><a href="#op-jn">Jump If Negative</a> (<code>jn</code>)</li>
-						<li><a href="#op-jz">Jump If Zero</a> (<code>jz</code>)</li>
-						<li><a href="#op-jnz">Jump If Nonzero</a> (<code>jnz</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-jump-r">Jumps (R-Types)</a>
@@ -287,25 +281,37 @@ Like much of this instruction set, the formatting for instructions is copied fro
 ## <a name="format-r"></a>R-Type Instructions
 R-type instructions perform computations with multiple registers.
 
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–18 (13) | 17–12 (6)    | 11–0 (12) |
-|------------:|:-----------:|:---------:|:---------:|:---------:|:----------:|:------------:|:---------:|
-| **Purpose** | Opcode      | rt        | rs        | rd        | Unused     | Linker flags | Function  |
+| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–18 (13) | 17–14 (4)  | 13 (2)       | 11–0 (12) |
+|------------:|:-----------:|:---------:|:---------:|:---------:|:----------:|:----------:|:------------:|:---------:|
+| **Purpose** | Opcode      | rt        | rs        | rd        | Unused     | Conditions | Linker flags | Function  |
 
 ## <a name="format-i"></a>I-Type Instructions
 I-type instructions perform computations with registers and an immediate value.
 
-| Range       | 63–52 (12) | 51–46 (6)    | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
-|------------:|:----------:|:------------:|:---------:|:---------:|:---------------:|
-| **Purpose** | Opcode     | Linker flags | rs        | rd        | Immediate Value |
+| Range       | 63–52 (12) | 51–48 (4)  | 47–46 (2)    | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
+|------------:|:----------:|:----------:|:------------:|:---------:|:---------:|:---------------:|
+| **Purpose** | Opcode     | Conditions | Linker flags | rs        | rd        | Immediate Value |
 
 ## <a name="format-j"></a>J-Type Instructions
 J-type instructions point the program counter to a given address under certain circumstances.
 
-|   Range | 63–52 (12) | 51–45 (7) | 44   | 43–38 (6) | 37–32 (6)    | 31–0 (32) |
-|--------:|:----------:|:---------:|:----:|:---------:|:------------:|:---------:|
-| Purpose | Opcode     | rs        | Link | Unused    | Linker flags | Address   |
+|   Range | 63–52 (12) | 51–45 (7) | 44   | 43–38 (6) | 37–36 (4)  | 33–32 (2)    | 31–0 (32) |
+|--------:|:----------:|:---------:|:----:|:---------:|:----------:|:------------:|:---------:|
+| Purpose | Opcode     | rs        | Link | Unused    | Conditions | Linker flags | Address   |
 
 If the link bit is set, the current value of the program counter will be stored in `$rt`, the return address register.
+
+## <a name="condbits"></a>Condition Bits
+For operations that support conditions, the condition bits indicate what combination of [ALU flags](#reg-st)
+are required for the operation to occur.
+
+<ul>
+	<li><code>0xxx</code>: Conditions disabled</li>
+	<li><code>1000</code>: Positive (<code>!N & !Z</code>)</li>
+	<li><code>1001</code>: Negative</li>
+	<li><code>1010</code>: Zero</li>
+	<li><code>1011</code>: Nonzero</li>
+</ul>
 
 # <a name="operations"></a>Operations
 
@@ -675,34 +681,6 @@ Jumps to the address of a given label or directly to a given address.
 > `000000010000` `sssssss` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
-
-### <a name="op-jp"></a>Jump If Positive (`jp`)
-> `+: label` or `+: imm`  
-> `+:: label` or `+:: imm` (linking variant)  
-> `0b000000101100` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-
-Jumps to the address of a given label or directly to a given address, provided neither the [negative bit](#reg-st) nor zero bit is set.
-
-### <a name="op-jn"></a>Jump If Negative (`jn`)
-> `-: label` or `-: imm`  
-> `-:: label` or `-:: imm` (linking variant)  
-> `0b000000101101` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-
-Jumps to the address of a given label or directly to a given address, provided the [negative bit](#reg-st) is set.
-
-### <a name="op-jz"></a>Jump If Zero (`jz`)
-> `0: label` or `0: imm`  
-> `0:: label` or `0:: imm` (linking variant)  
-> `0b000000101110` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-
-Jumps to the address of a given label or directly to a given address, provided the [zero bit](#reg-st) is set.
-
-### <a name="op-jnz"></a>Jump If Nonzero (`jnz`)
-> `!0: label` or `!0: imm`  
-> `!0:: label` or `!0:: imm` (linking variant)  
-> `0b000000101111` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-
-Jumps to the address of a given label or directly to a given address, provided the [zero bit](#reg-st) isn't set.
 
 ## <a name="ops-jump-r"></a>Jumps (R-Types)
 
