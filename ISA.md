@@ -295,7 +295,7 @@ I-type instructions perform computations with registers and an immediate value.
 ## <a name="format-j"></a>J-Type Instructions
 J-type instructions point the program counter to a given address under certain circumstances.
 
-|   Range | 63–52 (12) | 51–45 (7) | 44   | 43–38 (6) | 37–36 (4)  | 33–32 (2)    | 31–0 (32) |
+|   Range | 63–52 (12) | 51–45 (7) | 44   | 43–38 (6) | 37–34 (4)  | 33–32 (2)    | 31–0 (32) |
 |--------:|:----------:|:---------:|:----:|:---------:|:----------:|:------------:|:---------:|
 | Purpose | Opcode     | rs        | Link | Unused    | Conditions | Linker flags | Address   |
 
