@@ -1,0 +1,42 @@
+#meta
+name: "Conditions Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#includes
+../compiled/string.why
+
+#data
+s_p: "Positive\n"
+s_n: "Negative\n"
+s_z: "Zero\n"
+s_nz: "Nonzero\n"
+
+#code
+
+:: ret
+
+: next
+
+@ret
+!ret
+
+@next
+
+$0 - 5 -> $t0
+<p $t0>
+
++: positive
+-: negative
+0: zero
+!0: nzero
+
+@positive strprint(&s_p); : next2
+@negative strprint(&s_n); : next2
+@zero  strprint(&s_z);  : next2
+@nzero strprint(&s_nz); : next2
+
+@next2
+<p "Done.\n">
+<halt>

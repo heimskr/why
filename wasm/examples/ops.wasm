@@ -281,3 +281,20 @@ $t0 -> $t1
 @halt
 <halt>
 //*/
+
+@jl
+:: jlc
+:: 400
+
+@jlc
+:: jl if $t0
+:: 600 if $s1
+
++:   jl
++::  jl
+-:   jl
+-::  jl
+0::  jl
+0::  jl
+!0:: jl
+!0:: jl

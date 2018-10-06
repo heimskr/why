@@ -26,7 +26,7 @@ const compileData = (entries) => {
 const compileSubroutine = (name, args, code) => {
 	return [
 		[name, "push", ...args],
-		...code.map((item) => item[1] == Symbol.for("done")? [item[0], "j", 0, ["label", `${name}$done`], false] : item),
+		...code.map((item) => item[1] == Symbol.for("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
 		[`${name}$done`, "pop", ...args.reverse()],
 		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
 	];

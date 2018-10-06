@@ -9,7 +9,7 @@ let Long = require("long"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {REGISTER_OFFSETS, TRAPS} = require("../wasm/constants.js");
+const {REGISTER_OFFSETS, TRAPS, ALU_MASKS} = require("../wasm/constants.js");
 
 /**
  * `wvm` is the virtual machine for why.js. It executes bytecode produced by `wasmc`.
@@ -85,11 +85,11 @@ class WVM {
 		} else {
 			const fn = this[`op_${instr.op}`].bind(this);
 			if (instr.type == "r") {
-				skipPC = fn(instr.rt, instr.rs, instr.rd, instr.shift, instr.funct);
+				skipPC = fn(instr.rt, instr.rs, instr.rd, instr.funct, instr.conditions);
 			} else if (instr.type == "i") {
 				skipPC = fn(instr.rs, instr.rd, instr.imm);
 			} else if (instr.type == "j") {
-				skipPC = fn(instr.rs, instr.addr, instr.link);
+				skipPC = fn(instr.rs, instr.addr, instr.link, instr.conditions);
 			}
 		}
 
@@ -200,6 +200,35 @@ class WVM {
 
 	link() {
 		this.registers[REGISTER_OFFSETS.return] = Long.fromInt(this.programCounter + 8, true);
+	}
+
+	clearFlags() {
+		this.st &= ~0b1111;
+	}
+
+	updateFlags(n) {
+		this.clearFlags();
+		if (n == 0) {
+			this.st |= ALU_MASKS.z;
+		} else if (n < 0) {
+			this.st |= ALU_MASKS.n;
+		}
+	}
+
+	get flagZ() { return !!(this.st & ALU_MASKS.z); }
+	get flagN() { return !!(this.st & ALU_MASKS.n); }
+	get flagC() { return !!(this.st & ALU_MASKS.c); }
+	get flagO() { return !!(this.st & ALU_MASKS.o); }
+	
+	checkConditions(cond) {
+		switch (cond) {
+			case "p": return !(this.flagZ || this.flagN);
+			case "n": return this.flagN;
+			case "z": return this.flagZ;
+			case "nz": return !this.flagZ;
+		}
+
+		return true;
 	}
 
 	op_add(rt, rs, rd) {
@@ -440,13 +469,15 @@ class WVM {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
 	}
 
-	op_j(rs, addr, link) {
-		if (link) this.link();
-		this.programCounter = Long.fromInt(addr, true).toInt();
-		return true;
+	op_j(rs, addr, link, cond) {
+		if (this.checkConditions(cond)) {
+			if (link) this.link();
+			this.programCounter = Long.fromInt(addr, true).toInt();
+			return true;
+		}
 	}
 
-	op_jc(rs, addr, link) {
+	op_jc(rs, addr, link, cond) {
 		if (link) this.link();
 		if (!this.registers[rs].equals(0)) {
 			this.programCounter = Long.fromInt(addr, true).toInt();
@@ -454,9 +485,11 @@ class WVM {
 		}
 	}
 
-	op_jr(rt, rs, rd) {
-		this.programCounter = this.registers[rd].toUnsigned().toInt();
-		return true;
+	op_jr(rt, rs, rd, funct, cond) {
+		if (this.checkConditions(cond)) {
+			this.programCounter = this.registers[rd].toUnsigned().toInt();
+			return true;
+		}
 	}
 	
 	op_jrc(rt, rs, rd) {
@@ -466,9 +499,12 @@ class WVM {
 		}
 	}
 
-	op_jrl(rt, rs, rd) {
-		this.link();
-		return this.op_jr(rt, rs, rd);
+	op_jrl(rt, rs, rd, funct, cond) {
+		if (this.checkConditions(cond)) {
+			this.link();
+			this.programCounter = this.registers[rd].toUnsigned().toInt();
+			return true;
+		}
 	}
 	
 	op_jrlc(rt, rs, rd) {
@@ -530,7 +566,7 @@ class WVM {
 		this.registers[rd] = Long.fromInt(imm, true);
 	}
 
-	op_trap(rt, rs, rd, shift, funct) {
+	op_trap(rt, rs, rd, funct) {
 		if (funct == TRAPS.printr) {
 			this.flushPrcBuffer();
 			this.log(`${Parser.getRegister(rs)}: 0x${this.registers[rs].toString(16)}`);
@@ -570,9 +606,11 @@ class WVM {
 	get hi() { return this.registers[REGISTER_OFFSETS.hi]; }
 	get lo() { return this.registers[REGISTER_OFFSETS.lo]; }
 	get sp() { return this.registers[REGISTER_OFFSETS.stack]; }
+	get st() { return this.registers[REGISTER_OFFSETS.st]; }
 	set hi(to) { this.registers[REGISTER_OFFSETS.hi] = to; }
 	set lo(to) { this.registers[REGISTER_OFFSETS.lo] = to; }
 	set sp(to) { this.registers[REGISTER_OFFSETS.stack] = to; }
+	set st(to) { this.registers[REGISTER_OFFSETS.st] = to; }
 }
 
 module.exports = WVM;

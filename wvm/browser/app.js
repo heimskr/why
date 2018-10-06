@@ -713,7 +713,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/conditions.why", "utf8"));
 
 let {offsets, handlers, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});

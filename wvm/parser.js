@@ -14,9 +14,10 @@ require("../util.js").mixins(_);
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS} = require("../wasm/constants.js");
-const SEDOCPO = _.multiInvert(OPCODES);
-const STESFFO = _.multiInvert(REGISTER_OFFSETS);
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS, CONDITIONS} = require("../wasm/constants.js");
+const OPCODES_INV = _.multiInvert(OPCODES);
+const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
+const CONDITIONS_INV = _.multiInvert(CONDITIONS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
 
 /**
@@ -236,21 +237,21 @@ class Parser {
 		if (type == "r") {
 			const funct = get(52);
 			return {
-				op: opcode == OPCODES.trap? "trap" : SEDOCPO[opcode].filter((op) => SEDOCPO[opcode].length == 1 || Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
+				op: opcode == OPCODES.trap? "trap" : OPCODES_INV[opcode].filter((op) => OPCODES_INV[opcode].length == 1 || Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
 				opcode,
 				rt: get(12, 7),
 				rs: get(19, 7),
 				rd: get(26, 7),
 				funct,
-				conditions: get(46, 4),
+				conditions: CONDITIONS_INV[get(46, 4)],
 				flags: get(50, 2),
 				type: "r"
 			};
 		} else if (type == "i") {
 			return {
-				op: SEDOCPO[opcode][0],
+				op: OPCODES_INV[opcode][0],
 				opcode,
-				conditions: get(12, 4),
+				conditions: CONDITIONS_INV[get(12, 4)],
 				flags: get(16, 2),
 				rs: get(18, 7),
 				rd: get(25, 7),
@@ -259,11 +260,11 @@ class Parser {
 			};
 		} else if (type == "j") {
 			return {
-				op: SEDOCPO[opcode][0],
+				op: OPCODES_INV[opcode][0],
 				opcode,
 				rs: get(12, 7),
 				link: get(19, 1),
-				conditions: get(26, 4),
+				conditions: CONDITIONS_INV[get(26, 4)],
 				flags: get(30, 2),
 				addr: Long.fromString(instruction.substr(32), false, 2).toInt(),
 				type: "j"
@@ -302,18 +303,18 @@ class Parser {
 		const srs = Parser.getRegister(rs);
 
 		if (type == "j") {
-			return Parser.formatJ(SEDOCPO[opcode][0], srs, addr, link, flags, conditions, symbols);
+			return Parser.formatJ(OPCODES_INV[opcode][0], srs, addr, link, flags, conditions, symbols);
 		}
 
 		const srd = Parser.getRegister(rd);
 
 		if (type == "r") {
 			const srt = Parser.getRegister(rt);
-			return Parser.formatR(SEDOCPO[opcode].filter((op) => op == "trap" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags, conditions);
+			return Parser.formatR(OPCODES_INV[opcode].filter((op) => op == "trap" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags, conditions);
 		}
 		
 		if (type == "i") {
-			return Parser.formatI(SEDOCPO[opcode][0], srs, srd, imm, flags, conditions, symbols);
+			return Parser.formatI(OPCODES_INV[opcode][0], srs, srd, imm, flags, conditions, symbols);
 		}
 
 		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
@@ -342,7 +343,7 @@ class Parser {
 
 		for (let i = 0; i < OFFSET_VALUES.length; i++) {
 			if (OFFSET_VALUES[i] <= n) {
-				const s = STESFFO[OFFSET_VALUES[i]][0];
+				const s = OFFSETS_INV[OFFSET_VALUES[i]][0];
 				return "$" + (s.match(/^[ratskemf]$/)? s + (n - OFFSET_VALUES[i]).toString(16) : s);
 			}
 		}

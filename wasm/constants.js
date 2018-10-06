@@ -238,3 +238,10 @@ exports.CONDITIONS = {
 	z:  0b1010,
 	zn: 0b1011,
 };
+
+exports.ALU_MASKS = {
+	z: 0b0001,
+	n: 0b0010,
+	c: 0b0100,
+	o: 0b1000,
+};
