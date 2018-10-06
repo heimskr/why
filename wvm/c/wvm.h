@@ -35,6 +35,7 @@ void wvm_increment_pc();
 bool wvm_tick();
 void wvm_alu_flags_clear();
 void wvm_alu_flags_update(word n);
+int wvm_check_condition(int n);
 void wvm_print_memory();
 
 byte *memory;

@@ -19,6 +19,7 @@ reg_t wvm_r_rd(word instruction);
 void wvm_r_regs(word instruction, reg_t *rs, reg_t *rt, reg_t *rd);
 char wvm_r_flags(word instruction);
 int wvm_r_func(word instruction);
+char wvm_r_cond(word instruction);
 
 char wvm_i_flags(word instruction);
 reg_t wvm_i_rs(word instruction);
@@ -29,5 +30,6 @@ reg_t wvm_j_rs(word instruction);
 char wvm_j_flags(word instruction);
 imm_t wvm_j_addr(word instruction);
 char wvm_j_link(word instruction);
+char wvm_j_cond(word instruction);
 
 #endif

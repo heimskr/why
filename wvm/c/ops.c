@@ -334,10 +334,12 @@ void op_sgei(word instruction) {
 }
 
 void op_j(word instruction) {
-	JADDR(); JLINK();
-	if (link)
-		wvm_link();
-	wvm_jump(addr);
+	JADDR(); JLINK(); JCOND();
+	if (wvm_check_condition(cond)) {
+		if (link)
+			wvm_link();
+		wvm_jump(addr);
+	} else INC();
 }
 
 void op_jc(word instruction) {
@@ -349,45 +351,11 @@ void op_jc(word instruction) {
 	} else INC();
 }
 
-void op_jp(word instruction) {
-	JADDR(); JLINK();
-	if (!FLAG_N && !FLAG_Z) {
-		if (link)
-			wvm_link();
-		wvm_jump(addr);
-	} else INC();
-}
-
-void op_jn(word instruction) {
-	JADDR(); JLINK();
-	if (FLAG_N) {
-		if (link)
-			wvm_link();
-		wvm_jump(addr);
-	} else INC();
-}
-
-void op_jz(word instruction) {
-	JADDR(); JLINK();
-	if (FLAG_Z) {
-		if (link)
-			wvm_link();
-		wvm_jump(addr);
-	} else INC();
-}
-
-void op_jnz(word instruction) {
-	JADDR(); JLINK();
-	if (!FLAG_Z) {
-		if (link)
-			wvm_link();
-		wvm_jump(addr);
-	} else INC();
-}
-
 void op_jr(word instruction) {
-	RREGS();
-	wvm_jump(rdv);
+	RREGS(); RCOND();
+	if (wvm_check_condition(cond))
+		wvm_jump(rdv);
+	else INC();
 }
 
 void op_jrc(word instruction) {
@@ -398,9 +366,11 @@ void op_jrc(word instruction) {
 }
 
 void op_jrl(word instruction) {
-	RREGS();
-	wvm_link();
-	wvm_jump(rdv);
+	RREGS(); RCOND();
+	if (wvm_check_condition(cond)) {
+		wvm_link();
+		wvm_jump(rdv);
+	} else INC();
 }
 
 void op_jrlc(word instruction) {

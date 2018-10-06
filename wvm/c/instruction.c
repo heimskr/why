@@ -103,10 +103,6 @@ op_fn wvm_get_fn(word instruction) {
 			}
 		case OP_J:   return op_j;
 		case OP_JC:  return op_jc;
-		case OP_JP:  return op_jp;
-		case OP_JN:  return op_jn;
-		case OP_JZ:  return op_jz;
-		case OP_JNZ: return op_jnz;
 		case OPS_RJUMP:
 			switch (wvm_r_func(instruction)) {
 				case FUNCT_JR:   return op_jr;
@@ -225,6 +221,15 @@ int wvm_r_func(word instruction) {
 }
 
 /**
+ * Returns the conditions of an R-type instruction.
+ * @param instruction An R-type instruction.
+ * @return A conditions ID.
+ */
+char wvm_r_cond(word instruction) {
+	return (instruction >> 14) & 0b1111;
+}
+
+/**
  * Returns the linker flags of an I-type instruction.
  * @param instruction An I-type instruction.
  * @return A set of linker flags.
@@ -294,4 +299,13 @@ imm_t wvm_j_addr(word instruction) {
  */
 char wvm_j_link(word instruction) {
 	return (instruction >> 44) & 1;
+}
+
+/**
+ * Returns the conditions of a J-type instruction.
+ * @param instruction A J-type instruction.
+ * @return A conditions ID.
+ */
+char wvm_j_cond(word instruction) {
+	return (instruction >> 34) & 0b1111;
 }

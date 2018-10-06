@@ -278,24 +278,25 @@ void wvm_disassemble_j(char *str, word instruction) {
 	reg_t rs = wvm_j_rs(instruction);
 	imm_t addr = wvm_j_addr(instruction);
 	char link = wvm_j_link(instruction);
+	char cond = wvm_j_cond(instruction);
 	char *srs = wvm_decode_reg(rs);
 	sprintf(str, "%s:", ANSI_DIM);
 
 	if (link)
 		sprintf(str, "%s:", str);
 
-	switch (opcode) {
-		case OP_JP:
+	switch (cond) {
+		case COND_P:
 			sprintf(str, "+%s", str);
 			break;
-		case OP_JN:
+		case COND_N:
 			sprintf(str, "-%s", str);
 			break;
-		case OP_JZ:
+		case COND_Z:
 			sprintf(str, "0%s", str);
 			break;
-		case OP_JNZ:
-			sprintf(str, "!0%s", str);
+		case COND_NZ:
+			sprintf(str, "*%s", str);
 			break;
 	}
 

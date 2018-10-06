@@ -180,6 +180,19 @@ void wvm_alu_flags_update(word n) {
 	}
 }
 
+int wvm_check_condition(int n) {
+	switch (n) {
+		case COND_P: return !FLAG_N && !FLAG_Z;
+		case COND_N: return FLAG_N;
+		case COND_Z: return FLAG_Z;
+		case COND_NZ: return !FLAG_Z;
+		case COND_NONE: return 1;
+	}
+	
+	fprintf(stderr, "Unknown condition: %d\n", n);
+	exit(2);
+}
+
 /**
  * Prints all the memory to the console.
  */

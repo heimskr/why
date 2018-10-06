@@ -7,6 +7,7 @@
 #define RRS() reg_t rs = wvm_r_rs(instruction);
 #define RRT() reg_t rt = wvm_r_rt(instruction);
 #define RRD() reg_t rd = wvm_r_rd(instruction);
+#define RCOND() char cond = wvm_r_cond(instruction);
 #define RREGS() reg_t rs, rt, rd; wvm_r_regs(instruction, &rs, &rt, &rd);
 
 #define IRS() reg_t rs = wvm_i_rs(instruction);
@@ -17,7 +18,8 @@
 #define JRS() reg_t rs = wvm_j_rs(instruction);
 #define JADDR() imm_t addr = wvm_j_addr(instruction);
 #define JLINK() char link = wvm_j_link(instruction);
-#define JREGS() JRS(); JADDR(); JLINK();
+#define JCOND() char cond = wvm_j_cond(instruction);
+#define JREGS() JRS(); JADDR();
 
 #define INC() wvm_increment_pc();
 
@@ -91,10 +93,6 @@ void op_sgei(word instruction);   // 42  I
 
 void op_j(word instruction);      // 15  J
 void op_jc(word instruction);     // 16  J
-void op_jp(word instruction);     // 44  J
-void op_jn(word instruction);     // 45  J
-void op_jz(word instruction);     // 46  J
-void op_jnz(word instruction);    // 47  J
 
 void op_jr(word instruction);     // 17  R 0
 void op_jrc(word instruction);    // 17  R 1
@@ -212,10 +210,6 @@ void op_nop(word instruction);    // 0   X
 #define OP_SGI    41
 #define OP_SGEI   42
 #define OP_CMPI   43
-#define OP_JP     44
-#define OP_JN     45
-#define OP_JZ     46
-#define OP_JNZ    47
 
 #define OPS_MATH   1
 #define OPS_RLOGIC 2
@@ -278,5 +272,11 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_XN_CONNECT 129
 #define FUNCT_XN_SEND    130
 #define FUNCT_XN_RECV    131
+
+#define COND_NONE 0
+#define COND_P  0b1000
+#define COND_N  0b1001
+#define COND_Z  0b1010
+#define COND_NZ 0b1011
 
 #endif
