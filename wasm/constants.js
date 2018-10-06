@@ -49,6 +49,10 @@ exports.J_TYPES = [
 	0b000000010000, // Jump Conditional
 	0b000000100000, // Jump and Link
 	0b000000100001, // Jump and Link Conditional
+	0b000000101011, // Jump If Negative
+	0b000000101100, // Jump If Positive
+	0b000000101101, // Jump If Zero
+	0b000000101110, // Jump If Nonzero
 ];
 
 exports.OPCODES = {
@@ -91,6 +95,7 @@ exports.OPCODES = {
 	seq:    0b000000001110,
 	slu:    0b000000001110,
 	sleu:   0b000000001110,
+	cmp:    0b000000001110,
 	j:      0b000000001111,
 	jc:     0b000000010000,
 	jr:     0b000000010001,
@@ -127,6 +132,11 @@ exports.OPCODES = {
 	lbni:   0b000000101000,
 	sgi:    0b000000101001,
 	sgei:   0b000000101010,
+	cmpi:   0b000000101011,
+	jp:     0b000000101100,
+	jn:     0b000000101101,
+	jz:     0b000000101110,
+	jnz:    0b000000101111,
 };
 
 exports.FUNCTS = {
@@ -154,6 +164,7 @@ exports.FUNCTS = {
 	or:    0b000000000100,
 	sleu:  0b000000000100,
 	subu:  0b000000000100,
+	cmp:   0b000000000101,
 	multu: 0b000000000101,
 	sb:    0b000000000101,
 	xnor:  0b000000000101,

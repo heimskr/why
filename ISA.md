@@ -3,6 +3,9 @@
 	<ol>
 		<li><a href="#intro">Introduction</a>
 		<li><a href="#registers">Registers</a></li>
+			<ol>
+				<li><a href="#reg-st">Status Register</a></li>
+			</ol>
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
@@ -85,6 +88,7 @@
 				</li>
 				<li><a href="#ops-comp-r">Comparisons (R-Types)</a>
 					<ol>
+						<li><a href="#op-cmp">Compare</a> (<code>cmp</code>)</li>
 						<li><a href="#op-sl">Set on Less Than</a> (<code>sl</code>)</li>
 						<li><a href="#op-sle">Set on Less Than or Equal</a> (<code>sle</code>)</li>
 						<li><a href="#op-seq">Set on Equal</a> (<code>seq</code>)</li>
@@ -98,6 +102,7 @@
 				</li>
 				<li><a href="#ops-comp-i">Comparisons (I-Types)</a>
 					<ol>
+						<li><a href="#op-cmpi">Compare Immediate</a> (<code>cmpi</code>)</li>
 						<li><a href="#op-sli">Set on Less Than Immediate</a> (<code>sli</code>)</li>
 						<li><a href="#op-slei">Set on Less Than or Equal Immediate</a> (<code>slei</code>)</li>
 						<li><a href="#op-seqi">Set on Equal Immediate</a> (<code>seqi</code>)</li>
@@ -115,6 +120,10 @@
 						<li><a href="#op-jc">Jump Conditional</a> (<code>jc</code>)</li>
 						<li><a href="#op-jl">Jump and Link</a> (<code>jl</code>)</li>
 						<li><a href="#op-jlc">Jump and Link Conditional</a> (<code>jlc</code>)</li>
+						<li><a href="#op-jp">Jump If Positive</a> (<code>jp</code>)</li>
+						<li><a href="#op-jn">Jump If Negative</a> (<code>jn</code>)</li>
+						<li><a href="#op-jz">Jump If Zero</a> (<code>jz</code>)</li>
+						<li><a href="#op-jnz">Jump If Nonzero</a> (<code>jnz</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-jump-r">Jumps (R-Types)</a>
@@ -191,16 +200,28 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | 2        | `$sp`        | Stack pointer.                              |
 | 3        | `$fp`        | Frame pointer.                              |
 | 4        | `$rt`        | Return address.                             |
-| 5        | `$lo`        | Stores the lower half of a mult/div result. |
-| 6        | `$hi`        | Stores the upper half of a mult/div result. |
+| 5        | `$lo`        | Stores the lower half of a mult result.     |
+| 6        | `$hi`        | Stores the upper half of a mult result.     |
 | 7–22     | `$r0`–`$rf`  | Contains return values.                     |
 | 23–38    | `$a0`–`$af`  | Contains arguments for subroutines.         |
 | 39–61    | `$t0`–`$t16` | Temporary registers.                        |
 | 62–84    | `$s0`–`$s16` | Saved registers.                            |
-| 85–101   | `$k0`–`$k10` | Kernel registers.                           |
+| 85–100   | `$k0`–`$kf`  | Kernel registers.                           |
+| 101      | `$st`        | Status register.                            |
 | 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
 | 118–121  | `$f0`–`$f3`  | Floating point return values.               |
 | 122–127  | `$e0`–`$e5`  | Contains data about exceptions.             |
+
+## <a name="reg-st"></a>Status Register
+The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order of significance, these are:
+<ol>
+	<li>`Z` (zero): Whether the last arithmetic result was zero (for `cmp`/`cmpi`, whether the compared values are equal)</li>
+	<li>`N` (negative): Whether the result of the last arithmetic result was negative (for `cmp`/`cmpi`, whether the left value was less than the right value)</li>
+	<li>`C` (carry): Whether the result of an addition was truncated. (Currently not implemented for subtraction.)</li>
+	<li>`O` (overflow): Whether the addition of two positive signed numbers had a negative result due to overflow.</li>
+</ol>
+
+These status numbers are used in conditional branches, but they can also be accessed by programs. Writing to the `$st` register is possible, but strange behavior may occur as a result.
 
 # <a name="prog"></a>Programs
 
@@ -537,6 +558,12 @@ Loads an immediate value into the upper half of the word at `rd`. The lower half
 
 ## <a name="ops-comp-r"></a>Comparisons (R-Types)
 
+### <a name="op-cmp"></a>Compare (`cmp`)
+> `$rs ~ $rt`  
+> `000000001110` `ttttttt` `sssssss` `.......` `0000000000000` `......` `000000000101`
+
+Compares the value in `rs` to the value in `rt` and updates the [status register](#reg-st).
+
 ### <a name="op-sl"></a>Set on Less Than (`sl`)
 > `$rs < $rt -> $rd`  
 > `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000000`
@@ -627,27 +654,51 @@ If the value in `rs` is less than or equal to `imm` (treating both as unsigned v
 
 ### <a name="op-j"></a>Jump (`j`)
 > `: label` or `: imm`  
-> `000000001111` `0000000` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000001111` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional (`jc`)
 > `: label if $rs` or `: imm if $rs`  
-> `000000010000` `sssssss` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000010000` `sssssss` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
 ### <a name="op-jl"></a>Jump and Link (`jl`)
 > `:: label` or `:: imm`  
-> `000000100000` `0000000` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000100000` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Stores the address of the next instruction in `$rt` and then <a href="#op-j">jumps</a> to the target.
 
 ### <a name="op-jlc"></a>Jump and Link Conditional (`jlc`)
 > `:: label if $rs` or `:: imm if $rs`  
-> `000000100001` `sssssss` `0000000......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000100001` `sssssss` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
-Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero, after storing the address of the next instruction in `$rt`.
+Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero, after storing the address of the next instruction in `rt`.
+
+### <a name="op-jp"></a>Jump If Positive (`jp`)
+> `+: label` or `+: imm`  
+> `0b000000101100` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Jumps to the address of a given label or directly to a given address, provided neither the [negative bit](#reg-st) nor zero bit is set.
+
+### <a name="op-jn"></a>Jump If Negative (`jn`)
+> `-: label` or `-: imm`  
+> `0b000000101101` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Jumps to the address of a given label or directly to a given address, provided the [negative bit](#reg-st) is set.
+
+### <a name="op-jz"></a>Jump If Zero (`jz`)
+> `0: label` or `0: imm`  
+> `0b000000101110` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Jumps to the address of a given label or directly to a given address, provided the [zero bit](#reg-st) is set.
+
+### <a name="op-jnz"></a>Jump If Nonzero (`jnz`)
+> `!0: label` or `!0: imm`  
+> `0b000000101111` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Jumps to the address of a given label or directly to a given address, provided the [zero bit](#reg-st) isn't set.
 
 ## <a name="ops-jump-r"></a>Jumps (R-Types)
 
