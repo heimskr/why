@@ -215,10 +215,18 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 ## <a name="reg-st"></a>Status Register
 The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order of significance, these are:
 <ol>
-	<li>`Z` (zero): Whether the last arithmetic result was zero (for `cmp`/`cmpi`, whether the compared values are equal)</li>
-	<li>`N` (negative): Whether the result of the last arithmetic result was negative (for `cmp`/`cmpi`, whether the left value was less than the right value)</li>
-	<li>`C` (carry): Whether the result of an addition was truncated. (Currently not implemented for subtraction.)</li>
-	<li>`O` (overflow): Whether the addition of two positive signed numbers had a negative result due to overflow.</li>
+	<li><code>Z</code> (zero):
+		Whether the last arithmetic result was zero (for `cmp`/`cmpi`, whether the compared values are equal)
+	</li>
+	<li><code>N</code> (negative):
+		Whether the result of the last arithmetic result was negative (for `cmp`/`cmpi`, whether the left value was less than the right value)
+	</li>
+	<li><code>C</code> (carry):
+		Whether the result of an addition was truncated. (Currently not implemented for subtraction.)
+	</li>
+	<li><code>O</code> (overflow):
+		Whether the addition of two positive signed numbers had a negative result due to overflow.
+	</li>
 </ol>
 
 These status numbers are used in conditional branches, but they can also be accessed by programs. Writing to the `$st` register is possible, but strange behavior may occur as a result.
