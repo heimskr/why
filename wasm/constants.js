@@ -181,7 +181,7 @@ exports.FUNCTS = {
 	lnot:  0b000000001011,
 	lor:   0b000000001100,
 	lxnor: 0b000000001101,
-	lxor:  0b000000001110
+	lxor:  0b000000001110,
 };
 
 exports.REGISTER_OFFSETS = {
