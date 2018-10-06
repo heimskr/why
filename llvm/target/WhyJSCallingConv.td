@@ -9,3 +9,4 @@ def CC_WhyJS : CallingConv<[
 	CCIfType<[i64], CCAssignToStack<8, 8>>
 ]>;
 
+def CC_Save : CalleeSavedRegs<(add (sequence "S%x", 22, 0))>;
