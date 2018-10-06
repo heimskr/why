@@ -17,6 +17,7 @@
 #define JRS() reg_t rs = wvm_j_rs(instruction);
 #define JADDR() imm_t addr = wvm_j_addr(instruction);
 #define JREGS() JRS(); JADDR();
+#define JLINK() char link = wvm_j_link(instruction);
 
 #define INC() wvm_increment_pc();
 
@@ -90,8 +91,10 @@ void op_sgei(word instruction);   // 42  I
 
 void op_j(word instruction);      // 15  J
 void op_jc(word instruction);     // 16  J
-void op_jl(word instruction);     // 32  J
-void op_jlc(word instruction);    // 33  J
+void op_jp(word instruction);     // 44  J
+void op_jn(word instruction);     // 45  J
+void op_jz(word instruction);     // 46  J
+void op_jnz(word instruction);    // 47  J
 
 void op_jr(word instruction);     // 17  R 0
 void op_jrc(word instruction);    // 17  R 1
@@ -197,8 +200,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_PRC    31
 #define OP_PRD    31
 #define OP_PRX    31
-#define OP_JL     32
-#define OP_JLC    33
+//                32
+//                33
 #define OP_SLLI   34
 #define OP_SRLI   35
 #define OP_SRAI   36
@@ -208,6 +211,11 @@ void op_nop(word instruction);    // 0   X
 #define OP_LBNI   40
 #define OP_SGI    41
 #define OP_SGEI   42
+#define OP_CMPI   43
+#define OP_JP     44
+#define OP_JN     45
+#define OP_JZ     46
+#define OP_JNZ    47
 
 #define OPS_MATH   1
 #define OPS_RLOGIC 2

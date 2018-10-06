@@ -148,8 +148,6 @@ op_fn wvm_get_fn(word instruction) {
 				case FUNCT_XN_SEND:    return op_xn_send;
 				case FUNCT_XN_RECV:    return op_xn_recv;
 			}
-		case OP_JL:   return op_jl;
-		case OP_JLC:  return op_jlc;
 		case OP_SLLI: return op_slli;
 		case OP_SRLI: return op_srli;
 		case OP_SRAI: return op_srai;
@@ -281,4 +279,13 @@ char wvm_j_flags(word instruction) {
  */
 imm_t wvm_j_addr(word instruction) {
 	return instruction & 0xffffffff;
+}
+
+/**
+ * Returns the link bit of a J-type instruction.
+ * @param instruction A J-type instruction.
+ * @return A link bit.
+ */
+char wvm_j_link(word instruction) {
+	return (instruction >> 44) & 1;
 }

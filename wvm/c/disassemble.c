@@ -277,12 +277,29 @@ void wvm_disassemble_j(char *str, word instruction) {
 	opcode_t opcode = wvm_get_opcode(instruction);
 	reg_t rs = wvm_j_rs(instruction);
 	imm_t addr = wvm_j_addr(instruction);
+	char link = wvm_j_link(instruction);
 	char *srs = wvm_decode_reg(rs);
 	sprintf(str, "%s:", ANSI_DIM);
 
-	if (opcode == OP_JL || opcode == OP_JLC)
+	if (link)
 		sprintf(str, "%s:", str);
+
+	switch (opcode) {
+		case OP_JP:
+			sprintf(str, "+%s", str);
+			break;
+		case OP_JN:
+			sprintf(str, "-%s", str);
+			break;
+		case OP_JZ:
+			sprintf(str, "0%s", str);
+			break;
+		case OP_JNZ:
+			sprintf(str, "!0%s", str);
+			break;
+	}
+
 	sprintf(str + strlen(str), " %s%d%s", COLOR_IMM, addr, ANSI_RESET);
-	if (opcode == OP_JC || opcode == OP_JLC)
+	if (opcode == OP_JC)
 		sprintf(str + strlen(str), " %sif%s %s$%s%s", COLOR_IF, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
 }

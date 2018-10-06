@@ -28,5 +28,6 @@ imm_t wvm_i_imm(word instruction);
 reg_t wvm_j_rs(word instruction);
 char wvm_j_flags(word instruction);
 imm_t wvm_j_addr(word instruction);
+char wvm_j_link(word instruction);
 
 #endif

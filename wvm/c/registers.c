@@ -103,7 +103,7 @@ char * wvm_decode_reg(reg_t id) {
 		case 98: return "kd";
 		case 99: return "ke";
 		case 100: return "kf";
-		case 101: return "k10";
+		case 101: return "st";
 		case 102: return "m0";
 		case 103: return "m1";
 		case 104: return "m2";

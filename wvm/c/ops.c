@@ -328,26 +328,18 @@ void op_sgei(word instruction) {
 
 void op_j(word instruction) {
 	JADDR();
+	JLINK();
+	if (link)
+		wvm_link();
 	wvm_jump(addr);
 }
 
 void op_jc(word instruction) {
 	JREGS();
-	if (rsv)
-		wvm_jump(addr);
-	else INC();
-}
-
-void op_jl(word instruction) {
-	JADDR();
-	wvm_link();
-	wvm_jump(addr);
-}
-
-void op_jlc(word instruction) {
-	JREGS();
+	JLINK();
 	if (rsv) {
-		wvm_link();
+		if (link)
+			wvm_link();
 		wvm_jump(addr);
 	} else INC();
 }

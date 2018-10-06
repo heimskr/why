@@ -407,7 +407,7 @@ class Parser {
 		if (op == "lb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd)} /b`;
 		if (op == "sb")    return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "spush") return `${chalk.dim("[")} ${chalk.yellow(rs)}`;
-		if (op == "spop")  return `${chalk.dim("]")} ${chalk.yellow(rd)}`;
+		if (op == "spop")  return `\xa0\xa0${chalk.yellow(rd)} ${chalk.dim("]")}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 

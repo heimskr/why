@@ -105,7 +105,7 @@ char * wvm_decode_reg(reg_t id);
 #define R_KD 98
 #define R_KE 99
 #define R_KF 100
-#define R_K10 101
+#define R_ST 101
 #define R_M0 102
 #define R_M1 103
 #define R_M2 104
