@@ -281,7 +281,7 @@ Like much of this instruction set, the formatting for instructions is copied fro
 ## <a name="format-r"></a>R-Type Instructions
 R-type instructions perform computations with multiple registers.
 
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–18 (13) | 17–14 (4)  | 13 (2)       | 11–0 (12) |
+| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–18 (13) | 17–14 (4)  | 13-12 (2)    | 11–0 (12) |
 |------------:|:-----------:|:---------:|:---------:|:---------:|:----------:|:----------:|:------------:|:---------:|
 | **Purpose** | Opcode      | rt        | rs        | rd        | Unused     | Conditions | Linker flags | Function  |
 
@@ -671,14 +671,20 @@ If the value in `rs` is less than or equal to `imm` (treating both as unsigned v
 ### <a name="op-j"></a>Jump (`j`)
 > `: label` or `: imm`  
 > `:: label` or `:: imm` (linking variant)  
-> `000000001111` `0000000` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000001111` `0000000` `0000000` `cccc` `..` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+
+Supports conditions:
+> `+:`/`+::`: jump if positive  
+> `-:`/`-::`: jump if negative  
+> `0:`/`0::`: jump if zero  
+> `!0:`/`!0::`: jump if nonzero  
 
 Jumps to the address of a given label or directly to a given address.
 
 ### <a name="op-jc"></a>Jump Conditional (`jc`)
 > `: label if $rs` or `: imm if $rs`  
 > `:: label if $rs` or `:: imm if $rs` (linking variant)  
-> `000000010000` `sssssss` `0000000` `......` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000010000` `sssssss` `0000000` `cccc` `..` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
@@ -686,19 +692,21 @@ Jumps to the address of a given label or directly to a given address, provided t
 
 ### <a name="op-jr"></a>Jump to Register (`jr`)
 > `: $rd`  
-> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `......` `000000000000`
+> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `......` `000000000000`  
+> Supports conditions
 
 Jumps to the address stored in `rd`.
 
 ### <a name="op-jrc"></a>Jump to Register Conditional (`jrc`)
 > `: $rd if $rs`  
-> `000000010001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000001`
+> `000000010001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000001`  
 
 Jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
 
 ### <a name="op-jrl"></a>Jump to Register and Link (`jrl`)
 > `:: $rd`  
-> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `......` `000000000010`
+> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `......` `000000000010`  
+> Supports conditions
 
 Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`.
 

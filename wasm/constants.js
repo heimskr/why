@@ -229,3 +229,11 @@ exports.FLAGS = {
 	UNKNOWN_SYMBOL: 2, // During compilation, indicates that the imm/addr is the ID of a symbol that wasn't defined in the program's source code.
 	SYMBOL_ID: 3,      // During linking, indicates that the imm/addr of the instruction has been replaced with the corresponding label ID.
 };
+
+exports.CONDITIONS = {
+	[null]: 0,
+	p:  0b1000,
+	n:  0b1001,
+	z:  0b1010,
+	zn: 0b1011,
+};
