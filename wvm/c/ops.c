@@ -13,13 +13,18 @@ void op_nop(word instruction) {
 
 void op_add(word instruction) {
 	RREGS();
-	rdv = rsv + rtv;
+	wvm_alu_flags_update(rdv = rsv + rtv);
+	if (rdv < rsv) {
+		FLAG_O_SET(1);
+	}
+
 	INC();
 }
 
 void op_sub(word instruction) {
 	RREGS();
-	rdv = rsv - rtv;
+	wvm_alu_flags_update(rdv = rsv - rtv);
+	INC();
 }
 
 void op_mult(word instruction) {
@@ -28,9 +33,13 @@ void op_mult(word instruction) {
 }
 
 void op_addu(word instruction) {
-	// TODO: signed arithmetic and unsigned arithmetic are pretty much the same?
-	// Unless they're not? It's 3:51 AM and I'm tired.
-	op_add(instruction);
+	RREGS();
+	wvm_alu_flags_update(rdv = rsv + rtv);
+	if (rdv < rsv) {
+		FLAG_C_SET(1);
+	}
+
+	INC();
 }
 
 void op_subu(word instruction) {
@@ -43,123 +52,121 @@ void op_multu(word instruction) {
 
 void op_mod(word instruction) {
 	RREGS();
-	rdv = rsv % rtv;
+	wvm_alu_flags_update(rdv = rsv % rtv);
 	INC();
 }
 
 void op_sll(word instruction) {
 	RREGS();
-	rdv = rsv << rtv;
+	wvm_alu_flags_update(rdv = rsv << rtv);
 	INC();
 }
 
 void op_srl(word instruction) {
 	RREGS();
-	rdv = ((uword) rsv) >> (uword) rtv;
+	wvm_alu_flags_update(rdv = ((uword) rsv) >> (uword) rtv);
 	INC();
 }
 
 void op_sra(word instruction) {
 	RREGS();
-	rdv = rsv >> rtv;
+	wvm_alu_flags_update(rdv = rsv >> rtv);
 	INC();
 }
 
 void op_and(word instruction) {
 	RREGS();
-	rdv = rsv & rtv;
+	wvm_alu_flags_update(rdv = rsv & rtv);
 	INC();
 }
 
 void op_nand(word instruction) {
 	RREGS();
-	rdv = ~(rsv & rtv);
+	wvm_alu_flags_update(rdv = ~(rsv & rtv));
 	INC();
 }
 
 void op_nor(word instruction) {
 	RREGS();
-	rdv = ~(rsv | rtv);
+	wvm_alu_flags_update(rdv = ~(rsv | rtv));
 	INC();
 }
 
 void op_not(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-	rdv = ~rsv;
+	RREGS();
+	wvm_alu_flags_update(rdv = ~rsv);
 	INC();
 }
 
 void op_or(word instruction) {
 	RREGS();
-	rdv = rsv | rtv;
+	wvm_alu_flags_update(rdv = rsv | rtv);
 	INC();
 }
 
 void op_xnor(word instruction) {
 	RREGS();
-	rdv = ~(rsv ^ rtv);
+	wvm_alu_flags_update(rdv = ~(rsv ^ rtv));
 	INC();
 }
 
 void op_xor(word instruction) {
 	RREGS();
-	rdv = rsv ^ rtv;
+	wvm_alu_flags_update(rdv = rsv ^ rtv);
 	INC();
 }
 
 void op_land(word instruction) {
 	RREGS();
-	rdv = rsv && rtv;
+	wvm_alu_flags_update(rdv = rsv && rtv);
 	INC();
 }
 
 void op_lnand(word instruction) {
 	RREGS();
-	rdv = !(rsv && rtv);
+	wvm_alu_flags_update(rdv = !(rsv && rtv));
 	INC();
 }
 
 void op_lnor(word instruction) {
 	RREGS();
-	rdv = !(rsv || rtv);
+	wvm_alu_flags_update(rdv = !(rsv || rtv));
 	INC();
 }
 
 void op_lnot(word instruction) {
-	reg_t rs = wvm_r_rs(instruction);
-	reg_t rd = wvm_r_rd(instruction);
-	rdv = !rsv;
+	RREGS();
+	wvm_alu_flags_update(rdv = !rsv);
 	INC();
 }
 
 void op_lor(word instruction) {
 	RREGS();
-	rdv = rsv || rtv;
+	wvm_alu_flags_update(rdv = rsv || rtv);
 	INC();
 }
 
 void op_lxnor(word instruction) {
 	RREGS();
-	rdv = !(rsv ^ rtv);
+	wvm_alu_flags_update(rdv = !(rsv ^ rtv));
 	INC();
 }
 
 void op_lxor(word instruction) {
 	RREGS();
-	rdv = !!(rsv ^ rtv);
+	wvm_alu_flags_update(rdv = !!(rsv ^ rtv));
 	INC();
 }
 
 void op_addi(word instruction) {
 	IREGS();
-	rdv = rsv + (word) imm;
+	wvm_alu_flags_update(rdv = rsv + (word) imm);
 	INC();
 }
 
 void op_subi(word instruction) {
 	IREGS();
-	rdv = rsv - (word) imm;
+	wvm_alu_flags_update(rdv = rsv - (word) imm);
 	INC();
 }
 
@@ -171,13 +178,13 @@ void op_multi(word instruction) {
 void op_addui(word instruction) {
 	IREGS();
 	// Does this do anything?
-	rdv = ((uword) rsv) + (uword) imm;
+	wvm_alu_flags_update(rdv = ((uword) rsv) + (uword) imm);
 	INC();
 }
 
 void op_subui(word instruction) {
 	IREGS();
-	rdv = ((uword) rsv) - (uword) imm;
+	wvm_alu_flags_update(rdv = ((uword) rsv) - (uword) imm);
 	INC();
 }
 
@@ -188,61 +195,61 @@ void op_multui(word instruction) {
 
 void op_slli(word instruction) {
 	IREGS();
-	rdv = rsv << (word) imm;
+	wvm_alu_flags_update(rdv = rsv << (word) imm);
 	INC();
 }
 
 void op_srli(word instruction) {
 	IREGS();
-	rdv = ((uword) rsv) >> (uword) imm;
+	wvm_alu_flags_update(rdv = ((uword) rsv) >> (uword) imm);
 	INC();
 }
 
 void op_srai(word instruction) {
 	IREGS();
-	rdv = rsv >> (word) imm;
+	wvm_alu_flags_update(rdv = rsv >> (word) imm);
 	INC();
 }
 
 void op_modi(word instruction) {
 	IREGS();
-	rdv = rsv % (word) imm;
+	wvm_alu_flags_update(rdv = rsv % (word) imm);
 	INC();
 }
 
 void op_andi(word instruction) {
 	IREGS();
-	rdv = rsv & (word) imm;
+	wvm_alu_flags_update(rdv = rsv & (word) imm);
 	INC();
 }
 
 void op_nandi(word instruction) {
 	IREGS();
-	rdv = ~(rsv & (word) imm);
+	wvm_alu_flags_update(rdv = ~(rsv & (word) imm));
 	INC();
 }
 
 void op_nori(word instruction) {
 	IREGS();
-	rdv = ~(rsv | (word) imm);
+	wvm_alu_flags_update(rdv = ~(rsv | (word) imm));
 	INC();
 }
 
 void op_ori(word instruction) {
 	IREGS();
-	rdv = rsv | (word) imm;
+	wvm_alu_flags_update(rdv = rsv | (word) imm);
 	INC();
 }
 
 void op_xnori(word instruction) {
 	IREGS();
-	rdv = ~(rsv ^ (word) imm);
+	wvm_alu_flags_update(rdv = ~(rsv ^ (word) imm));
 	INC();
 }
 
 void op_xori(word instruction) {
 	IREGS();
-	rdv = rsv ^ (word) imm;
+	wvm_alu_flags_update(rdv = rsv ^ (word) imm);
 	INC();
 }
 
@@ -327,16 +334,14 @@ void op_sgei(word instruction) {
 }
 
 void op_j(word instruction) {
-	JADDR();
-	JLINK();
+	JADDR(); JLINK();
 	if (link)
 		wvm_link();
 	wvm_jump(addr);
 }
 
 void op_jc(word instruction) {
-	JREGS();
-	JLINK();
+	JREGS(); JLINK();
 	if (rsv) {
 		if (link)
 			wvm_link();

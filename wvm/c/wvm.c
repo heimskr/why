@@ -167,6 +167,19 @@ bool wvm_tick() {
 	return alive;
 }
 
+void wvm_alu_flags_clear() {
+	registers[R_ST] &= ~0b1111;
+}
+
+void wvm_alu_flags_update(word n) {
+	wvm_alu_flags_clear();
+	if (n == 0) {
+		FLAG_Z_SET(1);
+	} else if (n < 0) {
+		FLAG_N_SET(1);
+	}
+}
+
 /**
  * Prints all the memory to the console.
  */

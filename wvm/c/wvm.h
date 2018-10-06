@@ -7,6 +7,14 @@
 #include <string.h>
 
 #define DIE(s) { fprintf(stderr, s); exit(1); }
+#define FLAG_Z (registers[R_ST] & 0b0001)
+#define FLAG_N (registers[R_ST] & 0b0010)
+#define FLAG_C (registers[R_ST] & 0b0100)
+#define FLAG_O (registers[R_ST] & 0b1000)
+#define FLAG_Z_SET(n) registers[R_ST] = (registers[R_ST] & ~0b0001) | n
+#define FLAG_N_SET(n) registers[R_ST] = (registers[R_ST] & ~0b0010) | (n << 1)
+#define FLAG_C_SET(n) registers[R_ST] = (registers[R_ST] & ~0b0100) | (n << 2)
+#define FLAG_O_SET(n) registers[R_ST] = (registers[R_ST] & ~0b1000) | (n << 3)
 
 typedef int64_t word;
 typedef uint64_t uword;
@@ -25,6 +33,8 @@ void wvm_jump(word addr);
 void wvm_link();
 void wvm_increment_pc();
 bool wvm_tick();
+void wvm_alu_flags_clear();
+void wvm_alu_flags_update(word n);
 void wvm_print_memory();
 
 byte *memory;
