@@ -232,6 +232,7 @@ exports.FLAGS = {
 
 exports.CONDITIONS = {
 	[null]: 0,
+	"": 0,
 	p:  0b1000,
 	n:  0b1001,
 	z:  0b1010,

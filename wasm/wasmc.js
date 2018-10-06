@@ -17,7 +17,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, TRAPS} = require("./constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, TRAPS, CONDITIONS} = require("./constants.js");
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
@@ -524,13 +524,13 @@ class WASMC {
 		const [op, ...args] = instruction;
 		const {flags} = instruction;
 		if (op == "trap") {
-			return WASMC.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags);
+			return WASMC.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags, null);
 		} else if (R_TYPES.includes(OPCODES[op])) {
-			return WASMC.rType(OPCODES[op], ...args.map(WASMC.convertRegister), FUNCTS[op], flags);
+			return WASMC.rType(OPCODES[op], ...args.slice(0, 3).map(WASMC.convertRegister), FUNCTS[op], flags, args[3]);
 		} else if (I_TYPES.includes(OPCODES[op])) {
-			return WASMC.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags);
+			return WASMC.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags, null);
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			return WASMC.jType(OPCODES[op], this.convertValue(args[0]), args[1], args[2], flags);
+			return WASMC.jType(OPCODES[op], this.convertValue(args[0]), args[1], args[2], flags, args[3]);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
@@ -540,26 +540,26 @@ class WASMC {
 	}
 
 	/**
-	 * Compiles an object representaiton of an instruction into a Long containing the bytecode.
+	 * Compiles an object representation of an instruction into a Long containing the bytecode.
 	 * @param {Object} instruction - An uncompiled instruction.
 	 * @return {Long} The bytecode representation of the instruction.
 	 */
 	static unparseInstruction(instruction) {
 		const {op, type} = instruction;
 		if (type == "r") {
-			const {opcode, rt, rs, rd, funct, flags} = instruction;
-			return WASMC.rType(opcode, rt, rs, rd, funct, flags);
+			const {opcode, rt, rs, rd, funct, flags, conditions} = instruction;
+			return WASMC.rType(opcode, rt, rs, rd, funct, flags, conditions);
 		} else if (type == "i") {
-			const {opcode, rs, rd, imm, flags} = instruction;
-			return WASMC.iType(opcode, rs, rd, imm, flags);
+			const {opcode, rs, rd, imm, flags, conditions} = instruction;
+			return WASMC.iType(opcode, rs, rd, imm, flags, conditions);
 		} else if (type == "j") {
-			const {opcode, rs, addr, link, flags} = instruction;
-			return WASMC.jType(opcode, rs, addr, link, flags);
+			const {opcode, rs, addr, link, flags, conditions} = instruction;
+			return WASMC.jType(opcode, rs, addr, link, flags, conditions);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
 			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
-			return Long.fromString("deadc0de", true, 16);
+			return Long.fromString("6666deadc0de6666", true, 16);
 		}
 	}
 
@@ -593,11 +593,12 @@ class WASMC {
 	 * @param {number} rs     The instruction's primary source register.
 	 * @param {number} rd     The instruction's destination register.
 	 * @param {number} func   The instruction's function field.
-	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
-	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
+	 * @param {number}  [flags=0]    The linker flags to embed in the instruction.
+	 * @param {string}  [conditions] The conditions for the instruction.
+	 * @param {boolean} [warn=true]  Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static rType(opcode, rt, rs, rd, func, flags=0, warn=true) {
+	static rType(opcode, rt, rs, rd, func, flags=0, conditions=null, warn=true) {
 		if (!R_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid r-type`);
 		if (warn) {
 			if (rt < 0 || 127 < rt) WASMC.warn(`rt (${rt}) not within the valid range (0–127)`);
@@ -606,7 +607,7 @@ class WASMC {
 			if (func < 0 || 4095 < func) WASMC.warn(`func (${func}) not within the valid range (0–4095)`);
 		}
 
-		let lower = func | (flags << 12) | ((rd & 1) << 31);
+		let lower = func | (this.ignoreFlag? 0 : flags << 12) | (CONDITIONS[conditions] << 14) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
@@ -619,11 +620,12 @@ class WASMC {
 	 * @param {number} rs     The instruction's source register.
 	 * @param {number} rd     The instruction's destination register.
 	 * @param {number} imm    The instruction's immediate value.
-	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
-	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
+	 * @param {number}  [flags=0]    The linker flags to embed in the instruction.
+	 * @param {string}  [conditions] The conditions for the instruction.
+	 * @param {boolean} [warn=true]  Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static iType(opcode, rs, rd, imm, flags=0, warn=true) {
+	static iType(opcode, rs, rd, imm, flags=0, conditions=null, warn=true) {
 		if (!I_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid i-type`);
 		if (warn) {
 			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
@@ -632,7 +634,7 @@ class WASMC {
 		}
 
 		let lower = imm;
-		let upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) | (opcode << 20);
+		let upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) | (CONDITIONS[conditions] << 16) | (opcode << 20);
 		let long = Long.fromBits(lower, upper);
 
 		return long;
@@ -644,11 +646,12 @@ class WASMC {
 	 * @param {number} rs     The instruction's source register.
 	 * @param {number} addr   The instruction's address field.
 	 * @param {boolean} link  The instruction's link bit.
-	 * @param {number}  [flags=0]   The linker flags to embed in the instruction.
-	 * @param {boolean} [warn=true] Whether to enable warnings for invalid ranges.
+	 * @param {number}  [flags=0]    The linker flags to embed in the instruction.
+	 * @param {string}  [conditions] The conditions for the instruction.
+	 * @param {boolean} [warn=true]  Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static jType(opcode, rs, addr, link=false, flags=0, warn=true) {
+	static jType(opcode, rs, addr, link=false, flags=0, conditions=null, warn=true) {
 		if (!J_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid j-type`);
 		if (warn) {
 			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
@@ -656,7 +659,7 @@ class WASMC {
 		}
 
 		let lower = addr;
-		let upper = (this.ignoreFlags? 0 : flags) | (+link << 12) | (rs << 13) | (opcode << 20);
+		let upper = (this.ignoreFlags? 0 : flags) | (CONDITIONS[conditions] << 2) | (+link << 12) | (rs << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
 		return long;

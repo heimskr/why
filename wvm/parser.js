@@ -242,17 +242,19 @@ class Parser {
 				rs: get(19, 7),
 				rd: get(26, 7),
 				funct,
-				flags: get(49, 3),
+				conditions: get(46, 4),
+				flags: get(50, 2),
 				type: "r"
 			};
 		} else if (type == "i") {
 			return {
 				op: SEDOCPO[opcode][0],
 				opcode,
+				conditions: get(12, 4),
+				flags: get(16, 2),
 				rs: get(18, 7),
 				rd: get(25, 7),
 				imm: Long.fromString(instruction.substr(32), false, 2).toInt(),
-				flags: get(15, 3),
 				type: "i"
 			};
 		} else if (type == "j") {
@@ -261,8 +263,9 @@ class Parser {
 				opcode,
 				rs: get(12, 7),
 				link: get(19, 1),
-				addr: get(32),
-				flags: get(29, 3),
+				conditions: get(26, 4),
+				flags: get(30, 2),
+				addr: Long.fromString(instruction.substr(32), false, 2).toInt(),
 				type: "j"
 			};
 		} else if (opcode == 0) {
@@ -290,7 +293,7 @@ class Parser {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
 
-		const {opcode, flags, type, funct, rt, rs, rd, imm, addr, link} = Parser.parseInstruction(instruction);
+		const {opcode, flags, type, funct, rt, rs, rd, imm, addr, link, conditions} = Parser.parseInstruction(instruction);
 
 		if (opcode == 0) {
 			return "<>";
@@ -299,18 +302,18 @@ class Parser {
 		const srs = Parser.getRegister(rs);
 
 		if (type == "j") {
-			return Parser.formatJ(SEDOCPO[opcode][0], srs, addr, link, flags, symbols);
+			return Parser.formatJ(SEDOCPO[opcode][0], srs, addr, link, flags, conditions, symbols);
 		}
 
 		const srd = Parser.getRegister(rd);
 
 		if (type == "r") {
 			const srt = Parser.getRegister(rt);
-			return Parser.formatR(SEDOCPO[opcode].filter((op) => op == "trap" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags);
+			return Parser.formatR(SEDOCPO[opcode].filter((op) => op == "trap" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags, conditions);
 		}
 		
 		if (type == "i") {
-			return Parser.formatI(SEDOCPO[opcode][0], srs, srd, imm, flags, symbols);
+			return Parser.formatI(SEDOCPO[opcode][0], srs, srd, imm, flags, conditions, symbols);
 		}
 
 		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
@@ -355,9 +358,10 @@ class Parser {
 	 * @param  {string} rd The name of the `rt` register.
 	 * @param  {number} funct The ID of the function.
 	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatR(op, rt, rs, rd, funct, flags=0) {
+	static formatR(op, rt, rs, rd, funct, flags=0, conditions=null) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;
 			if (rt == rd) return `${chalk.yellow(rt)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rs)}`;
@@ -418,10 +422,11 @@ class Parser {
 	 * @param  {string} rd The name of the `rt` register.
 	 * @param  {number} imm An immediate value.
 	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatI(op, rs, rd, imm, flags=0, symbols={}) {
+	static formatI(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
 		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;
 
 		const mathi = (increment, opequals, op) => {
@@ -474,18 +479,16 @@ class Parser {
 	 * @param  {number} addr An immediate value.
 	 * @param  {boolean} link Whether the link bit is set.
 	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatJ(op, rs, addr, link, flags=0, symbols={}) {
+	static formatJ(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
 		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
 		const sym = link? "::" : ":";
-		if (op == "j")   return `${chalk.dim(sym)} ${target}`;
+		const cond = {"p": "+", "n": "-", "z": "0", "nz": "!0"}[conditions] || "";
+		if (op == "j")   return `${chalk.dim(cond + sym)} ${target}`;
 		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
-		if (op == "jp")  return `${chalk.dim("+"  + sym)} ${target}`;
-		if (op == "jn")  return `${chalk.dim("-"  + sym)} ${target}`;
-		if (op == "jz")  return `${chalk.dim("0"  + sym)} ${target}`;
-		if (op == "jnz") return `${chalk.dim("!0" + sym)} ${target}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 

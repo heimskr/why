@@ -263,7 +263,7 @@ $t0 -> $t1
 
 @ret
 &push -> $r
-ret
+!ret
 
 @push
 [ $t0 $t1 $s0 $s1
