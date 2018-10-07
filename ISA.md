@@ -677,7 +677,7 @@ Supports conditions:
 > `+:`/`+::`: jump if positive  
 > `-:`/`-::`: jump if negative  
 > `0:`/`0::`: jump if zero  
-> `!0:`/`!0::`: jump if nonzero  
+> `*:`/`*::`: jump if nonzero  
 
 Jumps to the address of a given label or directly to a given address.
 
