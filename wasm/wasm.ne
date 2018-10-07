@@ -44,6 +44,9 @@ const compileCode = (statements) => {
 
 	return out;
 };
+
+const subify = (x) => Object.assign(x, {inSubroutine: true});
+
 %}
 
 @builtin "postprocessors.ne"
@@ -99,8 +102,8 @@ subroutine		-> "sub" __ var _ "(" _ sub_saved _ ")" _ "{" _ subroutine_code:* _ 
 															{% d => compileSubroutine(d[2], d[6], filter(d[12])) %}
 				 | "sub" __ var _ "(" _ ")" _ "{" _ subroutine_code:* _ "}"
 															{% d => compileSubroutine(d[2], [], filter(d[10])) %}
-subroutine_code -> _ op										{% d => [null, ...d[1][0]] %}
-				 | _ label (_ lineend):* _ op				{% d => [d[1], ...d[4][0]] %}
+subroutine_code -> _ op										{% d => subify([null, ...d[1][0]]) %}
+				 | _ label (_ lineend):* _ op				{% d => subify([d[1], ...d[4][0]]) %}
 				 | _ sep									{% d => null %}
 				 | ___ "!done"								{% d => [null, Symbol.for("done")] %}
 				 | _ label (lineend | __):+ "!done"			{% d => [d[1], Symbol.for("done")] %}

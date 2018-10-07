@@ -345,8 +345,16 @@ class WASMC {
 					throw new Error(`Too many arguments given to subroutine (given ${vals.length}, maximum is ${MAX_ARGS})`);
 				}
 
-				// Push the current return address and the current values in $a_0...$a_{n-1} (in that order) to the stack.
-				addPush([_RA, ..._.range(0, vals.length).map((n) => _A[n])], label);
+				
+				const currentValues = _.range(0, vals.length).map((n) => _A[n]);
+				if (item.inSubroutine) {
+					currentValues.unshift(_RA);
+				}
+
+				if (currentValues.length) {
+					// Push the current return address and the current values in $a_0...$a_{n-1} (in that order) to the stack.
+					addPush(currentValues, label);
+				}
 
 				// For each argument in the subroutine call, set its corresponding
 				// argument register based on the type of the argument. (An argument
@@ -371,8 +379,10 @@ class WASMC {
 				// Store the program counter in $rt and jump to the subroutine.
 				add([null, "j", _0, ["label", name], true]);
 
-				// Now that we've returned from the subroutine, pop the values we pushed earlier, but in reverse order.
-				addPop([..._.range(vals.length - 1, -1, -1).map((n) => _A[n]), _RA], null);
+				if (currentValues.length) {
+					// Now that we've returned from the subroutine, pop the values we pushed earlier, but in reverse order.
+					addPop(currentValues.reverse(), null);
+				}
 			} else if (op == "trap") {
 				const funct = args[3];
 				if (funct == TRAPS.prc) {
