@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# It's a shame UCSC's timeshare doesn't allow pubkey authentication, honestly.
+export TARGET="ktamkun@unix.ucsc.edu:public_html/whyjs"
+
+cd `dirname $0`/wvm/dist
+
+echo -e "\x1b[2m...\x1b[0m Uploading files."
+
+sftp -q $TARGET <<EOF
+put app.css
+put app.css.map
+put app.js
+put app.js.map
+put index.html
+exit
+EOF
+
+FAILED=$?
+NOPE="\x1b[1m[\x1b[31m✘\x1b[0m\x1b[1m]\x1b[0m"
+YEP="\x1b[1m[\x1b[32m✔\x1b[0m\x1b[1m]\x1b[0m"
+
+if [ $FAILED -ne 0 ]; then
+	echo -e "$NOPE Upload failed."
+else
+	echo -e "$YEP Upload complete."
+fi
