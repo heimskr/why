@@ -1,3 +1,4 @@
 # why.js
 
-Writing web applications is too easy. What if you could replace JS with an obscure, ad-hoc assembly language for a VM emulating an instruction set that doesn't exist? Sounds great. Standard operations you'd find on most instruction sets are available, and interaction with the browser is done via interrupts.
+I created this as a learning exercise while taking CMPE 13. Originally created as a joke to make web development harder,
+it changed into a project to create a general-purpose ISA, and I've written VM implementations in both C and JavaScript.
