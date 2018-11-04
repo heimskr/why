@@ -362,7 +362,7 @@ class Parser {
 	 * @param  {string} [conditions] The instruction conditions.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatR(op, rt, rs, rd, funct, flags=0, conditions=null) {
+	static formatR_w(op, rt, rs, rd, funct, flags=0, conditions=null) {
 		const alt_op = (oper) => {
 			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;
 			if (rt == rd) return `${chalk.yellow(rt)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rs)}`;
@@ -415,6 +415,52 @@ class Parser {
 		if (op == "spop")  return `\xa0\xa0${chalk.yellow(rd)} ${chalk.dim("]")}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
+
+	/**
+	 * Converts an R-type instruction to its mnemonic representation.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rt The name of the `rt` register.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {string} rd The name of the `rt` register.
+	 * @param  {number} funct The ID of the function.
+	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
+	 * @return {string} A line of wasm source.
+	 */
+	static formatR_m(op, rt, rs, rd, funct, flags=0, conditions=null) {
+		let base;
+		
+		if (op == "trap") {
+			base = chalk.cyan(Object.keys(TRAPS).filter(t => funct == TRAPS[t])[0] || ("trap " + funct));
+		} else {
+			base = chalk.cyan(op);
+		}
+
+		let includeRs = true, includeRt = true;
+		if (op == "trap") {
+			if (funct == TRAPS.halt) {
+				includeRs = includeRt = false;
+			} else if (funct == TRAPS.prd || funct == TRAPS.prc || funct == TRAPS.prx) {
+				includeRt = false;
+			}
+		}
+
+		if (includeRs) {
+			base += " " + chalk.yellow(rs);
+
+			if (includeRt) {
+				base += chalk.dim(",") + " " + chalk.yellow(rt);
+			}
+		}
+		
+		if (rd == "$0") {
+			return base;
+		} else {
+			return `${base} ${chalk.dim("->")} ${rd}`;
+		}
+	}
+
+	static formatR = Parser.formatR_m;
 
 	/**
 	 * Converts an I-type instruction to its original wasm source.

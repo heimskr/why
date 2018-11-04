@@ -278,7 +278,8 @@ let App = window.App = class App {
 					.replace(/#ff0000/g, "#a00")
 					.replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
 					.replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
-					.replace(/^(<<span)([^>]*>)(halt|pr[cdxb]|sleep)( |<)/, ($0, $1, $2, $3, $4) => `${$1} class="has-title" title="${text[$3]}"` + $2 + $3 + $4);
+					.replace(/^(<<span)([^>]*>)(halt|pr[cdxb]|sleep)( |<)/, ($0, $1, $2, $3, $4) => `${$1} class="has-title" title="${text[$3]}"` + $2 + $3 + $4)
+					.replace(/^(<span style="color:#00bfff;")>(\w+)( |<)/, ($0, $1, $2, $3) => $2 in text? `${$1} class="has-title" title="${text[$2]}">` + $2 + $3 : $0);
 			} catch(e) {
 				return `<span class="what">?</span>`;
 			}
