@@ -417,52 +417,6 @@ class Parser {
 	}
 
 	/**
-	 * Converts an R-type instruction to its mnemonic representation.
-	 * @param  {string} op The name of the operation.
-	 * @param  {string} rt The name of the `rt` register.
-	 * @param  {string} rs The name of the `rs` register.
-	 * @param  {string} rd The name of the `rt` register.
-	 * @param  {number} funct The ID of the function.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @return {string} A line of wasm source.
-	 */
-	static formatR_m(op, rt, rs, rd, funct, flags=0, conditions=null) {
-		let base;
-		
-		if (op == "trap") {
-			base = chalk.cyan(Object.keys(TRAPS).filter(t => funct == TRAPS[t])[0] || ("trap " + funct));
-		} else {
-			base = chalk.cyan(op);
-		}
-
-		let includeRs = true, includeRt = true;
-		if (op == "trap") {
-			if (funct == TRAPS.halt) {
-				includeRs = includeRt = false;
-			} else if (funct == TRAPS.prd || funct == TRAPS.prc || funct == TRAPS.prx) {
-				includeRt = false;
-			}
-		}
-
-		if (includeRs) {
-			base += " " + chalk.yellow(rs);
-
-			if (includeRt) {
-				base += chalk.dim(",") + " " + chalk.yellow(rt);
-			}
-		}
-		
-		if (rd == "$0") {
-			return base;
-		} else {
-			return `${base} ${chalk.dim("->")} ${rd}`;
-		}
-	}
-
-	static formatR = Parser.formatR_m;
-
-	/**
 	 * Converts an I-type instruction to its original wasm source.
 	 * @param  {string} op The name of the operation.
 	 * @param  {string} rs The name of the `rs` register.
@@ -473,7 +427,7 @@ class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatI(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
+	static formatI_w(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
 		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;
 
 		const mathi = (increment, opequals, op) => {
@@ -530,7 +484,7 @@ class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatJ(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
+	static formatJ_w(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
 		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
 		const sym = link? "::" : ":";
 		const cond = {"p": "+", "n": "-", "z": "0", "nz": "*"}[conditions] || "";
@@ -538,6 +492,106 @@ class Parser {
 		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
+
+	/**
+	 * Converts an R-type instruction to its mnemonic representation.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rt The name of the `rt` register.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {string} rd The name of the `rt` register.
+	 * @param  {number} funct The ID of the function.
+	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
+	 * @return {string} A mnemonic representation of the instruction.
+	 */
+	static formatR_m(op, rt, rs, rd, funct, flags=0, conditions=null) {
+		let base;
+		
+		if (op == "trap") {
+			base = chalk.cyan(Object.keys(TRAPS).filter(t => funct == TRAPS[t])[0] || ("trap " + funct));
+		} else {
+			base = chalk.cyan(op);
+		}
+
+		let includeRs = true, includeRt = true;
+		if (op == "trap") {
+			if (funct == TRAPS.halt) {
+				includeRs = includeRt = false;
+			} else if (funct == TRAPS.prd || funct == TRAPS.prc || funct == TRAPS.prx) {
+				includeRt = false;
+			}
+		}
+
+		if (includeRs) {
+			base += " " + chalk.yellow(rs);
+
+			if (includeRt) {
+				base += chalk.dim(",") + " " + chalk.yellow(rt);
+			}
+		}
+		
+		if (rd == "$0") {
+			return base;
+		} else {
+			return `${base} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		}
+	}
+
+	/**
+	 * Converts an I-type instruction to its mnemonic representation.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {string} rd The name of the `rt` register.
+	 * @param  {number} imm An immediate value.
+	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
+	 * @param  {SymbolTable} [symbols] A symbol table.
+	 * @return {string} A mnemonic representation of the instruction.
+	 */
+	static formatI_m(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
+		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;
+		
+		let base = `${chalk.cyan(op)} `;
+		
+		if (rs != "$0") {
+			base += `${chalk.yellow(rs) + chalk.dim(",")} `;
+		}
+		
+		base += chalk.magenta(target);
+		
+		if (rd == "$0") {
+			return base;
+		} else {
+			return base + `${chalk.dim(",")} ${chalk.yellow(rd)}`;
+		}
+	}
+
+	/**
+	 * Converts a J-type instruction to its mnemonic representation.
+	 * @param  {string} op The name of the operation.
+	 * @param  {string} rs The name of the `rs` register.
+	 * @param  {number} addr An immediate value.
+	 * @param  {boolean} link Whether the link bit is set.
+	 * @param  {number} [flags=0] The assembler flags.
+	 * @param  {string} [conditions] The instruction conditions.
+	 * @param  {SymbolTable} [symbols] A symbol table.
+	 * @return {string} A mnemonic representation of the instruction.
+	 */
+	static formatJ_m(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
+		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
+
+		
+		const cond = {"p": "+", "n": "-", "z": "0", "nz": "*"}[conditions] || "";
+		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs)}, ${target}`;
+
+		if (op == "j")   return `${chalk.dim(cond + sym)} ${target}`;
+		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
+		return `(unknown J-type: ${Parser.colorOper(op)})`;
+	}
+
+	static formatR = Parser.formatR_m;
+	static formatI = Parser.formatI_m;
+	static formatJ = Parser.formatJ_m;
 
 	/**
 	 * Converts a trap instruction to its original wasm source.
