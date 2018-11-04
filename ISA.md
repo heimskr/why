@@ -752,7 +752,7 @@ Loads the byte stored at the memory address pointed to by `rs` into `rd`.
 > `$rs -> [$rd] /b`  
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000101`
 
-Stores the byte of `rs` into the memory address pointed to by `rd`.
+Stores the lowest 8 bits of `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-spush"></a>Stack Push (`spush`)
 > `[ $rs`  
@@ -780,7 +780,7 @@ Loads the word beginning at address `imm` into `rd`.
 > `$rs -> [imm]`  
 > `000000010100` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Stores the value of `rs` into memory at address `imm`.
+Stores the value of `rs` into memory beginning at address `imm`.
 
 ### <a name="op-lbi"></a>Load Byte Immediate (`lbi`)
 > `[imm] -> $rd /b`  
@@ -792,19 +792,19 @@ Loads the byte at address `imm` into `rd`.
 > `$rs -> [imm] /b`  
 > `000000100110` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Copies the byte stored at the memory address pointed to by `rs` into memory at address `imm`.
+Stores the lowest 8 bits of `rs` into memory at address `imm`.
 
 ### <a name="op-lni"></a>Load Indirect Immediate (`lni`)
 > `[imm] -> [$rd]`  
 > `000000100111` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Copies the word stored at the memory at address `imm` into the memory address pointed to by `rd`.
+Copies the word stored in memory at address `imm` into the memory beginning at the address pointed to by `rd`.
 
 ### <a name="op-lbni"></a>Load Byte Indirect Immediate (`lbni`)
 > `[imm] -> [$rd] /b`  
 > `000000101000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Copies the byte stored at the memory at address `imm` into the memory address pointed to by `rd`.
+Copies the byte stored in memory at address `imm` into the memory address pointed to by `rd`.
 
 ### <a name="op-set"></a>Set (`set`)
 > `imm -> $rd`  
