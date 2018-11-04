@@ -542,7 +542,7 @@ class Parser {
 	 */
 	static formatJ_m(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
 		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
-		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs)}, ${target}`;
+		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs) + chalk.dim(",")} ${target}`;
 	}
 
 	static get formatStyle() {
@@ -563,9 +563,6 @@ class Parser {
 	}
 
 	static defaultStyle = "mnem";
-	static formatR = Parser.formatR_m;
-	static formatI = Parser.formatI_m;
-	static formatJ = Parser.formatJ_m;
 
 	/**
 	 * Converts a trap instruction to its original wasm source.
@@ -584,6 +581,8 @@ class Parser {
 		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
 	}
 }
+
+Parser.formatStyle = Parser.defaultStyle;
 
 module.exports = Parser;
 
