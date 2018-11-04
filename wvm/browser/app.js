@@ -271,6 +271,7 @@ let App = window.App = class App {
 			}
 
 			try {
+				// const a = ansiHTML(Parser.formatInstruction(long, this.vm.symbols)); if (a.match(/halt/)) console.log(a);
 				return ansiHTML(Parser.formatInstruction(long, this.vm.symbols))
 					.replace(/#e8bf03/g, "orange")
 					.replace(/#ff00ff/g, "#f08")
@@ -279,7 +280,8 @@ let App = window.App = class App {
 					.replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
 					.replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
 					.replace(/^(<<span)([^>]*>)(halt|pr[cdxb]|sleep)( |<)/, ($0, $1, $2, $3, $4) => `${$1} class="has-title" title="${text[$3]}"` + $2 + $3 + $4)
-					.replace(/^(<span style="color:#00bfff;")>(\w+)( |<)/, ($0, $1, $2, $3) => $2 in text? `${$1} class="has-title" title="${text[$2]}">` + $2 + $3 : $0);
+					.replace(/^(<span style=")([^"]+")><span style="font-weight:bold;">(\w+)<\/span>/, ($0, $1, $2, $3) => $3 in text? `${$1}font-style:italic;${$2}" class="has-title" title="${text[$3]}">` + $3 : $0)
+					.replace(/^(<span style="[^"]+")>(\w+)( |<)/, ($0, $1, $2, $3) => $2 in text? `${$1} class="has-title" title="${text[$2]}">` + $2 + $3 : $0);
 			} catch(e) {
 				return `<span class="what">?</span>`;
 			}

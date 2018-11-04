@@ -505,36 +505,12 @@ class Parser {
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
 	static formatR_m(op, rt, rs, rd, funct, flags=0, conditions=null) {
-		let base;
-		
+		let base = chalk.cyan(op);
 		if (op == "trap") {
-			base = chalk.cyan(Object.keys(TRAPS).filter(t => funct == TRAPS[t])[0] || ("trap " + funct));
-		} else {
-			base = chalk.cyan(op);
+			base = chalk.cyan.bold(Object.keys(TRAPS).filter(t => funct == TRAPS[t])[0] || ("trap " + funct));
 		}
 
-		let includeRs = true, includeRt = true;
-		if (op == "trap") {
-			if (funct == TRAPS.halt) {
-				includeRs = includeRt = false;
-			} else if (funct == TRAPS.prd || funct == TRAPS.prc || funct == TRAPS.prx) {
-				includeRt = false;
-			}
-		}
-
-		if (includeRs) {
-			base += " " + chalk.yellow(rs);
-
-			if (includeRt) {
-				base += chalk.dim(",") + " " + chalk.yellow(rt);
-			}
-		}
-		
-		if (rd == "$0") {
-			return base;
-		} else {
-			return `${base} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		}
+		return `${base} ${chalk.yellow(rs)}${chalk.dim(",")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 	}
 
 	/**
@@ -549,21 +525,8 @@ class Parser {
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
 	static formatI_m(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
-		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;
-		
-		let base = `${chalk.cyan(op)} `;
-		
-		if (rs != "$0") {
-			base += `${chalk.yellow(rs) + chalk.dim(",")} `;
-		}
-		
-		base += chalk.magenta(target);
-		
-		if (rd == "$0") {
-			return base;
-		} else {
-			return base + `${chalk.dim(",")} ${chalk.yellow(rd)}`;
-		}
+		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;	
+		return `${chalk.cyan(op)} ${chalk.yellow(rs) + chalk.dim(",")} ${chalk.magenta(target)}${chalk.dim(",")} ${chalk.yellow(rd)}`;
 	}
 
 	/**

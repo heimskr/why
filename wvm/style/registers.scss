@@ -61,7 +61,7 @@
 	}
 }
 
-@include register(0, #aaa);
+@include register(0, rgba(180, 180, 180, 0.5));
 @include register(g, #0aa);
 @include register(fp, #777);
 @include register(sp, #a00);
