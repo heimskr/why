@@ -780,7 +780,7 @@ Loads the word beginning at address `imm` into `rd`.
 > `$rs -> [imm]`  
 > `000000010100` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Copies the word beginning at the memory address pointed to by `rs` into memory beginning at address `imm`.
+Stores the value of `rs` into memory at address `imm`.
 
 ### <a name="op-lbi"></a>Load Byte Immediate (`lbi`)
 > `[imm] -> $rd /b`  
