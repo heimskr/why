@@ -28,6 +28,9 @@
 		"node-sass": "^4.7.2"
 	},
 	"dependencies": {
+		"babel-plugin-syntax-class-properties": "^6.13.0",
+		"babel-plugin-transform-class-properties": "^6.24.1",
+		"babel-preset-env": "^1.7.0",
 		"chalk": "^1.1.3",
 		"get-line-from-pos": "^1.0.0",
 		"jsome": "^2.3.26",

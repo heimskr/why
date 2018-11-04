@@ -66,7 +66,13 @@ module.exports = function(grunt) {
 				dest: "wvm/dist/app.js",
 				options: {
 					transform: [
-						["babelify", {presets: ["es2017", "es2015"]}],
+						["babelify", {
+							presets: [["env", {targets: {chrome: 64}}]],
+							plugins: [
+								"syntax-class-properties",
+								"transform-class-properties"
+							]
+						}],
 						["brfs"]
 					],
 					watch: true,
@@ -129,5 +135,5 @@ module.exports = function(grunt) {
 		};
 	});
 
-	grunt.registerTask("default", ["jsdoc", "nearley", "sass", "browserify:dev", "watch"]);
+	grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
 };

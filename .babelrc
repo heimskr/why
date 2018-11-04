@@ -1,4 +1,11 @@
 {
-	"presets": ["es2017", "es2015"],
-	"plugins": []
+	"plugins": [
+		"syntax-class-properties",
+		"transform-class-properties"
+	],
+	"presets": [["env", {
+		"targets": {
+			"chrome": 64
+		}
+	}]]
 }
