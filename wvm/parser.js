@@ -526,7 +526,7 @@ class Parser {
 	 */
 	static formatI_m(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
 		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;	
-		return `${chalk.cyan(op)} ${chalk.yellow(rs) + chalk.dim(",")} ${chalk.magenta(target)}${chalk.dim(",")} ${chalk.yellow(rd)}`;
+		return `${chalk.cyan(op)} ${chalk.yellow(rs) + chalk.dim(",")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 	}
 
 	/**
@@ -542,14 +542,7 @@ class Parser {
 	 */
 	static formatJ_m(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
 		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
-
-		
-		const cond = {"p": "+", "n": "-", "z": "0", "nz": "*"}[conditions] || "";
 		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs)}, ${target}`;
-
-		if (op == "j")   return `${chalk.dim(cond + sym)} ${target}`;
-		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
-		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 
 	static formatR = Parser.formatR_m;
