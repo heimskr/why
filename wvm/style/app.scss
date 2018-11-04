@@ -71,7 +71,7 @@ body.light {
 	}
 
 	.has-title {
-		border-bottom-color: black;
+		text-decoration-color: black;
 	}
 
 	@include register(tx, #eeda00);
@@ -82,6 +82,15 @@ body.light {
 }
 
 .has-title {
-	border-bottom: 1px dotted rgba(255, 255, 255, 0.33);
+	text-decoration: underline dotted rgba(255, 255, 255, 0.33);
 	cursor: default;
+}
+
+#format {
+	cursor: default;
+
+	span {
+		cursor: pointer;
+		color: rgba(150, 150, 255, 1.0);
+	}
 }

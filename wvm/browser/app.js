@@ -127,6 +127,10 @@ let App = window.App = class App {
 		return false;
 	}
 
+	renderFormatLink() {
+		$("#format").show().find("span").text(localStorage.formatStyle == "mnem"? "Mnemonics" : "WASM");
+	}
+
 	displayRegisters() {
 		$("#registers").removeClass().addClass(`base-${localStorage.wvm_reg_base || 10}`);
 		_.range(0, 128).forEach((i) => $($("#registers tr")[i]).find("td:last-child").html(this.vm.registers[i]? this.vm.registers[i].toSigned().toString(localStorage.wvm_reg_base || 10) : "?"));
@@ -640,6 +644,17 @@ function initializeUI(app) {
 		row.append(namecell).append(valcell).click(() => row.toggleClass("active-register"));
 	}
 
+	$("#format span").click(() => {
+		let old = localStorage.formatStyle + "";
+		const newStyle = localStorage.formatStyle == "mnem"? "wasm" : "mnem";
+		localStorage.formatStyle = newStyle;
+		Parser.formatStyle = newStyle;
+		app.renderFormatLink();
+		app.displayMemory();
+	});
+
+	app.renderFormatLink();
+
 	$("#top").split({orientation: "vertical", limit: 210, position: "81.5%"});
 	$(".hsplitter").height(4);
 	$(".vsplitter").width(2);
@@ -717,9 +732,14 @@ function initializeUI(app) {
 
 let parser = new Parser();
 parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
-
 let {offsets, handlers, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
+
+if (!localStorage.formatStyle) {
+	localStorage.formatStyle = Parser.defaultStyle;
+}
+
+Parser.formatStyle = localStorage.formatStyle;
 
 $(() => {
 	let bp = [];

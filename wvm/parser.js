@@ -545,6 +545,24 @@ class Parser {
 		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs)}, ${target}`;
 	}
 
+	static get formatStyle() {
+		return Parser._formatStyle || "wasm";
+	}
+
+	static set formatStyle(to) {
+		Parser._formatStyle = to == "mnem"? to : "wasm";
+		if (to == "mnem") {
+			Parser.formatR = Parser.formatR_m;
+			Parser.formatI = Parser.formatI_m;
+			Parser.formatJ = Parser.formatJ_m;
+		} else {
+			Parser.formatR = Parser.formatR_w;
+			Parser.formatI = Parser.formatI_w;
+			Parser.formatJ = Parser.formatJ_w;
+		}
+	}
+
+	static defaultStyle = "mnem";
 	static formatR = Parser.formatR_m;
 	static formatI = Parser.formatI_m;
 	static formatJ = Parser.formatJ_m;
