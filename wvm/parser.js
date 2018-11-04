@@ -562,8 +562,6 @@ class Parser {
 		}
 	}
 
-	static defaultStyle = "mnem";
-
 	/**
 	 * Converts a trap instruction to its original wasm source.
 	 * @param  {string} rt The name of the `rt` register.
@@ -582,6 +580,7 @@ class Parser {
 	}
 }
 
+Parser.defaultStyle = "mnem";
 Parser.formatStyle = Parser.defaultStyle;
 
 module.exports = Parser;
