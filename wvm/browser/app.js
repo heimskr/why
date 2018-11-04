@@ -271,15 +271,14 @@ let App = window.App = class App {
 			}
 
 			try {
-				let html = ansiHTML(Parser.formatInstruction(long, this.vm.symbols));
-				html = html.replace(/#e8bf03/g, "orange")
-						   .replace(/#ff00ff/g, "#f08")
-						   .replace(/#00ffee/g, "#00bfff")
-						   .replace(/#ff0000/g, "#a00")
-						   .replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
-						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
-						   .replace(/^(<<span)([^>]*>)(halt|pr[cdxb]|sleep)( |<)/, ($0, $1, $2, $3, $4) => `${$1} class="has-title" title="${text[$3]}"` + $2 + $3 + $4);
-				return html;
+				return ansiHTML(Parser.formatInstruction(long, this.vm.symbols))
+					.replace(/#e8bf03/g, "orange")
+					.replace(/#ff00ff/g, "#f08")
+					.replace(/#00ffee/g, "#00bfff")
+					.replace(/#ff0000/g, "#a00")
+					.replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
+					.replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
+					.replace(/^(<<span)([^>]*>)(halt|pr[cdxb]|sleep)( |<)/, ($0, $1, $2, $3, $4) => `${$1} class="has-title" title="${text[$3]}"` + $2 + $3 + $4);
 			} catch(e) {
 				return `<span class="what">?</span>`;
 			}
