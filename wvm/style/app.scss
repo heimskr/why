@@ -70,9 +70,18 @@ body.light {
 		color: black;
 	}
 
+	.has-title {
+		border-bottom-color: black;
+	}
+
 	@include register(tx, #eeda00);
 }
 
 .hash {
 	color: gray;
+}
+
+.has-title {
+	border-bottom: 1px dotted #aaa;
+	cursor: default;
 }

@@ -10,7 +10,8 @@ let WVM = require("../wvm.js"),
 	Long = require("long"),
 	_ = require("lodash"),
 	ansiHTML = require("ansi-html"),
-	chalk = require("chalk");
+	chalk = require("chalk"),
+	text = require("./text.js");
 
 require("jquery.splitter");
 
@@ -276,7 +277,8 @@ let App = window.App = class App {
 						   .replace(/#00ffee/g, "#00bfff")
 						   .replace(/#ff0000/g, "#a00")
 						   .replace(/<span style="[^"]*">\$(rt|[fs]p|0|g|lo|hi)<\/span>/g, ($0, $1) => `<span class="reg-${$1}">$${$1}</span>`)
-						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`);
+						   .replace(/<span style="[^"]*">\$(([ratskemf])[0-9a-f]+)<\/span>/g, ($0, $1, $2) => `<span class="reg-${$2}x">$${$1}</span>`)
+						   .replace(/^(<<span)([^>]*>)(halt|pr[cdxb]|sleep)( |<)/, ($0, $1, $2, $3, $4) => `${$1} class="has-title" title="${text[$3]}"` + $2 + $3 + $4);
 				return html;
 			} catch(e) {
 				return `<span class="what">?</span>`;
@@ -713,7 +715,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/conditions.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fibonacci.why", "utf8"));
 
 let {offsets, handlers, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
