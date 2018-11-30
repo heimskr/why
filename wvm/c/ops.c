@@ -32,20 +32,6 @@ void op_mult(word instruction) {
 	INC();
 }
 
-void op_addu(word instruction) {
-	RREGS();
-	wvm_alu_flags_update(rdv = rsv + rtv);
-	if (rdv < rsv) {
-		FLAG_C_SET(1);
-	}
-
-	INC();
-}
-
-void op_subu(word instruction) {
-	op_sub(instruction);
-}
-
 void op_multu(word instruction) {
 	op_mult(instruction);
 }
@@ -172,19 +158,6 @@ void op_subi(word instruction) {
 
 void op_multi(word instruction) {
 	// TODO: see op_mult.
-	INC();
-}
-
-void op_addui(word instruction) {
-	IREGS();
-	// Does this do anything?
-	wvm_alu_flags_update(rdv = ((uword) rsv) + (uword) imm);
-	INC();
-}
-
-void op_subui(word instruction) {
-	IREGS();
-	wvm_alu_flags_update(rdv = ((uword) rsv) - (uword) imm);
 	INC();
 }
 

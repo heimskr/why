@@ -30,8 +30,6 @@
 						<li><a href="#op-add">Add</a> (<code>add</code>)</li>
 						<li><a href="#op-sub">Subtract</a> (<code>sub</code>)</li>
 						<li><a href="#op-mult">Multiply</a> (<code>mult</code>)</li>
-						<li><a href="#op-addu">Add Unsigned</a> (<code>addu</code>)</li>
-						<li><a href="#op-subu">Subtract Unsigned</a> (<code>subu</code>)</li>
 						<li><a href="#op-multu">Multiply Unsigned</a> (<code>multu</code>)</li>
 						<li><a href="#op-sll">Shift Left Logical</a> (<code>sll</code>)</li>
 						<li><a href="#op-srl">Shift Right Logical</a> (<code>srl</code>)</li>
@@ -62,8 +60,6 @@
 						<li><a href="#op-addi">Add Immediate</a> (<code>addi</code>)</li>
 						<li><a href="#op-subi">Subtract Immediate</a> (<code>subi</code>)</li>
 						<li><a href="#op-multi">Multiply Immediate</a> (<code>multi</code>)</li>
-						<li><a href="#op-addui">Add Unsigned Immediate</a> (<code>addui</code>)</li>
-						<li><a href="#op-subui">Subtract Unsigned Immediate</a> (<code>subui</code>)</li>
 						<li><a href="#op-multui">Multiply Unsigned Immediate</a> (<code>multui</code>)</li>
 						<li><a href="#op-slli">Shift Left Logical Immediate</a> (<code>slli</code>)</li>
 						<li><a href="#op-srli">Shift Right Logical Immediate</a> (<code>srli</code>)</li>
@@ -335,19 +331,6 @@ Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`
 
 Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
-
-### <a name="op-addu"></a>Add Unsigned (`addu`)
-> `$rs + $rt -> $rd /u` or `$rd += $rt /u`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000011`
-
-Adds the values in `rs` and `rt` (treating both as unsigned values) and stores the result in `rd`.
-
-### <a name="op-subu"></a>Subtract Unsigned (`subu`)
-> `$rs - $rt -> $rd /u` or `$rd -= $rt /u`  
-> `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000100`
-
-Subtracts the value in `rt` from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
-
 ### <a name="op-multu"></a>Multiply Unsigned (`multu`)
 > `$rs * $rt /u`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000101`
@@ -483,18 +466,6 @@ Subtracts a constant from the value in `rs` and stores the result in `rd`.
 > `000000000101` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Multiplies the value in `rs` by a constant and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
-
-### <a name="op-addui"></a>Add Unsigned Immediate (`addui`)
-> `$rs + imm -> $rd /u` or `$rd += imm /u`  
-> `000000010110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
-
-Adds the value in `rs` and a constant (treating both as unsigned values) and stores the result in `rd`.
-
-### <a name="op-subui"></a>Subtract Unsigned Immediate (`subui`)
-> `$rs - imm -> $rd /u` or `$rd -= imm /u`  
-> `000000010111` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
-
-Subtracts a constant from the value in `rs` (treating both as unsigned values) and stores the result in `rd`.
 
 ### <a name="op-multui"></a>Multiply Unsigned Immediate (`multui`)
 > `$rs * imm /u`  

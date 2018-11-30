@@ -57,8 +57,6 @@ op_fn wvm_get_fn(word instruction) {
 				case FUNCT_ADD:   return op_add;
 				case FUNCT_SUB:   return op_sub;
 				case FUNCT_MULT:  return op_mult;
-				case FUNCT_ADDU:  return op_addu;
-				case FUNCT_SUBU:  return op_subu;
 				case FUNCT_MULTU: return op_multu;
 				case FUNCT_SLL:   return op_sll;
 				case FUNCT_SRL:   return op_srl;
@@ -124,8 +122,6 @@ op_fn wvm_get_fn(word instruction) {
 		case OP_LI:     return op_li;
 		case OP_SI:     return op_si;
 		case OP_SET:    return op_set;
-		case OP_ADDUI:  return op_addui;
-		case OP_SUBUI:  return op_subui;
 		case OP_MULTUI: return op_multui;
 		case OP_SLI:    return op_sli;
 		case OP_SLEI:   return op_slei;

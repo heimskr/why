@@ -402,8 +402,6 @@ class Parser {
 		if (op == "c")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
 		if (op == "l")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd)}`;
 		if (op == "s")     return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
-		if (op == "addu")  return `${alt_op("+")} /u`;
-		if (op == "subu")  return `${alt_op("-")} /u`;
 		if (op == "multu") return `${chalk.yellow(rs)} ${Parser.colorOper("*") } ${chalk.yellow(rt)} /u`;
 		if (op == "slu")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "sleu")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
@@ -441,8 +439,6 @@ class Parser {
 		const alt_op = (oper) => `${chalk.yellow(rs)} ${Parser.colorOper(oper + (rs == rd? "=" : ""))} ${chalk.magenta(target) + (rs != rd? chalk.dim(" -> ") + chalk.yellow(rd) : "")}`;
 		if (op == "addi")   return mathi("++", "+=", "+");
 		if (op == "subi")   return mathi("--", "-=", "-");
-		if (op == "addui")  return `${mathi("++", "+=", "+")} /u`;
-		if (op == "subui")  return `${mathi("--", "-=", "-")} /u`;
 		if (op == "multi")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(target)}`;
 		if (op == "multui") return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(target)} /u`;
 		if (op == "modi")   return alt_op("%");

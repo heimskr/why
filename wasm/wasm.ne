@@ -135,7 +135,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_and | op_nand | op_nor | op_not | op_or | op_xnor | op_xor
 				 | op_land | op_lnand | op_lnor | op_lnot | op_lor | op_lxnor | op_lxor
 				 | op_andi | op_nandi | op_nori | op_ori | op_xnori | op_xori
-				 | op_addu | op_subu | op_multu | op_addiu | op_subiu | op_multiu | op_mod | op_modi
+				 | op_multu | op_multiu | op_mod | op_modi
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
@@ -149,10 +149,6 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 into			-> _ "->" _									{% d => null %}
 
 # R-Type instructions										                   rt    rs    rd
-op_addu			-> riap["+"]  into reg _ "/u"				{% d => ["addu",     ...d[0], d[2]] %}
-				 | rv _ "+="  _ rv _     "/u"				{% d => ["addu",  d[4], d[0], d[0]] %}
-op_subu			-> riap["-"]  into reg _ "/u"				{% d => ["subu",     ...d[0], d[2]] %}
-				 | rv _ "-="  _ rv _     "/u"				{% d => ["subu",  d[4], d[0], d[0]] %}
 op_add			-> riap["+"]  into reg						{% d => ["add",      ...d[0], d[2]] %}
 				 | rv _ "+="  _ rv							{% d => ["add",   d[4], d[0], d[0]] %}
 op_sub			-> riap["-"]  into reg						{% d => ["sub",      ...d[0], d[2]] %}
@@ -226,14 +222,6 @@ op_sra			-> riap[">>"]  into rv						{% d => ["sra",      ...d[0], d[2]] %}
 				 | rv _ ">>="  _ rv							{% d => ["sra",   d[4], d[0], d[0]] %}
 
 # I-Type instructions										                   rs    rd    imm
-op_addiu		-> reg _ "+"  _ int into reg _ "/u"			{% d => ["addiu",  d[0], d[6], d[4]] %}
-				 | reg _ "++" _ "/u"						{% d => ["addiu",  d[0], d[0],   1 ] %}
-				 | _ "++" _ reg _ "/u"						{% d => ["addiu",  d[3], d[3],   1 ] %}
-				 | reg _ "+=" _ int "/u"					{% d => ["addiu",  d[0], d[0], d[4]] %}
-op_subiu		-> reg _ "-"  _ int into reg _ "/u"			{% d => ["subiu",  d[0], d[6], d[4]] %}
-				 | reg _ "--" _ "/u"						{% d => ["subiu",  d[0], d[0],   1 ] %}
-				 | _ "--" _ reg	_ "/u"						{% d => ["subiu",  d[3], d[3],   1 ] %}
-				 | reg _ "-="  _ int _ "/u"					{% d => ["subiu",  d[0], d[0], d[4]] %}
 op_multiu		-> reg _ "*"   _ int _ "/u"					{% d => ["multiu", d[0],   0,  d[4]] %}
 op_addi			-> reg _ "+"   _ int into reg				{% d => ["addi",   d[0], d[6], d[4]] %}
 				 | reg _ "++"								{% d => ["addi",   d[0], d[0],   1 ] %}

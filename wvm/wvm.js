@@ -243,18 +243,10 @@ class WVM {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(this.registers[rt].toSigned()));
 	}
 
-	op_addu(rt, rs, rd) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toUnsigned().add(this.registers[rt].toUnsigned()));
-	}
-
 	// mult
 
 	op_sub(rt, rs, rd) {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().subtract(this.registers[rt].toSigned()));
-	}
-
-	op_subu(rt, rs, rd) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toUnsigned().subtract(this.registers[rt].toUnsigned()));
 	}
 
 	// multu
@@ -348,14 +340,6 @@ class WVM {
 	}
 
 	// multi
-
-	op_addui(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], true).add(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)));
-	}
-
-	op_subui(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], true).subtract(imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)));
-	}
 
 	op_multui(rs, rd, imm) {
 		let i = imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true);

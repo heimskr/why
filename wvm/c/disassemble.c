@@ -186,11 +186,9 @@ void wvm_disassemble_i(char *str, word instruction) {
 
 	switch (opcode) {
 		case OP_ADDI:
-		case OP_ADDUI:
 			wvm_disassemble_i_math(str, rs, rd, imm, '+');
 			break;
 		case OP_SUBI:
-		case OP_SUBUI:
 			wvm_disassemble_i_math(str, rs, rd, imm, '-');
 			break;
 		case OP_MULTI:
@@ -247,7 +245,7 @@ void wvm_disassemble_i(char *str, word instruction) {
 			return;
 	}
 
-	if (opcode == OP_ADDUI || opcode == OP_SUBUI || opcode == OP_MULTUI || opcode == OP_SLUI || opcode == OP_SLEUI)
+	if (opcode == OP_MULTUI || opcode == OP_SLUI || opcode == OP_SLEUI)
 		strcat(str, " /u");
 	else if (opcode == OP_LBI || opcode == OP_SBI)
 		strcat(str, " /b");

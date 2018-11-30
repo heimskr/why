@@ -35,8 +35,8 @@ void op_nop(word instruction);    // 0   X
 void op_add(word instruction);    // 1   R 0
 void op_sub(word instruction);    // 1   R 1
 void op_mult(word instruction);   // 1   R 2
-void op_addu(word instruction);   // 1   R 3
-void op_subu(word instruction);   // 1   R 4
+// 1.3
+// 1.4
 void op_multu(word instruction);  // 1   R 5
 void op_sll(word instruction);    // 1   R 6
 void op_srl(word instruction);    // 1   R 7
@@ -61,8 +61,8 @@ void op_lxor(word instruction);   // 2   R 14
 void op_addi(word instruction);   // 3   I
 void op_subi(word instruction);   // 4   I
 void op_multi(word instruction);  // 5   I
-void op_addui(word instruction);  // 22  I
-void op_subui(word instruction);  // 23  I
+// 22
+// 23
 void op_multui(word instruction); // 24  I
 void op_slli(word instruction);   // 34  I
 void op_srli(word instruction);   // 35  I
@@ -129,8 +129,6 @@ void op_nop(word instruction);    // 0   X
 #define OP_ADD    1
 #define OP_SUB    1
 #define OP_MULT   1
-#define OP_ADDU   1
-#define OP_SUBU   1
 #define OP_MULTU  1
 #define OP_SLL    1
 #define OP_SRL    1
@@ -183,8 +181,6 @@ void op_nop(word instruction);    // 0   X
 #define OP_LI     19
 #define OP_SI     20
 #define OP_SET    21
-#define OP_ADDUI  22
-#define OP_SUBUI  23
 #define OP_MULTUI 24
 #define OP_SLI    25
 #define OP_SLEI   26
@@ -235,7 +231,6 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_S      2
 #define FUNCT_SEQ    2
 #define FUNCT_HALT   2
-#define FUNCT_ADDU   3
 #define FUNCT_CB     3
 #define FUNCT_JRLC   3
 #define FUNCT_NOT    3
@@ -244,7 +239,6 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_LB     4
 #define FUNCT_OR     4
 #define FUNCT_SLEU   4
-#define FUNCT_SUBU   4
 #define FUNCT_PRC    4
 #define FUNCT_PRD    5
 #define FUNCT_MULTU  5
