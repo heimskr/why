@@ -30,7 +30,13 @@ class WVM {
 			throw "Unable to load memory.";
 		}
 
-		({ offsets: this.offsets, handlers: this.handlers, meta: this.meta, code: this.code, symbols: this.symbols} = program);
+		({
+			offsets: this.offsets,
+			handlers: this.handlers,
+			meta: this.meta,
+			code: this.code,
+			symbols: this.symbols
+		} = program);
 		this.initial = initial;
 		this.memorySize = memorySize;
 		this.resetMemory();
@@ -73,7 +79,9 @@ class WVM {
 		const loaded = this.loadInstruction();
 		let instr = Parser.parseInstruction(loaded);
 		if (!instr) {
-			console.error(chalk.red("Invalid instruction:"), instr, loaded.toString(16).padStart(16, "0"), "/", loaded.toString(2).padStart(64, "0"));
+			console.error(`${chalk.red("Invalid instruction")} at ${this.programCounter}:`,
+				"0x" + loaded.toString(16).padStart(16, "0"), "/", loaded.toString(2).padStart(64, "0"));
+			this.stop();
 			return;
 		}
 
@@ -130,7 +138,10 @@ class WVM {
 			// In the future, this may cause an exception.
 		}
 
-		return new Long(this.memory[k+7] | this.memory[k+6] << 8 | this.memory[k+5] << 16 | this.memory[k+4] << 24, this.memory[k+3] << 32 | this.memory[k+2] << 40 | this.memory[k+1] << 48 | this.memory[k] << 56, signed);
+		return new Long(
+			this.memory[k+7]       | this.memory[k+6] <<  8 | this.memory[k+5] << 16 | this.memory[k+4] << 24,
+			this.memory[k+3] << 32 | this.memory[k+2] << 40 | this.memory[k+1] << 48 | this.memory[k]   << 56,
+		signed);
 	}
 
 	/**
@@ -328,15 +339,18 @@ class WVM {
 	}
 
 	op_addi(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(
+			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	op_subi(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
+		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(
+			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	op_modi(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(
+			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	// multi
@@ -373,15 +387,18 @@ class WVM {
 	}
 
 	op_slli(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(imm instanceof Long? imm.toUnsigned() : imm));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(
+			imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
 	op_srli(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(imm instanceof Long? imm.toUnsigned() : imm));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(
+			imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
 	op_srai(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRight(imm instanceof Long? imm.toUnsigned() : imm));
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRight(
+			imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
 	op_andi(rs, rd, imm) {
@@ -416,51 +433,63 @@ class WVM {
 	}
 
 	op_sl(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().lessThan(this.registers[rt].toSigned())? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toSigned().lessThan(this.registers[rt].toSigned())?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_sle(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(this.registers[rt].toSigned())? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(this.registers[rt].toSigned())?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_seq(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toUnsigned().equals(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(this.registers[rt].toUnsigned())?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_slu(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(this.registers[rt].toUnsigned())?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_sleu(rt, rs, rd) {
-		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(this.registers[rt].toUnsigned())? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(this.registers[rt].toUnsigned())?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_sli(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().lessThan(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toSigned().lessThan(Long.fromInt(imm, false))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_slei(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(Long.fromInt(imm, false))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_seqi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, false))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_sgi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().greaterThan(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toSigned().greaterThan(Long.fromInt(imm, false))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_sgei(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().greaterThanOrEqual(Long.fromInt(imm, false))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toSigned().greaterThanOrEqual(Long.fromInt(imm, false))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_slui(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_sleui(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))? Long.UONE : Long.UZERO;
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))?
+			Long.UONE : Long.UZERO;
 	}
 
 	op_j(rs, addr, link, cond) {
