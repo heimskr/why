@@ -291,27 +291,27 @@ op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 # J-Type instructions										               rs     addr             link   condition
 op_jc			-> ":" _ int   __ "if" __ reg				{% d => ["jc", d[6],  d[2],            false, null] %}
 				 | ":" _ xvar  __ "if" __ reg				{% d => ["jc", d[6],  ["label", d[2]], false, null] %}
-				 | "::" _ int  __ "if" __ reg				{% d => ["jc", d[6],   d[2],             true, null] %}
-				 | "::" _ xvar __ "if" __ reg				{% d => ["jc", d[6],   ["label", d[2]],  true, null] %}
+				 | "::" _ int  __ "if" __ reg				{% d => ["jc", d[6],  d[2],             true, null] %}
+				 | "::" _ xvar __ "if" __ reg				{% d => ["jc", d[6],  ["label", d[2]],  true, null] %}
 
 op_j			-> ":"   _ int								{% d => ["j",    0,   d[2],            false, null] %}
 				 | ":"   _ xvar								{% d => ["j",    0,   ["label", d[2]], false, null] %}
 				 | "::"  _ int								{% d => ["j",    0,   d[2],             true, null] %}
 				 | "::"  _ xvar								{% d => ["j",    0,   ["label", d[2]],  true, null] %}
-				 | "+:"  _ int								{% d => ["j",    0,  d[2],            false,  "p"] %}
-				 | "+:"  _ xvar								{% d => ["j",    0,  ["label", d[2]], false,  "p"] %}
+				 | "+:"  _ int								{% d => ["j",    0,   d[2],            false,  "p"] %}
+				 | "+:"  _ xvar								{% d => ["j",    0,   ["label", d[2]], false,  "p"] %}
 				 | "+::" _ int								{% d => ["j",    0,   d[2],             true,  "p"] %}
 				 | "+::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true,  "p"] %}
-				 | "-:"  _ int								{% d => ["j",    0,  d[2],            false,  "n"] %}
-				 | "-:"  _ xvar								{% d => ["j",    0,  ["label", d[2]], false,  "n"] %}
+				 | "-:"  _ int								{% d => ["j",    0,   d[2],            false,  "n"] %}
+				 | "-:"  _ xvar								{% d => ["j",    0,   ["label", d[2]], false,  "n"] %}
 				 | "-::" _ int								{% d => ["j",    0,   d[2],             true,  "n"] %}
 				 | "-::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true,  "n"] %}
-				 | "0:"  _ int								{% d => ["j",    0,  d[2],            false,  "z"] %}
-				 | "0:"  _ xvar								{% d => ["j",    0,  ["label", d[2]], false,  "z"] %}
+				 | "0:"  _ int								{% d => ["j",    0,   d[2],            false,  "z"] %}
+				 | "0:"  _ xvar								{% d => ["j",    0,   ["label", d[2]], false,  "z"] %}
 				 | "0::" _ int								{% d => ["j",    0,   d[2],             true,  "z"] %}
 				 | "0::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true,  "z"] %}
-				 | "*:"  _ int								{% d => ["j",    0,  d[2],            false, "nz"] %}
-				 | "*:"  _ xvar								{% d => ["j",    0,  ["label", d[2]], false, "nz"] %}
+				 | "*:"  _ int								{% d => ["j",    0,   d[2],            false, "nz"] %}
+				 | "*:"  _ xvar								{% d => ["j",    0,   ["label", d[2]], false, "nz"] %}
 				 | "*::" _ int								{% d => ["j",    0,   d[2],             true, "nz"] %}
 				 | "*::" _ xvar								{% d => ["j",    0,   ["label", d[2]],  true, "nz"] %}
 
