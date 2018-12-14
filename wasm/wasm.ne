@@ -58,6 +58,8 @@ lineend			-> (single newline | multi | newline) 		{% d => null %}
 sep				-> ";"										{% d => null %}
 				 | lineend									{% d => null %}
 
+par[OPER]		-> "(" _ $OPER _ ")"						{% d => d[2] %}
+
 string			-> dqstring									{% nth(0) %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
 int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
@@ -89,7 +91,7 @@ datakey			-> _ var (_ ":" _ | __)						{% d => d[1] %}
 datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
 				 | datakey int    _ sep						{% d => ["int",    d[0], d[1]] %}
 				 | datakey string _ sep						{% d => ["string", d[0], d[1]] %}
-				 | datakey "(" _ int _ ")" _ sep			{% d => ["bytes",  d[0], d[3]] %}
+				 | datakey par[int] _ sep					{% d => ["bytes",  d[0], d[1]] %}
 				 | _ sep 									{% d => null %}
 
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
