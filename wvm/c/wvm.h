@@ -7,6 +7,7 @@
 #include <string.h>
 
 #define DIE(s) { fprintf(stderr, s); exit(1); }
+#define DIEF(f, a...) { fprintf(stderr, f, a); exit(1); }
 #define FLAG_Z (registers[R_ST] & 0b0001)
 #define FLAG_N (registers[R_ST] & 0b0010)
 #define FLAG_C (registers[R_ST] & 0b0100)

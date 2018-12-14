@@ -162,6 +162,11 @@ void wvm_increment_pc() {
 bool wvm_tick() {
 	word instruction = wvm_get_word(pc);
 	op_fn op = wvm_get_fn(instruction);
+	if (op == NULL) {
+		DIEF("%s Couldn't find function for instruction %s0x%016llx%s (opcode %s%d%s) at address %s%lld%s\n", S_NOPE,
+			BOLD(instruction), BOLD(wvm_get_opcode(instruction)), BOLD(pc));
+	}
+
 	op(instruction);
 	cycles++;
 	return alive;
