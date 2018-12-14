@@ -85,10 +85,11 @@ handler			-> _ var (_ ":" _ | __) var_addr _ sep		{% d => [d[1], d[3]] %}
 
 data_section	-> _ data_header _ sep datadef:*			{% d => ["data", compileData(d[4])] %}
 data_header		-> "#data" | "#d"							{% d => null %}
-datadef			-> _ var (_ ":" _ | __) float  _ sep		{% d => ["float",  d[1], d[3]] %}
-				 | _ var (_ ":" _ | __) int    _ sep		{% d => ["int",    d[1], d[3]] %}
-				 | _ var (_ ":" _ | __) string _ sep		{% d => ["string", d[1], d[3]] %}
-				 | _ var (_ ":" _ | __) "(" _ int _ ")" _ sep	{% d => ["bytes", d[1], d[5]] %}
+datakey			-> _ var (_ ":" _ | __)						{% d => d[1] %}
+datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
+				 | datakey int    _ sep						{% d => ["int",    d[0], d[1]] %}
+				 | datakey string _ sep						{% d => ["string", d[0], d[1]] %}
+				 | datakey "(" _ int _ ")" _ sep			{% d => ["bytes",  d[0], d[3]] %}
 				 | _ sep 									{% d => null %}
 
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
