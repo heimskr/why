@@ -149,7 +149,7 @@
 				</li>
 				<li><a href="#ops-special">Special Instructions</a>
 					<ol>
-						<li><a href="#op-trap">Trap</a> (<code>trap</code>)</li>
+						<li><a href="#op-ext">External</a> (<code>ext</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -163,14 +163,14 @@
 				</li>
 			</ol>
 		</li>
-		<li><a href="#traps">Traps</a>
+		<li><a href="#ext">Externals</a>
 			<ol>
-				<li><a href="#trap-printr">Print Register</a> (<code>printr</code>)</li>
-				<li><a href="#trap-halt">Halt</a> (<code>halt</code>)</li>
-				<li><a href="#trap-eval">Evaluate String</a> (<code>eval</code>)</li>
-				<li><a href="#trap-prc">Print Character</a> (<code>prc</code>)</li>
-				<li><a href="#trap-prd">Print Decimal</a> (<code>prd</code>)</li>
-				<li><a href="#trap-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
+				<li><a href="#ext-printr">Print Register</a> (<code>printr</code>)</li>
+				<li><a href="#ext-halt">Halt</a> (<code>halt</code>)</li>
+				<li><a href="#ext-eval">Evaluate String</a> (<code>eval</code>)</li>
+				<li><a href="#ext-prc">Print Character</a> (<code>prc</code>)</li>
+				<li><a href="#ext-prd">Print Decimal</a> (<code>prd</code>)</li>
+				<li><a href="#ext-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -785,8 +785,8 @@ Sets a register to the given immediate value.
 
 ## <a name="ops-special"></a>Special Instructions
 
-### <a name="op-trap"></a>Trap (`trap`)
-> (varies; see <a href="#traps">Traps</a>)  
+### <a name="op-ext"></a>External (`ext`)
+> (varies; see <a href="#ext">Externals</a>)  
 > `000000011111` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `xxxxxxxxxxxx`
 
 Performs a special instruction, typically for interaction with the world outside the VM.
@@ -887,39 +887,39 @@ If the value in `rs` is greather than or equal to `imm` (treating both as unsign
 
 If the value in `rs` is greather than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0. Currently unimplemented.
 
-# <a name="traps"></a>Traps
+# <a name="ext"></a>Externals
 
-### <a name="trap-printr"></a>Print Register
+### <a name="ext-printr"></a>Print Register
 Syntax: `<print $rs>`  
 Function value: `000000000001`
 
 Prints the value stored in `rs` to the console.
 
-### <a name="trap-halt"></a>Halt
+### <a name="ext-halt"></a>Halt
 Syntax: `<halt>`  
 Function value: `000000000010`
 
 Halts the VM.
 
-### <a name="trap-eval"></a>Evaluate String
+### <a name="ext-eval"></a>Evaluate String
 Syntax: `<eval $rs>`  
 Function value: `000000000011`
 
 Evaluates the string beginning at the address stored in `rs`. Unimplemented.
 
-### <a name="trap-prc"></a>Print Character
+### <a name="ext-prc"></a>Print Character
 Syntax: `<prc $rs>`  
 Function value: `000000000100`
 
 Prints the character stored in `rs` to the console.
 
-### <a name="trap-prd"></a>Print Decimal
+### <a name="ext-prd"></a>Print Decimal
 Syntax: `<prd $rs>`  
 Function value: `000000000101`
 
 Prints the number stored in `rs` to the console as a decimal.
 
-### <a name="trap-prx"></a>Print Hexadecimal
+### <a name="ext-prx"></a>Print Hexadecimal
 Syntax: `<prx $rs>`  
 Function value: `000000000110`
 

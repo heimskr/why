@@ -131,7 +131,7 @@ op_fn wvm_get_fn(word instruction) {
 		case OP_SLUI:   return op_slui;
 		case OP_SLEUI:  return op_sleui;
 		case OP_MODI:   return op_modi;
-		case OPS_TRAP: // Are traps true R-types? The format in the ISA documentation looks strange.
+		case OPS_EXT:
 			switch (wvm_r_func(instruction)) {
 				case FUNCT_PRINTR: return op_pr;
 				case FUNCT_HALT:   return op_halt;

@@ -212,7 +212,7 @@ void op_nop(word instruction);    // 0   X
 #define OPS_RCOMP  14
 #define OPS_RJUMP  17
 #define OPS_MEM    18
-#define OPS_TRAP   31
+#define OPS_EXT    31
 
 #define FUNCT_ADD    0
 #define FUNCT_AND    0

@@ -17,7 +17,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, TRAPS, CONDITIONS} = require("./constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, EXTS, CONDITIONS} = require("./constants.js");
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
@@ -383,13 +383,13 @@ class WASMC {
 					// Now that we've returned from the subroutine, pop the values we pushed earlier, but in reverse order.
 					addPop(currentValues.reverse(), null);
 				}
-			} else if (op == "trap") {
+			} else if (op == "ext") {
 				const funct = args[3];
-				if (funct == TRAPS.prc) {
+				if (funct == EXTS.prc) {
 					const type = args[1][0];
 					if (type == "char") {
 						add([label, "set", _0, _M[2], args[1][1]]);
-						add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
+						add([null, "ext", 0, ["register", "m", 2], 0, EXTS.prc]);
 						return;
 					} else if (type == "string") {
 						let lastChar;
@@ -400,14 +400,14 @@ class WASMC {
 								lastChar = char;
 							}
 							
-							add([null, "trap", 0, ["register", "m", 2], 0, TRAPS.prc]);
+							add([null, "ext", 0, ["register", "m", 2], 0, EXTS.prc]);
 						});
 
 						return;
 					}
 				}
 				
-				add([label, "trap", ...args]);
+				add([label, "ext", ...args]);
 			} else if (op == "mv") {
 				add([label, "or", args[0], _0, args[1]]);
 			} else if (op == "push") {
@@ -533,8 +533,8 @@ class WASMC {
 	compileInstruction(instruction) {
 		const [op, ...args] = instruction;
 		const {flags} = instruction;
-		if (op == "trap") {
-			return WASMC.rType(OPCODES.trap, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags, null);
+		if (op == "ext") {
+			return WASMC.rType(OPCODES.ext, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags, null);
 		} else if (R_TYPES.includes(OPCODES[op])) {
 			return WASMC.rType(OPCODES[op], ...args.slice(0, 3).map(WASMC.convertRegister), FUNCTS[op], flags, args[3]);
 		} else if (I_TYPES.includes(OPCODES[op])) {

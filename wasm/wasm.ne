@@ -1,7 +1,7 @@
 @{%
 "use strict";
 
-const {TRAPS} = require("./constants.js");
+const {EXTS} = require("./constants.js");
 
 const special = {
 	chars: "@$&*\t \":`./%",
@@ -143,8 +143,8 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
-				 | gap | trap_prc | trap_printr | trap_halt | trap_n | trap_eval | trap_prd | trap_prx | trap_prs | trap_pr
-				 | trap_sleep | trap_xn_init | trap_xn_connect | trap_xn_send | trap_xn_recv
+				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
+				 | ext_sleep | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
 
 into			-> _ "->" _									{% d => null %}
 
@@ -318,26 +318,25 @@ op_jeq			-> ":" _ reg  __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d
 				 | ":" _ xvar __ "if" __ rv _ "==" _ int	{% d => ["jeq", d[10], d[6], ["label", d[2]]] %}
 op_nop			-> "<>"										{% d => ["nop"] %}
 
-# Traps																		   rt    rs    rd   funct
-trap_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["trap",    0,  d[4],   0,    1 ] %}
-trap_halt		-> "<" _ "halt" _ ">"						{% d => ["trap",    0,    0,    0,    2 ] %}
-trap_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    3 ] %}
-trap_prc		-> "<" _ "prc" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    4 ] %}
-				 | "<" _ "prc" _ char _ ">"					{% d => ["trap", 0, ["char", d[4]], 0, 4] %}
-trap_prd		-> "<" _ "prd" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    5 ] %}
-trap_prx		-> "<" _ "prx" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    6 ] %}
-trap_prs		-> "<" _ "prs" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]], 0, 4] %}
-trap_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["trap",    0,  d[4],   0,    5 ] %}
-				 | "<" _ "p" _ char _ ">"					{% d => ["trap", 0, ["char", d[4]], 0, 4] %}
-				 | "<" _ "p" _ dqstring _ ">"				{% d => ["trap", 0, ["string", d[4]], 0, 4] %}
-trap_sleep		-> "<" _ ("sleep" | "wait") _ reg _ ">"		{% d => ["trap", 0, d[4], 0, TRAPS.sleep] %}
-trap_n			-> "<" _ int _ ">"							{% d => ["trap",    0,    0,    0, parseInt(d[2])]%}
+# Externals																	  rt    rs             rd    funct
+ext_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["ext",    0,  d[4],            0,     1] %}
+ext_halt		-> "<" _ "halt" _ ">"						{% d => ["ext",    0,    0,             0,     2] %}
+ext_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     3] %}
+ext_prc			-> "<" _ "prc" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     4] %}
+				 | "<" _ "prc" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0,     4] %}
+ext_prd			-> "<" _ "prd" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     5] %}
+ext_prx			-> "<" _ "prx" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     6] %}
+ext_prs			-> "<" _ "prs" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0,     4] %}
+ext_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     5] %}
+				 | "<" _ "p" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0,     4] %}
+				 | "<" _ "p" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0,     4] %}
+ext_sleep		-> "<" _ ("sleep" | "wait") _ reg _ ">"		{% d => ["ext",    0,  d[4],            0, EXTS.sleep] %}
+ext_n			-> "<" _ int _ ">"							{% d => ["ext",    0,    0,             0, parseInt(d[2])] %}
 
-trap_xn_init	-> "<" _ "xn" __ "init" _ ">"				{% d => ["trap", 0, 0, 0, TRAPS.xn_init] %}
-trap_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["trap", d[8], d[6], 0, TRAPS.xn_connect] %}
-trap_xn_send	-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["trap", 0, d[6], 0, TRAPS.xn_send] %}
-trap_xn_recv	-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["trap", 0, d[8], d[6], TRAPS.xn_recv] %}
-
+ext_xn_init		-> "<" _ "xn" __ "init" _ ">"				{% d => ["ext",   0,    0,    0,  EXTS.xn_init   ] %}
+ext_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["ext", d[8], d[6],   0,  EXTS.xn_connect] %}
+ext_xn_send		-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["ext",   0,  d[6],   0,  EXTS.xn_send   ] %}
+ext_xn_recv		-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["ext",   0,  d[8], d[6], EXTS.xn_recv   ] %}
 
 gap				-> "{" _ int _ "}"							{% d => ["gap", d[2]] %}
 

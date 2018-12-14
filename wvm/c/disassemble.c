@@ -137,7 +137,7 @@ void wvm_disassemble_r(char *str, word instruction) {
 					return;
 			}
 
-		case OPS_TRAP:
+		case OPS_EXT:
 			sprintf(str, "<%s", ANSI_CYAN);
 			switch (func) {
 				case FUNCT_PRINTR:

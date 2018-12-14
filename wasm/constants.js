@@ -7,7 +7,7 @@ exports.R_TYPES = [
 	0b000000001110, // Comparisons
 	0b000000010001, // Jumps
 	0b000000010010, // Memory
-	0b000000011111, // Trap
+	0b000000011111, // External
 ];
 
 exports.I_TYPES = [
@@ -114,7 +114,7 @@ exports.OPCODES = {
 	slui:   0b000000011100,
 	sleui:  0b000000011101,
 	modi:   0b000000011110,
-	trap:   0b000000011111,
+	ext:    0b000000011111,
 	//      0b000000100000,
 	//      0b000000100001,
 	slli:   0b000000100010,
@@ -198,7 +198,7 @@ exports.REGISTER_OFFSETS = {
 	e:    122,
 };
 
-exports.TRAPS = {
+exports.EXTS = {
 	printr: 0b000000000001, // prints contents of register whose ID is stored in $rs.
 	halt:   0b000000000010, // tells the vm to stop
 	eval:   0b000000000011, // executes the string starting at a given address as JS

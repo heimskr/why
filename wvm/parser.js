@@ -14,7 +14,7 @@ require("../util.js").mixins(_);
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, TRAPS, CONDITIONS} = require("../wasm/constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS} = require("../wasm/constants.js");
 const OPCODES_INV = _.multiInvert(OPCODES);
 const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
 const CONDITIONS_INV = _.invert(CONDITIONS);
@@ -237,7 +237,7 @@ class Parser {
 		if (type == "r") {
 			const funct = get(52);
 			return {
-				op: opcode == OPCODES.trap? "trap" : OPCODES_INV[opcode].filter((op) => OPCODES_INV[opcode].length == 1 || Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
+				op: opcode == OPCODES.ext? "ext" : OPCODES_INV[opcode].filter((op) => OPCODES_INV[opcode].length == 1 || Parser.instructionType(opcode) == "r" && FUNCTS[op] == funct)[0],
 				opcode,
 				rt: get(12, 7),
 				rs: get(19, 7),
@@ -310,7 +310,7 @@ class Parser {
 
 		if (type == "r") {
 			const srt = Parser.getRegister(rt);
-			return Parser.formatR(OPCODES_INV[opcode].filter((op) => op == "trap" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags, conditions);
+			return Parser.formatR(OPCODES_INV[opcode].filter((op) => op == "ext" || FUNCTS[op] == funct)[0], srt, srs, srd, funct, flags, conditions);
 		}
 		
 		if (type == "i") {
@@ -405,7 +405,7 @@ class Parser {
 		if (op == "multu") return `${chalk.yellow(rs)} ${Parser.colorOper("*") } ${chalk.yellow(rt)} /u`;
 		if (op == "slu")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
 		if (op == "sleu")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "trap")  return Parser.formatTrap(rt, rs, rd, funct);
+		if (op == "ext")   return Parser.formatExt(rt, rs, rd, funct);
 		if (op == "cb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "lb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd)} /b`;
 		if (op == "sb")    return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
@@ -502,8 +502,8 @@ class Parser {
 	 */
 	static formatR_m(op, rt, rs, rd, funct, flags=0, conditions=null) {
 		let base = chalk.cyan(op);
-		if (op == "trap") {
-			base = chalk.cyan.bold(Object.keys(TRAPS).filter(t => funct == TRAPS[t])[0] || ("trap " + funct));
+		if (op == "ext") {
+			base = chalk.cyan.bold(Object.keys(EXTS).filter(t => funct == EXTS[t])[0] || ("ext " + funct));
 		}
 
 		return `${base} ${chalk.yellow(rs)}${chalk.dim(",")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
@@ -559,20 +559,20 @@ class Parser {
 	}
 
 	/**
-	 * Converts a trap instruction to its original wasm source.
+	 * Converts an external instruction to its original wasm source.
 	 * @param  {string} rt The name of the `rt` register.
 	 * @param  {string} rs The name of the `rs` register.
 	 * @param  {string} rd The name of the `rt` register.
 	 * @param  {number} funct The ID of the function.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatTrap(rt, rs, rd, funct) {
-		if (funct == TRAPS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
-		if (funct == TRAPS.prc)    return `<${chalk.cyan("prc")} ${chalk.yellow(rs)}>`;
-		if (funct == TRAPS.prd)    return `<${chalk.cyan("prd")} ${chalk.yellow(rs)}>`;
-		if (funct == TRAPS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
-		if (funct == TRAPS.halt)   return `<${chalk.cyan("halt")}>`;
-		return `<${chalk.bold("trap")} ${chalk.red(funct)}>`;
+	static formatExt(rt, rs, rd, funct) {
+		if (funct == EXTS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
+		if (funct == EXTS.prc)    return `<${chalk.cyan("prc")} ${chalk.yellow(rs)}>`;
+		if (funct == EXTS.prd)    return `<${chalk.cyan("prd")} ${chalk.yellow(rs)}>`;
+		if (funct == EXTS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
+		if (funct == EXTS.halt)   return `<${chalk.cyan("halt")}>`;
+		return `<${chalk.bold("ext")} ${chalk.red(funct)}>`;
 	}
 }
 

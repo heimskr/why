@@ -9,7 +9,7 @@ let Long = require("long"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {REGISTER_OFFSETS, TRAPS, ALU_MASKS} = require("../wasm/constants.js");
+const {REGISTER_OFFSETS, EXTS, ALU_MASKS} = require("../wasm/constants.js");
 
 /**
  * `wvm` is the virtual machine for why.js. It executes bytecode produced by `wasmc`.
@@ -560,16 +560,16 @@ class WVM {
 		this.registers[rd] = Long.fromInt(imm, true);
 	}
 
-	op_trap(rt, rs, rd, funct) {
-		if (funct == TRAPS.printr) {
+	op_ext(rt, rs, rd, funct) {
+		if (funct == EXTS.printr) {
 			this.flushPrcBuffer();
 			this.log(`${Parser.getRegister(rs)}: 0x${this.registers[rs].toString(16)}`);
-		} else if (funct == TRAPS.halt) {
+		} else if (funct == EXTS.halt) {
 			this.stop();
 			return true;
-		} else if (funct == TRAPS.eval) {
+		} else if (funct == EXTS.eval) {
 			console.warn("<eval> is currently unimplemented.");
-		} else if (funct == TRAPS.prc) {
+		} else if (funct == EXTS.prc) {
 			const n = this.registers[rs].toUnsigned().toInt() & 0xff;
 			const c = String.fromCharCode(n);
 			if (this.onPrintChar) {
@@ -581,12 +581,12 @@ class WVM {
 			} else {
 				this.prcBuffer += c;
 			}
-		} else if (funct == TRAPS.prd) {
+		} else if (funct == EXTS.prd) {
 			this.prcBuffer += this.registers[rs].toString();
-		} else if (funct == TRAPS.prx) {
+		} else if (funct == EXTS.prx) {
 			this.prcBuffer += "0x" + this.registers[rs].toString(16);
 		} else {
-			console.log("Unknown trap:", {rt, rs, rd, shift, funct});
+			console.log("Unknown external:", {rt, rs, rd, shift, funct});
 		}
 	}
 
