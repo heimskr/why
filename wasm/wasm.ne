@@ -60,8 +60,8 @@ lineend			-> (single newline | multi | newline) 		{% d => null %}
 sep				-> ";"										{% d => null %}
 				 | lineend									{% d => null %}
 
-par[OPER]		-> "(" _ $OPER _ ")"						{% d => d[2] %}
-brc[OPER]		-> "{" _ $OPER _ "}"						{% d => d[2] %}
+par[OPER]		-> "(" _ $OPER _ ")"						{% d => d[2][0] %}
+brc[OPER]		-> "{" _ $OPER _ "}"						{% d => d[2][0] %}
 epar			-> "(" _ ")"								{% d => null %}
 
 string			-> dqstring									{% nth(0) %}
@@ -108,7 +108,7 @@ statement		-> _ op _ sep								{% d => [null, ...d[1][0]] %}
 subroutine		-> "sub" __ var _ par[sub_saved] _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2], d[4], filter(d[6])) %}
 				 | "sub" __ var _ epar _ brc[subroutine_code:*]
-															{% d => compileSubroutine(d[2],   [], filter(d[8])) %}
+															{% d => compileSubroutine(d[2],   [], filter(d[6])) %}
 subroutine_code -> _ op										{% d => subify([null, ...d[1][0]]) %}
 				 | _ label (_ lineend):* _ op				{% d => subify([d[1], ...d[4][0]]) %}
 				 | _ sep									{% d =>  null %}
