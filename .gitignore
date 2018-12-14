@@ -1,5 +1,4 @@
-/*node_modules
-/compiler.js
+/**/node_modules
 /wasm/what*
 /wasm/wasm.js
 /wasm/wasm_parser.js
