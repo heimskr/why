@@ -1,6 +1,8 @@
 @{%
 "use strict";
 
+const S = Symbol.for;
+
 const {EXTS} = require("./constants.js");
 
 const special = {
@@ -26,7 +28,7 @@ const compileData = (entries) => {
 const compileSubroutine = (name, args, code) => {
 	return [
 		[name, "push", ...args],
-		...code.map((item) => item[1] == Symbol.for("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
+		...code.map((item) => item[1] == S("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
 		[`${name}$done`, "pop", ...args.reverse()],
 		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
 	];
@@ -59,6 +61,8 @@ sep				-> ";"										{% d => null %}
 				 | lineend									{% d => null %}
 
 par[OPER]		-> "(" _ $OPER _ ")"						{% d => d[2] %}
+brc[OPER]		-> "{" _ $OPER _ "}"						{% d => d[2] %}
+epar			-> "(" _ ")"								{% d => null %}
 
 string			-> dqstring									{% nth(0) %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
@@ -101,15 +105,15 @@ statement		-> _ op _ sep								{% d => [null, ...d[1][0]] %}
 				 | _ sep									{% d => null %}
 				 | _ subroutine								{% d => ["subroutine", d[1]] %}
 
-subroutine		-> "sub" __ var _ "(" _ sub_saved _ ")" _ "{" _ subroutine_code:* _ "}"
-															{% d => compileSubroutine(d[2], d[6], filter(d[12])) %}
-				 | "sub" __ var _ "(" _ ")" _ "{" _ subroutine_code:* _ "}"
-															{% d => compileSubroutine(d[2], [], filter(d[10])) %}
+subroutine		-> "sub" __ var _ par[sub_saved] _ brc[subroutine_code:*]
+															{% d => compileSubroutine(d[2], d[4], filter(d[6])) %}
+				 | "sub" __ var _ epar _ brc[subroutine_code:*]
+															{% d => compileSubroutine(d[2],   [], filter(d[8])) %}
 subroutine_code -> _ op										{% d => subify([null, ...d[1][0]]) %}
 				 | _ label (_ lineend):* _ op				{% d => subify([d[1], ...d[4][0]]) %}
-				 | _ sep									{% d => null %}
-				 | ___ "!done"								{% d => [null, Symbol.for("done")] %}
-				 | _ label (lineend | __):+ "!done"			{% d => [d[1], Symbol.for("done")] %}
+				 | _ sep									{% d =>  null %}
+				 | ___ "!done"								{% d => [null, S("done")] %}
+				 | _ label (lineend | __):+ "!done"			{% d => [d[1], S("done")] %}
 sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
 
 include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}
@@ -341,10 +345,10 @@ ext_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["ext", d[8],
 ext_xn_send		-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["ext",   0,  d[6],   0,  EXTS.xn_send   ] %}
 ext_xn_recv		-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["ext",   0,  d[8], d[6], EXTS.xn_recv   ] %}
 
-gap				-> "{" _ int _ "}"							{% d => ["gap", d[2]] %}
+gap				-> brc[int]									{% d => ["gap",  d[0]] %}
 
-call			-> var _ "(" _ args _ ")"					{% d => ["call", d[0], ...d[4].map((x) => x[0])] %}
-				 | var _ "(" _ ")"							{% d => ["call", d[0]] %}
+call			-> var _ par[args]							{% d => ["call", d[0], ...d[2].map((x) => x[0])] %}
+				 | var _ epar								{% d => ["call", d[0]] %}
 arg				-> (rv | int | var_addr)					{% nth(0) %}
 args			-> delimited[arg, ("," _)]					{% d => d[0][0] %}
 
