@@ -10,6 +10,7 @@ library
 
 #data
 heap_limit: 100000
+endptr: &.end
 globalbase: 0 // pointer to first block in the list.
 msg_cantallocate: "\A38;5;9mCouldn't find a free block.\A0m"
 ptrtoblock: 0

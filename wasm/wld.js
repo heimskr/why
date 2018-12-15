@@ -8,7 +8,7 @@ let fs = require("fs"),
 	Parser = require("../wvm/parser.js"),
 	_ = require("lodash");
 
-const {FLAGS, EXCEPTIONS} = require("./constants.js");
+const {FLAGS, EXCEPTIONS, SYMBOL_TYPES} = require("./constants.js");
 
 /**
  * @module wasm
@@ -73,7 +73,6 @@ class Linker {
 	link() {
 		// Step 1
 		this.parser = this.openMain(this.objectFilenames[0]);
-		const {raw, parsed} = this.parser;
 
 		// Step 2
 		const metaLength = this.parser.getMetaLength();
@@ -86,7 +85,7 @@ class Linker {
 		 * Contains the combination of all parsed symbol tables.
 		 * @type {SymbolTable}
 		 */
-		this.combinedSymbols = _.cloneDeep(mainSymbols);
+		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser);
 		
 		/**
 		 * Contains the combination of all parsed code sections.
@@ -221,17 +220,20 @@ class Linker {
 		for (const handler in handlers) {
 			handlers[handler] = handlers[handler].add(handlerOffset);
 		}
-
+		
 		const encodedHandlers = Linker.encodeHandlers(handlers);
-
+		
 		// Step 10: Update the offset section in the metadata.
 		const meta = this.parser.rawMeta;
 		meta[1] = meta[1].add(handlerOffset); // Beginning of handlers
 		meta[2] = meta[1].add(encodedHandlers.length * 8); // Beginning of code
 		meta[3] = meta[2].add(this.combinedCode.length * 8); // Beginning of data
 		meta[4] = meta[3].add(this.combinedData.length * 8); // Beginning of heap
+		
+		// Step 11:
+		Linker.repointerize(this.combinedData, this.combinedSymbols, meta[3]);
 
-		// Step 11: Concatenate all the combined sections and write the result to the output file.
+		// Step 12: Concatenate all the combined sections and write the result to the output file.
 		const combined = [
 			...this.parser.rawMeta,
 			...encodedCombinedSymbols,
@@ -242,6 +244,56 @@ class Linker {
 
 		this.writeOutput(combined);
 		this.printSuccess();
+	}
+
+	/**
+	 * Replaces pointers inside pointer variables with the encoded names of the symbols they point to.
+	 * @param {SymbolTable} symtab A symbol table.
+	 * @param {Parser} parser A Parser whose parse() method has been called successfully.
+	 * @return {SymbolTable} A clone of the input symbol table with all pointers replaced.
+	 */
+	static depointerize(symtab, parser) {
+		const {offsets: {$data}, rawData} = parser;
+		const clone = _.cloneDeep(symtab);
+
+		for (const key in clone) {
+			const [id, addr, type] = clone[key];
+			if (type == SYMBOL_TYPES.POINTER) {
+				const index = (addr.toNumber() - $data) / 8;
+				const curValue = rawData[index];
+				
+				const matches = _.filter(clone, (v, k) => v[1].eq(curValue));
+				if (!matches.length) {
+					throw `Found 0 matches for ${curValue.toNumber()} from key "${key}".`;
+				}
+
+				// Replace the current data value, which currently contains the old pointer value,
+				// with the ID of the symbol it points to.
+				rawData[index] = Long.fromNumber(matches[0][0], true);
+			}
+		}
+
+		return clone;
+	}
+
+	static repointerize(data, symtab, dataStart) {
+		for (const key in symtab) {
+			const [id, addr, type] = symtab[key];
+			if (type == SYMBOL_TYPES.POINTER) {
+				const index = addr.sub(dataStart).div(8).toNumber();
+				const curValue = data[index];
+
+				// Search for a symbol whose ID matches the encoded symbol stored in the data entry.
+				const matches = _.filter(symtab, (v, k) => curValue.eq(v[0]));
+				if (!matches.length) {
+					throw `Found 0 matches for ${curValue.toNumber()} from key "${key}".`;
+				}
+
+				// Take the final address of the symbol and set it as the new value of the data entry.
+				const newAddr = matches[0][1];
+				data[index] = newAddr;
+			}
+		}
 	}
 
 	/**
