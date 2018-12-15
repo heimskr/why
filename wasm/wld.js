@@ -85,7 +85,8 @@ class Linker {
 		 * Contains the combination of all parsed symbol tables.
 		 * @type {SymbolTable}
 		 */
-		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser);
+		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser.rawData,
+			this.parser.offsets.$data);
 		
 		/**
 		 * Contains the combination of all parsed code sections.
@@ -123,13 +124,13 @@ class Linker {
 			const subparser = new Parser();
 			subparser.open(infile);
 
-			const {raw: subraw, parsed: subparsed} = subparser;
 			const subcode = subparser.rawCode;
 			const subdata = subparser.rawData;
-			const subtable = subparser.getSymbols();
+			const subtable = Linker.depointerize(subparser.getSymbols(), subdata, subparser.offsets.$data);
 			const subcodeLength = subparser.getCodeLength();
 			const subdataLength = subparser.getDataLength();
 			let subtableLength = subparser.rawSymbols.length;
+
 			// We can't have multiple .end labels! This is the only collision we account for;
 			// other collisions will cause an exception, though it could be possible to issue
 			// only a warning, in which case any collisions won't be added due to the behavior
@@ -206,14 +207,15 @@ class Linker {
 		}
 		
 		const end = 8 * (this.parser.rawMeta.length + WASMC.encodeSymbolTable(this.combinedSymbols).length
-		+ this.parser.rawHandlers.length + this.combinedCode.length + this.combinedData.length);
+			+ this.parser.rawHandlers.length + this.combinedCode.length + this.combinedData.length);
 		this.combinedSymbols[".end"][1] = Long.fromInt(end, true);
 		
 		// Step 8b: Replace all symbols in the code with the new addresses.
 		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
 
 		// Step 9: Update the handlers section.
-		// All the handler pointers have been pushed forward by the addition of other symbol tables, so we need to increase them to compensate.
+		// Because all the handler pointers have been pushed forward by the addition
+		// of other symbol tables, we need to increase them to compensate.
 		const encodedCombinedSymbols = WASMC.encodeSymbolTable(this.combinedSymbols);
 		const {handlers} = this.parser;
 		const handlerOffset = (encodedCombinedSymbols.length - symtabLength) * 8;
@@ -247,20 +249,21 @@ class Linker {
 	}
 
 	/**
-	 * Replaces pointers inside pointer variables with the encoded names of the symbols they point to.
-	 * @param {SymbolTable} symtab A symbol table.
-	 * @param {Parser} parser A Parser whose parse() method has been called successfully.
+	 * Replaces pointers inside all pointer variables of a symbol
+	 * table with the encoded names of the symbols they point to.
+	 * @param {SymbolTable} symtab     A symbol table.
+	 * @param {Long[]}      data       An array of longs comprising a data section.
+	 * @param {number}      dataOffset The start of the data section.
 	 * @return {SymbolTable} A clone of the input symbol table with all pointers replaced.
 	 */
-	static depointerize(symtab, parser) {
-		const {offsets: {$data}, rawData} = parser;
+	static depointerize(symtab, data, dataOffset) {
 		const clone = _.cloneDeep(symtab);
 
 		for (const key in clone) {
 			const [id, addr, type] = clone[key];
 			if (type == SYMBOL_TYPES.POINTER) {
-				const index = (addr.toNumber() - $data) / 8;
-				const curValue = rawData[index];
+				const index = (addr.toNumber() - dataOffset) / 8;
+				const curValue = data[index];
 				
 				const matches = _.filter(clone, (v, k) => v[1].eq(curValue));
 				if (!matches.length) {
@@ -269,7 +272,7 @@ class Linker {
 
 				// Replace the current data value, which currently contains the old pointer value,
 				// with the ID of the symbol it points to.
-				rawData[index] = Long.fromNumber(matches[0][0], true);
+				data[index] = Long.fromNumber(matches[0][0], true);
 			}
 		}
 
