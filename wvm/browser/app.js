@@ -213,7 +213,7 @@ let App = window.App = class App {
 		this._symbolTableEdges = [];
 
 		for (let i = this.vm.offsets.$symtab / 8, j = 0; i < this.vm.offsets.$handlers / 8 && j < 10000; j++) {
-			i += 2 + this.vm.initial[i].toUnsigned().low;
+			i += 2 + (this.vm.initial[i].toUnsigned().low & 0xffff);
 			if (i * 8 < this.vm.offsets.$handlers) {
 				this._symbolTableEdges.push(i * 8);
 			}
@@ -245,7 +245,7 @@ let App = window.App = class App {
 		if (inSymtab) {
 			if (edges.includes(addr)) { // first word: hash, length
 				const hash = long.high.toString(16);
-				const lengthNum = long.low;
+				const lengthNum = long.low & 0xffff;
 				let lengthStr = lengthNum.toString();
 				if (lengthNum < 5) {
 					const pad = `<span class="glyphicon glyphicon-flash"></span>`;
@@ -731,7 +731,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/memory.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/string.why", "utf8"));
 let {offsets, handlers, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
 
