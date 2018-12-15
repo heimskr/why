@@ -239,3 +239,8 @@ exports.ALU_MASKS = {
 	c: 0b0100,
 	o: 0b1000,
 };
+
+exports.SYMBOL_TYPES = {
+	UNKNOWN: 0,
+	POINTER: 1,
+};

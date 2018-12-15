@@ -360,7 +360,6 @@ class Linker {
 					throw `resymbolize: Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x${val.toString(16).padStart(16, "0")}\x1b[0m.`;
 				}
 
-				
 				const addr = symbolTable[name][1];
 				if (addr.high != 0) {
 					console.warn(`Truncating address of label ${chalk.bold(name)} from ${chalk.bold(`0x${addr.toString(16).padStart(16, "0")}`)} to ${chalk.bold(`0x${addr.low.toString(16).padStart(16, "0")}`)}.`);

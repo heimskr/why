@@ -17,7 +17,7 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, EXTS, CONDITIONS} = require("./constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} = require("./constants.js");
 const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
@@ -99,6 +99,13 @@ class WASMC {
 		 * @name module:wasm~WASMC#dataOffsets
 		 */
 		this.dataOffsets = {};
+
+		/**
+		 * An object mapping names of data variables to the names of variables whose addresses they store.
+		 * @type {Object.<string, string>}
+		 * @name module:wasm~WASMC#dataVariables
+		 */
+		this.dataVariables = {};
 	}
 
 	/**
@@ -185,8 +192,10 @@ class WASMC {
 		this.metaOffsetEnd = end;
 
 		this.setDataOffsets(this.metaOffsetData.toInt());
+		this.reprocessData();
 		this.processCode(this.expandLabels(expanded));
 		this.symbolTable = this.createSymbolTable(labels, false);
+
 
 		this.assembled = [...this.meta, ...this.symbolTable, ...this.handlers, ...this.code, ...this.data];
 
@@ -260,12 +269,23 @@ class WASMC {
 	processData() {
 		let length = 0;
 		_(this.parsed.data).forEach(([type, value], key) => {
-			const pieces = this.convertDataPieces(type, value);
-			this.dataOffsets[key] = length;
 			this.log(chalk.yellow("Assigning"), "[" + chalk.bold(length) + "]", "to", chalk.bold(key));
+			this.dataOffsets[key] = length;
+			const pieces = this.convertDataPieces(type, value, key);
 			this.data = this.data.concat(pieces);
 			length += pieces.length * 8;
 		});
+	}
+
+	/**
+	 * Replaces variable reference placeholders in the data section with the proper values of the pointers.
+	 */
+	reprocessData() {
+		for (const key in this.dataVariables) {
+			const ref = this.dataVariables[key];
+			const index = this.dataOffsets[key] / 8;
+			this.data[index] = Long.fromInt(this.offsets[ref], true);
+		}
 	}
 
 	/**
@@ -282,7 +302,7 @@ class WASMC {
 	 * @param {number|string} value A data value.
 	 * @return {Long[]} The encoded form of the entry.
 	 */
-	convertDataPieces(type, value) {
+	convertDataPieces(type, value, key) {
 		if (type.match(/^(in|floa)t$/)) {
 			return [Long.fromValue(value)];
 		}
@@ -293,6 +313,15 @@ class WASMC {
 
 		if (type == "bytes") {
 			return [...Array(Math.ceil(value / 8))].map(() => Long.fromInt(0));
+		}
+
+		if (type == "var") {
+			// Just a placeholder for now; replaced with the address in reprocessData().
+			if (key) {
+				this.dataVariables[key] = value;
+			}
+
+			return [Long.UZERO];
 		}
 
 		WASMC.die(`Error: unknown data type "${type}".`);
@@ -680,7 +709,7 @@ class WASMC {
 	 * @param {...*} args - The arguments to pass to console.log.
 	 */
 	static warn(...args) {
-		console.log(...args);
+		console.warn(...args);
 	}
 
 	/**
@@ -720,11 +749,21 @@ class WASMC {
 	 * @return {Long[]} An encoded symbol table.
 	 */
 	createSymbolTable(labels, skeleton = true) {
-		return _.flatten(_.uniq([...labels, ".end"]).map((label) => [
-			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
-			skeleton? Long.UZERO : Long.fromInt(this.offsets[label], true),
-			...WASMC.str2longs(label)
-		]));
+		return _.flatten(_.uniq([...labels, ".end"]).map((label) => {
+			const length = Math.ceil(label.length / 8) & 0xffff;
+			let type = SYMBOL_TYPES.UNKNOWN;
+			if (!skeleton) {
+				if (label in this.dataVariables) {
+					type = SYMBOL_TYPES.POINTER;
+				}
+			}
+
+			return [
+				Long.fromBits(length | (type << 16), WASMC.encodeSymbol(label), true),
+				skeleton? Long.UZERO : Long.fromInt(this.offsets[label], true),
+				...WASMC.str2longs(label)
+			];
+		}));
 	}
 
 	/**

@@ -96,6 +96,7 @@ datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
 				 | datakey int    _ sep						{% d => ["int",    d[0], d[1]] %}
 				 | datakey string _ sep						{% d => ["string", d[0], d[1]] %}
 				 | datakey par[int] _ sep					{% d => ["bytes",  d[0], d[1]] %}
+				 | datakey "&" xvar							{% d => ["var",    d[0], d[2]] %}
 				 | _ sep 									{% d => null %}
 
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}

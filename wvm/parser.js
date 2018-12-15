@@ -165,13 +165,14 @@ class Parser {
 		const out = {};
 		for (let i = start, j = 0; i < end && j < 10000; j++) {
 			const id = Math.abs(longs[i].high);
-			const len = longs[i].low;
+			const len = longs[i].low & 0xffff;
+			const type = longs[i].low >> 16;
 			const addr = longs[i + 1];
 
 			const encodedName = longs.slice(i + 2, i + 2 + len).map((l) => l.toString(16).padStart(16, "0")).join("").replace(/(00)+$/, "");
 			const name = _.chunk(encodedName, 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
 
-			out[name] = [id, addr];
+			out[name] = [id, addr, type];
 
 			i += 2 + len;
 		}
