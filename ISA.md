@@ -159,6 +159,8 @@
 						<li><a href="#op-ext">External</a> (<code>ext</code>)</li>
 						<li><a href="#op-int">Interrupt</a> (<code>int</code>)</li>
 						<li><a href="#op-rit">Register Interrupt Table</a> (<code>rit</code>)</li>
+						<li><a href="#op-time">Set Timer</a> (<code>time</code>)</li>
+						<li><a href="#op-timei">Set Timer Immediate</a> (<code>timei</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -180,7 +182,6 @@
 				<li><a href="#ext-prc">Print Character</a> (<code>prc</code>)</li>
 				<li><a href="#ext-prd">Print Decimal</a> (<code>prd</code>)</li>
 				<li><a href="#ext-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
-				<li><a href="#ext-time">Set Timer</a> (<code>time</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -283,7 +284,7 @@ some_number: 42
 WhySA has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
 
 # <a name="interrupts"></a>Interrupts
-Interrupts can be triggered by software or by the VM itself.
+Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, the current program counter is pushed to the stack. Interrupt handlers are expected to deal with properly resuming normal program execution after finishing up.
 
 ## <a name="int-system"></a>1: `SYSTEM`
 The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
@@ -824,6 +825,18 @@ Performs an interrupt. If no interrupt table has been registered, nothing intere
 
 Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode; will cause the machine to halt if called in user mode.
 
+### <a name="op-time"></a>Set Timer (`time`)
+> `time rs`  
+> `000000110000` `.......` `sssssss` `.......` `0000000000000` `......` `000000000000`
+
+Sets the hardware timer to the number stored in `rs` (in nanoseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+
+### <a name="op-timei"></a>Set Timer Immediate (`timei`)
+> `time imm`  
+> `000000110001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Sets the hardware timer to the number stored in `imm` (in nanoseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
 ### <a name="op-mv"></a>Move (`mv`)
@@ -957,9 +970,3 @@ Syntax: `<prx $rs>`
 Function value: `000000000110`
 
 Prints the number stored in `rs` to the console as a hexadecimal.
-
-### <a name="ext-time"></a>Set Timer
-Syntax: `<time $rs>`
-Function value: `000000000111`
-
-Sets the hardware timer to the number stores in `rs`, canceling any previous timer. Requires kernel mode.

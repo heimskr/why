@@ -412,6 +412,7 @@ class Parser {
 		if (op == "sb")    return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "spush") return `${chalk.dim("[")} ${chalk.yellow(rs)}`;
 		if (op == "spop")  return `\xa0\xa0${chalk.yellow(rd)} ${chalk.dim("]")}`;
+		if (op == "time")  return `${chalk.cyan("time")} ${chalk.yellow(rs)}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 
@@ -469,6 +470,7 @@ class Parser {
 		if (op == "lbni")   return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
 		if (op == "int")    return `${chalk.cyan("int")} ${imm}`;
 		if (op == "rit")    return `${chalk.cyan("rit")} ${chalk.magenta(target)}`;
+		if (op == "timei")  return `${chalk.cyan("time")} ${imm}`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 

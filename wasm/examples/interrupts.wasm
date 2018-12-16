@@ -4,18 +4,39 @@ author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
 version: "1"
 
-#data
+#includes
+../compiled/string.why
 
+#data
 isrtable: (8)
 isr_syscall: &syscall
+isr_timer:   &timer
+msg_timer: "Timer expired.\n"
+msg_bye: "Goodbye.\n"
 
 #code
 
 rit isrtable
 int 1
 
+@loop
+	: done if $s1
+	: loop
+
+@done
+strprint(&msg_bye)
 <halt>
 
 sub syscall() {
+	1000000000 -> $t0
+	$t0 += $t0
+	$t0 += $t0
+	time $t0
+	] $t0; : $t0
+}
 
+sub timer() {
+	strprint(&msg_timer)
+	1 -> $s1
+	] $t0; : $t0
 }

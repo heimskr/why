@@ -46,6 +46,7 @@ class WVM {
 		this.cycles = 0;
 		this.ring = RINGS.KERNEL;
 		this.interruptTableAddress = null;
+		this.timeoutID = 0;
 
 		this.prcBuffer = "";
 		this.noBuffer = false;
@@ -256,6 +257,16 @@ class WVM {
 		return true;
 	}
 
+	checkKernel(opName) {
+		if (RINGS.KERNEL < this.ring) {
+			console.error(`Called ${opName} outside of kernel mode; halting.`);
+			this.stop();
+			return false;
+		}
+
+		return true;
+	}
+
 	interrupt(id) {
 		if (!this.interruptTableAddress) {
 			console.warn("No interrupt table registered; ignoring interrupt.");
@@ -277,12 +288,33 @@ class WVM {
 			return false;
 		}
 
+		this.stackPush(this.programCounter);
+
 		if (-1 < newRing) {
 			this.ring = newRing;
 		}
 
 		this.programCounter = this.getWord(this.interruptTableAddress + id * 8).toInt();
 		return true;
+	}
+
+	timerExpired() {
+		this.interrupt(INTERRUPTS.TIMER[0]);
+	}
+
+	stackPush(val) {
+		this.setWord(this.sp, val);
+		this.sp = this.sp.subtract(8);
+	}
+
+	stackPop() {
+		this.sp = this.sp.add(8);
+		return this.getWord(this.sp);
+	}
+
+	setTimer(nano) {
+		clearTimeout(this.timeoutID);
+		this.timeoutID = setTimeout(() => this.timerExpired(), nano / 1e6);
 	}
 
 	op_add(rt, rs, rd) {
@@ -422,23 +454,35 @@ class WVM {
 	}
 
 	op_int(rs, rd, imm) {
+		const i = imm instanceof Long? imm.toInt() : imm;
+
 		if (imm < 0 || Object.keys(INTERRUPTS).length <= imm) {
 			console.error("Invalid interrupt ID:", imm);
 			this.stop();
 			return;
 		}
 
+		// Return to the following instruction.
+		this.programCounter += 8;
 		return this.interrupt(imm);
 	}
 
 	op_rit(rs, rd, imm) {
-		if (RINGS.KERNEL < this.ring) {
-			console.error("Called rit outside of kernel mode; halting.");
-			this.stop();
-			return;
+		if (this.checkKernel()) {
+			this.interruptTableAddress = imm instanceof Long? imm.toInt() : imm;
 		}
+	}
 
-		this.interruptTableAddress = imm;
+	op_time(rt, rs, rd) {
+		if (this.checkKernel()) {
+			this.setTimer(this.registers[rs].toUnsigned().toInt());
+		}
+	}
+
+	op_timei(rs, rd, imm) {
+		if (this.checkKernel()) {
+			this.setTimer(imm instanceof Long? imm.toInt() : imm);
+		}
 	}
 
 	op_slli(rs, rd, imm) {
@@ -629,13 +673,11 @@ class WVM {
 	}
 
 	op_spush(rt, rs) {
-		this.setWord(this.sp, this.registers[rs]);
-		this.sp = this.sp.subtract(8);
+		this.stackPush(this.registers[rs]);
 	}
 
 	op_spop(rt, rs, rd) {
-		this.sp = this.sp.add(8);
-		this.registers[rd] = this.getWord(this.sp);
+		this.registers[rd] = this.stackPop();
 	}
 
 	op_li(rs, rd, imm) {

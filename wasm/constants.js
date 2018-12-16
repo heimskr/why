@@ -8,6 +8,7 @@ exports.R_TYPES = [
 	0b000000010001, // Jumps
 	0b000000010010, // Memory
 	0b000000011111, // External
+	0b000000110000, // Set Timer
 ];
 
 exports.I_TYPES = [
@@ -44,15 +45,17 @@ exports.I_TYPES = [
 	0b000000101000, // Load Byte Indirect Immediate
 	0b000000101001, // Set on Greater Than Immediate
 	0b000000101010, // Set on Greater Than or Equal Immediate
+	0b000000101100, // Compare Immediate
+	0b000000110001, // Set Timer Immediate
 ];
 
 exports.J_TYPES = [
 	0b000000001111, // Jump
 	0b000000010000, // Jump Conditional
-	0b000000101011, // Jump If Negative
 	0b000000101100, // Jump If Positive
-	0b000000101101, // Jump If Zero
-	0b000000101110, // Jump If Nonzero
+	0b000000101101, // Jump If Negative
+	0b000000101110, // Jump If Zero
+	0b000000101111, // Jump If Nonzero
 ];
 
 exports.OPCODES = {
@@ -133,6 +136,8 @@ exports.OPCODES = {
 	jn:     0b000000101101,
 	jz:     0b000000101110,
 	jnz:    0b000000101111,
+	time:   0b000000110000,
+	timei:  0b000000110001,
 };
 
 exports.FUNCTS = {
@@ -141,6 +146,7 @@ exports.FUNCTS = {
 	c:     0b000000000000,
 	jr:    0b000000000000,
 	sl:    0b000000000000,
+	time:  0b000000000000,
 	jrc:   0b000000000001,
 	l:     0b000000000001,
 	nand:  0b000000000001,
