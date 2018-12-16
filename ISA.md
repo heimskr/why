@@ -20,6 +20,7 @@
 		<li><a href="#interrupts">Interrupts</a>
 			<ol>
 				<li><a href="#int-system"><code>SYSTEM</code></a>
+				<li><a href="#int-timer"><code>TIMER</code></a>
 			</ol>
 		</li>
 		<li><a href="#format">Instruction Format</a>
@@ -179,6 +180,7 @@
 				<li><a href="#ext-prc">Print Character</a> (<code>prc</code>)</li>
 				<li><a href="#ext-prd">Print Decimal</a> (<code>prd</code>)</li>
 				<li><a href="#ext-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
+				<li><a href="#ext-time">Set Timer</a> (<code>time</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -285,6 +287,9 @@ Interrupts can be triggered by software or by the VM itself.
 
 ## <a name="int-system"></a>1: `SYSTEM`
 The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
+
+## <a name="int-timer"></a>2: `TIMER`
+The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. It's exclusive to kernel mode. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own mechanisms to expose timer functionality to lower-privileged code.
 
 
 # <a name="format"></a>Instruction Format
@@ -952,3 +957,9 @@ Syntax: `<prx $rs>`
 Function value: `000000000110`
 
 Prints the number stored in `rs` to the console as a hexadecimal.
+
+### <a name="ext-time"></a>Set Timer
+Syntax: `<time $rs>`
+Function value: `000000000111`
+
+Sets the hardware timer to the number stores in `rs`, canceling any previous timer. Requires kernel mode.

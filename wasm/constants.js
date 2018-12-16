@@ -258,4 +258,5 @@ exports.RINGS = {
 exports.INTERRUPTS = { // [ID, new mode (-1 for unchanged), max permitted mode (-1 for any)]
 	NULL:   [0, -1, -1],
 	SYSTEM: [1,  0, -1],
+	TIMER:  [2, -1,  0],
 };
