@@ -14,7 +14,7 @@ require("../util.js").mixins(_);
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS} = require("../wasm/constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS} = require("../wasm/constants.js");
 const OPCODES_INV = _.multiInvert(OPCODES);
 const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
 const CONDITIONS_INV = _.invert(CONDITIONS);
@@ -577,7 +577,7 @@ class Parser {
 	}
 
 	static getTarget(imm, flags, symbols) {
-		if (flags != 1) {
+		if (flags != FLAGS.KNOWN_SYMBOL) {
 			return imm;
 		}
 
