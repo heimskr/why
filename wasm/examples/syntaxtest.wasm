@@ -12,7 +12,8 @@ foo: "hi"
 %meme: "hey"
 
 #code
-!fibonacci(50)
+fibonacci(50)
+
 <print $r0>
 <halt>
 

@@ -427,14 +427,7 @@ class Parser {
 	 * @return {string} A line of wasm source.
 	 */
 	static formatI_w(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
-		let target = imm;
-
-		if (flags == 1) {
-			const key = _.findKey(symbols, (s) => s[1].eq(imm));
-			if (key) {
-				target = "&" + key;
-			}
-		}
+		const target = Parser.getTarget(imm, flags, symbols);
 
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
@@ -489,7 +482,7 @@ class Parser {
 	 * @return {string} A line of wasm source.
 	 */
 	static formatJ_w(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
-		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
+		const target = chalk.magenta(Parser.getTarget(addr, flags, symbols));
 		const sym = link? "::" : ":";
 		const cond = {"p": "+", "n": "-", "z": "0", "nz": "*"}[conditions] || "";
 		if (op == "j")   return `${chalk.dim(cond + sym)} ${target}`;
@@ -529,7 +522,7 @@ class Parser {
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
 	static formatI_m(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
-		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;	
+		const target = Parser.getTarget(imm, flags, symbols);
 		return `${chalk.cyan(op)} ${chalk.yellow(rs) + chalk.dim(",")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
 	}
 
@@ -545,7 +538,7 @@ class Parser {
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
 	static formatJ_m(op, rs, addr, link, flags=0, conditions=null, symbols={}) {
-		const target = chalk.magenta(flags == 1 && _.findKey(symbols, (s) => s[1].eq(addr)) || addr);
+		const target = chalk.magenta(Parser.getTarget(addr, flags, symbols));
 		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs) + chalk.dim(",")} ${target}`;
 	}
 
@@ -581,6 +574,15 @@ class Parser {
 		if (funct == EXTS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
 		if (funct == EXTS.halt)   return `<${chalk.cyan("halt")}>`;
 		return `<${chalk.bold("ext")} ${chalk.red(funct)}>`;
+	}
+
+	static getTarget(imm, flags, symbols) {
+		if (flags != 1) {
+			return imm;
+		}
+
+		const key = _.findKey(symbols, (s) => s[1].eq(imm));
+		return key? "&" + key : imm;
 	}
 }
 
