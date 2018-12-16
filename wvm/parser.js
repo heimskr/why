@@ -427,7 +427,14 @@ class Parser {
 	 * @return {string} A line of wasm source.
 	 */
 	static formatI_w(op, rs, rd, imm, flags=0, conditions=null, symbols={}) {
-		const target = flags == 1 && _.findKey(symbols, (s) => s[1].eq(imm)) || imm;
+		let target = imm;
+
+		if (flags == 1) {
+			const key = _.findKey(symbols, (s) => s[1].eq(imm));
+			if (key) {
+				target = "&" + key;
+			}
+		}
 
 		const mathi = (increment, opequals, op) => {
 			if (rs == rd) {
