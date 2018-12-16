@@ -269,8 +269,11 @@ class WASMC {
 	processData() {
 		let length = 0;
 		_(this.parsed.data).forEach(([type, value], key) => {
-			this.log(chalk.yellow("Assigning"), "[" + chalk.bold(length) + "]", "to", chalk.bold(key));
-			this.dataOffsets[key] = length;
+			if (key[0] != "%") {
+				this.log(chalk.yellow("Assigning"), "[" + chalk.bold(length) + "]", "to", chalk.bold(key));
+				this.dataOffsets[key] = length;
+			}
+			
 			const pieces = this.convertDataPieces(type, value, key);
 			this.data = this.data.concat(pieces);
 			length += pieces.length * 8;
@@ -728,7 +731,7 @@ class WASMC {
 	 */
 	findAllLabels() {
 		return _.uniq([
-			...Object.keys(this.parsed.data),
+			...Object.keys(this.parsed.data).filter((label) => label[0] != "%"),
 			...this.parsed.code.map(([label]) => label).filter((label) => label)
 		]);
 	}

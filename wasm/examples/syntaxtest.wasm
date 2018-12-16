@@ -9,6 +9,7 @@ version: "1"
 
 #data
 foo: "hi"
+%meme: "hey"
 
 #code
 !fibonacci(50)
@@ -21,10 +22,10 @@ foo: "hi"
 	1 -> $t1
 	0 -> $r0
 	@fibonacci_loop
-		: &fibonacci_loop_done ($a0 == $0); $a0--
+		: fibonacci_loop_done if $a0 == $0; $a0--
 		$t0 + $t1 -> $r0
 		$t1 -> $t0
 		$r0 -> $t1
-		: &fibonacci_loop
+		: fibonacci_loop
 	@fibonacci_loop_done
-] $t1 $t0; ret
+] $t1 $t0; !ret
