@@ -91,7 +91,7 @@ handler			-> _ var (_ ":" _ | __) var_addr _ sep		{% d => [d[1], d[3]] %}
 
 data_section	-> _ data_header _ sep datadef:*			{% d => ["data", compileData(d[4])] %}
 data_header		-> "#data" | "#d"							{% d => null %}
-datakey			-> _ "%":? _ var (_ ":" _ | __)				{% d => (d[1] || "") + d[3] %}
+datakey			-> _ var (_ ":" _ | __)						{% d => d[1] %}
 datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
 				 | datakey int    _ sep						{% d => ["int",    d[0], d[1]] %}
 				 | datakey string _ sep						{% d => ["string", d[0], d[1]] %}
@@ -149,7 +149,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
 				 | op_lni | op_lbni
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
-				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop
+				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit
 				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
@@ -288,6 +288,9 @@ op_lni			-> "[" _ int  _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8],
 				 | "[" _ xvar _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], ["label", d[2]]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 				 | ptr_ref into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
+op_int			-> "int" __ int								{% d => ["int",      0,    0,  d[2]] %}
+op_rit			-> "rit" __ int								{% d => ["rit",      0,    0,  d[2]] %}
+				 | "rit" __ var								{% d => ["rit",      0,    0,  ["label", d[2]]] %}
 
 # J-Type instructions										               rs     addr             link   condition
 op_jc			-> ":" _ int   __ "if" __ reg				{% d => ["jc", d[6],  d[2],            false, null] %}

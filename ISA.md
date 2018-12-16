@@ -150,6 +150,8 @@
 				<li><a href="#ops-special">Special Instructions</a>
 					<ol>
 						<li><a href="#op-ext">External</a> (<code>ext</code>)</li>
+						<li><a href="#op-int">Interrupt</a> (<code>int</code>)</li>
+						<li><a href="#op-rit">Register Interrupt Table</a> (<code>rit</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -790,6 +792,19 @@ Sets a register to the given immediate value.
 > `000000011111` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `xxxxxxxxxxxx`
 
 Performs a special instruction, typically for interaction with the world outside the VM.
+
+### <a name="op-int"></a>Interrupt (`int`)
+> `int imm`  
+> `000000100000` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Performs an interrupt. If no interrupt table has been registered, nothing interesting happens.
+
+### <a name="op-int"></a>Interrupt (`int`)
+> `rit imm`  
+> `000000100001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode;
+will cause the machine to halt if called in user mode.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 

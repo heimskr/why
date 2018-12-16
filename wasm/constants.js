@@ -33,6 +33,8 @@ exports.I_TYPES = [
 	0b000000011100, // Set on Less Than Immediate Unsigned
 	0b000000011101, // Set on Less Than or Equal Immediate Unsigned
 	0b000000011110, // Modulo Unsigned
+	0b000000100000, // Interrupt
+	0b000000100001, // Register Interrupt Table
 	0b000000100010, // Shift Left Logical Immediate
 	0b000000100011, // Shift Right Logical Immediate
 	0b000000100100, // Shift Right Arithmetic Immediate
@@ -115,8 +117,8 @@ exports.OPCODES = {
 	sleui:  0b000000011101,
 	modi:   0b000000011110,
 	ext:    0b000000011111,
-	//      0b000000100000,
-	//      0b000000100001,
+	int:    0b000000100000,
+	rit:    0b000000100001,
 	slli:   0b000000100010,
 	srli:   0b000000100011,
 	srai:   0b000000100100,
@@ -246,4 +248,14 @@ exports.SYMBOL_TYPES = {
 	UNKNOWN_POINTER: 2,
 	CODE: 3,
 	DATA: 4,
+};
+
+exports.MODES = {
+	KERNEL: 0,
+	USER: 3
+};
+
+exports.INTERRUPTS = { // [ID, mode (-1 for unchanged)]
+	NULL: [0, -1],
+	SYSTEM: [1, 0]
 };

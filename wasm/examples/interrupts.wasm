@@ -1,0 +1,21 @@
+#meta
+name: "Interrupts"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+
+isrtable: (8)
+isr_syscall: &syscall
+
+#code
+
+rit isrtable
+int 1
+
+<halt>
+
+sub syscall() {
+
+}

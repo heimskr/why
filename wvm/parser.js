@@ -467,6 +467,8 @@ class Parser {
 		if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(target)}] /b`;
 		if (op == "lni")    return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
 		if (op == "lbni")   return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
+		if (op == "int")    return `${chalk.cyan("int")} ${imm}`;
+		if (op == "rit")    return `${chalk.cyan("rit")} ${chalk.magenta(target)}`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 

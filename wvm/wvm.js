@@ -9,7 +9,7 @@ let Long = require("long"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {REGISTER_OFFSETS, EXTS, ALU_MASKS} = require("../wasm/constants.js");
+const {REGISTER_OFFSETS, EXTS, ALU_MASKS, MODES, INTERRUPTS} = require("../wasm/constants.js");
 
 /**
  * `wvm` is the virtual machine for why.js. It executes bytecode produced by `wasmc`.
@@ -44,6 +44,8 @@ class WVM {
 		this.programCounter = this.offsets.$code;
 		this.active = true;
 		this.cycles = 0;
+		this.mode = MODES.KERNEL;
+		this.interruptTableAddress = null;
 
 		this.prcBuffer = "";
 		this.noBuffer = false;
@@ -51,9 +53,13 @@ class WVM {
 		this.onPrintChar /* (val) */ = null;
 	}
 
+	set mode(to) { this.onChangeMode(this._mode = to); }
+	get mode() { return this._mode; }
+
 	onTick() { }
 	onSetWord(/*addr, val*/) { }
 	onSetByte(/*addr, val*/) { }
+	onChangeMode(/*newMode*/) { }
 
 	/**
 	 * Returns the instruction currently pointed to by the program counter.
@@ -250,6 +256,27 @@ class WVM {
 		return true;
 	}
 
+	interrupt(id) {
+		if (!this.interruptTableAddress) {
+			console.warn("No interrupt table registered; ignoring interrupt.");
+			return false;
+		}
+
+		const meta = Object.values(INTERRUPTS).filter((x) => x[0] == id);
+		if (!meta) {
+			console.error("Invalid interrupt ID:", id);
+			this.halt();
+			return false;
+		}
+
+		if (-1 < meta[1]) {
+			this.mode = meta[1];
+		}
+
+		this.programCounter = this.getWord(this.interruptTableAddress + id * 8).toInt();
+		return true;
+	}
+
 	op_add(rt, rs, rd) {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(this.registers[rt].toSigned()));
 	}
@@ -386,6 +413,26 @@ class WVM {
 		}
 	}
 
+	op_int(rs, rd, imm) {
+		if (imm < 0 || INTERRUPTS.length <= imm) {
+			console.error("Invalid interrupt ID:", imm);
+			this.stop();
+			return;
+		}
+
+		return this.interrupt(imm);
+	}
+
+	op_rit(rs, rd, imm) {
+		if (MODES.KERNEL < this.mode) {
+			console.error("Called rit outside of kernel mode; halting.");
+			this.stop();
+			return;
+		}
+
+		this.interruptTableAddress = imm;
+	}
+
 	op_slli(rs, rd, imm) {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(
 			imm instanceof Long? imm.toUnsigned() : imm));
@@ -495,6 +542,12 @@ class WVM {
 	op_j(rs, addr, link, cond) {
 		if (this.checkConditions(cond)) {
 			if (link) this.link();
+			if (addr == 0) {
+				console.error("Invalid jump address:", addr);
+				this.stop();
+				return true;
+			}
+
 			this.programCounter = Long.fromInt(addr, true).toInt();
 			return true;
 		}
@@ -510,7 +563,15 @@ class WVM {
 
 	op_jr(rt, rs, rd, funct, cond) {
 		if (this.checkConditions(cond)) {
-			this.programCounter = this.registers[rd].toUnsigned().toInt();
+			const addr = this.registers[rd].toUnsigned().toInt();
+			
+			if (addr == 0) {
+				console.error("Invalid jump address:", addr);
+				this.stop();
+				return true;
+			}
+			
+			this.programCounter = addr;
 			return true;
 		}
 	}
