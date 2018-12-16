@@ -9,7 +9,7 @@ let Long = require("long"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {REGISTER_OFFSETS, EXTS, ALU_MASKS, MODES, INTERRUPTS} = require("../wasm/constants.js");
+const {REGISTER_OFFSETS, EXTS, ALU_MASKS, RINGS, INTERRUPTS} = require("../wasm/constants.js");
 
 /**
  * `wvm` is the virtual machine for why.js. It executes bytecode produced by `wasmc`.
@@ -44,7 +44,7 @@ class WVM {
 		this.programCounter = this.offsets.$code;
 		this.active = true;
 		this.cycles = 0;
-		this.mode = MODES.KERNEL;
+		this.ring = RINGS.KERNEL;
 		this.interruptTableAddress = null;
 
 		this.prcBuffer = "";
@@ -53,13 +53,13 @@ class WVM {
 		this.onPrintChar /* (val) */ = null;
 	}
 
-	set mode(to) { this.onChangeMode(this._mode = to); }
-	get mode() { return this._mode; }
+	set ring(to) { this.onChangeRing(this._ring = to); }
+	get ring() { return this._ring; }
 
 	onTick() { }
 	onSetWord(/*addr, val*/) { }
 	onSetByte(/*addr, val*/) { }
-	onChangeMode(/*newMode*/) { }
+	onChangeRing(/*newRing*/) { }
 
 	/**
 	 * Returns the instruction currently pointed to by the program counter.
@@ -262,15 +262,23 @@ class WVM {
 			return false;
 		}
 
-		const meta = Object.values(INTERRUPTS).filter((x) => x[0] == id);
+		const meta = Object.values(INTERRUPTS).filter((x) => x[0] == id)[0];
 		if (!meta) {
 			console.error("Invalid interrupt ID:", id);
 			this.halt();
 			return false;
 		}
 
-		if (-1 < meta[1]) {
-			this.mode = meta[1];
+		const [, newRing, reqRing] = meta;
+
+		if (reqRing != -1 && reqRing < this.ring) {
+			console.warn(`Insufficient privilege for interrupt ${id} (currently ${this.ring}, required ${reqRing});`,
+			"ignoring interrupt.");
+			return false;
+		}
+
+		if (-1 < newRing) {
+			this.ring = newRing;
 		}
 
 		this.programCounter = this.getWord(this.interruptTableAddress + id * 8).toInt();
@@ -414,7 +422,7 @@ class WVM {
 	}
 
 	op_int(rs, rd, imm) {
-		if (imm < 0 || INTERRUPTS.length <= imm) {
+		if (imm < 0 || Object.keys(INTERRUPTS).length <= imm) {
 			console.error("Invalid interrupt ID:", imm);
 			this.stop();
 			return;
@@ -424,7 +432,7 @@ class WVM {
 	}
 
 	op_rit(rs, rd, imm) {
-		if (MODES.KERNEL < this.mode) {
+		if (RINGS.KERNEL < this.ring) {
 			console.error("Called rit outside of kernel mode; halting.");
 			this.stop();
 			return;

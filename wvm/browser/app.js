@@ -15,7 +15,7 @@ let WVM = require("../wvm.js"),
 
 require("jquery.splitter");
 
-const {REGISTER_OFFSETS, FLAGS, MODES} = require("../../wasm/constants.js");
+const {REGISTER_OFFSETS, FLAGS, RINGS} = require("../../wasm/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
 const UNPRINTABLE = [...[[0, 32], [127, 159], [173, 173]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
@@ -350,10 +350,10 @@ let App = window.App = class App {
 		(this.vm.onTick = this.onTickUI.bind(this))();
 		this.vm.onSetWord = this.onSetWord.bind(this);
 		this.vm.onSetByte = this.onSetByte.bind(this);
-		this.vm.onChangeMode = this.onChangeMode.bind(this);
+		this.vm.onChangeRing = this.onChangeRing.bind(this);
 		this.vm.log = this.log.bind(this);
 		this.vm.stop = this.stop.bind(this);
-		this.onChangeMode(this.vm.mode);
+		this.onChangeRing(this.vm.ring);
 	}
 
 	onTickUI() {
@@ -399,16 +399,16 @@ let App = window.App = class App {
 		row.find("td:eq(2)").html(this.decompiledCell(word, addr));
 	}
 
-	onChangeMode(newMode) {
+	onChangeRing(newRing) {
 		let newIcon = "question-sign";
 
-		if (newMode == MODES.KERNEL) {
+		if (newRing == RINGS.KERNEL) {
 			newIcon = "lock";
-		} else if (newMode == MODES.USER) {
+		} else if (newRing == RINGS.USER) {
 			newIcon = "user";
 		}
 
-		$("#mode span").attr("class", "glyphicon glyphicon-" + newIcon);
+		$("#ring span").attr("class", "glyphicon glyphicon-" + newIcon);
 	}
 
 	heartbeat() {
@@ -712,7 +712,7 @@ function initializeUI(app) {
 		}
 	});
 
-	$("#mode").click(() => app.vm.mode = app.vm.mode == MODES.KERNEL? MODES.USER : MODES.KERNEL);
+	$("#ring").click(() => app.vm.ring = app.vm.ring == RINGS.KERNEL? RINGS.USER : RINGS.KERNEL);
 
 	$(document.body).keydown((event) => {
 		const {key, ctrlKey, shiftKey} = event;

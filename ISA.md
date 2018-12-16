@@ -2,20 +2,26 @@
 <blockquote>
 	<ol>
 		<li><a href="#intro">Introduction</a>
-		<li><a href="#registers">Registers</a></li>
+		<li><a href="#registers">Registers</a>
 			<ol>
 				<li><a href="#reg-st">Status Register</a></li>
 			</ol>
+		</li>
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
-				<li><a href="#prog-ptrs">Handler Pointer Section</a></li>
+				<li><s><a href="#prog-ptrs">Handler Pointer Section</a></s></li>
 				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
 			</ol>
 		</li>
-		<li><a href="#exceptions">Exceptions</a></li>
+		<li><a href="#rings">Rings</a></li>
+		<li><a href="#interrupts">Interrupts</a>
+			<ol>
+				<li><a href="#int-system"><code>SYSTEM</code></a>
+			</ol>
+		</li>
 		<li><a href="#format">Instruction Format</a>
 			<ol>
 				<li><a href="#format-r">R-Type Instructions</a></li>
@@ -180,7 +186,7 @@
 
 # <a name="intro"></a>Introduction
 
-The VM emulates a custom instruction set that may or may not actually be theoretically implementable as real hardware. (As of this writing, the only relevant class I've taken is CMPE 12). This instruction set has 64-bit word length, but the memory addressability is 32 bits.
+The VM emulates WhySA, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, but the memory addressability is 32 bits.
 
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
@@ -252,6 +258,8 @@ version: "4"
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
 ## <a name="prog-ptrs"></a>Handler Pointer Section
+<i>Note: handler pointers are **deprecated** in favor of <a href="#interrupts">interrupts</a>.</i>
+
 As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero). Its size is exactly equal to 256 words, but this may change if more than that many exceptions are eventually defined (an exceedingly unlikely possibility).
 
 ## <a name="prog-code"></a>Code Section
@@ -269,8 +277,14 @@ some_string: "this is an example."
 some_number: 42
 </pre>
 
-# <a name="exceptions"></a>Exceptions
-Exceptions occur when invalid code is executed. For example, trying to divide by zero will cause a division by zero error. When an exception occurs, the VM will search for a handler in the [handler pointer section](#prog-ptrs) and, if one is found, jump to it. If no handler is found in the handler pointer section, code will continue, which may result in undefined behavior. For example, unhandled division by zero may or may not store a result in `rd`, and if it does, the value it stores isn't guaranteed to be defined. (Note that division isn't currently implemented because support for floating point numbers hasn't been implemented.)
+# <a name="rings"></a>Rings
+WhySA has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
+
+# <a name="interrupts"></a>Interrupts
+Interrupts can be triggered by software or by the VM itself.
+
+## <a name="int-system"></a>1: `SYSTEM`
+The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
 
 
 # <a name="format"></a>Instruction Format
@@ -799,12 +813,11 @@ Performs a special instruction, typically for interaction with the world outside
 
 Performs an interrupt. If no interrupt table has been registered, nothing interesting happens.
 
-### <a name="op-int"></a>Interrupt (`int`)
+### <a name="op-rit"></a>Register Interrupt Table (`rit`)
 > `rit imm`  
 > `000000100001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode;
-will cause the machine to halt if called in user mode.
+Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode; will cause the machine to halt if called in user mode.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
