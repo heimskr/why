@@ -7,7 +7,6 @@ version: "2"
 #data
 s_true: "true"
 s_false: "false"
-endptr2: &.end
 
 #code
 

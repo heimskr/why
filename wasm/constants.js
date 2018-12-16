@@ -242,5 +242,8 @@ exports.ALU_MASKS = {
 
 exports.SYMBOL_TYPES = {
 	UNKNOWN: 0,
-	POINTER: 1,
+	KNOWN_POINTER: 1,
+	UNKNOWN_POINTER: 2,
+	CODE: 3,
+	DATA: 4,
 };

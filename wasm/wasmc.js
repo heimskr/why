@@ -752,9 +752,14 @@ class WASMC {
 		return _.flatten(_.uniq([...labels, ".end"]).map((label) => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
 			let type = SYMBOL_TYPES.UNKNOWN;
-			if (!skeleton) {
-				if (label in this.dataVariables) {
-					type = SYMBOL_TYPES.POINTER;
+
+			if (!skeleton && label in this.dataVariables) {
+				const ptr = this.dataVariables[label];
+				type = ptr in this.offsets? SYMBOL_TYPES.KNOWN_POINTER : SYMBOL_TYPES.UNKNOWN_POINTER;
+				if (!(ptr in this.offsets || this.unknownSymbols.includes(ptr))) {
+					const index = (this.offsets[label] - this.metaOffsetData) / 8;
+					this.data[index] = Long.fromInt(WASMC.encodeSymbol(ptr), true);
+					this.unknownSymbols.push(ptr);
 				}
 			}
 

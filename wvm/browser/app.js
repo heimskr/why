@@ -243,7 +243,7 @@ let App = window.App = class App {
 
 		const edges = [$symtab, ...this.symbolTableEdges];
 		if (inSymtab) {
-			if (edges.includes(addr)) { // first word: hash, length
+			if (edges.includes(addr)) { // first word: hash, type, length
 				const hash = long.high.toString(16);
 				const lengthNum = long.low & 0xffff;
 				let lengthStr = lengthNum.toString();
@@ -731,7 +731,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/string.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/memory.why", "utf8"));
 let {offsets, handlers, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
 

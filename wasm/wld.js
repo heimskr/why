@@ -85,8 +85,7 @@ class Linker {
 		 * Contains the combination of all parsed symbol tables.
 		 * @type {SymbolTable}
 		 */
-		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser.rawData,
-			this.parser.offsets.$data);
+		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser.rawData, this.parser.offsets);
 		
 		/**
 		 * Contains the combination of all parsed code sections.
@@ -126,7 +125,7 @@ class Linker {
 
 			const subcode = subparser.rawCode;
 			const subdata = subparser.rawData;
-			const subtable = Linker.depointerize(subparser.getSymbols(), subdata, subparser.offsets.$data);
+			const subtable = Linker.depointerize(subparser.getSymbols(), subdata, subparser.offsets);
 			const subcodeLength = subparser.getCodeLength();
 			const subdataLength = subparser.getDataLength();
 			let subtableLength = subparser.rawSymbols.length;
@@ -151,11 +150,12 @@ class Linker {
 			// Steps 7d–e
 			for (const symbol in subtable) {
 				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
+
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference - 24);
-				} else {
+				} else if (type == "data") {
 					// Step 7e: For each data symbol in the included symbol table, increase
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength + metaDifference - 24);
@@ -232,10 +232,7 @@ class Linker {
 		meta[3] = meta[2].add(this.combinedCode.length * 8); // Beginning of data
 		meta[4] = meta[3].add(this.combinedData.length * 8); // Beginning of heap
 		
-		// Step 11:
-		Linker.repointerize(this.combinedData, this.combinedSymbols, meta[3]);
-
-		// Step 12: Concatenate all the combined sections and write the result to the output file.
+		// Step 11: Concatenate all the combined sections and write the result to the output file.
 		const combined = [
 			...this.parser.rawMeta,
 			...encodedCombinedSymbols,
@@ -243,6 +240,15 @@ class Linker {
 			...this.combinedCode,
 			...this.combinedData
 		];
+		
+		// Step 12:
+		Linker.repointerize(this.combinedData, this.combinedSymbols, {
+			$symtab: meta[0].toInt(),
+			$handlers: meta[1].toInt(),
+			$code: meta[2].toInt(),
+			$data: meta[3].toInt(),
+			$end: meta[4].toInt()
+		}, combined);
 
 		this.writeOutput(combined);
 		this.printSuccess();
@@ -251,18 +257,19 @@ class Linker {
 	/**
 	 * Replaces pointers inside all pointer variables of a symbol
 	 * table with the encoded names of the symbols they point to.
-	 * @param {SymbolTable} symtab     A symbol table.
-	 * @param {Long[]}      data       An array of longs comprising a data section.
-	 * @param {number}      dataOffset The start of the data section.
+	 * @param {SymbolTable} symtab  A symbol table.
+	 * @param {Long[]}      data    An array of longs comprising a data section.
+	 * @param {Object}      offsets An object of the basic offsets.
 	 * @return {SymbolTable} A clone of the input symbol table with all pointers replaced.
 	 */
-	static depointerize(symtab, data, dataOffset) {
+	static depointerize(symtab, data, offsets) {
 		const clone = _.cloneDeep(symtab);
+		const {$data, $end} = offsets;
 
 		for (const key in clone) {
 			const [id, addr, type] = clone[key];
-			if (type == SYMBOL_TYPES.POINTER) {
-				const index = (addr.toNumber() - dataOffset) / 8;
+			const index = (addr.toNumber() - $data) / 8;
+			if (type == SYMBOL_TYPES.KNOWN_POINTER) {
 				const curValue = data[index];
 				
 				const matches = _.filter(clone, (v, k) => v[1].eq(curValue));
@@ -279,22 +286,14 @@ class Linker {
 		return clone;
 	}
 
-	static repointerize(data, symtab, dataStart) {
+	static repointerize(data, symtab, offsets, combined) {
+		const {$end} = offsets;
 		for (const key in symtab) {
-			const [id, addr, type] = symtab[key];
-			if (type == SYMBOL_TYPES.POINTER) {
-				const index = addr.sub(dataStart).div(8).toNumber();
-				const curValue = data[index];
-
-				// Search for a symbol whose ID matches the encoded symbol stored in the data entry.
-				const matches = _.filter(symtab, (v, k) => curValue.eq(v[0]));
-				if (!matches.length) {
-					throw `Found 0 matches for ${curValue.toNumber()} from key "${key}".`;
-				}
-
-				// Take the final address of the symbol and set it as the new value of the data entry.
-				const newAddr = matches[0][1];
-				data[index] = newAddr;
+			const [, addr, type] = symtab[key];
+			if (type == SYMBOL_TYPES.KNOWN_POINTER || type == SYMBOL_TYPES.UNKNOWN_POINTER) {
+				const index = addr.toInt() / 8;
+				const ptr = Linker.findSymbolFromID(combined[index], symtab, $end);
+				combined[index] = symtab[ptr][1];
 			}
 		}
 	}
@@ -330,6 +329,7 @@ class Linker {
 	static getSymbolType(offsets, symbolTable, symbol) {
 		const addr = symbolTable[symbol][1].toInt();
 		const {$code, $data, $end} = offsets;
+
 		if ($code <= addr && addr < $data) {
 			return "code";
 		}
