@@ -149,8 +149,8 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
 				 | op_lni | op_lbni
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
-				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei
-				 | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
+				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei | op_ring
+				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
 
@@ -229,6 +229,7 @@ op_srl			-> riap[">>>"] into rv						{% d => ["srl",      ...d[0], d[2]] %}
 op_sra			-> riap[">>"]  into rv						{% d => ["sra",      ...d[0], d[2]] %}
 				 | rv _ ">>="  _ rv							{% d => ["sra",   d[4], d[0], d[0]] %}
 op_time			-> "time" __ rv								{% d => ["time",    0,  d[2],   0 ] %}
+op_ring			-> "ring" __ rv								{% d => ["ring",    0,  d[2],   0 ] %}
 
 # I-Type instructions										                   rs    rd    imm
 op_multui		-> reg _ "*"   _ int _ "/u"					{% d => ["multui", d[0],   0,  d[4]] %}
@@ -293,6 +294,7 @@ op_int			-> "int" __ int								{% d => ["int",      0,    0,  d[2]] %}
 op_rit			-> "rit" __ int								{% d => ["rit",      0,    0,  d[2]] %}
 				 | "rit" __ var								{% d => ["rit",      0,    0,  ["label", d[2]]] %}
 op_timei		-> "time" __ int							{% d => ["timei",    0,    0,  d[2]] %}
+op_ringi		-> "ring" __ int							{% d => ["ringi",    0,    0,  d[2]] %}
 
 # J-Type instructions										               rs     addr             link   condition
 op_jc			-> ":" _ int   __ "if" __ reg				{% d => ["jc", d[6],  d[2],            false, null] %}

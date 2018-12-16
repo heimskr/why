@@ -9,6 +9,7 @@ exports.R_TYPES = [
 	0b000000010010, // Memory
 	0b000000011111, // External
 	0b000000110000, // Set Timer
+	0b000000110010, // Change Ring
 ];
 
 exports.I_TYPES = [
@@ -47,6 +48,7 @@ exports.I_TYPES = [
 	0b000000101010, // Set on Greater Than or Equal Immediate
 	0b000000101100, // Compare Immediate
 	0b000000110001, // Set Timer Immediate
+	0b000000110011, // Change Ring Immediate
 ];
 
 exports.J_TYPES = [
@@ -138,6 +140,8 @@ exports.OPCODES = {
 	jnz:    0b000000101111,
 	time:   0b000000110000,
 	timei:  0b000000110001,
+	ring:   0b000000110010,
+	ringi:  0b000000110011,
 };
 
 exports.FUNCTS = {
@@ -147,6 +151,7 @@ exports.FUNCTS = {
 	jr:    0b000000000000,
 	sl:    0b000000000000,
 	time:  0b000000000000,
+	ring:  0b000000000000,
 	jrc:   0b000000000001,
 	l:     0b000000000001,
 	nand:  0b000000000001,
@@ -265,4 +270,5 @@ exports.INTERRUPTS = { // [ID, new mode (-1 for unchanged), max permitted mode (
 	NULL:   [0, -1, -1],
 	SYSTEM: [1,  0, -1],
 	TIMER:  [2, -1,  0],
+	PROTEC: [3,  0,  2],
 };

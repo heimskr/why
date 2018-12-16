@@ -413,6 +413,7 @@ class Parser {
 		if (op == "spush") return `${chalk.dim("[")} ${chalk.yellow(rs)}`;
 		if (op == "spop")  return `\xa0\xa0${chalk.yellow(rd)} ${chalk.dim("]")}`;
 		if (op == "time")  return `${chalk.cyan("time")} ${chalk.yellow(rs)}`;
+		if (op == "ring")  return `${chalk.cyan("ring")} ${chalk.yellow(rs)}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 
@@ -471,6 +472,7 @@ class Parser {
 		if (op == "int")    return `${chalk.cyan("int")} ${imm}`;
 		if (op == "rit")    return `${chalk.cyan("rit")} ${chalk.magenta(target)}`;
 		if (op == "timei")  return `${chalk.cyan("time")} ${imm}`;
+		if (op == "ringi")  return `${chalk.cyan("ring")} ${imm}`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 

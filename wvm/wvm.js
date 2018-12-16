@@ -267,7 +267,7 @@ class WVM {
 		return true;
 	}
 
-	interrupt(id) {
+	interrupt(id, override) {
 		if (!this.interruptTableAddress) {
 			console.warn("No interrupt table registered; ignoring interrupt.");
 			return false;
@@ -276,19 +276,20 @@ class WVM {
 		const meta = Object.values(INTERRUPTS).filter((x) => x[0] == id)[0];
 		if (!meta) {
 			console.error("Invalid interrupt ID:", id);
-			this.halt();
+			this.stop();
 			return false;
 		}
 
 		const [, newRing, reqRing] = meta;
 
-		if (reqRing != -1 && reqRing < this.ring) {
+		if (!override && reqRing != -1 && reqRing < this.ring) {
 			console.warn(`Insufficient privilege for interrupt ${id} (currently ${this.ring}, required ${reqRing});`,
 			"ignoring interrupt.");
 			return false;
 		}
 
-		this.stackPush(this.programCounter);
+		this.e0 = Long.fromInt(this.programCounter + 8, true);
+		this.e1 = Long.fromInt(this.ring, true);
 
 		if (-1 < newRing) {
 			this.ring = newRing;
@@ -299,7 +300,7 @@ class WVM {
 	}
 
 	timerExpired() {
-		this.interrupt(INTERRUPTS.TIMER[0]);
+		this.interrupt(INTERRUPTS.TIMER[0], true);
 	}
 
 	stackPush(val) {
@@ -462,8 +463,6 @@ class WVM {
 			return;
 		}
 
-		// Return to the following instruction.
-		this.programCounter += 8;
 		return this.interrupt(imm);
 	}
 
@@ -482,6 +481,36 @@ class WVM {
 	op_timei(rs, rd, imm) {
 		if (this.checkKernel()) {
 			this.setTimer(imm instanceof Long? imm.toInt() : imm);
+		}
+	}
+
+	op_ring(rt, rs, rd) {
+		const rsv = this.registers[rs];
+		const r = Object.values(RINGS);
+		if (rsv < _.min(r) || _.max(r) < rsv) {
+			console.warn("Unknown ring:", rsv);
+			return;
+		}
+
+		if (rsv < this.ring) {
+			this.interrupt(INTERRUPTS.PROTEC[0], true);
+		} else {
+			this.ring = rsv;
+		}
+	}
+
+	op_ringi(rs, rd, imm) {
+		const i = imm instanceof Long? imm.toInt() : imm;
+		const r = Object.values(RINGS);
+		if (i < _.min(r) || _.max(r) < i) {
+			console.warn("Unknown ring:", i);
+			return;
+		}
+
+		if (i < this.ring) {
+			this.interrupt(INTERRUPTS.PROTEC[0], true);
+		} else {
+			this.ring = i;
 		}
 	}
 
@@ -741,10 +770,14 @@ class WVM {
 	get lo() { return this.registers[REGISTER_OFFSETS.lo]; }
 	get sp() { return this.registers[REGISTER_OFFSETS.stack]; }
 	get st() { return this.registers[REGISTER_OFFSETS.st]; }
+	get e0() { return this.registers[REGISTER_OFFSETS.e]; }
+	get e1() { return this.registers[REGISTER_OFFSETS.e + 1]; }
 	set hi(to) { this.registers[REGISTER_OFFSETS.hi] = to; }
 	set lo(to) { this.registers[REGISTER_OFFSETS.lo] = to; }
 	set sp(to) { this.registers[REGISTER_OFFSETS.stack] = to; }
 	set st(to) { this.registers[REGISTER_OFFSETS.st] = to; }
+	set e0(to) { this.registers[REGISTER_OFFSETS.e] = to; }
+	set e1(to) { this.registers[REGISTER_OFFSETS.e + 1] = to; }
 }
 
 module.exports = WVM;

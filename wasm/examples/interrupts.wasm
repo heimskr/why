@@ -11,13 +11,17 @@ version: "1"
 isrtable: (8)
 isr_syscall: &syscall
 isr_timer:   &timer
+isr_protc:   &protec
 msg_timer: "Timer expired.\n"
 msg_bye: "Goodbye.\n"
+msg_protec: "Protection error at "
 
 #code
 
 rit isrtable
 int 1
+
+ring 3
 
 @loop
 	: done if $s1
@@ -25,6 +29,7 @@ int 1
 
 @done
 strprint(&msg_bye)
+ring 0 // should cause an exception
 <halt>
 
 sub syscall() {
@@ -32,11 +37,22 @@ sub syscall() {
 	$t0 += $t0
 	$t0 += $t0
 	time $t0
-	] $t0; : $t0
+
+	ring $e1; : $e0
 }
 
 sub timer() {
 	strprint(&msg_timer)
 	1 -> $s1
-	] $t0; : $t0
+
+	ring $e1; : $e0
 }
+
+sub protec() {
+	strprint(&msg_protec)
+	<p $e0>
+	<p ".\n">
+	ring $e1; : $e0
+}
+
+{8}
