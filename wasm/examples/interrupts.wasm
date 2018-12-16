@@ -11,7 +11,7 @@ version: "1"
 isrtable: (8)
 isr_syscall: &syscall
 isr_timer:   &timer
-isr_protc:   &protec
+isr_protec:  &protec
 msg_timer: "Timer expired.\n"
 msg_bye: "Goodbye.\n"
 msg_protec: "Protection error at "

@@ -141,7 +141,7 @@ let App = window.App = class App {
 		
 		const edges = this.symbolTableEdges;
 
-		const {$symtab, $handlers, $code, $data, $end} = vm.offsets;
+		const {$symtab, $code, $data, $end} = vm.offsets;
 
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
@@ -151,14 +151,13 @@ let App = window.App = class App {
 				const classes = [`addr-${i}`];
 				const dataStart = $data == byte && $data != $code;
 				const symtabStart = $symtab == byte;
-				const handlersStart = $handlers == byte;
 				const codeStart = $code == byte;
 				const stackStart = vm.memorySize - 16 == i;
 				const globalStart = $end == byte;
 
 				if (stackStart || edges.includes(byte))
 					classes.push("dashed");
-				if (handlersStart || symtabStart || codeStart || dataStart || globalStart)
+				if (symtabStart || codeStart || dataStart || globalStart)
 					classes.push("solid");
 
 				if ($data <= byte && this.vm.symbols && _.keys(this.vm.symbols).filter((s) => this.vm.symbols[s][1].toInt() == byte).length)
@@ -181,7 +180,7 @@ let App = window.App = class App {
 					.append($("<td></td>").html(this.hexCell(long)))
 					.append($("<td></td>").html(this.decompiledCell(long, byte)))
 					.click((event) => {
-						if (!$(event.target).hasClass("handler")) {
+						if (!$(event.target).hasClass("meta")) {
 							vm.programCounter = byte;
 							this.onTickUI();
 						}
@@ -212,9 +211,9 @@ let App = window.App = class App {
 
 		this._symbolTableEdges = [];
 
-		for (let i = this.vm.offsets.$symtab / 8, j = 0; i < this.vm.offsets.$handlers / 8 && j < 10000; j++) {
+		for (let i = this.vm.offsets.$symtab / 8, j = 0; i < this.vm.offsets.$code / 8 && j < 10000; j++) {
 			i += 2 + (this.vm.initial[i].toUnsigned().low & 0xffff);
-			if (i * 8 < this.vm.offsets.$handlers) {
+			if (i * 8 < this.vm.offsets.$code) {
 				this._symbolTableEdges.push(i * 8);
 			}
 		}
@@ -227,15 +226,14 @@ let App = window.App = class App {
 	}
 
 	decompiledCell(long, addr) {
-		const {$symtab, $handlers, $code, $data} = this.vm.offsets;
+		const {$symtab, $code, $data} = this.vm.offsets;
 
 		const inMeta = addr < 40;
-		const inSymtab = $symtab <= addr && addr < $handlers;
-		const inHandlers = $handlers <= addr && addr < $code;
+		const inSymtab = $symtab <= addr && addr < $code;
 		const inCode = $code <= addr && addr < $data;
 
-		if (inMeta || inHandlers) {
-			return $("<a></a>").attr({href: "#"}).addClass("handler").text(long.toString()).click(() => {
+		if (inMeta) {
+			return $("<a></a>").attr({href: "#"}).addClass("meta").text(long.toString()).click(() => {
 				this.vm.programCounter = long.toInt();
 				this.highlightProgramCounter();
 			});
@@ -254,10 +252,10 @@ let App = window.App = class App {
 
 				return `<span class="hash">${hash}</span> ${lengthStr}`;
 			} else if (edges.includes(addr - 8)) { // first word: position
-				return `<span class="handler">${long.toString()}</span>`;
+				return `<span class="meta">${long.toString()}</span>`;
 			} else if (edges.includes(addr - 16)) { // at the first word of the symbol name
 				const words = [];
-				for (let i = addr; !edges.includes(i) && i < $handlers; i += 8) {
+				for (let i = addr; !edges.includes(i) && i < $code; i += 8) {
 					words.push(this.vm.getWord(i));
 				}
 
@@ -335,7 +333,7 @@ let App = window.App = class App {
 		if (this.config.excludeSymtab) {
 			this.range = [
 				[0, this.vm.offsets.$symtab - 8],
-				[this.vm.offsets.$handlers, this.vm.offsets.$end + (32 - 1) * 8],
+				[this.vm.offsets.$code, this.vm.offsets.$end + (32 - 1) * 8],
 				[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
 			].map((x) => x.join("-")).join(";");
 		} else {
@@ -748,8 +746,8 @@ function initializeUI(app) {
 
 let parser = new Parser();
 parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/interrupts.why", "utf8"));
-let {offsets, handlers, meta, code, symbols} = parser;
-let app, vm = window.vm = new WVM({program: {offsets, handlers, meta, code, symbols}, memory: parser.raw});
+let {offsets, meta, code, symbols} = parser;
+let app, vm = window.vm = new WVM({program: {offsets, meta, code, symbols}, memory: parser.raw});
 
 if (!localStorage.formatStyle) {
 	localStorage.formatStyle = Parser.defaultStyle;

@@ -75,23 +75,10 @@ class Parser {
 		 */
 		this.offsets = {
 			$symtab: longs[0].toInt(),
-			$handlers: longs[1].toInt(),
-			$code: longs[2].toInt(),
-			$data: longs[3].toInt(),
-			$end: longs[4].toInt()
+			$code:   longs[1].toInt(),
+			$data:   longs[2].toInt(),
+			$end:    longs[3].toInt()
 		};
-
-		/**
-		 * Contains all the unparsed Longs in the handlers section.
-		 * @type {Long[]}
-		 */
-		this.rawHandlers = longs.slice(this.offsets.$handlers / 8, this.offsets.$code / 8);
-
-		/**
-		 * An object mapping handler names to addresses.
-		 * @type {Object<string, number>}
-		 */
-		this.handlers = _.fromPairs(this.rawHandlers.map((x, i) => [EXCEPTIONS[i], x]));
 
 		/**
 		 * Contains all the unparsed Longs in the metadata section.
@@ -106,13 +93,13 @@ class Parser {
 		this.meta = {
 			orcid: _.chain([4, 5]).map((n) => longs[n]).longString().join("").chunk(4).map((n) => n.join("")).join("-").value()
 		};
-		[this.meta.name, this.meta.version, this.meta.author] = _(longs).slice(6, this.offsets.$handlers).longStrings();
+		[this.meta.name, this.meta.version, this.meta.author] = _(longs).slice(6, this.offsets.$code).longStrings();
 
 		/**
 		 * Contains all the unparsed Longs in the symbol table.
 		 * @type {Long[]}
 		 */
-		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$handlers / 8);
+		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$code / 8);
 
 		/**
 		 * Contains the parsed symbol table.
@@ -146,9 +133,6 @@ class Parser {
 
 			console.log(chalk.green("#meta"));
 			console.log(Object.keys(this.meta).map((k) => `${chalk.cyan(k)}: ${chalk.yellow(`"${this.meta[k]}"`)}`).concat([""]).join("\n"));
-
-			console.log(chalk.green("#handlers"));
-			console.log(this.handlers.map(([k, v]) => `${k}: ${chalk.magenta(v)}`).join("\n"));
 
 			console.log([, chalk.green("#code"), ...this.code].join("\n"));
 		}
@@ -197,19 +181,11 @@ class Parser {
 	}
 
 	/**
-	 * Finds the length of the handlers section of the program.
-	 * @return {number} The length of the handlers section in bytes.
-	 */
-	getHandlersLength() {
-		return this.raw[2].subtract(this.raw[1]).toNumber();
-	}
-
-	/**
 	 * Finds the length of the code section of the program.
 	 * @return {number} The length of the code section in bytes.
 	 */
 	getCodeLength() {
-		return this.raw[3].subtract(this.raw[2]).toNumber();
+		return this.raw[2].subtract(this.raw[1]).toNumber();
 	}
 
 	/**
@@ -217,7 +193,7 @@ class Parser {
 	 * @return {number} The length of the data section in bytes.
 	 */
 	getDataLength() {
-		return this.raw[4].subtract(this.raw[3]).toNumber();
+		return this.raw[3].subtract(this.raw[2]).toNumber();
 	}
 
 	/**

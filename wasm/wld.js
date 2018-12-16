@@ -201,53 +201,40 @@ class Linker {
 			this.combinedData = [...this.combinedData, ...subdata];
 		}
 
-		// Step 8a: Readjust the .end entry in the symbol table.
+		// Step 8: Readjust the .end entry in the symbol table.
 		if (!(".end" in this.combinedSymbols)) {
 			this.combinedSymbols[".end"] = [WASMC.encodeSymbol(".end"), Long.UZERO];
 		}
-		
+
 		const end = 8 * (this.parser.rawMeta.length + WASMC.encodeSymbolTable(this.combinedSymbols).length
-			+ this.parser.rawHandlers.length + this.combinedCode.length + this.combinedData.length);
+			+ this.combinedCode.length + this.combinedData.length);
 		this.combinedSymbols[".end"][1] = Long.fromInt(end, true);
+		const encodedCombinedSymbols = WASMC.encodeSymbolTable(this.combinedSymbols);
+		const codeOffset = (encodedCombinedSymbols.length - symtabLength) * 8;
 		
-		// Step 8b: Replace all symbols in the code with the new addresses.
+		// Step 9: Replace all symbols in the code with the new addresses.
 		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
 
-		// Step 9: Update the handlers section.
-		// Because all the handler pointers have been pushed forward by the addition
-		// of other symbol tables, we need to increase them to compensate.
-		const encodedCombinedSymbols = WASMC.encodeSymbolTable(this.combinedSymbols);
-		const {handlers} = this.parser;
-		const handlerOffset = (encodedCombinedSymbols.length - symtabLength) * 8;
-		for (const handler in handlers) {
-			handlers[handler] = handlers[handler].add(handlerOffset);
-		}
-		
-		const encodedHandlers = Linker.encodeHandlers(handlers);
-		
 		// Step 10: Update the offset section in the metadata.
 		const meta = this.parser.rawMeta;
-		meta[1] = meta[1].add(handlerOffset); // Beginning of handlers
-		meta[2] = meta[1].add(encodedHandlers.length * 8); // Beginning of code
-		meta[3] = meta[2].add(this.combinedCode.length * 8); // Beginning of data
-		meta[4] = meta[3].add(this.combinedData.length * 8); // Beginning of heap
-		
+		meta[1] = meta[1].add(codeOffset); // Beginning of code
+		meta[2] = meta[1].add(this.combinedCode.length * 8); // Beginning of data
+		meta[3] = meta[2].add(this.combinedData.length * 8); // Beginning of heap
+
 		// Step 11: Concatenate all the combined sections and write the result to the output file.
 		const combined = [
 			...this.parser.rawMeta,
 			...encodedCombinedSymbols,
-			...encodedHandlers,
 			...this.combinedCode,
 			...this.combinedData
 		];
-		
+
 		// Step 12:
 		Linker.repointerize(this.combinedData, this.combinedSymbols, {
 			$symtab: meta[0].toInt(),
-			$handlers: meta[1].toInt(),
-			$code: meta[2].toInt(),
-			$data: meta[3].toInt(),
-			$end: meta[4].toInt()
+			$code:   meta[1].toInt(),
+			$data:   meta[2].toInt(),
+			$end:    meta[3].toInt()
 		}, combined);
 
 		this.writeOutput(combined);
@@ -293,19 +280,14 @@ class Linker {
 			if (type == SYMBOL_TYPES.KNOWN_POINTER || type == SYMBOL_TYPES.UNKNOWN_POINTER) {
 				const index = addr.toInt() / 8;
 				const ptr = Linker.findSymbolFromID(combined[index], symtab, $end);
-				combined[index] = symtab[ptr][1];
+				// console.log(key, addr.toString(), combined[index].toString(16), "\n\n\n", symtab);
+				if (symtab[ptr]) {
+					combined[index] = symtab[ptr][1];
+				} else {
+					console.warn(`Couldn't find pointer for ${key}`);
+				}
 			}
 		}
-	}
-
-	/**
-	 * Encodes a handlers object.
-	 * @param  {Object<string, number>} handlers An object mapping handler names to addresses.
-	 * @return {Long[]} An encoded handlers section.
-	 */
-	static encodeHandlers(handlers) {
-		const obj = _.fromPairs(_.keys(handlers).map((key) => [EXCEPTIONS.indexOf(key), handlers[key]]));
-		return _.keys(obj).sort((a, b) => a < b? -1 : 1).map((key) => obj[key]);
 	}
 
 	/**

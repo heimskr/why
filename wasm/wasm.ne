@@ -73,7 +73,7 @@ int				-> (int_hex | int_bin | int_dec | char)		{% d => d[0][0] %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
 				 | ("-":? ".") [0-9]:+						{% d => parseFloat(filter(d[0]).join("") + d[1].join("")) %}
 
-section			-> (data_section | code_section | meta_section | handlers_section | include_section)
+section			-> (data_section | code_section | meta_section | include_section)
 															{% d => d[0][0] %}
 
 meta_section	-> _ meta_header _ sep meta:*				{% d => ["meta", compileObject(d[4])] %}
@@ -82,12 +82,6 @@ meta			-> _ metakey _ [:=] _ string				{% d => [d[1][0], d[5]] %}
 				 | _ "library"								{% d => ["library", true] %}
 				 | _ sep									{% d => null %}
 metakey			-> ("orcid" | "version" | "author" | "name"){% nth(0) %}
-
-handlers_section-> _ handlers_header _ sep handler:*		{% d => ["handlers", compileObject(d[4])] %}
-handlers_header	-> "#handlers" | "#h"						{% d => null %}
-handler			-> _ var (_ ":" _ | __) var_addr _ sep		{% d => [d[1], d[3]] %}
-				 | _ var (_ ":" _ | __) int _ sep			{% d => [d[1], d[3]] %}
-				 | _ sep									{% d => null %}
 
 data_section	-> _ data_header _ sep datadef:*			{% d => ["data", compileData(d[4])] %}
 data_header		-> "#data" | "#d"							{% d => null %}

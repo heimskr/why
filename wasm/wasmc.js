@@ -180,7 +180,6 @@ class WASMC {
 		this.parse(source);
 		const labels = this.findAllLabels();
 		this.symbolTable = this.createSymbolTable(labels, true);
-		this.processHandlers();
 		this.processMetadata();
 		this.processData();
 
@@ -197,12 +196,11 @@ class WASMC {
 		this.symbolTable = this.createSymbolTable(labels, false);
 
 
-		this.assembled = [...this.meta, ...this.symbolTable, ...this.handlers, ...this.code, ...this.data];
+		this.assembled = [...this.meta, ...this.symbolTable, ...this.code, ...this.data];
 
 		if (this.options.debug) {
 			console.log({
 				meta: WASMC.longs2strs(this.meta),
-				handlers: WASMC.longs2strs(this.handlers),
 				data: WASMC.longs2strs(this.data),
 				code: WASMC.longs2strs(this.code),
 				out: WASMC.longs2strs(out),
@@ -241,7 +239,7 @@ class WASMC {
 		}
 		
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
-		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, ...[orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")))];
+		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, ...[orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")))];
 		
 		// Append the name-version-author string.
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
@@ -249,18 +247,8 @@ class WASMC {
 		// The beginning of the symbol table comes right after the end of the meta section.
 		this.metaOffsetSymbols = Long.fromInt(this.meta.length * 8, true);
 		
-		// The handlers section begins right after the symbol table.
-		this.metaOffsetHandlers = this.metaOffsetSymbols.add(this.symbolTable.length * 8);
-
-		// The handlers section is exactly as large as the set of exceptions.
-		this.metaOffsetCode = this.metaOffsetHandlers.add(this.handlers.length * 8);
-	}
-
-	/**
-	 * Will eventually extract and process the program's handlers and store it, but is currently just a placeholder.
-	 */
-	processHandlers() {
-		this.handlers = [...Array(EXCEPTIONS.length)].map(() => Long.UZERO);
+		// The code section begins right after the symbol table.
+		this.metaOffsetCode = this.metaOffsetSymbols.add(this.symbolTable.length * 8);
 	}
 
 	/**
@@ -377,7 +365,6 @@ class WASMC {
 					throw new Error(`Too many arguments given to subroutine (given ${vals.length}, maximum is ${MAX_ARGS})`);
 				}
 
-				
 				const currentValues = _.range(0, vals.length).map((n) => _A[n]);
 				if (item.inSubroutine) {
 					currentValues.unshift(_RA);
@@ -796,15 +783,13 @@ class WASMC {
 	}
 
 	get metaOffsetSymbols()  { return this.meta[0]; }
-	get metaOffsetHandlers() { return this.meta[1]; }
-	get metaOffsetCode()     { return this.meta[2]; }
-	get metaOffsetData()     { return this.meta[3]; }
-	get metaOffsetEnd()      { return this.meta[4]; }
+	get metaOffsetCode()     { return this.meta[1]; }
+	get metaOffsetData()     { return this.meta[2]; }
+	get metaOffsetEnd()      { return this.meta[3]; }
 	set metaOffsetSymbols(to)  { this.meta[0] = Long.fromInt(to, true); }
-	set metaOffsetHandlers(to) { this.meta[1] = Long.fromInt(to, true); }
-	set metaOffsetCode(to)     { this.meta[2] = Long.fromInt(to, true); }
-	set metaOffsetData(to)     { this.meta[3] = Long.fromInt(to, true); }
-	set metaOffsetEnd(to)      { this.meta[4] = Long.fromInt(to, true); }
+	set metaOffsetCode(to)     { this.meta[1] = Long.fromInt(to, true); }
+	set metaOffsetData(to)     { this.meta[2] = Long.fromInt(to, true); }
+	set metaOffsetEnd(to)      { this.meta[3] = Long.fromInt(to, true); }
 
 	/**
 	 * Prints a message to stderr and exits the process with return code 1.

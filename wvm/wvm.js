@@ -32,7 +32,6 @@ class WVM {
 
 		({
 			offsets: this.offsets,
-			handlers: this.handlers,
 			meta: this.meta,
 			code: this.code,
 			symbols: this.symbols
@@ -791,8 +790,8 @@ if (require.main === module) {
 	}
 
 	let { parsed, raw } = Parser.open(filename);
-	let { offsets, handlers, meta, code } = parsed;
-	let vm = new WVM({ program: { offsets, handlers, meta, code }, memory: raw });
+	let { offsets, meta, code } = parsed;
+	let vm = new WVM({ program: { offsets, meta, code }, memory: raw });
 	vm.tick();
 }
 

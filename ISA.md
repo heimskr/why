@@ -11,7 +11,6 @@
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
-				<li><s><a href="#prog-ptrs">Handler Pointer Section</a></s></li>
 				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
 			</ol>
@@ -236,18 +235,17 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into four sections: metadata, handler pointers, data and code. The code section consists of executable code. The exception handler pointer section, as its name suggests, contains pointers to functions in the code section to handle exceptions (such as overflows and division by zero).
+Programs are divided into four sections: metadata, symbol table, data and code. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly.
 
 ## <a name="prog-meta"></a>Metadata Section
-The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the handler pointer section, and is therefore equivalent to the size of the metadata section.
+The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
 
 * `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x01`: Address of the beginning of the [handler pointer section](#prog-ptrs).
-* `0x02`: Address of the beginning of the [code section](#prog-code).
-* `0x03`: Address of the beginning of the [data section](#prog-data).
-* `0x04`: Total size of the program.
-* `0x05`–`0x06`: ORCID of the author (represented with ASCII).
-* `0x07`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x01`: Address of the beginning of the [code section](#prog-code).
+* `0x02`: Address of the beginning of the [data section](#prog-data).
+* `0x03`: Total size of the program.
+* `0x04`–`0x05`: ORCID of the author (represented with ASCII).
+* `0x06`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembler syntax
@@ -261,11 +259,6 @@ version: "4"
 
 ## <a name="prog-symtab"></a>Symbol Table Section
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
-
-## <a name="prog-ptrs"></a>Handler Pointer Section
-<i>Note: handler pointers are **deprecated** in favor of <a href="#interrupts">interrupts</a>.</i>
-
-As its name suggests, the handler pointer section contains pointers to functions stored in the code section that handle various situations, such as exceptions (e.g., overflows and division by zero). Its size is exactly equal to 256 words, but this may change if more than that many exceptions are eventually defined (an exceedingly unlikely possibility).
 
 ## <a name="prog-code"></a>Code Section
 The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
