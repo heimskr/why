@@ -5,7 +5,7 @@ int i = 5;
 int retvar() { return i; }
 
 void _main() {
-	int x = _gettime();
+	int x = retvar();
 	foo:
 	strprint("hello\n");
 	if (++x < i) {

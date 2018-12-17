@@ -16,29 +16,26 @@ define i32 @retvar() #0 {
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define void @_main() #0 {
   %1 = alloca i32, align 4
-  %2 = call i64 (...) @_gettime()
-  %3 = trunc i64 %2 to i32
-  store i32 %3, i32* %1, align 4
-  br label %4
+  %2 = call i32 @retvar()
+  store i32 %2, i32* %1, align 4
+  br label %3
 
-; <label>:4:                                      ; preds = %9, %0
+; <label>:3:                                      ; preds = %8, %0
   call void @strprint(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i32 0, i32 0))
-  %5 = load i32, i32* %1, align 4
-  %6 = add nsw i32 %5, 1
-  store i32 %6, i32* %1, align 4
-  %7 = load i32, i32* @i, align 4
-  %8 = icmp slt i32 %6, %7
-  br i1 %8, label %9, label %10
+  %4 = load i32, i32* %1, align 4
+  %5 = add nsw i32 %4, 1
+  store i32 %5, i32* %1, align 4
+  %6 = load i32, i32* @i, align 4
+  %7 = icmp slt i32 %5, %6
+  br i1 %7, label %8, label %9
 
-; <label>:9:                                      ; preds = %4
-  br label %4
+; <label>:8:                                      ; preds = %3
+  br label %3
 
-; <label>:10:                                     ; preds = %4
+; <label>:9:                                      ; preds = %3
   call void @strprint(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.1, i32 0, i32 0))
   ret void
 }
-
-declare i64 @_gettime(...) #1
 
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define void @strprint(i8*) #0 {
