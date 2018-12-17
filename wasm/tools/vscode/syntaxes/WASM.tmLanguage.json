@@ -48,7 +48,7 @@
 	],
 	"repository": {
 		"subroutine": {
-			"match": "(sub)\\s+([^@$&*\\t \":`./()]+)\\s*(\\()\\s*((\\$[\\w\\d]+)(\\s*(,)\\s*(\\$[\\w\\d]+))+)?\\s*(\\))",
+			"match": "(sub)\\s+([^@$&*\\t \":`./()]+)\\s*(\\()\\s*((\\$[\\w\\d]+)(\\s*(,)\\s*(\\$[\\w\\d]+))*)?\\s*(\\))",
 			"captures": {
 				"1": {"name": "keyword.control.sub"},
 				"2": {"name": "entity.name.function"},
