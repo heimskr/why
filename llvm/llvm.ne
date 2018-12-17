@@ -261,7 +261,7 @@ fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse" |
 
 bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __ %}
 					 |	("invariant" | "invariant.load" | "nontemporal.group")		{% __ %}
-					 |	("align")													{% __ %}
+					 |	("align" | "tbaa")											{% __ %}
 					 |	llvm_bang													{% _ %}
 
 llvm_bang			->	"llvm." ("loop" | "mem.parallel_loop_access")				{% d => d[0] + d[1][0] %}
@@ -288,8 +288,7 @@ i_alloca			->	variable
 							addrspace:   d[6]? d[6][1] : null
 						}] %}
 
-i_load				->	(i_load_normal | i_load_atomic)								{% __ %}
-i_load_normal		->	variable
+i_load				->	variable
 						" = load "
 						"volatile ":?
 						(type_any ", " type_any "* " (variable | global))
@@ -427,8 +426,7 @@ i_switch			->	"switch"
 							table: d[6]? filter(d[6]) : []
 						}] %}
 
-i_store				->	(i_store_normal | i_store_atomic)							{% __ %}
-i_store_normal		->	"store"
+i_store				->	"store"
 						" volatile":?
 						spaced[type_any]
 						operand
