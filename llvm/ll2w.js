@@ -297,9 +297,12 @@ class LL2W {
 				if (meta.pointerValue[0] == "variable") {
 					read.push(meta.pointerValue[1]);
 				}
-			} else if (type == "binary") {
+			} else if (type == "binary" || type == "icmp") {
 				written.push(meta.destination[1]);
 				[meta.op1, meta.op2].forEach((o) => o[0] == "variable" && read.push(o[1]));
+			} else if (type == "br_conditional") {
+				// TODO: do branch targets count as reads?
+				read.push(meta.cond[1]);
 			} else if (!["alloca", "br_unconditional"].includes(type)) {
 				console.log(type);
 			}
