@@ -114,6 +114,7 @@ vector_type			->	(type_int | type_ptr)										{% d => d[0][0] %}
 type_ptr			->	type_any "*"												{% d => compilePtr(d[0]) %}
 type_void			->	"void"														{% d => ["void"] %}
 type_function		->	type_any _ "(" types ", ...":? ")*"							{% d => ["function", d[0], d[3], !!d[4]] %}
+					 |	type_any _ "(...)*"											{% d => ["function", d[0], [], true] %}
 type_any			->	(type_void | type_ptr | type_array | type_int | type_float |
 						 type_function | type_vector | type_struct)					{% d => d[0][0] %}
 type_intvec			->	type_int													{% _ %}
@@ -174,6 +175,8 @@ initial_value		->	cstring														{% d => ["string",  d[0]] %}
 					 |	decimal														{% d => ["decimal", d[0]] %}
 					 |	"zeroinitializer"											{% d => ["zero"] %}
 
+type_list			-> commalist[function_type] ", ...":?							{% d => [d[0], !!d[1]] %}
+					 | "..."														{% d => [[], true] %}
 function_header		->	(" " linkage):?
 						(" " visibility):?
 						(" " dll_storage_class):?
@@ -184,7 +187,7 @@ function_header		->	(" " linkage):?
 						" "
 						function_name
 						"("
-						(commalist[function_type] ", ...":? | _)
+						(type_list | _)
 						")"
 						(" " unnamed_addr):?
 						((" " fnattr):+ | " #" decimal):?
@@ -204,8 +207,8 @@ function_header		->	(" " linkage):?
 							retattrs:     select(d[4], 1),
 							type:         d[6],
 							name:         d[8],
-							types:        d[10][0]? d[10] : null,
-							varargs:      d[10][0]? !!d[10][1] : null,
+							types:        d[10][0]? d[10][0][0] : null,
+							varargs:      d[10][0]? d[10][0][1] : null,
 							unnamedAddr:  d[12]? d[12][1] : null,
 							fnattrs:      d[13],
 							section:      d[14]? d[14][1] : null,
@@ -555,6 +558,7 @@ i_ret				->	"ret " type_any " " value									{% d => ["instruction", "ret", { t
 
 
 call_fnty			->	type_any " (" commalist[type_any] ", ...":? ")"				{% d => [d[0], d[2][0], !!d[3]] %}
+					 |	type_any " (...)"											{% d => [d[0], [], true] %}
 function_name		->	"@" (var | string)											{% d => d[1][0] %}
 
 fast_math_flags		->	list[fast_math_flag]											{% compileFastMathFlags %}
