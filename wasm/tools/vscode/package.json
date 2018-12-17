@@ -1,0 +1,25 @@
+{
+    "name": "wasm",
+    "displayName": "WASM",
+    "description": "",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.30.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "wasm",
+            "aliases": ["WASM", "wasm"],
+            "extensions": [".wasm"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "wasm",
+            "scopeName": "source.wasm",
+            "path": "./syntaxes/WASM.tmLanguage"
+        }]
+    }
+}
