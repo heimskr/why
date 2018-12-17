@@ -17,8 +17,8 @@ exit
 EOF
 
 FAILED=$?
-NOPE="\x1b[1m[\x1b[31m✘\x1b[0m\x1b[1m]\x1b[0m"
-YEP="\x1b[1m[\x1b[32m✔\x1b[0m\x1b[1m]\x1b[0m"
+NOPE="\x1b[2m[\x1b[0;31m✘\x1b[0;2m]\x1b[0m"
+YEP="\x1b[2m[\x1b[0;32m✔\x1b[0;2m]\x1b[0m"
 
 if [ $FAILED -ne 0 ]; then
 	echo -e "$NOPE Upload failed."
