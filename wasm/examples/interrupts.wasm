@@ -33,11 +33,7 @@ ring 0 // should cause an exception
 <halt>
 
 sub syscall() {
-	1000000000 -> $t0
-	$t0 += $t0
-	$t0 += $t0
-	time $t0
-
+	time 5000000
 	ring $e1; : $e0
 }
 
