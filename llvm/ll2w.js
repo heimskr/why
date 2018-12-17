@@ -277,7 +277,14 @@ class LL2W {
 				_.push(meta.out, destName);
 				_.push(destBlock[0].in, fullName);
 			} else if (last[1] == "br_conditional") {
-				console.log(last);
+				// I'm assuming that conditional branches go only to other basic blocks within the same function.
+				const {iftrue: [, iftrue], iffalse: [, iffalse]} = last[2];
+				let trueName  = `${funcName}:${iftrue}`,
+					falseName = `${funcName}:${iffalse}`;
+				_.push(basicBlocks[trueName][0].in, fullName);
+				_.push(basicBlocks[falseName][0].in, fullName);
+				_.push(meta.out, trueName);
+				_.push(meta.out, falseName);
 			} else {
 				// console.log(last[1]);
 			}
@@ -289,20 +296,41 @@ class LL2W {
 				}
 
 				if (name == "call") {
-					const destName = `${imeta.name}:start`;
+					const iname = imeta.name;
+					const destName = `${iname}:start`;
+					if (LL2W.builtins.includes(iname)) {
+						// Because builtins are single machine instructions and not real functions,
+						// we don't include them in the control flow graph.
+						continue;
+					}
+
 					_.push(meta.out, destName);
 					if (!(destName in basicBlocks)) {
 						console.warn(`Warning: couldn't find a basic block called ${destName}.`);
 					} else {
+						// First, make a link from this block to the start of the called function.
 						const destBlock = basicBlocks[destName];
 						_.push(destBlock[0].in, fullName);
-						_.push(destBlock[0].out, fullName);
+
+						// Next, we link each return statement from the called function back to this block.
+						// Depending on the exact circumstances, some of the returns (but not all) might not ever return
+						// control to this block, but I imagine it would be extremely tricky to determine which do, so
+						// just have to assume that all of them do. This might end up decreasing performance due to
+						// overly cautious register allocation, but it's probably not a huge concern.
+						for (const [calledName, {out: calledOut}, calledInstructions] of functions[iname]) {
+							const [lastType, lastName] = _.last(calledInstructions);
+							if (lastType == "instruction" && lastName == "ret") {
+								_.push(calledOut, fullName);
+								_.push(meta.in, `${iname}:${calledName}`);
+							}
+						}
 					}
 				}
 			}
 		}
 
-		Object.keys(basicBlocks).forEach(k => console.log("\n" + chalk.bold(k), {in: basicBlocks[k][0].in, out: basicBlocks[k][0].out}));
+		Object.keys(basicBlocks).forEach(k => console.log("\n" + chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
+		// console.log(functions);
 	}
 
 	extractBasicBlockVariables(basicBlock) {
@@ -374,6 +402,7 @@ class LL2W {
 		basicBlock[1].read = _.uniq(read);
 		basicBlock[1].written = _.uniq(written);
 		basicBlock[1].assigners = assigners;
+		return basicBlock;
 	}
 
 	/**
@@ -419,6 +448,8 @@ class LL2W {
 		}
 	}
 }
+
+LL2W.builtins = ["_int", "_rit", "_time", "_gettime", "_halt", "_prc", "_prd", "_prx"];
 
 module.exports = LL2W;
 
