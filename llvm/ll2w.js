@@ -10,7 +10,8 @@ let minimist = require("minimist"),
 	exec = util.promisify(require("child_process").exec),
 	rimraf = require("rimraf"),
 	shell_escape = require("shell-escape"),
-	path = require("path");
+	path = require("path"),
+	jsome = require("jsome");
 
 const {displayIOError} = require("../util.js");
 
@@ -54,7 +55,7 @@ class LL2W {
 			console.error(`Couldn't read ${chalk.bold("llvm.js")}.`);
 			if (this.options.debug) {
 				console.error(e);
-			};
+			}
 
 			process.exit(1);
 		}
@@ -205,7 +206,7 @@ class LL2W {
 				}
 			});
 
-			this.metadata[name] = { recursive, distinct, items: toAdd };
+			this.metadata[name] = {recursive, distinct, items: toAdd};
 		});
 
 		graph.sorted().forEach(({ id: name }) => graph.getNode(name).out.forEach((dependency) => {
@@ -234,14 +235,35 @@ class LL2W {
 		this.iterateTree("global constant", (item) => this.constants[item.name] = _.omit(item, "name"));
 	}
 
+	extractFunctions() {
+		this.functions = [];
+
+		this.iterateTree("function", (meta, instructions) => {
+			const sections = [];
+			let currentSection = ["start", [], []];
+
+			for (const instruction of instructions) {
+				const [name, ...args] = instruction;
+				if (name == "label_c") {
+					sections.push(currentSection);
+					currentSection = [...args, []];
+				} else {
+					currentSection[2].push(instruction);
+				}
+			}
+
+			if (currentSection[2].length) {
+				sections.push(currentSection);
+			}
+		});
+	}
+
 	/**
 	 * Executes a function if options.debug is true. Does nothing otherwise.
 	 * @param {function} fn - The function to execute.
 	 **/
 	debug(fn) {
-		if (this.options.debug) {
-			fn(this);
-		}
+		this.options.debug && fn(this);
 	}
 
 	/**
@@ -314,8 +336,9 @@ if (require.main === module) {
 	compiler.extractStructs();
 	compiler.extractMetadata();
 	compiler.extractGlobalConstants();
+	compiler.extractFunctions();
 
-	compiler.debug(() => require("jsome")({
+	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
 		targets: compiler.targets,
 		attributes: compiler.attributes,
@@ -323,6 +346,8 @@ if (require.main === module) {
 		metadata: compiler.metadata,
 		constants: compiler.constants,
 	}));
+
+	// console.log(compiler.ast);
 }
 
 /*
