@@ -16,7 +16,7 @@
 		{"include": "#subroutine"},
 		{
 			"match": "#(m(eta)?|i(ncludes)?|c(ode)?|d(ata)?)",
-			"name": "keyword.other.section.wasm"
+			"name": "variable.other.enummember.wasm"
 		},
 		{
 			"begin": "/\\*",
