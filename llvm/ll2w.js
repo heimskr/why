@@ -240,30 +240,30 @@ class LL2W {
 
 		this.iterateTree("function", (meta, instructions) => {
 			console.log(chalk.bold("".padStart(16, "="), meta.name, "".padStart(16, "=")));
-			const sections = [];
-			let currentSection = ["start", {preds: []}, []];
+			const basicBlocks = [];
+			let currentBasicBlock = ["start", {preds: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
 				if (name == "label_c") {
-					sections.push(currentSection);
-					currentSection = [args[0], {preds: args[1]}, []];
+					basicBlocks.push(currentBasicBlock);
+					currentBasicBlock = [args[0], {preds: args[1]}, []];
 				} else {
-					currentSection[2].push(instruction);
+					currentBasicBlock[2].push(instruction);
 				}
 			}
 
-			if (currentSection[2].length) {
-				sections.push(currentSection);
+			if (currentBasicBlock[2].length) {
+				basicBlocks.push(currentBasicBlock);
 			}
 
-			sections.map(this.extractSectionVariables);
+			basicBlocks.map(this.extractBasicBlockVariables);
 		});
 	}
 
-	extractSectionVariables(section) {
+	extractBasicBlockVariables(basicBlock) {
 		let read = [], written = [];
-		for (const instruction of section[2]) {
+		for (const instruction of basicBlock[2]) {
 			const [, type, meta] = instruction;
 			if (type == "phi" || type == "alloca") {
 				// TODO: do phi instructions count as reads?
@@ -317,10 +317,10 @@ class LL2W {
 			}
 		}
 		
-		console.log(section[0], {read: _.uniq(read), written: _.uniq(written)});
-		section[1].all = _.uniq([...read, ...written]);
-		section[1].read = _.uniq(read);
-		section[1].written = _.uniq(written);
+		console.log(basicBlock[0], {read: _.uniq(read), written: _.uniq(written)});
+		basicBlock[1].all = _.uniq([...read, ...written]);
+		basicBlock[1].read = _.uniq(read);
+		basicBlock[1].written = _.uniq(written);
 	}
 
 	/**
