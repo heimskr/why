@@ -303,8 +303,19 @@ class LL2W {
 			} else if (type == "br_conditional") {
 				// TODO: do branch targets count as reads?
 				read.push(meta.cond[1]);
+			} else if (type == "ret") {
+				if (meta.value && meta.value[0] == "variable") {
+					read.push(meta.value[1]);
+				}
+			} else if (type == "getelementptr") {
+				written.push(meta.destination[1]);
+				if (meta.pointerValue[0] == "variable") {
+					read.push(meta.pointerValue[1]);
+				}
+
+				meta.indices.filter(i => i[1][0] == "variable").forEach(i => read.push(i[1][1]));
 			} else if (!["alloca", "br_unconditional"].includes(type)) {
-				console.log(type);
+				console.log("???", type);
 			}
 		}
 		
