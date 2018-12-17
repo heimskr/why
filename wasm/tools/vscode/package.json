@@ -19,7 +19,7 @@
         "grammars": [{
             "language": "wasm",
             "scopeName": "source.wasm",
-            "path": "./syntaxes/WASM.tmLanguage"
+            "path": "./syntaxes/WASM.tmLanguage.json"
         }]
     }
 }

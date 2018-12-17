@@ -1,0 +1,107 @@
+{
+	"name": "WASM",
+	"scopeName": "source.wasm",
+	"fileTypes": ["wasm"],
+	"foldingStartMarker": "/\\*|^#|^\\*|^\\b|^\\.",
+	"foldingStopMarker": "\\*/|^\\s*$",
+	"keyEquivalent": "^~S",
+	"patterns": [
+		{
+			"match": "![^@$<*\\t \":()]+\\b",
+			"name": "support.function.wasm"
+		},
+		{
+			"match": "(?<=@)[^@$<*\\t \":]+\\b|\\bif\\b",
+			"name": "keyword.control.operator.wasm"
+		},
+		{
+			"include": "#quoted-double"
+		},
+		{
+			"match": "#(m(eta)?|i(ncludes)?|c(ode)?|d(ata)?)",
+			"name": "keyword.other.section.wasm"
+		},
+		{
+			"match": "\\$[\\w\\d]+",
+			"name": "variable.parameter.wasm"
+		},
+		{
+			"begin": "/\\*",
+			"end": "\\*/",
+			"name": "comment.block.wasm"
+		},
+		{
+			"begin": "//",
+			"end": "$\\n?",
+			"name": "comment.line.double-slash.wasm"
+		},
+		{
+			"match": "(-|\\+)?\\s*[0-9]+(\\.[0-9]+)?",
+			"name": "constant.numeric.wasm"
+		},
+		{
+			"match": "[@&*]",
+			"name": "storage.type.wasm"
+		},
+		{
+			"match": "\\b(name|author|orcid|version|library)\\b",
+			"name": "support.type.property-name.wasm"
+		},
+		{
+			"match": "\\b(print|halt)\\b",
+			"name": "support.constant.ext.wasm"
+		},
+		{
+			"match": "(sub)\\s+([^@$&*\\t \":`./()]+)(\\()[^)]*(\\))",
+			"captures": {
+				"0": {"name": "keyword.control.sub"},
+				"2": {"name": "entity.name.function"},
+				"3": {"name": "punctuation.section.parameters.begin.bracket.round.wasm"},
+				"4": {"name": "punctuation.section.parameters.end.bracket.round.wasm"}
+			}
+		}
+	],
+	"repository": {
+		"block": {
+			"begin": "{",
+			"beginCaptures": {"0": {"name": "punctuation.section.block.begin.bracket.curly.wasm"}},
+			"end": "}",
+			"endCaptures": {"0": {"name": "punctuation.section.block.end.bracket.curly.wasm"}},
+			"name": "meta.block.c",
+			"patterns": [{"include": "#block_innards"}]
+		},
+		"block_innards": {
+			"patterns": [
+				{"include": "$base"}
+			]
+		},
+		"quoted-single": {
+			"begin":"'",
+			"end":  "'",
+			"name": "string.quoted.single.wasm",
+			"patterns": [
+				{
+					"match":"\\.",
+					"name": "constant.character.escaped.wasm"
+				}
+			]
+		},
+		"quoted-double": {
+			"begin": "\"",
+			"end": "\"",
+			"name": "string.quoted.double.wasm",
+			"patterns": [
+				{
+					"match": "\\.",
+					"name": "constant.character.escaped.wasm"
+				}
+			]
+		},
+		"nested-parens": {
+			"begin": "\\(",
+			"captures": {"0": {"name": "punctuation.section.scope.wasm"}},
+			"end": "\\)",
+			"patterns": [{"include": "#nested-parens"}]
+		}
+	}
+}
