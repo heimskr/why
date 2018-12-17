@@ -15,6 +15,9 @@ test: $(TEST) $(COMPILED) test.ll
 itest: $(TEST) $(COMPILED) io.ll
 	node ll2w.js -d io.ll
 
+otest: $(TEST) $(COMPILED) optimized.ll
+	node ll2w.js -d optimized.ll
+
 itree: $(TEST) $(COMPILED) io.ll
 	node $(TEST) io.ll
 
