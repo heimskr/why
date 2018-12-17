@@ -236,10 +236,11 @@ class LL2W {
 	}
 
 	extractFunctions() {
-		this.functions = [];
+		this.functions = {};
+		this.allBlocks = {};
 
 		this.iterateTree("function", (meta, instructions) => {
-			console.log(chalk.bold("".padStart(16, "="), meta.name, "".padStart(16, "=")));
+			// console.log(chalk.bold("".padStart(16, "="), meta.name, "".padStart(16, "=")));
 			const basicBlocks = [];
 			let currentBasicBlock = ["start", {preds: []}, []];
 
@@ -257,8 +258,11 @@ class LL2W {
 				basicBlocks.push(currentBasicBlock);
 			}
 
-			basicBlocks.map(this.extractBasicBlockVariables);
+			this.functions[meta.name] = basicBlocks.map(this.extractBasicBlockVariables);
+			basicBlocks.forEach(([name, ...etc]) => this.allBlocks[meta.name + ":" + name] = etc);
 		});
+
+		console.log(this.allBlocks);
 	}
 
 	extractBasicBlockVariables(basicBlock) {
@@ -317,7 +321,6 @@ class LL2W {
 			}
 		}
 		
-		console.log(basicBlock[0], {read: _.uniq(read), written: _.uniq(written)});
 		basicBlock[1].all = _.uniq([...read, ...written]);
 		basicBlock[1].read = _.uniq(read);
 		basicBlock[1].written = _.uniq(written);
