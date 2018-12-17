@@ -370,7 +370,7 @@ i_call				->	(variable " = "):?
 							cconv:      d[ 4] || null,
 							retattr:    d[ 5]? d[5].map((x) => x[1]) : [],
 							returnType: d[ 7][0],
-							name:       d[ 9][0],
+							name:       d[ 9],
 							args:       d[11][0]? d[11][0] : [],
 							bundles:    d[13]?    d[13][1].map((x) => x[1]) : []
 						}] %}
