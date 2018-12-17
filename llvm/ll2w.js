@@ -265,7 +265,7 @@ class LL2W {
 		let read = [], written = [];
 		for (const instruction of section[2]) {
 			const [, type, meta] = instruction;
-			if (type == "phi") {
+			if (type == "phi" || type == "alloca") {
 				// TODO: do phi instructions count as reads?
 				written.push(meta.destination[1]);
 			} else if (["conversion"].includes(type)) {
@@ -312,14 +312,14 @@ class LL2W {
 				if (meta.pointerValue[0] == "variable") {
 					read.push(meta.pointerValue[1]);
 				}
-
+				
 				meta.indices.filter(i => i[1][0] == "variable").forEach(i => read.push(i[1][1]));
-			} else if (!["alloca", "br_unconditional"].includes(type)) {
-				console.log("???", type);
+			} else if (!["br_unconditional", "unreachable"].includes(type)) {
+				// console.log("???", type);
 			}
 		}
 		
-		console.log(section[0], {read, written});
+		// console.log(section[0], {read, written});
 		section[1].all = _.uniq([...read, ...written]);
 		section[1].read = _.uniq(read);
 		section[1].written = _.uniq(written);
