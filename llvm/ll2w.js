@@ -314,12 +314,10 @@ class LL2W {
 				}
 				
 				meta.indices.filter(i => i[1][0] == "variable").forEach(i => read.push(i[1][1]));
-			} else if (!["br_unconditional", "unreachable"].includes(type)) {
-				// console.log("???", type);
 			}
 		}
 		
-		// console.log(section[0], {read, written});
+		console.log(section[0], {read: _.uniq(read), written: _.uniq(written)});
 		section[1].all = _.uniq([...read, ...written]);
 		section[1].read = _.uniq(read);
 		section[1].written = _.uniq(written);
