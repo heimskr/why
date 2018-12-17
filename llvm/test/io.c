@@ -2,7 +2,7 @@
 
 int i = 5;
 void _main() {
-	int x = 0;
+	int x = _gettime();
 	foo:
 	strprint("hello\n");
 	if (++x < i) {

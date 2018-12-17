@@ -12,6 +12,7 @@
 void _int(int64_t type);
 void _rit(int64_t *table[]);
 void _time(int64_t micro);
+int64_t _gettime();
 
 // External
 void _halt();
