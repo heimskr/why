@@ -358,15 +358,15 @@ i_call				->	(variable " = "):?
 						# todo: fn attrs
 						(_ list["#" decimal]):?
 						{% d => ["instruction", "call", {
-							assign:   d[0]? d[0][0] : null,
-							tail:     d[1]? d[1][0][0] : null,
-							fastmath: d[3] || null,
-							cconv:    d[4] || null,
-							retattr:  d[5]? d[5].map((x) => x[1]) : [],
-							type:     d[ 7][0],
-							name:     d[ 9][0],
-							args:     d[11][0]? d[11][0] : [],
-							bundles:  d[13]?    d[13][1].map((x) => x[1]) : []
+							assign:     d[ 0]? d[0][0] : null,
+							tail:       d[ 1]? d[1][0][0] : null,
+							fastmath:   d[ 3] || null,
+							cconv:      d[ 4] || null,
+							retattr:    d[ 5]? d[5].map((x) => x[1]) : [],
+							returnType: d[ 7][0],
+							name:       d[ 9][0],
+							args:       d[11][0]? d[11][0] : [],
+							bundles:    d[13]?    d[13][1].map((x) => x[1]) : []
 						}] %}
 
 i_unreachable		->	"unreachable"												{% d => ["instruction", "unreachable", { }] %}
