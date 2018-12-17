@@ -12,6 +12,8 @@
 		{"include": "#op"},
 		{"include": "#register"},
 		{"include": "#label"},
+		{"include": "#block"},
+		{"include": "#subroutine"},
 		{
 			"match": "#(m(eta)?|i(ncludes)?|c(ode)?|d(ata)?)",
 			"name": "keyword.other.section.wasm"
@@ -38,23 +40,30 @@
 			"match": "\\b(print|halt)\\b",
 			"name": "support.constant.ext.wasm"
 		},
+		{"include": "#operator_token"},
 		{
-			"match": "(sub)\\s+([^@$&*\\t \":`./()]+)(\\()[^)]*(\\))",
-			"captures": {
-				"0": {"name": "keyword.control.sub"},
-				"2": {"name": "entity.name.function"},
-				"3": {"name": "punctuation.section.parameters.begin.bracket.round.wasm"},
-				"4": {"name": "punctuation.section.parameters.end.bracket.round.wasm"}
-			}
+			"match": "/[bu]\\b",
+			"name": "constant.language.modifier.wasm"
 		}
 	],
 	"repository": {
+		"subroutine": {
+			"match": "(sub)\\s+([^@$&*\\t \":`./()]+)\\s*(\\()\\s*((\\$[\\w\\d]+)(\\s*(,)\\s*(\\$[\\w\\d]+))+)?\\s*(\\))",
+			"captures": {
+				"1": {"name": "keyword.control.sub"},
+				"2": {"name": "entity.name.function"},
+				"3": {"name": "punctuation.section.parameters.begin.bracket.round.wasm"},
+				"5": {"name": "punctuation.decorator.register.wasm"},
+				"7": {"name": "punctuation.terminator.wasm"},
+				"8": {"name": "punctuation.decorator.register.wasm"},
+				"9": {"name": "punctuation.section.parameters.end.bracket.round.wasm"}
+			}
+		},
 		"block": {
 			"begin": "{",
-			"beginCaptures": {"0": {"name": "punctuation.section.block.begin.bracket.curly.wasm"}},
+			"beginCaptures": {"0": {"name": "punctuation.definition.bracket.curly.wasm"}},
 			"end": "}",
-			"endCaptures": {"0": {"name": "punctuation.section.block.end.bracket.curly.wasm"}},
-			"name": "meta.block.c",
+			"endCaptures": {"0": {"name": "punctuation.definition.bracket.curly.wasm"}},
 			"patterns": [{"include": "#block_innards"}]
 		},
 		"block_innards": {
@@ -64,12 +73,8 @@
 			]
 		},
 		"operator_token": {
-			"patterns": [
-				{
-					"match": "\\bif\\b|->|[+-%]",
-					"name": "keyword.operator.wasm"
-				}
-			]
+			"match": "::?|->|[\\+\\-\\%]=?",
+			"name": "punctuation.terminator.wasm"
 		},
 		"ext": {
 			"begin": "(<)(\\w+)",
@@ -98,9 +103,9 @@
 				"1": {"name": "punctuation.terminator.wasm"},
 				"2": {"name": "entity.name.function.wasm"},
 				"4": {"name": "keyword.operator.wasm"},
-				"5": {"name": "constant.language.registers.wasm"},
+				"5": {"name": "punctuation.decorator.register.wasm"},
 				"7": {"name": "punctuation.terminator.wasm"},
-				"8": {"name": "constant.language.registers.wasm"}
+				"8": {"name": "punctuation.decorator.register.wasm"}
 			}
 		},
 		"sub_special": {
