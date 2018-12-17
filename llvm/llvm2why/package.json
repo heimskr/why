@@ -1,0 +1,17 @@
+{
+  "name": "llvm2why",
+  "version": "1.0.0",
+  "description": "Converts LLVM IR to wasm.",
+  "main": "llvm2why.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kai Tamkun",
+  "license": "MIT",
+  "dependencies": {
+    "rimraf": "^2.6.2"
+  }
+}

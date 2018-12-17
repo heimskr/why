@@ -1,3 +1,8 @@
+/*
+ * Declares built-in methods.
+ * The llvm2why compiler recognizes these and translates them into the corresponding instructions.
+ */
+
 #ifndef _WHYSA_H_
 #define _WHYSA_H_
 
