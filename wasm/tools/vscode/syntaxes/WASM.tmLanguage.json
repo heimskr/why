@@ -6,24 +6,15 @@
 	"foldingStopMarker": "\\*/|^\\s*$",
 	"keyEquivalent": "^~S",
 	"patterns": [
-		{
-			"match": "![^@$<*\\t \":()]+\\b",
-			"name": "support.function.wasm"
-		},
-		{
-			"match": "(?<=@)[^@$<*\\t \":]+\\b|\\bif\\b",
-			"name": "keyword.control.operator.wasm"
-		},
-		{
-			"include": "#quoted-double"
-		},
+		{"include": "#quoted-double"},
+		{"include": "#quoted-single"},
+		{"include": "#ext"},
+		{"include": "#op"},
+		{"include": "#register"},
+		{"include": "#label"},
 		{
 			"match": "#(m(eta)?|i(ncludes)?|c(ode)?|d(ata)?)",
 			"name": "keyword.other.section.wasm"
-		},
-		{
-			"match": "\\$[\\w\\d]+",
-			"name": "variable.parameter.wasm"
 		},
 		{
 			"begin": "/\\*",
@@ -38,10 +29,6 @@
 		{
 			"match": "(-|\\+)?\\s*[0-9]+(\\.[0-9]+)?",
 			"name": "constant.numeric.wasm"
-		},
-		{
-			"match": "[@&*]",
-			"name": "storage.type.wasm"
 		},
 		{
 			"match": "\\b(name|author|orcid|version|library)\\b",
@@ -72,8 +59,64 @@
 		},
 		"block_innards": {
 			"patterns": [
+				{"include": "#op"},
 				{"include": "$base"}
 			]
+		},
+		"operator_token": {
+			"patterns": [
+				{
+					"match": "\\bif\\b|->|[+-%]",
+					"name": "keyword.operator.wasm"
+				}
+			]
+		},
+		"ext": {
+			"begin": "(<)(\\w+)",
+			"beginCaptures": {
+				"1": {"name": "meta.tag.other.begin.wasm"},
+				"2": {"name": "storage.type.wasm"}
+			},
+			"end": ">",
+			"endCaptures": {"0": {"name": "meta.tag.other.end.wasm"}},
+			"name": "meta.op.ext.wasm",
+			"patterns": [
+				{"include": "#register"},
+				{"include": "#quoted-double"},
+				{"include": "#quoted-single"}
+			]
+		},
+		"op": {
+			"patterns": [
+				{"include": "#sub_special"},
+				{"include": "#jump"}
+			]
+		},
+		"jump": {
+			"match": "(::?)\\s*([^@$<*\\t \":]+)(\\s+(if)\\s*(\\$[\\w\\d]+)(\\s*(==)\\s*(\\$[\\w\\d]+))?)?",
+			"captures": {
+				"1": {"name": "punctuation.terminator.wasm"},
+				"2": {"name": "entity.name.function.wasm"},
+				"4": {"name": "keyword.operator.wasm"},
+				"5": {"name": "constant.language.registers.wasm"},
+				"7": {"name": "punctuation.terminator.wasm"},
+				"8": {"name": "constant.language.registers.wasm"}
+			}
+		},
+		"sub_special": {
+			"match": "!(done|ret)",
+			"name": "meta.method.identifier"
+		},
+		"register": {
+			"match": "\\$[\\w\\d]+",
+			"name": "punctuation.decorator.register.wasm"
+		},
+		"label": {
+			"match": "(@)([^@$<*\\t \":]+)",
+			"captures": {
+				"1": {"name": "storage.type.wasm"},
+				"2": {"name": "entity.name.function.wasm"}
+			}
 		},
 		"quoted-single": {
 			"begin":"'",
