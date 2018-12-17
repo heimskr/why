@@ -228,7 +228,7 @@ let App = window.App = class App {
 	decompiledCell(long, addr) {
 		const {$symtab, $code, $data} = this.vm.offsets;
 
-		const inMeta = addr < 40;
+		const inMeta = addr < 32;
 		const inSymtab = $symtab <= addr && addr < $code;
 		const inCode = $code <= addr && addr < $data;
 
