@@ -47,6 +47,11 @@ const parseLabelComment = (d, l, r) => {
 	return m? ["label_c", m[1], m[2].split(/, /).map((x) => x.substr(1))] : null;
 };
 
+const parseLabel = (d, l, r) => {
+	const m = d[3].match(/^preds = (%[^,]+(, %[^,]+)*)$/);
+	return m? ["label_c", d[1][1], m[1].split(/, /).map((x) => x.substr(1))] : d[1];
+};
+
 %}
 
 @include "strings.ne"
@@ -224,12 +229,11 @@ function_header		->	(" " linkage):?
 declaration			->	"declare" function_header									{% d => ["declaration", d[1]] %}
 function_type		->	type_any (_ parattr):* (" " variable):?
 function_def		->	"define" function_header " {" function_line:* "}"			{% d => [...d[1], filter(d[3])] %}
-label_c				-> "; <label>:" [0-9]:+ ":" " ":+ "; preds = " commalist["%" [^,]:+]
-																					{% d => ["label_c", d[1], d[5]] %}
-function_line		->	_ comment newline											{% parseLabelComment %}
+
+function_line		->	_ label " ":* comment newline								{% parseLabel %}
+					 |	_ comment newline											{% parseLabelComment %}
 					 |	_ newline													{% _( ) %}
 					 |	_ instruction												{% _(1) %}
-					 |	_ label														{% _(1) %}
 
 cconv				->	("ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" |
 						 "preserve_allcc" | "preserve_mostcc" | "x86_vectorcallcc" |
