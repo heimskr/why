@@ -237,6 +237,10 @@ class LL2W {
 		const allBlocks = {};
 
 		this.iterateTree("function", (meta, instructions) => {
+			// LLVM helpfully indicates basic blocks with comments and labels.
+			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
+			// (Even though it wouldn't be very difficult to implement such an algorithm.)
+
 			const basicBlocks = [];
 			let currentBasicBlock = ["start", {preds: [], in: [], out: []}, []];
 
