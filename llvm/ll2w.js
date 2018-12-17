@@ -239,14 +239,15 @@ class LL2W {
 		this.functions = [];
 
 		this.iterateTree("function", (meta, instructions) => {
+			console.log(chalk.bold("".padStart(16, "="), meta.name, "".padStart(16, "=")));
 			const sections = [];
-			let currentSection = ["start", [], []];
+			let currentSection = ["start", {preds: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
 				if (name == "label_c") {
 					sections.push(currentSection);
-					currentSection = [...args, []];
+					currentSection = [args[0], {preds: args[1]}, []];
 				} else {
 					currentSection[2].push(instruction);
 				}
@@ -255,7 +256,40 @@ class LL2W {
 			if (currentSection[2].length) {
 				sections.push(currentSection);
 			}
+
+			sections.map(this.extractSectionVariables);
 		});
+	}
+
+	extractSectionVariables(section) {
+		let read = [], written = [];
+		for (const instruction of section[2]) {
+			const [, type, meta] = instruction;
+			if (type == "phi") {
+				// TODO: do phi instructions count as reads?
+				written.push(meta.destination[1]);
+			} else if (["conversion"].includes(type)) {
+				written.push(meta.destination[1]);
+				if (meta.sourceValue[0] == "variable") {
+					read.push(meta.sourceValue[1]);
+				}
+			} else if (type == "call") {
+				if (meta.assign) {
+					written.push(meta.assign[1]);
+				}
+
+				for (const arg of meta.args) {
+					if (arg[1] && arg[1][0] == "variable") {
+						read.push(parseInt(arg[1][1]));
+					}
+				}
+			}
+		}
+		
+		console.log(section[0], {read, written});
+		section[1].all = _.uniq([...read, ...written]);
+		section[1].read = _.uniq(read);
+		section[1].written = _.uniq(written);
 	}
 
 	/**
