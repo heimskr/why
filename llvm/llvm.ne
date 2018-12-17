@@ -8,10 +8,10 @@ const special = {
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
-const filter = (arr, index=null, ...remove) => arr.filter((item) => !(remove.length? remove : [null]).includes(typeof index == "number" && 0 <= index? item[index] : item));
-const select = (multidim, index) => multidim.map((arr) => arr[index]);
+const filter = (arr, index=null, ...remove) => arr.filter(item => !(remove.length? remove : [null]).includes(typeof index == "number" && 0 <= index? item[index] : item));
+const select = (multidim, index) => multidim.map(arr => arr[index]);
 
-const _ = (arg) => {
+const _ = arg => {
 	if (arg instanceof Array) {
 		return arg[0];
 	};
@@ -39,17 +39,17 @@ const __ = (x, y) => {
 	return () => { throw "Unknown type given to __." };
 };
 
-const compileFastMathFlags = (flags) => flags.includes("fast")? ["nnan", "ninf", "nsz", "arcp", "constract", "fast"] : unique(flags);
-const compilePtr = (type) => type[0] == "ptr"? ["ptr", type[1], type[2] + 1] : ["ptr", type, 1];
+const compileFastMathFlags = flags => flags.includes("fast")? ["nnan", "ninf", "nsz", "arcp", "constract", "fast"] : unique(flags);
+const compilePtr = type => type[0] == "ptr"? ["ptr", type[1], type[2] + 1] : ["ptr", type, 1];
 
 const parseLabelComment = (d, l, r) => {
 	const m = d[1].match(/^<label>:(\d+): *; preds = (%[^,]+(, %[^,]+)*)$/);
-	return m? ["label_c", m[1], m[2].split(/, /).map((x) => x.substr(1))] : null;
+	return m? ["label_c", m[1], m[2].split(/, /).map(x => x.substr(1))] : null;
 };
 
 const parseLabel = (d, l, r) => {
 	const m = d[3].match(/^preds = (%[^,]+(, %[^,]+)*)$/);
-	return m? ["label_c", d[1][1], m[1].split(/, /).map((x) => x.substr(1))] : d[1];
+	return m? ["label_c", d[1][1], m[1].split(/, /).map(x => x.substr(1))] : d[1];
 };
 
 %}
@@ -64,8 +64,8 @@ item ->	_ lineend																	{% _() %}
 
 lineend				->	(comment newline | newline) 								{% _( ) %}
 spaced[X]			->	" " $X " "													{% _(1) %}
-list[X]				->	$X (" " $X):*												{% d => [d[0][0], ...d[1].map((x) => x[1][0])] %}
-commalist[X]		->	$X (", " $X):*												{% d => [d[0][0], ...d[1].map((x) => x[1][0])] %}
+list[X]				->	$X (" " $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
+commalist[X]		->	$X (", " $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
 pars[X]				->	"(" $X ")"													{% _(1) %}
 
 cstring				->	"c" string													{% _(1) %}
@@ -368,11 +368,11 @@ i_call				->	(variable " = "):?
 							tail:       d[ 1]? d[1][0][0] : null,
 							fastmath:   d[ 3] || null,
 							cconv:      d[ 4] || null,
-							retattr:    d[ 5]? d[5].map((x) => x[1]) : [],
+							retattr:    d[ 5]? d[5].map(x => x[1]) : [],
 							returnType: d[ 7][0],
 							name:       d[ 9],
 							args:       d[11][0]? d[11][0] : [],
-							bundles:    d[13]?    d[13][1].map((x) => x[1]) : []
+							bundles:    d[13]?    d[13][1].map(x => x[1]) : []
 						}] %}
 
 i_unreachable		->	"unreachable"												{% d => ["instruction", "unreachable", { }] %}
@@ -393,7 +393,7 @@ i_getelementptr_1	->	variable
 							type: d[3],
 							pointerType: d[5],
 							pointerValue: d[7][0],
-							indices: d[8].map((x) => [x[2], x[4][0], !!x[1]]),
+							indices: d[8].map(x => [x[2], x[4][0], !!x[1]]),
 							flavor: "single"
 						}] %}
 i_getelementptr_2	->	variable
@@ -412,7 +412,7 @@ i_getelementptr_2	->	variable
 							type: d[4],
 							pointerType: d[6],
 							pointerValue: d[8][0],
-							indices: d[9].map((x) => [x[2], x[4][0], !!x[1]]),
+							indices: d[9].map(x => [x[2], x[4][0], !!x[1]]),
 							flavor: "multi"
 						}] %}
 
@@ -498,7 +498,7 @@ i_binary_fastmath	->	variable
 						{% d => ["instruction", "binary", {
 							destination: d[0],
 							operation: d[2][0],
-							flags: d[3]? d[3].map((x) => x[1]) : [],
+							flags: d[3]? d[3].map(x => x[1]) : [],
 							type: d[4][0],
 							op1: d[5],
 							op2: d[7],
@@ -568,7 +568,7 @@ function_name		->	"@" (var | string)											{% d => d[1][0] %}
 fast_math_flags		->	list[fast_math_flag]											{% compileFastMathFlags %}
 fast_math_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
 
-constant			->	type_any (" " parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map((x) => x[0])] %}
+constant			->	type_any (" " parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map(x => x[0])] %}
 cst_to_type[X]		->	$X " " constant " to " type_any								{% d => [d[0], ...d[2], d[4]] %}
 cst_to_types		->	("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
 																					{% __ %}
@@ -590,7 +590,7 @@ getelementptr_expr	->	"getelementptr "
 							type: d[3],
 							ptr: d[5],
 							name: d[7],
-							indices: d[8].map((x) => [x[1], x[3]])
+							indices: d[8].map(x => [x[1], x[3]])
 						}] %}
 
 var -> varchar:+ {%

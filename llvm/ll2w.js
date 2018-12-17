@@ -96,7 +96,7 @@ class LL2W {
 		}
 
 		if (trees.length > 1) {
-			trees.forEach((tree) => console.log(JSON.stringify(trees[tree], null, 4)));
+			trees.forEach(tree => console.log(JSON.stringify(trees[tree], null, 4)));
 			console.error(chalk.red.italic(`\nAmbiguous grammar (${trees.length}).\n`));
 			process.exit(1);
 		} else if (trees.length == 0) {
@@ -128,7 +128,7 @@ class LL2W {
 		}
 
 		if (type == null) {
-			this.ast.forEach((entry) => fn(...entry));
+			this.ast.forEach(entry => fn(...entry));
 		} else {
 			this.ast.forEach(([name, ...args]) => name == type && fn(...args));
 		}
@@ -151,7 +151,7 @@ class LL2W {
 		 */
 		this.targets = {};
 
-		this.iterateTree("source_filename", (name) => this.sourceFilename = name);
+		this.iterateTree("source_filename", name => this.sourceFilename = name);
 		this.iterateTree("target", (key, value) => this.targets[key] = value);
 	}
 
@@ -210,7 +210,7 @@ class LL2W {
 			this.metadata[name] = {recursive, distinct, items: toAdd};
 		});
 
-		graph.sorted().forEach(({ id: name }) => graph.getNode(name).out.forEach((dependency) => {
+		graph.sorted().forEach(({id: name}) => graph.getNode(name).out.forEach(dependency => {
 			this.metadata[name].items = _.unionWith(this.metadata[name].items, this.metadata[dependency].items, _.isEqual);
 		}));
 
@@ -218,7 +218,7 @@ class LL2W {
 			this.metadata[name] = {
 				recursive: false,
 				distinct, 
-				items: _.uniqWith(_.flatten(items.map((i) => this.metadata[i].items)), _.isEqual)
+				items: _.uniqWith(_.flatten(items.map(i => this.metadata[i].items)), _.isEqual)
 			};
 		});
 	}
@@ -228,7 +228,7 @@ class LL2W {
 	 */
 	extractGlobalConstants() {
 		const constants = {};
-		this.iterateTree("global constant", (item) => constants[item.name] = _.omit(item, "name"));
+		this.iterateTree("global constant", item => constants[item.name] = _.omit(item, "name"));
 		return constants;
 	}
 
@@ -383,7 +383,7 @@ class LL2W {
 				written.push(meta.destination[1]);
 				assigners[meta.destination[1]] = instruction;
 
-				[meta.op1, meta.op2].forEach((o) => o[0] == "variable" && read.push(o[1]));
+				[meta.op1, meta.op2].forEach(o => o[0] == "variable" && read.push(o[1]));
 			} else if (type == "br_conditional") {
 				// TODO: do branch targets count as reads?
 				read.push(meta.cond[1]);
@@ -437,7 +437,7 @@ class LL2W {
 
 		console.log(`Using ${chalk.bold(dirName)}.`);
 		
-		const resolved = filenames.map((f) => path.resolve(f));
+		const resolved = filenames.map(f => path.resolve(f));
 		const cmd = shell_escape(["clang", "-S", "-emit-llvm", ...resolved]);
 
 		process.chdir(dirName);
@@ -459,9 +459,9 @@ module.exports = LL2W;
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
-		alias: { d: "debug" },
+		alias: {d: "debug"},
 		boolean: ["debug"],
-		default: { d: false }
+		default: {d: false}
 	}), infile = options._[0];
 
 	if (!infile) {

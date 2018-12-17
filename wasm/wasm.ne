@@ -10,35 +10,35 @@ const special = {
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
-const filter = (arr, index=null, ...remove) => arr.filter((item) => !(remove.length? remove : [null]).includes(typeof index == "number" && 0 <= index? item[index] : item));
-const select = (arr, ...indices) => indices.map((i) => arr[i]);
+const filter = (arr, index=null, ...remove) => arr.filter(item => !(remove.length? remove : [null]).includes(typeof index == "number" && 0 <= index? item[index] : item));
+const select = (arr, ...indices) => indices.map(i => arr[i]);
 
-const compileObject = (entries) => {
+const compileObject = entries => {
 	let obj = {};
-	filter(entries).forEach((entry) => obj[entry[0]] = entry[1]);
+	filter(entries).forEach(entry => obj[entry[0]] = entry[1]);
 	return obj;
 };
 
-const compileData = (entries) => {
+const compileData = entries => {
 	let obj = {};
-	filter(entries).forEach((entry) => obj[entry[1]] = select(entry, 0, 2));
+	filter(entries).forEach(entry => obj[entry[1]] = select(entry, 0, 2));
 	return obj;
 };
 
 const compileSubroutine = (name, args, code) => {
 	return [
 		[name, "push", ...args],
-		...code.map((item) => item[1] == S("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
+		...code.map(item => item[1] == S("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
 		[`${name}$done`, "pop", ...args.reverse()],
 		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
 	];
 };
 
-const compileCode = (statements) => {
+const compileCode = statements => {
 	const out = [];
-	statements.forEach((statement) => {
+	statements.forEach(statement => {
 		if (statement != null && statement[0] == "subroutine") {
-			statement[1].forEach((substatement) => out.push(substatement));
+			statement[1].forEach(substatement => out.push(substatement));
 		} else if (statement != null) {
 			out.push(statement);
 		};
@@ -47,7 +47,7 @@ const compileCode = (statements) => {
 	return out;
 };
 
-const subify = (x) => Object.assign(x, {inSubroutine: true});
+const subify = x => Object.assign(x, {inSubroutine: true});
 
 %}
 
@@ -109,7 +109,7 @@ subroutine_code -> _ op										{% d => subify([null, ...d[1][0]]) %}
 				 | _ sep									{% d =>  null %}
 				 | ___ "!done"								{% d => [null, S("done")] %}
 				 | _ label (lineend | __):+ "!done"			{% d => [d[1], S("done")] %}
-sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map((x) => x[3])] %}
+sub_saved		-> reg (_ "," _ reg):*						{% d => [d[0], ...d[1].map(x => x[3])] %}
 
 include_section	-> _ include_header _ sep inclusion:*		{% d => ["includes", filter(d[4])] %}
 include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}
@@ -349,7 +349,7 @@ ext_xn_recv		-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["ext",   0,  d[8
 
 gap				-> brc[int]									{% d => ["gap",  d[0]] %}
 
-call			-> var _ par[args]							{% d => ["call", d[0], ...d[2].map((x) => x[0])] %}
+call			-> var _ par[args]							{% d => ["call", d[0], ...d[2].map(x => x[0])] %}
 				 | var _ epar								{% d => ["call", d[0]] %}
 arg				-> (rv | int | var_addr)					{% nth(0) %}
 args			-> delimited[arg, ("," _)]					{% d => d[0][0] %}

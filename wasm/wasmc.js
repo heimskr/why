@@ -18,7 +18,7 @@ require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
 const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} = require("./constants.js");
-const isLabelRef = (x) => x instanceof Array && x.length == 2 && x[0] == "label";
+const isLabelRef = x => x instanceof Array && x.length == 2 && x[0] == "label";
 
 /**
  * Represents a `wasmc` instance.
@@ -144,7 +144,7 @@ class WASMC {
 		}
 
 		if (trees.length > 1) {
-			trees.forEach((tree) => console.log(JSON.stringify(tree, null, 4) + "\n" + chalk.bold("".padStart(64, "-"))));
+			trees.forEach(tree => console.log(JSON.stringify(tree, null, 4) + "\n" + chalk.bold("".padStart(64, "-"))));
 			console.error(chalk.red.italic(`\nAmbiguous grammar (${trees.length}).\n`));
 			process.exit(1);
 		} else if (trees.length === 0) {
@@ -223,7 +223,7 @@ class WASMC {
 		console.log(chalk.green.bold(" \u2714"), "Successfully assembled", infile? chalk.bold(infile) : "the program", "and saved the output to", chalk.bold(outfile) + ".");
 
 		if (0 < this.unknownSymbols.length) {
-			console.log(chalk.yellow.bold(" ?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map((s) => chalk.bold(s)).join(", "));
+			console.log(chalk.yellow.bold(" ?"), "Unknown symbol" + (this.unknownSymbols.length == 1? "" : "s") + ":", this.unknownSymbols.map(s => chalk.bold(s)).join(", "));
 		}
 	}
 	
@@ -239,7 +239,7 @@ class WASMC {
 		}
 		
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
-		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, ...[orcid.substr(0, 8), orcid.substr(8)].map((half) => WASMC.chunk2long(half.split("")))];
+		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, ...[orcid.substr(0, 8), orcid.substr(8)].map(half => WASMC.chunk2long(half.split("")))];
 		
 		// Append the name-version-author string.
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
@@ -284,7 +284,7 @@ class WASMC {
 	 * @param {number} dataSectionStart The start offset of the data section.
 	 */
 	setDataOffsets(dataSectionStart) {
-		Object.keys(this.dataOffsets).forEach((key) => this.offsets[key] = this.dataOffsets[key] + dataSectionStart);
+		Object.keys(this.dataOffsets).forEach(key => this.offsets[key] = this.dataOffsets[key] + dataSectionStart);
 	}
 
 	/**
@@ -323,7 +323,7 @@ class WASMC {
 	 * @param {Array} expanded - The list of expanded instructions to compile and store.
 	 */
 	processCode(expanded) {
-		expanded.forEach((item) => this.addCode(item));
+		expanded.forEach(item => this.addCode(item));
 	}
 
 	/**
@@ -334,25 +334,25 @@ class WASMC {
 		let expanded = [];
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions will need to be
 		// gone over once again after labels have been sorted out so we can replace variable references with addresses.
-		this.parsed.code.forEach((item) => {
+		this.parsed.code.forEach(item => {
 			let [label, op, ...args] = item;
 			if (label) {
 				this.offsets[label] = this.metaOffsetCode.toInt() + expanded.length * 8;
 				this.log(chalk.magenta("Assigning"), chalk.bold(this.offsets[label]), "to", label, "based on an expanded length equal to", chalk.bold(expanded.length));
 			}
 
-			const add = (x) => expanded.push(x);
+			const add = x => expanded.push(x);
 
 			const addPush = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
-				args.forEach((reg) => {
+				args.forEach(reg => {
 					add([getLabel(), "spush", _0, reg, _0]);
 				});
 			};
 
 			const addPop = (args, _label=label) => {
 				const getLabel = () => [_label, _label = null][0];
-				args.forEach((reg) => {
+				args.forEach(reg => {
 					add([getLabel(), "spop", _0, _0, reg]);
 				});
 			};
@@ -365,7 +365,7 @@ class WASMC {
 					throw new Error(`Too many arguments given to subroutine (given ${vals.length}, maximum is ${MAX_ARGS})`);
 				}
 
-				const currentValues = _.range(0, vals.length).map((n) => _A[n]);
+				const currentValues = _.range(0, vals.length).map(n => _A[n]);
 				if (item.inSubroutine) {
 					currentValues.unshift(_RA);
 				}
@@ -508,7 +508,7 @@ class WASMC {
 	expandLabels(expanded) {
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
-		expanded.forEach((item) => {
+		expanded.forEach(item => {
 			// First off, now that we've recorded all the label positions,
 			// we can remove the label tags.
 			item.shift();
@@ -718,8 +718,8 @@ class WASMC {
 	 */
 	findAllLabels() {
 		return _.uniq([
-			...Object.keys(this.parsed.data).filter((label) => label[0] != "%"),
-			...this.parsed.code.map(([label]) => label).filter((label) => label)
+			...Object.keys(this.parsed.data).filter(label => label[0] != "%"),
+			...this.parsed.code.map(([label]) => label).filter(label => label)
 		]);
 	}
 
@@ -739,7 +739,7 @@ class WASMC {
 	 * @return {Long[]} An encoded symbol table.
 	 */
 	createSymbolTable(labels, skeleton = true) {
-		return _.flatten(_.uniq([...labels, ".end"]).map((label) => {
+		return _.flatten(_.uniq([...labels, ".end"]).map(label => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
 			let type = SYMBOL_TYPES.UNKNOWN;
 
@@ -767,7 +767,7 @@ class WASMC {
 	 * @return {Long[]} An encoded symbol table.
 	 */
 	static encodeSymbolTable(symbolTable) {
-		return _.flatten(Object.keys(symbolTable).map((label) => [
+		return _.flatten(Object.keys(symbolTable).map(label => [
 			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
 			symbolTable[label][1],
 			...WASMC.str2longs(label)
@@ -806,7 +806,7 @@ class WASMC {
 	 * @return {Long} A Long containing the concatenated ASCII values of the characters.
 	 */
 	static chunk2long(chunk) {
-		return Long.fromString(chunk.map((c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""), true, 16);
+		return Long.fromString(chunk.map(c => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""), true, 16);
 	}
 
 	/**
@@ -839,7 +839,7 @@ class WASMC {
 	 * @return {Array.<string>} An array of zero-padded hex strings corresponding to the inputs.
 	 */
 	static longs2strs(longs) {
-		return longs.map((l) => l instanceof Long? l.toString(16).padStart(16, "0") : "x".repeat(16));
+		return longs.map(l => l instanceof Long? l.toString(16).padStart(16, "0") : "x".repeat(16));
 	}
 
 	/**
@@ -867,9 +867,9 @@ class WASMC {
 
 module.exports = WASMC;
 
-const _A = _.range(0, 16).map((n) => ["register", "a", n]);
+const _A = _.range(0, 16).map(n => ["register", "a", n]);
 const _RA = ["register", "return", 0];
-const _M = _.range(0, 16).map((n) => ["register", "m", n]);
+const _M = _.range(0, 16).map(n => ["register", "m", n]);
 const _0  = ["register", "zero",  0];
 
 if (require.main === module) {

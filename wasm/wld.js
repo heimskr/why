@@ -52,7 +52,7 @@ class Linker {
 			bytecode = WASMC.longs2strs(asm.assembled).join("\n");
 			if (asm.parsed.includes) {
 				// Included files are relative to the source file, so we need to resolve the paths.
-				this.objectFilenames.splice(1, 0, ...asm.parsed.includes.map((f) => path.resolve(path.dirname(filename), f)));
+				this.objectFilenames.splice(1, 0, ...asm.parsed.includes.map(f => path.resolve(path.dirname(filename), f)));
 				// In case the main source includes a file already specified as an input from the command line, we need to remove duplicates.
 				this.objectFilenames = _.uniq(this.objectFilenames);
 			}
@@ -298,7 +298,7 @@ class Linker {
 	 * @return {Object<string, SymbolType>} A map between symbol names and symbol types.
 	 */
 	static collectSymbolTypes(offsets, symbolTable) {
-		return _.fromPairs(Object.keys(symbolTable).map((key) => [key, Linker.getSymbolType(offsets, symbolTable, key)]));
+		return _.fromPairs(Object.keys(symbolTable).map(key => [key, Linker.getSymbolType(offsets, symbolTable, key)]));
 	}
 
 	/**
@@ -497,7 +497,7 @@ if (require.main === module) {
 	}
 
 	try {
-		new Linker(options, options._.map((f) => path.resolve(f)), options.out).link();
+		new Linker(options, options._.map(f => path.resolve(f)), options.out).link();
 	} catch(e) {
 		if (typeof e == "string") {
 			console.error(chalk.red(e));
