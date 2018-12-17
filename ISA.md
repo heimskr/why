@@ -827,13 +827,13 @@ Registers the interrupt table. Takes a pointer to a table in the data section. V
 > `time $rs`  
 > `000000110000` `.......` `sssssss` `.......` `0000000000000` `......` `000000000000`
 
-Sets the hardware timer to the number stored in `rs` (in nanoseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+Sets the hardware timer to the number stored in `rs` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
 
 ### <a name="op-timei"></a>Set Timer Immediate (`timei`)
 > `time imm`  
 > `000000110001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Sets the hardware timer to the number stored in `imm` (in nanoseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+Sets the hardware timer to the number stored in `imm` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
 
 ### <a name="op-ring"></a>Change Ring (`ring`)
 > `ring $rs`  

@@ -312,9 +312,9 @@ class WVM {
 		return this.getWord(this.sp);
 	}
 
-	setTimer(nano) {
+	setTimer(micro) {
 		clearTimeout(this.timeoutID);
-		this.timeoutID = setTimeout(() => this.timerExpired(), nano / 1e6);
+		this.timeoutID = setTimeout(() => this.timerExpired(), micro / 1e3);
 	}
 
 	op_add(rt, rs, rd) {
