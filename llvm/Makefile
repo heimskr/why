@@ -13,7 +13,10 @@ test: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
 
 itest: $(TEST) $(COMPILED) io.ll
-	node $(TEST) -d io.ll
+	node ll2w.js -d io.ll
+
+itree: $(TEST) $(COMPILED) io.ll
+	node $(TEST) io.ll
 
 stest: $(TEST) $(COMPILED) syntax.ll
 	node $(TEST) syntax.ll
