@@ -43,7 +43,7 @@ const compileFastMathFlags = (flags) => flags.includes("fast")? ["nnan", "ninf",
 const compilePtr = (type) => type[0] == "ptr"? ["ptr", type[1], type[2] + 1] : ["ptr", type, 1];
 
 const parseLabelComment = (d, l, r) => {
-	const m = d[1].match(/^<label>:(\d+): *; preds = (%[^,]+(, %[^,]+)+)$/);
+	const m = d[1].match(/^<label>:(\d+): *; preds = (%[^,]+(, %[^,]+)*)$/);
 	return m? ["label_c", m[1], m[2].split(/, /).map((x) => x.substr(1))] : null;
 };
 
@@ -555,7 +555,7 @@ i_ret				->	"ret " type_any " " value									{% d => ["instruction", "ret", { t
 
 
 call_fnty			->	type_any " (" commalist[type_any] ", ...":? ")"				{% d => [d[0], d[2][0], !!d[3]] %}
-function_name		->	"@" (var | string)											{% _(1) %}
+function_name		->	"@" (var | string)											{% d => d[1][0] %}
 
 fast_math_flags		->	list[fast_math_flag]											{% compileFastMathFlags %}
 fast_math_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
