@@ -4,9 +4,9 @@ COMPILE		= nearleyc
 TEST		= tree.js
 CHECK		= \x1b[32m\xe2\x9c\x94\x1b[0m
 
-all: $(COMPILED)
+all: $(COMPILED) _
 
-$(COMPILED): $(SYNTAX)
+$(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
 
 test: $(TEST) $(COMPILED) test.ll
@@ -28,7 +28,9 @@ ptest: $(TEST) $(COMPILED) printf.ll
 	node $(TEST) printf.ll
 
 io.ll: test/io.c
-	clang -O3 -S -emit-llvm test/io.c
+	clang -S -emit-llvm test/io.c
 
 clean:
 	rm -f $(COMPILED)
+
+_:
