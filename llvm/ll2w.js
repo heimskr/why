@@ -5,9 +5,14 @@ let minimist = require("minimist"),
 	getline = require("get-line-from-pos"),
 	nearley = require("nearley"),
 	Graph = require("../graph.js"),
-	_ = require("lodash");
+	_ = require("lodash"),
+	util = require("util"),
+	exec = util.promisify(require("child_process").exec),
+	rimraf = require("rimraf"),
+	shell_escape = require("shell-escape"),
+	path = require("path");
 
-const { displayIOError } = require("../util.js");
+const {displayIOError} = require("../util.js");
 
 /**
  * `ll2w` is an LLVM intermediate representation to WVM compiler (thus
@@ -246,6 +251,32 @@ class LL2W {
 	static die(...args) {
 		console.error(...args);
 		process.exit(1);
+	}
+
+	static async produceIR(dirName, ...filenames) {
+		let deleteDir = false;
+		if (!dirName) {
+			let {err, stdout, stderr} = await exec("mktemp -d");
+			if (err) throw err;
+			dirName = stdout.trim();
+			deleteDir = true;
+		}
+
+		console.log(`Using ${chalk.bold(dirName)}.`);
+		
+		const resolved = filenames.map((f) => path.resolve(f));
+		const cmd = shell_escape(["clang", "-S", "-emit-llvm", ...resolved]);
+
+		process.chdir(dirName);
+
+		let {err, stdout, stderr} = await exec(cmd);
+		if (err) throw err;
+		
+		console.log({err, stdout, stderr});
+
+		if (deleteDir) {
+			rimraf.sync(dirName);
+		}
 	}
 }
 
