@@ -31,6 +31,13 @@ exports.mixins = (_) => {
 		replaceChar(str, index, replacement) {
 			console.log(`Replacing ${str[index] == "\n"? "\\n" : str[index] == " "? "space" : str[index]} with ${replacement == "\n"? "\\n" : replacement}`);
 			return str.substr(0, index) + replacement + str.substr(index + replacement.length);
+		},
+
+		// Pushes a value to an array, but only if the value isn't already in the array.
+		push(dest, val) {
+			if (!dest.includes(val)) {
+				dest.push(val);
+			}
 		}
 	});
 };

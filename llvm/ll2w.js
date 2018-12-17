@@ -13,7 +13,8 @@ let minimist = require("minimist"),
 	path = require("path"),
 	jsome = require("jsome");
 
-const {displayIOError} = require("../util.js");
+const {displayIOError, mixins} = require("../util.js");
+mixins(_);
 
 /**
  * `ll2w` is an LLVM intermediate representation to WVM compiler (thus
@@ -265,8 +266,7 @@ class LL2W {
 			const [funcName, name] = fullName.split(":");
 			const [meta, instructions] = block;
 			const last = _.last(instructions);
-			// console.log(fullName, meta.assigners);
-			// console.log(fullName, last);
+			
 			if (last[1] == "br_unconditional") {
 				const destName = `${funcName}:${last[2].dest[1]}`;
 				if (!(destName in basicBlocks)) {
@@ -274,12 +274,35 @@ class LL2W {
 				}
 
 				const destBlock = basicBlocks[destName];
-				meta.out = _.uniq([...meta.out, destName]);
-				destBlock[0].in = _.uniq([...destBlock[0].in, fullName]);
+				_.push(meta.out, destName);
+				_.push(destBlock[0].in, fullName);
+			} else if (last[1] == "br_conditional") {
+				console.log(last);
+			} else {
+				// console.log(last[1]);
+			}
+
+			for (const instruction of instructions) {
+				const [type, name, imeta] = instruction;
+				if (type != "instruction") {
+					continue;
+				}
+
+				if (name == "call") {
+					const destName = `${imeta.name}:start`;
+					_.push(meta.out, destName);
+					if (!(destName in basicBlocks)) {
+						console.warn(`Warning: couldn't find a basic block called ${destName}.`);
+					} else {
+						const destBlock = basicBlocks[destName];
+						_.push(destBlock[0].in, fullName);
+						_.push(destBlock[0].out, fullName);
+					}
+				}
 			}
 		}
 
-		console.log(basicBlocks);
+		Object.keys(basicBlocks).forEach(k => console.log("\n" + chalk.bold(k), {in: basicBlocks[k][0].in, out: basicBlocks[k][0].out}));
 	}
 
 	extractBasicBlockVariables(basicBlock) {
