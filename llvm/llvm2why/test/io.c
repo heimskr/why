@@ -1,6 +1,6 @@
 #include "io.h"
 
-void main() {
+void _main() {
 
 }
 

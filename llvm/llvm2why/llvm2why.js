@@ -1,24 +1,43 @@
 #!/usr/bin/env node
-let {exec} = require("child_process"),
+let util = require("util"),
+	exec = util.promisify(require("child_process").exec),
 	rimraf = require("rimraf"),
-	chalk = require("chalk");
+	chalk = require("chalk"),
+	shell_escape = require("shell-escape"),
+	minimist = require("minimist"),
+	path = require("path");
 
 class LLVM2Why {
-	static produceIR(...filenames) {
-		exec("mktemp -d", function(err, stdout, stderr) {
+	static async produceIR(dirName, ...filenames) {
+		let deleteDir = false;
+		if (!dirName) {
+			let {err, stdout, stderr} = await exec("mktemp -d");
 			if (err) throw err;
-			const dirName = stdout.trim();
-			console.log(`Using ${chalk.bold(dirName)}.`);
+			dirName = stdout.trim();
+			deleteDir = true;
+		}
 
-			rimraf(dirName, () => {
-				console.log("Done.");
-			});
-		});
+		console.log(`Using ${chalk.bold(dirName)}.`);
+		
+		const resolved = filenames.map((f) => path.resolve(f));
+		const cmd = shell_escape(["clang", "-S", "-emit-llvm", ...resolved]);
+
+		process.chdir(dirName);
+
+		let {err, stdout, stderr} = await exec(cmd);
+		if (err) throw err;
+		
+		console.log({err, stdout, stderr});
+
+		if (deleteDir) {
+			rimraf.sync(dirName);
+		}
 	}
 }
 
 module.exports = LLVM2Why;
 
 if (require.main === module) {
-	LLVM2Why.produceIR("test/io.c");
+	const opt = minimist(process.argv.slice(2), {alias: {t: "temp"}});
+	LLVM2Why.produceIR(opt.t, ...opt._);
 }
