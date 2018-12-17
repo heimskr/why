@@ -1,6 +1,9 @@
 #include "io.h"
 
+
 int i = 5;
+int retvar() { return i; }
+
 void _main() {
 	int x = _gettime();
 	foo:

@@ -8,6 +8,12 @@ target triple = "x86_64-apple-macosx10.14.0"
 @.str.1 = private unnamed_addr constant [5 x i8] c"bye\0A\00", align 1
 
 ; Function Attrs: noinline nounwind optnone ssp uwtable
+define i32 @retvar() #0 {
+  %1 = load i32, i32* @i, align 4
+  ret i32 %1
+}
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
 define void @_main() #0 {
   %1 = alloca i32, align 4
   %2 = call i64 (...) @_gettime()
