@@ -4,12 +4,12 @@ let jsome = require("jsome"),
 exports.mixins = (_) => {
 	if (typeof Object.values == "undefined") {
 		Object.values = (obj) => Object.keys(obj).map((key) => obj[key]);
-	};
+	}
 
 	_.mixin({
 		// Stringifies a long representing 8 characters.
 		longString(long) {
-			return long instanceof Array? long.map(_.longString) :  _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
+			return long instanceof Array? long.map(_.longString) : _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
 		},
 
 		// Converts a sequence of longs to strings and splits by \0.
@@ -37,7 +37,7 @@ exports.mixins = (_) => {
 
 // Wouldn't seem particularly idiomatic to make this a lodash mixin.
 exports.displayIOError = (error, filename="file", mode="r", print=console.error) => {
-	const { message } = error;
+	const {message} = error;
 	const intro = chalk.red(`Couldn't open ${chalk.bold(filename)} for ${mode == "r"? "read" : "write"}ing`) + ":";
 	if (message.match(/^ENOENT:/)) {
 		print(intro, `no such file.`);
@@ -45,5 +45,5 @@ exports.displayIOError = (error, filename="file", mode="r", print=console.error)
 		print(intro, `permission denied.`);
 	} else {
 		print(intro, e.message);
-	};
+	}
 };
