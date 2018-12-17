@@ -39,7 +39,7 @@ class LL2W {
 		 * @name module:llvm~LL2W#options
 		 */
 		this.options = options;
-	};
+	}
 
 	/**
 	 * Sets up the compiler to use the LLVM parser.
@@ -226,29 +226,24 @@ class LL2W {
 	 * Finds and extracts global constant defintions from the AST.
 	 */
 	extractGlobalConstants() {
-		/**
-		 * A map of global constant definitions.
-		 * @type {Object<string, Object>}
-		 */
-		this.constants = {};
-
-		this.iterateTree("global constant", (item) => this.constants[item.name] = _.omit(item, "name"));
+		const constants = {};
+		this.iterateTree("global constant", (item) => constants[item.name] = _.omit(item, "name"));
+		return constants;
 	}
 
 	extractFunctions() {
-		this.functions = {};
-		this.allBlocks = {};
+		const functions = {};
+		const allBlocks = {};
 
 		this.iterateTree("function", (meta, instructions) => {
-			// console.log(chalk.bold("".padStart(16, "="), meta.name, "".padStart(16, "=")));
 			const basicBlocks = [];
-			let currentBasicBlock = ["start", {preds: []}, []];
+			let currentBasicBlock = ["start", {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
 				if (name == "label_c") {
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], {preds: args[1]}, []];
+					currentBasicBlock = [args[0], {preds: args[1], in: [], out: []}, []];
 				} else {
 					currentBasicBlock[2].push(instruction);
 				}
@@ -258,28 +253,54 @@ class LL2W {
 				basicBlocks.push(currentBasicBlock);
 			}
 
-			this.functions[meta.name] = basicBlocks.map(this.extractBasicBlockVariables);
-			basicBlocks.forEach(([name, ...etc]) => this.allBlocks[meta.name + ":" + name] = etc);
+			functions[meta.name] = basicBlocks.map(this.extractBasicBlockVariables);
+			basicBlocks.forEach(([name, ...etc]) => allBlocks[meta.name + ":" + name] = etc);
 		});
 
-		console.log(this.allBlocks);
+		return [functions, allBlocks];
+	}
+
+	connectBlocks(functions, basicBlocks) {
+		for (const [fullName, block] of Object.entries(basicBlocks)) {
+			const [funcName, name] = fullName.split(":");
+			const [meta, instructions] = block;
+			const last = _.last(instructions);
+			// console.log(fullName, meta.assigners);
+			// console.log(fullName, last);
+			if (last[1] == "br_unconditional") {
+				const destName = `${funcName}:${last[2].dest[1]}`;
+				if (!(destName in basicBlocks)) {
+					throw new Error(`Couldn't find a basic block called ${destName}.`);
+				}
+
+				const destBlock = basicBlocks[destName];
+				meta.out = _.uniq([...meta.out, destName]);
+				destBlock[0].in = _.uniq([...destBlock[0].in, fullName]);
+			}
+		}
+
+		console.log(basicBlocks);
 	}
 
 	extractBasicBlockVariables(basicBlock) {
-		let read = [], written = [];
+		let read = [], written = [], assigners = {};
 		for (const instruction of basicBlock[2]) {
 			const [, type, meta] = instruction;
 			if (type == "phi" || type == "alloca") {
 				// TODO: do phi instructions count as reads?
 				written.push(meta.destination[1]);
+				assigners[meta.destination[1]] = instruction;
 			} else if (["conversion"].includes(type)) {
 				written.push(meta.destination[1]);
+				assigners[meta.destination[1]] = instruction;
+
 				if (meta.sourceValue[0] == "variable") {
 					read.push(meta.sourceValue[1]);
 				}
 			} else if (type == "call") {
 				if (meta.assign) {
 					written.push(meta.assign[1]);
+					assigners[meta.assign[1]] = instruction;
 				}
 
 				for (const arg of meta.args) {
@@ -294,15 +315,19 @@ class LL2W {
 				
 				if (meta.destinationValue[0] == "variable") {
 					written.push(meta.destinationValue[1]);
+					assigners[meta.destinationValue[1]] = instruction;
 				}
 			} else if (type == "load") {
 				written.push(meta.destination[1]);
+				assigners[meta.destination[1]] = instruction;
 				
 				if (meta.pointerValue[0] == "variable") {
 					read.push(meta.pointerValue[1]);
 				}
 			} else if (type == "binary" || type == "icmp") {
 				written.push(meta.destination[1]);
+				assigners[meta.destination[1]] = instruction;
+
 				[meta.op1, meta.op2].forEach((o) => o[0] == "variable" && read.push(o[1]));
 			} else if (type == "br_conditional") {
 				// TODO: do branch targets count as reads?
@@ -313,6 +338,8 @@ class LL2W {
 				}
 			} else if (type == "getelementptr") {
 				written.push(meta.destination[1]);
+				assigners[meta.destination[1]] = instruction;
+
 				if (meta.pointerValue[0] == "variable") {
 					read.push(meta.pointerValue[1]);
 				}
@@ -321,9 +348,9 @@ class LL2W {
 			}
 		}
 		
-		basicBlock[1].all = _.uniq([...read, ...written]);
 		basicBlock[1].read = _.uniq(read);
 		basicBlock[1].written = _.uniq(written);
+		basicBlock[1].assigners = assigners;
 	}
 
 	/**
@@ -403,8 +430,9 @@ if (require.main === module) {
 	compiler.extractAttributes();
 	compiler.extractStructs();
 	compiler.extractMetadata();
-	compiler.extractGlobalConstants();
-	compiler.extractFunctions();
+	compiler.globalConstants = compiler.extractGlobalConstants();
+	[compiler.functions, compiler.allBlocks] = compiler.extractFunctions();
+	compiler.connectBlocks(compiler.functions, compiler.allBlocks);
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
@@ -412,7 +440,7 @@ if (require.main === module) {
 		attributes: compiler.attributes,
 		structs: compiler.structs,
 		metadata: compiler.metadata,
-		constants: compiler.constants,
+		constants: compiler.globalConstants,
 	}));
 
 	// console.log(compiler.ast);
