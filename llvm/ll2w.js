@@ -283,6 +283,25 @@ class LL2W {
 						read.push(parseInt(arg[1][1]));
 					}
 				}
+			} else if (type == "store") {
+				if (meta.storeValue[0] == "variable") {
+					read.push(meta.storeValue[1]);
+				}
+				
+				if (meta.destinationValue[0] == "variable") {
+					written.push(meta.destinationValue[1]);
+				}
+			} else if (type == "load") {
+				written.push(meta.destination[1]);
+				
+				if (meta.pointerValue[0] == "variable") {
+					read.push(meta.pointerValue[1]);
+				}
+			} else if (type == "binary") {
+				written.push(meta.destination[1]);
+				[meta.op1, meta.op2].forEach((o) => o[0] == "variable" && read.push(o[1]));
+			} else if (!["alloca", "br_unconditional"].includes(type)) {
+				console.log(type);
 			}
 		}
 		
