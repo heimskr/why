@@ -42,6 +42,11 @@ const __ = (x, y) => {
 const compileFastMathFlags = (flags) => flags.includes("fast")? ["nnan", "ninf", "nsz", "arcp", "constract", "fast"] : unique(flags);
 const compilePtr = (type) => type[0] == "ptr"? ["ptr", type[1], type[2] + 1] : ["ptr", type, 1];
 
+const parseLabelComment = (d, l, r) => {
+	const m = d[1].match(/^<label>:(\d+): *; preds = (%[^,]+(, %[^,]+)+)$/);
+	return m? ["label_c", m[1], m[2].split(/, /).map((x) => x.substr(1))] : null;
+};
+
 %}
 
 @include "strings.ne"
@@ -216,7 +221,10 @@ function_header		->	(" " linkage):?
 declaration			->	"declare" function_header									{% d => ["declaration", d[1]] %}
 function_type		->	type_any (_ parattr):* (" " variable):?
 function_def		->	"define" function_header " {" function_line:* "}"			{% d => [...d[1], filter(d[3])] %}
-function_line		->	_ lineend													{% _( ) %}
+label_c				-> "; <label>:" [0-9]:+ ":" " ":+ "; preds = " commalist["%" [^,]:+]
+																					{% d => ["label_c", d[1], d[5]] %}
+function_line		->	_ comment newline											{% parseLabelComment %}
+					 |	_ newline													{% _( ) %}
 					 |	_ instruction												{% _(1) %}
 					 |	_ label														{% _(1) %}
 
@@ -586,11 +594,11 @@ var -> varchar:+ {%
 	}
 %}
 
-varchar -> . 				{% (d, location, reject) => d[0] && special.chars.indexOf(d[0]) === -1 ? d[0] : reject %}
-comment	-> ";" [^\n]:*		{% d => null %}
-_		-> [\t ]:*			{% d => null %}
-__		-> [\t ]:+			{% d => null %}
-newline -> "\r\n" | [\r\n]	{% d => null %}
+varchar -> . 							{% (d, location, reject) => d[0] && special.chars.indexOf(d[0]) === -1 ? d[0] : reject %}
+comment	-> ";" _ ([^\n\t ] [^\n]:*):?	{% d => d[2]? d[2][0] + d[2][1].join(""): "" %}
+_		-> [\t ]:*						{% d => null %}
+__		-> [\t ]:+						{% d => null %}
+newline -> "\r\n" | [\r\n]				{% d => null %}
 
 @{%/*
 

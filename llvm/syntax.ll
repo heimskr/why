@@ -22,6 +22,7 @@ define i32* @hello() {
 	%13 = tail call i32 (i8*, i6666, ...) @printf(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str, i64 0, i64 0), i8* %12)
 	tail call void @exit(i32 1) #7
 	unreachable
+; <label>:14:                                     ; preds = %1, %._crit_edge, %2, %foobar
 	%15 = getelementptr inbounds i8*, i8** %1, i64 1
 	%17 = tail call %struct.__sFILE* @"\01_fopen"(i8* %16, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.1, i64 0, i64 0)) #6
 	%33 = call %struct.GraphObj* @newGraph(i32 %32)
