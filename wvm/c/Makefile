@@ -17,10 +17,13 @@ wvm: $(OBJECTS)
 $(OBJECTS): $(SOURCES) $(HEADERS)
 	$(COMPILE) $(SOURCES)
 
-clean:
-	rm -f wvm *.o
+tidy:
+	rm -f *.o
 
-test: wvm
+clean: tidy
+	rm -f wvm
+
+test: wvm tidy
 	./wvm -c interrupts
 
 link:
