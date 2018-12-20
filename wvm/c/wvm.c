@@ -4,6 +4,9 @@
 #include "instruction.h"
 #include "disassemble.h"
 #include "ansi.h"
+#include "interrupts.h"
+
+ring_t cur_ring = RING_KERNEL;
 
 /**
  * Allocates memory for the VM and resets some global variables.
@@ -152,6 +155,30 @@ void wvm_link() {
  */
 void wvm_increment_pc() {
 	pc += 8;
+}
+
+/**
+ * Attempts to change the ring safely. If the new ring value is lower
+ * than the current ring value, a protection interrupt will occur.
+ * @param new_ring The ring to try to change to.
+ * @return 1 if the operation succeeded; 0 otherwise.
+ */
+int wvm_change_ring(ring_t new_ring) {
+	if (new_ring < RING_MIN || RING_MAX < new_ring) {
+#ifdef WVM_DEBUG
+		fprintf(stderr, "Invalid ring value: %d\n", new_ring);
+#endif
+	} else if (new_ring < cur_ring) {
+#ifdef WVM_DEBUG
+		fprintf(stderr, "Preventing privilege escalation (%d -> %d)\n", cur_ring, new_ring);
+#endif
+	} else {
+		cur_ring = new_ring;
+		return 1;
+	}
+
+	int_protec();
+	return 0;
 }
 
 /**

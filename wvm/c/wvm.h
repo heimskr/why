@@ -17,9 +17,13 @@
 #define FLAG_C_SET(n) registers[R_ST] = (registers[R_ST] & ~0b0100) | (n << 2)
 #define FLAG_O_SET(n) registers[R_ST] = (registers[R_ST] & ~0b1000) | (n << 3)
 
+#define RING_MIN 0
+#define RING_MAX 3
+
 typedef int64_t word;
 typedef uint64_t uword;
 typedef uint8_t byte;
+typedef enum {RING_ANY = -1, RING_KERNEL = 0, RING_1 = 1, RING_2 = 2, RING_USER = 3} ring_t;
 
 bool wvm_init(word length);
 void wvm_free();
@@ -33,6 +37,7 @@ char * wvm_get_string(word addr);
 void wvm_jump(word addr);
 void wvm_link();
 void wvm_increment_pc();
+int wvm_change_ring(ring_t new_ring);
 bool wvm_tick();
 void wvm_alu_flags_clear();
 void wvm_alu_flags_update(word n);
@@ -50,5 +55,6 @@ word registers[128];
 word membytes;
 int cycles;
 bool alive;
+ring_t cur_ring;
 
 #endif
