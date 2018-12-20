@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 #include "wvm.h"
-#include "instruction.h"
-#include "disassemble.h"
 #include "ansi.h"
+#include "disassemble.h"
+#include "instruction.h"
 #include "interrupts.h"
 
 ring_t cur_ring = RING_KERNEL;

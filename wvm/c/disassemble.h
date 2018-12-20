@@ -2,6 +2,8 @@
 #define __DISASSEMBLE_H__
 
 #include "wvm.h"
+#include "instruction.h"
+#include "registers.h"
 
 #define COLOR_IMM "\33[38;5;164m"
 #define COLOR_IF "\33[38;5;90m"
