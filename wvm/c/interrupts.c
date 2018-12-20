@@ -1,5 +1,7 @@
-#include "interrupts.h"
 #include <stdio.h>
+
+#include "interrupts.h"
+#include "wvm.h"
 
 #define TOFROM(id) case INT_##id: to = INT_##id##_TO; from = INT_##id##_FROM; break
 
@@ -58,7 +60,7 @@ int wvm_force_interrupt(imm_t id, ring_t new_ring) {
 	if (-1 < new_ring)
 		cur_ring = new_ring;
 
-	wvm_jump(inttab + 8 * id);
+	wvm_jump(wvm_get_word(inttab + 8 * id));
 	return 0;
 }
 
