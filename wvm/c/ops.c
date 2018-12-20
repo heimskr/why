@@ -4,9 +4,11 @@
 
 #include <stdio.h>
 #include <unistd.h>
+
 #include "ops.h"
 #include "instruction.h"
 #include "interrupts.h"
+#include "timer.h"
 
 void op_nop(word instruction) {
 	INC();
@@ -463,13 +465,15 @@ void op_rit(word instruction) {
 }
 
 void op_time(word instruction) {
-	fprintf(stderr, "op_time not implemented.\n");
-	exit(1);
+	RRS();
+	wvm_set_timer((uword) rsv);
+	INC();
 }
 
 void op_timei(word instruction) {
-	fprintf(stderr, "op_timei not implemented.\n");
-	exit(1);
+	IIMM();
+	wvm_set_timer((uword) imm);
+	INC();
 }
 
 void op_ring(word instruction) {
