@@ -23,20 +23,18 @@ opcode_t wvm_get_opcode(word instruction) {
  */
 ins_type wvm_get_type(opcode_t opcode) {
 	switch (opcode) {
-		case 1:
-		case 2:
-		case 14:
-		case 17:
-		case 18:
-		case 31:
+		case OPS_RMATH:
+		case OPS_RLOGIC:
+		case OPS_RCOMP:
+		case OPS_RJUMP:
+		case OPS_MEM:
+		case OPS_EXT:
+		case OP_TIME:
+		case OP_RING:
 			return R;
 
-		case 15:
-		case 16:
-		case 44:
-		case 45:
-		case 46:
-		case 47:
+		case OP_J:
+		case OP_JC:
 			return J;
 	}
 
@@ -52,7 +50,7 @@ op_fn wvm_get_fn(word instruction) {
 	switch (wvm_get_opcode(instruction)) {
 		case OP_NOP:
 			return op_nop;
-		case OPS_MATH:
+		case OPS_RMATH:
 			switch (wvm_r_func(instruction)) {
 				case FUNCT_ADD:   return op_add;
 				case FUNCT_SUB:   return op_sub;

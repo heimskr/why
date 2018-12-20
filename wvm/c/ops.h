@@ -218,7 +218,7 @@ void op_nop(word instruction);    // 0   X
 #define OP_RING   50
 #define OP_RINGI  51
 
-#define OPS_MATH   1
+#define OPS_RMATH  1
 #define OPS_RLOGIC 2
 #define OPS_RCOMP  14
 #define OPS_RJUMP  17
