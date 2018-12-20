@@ -199,10 +199,17 @@ bool wvm_tick() {
 	return alive;
 }
 
+/**
+ * Clears the status register's condition bits.
+ */
 void wvm_alu_flags_clear() {
 	registers[R_ST] &= ~0b1111;
 }
 
+/**
+ * Updates the status register after an ALU operation.
+ * @param n The output of the ALU operation.
+ */
 void wvm_alu_flags_update(word n) {
 	wvm_alu_flags_clear();
 	if (n == 0) {
@@ -212,7 +219,12 @@ void wvm_alu_flags_update(word n) {
 	}
 }
 
-int wvm_check_condition(int n) {
+/**
+ * Checks whether the status register matches a given condition.
+ * @param n A condition enum.
+ * @return 0 if the condition is false, 1 if the condition is true or 2 if the argument is invalid.
+ */
+int wvm_check_condition(cond_t n) {
 	switch (n) {
 		case COND_P: return !FLAG_N && !FLAG_Z;
 		case COND_N: return FLAG_N;

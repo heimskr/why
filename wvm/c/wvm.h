@@ -41,7 +41,7 @@ int wvm_change_ring(ring_t new_ring);
 bool wvm_tick();
 void wvm_alu_flags_clear();
 void wvm_alu_flags_update(word n);
-int wvm_check_condition(int n);
+int wvm_check_condition(cond_t n);
 void wvm_print_memory();
 
 byte *memory;

@@ -278,10 +278,13 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_XN_SEND    130
 #define FUNCT_XN_RECV    131
 
-#define COND_NONE 0
-#define COND_P  0b1000
-#define COND_N  0b1001
-#define COND_Z  0b1010
-#define COND_NZ 0b1011
+
+typedef enum {
+	COND_NONE = 0,
+	COND_P    = 0b1000,
+	COND_N    = 0b1001,
+	COND_Z    = 0b1010,
+	COND_NZ   = 0b1011,
+} cond_t;
 
 #endif
