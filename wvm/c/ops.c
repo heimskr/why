@@ -463,11 +463,13 @@ void op_rit(word instruction) {
 }
 
 void op_time(word instruction) {
-
+	fprintf(stderr, "op_time not implemented.\n");
+	exit(1);
 }
 
 void op_timei(word instruction) {
-
+	fprintf(stderr, "op_timei not implemented.\n");
+	exit(1);
 }
 
 void op_ring(word instruction) {
