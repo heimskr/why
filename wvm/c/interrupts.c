@@ -62,7 +62,11 @@ int wvm_force_interrupt(imm_t id, ring_t new_ring) {
 	return 0;
 }
 
-int check_inttab() {
+void int_protec() {
+	wvm_force_interrupt(INT_PROTEC, -1);
+}
+
+static int check_inttab() {
 	if (inttab == 0) {
 #ifdef INTERRUPTS_DEBUG
 		fprintf(stderr, "Warning: no interrupt table registered; ignoring interrupt.\n");
@@ -73,11 +77,7 @@ int check_inttab() {
 	return 1;
 }
 
-void int_protec() {
-	wvm_force_interrupt(INT_PROTEC, -1);
-}
-
-int check_ring(ring_t ring) {
+static int check_ring(ring_t ring) {
 	if (ring < cur_ring) {
 		int_protec();
 		return 0;
