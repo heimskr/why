@@ -1,24 +1,26 @@
+#include <errno.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include "interrupts.h"
 #include "timer.h"
 
+pthread_mutex_t timer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t timer_thread;
 
-int timer_active = 0;
 uword timer_delay;
 
 static void *wvm_timer_thread(void *args) {
-	timer_active = 1;
 	usleep(timer_delay);
 	wvm_force_interrupt(INT_TIMER, INT_TIMER_TO);
-	timer_active = 0;
+	pthread_mutex_unlock(&timer_mutex);
 	return NULL;
 }
 
 int wvm_set_timer(uword us) {
-	if (timer_active == 1) {
+	if (pthread_mutex_trylock(&timer_mutex) == EBUSY) {
+		// Only one timer at a time.
 		return 0;
 	}
 
