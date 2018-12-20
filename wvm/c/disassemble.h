@@ -1,5 +1,5 @@
-#ifndef __DISASSEMBLE_H__
-#define __DISASSEMBLE_H__
+#ifndef DISASSEMBLE_H_
+#define DISASSEMBLE_H_
 
 #include "wvm.h"
 #include "instruction.h"

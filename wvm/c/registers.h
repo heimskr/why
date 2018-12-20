@@ -1,5 +1,5 @@
-#ifndef __REGISTERS_H__
-#define __REGISTERS_H__
+#ifndef REGISTERS_H_
+#define REGISTERS_H_
 typedef unsigned char reg_t;
 
 char * wvm_decode_reg(reg_t id);

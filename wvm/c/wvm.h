@@ -1,5 +1,5 @@
-#ifndef __WVM_H__
-#define __WVM_H__
+#ifndef WVM_H_
+#define WVM_H_
 
 #include <stdbool.h>
 #include <stdint.h>

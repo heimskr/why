@@ -1,5 +1,5 @@
-#ifndef __ANSI_H__
-#define __ANSI_H__
+#ifndef ANSI_H_
+#define ANSI_H_
 
 #define ANSI_RESET "\e[0m"
 #define ANSI_BOLD "\e[1m"

@@ -1,5 +1,5 @@
-#ifndef __INSTRUCTION_H__
-#define __INSTRUCTION_H__
+#ifndef INSTRUCTION_H_
+#define INSTRUCTION_H_
 
 #include "ops.h"
 #include "registers.h"

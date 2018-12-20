@@ -1,5 +1,5 @@
-#ifndef __EXT_NET_H__
-#define __EXT_NET_H__
+#ifndef EXT_NET_H_
+#define EXT_NET_H_
 
 #include <arpa/inet.h>
 #include <stdint.h>

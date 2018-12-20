@@ -1,5 +1,5 @@
-#ifndef __OPS_H__
-#define __OPS_H__
+#ifndef OPS_H_
+#define OPS_H_
 
 #include "wvm.h"
 #include "registers.h"
