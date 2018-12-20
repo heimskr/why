@@ -144,13 +144,19 @@ op_fn wvm_get_fn(word instruction) {
 				case FUNCT_XN_SEND:    return op_xn_send;
 				case FUNCT_XN_RECV:    return op_xn_recv;
 			}
-		case OP_SLLI: return op_slli;
-		case OP_SRLI: return op_srli;
-		case OP_SRAI: return op_srai;
-		case OP_LBI:  return op_lbi;
-		case OP_SBI:  return op_sbi;
-		case OP_LNI:  return op_lni;
-		case OP_LBNI: return op_lbni;
+		case OP_SLLI:  return op_slli;
+		case OP_SRLI:  return op_srli;
+		case OP_SRAI:  return op_srai;
+		case OP_LBI:   return op_lbi;
+		case OP_SBI:   return op_sbi;
+		case OP_LNI:   return op_lni;
+		case OP_LBNI:  return op_lbni;
+		case OP_INT:   return op_int;
+		case OP_RIT:   return op_rit;
+		case OP_TIME:  return op_time;
+		case OP_TIMEI: return op_timei;
+		case OP_RING:  return op_ring;
+		case OP_RINGI: return op_ringi;
 	}
 
 	return NULL;
