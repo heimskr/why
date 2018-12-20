@@ -8,7 +8,7 @@ uword inttab;
 
 int wvm_interrupt(imm_t id);
 void int_protec();
-int check_kernel();
+int check_ring();
 
 #define INTERRUPT_MAX	3
 
