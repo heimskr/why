@@ -9,8 +9,8 @@ uword inttab;
 int wvm_interrupt(imm_t id);
 int wvm_force_interrupt(imm_t id, ring_t new_ring);
 void int_protec();
-static int check_inttab();
-static int check_ring();
+int check_ring(ring_t ring);
+int check_inttab();
 
 #define INTERRUPT_MAX	3
 

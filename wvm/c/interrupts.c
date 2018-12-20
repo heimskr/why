@@ -26,7 +26,7 @@ int wvm_interrupt(imm_t id) {
 		TOFROM(PROTEC);
 	}
 
-	if (from < cur_ring) {
+	if (!check_ring(from)) {
 #ifdef INTERRUPTS_DEBUG
 		fprintf(stderr, "Insufficient privilege for interrupt %u (currently %d, required %d); ignoring interrupt.\n",
 			id, cur_ring, from);
@@ -66,20 +66,20 @@ void int_protec() {
 	wvm_force_interrupt(INT_PROTEC, -1);
 }
 
-static int check_inttab() {
-	if (inttab == 0) {
-#ifdef INTERRUPTS_DEBUG
-		fprintf(stderr, "Warning: no interrupt table registered; ignoring interrupt.\n");
-#endif
+int check_ring(ring_t ring) {
+	if (ring != -1 && ring < cur_ring) {
+		int_protec();
 		return 0;
 	}
 
 	return 1;
 }
 
-static int check_ring(ring_t ring) {
-	if (ring < cur_ring) {
-		int_protec();
+int check_inttab() {
+	if (inttab == 0) {
+#ifdef INTERRUPTS_DEBUG
+		fprintf(stderr, "Warning: no interrupt table registered; ignoring interrupt.\n");
+#endif
 		return 0;
 	}
 
