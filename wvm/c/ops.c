@@ -446,6 +446,31 @@ void op_lbni(word instruction) {
 	INC();
 }
 
+void op_int(word instruction) {
+	
+}
+
+void op_rit(word instruction) {
+	
+}
+
+void op_time(word instruction) {
+	
+}
+
+void op_timei(word instruction) {
+	
+}
+
+void op_ring(word instruction) {
+	
+}
+
+void op_ringi(word instruction) {
+	
+}
+
+
 void op_pr(word instruction) {
 	RRS();
 	printf("$%s: 0x%llx / %lld\n", wvm_decode_reg(rs), rsv, rsv);

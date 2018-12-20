@@ -116,6 +116,13 @@ void op_sbi(word instruction);    // 38  I
 void op_lni(word instruction);    // 39  I
 void op_lbni(word instruction);   // 40  I
 
+void op_int(word instruction);    // 32  I
+void op_rit(word instruction);    // 33  I
+void op_time(word instruction);   // 48  R
+void op_timei(word instruction);  // 49  I
+void op_ring(word instruction);   // 50  R
+void op_ringi(word instruction);  // 51  I
+
 void op_pr(word instruction);     // 31 ?R 1
 void op_halt(word instruction);   // 31 ?R 2
 void op_eval(word instruction);   // 31 ?R 3
@@ -194,8 +201,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_PRC    31
 #define OP_PRD    31
 #define OP_PRX    31
-//                32
-//                33
+#define OP_INT    32
+#define OP_RIT    33
 #define OP_SLLI   34
 #define OP_SRLI   35
 #define OP_SRAI   36
@@ -206,6 +213,10 @@ void op_nop(word instruction);    // 0   X
 #define OP_SGI    41
 #define OP_SGEI   42
 #define OP_CMPI   43
+#define OP_TIME   48
+#define OP_TIMEI  49
+#define OP_RING   50
+#define OP_RINGI  51
 
 #define OPS_MATH   1
 #define OPS_RLOGIC 2
