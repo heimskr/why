@@ -1,7 +1,7 @@
-MAIN_SRC	= $(wildcard *.c)
-SOURCES		= $(MAIN_SRC) ext/net.c
-HEADERS		= $(wildcard *.h) ext/net.h
-OBJECTS		= $(MAIN_SRC:.c=.o) net.o
+MAIN_SRC		= $(wildcard *.c)
+SOURCES			= $(MAIN_SRC) ext/net.c
+HEADERS			= $(wildcard *.h) ext/net.h
+OBJECTS			= $(MAIN_SRC:.c=.o) net.o
 COMPILE			= gcc -g -c -std=c99 -Wall
 LINK			= gcc -g -o
 
