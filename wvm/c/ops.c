@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "ops.h"
 #include "instruction.h"
+#include "interrupts.h"
 
 void op_nop(word instruction) {
 	INC();
@@ -447,27 +448,40 @@ void op_lbni(word instruction) {
 }
 
 void op_int(word instruction) {
-	
+	IIMM();
+	if (wvm_interrupt(imm)) {
+		INC();
+	}
 }
 
 void op_rit(word instruction) {
-	
+	if (check_kernel()) {
+		IIMM();
+		inttab = imm;
+		INC();
+	}
 }
 
 void op_time(word instruction) {
-	
+
 }
 
 void op_timei(word instruction) {
-	
+
 }
 
 void op_ring(word instruction) {
-	
+	RRS();
+	if (wvm_change_ring(rsv)) {
+		INC();
+	}
 }
 
 void op_ringi(word instruction) {
-	
+	IIMM();
+	if (wvm_change_ring(imm)) {
+		INC();
+	}
 }
 
 

@@ -21,7 +21,7 @@
 #define JCOND() char cond = wvm_j_cond(instruction);
 #define JREGS() JRS(); JADDR();
 
-#define INC() wvm_increment_pc();
+#define INC() wvm_increment_pc()
 
 #define rsv registers[rs]
 #define rtv registers[rt]
