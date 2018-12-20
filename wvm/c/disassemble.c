@@ -9,6 +9,7 @@
 #include "instruction.h"
 #include "ansi.h"
 #include "disassemble.h"
+#include "interrupts.h"
 
 char * wvm_disassemble(word instruction) {
 	opcode_t opcode = wvm_get_opcode(instruction);
@@ -152,6 +153,14 @@ void wvm_disassemble_r(char *str, word instruction) {
 
 			sprintf(str + strlen(str), "%s>", ANSI_RESET);
 			return;
+
+		case OP_TIME:
+			sprintf(str, "%stime %s%s$%s%s", ANSI_CYAN, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
+			return;
+
+		case OP_RING:
+			sprintf(str, "%sring %s%s$%s%s", ANSI_CYAN, ANSI_RESET, COLOR_REG, srs, ANSI_RESET);
+			return;
 	}
 
 	sprintf(str, "%s(Unknown R-type)%s", ANSI_DIM, ANSI_RESET);
@@ -163,15 +172,8 @@ void wvm_disassemble_r_alt_op(char *str, reg_t rs, reg_t rt, reg_t rd, char *ope
 	char *srd = wvm_decode_reg(rd);
 
 	if (rs == rd || rt == rd) {
-		char *src, *dest;
-		if (rs == rd) {
-			src = srs;
-			dest = srt;
-		} else {
-			src = srt;
-			dest = srs;
-		}
-
+		char *src  = rs == rd? srs : srt;
+		char *dest = rs == rd? srt : srs;
 		sprintf(str, "%s$%s%s %s%s=%s %s$%s%s", COLOR_REG, src, ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_REG, dest, ANSI_RESET);
 	} else {
 		sprintf(str, "%s$%s%s %s%s%s %s$%s%s %s->%s %s$%s%s", COLOR_REG, srs, ANSI_RESET, ANSI_BOLD, oper, ANSI_RESET, COLOR_REG, srt, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, srd, ANSI_RESET);
@@ -195,16 +197,16 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_MULTUI:
 			sprintf(str, "%s$%s%s %s*%s %s%d%s", COLOR_REG, wvm_decode_reg(rs), ANSI_RESET, ANSI_BOLD, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
 			break;
-		case OP_MODI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "%"); break;
-		case OP_ANDI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "&"); break;
-		case OP_NANDI: wvm_disassemble_i_alt_op(str, rs, rd, imm, "~&"); break;
-		case OP_NORI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "~|"); break;
-		case OP_ORI:   wvm_disassemble_i_alt_op(str, rs, rd, imm, "|"); break;
-		case OP_XNORI: wvm_disassemble_i_alt_op(str, rs, rd, imm, "~x"); break;
-		case OP_XORI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "x"); break;
-		case OP_SLLI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "<<"); break;
+		case OP_MODI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "%");   break;
+		case OP_ANDI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "&");   break;
+		case OP_NANDI: wvm_disassemble_i_alt_op(str, rs, rd, imm, "~&");  break;
+		case OP_NORI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "~|");  break;
+		case OP_ORI:   wvm_disassemble_i_alt_op(str, rs, rd, imm, "|");   break;
+		case OP_XNORI: wvm_disassemble_i_alt_op(str, rs, rd, imm, "~x");  break;
+		case OP_XORI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "x");   break;
+		case OP_SLLI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, "<<");  break;
 		case OP_SRLI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>>"); break;
-		case OP_SRAI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>"); break;
+		case OP_SRAI:  wvm_disassemble_i_alt_op(str, rs, rd, imm, ">>");  break;
 		case OP_LUI:
 			sprintf(str, "%slui:%s %s%d%s %s->%s %s$%s%s", ANSI_DIM, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET, ANSI_DIM, ANSI_RESET, COLOR_REG, wvm_decode_reg(rd), ANSI_RESET);
 			break;
@@ -240,9 +242,27 @@ void wvm_disassemble_i(char *str, word instruction) {
 		case OP_SEQI:
 			wvm_disassemble_i_comp(str, rs, rd, imm, "==");
 			break;
+		case OP_INT:
+			sprintf(str, "%sint%s ", ANSI_CYAN, ANSI_RESET);
+			switch (imm) {
+				case INT_NULL:   sprintf(str + strlen(str), "null");   return;
+				case INT_SYSTEM: sprintf(str + strlen(str), "system"); return;
+				case INT_TIMER:  sprintf(str + strlen(str), "timer");  return;
+				case INT_PROTEC: sprintf(str + strlen(str), "protec"); return;
+				default: sprintf(str + strlen(str), "???"); return;
+			}
+		case OP_RIT:
+			sprintf(str, "%srit%s %s%d%s", ANSI_CYAN, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
+			break;
+		case OP_TIMEI:
+			sprintf(str, "%stime%s %s%d%s", ANSI_CYAN, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
+			break;
+		case OP_RINGI:
+			sprintf(str, "%sring%s %s%d%s", ANSI_CYAN, ANSI_RESET, COLOR_IMM, imm, ANSI_RESET);
+			break;
 		default:
 			sprintf(str, "%s(Unknown I-type)%s", ANSI_DIM, ANSI_RESET);
-			return;
+			break;
 	}
 
 	if (opcode == OP_MULTUI || opcode == OP_SLUI || opcode == OP_SLEUI)
