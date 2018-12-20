@@ -7,7 +7,7 @@ uword inttab = 0;
 
 /**
  * Performs an interrupt.
- * @param id The ID of the interrupt.
+ * @param  id The ID of the interrupt.
  * @return Whether to increment the counter after performing the interrupt. (Useful only for software interrupts.)
  */
 int wvm_interrupt(imm_t id) {
@@ -16,18 +16,10 @@ int wvm_interrupt(imm_t id) {
 		exit(1);
 	}
 
-	if (inttab == 0) {
-#ifdef INTERRUPTS_DEBUG
-		fprintf(stderr, "Warning: no interrupt table registered; ignoring interrupt.\n");
-#endif
+	if (!check_inttab() || id == INT_NULL)
 		return 1;
-	}
 
-	if (id == INT_NULL) {
-		return 1;
-	}
-
-	ring_t to, from;
+	ring_t to, from = RING_INVALID;
 	switch (id) {
 		TOFROM(SYSTEM);
 		TOFROM(TIMER);
@@ -42,19 +34,47 @@ int wvm_interrupt(imm_t id) {
 		return 1;
 	}
 
+	return wvm_force_interrupt(id, to);
+}
+
+/**
+ * Forces an interrupt (i.e., performs an interrupt without checking the ring).
+ * @param  id       The ID of the interrupt.
+ * @param  new_ring The new ring to change to.
+ * @return Whether to increment the counter after performing the interrupt. (Useful only for software interrupts.)
+ */
+int wvm_force_interrupt(imm_t id, ring_t new_ring) {
+	if (INTERRUPT_MAX < id) {
+		fprintf(stderr, "Unknown interrupt: %u\n", id);
+		exit(1);
+	}
+
+	if (!check_inttab() || id == INT_NULL)
+		return 1;
+
 	registers[R_E0] = pc + 8;
 	registers[R_E1] = cur_ring;
 
-	if (-1 < to) {
-		cur_ring = to;
-	}
+	if (-1 < new_ring)
+		cur_ring = new_ring;
 
 	wvm_jump(inttab + 8 * id);
 	return 0;
 }
 
+int check_inttab() {
+	if (inttab == 0) {
+#ifdef INTERRUPTS_DEBUG
+		fprintf(stderr, "Warning: no interrupt table registered; ignoring interrupt.\n");
+#endif
+		return 0;
+	}
+
+	return 1;
+}
+
 void int_protec() {
-	wvm_interrupt(INT_PROTEC);
+	wvm_force_interrupt(INT_PROTEC, -1);
 }
 
 int check_ring(ring_t ring) {
@@ -65,4 +85,3 @@ int check_ring(ring_t ring) {
 
 	return 1;
 }
-
