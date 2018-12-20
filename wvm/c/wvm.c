@@ -50,10 +50,9 @@ int wvm_load(char *filename) {
 	fclose(file);
 
 	offset_symtab = wvm_get_word(0);
-	offset_handlers = wvm_get_word(8);
-	offset_code = wvm_get_word(16);
-	offset_data = wvm_get_word(24);
-	offset_end = wvm_get_word(32);
+	offset_code = wvm_get_word(8);
+	offset_data = wvm_get_word(16);
+	offset_end = wvm_get_word(24);
 
 	return memsize;
 }
@@ -211,7 +210,7 @@ void wvm_print_memory() {
 	for (int i = 0; i < memsize; i++) {
 		word boffset = i << 3;
 		word word = wvm_get_word(boffset);
-		if (boffset == offset_handlers || boffset == offset_data || boffset == offset_code || boffset == offset_symtab)
+		if (boffset == offset_symtab || boffset == offset_code || boffset == offset_data)
 			printf("├───────┼────────────────────┼%s┤%s\n", sep, ANSI_RESET);
 
 		printf("│\33[38;5;8m");
@@ -219,9 +218,9 @@ void wvm_print_memory() {
 			printf("\33[7m");
 		
 		printf(" %5lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │\33[38;5;250m", boffset, word);
-		if (i < 5)
+		if (i < 4)
 			printf(" %s%lld%s", ANSI_MAGENTA, word, ANSI_RESET);
-		else if (boffset < offset_handlers || (offset_data <= boffset)) {
+		else if (boffset < offset_code || offset_data <= boffset) {
 			printf(" ");
 			for (char j = 56; j >= 0; j -= 8) {
 				char byte = (char) (word >> j) & 0xff;
@@ -235,12 +234,10 @@ void wvm_print_memory() {
 		if (i == 0)
 			printf("\33[48G%ssymtab%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 1)
-			printf("\33[46G%shandlers%s", ANSI_DIM, ANSI_RESET);
-		else if (i == 2)
 			printf("\33[50G%scode%s", ANSI_DIM, ANSI_RESET);
-		else if (i == 3)
+		else if (i == 2)
 			printf("\33[50G%sdata%s", ANSI_DIM, ANSI_RESET);
-		else if (i == 4)
+		else if (i == 3)
 			printf("\33[51G%send%s", ANSI_DIM, ANSI_RESET);
 
 		if (boffset < offset_code || offset_data <= boffset)
@@ -250,8 +247,6 @@ void wvm_print_memory() {
 			printf(" Metadata");
 		else if (boffset == offset_symtab)
 			printf(" Symbol Table");
-		else if (boffset == offset_handlers)
-			printf(" Handlers");
 		else if (boffset == offset_code)
 			printf(" Code");
 		else if (boffset == offset_data)

@@ -43,7 +43,6 @@ byte *memory;
 size_t memsize;
 word pc; // in bytes, not words.
 word offset_symtab;
-word offset_handlers;
 word offset_data;
 word offset_code;
 word offset_end;
