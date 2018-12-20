@@ -1,6 +1,7 @@
-SOURCES			= main.c wvm.c instruction.c ops.c registers.c disassemble.c ext/net.c
-HEADERS			= ansi.h wvm.h instruction.h ops.h registers.h disassemble.h ext/net.h
-OBJECTS			= main.o wvm.o instruction.o ops.o registers.o disassemble.o net.o
+MAIN_SRC	= $(wildcard *.c)
+SOURCES		= $(MAIN_SRC) ext/net.c
+HEADERS		= $(wildcard *.h) ext/net.h
+OBJECTS		= $(MAIN_SRC:.c=.o) net.o
 COMPILE			= gcc -g -c -std=c99 -Wall
 LINK			= gcc -g -o
 
@@ -20,7 +21,7 @@ clean:
 	rm -f wvm *.o
 
 test: wvm
-	./wvm
+	./wvm -c interrupts
 
 link:
 	$(WLD) $(EXAMPLES)/memory.wasm $(EXAMPLES)/string.why -o $(COMPILED)/memory.why
