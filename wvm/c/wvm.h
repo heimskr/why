@@ -23,7 +23,7 @@
 typedef int64_t word;
 typedef uint64_t uword;
 typedef uint8_t byte;
-typedef enum {RING_ANY = -1, RING_KERNEL = 0, RING_1 = 1, RING_2 = 2, RING_USER = 3} ring_t;
+typedef enum {RING_INVALID = -2, RING_ANY = -1, RING_KERNEL = 0, RING_1 = 1, RING_2 = 2, RING_USER = 3} ring_t;
 
 bool wvm_init(word length);
 void wvm_free();
