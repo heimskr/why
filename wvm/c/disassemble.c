@@ -46,7 +46,7 @@ void wvm_disassemble_r(char *str, word instruction) {
 	char *srd = wvm_decode_reg(rd);
 
 	switch (opcode) {
-		case OPS_MATH:
+		case OPS_RMATH:
 			switch (func) {
 				case FUNCT_ADD: oper = "+"; break;
 				case FUNCT_SUB: oper = "-"; break;
