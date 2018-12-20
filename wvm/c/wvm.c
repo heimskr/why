@@ -230,10 +230,10 @@ int wvm_check_condition(int n) {
  */
 void wvm_print_memory() {
 	char *sep = "────────────────────────";
-	char *jump = "\33[55G";
+	char *jump = "\e[55G"; // If printed to the console, moves the cursor horizontally to right after the table
 	printf("        ┌────────────────────┬%s┐\n", sep);
-	printf("        │    \33[1mHexadecimal\33[0m     │");
-	printf("     \33[1mDecoded\33[0m            │");
+	printf("        │    \e[1mHexadecimal\e[0m     │");
+	printf("     \e[1mDecoded\e[0m            │");
 	printf("\n┌───────┼────────────────────┼%s┤\n", sep);
 	for (int i = 0; i < memsize; i++) {
 		word boffset = i << 3;
@@ -241,11 +241,11 @@ void wvm_print_memory() {
 		if (boffset == offset_symtab || boffset == offset_code || boffset == offset_data)
 			printf("├───────┼────────────────────┼%s┤%s\n", sep, ANSI_RESET);
 
-		printf("│\33[38;5;8m");
+		printf("│\e[38;5;8m");
 		if (boffset == pc)
-			printf("\33[7m");
+			printf("\e[7m");
 		
-		printf(" %5lld \33[0m│ \33[38;5;7m0x\33[0m\33[1m%016llx\33[0m │\33[38;5;250m", boffset, word);
+		printf(" %5lld \e[0m│ \e[38;5;7m0x\e[0m\e[1m%016llx\e[0m │\e[38;5;250m", boffset, word);
 		if (i < 4)
 			printf(" %s%lld%s", ANSI_MAGENTA, word, ANSI_RESET);
 		else if (boffset < offset_code || offset_data <= boffset) {
@@ -260,13 +260,13 @@ void wvm_print_memory() {
 		}
 
 		if (i == 0)
-			printf("\33[48G%ssymtab%s", ANSI_DIM, ANSI_RESET);
+			printf("\e[48G%ssymtab%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 1)
-			printf("\33[50G%scode%s", ANSI_DIM, ANSI_RESET);
+			printf("\e[50G%scode%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 2)
-			printf("\33[50G%sdata%s", ANSI_DIM, ANSI_RESET);
+			printf("\e[50G%sdata%s", ANSI_DIM, ANSI_RESET);
 		else if (i == 3)
-			printf("\33[51G%send%s", ANSI_DIM, ANSI_RESET);
+			printf("\e[51G%send%s", ANSI_DIM, ANSI_RESET);
 
 		if (boffset < offset_code || offset_data <= boffset)
 			printf("%s%s│", jump, ANSI_RESET);
@@ -275,8 +275,6 @@ void wvm_print_memory() {
 			printf(" Metadata");
 		else if (boffset == offset_symtab)
 			printf(" Symbol Table");
-		else if (boffset == offset_code)
-			printf(" Code");
 		else if (boffset == offset_data)
 			printf(" Data");
 
@@ -286,6 +284,9 @@ void wvm_print_memory() {
 			free(disassembled);
 			printf("%s│", jump);
 		}
+
+		if (boffset == offset_code)
+			printf(" Code");
 		
 		printf("\n");
 	}
