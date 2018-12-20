@@ -15,8 +15,11 @@ isr_protec:  &protec
 msg_timer: "Timer expired.\n"
 msg_bye: "Goodbye.\n"
 msg_protec: "Protection error at "
+delay: 100
 
 #code
+
+*delay -> $t0
 
 rit isrtable
 int 1
@@ -25,6 +28,7 @@ ring 3
 
 @loop
 	: done if $s1
+	<sleep $t0>
 	: loop
 
 @done
@@ -33,7 +37,7 @@ ring 0 // should cause an exception
 <halt>
 
 sub syscall() {
-	time 5000000
+	time 3000000
 	ring $e1; : $e0
 }
 
