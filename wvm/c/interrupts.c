@@ -57,8 +57,8 @@ void int_protec() {
 	wvm_interrupt(INT_PROTEC);
 }
 
-int check_kernel() {
-	if (RING_KERNEL < cur_ring) {
+int check_ring(ring_t ring) {
+	if (ring < cur_ring) {
 		int_protec();
 		return 0;
 	}

@@ -455,7 +455,7 @@ void op_int(word instruction) {
 }
 
 void op_rit(word instruction) {
-	if (check_kernel()) {
+	if (check_ring(RING_KERNEL)) {
 		IIMM();
 		inttab = imm;
 		INC();
@@ -485,7 +485,6 @@ void op_ringi(word instruction) {
 		INC();
 	}
 }
-
 
 void op_pr(word instruction) {
 	RRS();
