@@ -266,7 +266,7 @@ fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse" |
 						 "nonlazybind" | "sanitize_thread" | "thunk" | "sspstrong" |
 						 "sanitize_address" | "noinline" | "ssp")					{% _ %}
 					 |	"alignstack(" decimal ")"									{% d => d["alignstack", d[1]] %}
-					 |	"allocsize(" decimal (", " decimal):? ")"					{% d => d["allocsize", d[1], d[2]? d[2][1] : null] %}
+					 |	"allocsize(" decimal ("," _ decimal):? ")"					{% d => d["allocsize", d[1], d[2]? d[2][2] : null] %}
 					 |	"patchable-function=\"prologue-short-redirect\""			{% d => [d[0], d[2].replace(/^"|"$/g, "")] %}
 
 bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __ %}
