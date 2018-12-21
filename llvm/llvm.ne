@@ -443,7 +443,7 @@ i_store				->	"store"
 						", "
 						type_any
 						"* "
-						operand
+						(operand | getelementptr_expr)
 						(", align " decimal):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "store", {
@@ -451,7 +451,7 @@ i_store				->	"store"
 							storeType:        d[2][0],
 							storeValue:       d[3],
 							destinationType:  d[5],
-							destinationValue: d[7],
+							destinationValue: d[7][0],
 							align:            d[8]? d[8][1] : null,
 							bangs:            d[9]? d[9][1] : []
 						}] %}
