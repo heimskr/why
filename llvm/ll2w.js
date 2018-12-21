@@ -427,10 +427,16 @@ class LL2W {
 
 	computeLiveRanges(fn) {
 		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
+		let allVars = [];
 		for (const inst of instructions) {
 			const {read, written, assigner} = LL2W.extractOperands(inst);
+			allVars = [...allVars, ...read, ...written];
 			console.log(chalk.bold((inst[1] + ":").padEnd("br_unconditional:".length, " ")), read.join(", ") || chalk.dim("."), "→", (written.join(", ") || chalk.dim(".")) + ";", assigner);
 		}
+		
+		allVars = _.uniq(allVars);
+		console.log(allVars);
+
 
 		// console.log(instructions.map(x => x.slice(1)));
 	}
