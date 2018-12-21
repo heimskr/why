@@ -77,7 +77,7 @@ decimal				->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join
 natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}
 vector				->	"<" commalist[type_any " " value] ">"						{% d => ["vector", d[1][0]] %}
 
-value				->	(float | decimal | vector | variable)				{% __ %}
+value				->	(float | decimal | vector | variable | "null")				{% __ %}
 
 source_filename		->	"source_filename = " string									{% d => ["source_filename", d[1]] %}
 
@@ -179,8 +179,10 @@ global_constant		->	("global" | "constant")										{% __ %}
 initial_value		->	cstring														{% d => ["string",  d[0]] %}
 					 |	float														{% d => ["float",   d[0]] %}
 					 |	decimal														{% d => ["decimal", d[0]] %}
-					 |	"zeroinitializer"											{% d => ["zero"] %}
+					 |	(type_any _):? "zeroinitializer"							{% d => ["zero", d[0]? d[0][0] : null] %}
 					 |	"null"														{% d => ["null"] %}
+					 |	type_any __ (float | decimal | "null")						{% d => ["typed", d[0], d[2][0]] %}
+					 |	"{" _ commalist[initial_value] _ "}"						{% d => ["set", d[2]] %}
 
 type_list			-> commalist[function_type] ", ...":?							{% d => [d[0], !!d[1]] %}
 					 | "..."														{% d => [[], true] %}
