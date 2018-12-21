@@ -567,6 +567,7 @@ i_ret				->	"ret " type_any " " value									{% d => ["instruction", "ret", { t
 call_fnty			->	type_any " (" commalist[type_any] ", ...":? ")"				{% d => [d[0], d[2][0], !!d[3]] %}
 					 |	type_any " (...)"											{% d => [d[0], [], true] %}
 function_name		->	"@" (var | string)											{% d => d[1][0] %}
+					 |	variable													{% d => d[0][1] %}
 
 fast_math_flags		->	list[fast_math_flag]											{% compileFastMathFlags %}
 fast_math_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
