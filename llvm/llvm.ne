@@ -301,7 +301,7 @@ i_alloca			->	variable
 i_load				->	variable
 						" = load "
 						"volatile ":?
-						(type_any ", " type_any "* " (variable | global))
+						(type_any ", " type_any "* " (operand | getelementptr_expr))
 						(", align " decimal):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "load", {
