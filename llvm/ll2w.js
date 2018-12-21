@@ -370,6 +370,7 @@ class LL2W {
 		let read = [], written = [], assigner = null;
 
 		const isVar = x => x instanceof Array && x[0] == "variable";
+		const tryRead = x => isVar(x) && read.push(x[1]);
 
 		if (["phi", "alloca", "conversion", "load", "binary", "icmp", "getelementptr"].includes(type)) {
 			written.push(assigner = meta.destination[1]);
@@ -377,30 +378,25 @@ class LL2W {
 
 		if (type == "phi") {
 			// TODO: do phi instructions count as reads?
-			for (const [v, src] of meta.pairs) {
-				if (v instanceof Array && v[0] == "variable")
-					read.push(v[1]);
-			}
+			meta.pairs.forEach(([v, src]) => tryRead(v));
+		} else if (type == "switch") {
+			tryRead(meta.operand);
 		} else if (type == "select") {
 			written.push(assigner = meta.destination[1]);
 			read.push(meta.condition[1]);
-			[meta.leftValue, meta.rightValue].forEach(v => v[0] == "variable" && read.push(v[1]));
+			[meta.leftValue, meta.rightValue].forEach(tryRead);
 		} else if (type == "conversion") {
-			if (isVar(meta.sourceValue))
-				read.push(meta.sourceValue[1]);
+			tryRead(meta.sourceValue)
 		} else if (type == "call") {
 			if (meta.assign) {
 				written.push(assigner = meta.assign[1]);
 			}
 
 			for (const arg of meta.args) {
-				if (isVar(arg[1] && arg[1]))
-					read.push(parseInt(arg[1][1]));
+				tryRead(arg[1]);
 			}
 		} else if (type == "store") {
-			if (isVar(meta.storeValue)) {
-				read.push(meta.storeValue[1]);
-			}
+			tryRead(meta.storeValue);
 			
 			if (isVar(meta.destinationValue)) {
 				// Yes, the store writes a value, but it doesn't write it to a variable.
@@ -409,21 +405,16 @@ class LL2W {
 				read.push(assigner = meta.destinationValue[1]);
 			}
 		} else if (type == "load") {
-			if (isVar(meta.pointerValue))
-				read.push(meta.pointerValue[1]);
+			tryRead(meta.pointerValue);
 		} else if (type == "binary" || type == "icmp") {
 			[meta.op1, meta.op2].forEach(o => isVar(o) && read.push(o[1]));
 		} else if (type == "br_conditional") {
 			// TODO: do branch targets count as reads?
 			read.push(meta.cond[1]);
 		} else if (type == "ret") {
-			if (meta.value && isVar(meta.value))
-				read.push(meta.value[1]);
+			tryRead(meta.value);
 		} else if (type == "getelementptr") {
-			if (isVar(meta.pointerValue)) {
-				read.push(meta.pointerValue[1]);
-			}
-			
+			tryRead(meta.pointerValue);
 			meta.indices.filter(i => isVar(i[1])).forEach(i => read.push(i[1][1]));
 		}
 
