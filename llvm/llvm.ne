@@ -271,7 +271,7 @@ fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse" |
 
 bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __ %}
 					 |	("invariant" | "invariant.load" | "nontemporal.group")		{% __ %}
-					 |	("align" | "tbaa")											{% __ %}
+					 |	("align" | "tbaa" | "range")								{% __ %}
 					 |	llvm_bang													{% _ %}
 
 llvm_bang			->	"llvm." ("loop" | "mem.parallel_loop_access")				{% d => d[0] + d[1][0] %}
