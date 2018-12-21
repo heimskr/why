@@ -435,8 +435,8 @@ class LL2W {
 		for (const instruction of instructions) {
 			const {read, written, assigner} = LL2W.extractOperands(instruction);
 			allVars = [...allVars, ...read, ...written];
-			process.stdout.write(i+++": ");
-			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:".length, " ")), read.join(", ") || chalk.dim("."), "→", (written.join(", ") || chalk.dim(".")) + ";", assigner);
+			process.stdout.write((i+++":").padEnd(4, " "));
+			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:  ".length, " ")), (read.join(", ") || chalk.dim("  . ")).padEnd(4, " "), chalk.red("→"), written.join(", ") || chalk.dim("."), chalk.red("/"), chalk.cyan.dim(assigner));
 		}
 		
 		allVars = _.uniq(allVars);
