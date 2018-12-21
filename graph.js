@@ -15,7 +15,7 @@ const getID = node => node instanceof Node? node.id : node;
 class Graph {
 	/**
 	 * Creates a new graph.
-	 * @param {number} n - The number of nodes in the graph.
+	 * @param {number} n The number of nodes in the graph.
 	 */
 	constructor(n) {
 		/**
@@ -29,7 +29,7 @@ class Graph {
 
 	/**
 	 * Deletes all nodes in the graph.
-	 * @param {number} n - The number of new empty nodes to replace the old nodes.
+	 * @param {number} n The number of new empty nodes to replace the old nodes.
 	 */
 	reset(n) {
 		this.nodes = _.range(0, n).map(i => new Node(i, this));
@@ -37,17 +37,18 @@ class Graph {
 
 	/**
 	 * Returns the nth node of the graph.
-	 * @param {number} n - The ID of the node to return.
-	 * @return {Node} The node corresponding to n if n is a number; n otherwise.
+	 * @param  {number} n The ID of the node to return.
+	 * @return {Node}     The node corresponding to n if n is a number; n otherwise.
 	 */
 	getNode(n) {
-		return typeof n == "number"? this.nodes[n] : n;
+		n = typeof n == "number"? n : n.id;
+		return _.find(this.nodes, node => node.id == n);
 	}
 
 	/**
 	 * Adds a unidirectional connection from one node to another.
-	 * @param {(Node|number)} source - The source node.
-	 * @param {(Node|number)} destination - The destination node.
+	 * @param {(Node|number)} source      The source node.
+	 * @param {(Node|number)} destination The destination node.
 	 */
 	arc(source, destination) {
 		this.nodes[getID(source)].arc(destination);
@@ -63,8 +64,8 @@ class Graph {
 
 	/**
 	 * Removes an edge from one node to another.
-	 * @param {(Node|number)} source - The source node.
-	 * @param {(Node|number)} destination - The destination node.
+	 * @param {(Node|number)} source      The source node.
+	 * @param {(Node|number)} destination The destination node.
 	 */
 	removeArc(source, destination) {
 		this.nodes[getID(source)].removeArc(destination);
@@ -72,8 +73,8 @@ class Graph {
 
 	/**
 	 * Adds a bidirectional connection between two nodes.
-	 * @param {(Node|number)} a - The first node.
-	 * @param {(Node|number)} b - The second node.
+	 * @param {(Node|number)} a The first node.
+	 * @param {(Node|number)} b The second node.
 	 */
 	edge(a, b) {
 		this.nodes[getID(a)].arc(b);
@@ -82,8 +83,8 @@ class Graph {
 
 	/**
 	 * Removes all connections between two nodes.
-	 * @param {(Node|number)} a - The first node.
-	 * @param {(Node|number)} b - The second node.
+	 * @param {(Node|number)} a The first node.
+	 * @param {(Node|number)} b The second node.
 	 */
 	disconnect(a, b) {
 		this.nodes[getID(a)].removeArc(b);
@@ -115,7 +116,7 @@ class Graph {
 		_.range(0, this.nodes.length).forEach(u => discovered[u] == null && visit(u));
 
 		return {parents, discovered, finished};
-	};
+	}
 
 	/**
 	 * Calculates and returns a list of this graph's connected components using Kosaraju's algorithm.
@@ -198,6 +199,63 @@ class Graph {
 	}
 
 	/**
+	 * Condenses a list of nodes into a single node, removes the old nodes from the graph and inserts the new node.
+	 * The new node's in/out arrays are the unions of the given nodes' in/out arrays.
+	 * The new node is reflexive if any of the given nodes is reflexive.
+	 * @param  {(Node|number)[]} nodes A list of nodes.
+	 * @return {Node} The coalesced node.
+	 */
+	coalesce(nodes) {
+		if (!nodes.length) {
+			return undefined;
+		}
+
+		// The input may contain either Nodes or numeric IDs. Convert all the IDs to nodes.
+		nodes = nodes.map(n => this.nodes[getID(n)]);
+
+		// Calculate the union of all in/out edges, but don't include edges between any of the given nodes.
+		const combinedIn  = _.without(_.union(...nodes.map(node => node.in)),  ...nodes);
+		const combinedOut = _.without(_.union(...nodes.map(node => node.out)), ...nodes);
+
+		const reflexive = _.some(nodes, n => n.isReflexive);
+
+		const allIDs = nodes.map(node => node.id);
+		const newID = nodes[0].id;
+		const oldIDs = _.without(allIDs, newID);
+		let newNode = this.getNode(newID);
+		
+		// Remove all the old nodes from the graph.
+		_.remove(this.nodes, (v) => allIDs.includes(getID(v)));
+
+		// Go through every remaining node's in/out arrays, remove the old node IDs
+		// and insert the new ID where applicable.
+		for (const node of this.nodes) {
+			if (_.intersection(node.in,   allIDs).length)
+				node.in  = _.sortBy(_.without(node.in,  ...allIDs).concat(newID), getID);
+			if (_.intersection(node.out,  allIDs).length)
+				node.out = _.sortBy(_.without(node.out, ...allIDs).concat(newID), getID);
+		}
+
+		if (!newNode) {
+			newNode = new Node(newID, this);
+		}
+
+		newNode.in  = _.without(combinedIn,  ...allIDs);
+		newNode.out = _.without(combinedOut, ...allIDs);
+		
+		if (reflexive) {
+			newNode.in.push(newID);
+			newNode.out.push(newID);
+		}
+
+		newNode.in  = _.sortBy(newNode.in,  getID);
+		newNode.out = _.sortBy(newNode.out, getID);
+		
+		this.nodes.push(newNode);
+		return newNode;
+	}
+
+	/**
 	 * Calculates and returns the transpose of the graph.
 	 * @type {Graph}
 	 */
@@ -223,7 +281,7 @@ class Graph {
 	 * @return {string} A string representation of the graph.
 	 */
 	toString() {
-		return this.nodes.map(({out}, u) => `${u} => ${out.join(", ")}`).join("\n");
+		return _.sortBy(this.nodes, "id").map(({out, id}) => `${id} => ${out.join(", ")}`).join("\n");
 	}
 }
 
@@ -233,9 +291,9 @@ class Graph {
 class Node {
 	/**
 	 * Creates a new node.
-	 * @param {number} id - The node's ID.
-	 * @param {Graph} graph - The graph containing this node.
-	 * @param {*} data - The data attached to the node.
+	 * @param {number} id    The node's ID.
+	 * @param {Graph}  graph The graph containing this node.
+	 * @param {*}      data  The data attached to the node.
 	 */
 	constructor(id, graph, data=null) {
 		/**
@@ -272,11 +330,11 @@ class Node {
 		 * @name module:util~Node#data
 		 */
 		this.data = data;
-	};
+	}
 
 	/**
 	 * Adds a node to this node's outward edge list and adds this node to the node's inward edge list.
-	 * @param {(Node|number)} n - The node to add.
+	 * @param {(Node|number)} n The node to add.
 	 */
 	arc(n) {
 		n = getID(n);
@@ -292,7 +350,7 @@ class Node {
 
 	/**
 	 * Adds a node to this node's inward edge list and adds this node to the node's outward edge list.
-	 * @param {(Node|number)} n - The node to add.
+	 * @param {(Node|number)} n The node to add.
 	 */
 	arcFrom(n) {
 		n = getID(n);
@@ -308,7 +366,7 @@ class Node {
 
 	/**
 	 * Removes an outward connection from this node and the other node's corresponding inward connection.
-	 * @param {(Node|number)} n - The node whose arc will be removed.
+	 * @param {(Node|number)} n The node whose arc will be removed.
 	 */
 	removeArc(n) {
 		n = getID(n);
@@ -318,7 +376,7 @@ class Node {
 
 	/**
 	 * Removes an inward connection to this node and the other node's corresponding outward connection.
-	 * @param {(Node|number)} n - The node whose arc will be removed.
+	 * @param {(Node|number)} n The node whose arc will be removed.
 	 */
 	removeArcFrom(n) {
 		n = getID(n);
@@ -328,8 +386,8 @@ class Node {
 
 	/**
 	 * Checks for the existence of a connection from this node to another.
-	 * @param {(Node|number)} n - The node to check.
-	 * @return {boolean} Whether there exists an connection from this node to the other.
+	 * @param  {(Node|number)} n The node to check.
+	 * @return {boolean}         Whether there exists an connection from this node to the other.
 	 */
 	connectsTo(n) {
 		return this.out.includes(getID(n));
@@ -337,8 +395,8 @@ class Node {
 
 	/**
 	 * Checks for the existence of a connection to this node from another.
-	 * @param {(Node|number)} n - The node to check.
-	 * @return {boolean} Whether there exists an connection to this node from the other.
+	 * @param  {(Node|number)} n The node to check.
+	 * @return {boolean}         Whether there exists an connection to this node from the other.
 	 */
 	connectsFrom(n) {
 		return this.in.includes(getID(n));
@@ -346,8 +404,8 @@ class Node {
 
 	/**
 	 * Checks for the existence of a bidirectional connection between this node and another.
-	 * @param {(Node|number)} n - The node to check.
-	 * @return {boolean} Whether there exists a bidirectional connection between this node and the other.
+	 * @param  {(Node|number)} n The node to check.
+	 * @return {boolean}         Whether there exists a bidirectional connection between this node and the other.
 	 */
 	connects(n) {
 		return this.connectsTo(n) && this.connectsFrom(n);
@@ -355,14 +413,19 @@ class Node {
 
 	/**
 	 * Returns a copy of this node.
-	 * @param {?Graph} newGraph - If non-null, this will be the cloned node's parent graph.
-	 * @return {Node} A copy of the node.
+	 * @param  {?Graph} newGraph If non-null, this will be the cloned node's parent graph.
+	 * @return {Node}            A copy of the node.
 	 */
 	clone(newGraph=null) {
 		let newNode = new Node(this.id, newGraph === null? this.graph : newGraph);
 		newNode.out = this.out.slice(0);
 		newNode.in = this.in.slice(0);
 		return newNode;
+	}
+
+	get isReflexive() {
+		// If one of these conditions is true, the other should also be true...
+		return this.out.includes(this.id) || this.in.includes(this.id);
 	}
 }
 
@@ -371,9 +434,9 @@ module.exports.Node = Node;
 
 /**
  * @typedef {Object} DFSResult
- * @property {Array<number>} parents A list of each node's parent (null if nonexistent).
+ * @property {Array<number>} parents    A list of each node's parent (null if nonexistent).
  * @property {Array<number>} discovered A list of the times each node was discovered.
- * @property {Array<number>} finished A list of the times each node was finished.
+ * @property {Array<number>} finished   A list of the times each node was finished.
  */
 
 if (require.main === module) {
@@ -418,4 +481,11 @@ if (require.main === module) {
 			throw e;
 		}
 	}
+
+	console.log(`\n${chalk.bold("Coalese(G, G[0:2]):")}`);
+	console.log("Old node IDs:", g.nodes.map(getID));
+	console.log("Coalesced node ID:", chalk.bold((g.coalesce(g.nodes.slice(0, 3)) || {id: "?"}).id));
+	console.log("New node IDs:", g.nodes.map(getID));
+	console.log(`\n${chalk.bold("G:")}`);
+	console.log(g.toString());
 }
