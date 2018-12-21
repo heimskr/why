@@ -145,7 +145,7 @@ class Graph {
 					components[root].push(u);
 				}
 
-				this.getNode(u).in.forEach((v) => assign(v, root));
+				this.getNode(u).in.forEach(v => assign(v, root));
 			}
 		};
 
@@ -173,7 +173,7 @@ class Graph {
 			let n = s.pop();
 			l.unshift(n);
 			
-			copy.nodes.filter(m => m != n && m.connectsFrom(n)).forEach((m) => {
+			copy.nodes.filter(m => m != n && m.connectsFrom(n)).forEach(m => {
 				m.removeArcFrom(n);
 				
 				if (!m.in.length) {
@@ -225,7 +225,7 @@ class Graph {
 		let newNode = this.getNode(newID);
 		
 		// Remove all the old nodes from the graph.
-		_.remove(this.nodes, (v) => allIDs.includes(getID(v)));
+		_.remove(this.nodes, v => allIDs.includes(getID(v)));
 
 		// Go through every remaining node's in/out arrays, remove the old node IDs
 		// and insert the new ID where applicable.
@@ -261,7 +261,7 @@ class Graph {
 	 */
 	get transpose() {
 		let graph = new Graph(this.nodes.length);
-		this.nodes.forEach(({out}, u) => out.forEach((v) => graph.arc(v, u)));
+		this.nodes.forEach(({out}, u) => out.forEach(v => graph.arc(v, u)));
 
 		return graph;
 	}
