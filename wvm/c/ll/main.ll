@@ -7,145 +7,171 @@ target triple = "x86_64-apple-macosx10.14.0"
 %struct.__sFILEX = type opaque
 %struct.__sbuf = type { i8*, i32 }
 
-@__stderrp = external local_unnamed_addr global %struct.__sFILE*, align 8
+@__stderrp = external global %struct.__sFILE*, align 8
 @.str = private unnamed_addr constant [27 x i8] c"Couldn't allocate memory.\0A\00", align 1
 @.str.1 = private unnamed_addr constant [31 x i8] c"../../wasm/compiled/memory.why\00", align 1
 @.str.2 = private unnamed_addr constant [3 x i8] c"-c\00", align 1
 @.str.3 = private unnamed_addr constant [27 x i8] c"../../wasm/compiled/%s.why\00", align 1
 @.str.4 = private unnamed_addr constant [46 x i8] c"\0A\1B[31mExecution halted after %d cycle%s.\1B[0m\0A\00", align 1
-@cycles = common local_unnamed_addr global i32 0, align 4
+@cycles = common global i32 0, align 4
 @.str.5 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 @.str.6 = private unnamed_addr constant [2 x i8] c"s\00", align 1
-@memory = common local_unnamed_addr global i8* null, align 8
-@memsize = common local_unnamed_addr global i64 0, align 8
-@pc = common local_unnamed_addr global i64 0, align 8
-@offset_symtab = common local_unnamed_addr global i64 0, align 8
-@offset_handlers = common local_unnamed_addr global i64 0, align 8
-@offset_data = common local_unnamed_addr global i64 0, align 8
-@offset_code = common local_unnamed_addr global i64 0, align 8
-@offset_end = common local_unnamed_addr global i64 0, align 8
-@registers = common local_unnamed_addr global [128 x i64] zeroinitializer, align 16
-@membytes = common local_unnamed_addr global i64 0, align 8
-@alive = common local_unnamed_addr global i8 0, align 1
+@memory = common global i8* null, align 8
+@memsize = common global i64 0, align 8
+@pc = common global i64 0, align 8
+@offset_symtab = common global i64 0, align 8
+@offset_data = common global i64 0, align 8
+@offset_code = common global i64 0, align 8
+@offset_end = common global i64 0, align 8
+@registers = common global [128 x i64] zeroinitializer, align 16
+@membytes = common global i64 0, align 8
+@alive = common global i8 0, align 1
+@cur_ring = common global i32 0, align 4
 
-; Function Attrs: nounwind ssp uwtable
-define i32 @main(i32, i8** nocapture readonly) local_unnamed_addr #0 {
-  %3 = tail call zeroext i1 @wvm_init(i64 16777215) #7
-  br i1 %3, label %7, label %4
+; Function Attrs: noinline nounwind optnone ssp uwtable
+define i32 @main(i32, i8**) #0 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i8**, align 8
+  %6 = alloca i8*, align 8
+  store i32 0, i32* %3, align 4
+  store i32 %0, i32* %4, align 4
+  store i8** %1, i8*** %5, align 8
+  %7 = call zeroext i1 @wvm_init(i64 16777215)
+  br i1 %7, label %11, label %8
 
-; <label>:4:                                      ; preds = %2
-  %5 = load %struct.__sFILE*, %struct.__sFILE** @__stderrp, align 8, !tbaa !2
-  %6 = tail call i64 @fwrite(i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str, i64 0, i64 0), i64 26, i64 1, %struct.__sFILE* %5)
-  tail call void @exit(i32 1) #8
+; <label>:8:                                      ; preds = %2
+  %9 = load %struct.__sFILE*, %struct.__sFILE** @__stderrp, align 8
+  %10 = call i32 (%struct.__sFILE*, i8*, ...) @fprintf(%struct.__sFILE* %9, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str, i32 0, i32 0))
+  call void @exit(i32 1) #5
   unreachable
 
-; <label>:7:                                      ; preds = %2
-  switch i32 %0, label %28 [
-    i32 1, label %8
-    i32 2, label %10
-    i32 3, label %14
-  ]
+; <label>:11:                                     ; preds = %2
+  %12 = load i32, i32* %4, align 4
+  %13 = icmp eq i32 %12, 1
+  br i1 %13, label %14, label %16
 
-; <label>:8:                                      ; preds = %7
-  %9 = tail call i32 @wvm_load(i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.1, i64 0, i64 0)) #7
-  br label %28
+; <label>:14:                                     ; preds = %11
+  %15 = call i32 @wvm_load(i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.1, i32 0, i32 0))
+  br label %53
 
-; <label>:10:                                     ; preds = %7
-  %11 = getelementptr inbounds i8*, i8** %1, i64 1
-  %12 = load i8*, i8** %11, align 8, !tbaa !2
-  %13 = tail call i32 @wvm_load(i8* %12) #7
-  br label %28
+; <label>:16:                                     ; preds = %11
+  %17 = load i32, i32* %4, align 4
+  %18 = icmp eq i32 %17, 2
+  br i1 %18, label %19, label %24
 
-; <label>:14:                                     ; preds = %7
-  %15 = getelementptr inbounds i8*, i8** %1, i64 1
-  %16 = load i8*, i8** %15, align 8, !tbaa !2
-  %17 = tail call i32 @strcmp(i8* %16, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0))
-  %18 = icmp eq i32 %17, 0
-  br i1 %18, label %19, label %28
+; <label>:19:                                     ; preds = %16
+  %20 = load i8**, i8*** %5, align 8
+  %21 = getelementptr inbounds i8*, i8** %20, i64 1
+  %22 = load i8*, i8** %21, align 8
+  %23 = call i32 @wvm_load(i8* %22)
+  br label %52
 
-; <label>:19:                                     ; preds = %14
-  %20 = getelementptr inbounds i8*, i8** %1, i64 2
-  %21 = load i8*, i8** %20, align 8, !tbaa !2
-  %22 = tail call i64 @strlen(i8* %21)
-  %23 = add i64 %22, 25
-  %24 = tail call i8* @calloc(i64 %23, i64 1) #9
-  %25 = tail call i64 @llvm.objectsize.i64.p0i8(i8* %24, i1 false)
-  %26 = tail call i32 (i8*, i32, i64, i8*, ...) @__sprintf_chk(i8* %24, i32 0, i64 %25, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.3, i64 0, i64 0), i8* %21) #7
-  %27 = tail call i32 @wvm_load(i8* %24) #7
-  br label %28
+; <label>:24:                                     ; preds = %16
+  %25 = load i32, i32* %4, align 4
+  %26 = icmp eq i32 %25, 3
+  br i1 %26, label %27, label %51
 
-; <label>:28:                                     ; preds = %7, %10, %19, %14, %8
-  tail call void (...) @wvm_init_vm() #7
-  tail call void (...) @wvm_print_memory() #7
-  br label %29
+; <label>:27:                                     ; preds = %24
+  %28 = load i8**, i8*** %5, align 8
+  %29 = getelementptr inbounds i8*, i8** %28, i64 1
+  %30 = load i8*, i8** %29, align 8
+  %31 = call i32 @strcmp(i8* %30, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i32 0, i32 0))
+  %32 = icmp eq i32 %31, 0
+  br i1 %32, label %33, label %51
 
-; <label>:29:                                     ; preds = %29, %28
-  %30 = tail call zeroext i1 (...) @wvm_tick() #7
-  br i1 %30, label %29, label %31
+; <label>:33:                                     ; preds = %27
+  %34 = load i8**, i8*** %5, align 8
+  %35 = getelementptr inbounds i8*, i8** %34, i64 2
+  %36 = load i8*, i8** %35, align 8
+  %37 = call i64 @strlen(i8* %36)
+  %38 = add i64 20, %37
+  %39 = add i64 %38, 4
+  %40 = add i64 %39, 1
+  %41 = call i8* @calloc(i64 %40, i64 1) #6
+  store i8* %41, i8** %6, align 8
+  %42 = load i8*, i8** %6, align 8
+  %43 = load i8*, i8** %6, align 8
+  %44 = call i64 @llvm.objectsize.i64.p0i8(i8* %43, i1 false, i1 true)
+  %45 = load i8**, i8*** %5, align 8
+  %46 = getelementptr inbounds i8*, i8** %45, i64 2
+  %47 = load i8*, i8** %46, align 8
+  %48 = call i32 (i8*, i32, i64, i8*, ...) @__sprintf_chk(i8* %42, i32 0, i64 %44, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.3, i32 0, i32 0), i8* %47)
+  %49 = load i8*, i8** %6, align 8
+  %50 = call i32 @wvm_load(i8* %49)
+  br label %51
 
-; <label>:31:                                     ; preds = %29
-  %32 = load i32, i32* @cycles, align 4, !tbaa !6
-  %33 = icmp eq i32 %32, 1
-  %34 = select i1 %33, i8* getelementptr inbounds ([1 x i8], [1 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.6, i64 0, i64 0)
-  %35 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([46 x i8], [46 x i8]* @.str.4, i64 0, i64 0), i32 %32, i8* %34)
-  tail call void (...) @wvm_free() #7
+; <label>:51:                                     ; preds = %33, %27, %24
+  br label %52
+
+; <label>:52:                                     ; preds = %51, %19
+  br label %53
+
+; <label>:53:                                     ; preds = %52, %14
+  call void (...) @wvm_init_vm()
+  call void (...) @wvm_print_memory()
+  br label %54
+
+; <label>:54:                                     ; preds = %56, %53
+  %55 = call zeroext i1 (...) @wvm_tick()
+  br i1 %55, label %56, label %57
+
+; <label>:56:                                     ; preds = %54
+  br label %54
+
+; <label>:57:                                     ; preds = %54
+  %58 = load i32, i32* @cycles, align 4
+  %59 = load i32, i32* @cycles, align 4
+  %60 = icmp eq i32 %59, 1
+  %61 = zext i1 %60 to i64
+  %62 = select i1 %60, i8* getelementptr inbounds ([1 x i8], [1 x i8]* @.str.5, i32 0, i32 0), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.6, i32 0, i32 0)
+  %63 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([46 x i8], [46 x i8]* @.str.4, i32 0, i32 0), i32 %58, i8* %62)
+  call void (...) @wvm_free()
   ret i32 0
 }
 
-declare zeroext i1 @wvm_init(i64) local_unnamed_addr #1
+declare zeroext i1 @wvm_init(i64) #1
+
+declare i32 @fprintf(%struct.__sFILE*, i8*, ...) #1
 
 ; Function Attrs: noreturn
-declare void @exit(i32) local_unnamed_addr #2
+declare void @exit(i32) #2
 
-declare i32 @wvm_load(i8*) local_unnamed_addr #1
+declare i32 @wvm_load(i8*) #1
 
-; Function Attrs: nounwind readonly
-declare i32 @strcmp(i8* nocapture, i8* nocapture) local_unnamed_addr #3
+declare i32 @strcmp(i8*, i8*) #1
 
-; Function Attrs: nounwind allocsize(0,1)
-declare noalias i8* @calloc(i64, i64) local_unnamed_addr #4
+; Function Attrs: allocsize(0,1)
+declare i8* @calloc(i64, i64) #3
 
-; Function Attrs: nounwind readonly
-declare i64 @strlen(i8* nocapture) local_unnamed_addr #3
+declare i64 @strlen(i8*) #1
 
-declare i32 @__sprintf_chk(i8*, i32, i64, i8*, ...) local_unnamed_addr #1
+declare i32 @__sprintf_chk(i8*, i32, i64, i8*, ...) #1
 
-; Function Attrs: nounwind readnone
-declare i64 @llvm.objectsize.i64.p0i8(i8*, i1) #5
+; Function Attrs: nounwind readnone speculatable
+declare i64 @llvm.objectsize.i64.p0i8(i8*, i1, i1) #4
 
-declare void @wvm_init_vm(...) local_unnamed_addr #1
+declare void @wvm_init_vm(...) #1
 
-declare void @wvm_print_memory(...) local_unnamed_addr #1
+declare void @wvm_print_memory(...) #1
 
-declare zeroext i1 @wvm_tick(...) local_unnamed_addr #1
+declare zeroext i1 @wvm_tick(...) #1
 
-; Function Attrs: nounwind
-declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #6
+declare i32 @printf(i8*, ...) #1
 
-declare void @wvm_free(...) local_unnamed_addr #1
+declare void @wvm_free(...) #1
 
-; Function Attrs: nounwind
-declare i64 @fwrite(i8* nocapture, i64, i64, %struct.__sFILE* nocapture) #7
+attributes #0 = { noinline nounwind optnone ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #2 = { noreturn "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #3 = { allocsize(0,1) "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #4 = { nounwind readnone speculatable }
+attributes #5 = { noreturn }
+attributes #6 = { allocsize(0,1) }
 
-attributes #0 = { nounwind ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #1 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #2 = { noreturn "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #3 = { nounwind readonly "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #4 = { nounwind allocsize(0,1) "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #5 = { nounwind readnone }
-attributes #6 = { nounwind "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #7 = { nounwind }
-attributes #8 = { noreturn nounwind }
-attributes #9 = { allocsize(0,1) }
+!llvm.module.flags = !{!0, !1}
+!llvm.ident = !{!2}
 
-!llvm.module.flags = !{!0}
-!llvm.ident = !{!1}
-
-!0 = !{i32 1, !"PIC Level", i32 2}
-!1 = !{!"clang version 4.0.0 (tags/RELEASE_400/final)"}
-!2 = !{!3, !3, i64 0}
-!3 = !{!"any pointer", !4, i64 0}
-!4 = !{!"omnipotent char", !5, i64 0}
-!5 = !{!"Simple C/C++ TBAA"}
-!6 = !{!7, !7, i64 0}
-!7 = !{!"int", !4, i64 0}
+!0 = !{i32 1, !"wchar_size", i32 4}
+!1 = !{i32 7, !"PIC Level", i32 2}
+!2 = !{!"Apple LLVM version 10.0.0 (clang-1000.10.40.1)"}
