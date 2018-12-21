@@ -180,6 +180,7 @@ initial_value		->	cstring														{% d => ["string",  d[0]] %}
 					 |	float														{% d => ["float",   d[0]] %}
 					 |	decimal														{% d => ["decimal", d[0]] %}
 					 |	"zeroinitializer"											{% d => ["zero"] %}
+					 |	"null"														{% d => ["null"] %}
 
 type_list			-> commalist[function_type] ", ...":?							{% d => [d[0], !!d[1]] %}
 					 | "..."														{% d => [[], true] %}
