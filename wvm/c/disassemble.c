@@ -149,6 +149,7 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_PRC:  sprintf(str + strlen(str), "prc%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
 				case FUNCT_PRD:  sprintf(str + strlen(str), "prd%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
 				case FUNCT_PRX:  sprintf(str + strlen(str), "prx%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
+				default: sprintf(str, "%s(Unknown external)%s", ANSI_DIM, ANSI_RESET); return;
 			}
 
 			sprintf(str + strlen(str), "%s>", ANSI_RESET);
