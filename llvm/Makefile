@@ -6,13 +6,16 @@ CHECK		= \x1b[32m\xe2\x9c\x94\x1b[0m
 
 all: $(COMPILED) _
 
-test: itest
+test: ntest
 
 $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
 
 ttest: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
+
+ntest: $(TEST) $(COMPILED) net.ll
+	node ll2w.js -d net.ll
 
 itest: $(TEST) $(COMPILED) io.ll
 	node ll2w.js -d io.ll
