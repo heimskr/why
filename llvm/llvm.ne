@@ -65,6 +65,7 @@ item ->	_ lineend																	{% _() %}
 
 lineend				->	(comment newline | newline) 								{% _( ) %}
 spaced[X]			->	" " $X " "													{% _(1) %}
+wspaced[X]			->	_ $X _														{% _(1) %}
 list[X]				->	$X (" " $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
 commalist[X]		->	$X (", " $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
 pars[X]				->	"(" $X ")"													{% _(1) %}
@@ -75,7 +76,7 @@ decimal				->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join
 					 |	"true"														{% d => 1 %}
 					 |	"false"														{% d => 0 %}
 natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}
-vector				->	"<" commalist[type_any " " value] ">"						{% d => ["vector", d[1][0]] %}
+vector				->	"<" commalist[type_any __ value] ">"						{% d => ["vector", d[1][0]] %}
 
 value				->	(float | decimal | vector | variable | "null")				{% __ %}
 
@@ -105,16 +106,16 @@ metadata			->	constant													{% d => d[0].slice(0, 2) %}
 variable			->	"%" (var | decimal | string)								{% d => ["variable", d[1][0]] %}
 
 type_struct			->	"%struct." var												{% d => ["struct", d[1]] %}
-struct				->	type_struct " = type opaque"								{% d => [...d[0], "opaque"] %}
-					 |	type_struct " = type { " types " }"							{% d => [...d[0], d[2]] %}
+struct				->	type_struct _ "= type opaque"								{% d => [...d[0], "opaque"] %}
+					 |	type_struct _ "= type {" _ types _ "}"						{% d => [...d[0], d[4]] %}
 
 types				->	commalist[type_any]											{% _ %}
 
 type_int			->	"i" natural													{% d => ["int", d[1]] %}
 type_float			->	("half" | "float" | "double" | "fp128" | "x86_fp80" |
 					     "ppc_fp128")												{% d => ["float", d[0][0]] %}
-type_array			->	"[" _ natural _ "x" _ type_any "]"							{% d => ["array", d[2], d[6]] %}
-type_vector			->	"<" natural " x " vector_type ">"							{% d => ["vector", d[1], d[3]] %}
+type_array			->	"[" _ natural _ "x" _ type_any _ "]"						{% d => ["array", d[2], d[6]] %}
+type_vector			->	"<" wspaced[natural] "x" wspaced[vector_type] ">"			{% d => ["vector", d[1], d[3]] %}
 vector_type			->	(type_int | type_ptr)										{% d => d[0][0] %}
 					 |	"float"														{% d => ["float"] %}
 type_ptr			->	type_any "*"												{% d => compilePtr(d[0]) %}
@@ -124,9 +125,9 @@ type_function		->	type_any _ "(" types ", ...":? ")*"							{% d => ["function",
 type_any			->	(type_void | type_ptr | type_array | type_int | type_float |
 						 type_function | type_vector | type_struct)					{% d => d[0][0] %}
 type_intvec			->	type_int													{% _ %}
-					 |	"<" natural " x " type_int ">"								{% d => ["vector", d[1], d[3]] %}
+					 |	"<" wspaced[natural] "x" wspaced[type_int] ">"				{% d => ["vector", d[1], d[3]] %}
 type_floatvec		->	type_float													{% _ %}
-					 |	"<" natural " x " type_float ">"							{% d => ["vector", d[1], d[3]] %}
+					 |	"<" wspaced[natural] "x" wspaced[type_float] ">"			{% d => ["vector", d[1], d[3]] %}
 
 global				->	"@" var														{% d => ["global", d[1]] %}
 label				->	var ":"														{% d => ["label", d[0]] %}
@@ -280,9 +281,26 @@ llvm_bang			->	"llvm." ("loop" | "mem.parallel_loop_access")				{% d => d[0] + d
 
 bang[X]				->	"!" $X " !" decimal											{% d => [d[1], d[3]] %}
 bang_any			->	bang[bang_type]												{% _ %}
-instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store  |
-						 i_getelementptr | i_unreachable | i_br | i_binary | i_phi |
-						 i_conversion | i_ret)										{% __ %}
+instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store)	{% __ %}
+					 |	(i_getelementptr | i_unreachable | i_br | i_binary | i_phi)	{% __ %}
+					 |	(i_conversion | i_ret | i_select)							{% __ %}
+
+i_select			->	variable
+						(_ "=" _ "select" __ )
+						(type_any _ variable)
+						wspaced[","]
+						(type_any _ operand)
+						wspaced[","]
+						(type_any _ operand)
+						{% d => ["instruction", "select", {
+							destination:   d[0],
+							conditionType: d[2][0],
+							condition:     d[2][2],
+							leftType:      d[4][0],
+							leftValue:     d[4][2],
+							rightType:     d[6][0],
+							rightValue:    d[6][2],
+						}] %}
 
 i_alloca			->	variable
 						" = alloca "
@@ -303,7 +321,7 @@ i_alloca			->	variable
 i_load				->	variable
 						" = load "
 						"volatile ":?
-						(type_any ", " type_any "* " (operand | getelementptr_expr))
+						(type_any ", " type_any "* " operand)
 						(", align " decimal):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "load", {
@@ -311,12 +329,12 @@ i_load				->	variable
 							volatile:            !!d[2],
 							type:                  d[3][0],
 							pointerType:           d[3][2],
-							pointerValue:          d[3][4][0],
+							pointerValue:          d[3][4],
 							align:                 d[4]? d[4][1] : null,
 							bangs:                 d[5]? d[5][1] : []
 						}] %}
 
-operand				->	(variable | decimal | global)								{% __  %}
+operand				->	(variable | decimal | global | getelementptr_expr)			{% __  %}
 					 |	"null"														{% d => ["null"] %}
 floperand			->	(float | variable | decimal | global)						{% __  %}
 
@@ -441,19 +459,19 @@ i_switch			->	"switch"
 i_store				->	"store"
 						" volatile":?
 						spaced[type_any]
-						(operand | getelementptr_expr)
+						operand
 						", "
 						type_any
 						"* "
-						(operand | getelementptr_expr)
+						operand
 						(", align " decimal):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "store", {
 							volatile:       !!d[1],
 							storeType:        d[2][0],
-							storeValue:       d[3][0],
+							storeValue:       d[3],
 							destinationType:  d[5],
-							destinationValue: d[7][0],
+							destinationValue: d[7],
 							align:            d[8]? d[8][1] : null,
 							bangs:            d[9]? d[9][1] : []
 						}] %}

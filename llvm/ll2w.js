@@ -366,64 +366,62 @@ class LL2W {
 		const [, type, meta] = instruction;
 		let read = [], written = [], assigner = null;
 
+		const isVar = x => x instanceof Array && x[0] == "variable";
+
 		if (["phi", "alloca", "conversion", "load", "binary", "icmp", "getelementptr"].includes(type)) {
-			written.push(meta.destination[1]);
-			assigner = meta.destination[1];
+			written.push(assigner = meta.destination[1]);
 		}
 
 		if (type == "phi") {
 			// TODO: do phi instructions count as reads?
 			for (const [v, src] of meta.pairs) {
-				if (v instanceof Array && v[0] == "variable") {
+				if (v instanceof Array && v[0] == "variable")
 					read.push(v[1]);
-				}
 			}
-		} else if (["conversion"].includes(type)) {
-			if (meta.sourceValue[0] == "variable") {
+		} else if (type == "select") {
+			written.push(assigner = meta.destination[1]);
+			read.push(meta.condition[1]);
+			[meta.leftValue, meta.rightValue].forEach(v => v[0] == "variable" && read.push(v[1]));
+		} else if (type == "conversion") {
+			if (isVar(meta.sourceValue))
 				read.push(meta.sourceValue[1]);
-			}
 		} else if (type == "call") {
 			if (meta.assign) {
-				written.push(meta.assign[1]);
-				assigner = meta.assign[1];
+				written.push(assigner = meta.assign[1]);
 			}
 
 			for (const arg of meta.args) {
-				if (arg[1] && arg[1][0] == "variable") {
+				if (isVar(arg[1] && arg[1]))
 					read.push(parseInt(arg[1][1]));
-				}
 			}
 		} else if (type == "store") {
-			if (meta.storeValue[0] == "variable") {
+			if (isVar(meta.storeValue)) {
 				read.push(meta.storeValue[1]);
 			}
 			
-			if (meta.destinationValue[0] == "variable") {
+			if (isVar(meta.destinationValue)) {
 				// Yes, the store writes a value, but it doesn't write it to a variable.
 				// Instead, it writes it to memoryat the position contained in the destination pointer.
 				// That means it has two reads and no writes!
-				read.push(meta.destinationValue[1]);
-				assigner = meta.destinationValue[1];
+				read.push(assigner = meta.destinationValue[1]);
 			}
 		} else if (type == "load") {
-			if (meta.pointerValue[0] == "variable") {
+			if (isVar(meta.pointerValue))
 				read.push(meta.pointerValue[1]);
-			}
 		} else if (type == "binary" || type == "icmp") {
-			[meta.op1, meta.op2].forEach(o => o[0] == "variable" && read.push(o[1]));
+			[meta.op1, meta.op2].forEach(o => isVar(o) && read.push(o[1]));
 		} else if (type == "br_conditional") {
 			// TODO: do branch targets count as reads?
 			read.push(meta.cond[1]);
 		} else if (type == "ret") {
-			if (meta.value && meta.value[0] == "variable") {
+			if (meta.value && isVar(meta.value))
 				read.push(meta.value[1]);
-			}
 		} else if (type == "getelementptr") {
-			if (meta.pointerValue[0] == "variable") {
+			if (isVar(meta.pointerValue)) {
 				read.push(meta.pointerValue[1]);
 			}
 			
-			meta.indices.filter(i => i[1][0] == "variable").forEach(i => read.push(i[1][1]));
+			meta.indices.filter(i => isVar(i[1])).forEach(i => read.push(i[1][1]));
 		}
 
 		return {read, written, assigner};
@@ -459,7 +457,7 @@ class LL2W {
 		for (const instruction of instructions) {
 			const {read, written, assigner} = LL2W.extractOperands(instruction);
 			allVars = [...allVars, ...read, ...written];
-			process.stdout.write((i+++":").padEnd(4, " "));
+			process.stdout.write((i+++":").padEnd(5, " "));
 			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:  ".length, " ")), (read.join(", ") || chalk.dim("  .   ")).padEnd(6, " "), chalk.red(" → "), (written.join(", ") || chalk.dim(". ")).padEnd(2, " "), chalk.red(" /"), chalk.cyan.dim(assigner));
 		}
 
