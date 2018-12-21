@@ -351,6 +351,9 @@ class LL2W {
 								_.push(meta.in, `${iname}:${calledName}`);
 							}
 						}
+					} else if (typeof iname == "number" || (typeof iname == "string" && iname.match(/^\d+$/))) {
+						// If the function name is a number, that means the function is actually a function pointer.
+						// As those could point anywhere, it's not possible to do anything with them, so we do nothing.
 					} else if (!(iname in declarations)) {
 						console.warn(WARN, `Couldn't find a basic block called ${chalk.bold(iname + chalk.dim(":" + arity))}.`);
 					}
