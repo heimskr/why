@@ -128,7 +128,7 @@ type_intvec			->	type_int													{% _ %}
 type_floatvec		->	type_float													{% _ %}
 					 |	"<" natural " x " type_float ">"							{% d => ["vector", d[1], d[3]] %}
 
-global				->	"@" var														{% _(1) %}
+global				->	"@" var														{% d => ["global", d[1]] %}
 label				->	var ":"														{% d => ["label", d[0]] %}
 global_def			->	global
 						" ="
@@ -314,7 +314,7 @@ i_load				->	variable
 							bangs:                 d[5]? d[5][1] : []
 						}] %}
 
-operand				->	(variable | decimal)										{% __  %}
+operand				->	(variable | decimal | global)								{% __  %}
 					 |	"null"														{% d => ["null"] %}
 floperand			->	(float | variable | decimal)								{% __  %}
 
