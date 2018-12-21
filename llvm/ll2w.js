@@ -335,7 +335,7 @@ class LL2W {
 			}
 		}
 
-		Object.keys(basicBlocks).forEach(k => console.log("\n" + chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
+		Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
 		// console.log(functions);
 	}
 
@@ -427,7 +427,12 @@ class LL2W {
 
 	computeLiveRanges(fn) {
 		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
-		
+		for (const inst of instructions) {
+			const {read, written, assigner} = LL2W.extractOperands(inst);
+			console.log(chalk.bold((inst[1] + ":").padEnd("br_unconditional:".length, " ")), read.join(", ") || chalk.dim("."), "→", (written.join(", ") || chalk.dim(".")) + ";", assigner);
+		}
+
+		// console.log(instructions.map(x => x.slice(1)));
 	}
 
 	/**
@@ -522,8 +527,7 @@ if (require.main === module) {
 		constants: compiler.globalConstants,
 	}));
 
-	// const live = compiler.computeLiveRanges(compiler.functions._main);
-	jsome(compiler.functions);
+	const live = compiler.computeLiveRanges(compiler.functions._main);
 }
 
 /*
