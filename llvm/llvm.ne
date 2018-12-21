@@ -66,8 +66,8 @@ item ->	_ lineend																	{% _() %}
 lineend				->	(comment newline | newline) 								{% _( ) %}
 spaced[X]			->	" " $X " "													{% _(1) %}
 wspaced[X]			->	_ $X _														{% _(1) %}
-list[X]				->	$X (" " $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
-commalist[X]		->	$X (", " $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
+list[X]				->	$X (__ $X):*												{% d => [d[0][0], ...d[1].map(x => x[1][0])] %}
+commalist[X]		->	$X ("," _ $X):*												{% d => [d[0][0], ...d[1].map(x => x[2][0])] %}
 pars[X]				->	"(" $X ")"													{% _(1) %}
 
 cstring				->	"c" string													{% _(1) %}
@@ -287,7 +287,7 @@ instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store)	{% _
 					 |	(i_conversion | i_ret | i_select)							{% __ %}
 
 i_select			->	variable
-						(_ "=" _ "select" __ )
+						" = select "
 						(type_any _ variable)
 						wspaced[","]
 						(type_any _ operand)
@@ -598,7 +598,6 @@ cst_to_type[X]		->	$X " " constant " to " type_any								{% d => [d[0], ...d[2]
 cst_to_types		->	("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
 																					{% __ %}
 const_expr			->	cst_to_type[cst_to_types]									{% d => ["expr", d[0]] /* need to test this. */ %}
-					 |	getelementptr_expr											{% _ %}
 
 getelementptr_expr	->	"getelementptr "
 						"inbounds ":?
