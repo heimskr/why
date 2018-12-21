@@ -1,0 +1,5 @@
+digraph "CFG for 'op_prx' function" {
+	label="CFG for 'op_prx' function";
+
+	Node0x7f8ef0d44390 [shape=record,label="{%1:\l  %2 = tail call zeroext i8 @wvm_r_rs(i64 %0) #6\l  %3 = zext i8 %2 to i64\l  %4 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0, i64\l... %3\l  %5 = load i64, i64* %4, align 8, !tbaa !2\l  %6 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8],\l... [5 x i8]* @.str.3, i64 0, i64 0), i64 %5)\l  tail call void (...) @wvm_increment_pc() #6\l  ret void\l}"];
+}

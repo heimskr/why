@@ -1,0 +1,5 @@
+digraph "CFG for 'op_halt' function" {
+	label="CFG for 'op_halt' function";
+
+	Node0x7f8ef0d42a50 [shape=record,label="{%1:\l  store i8 0, i8* @alive, align 1, !tbaa !2\l  ret void\l}"];
+}

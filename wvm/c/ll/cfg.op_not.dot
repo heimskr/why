@@ -1,0 +1,5 @@
+digraph "CFG for 'op_not' function" {
+	label="CFG for 'op_not' function";
+
+	Node0x7f8ef0d2b6f0 [shape=record,label="{%1:\l  %2 = tail call zeroext i8 @wvm_r_rs(i64 %0) #6\l  %3 = tail call zeroext i8 @wvm_r_rd(i64 %0) #6\l  %4 = zext i8 %2 to i64\l  %5 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0, i64\l... %4\l  %6 = load i64, i64* %5, align 8, !tbaa !2\l  %7 = xor i64 %6, -1\l  %8 = zext i8 %3 to i64\l  %9 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0, i64\l... %8\l  store i64 %7, i64* %9, align 8, !tbaa !2\l  tail call void (...) @wvm_increment_pc() #6\l  ret void\l}"];
+}

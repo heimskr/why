@@ -503,7 +503,6 @@ class LL2W {
 			}
 		}
 
-		console.log();
 		console.log(ranges);
 	}
 

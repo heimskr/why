@@ -1,0 +1,5 @@
+digraph "CFG for 'op_multu' function" {
+	label="CFG for 'op_multu' function";
+
+	Node0x7f8ef0d24840 [shape=record,label="{%1:\l  tail call void (...) @wvm_increment_pc() #6\l  ret void\l}"];
+}

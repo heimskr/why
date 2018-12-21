@@ -1,0 +1,5 @@
+digraph "CFG for 'op_j' function" {
+	label="CFG for 'op_j' function";
+
+	Node0x7f8ef0c103f0 [shape=record,label="{%1:\l  %2 = tail call i32 @wvm_j_addr(i64 %0) #6\l  %3 = zext i32 %2 to i64\l  tail call void @wvm_jump(i64 %3) #6\l  ret void\l}"];
+}

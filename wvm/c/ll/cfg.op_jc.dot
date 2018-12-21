@@ -1,0 +1,12 @@
+digraph "CFG for 'op_jc' function" {
+	label="CFG for 'op_jc' function";
+
+	Node0x7f8ef0c10a50 [shape=record,label="{%1:\l  %2 = tail call zeroext i8 @wvm_j_rs(i64 %0) #6\l  %3 = tail call i32 @wvm_j_addr(i64 %0) #6\l  %4 = zext i8 %2 to i64\l  %5 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0, i64\l... %4\l  %6 = load i64, i64* %5, align 8, !tbaa !2\l  %7 = icmp eq i64 %6, 0\l  br i1 %7, label %10, label %8\l|{<s0>T|<s1>F}}"];
+	Node0x7f8ef0c10a50:s0 -> Node0x7f8ef0c10f60;
+	Node0x7f8ef0c10a50:s1 -> Node0x7f8ef0c10fe0;
+	Node0x7f8ef0c10fe0 [shape=record,label="{%8:\l\l  %9 = zext i32 %3 to i64\l  tail call void @wvm_jump(i64 %9) #6\l  br label %11\l}"];
+	Node0x7f8ef0c10fe0 -> Node0x7f8ef0c11020;
+	Node0x7f8ef0c10f60 [shape=record,label="{%10:\l\l  tail call void (...) @wvm_increment_pc() #6\l  br label %11\l}"];
+	Node0x7f8ef0c10f60 -> Node0x7f8ef0c11020;
+	Node0x7f8ef0c11020 [shape=record,label="{%11:\l\l  ret void\l}"];
+}
