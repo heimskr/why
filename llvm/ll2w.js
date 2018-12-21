@@ -236,6 +236,21 @@ class LL2W {
 		return constants;
 	}
 
+	extractDeclarations() {
+		const decs = {};
+		this.iterateTree("declaration", dec => {
+			const [, meta] = dec;
+			const {name, type, types, arity, unnamedAddr} = meta;
+			if (name in decs) {
+				console.warn(WARN, "Duplicate declaration for", chalk.bold(name) + ".");
+			}
+
+			decs[name] = {type, types, arity, isLocalUnnamed: unnamedAddr == "local_unnamed_addr"};
+		});
+
+		return decs;
+	}
+
 	extractFunctions() {
 		const functions = {};
 		const allBlocks = {};
@@ -274,7 +289,7 @@ class LL2W {
 		return [functions, allBlocks];
 	}
 
-	connectBlocks(functions, basicBlocks) {
+	connectBlocks(functions, basicBlocks, declarations={}) {
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
 			const [funcName, name] = fullName.split(":");
 			const [meta, instructions] = block;
@@ -310,7 +325,7 @@ class LL2W {
 
 				if (name == "call") {
 					const iname = imeta.name;
-					const destName = `${iname}:${LL2W.getArity(functions, iname)}`;
+					const destName = `${iname}:${LL2W.getArity(functions, iname, declarations)}`;
 					if (LL2W.builtins.includes(iname)) {
 						// Because builtins are single machine instructions and not real functions,
 						// we don't include them in the control flow graph.
@@ -485,13 +500,17 @@ class LL2W {
 		console.log(ranges);
 	}
 
-	static getArity(functions, functionName) {
+	static getArity(functions, functionName, declarations={}) {
 		if (functionName in functions) {
 			return functions[functionName].meta.arity;
 		}
 
 		if (functionName in BUILTINS) {
 			return BUILTINS[functionName].arity;
+		}
+
+		if (functionName in declarations) {
+			return declarations[functionName].arity;
 		}
 
 		return -1;
@@ -579,9 +598,10 @@ if (require.main === module) {
 	compiler.extractAttributes();
 	compiler.extractStructs();
 	compiler.extractMetadata();
+	compiler.declarations = compiler.extractDeclarations();
 	compiler.globalConstants = compiler.extractGlobalConstants();
 	[compiler.functions, compiler.allBlocks] = compiler.extractFunctions();
-	compiler.connectBlocks(compiler.functions, compiler.allBlocks);
+	compiler.connectBlocks(compiler.functions, compiler.allBlocks, compiler.declarations);
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
