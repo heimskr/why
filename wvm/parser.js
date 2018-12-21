@@ -555,7 +555,8 @@ class Parser {
 		if (funct == EXTS.prd)    return `<${chalk.cyan("prd")} ${chalk.yellow(rs)}>`;
 		if (funct == EXTS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
 		if (funct == EXTS.halt)   return `<${chalk.cyan("halt")}>`;
-		return `<${chalk.bold("ext")} ${chalk.red(funct)}>`;
+		if (funct == EXTS.sleep)  return `<${chalk.cyan("sleep")} ${chalk.yellow(rs)}>`;
+		return `<${chalk.cyan("ext")} ${chalk.red(funct)}>`;
 	}
 
 	static getTarget(imm, flags, symbols) {

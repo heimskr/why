@@ -144,11 +144,12 @@ void wvm_disassemble_r(char *str, word instruction) {
 				case FUNCT_PRINTR:
 					sprintf(str + strlen(str), "print%s %s$%s", ANSI_RESET, COLOR_REG, srs);
 					break;
-				case FUNCT_HALT: sprintf(str + strlen(str), "halt"); break;
-				case FUNCT_EVAL: sprintf(str + strlen(str), "eval"); break;
-				case FUNCT_PRC:  sprintf(str + strlen(str), "prc%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
-				case FUNCT_PRD:  sprintf(str + strlen(str), "prd%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
-				case FUNCT_PRX:  sprintf(str + strlen(str), "prx%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
+				case FUNCT_HALT:  sprintf(str + strlen(str), "halt"); break;
+				case FUNCT_EVAL:  sprintf(str + strlen(str), "eval"); break;
+				case FUNCT_PRC:   sprintf(str + strlen(str), "prc%s %s$%s",   ANSI_RESET, COLOR_REG, srs); break;
+				case FUNCT_PRD:   sprintf(str + strlen(str), "prd%s %s$%s",   ANSI_RESET, COLOR_REG, srs); break;
+				case FUNCT_PRX:   sprintf(str + strlen(str), "prx%s %s$%s",   ANSI_RESET, COLOR_REG, srs); break;
+				case FUNCT_SLEEP: sprintf(str + strlen(str), "sleep%s %s$%s", ANSI_RESET, COLOR_REG, srs); break;
 				default: sprintf(str, "%s(Unknown external)%s", ANSI_DIM, ANSI_RESET); return;
 			}
 
