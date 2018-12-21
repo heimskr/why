@@ -325,7 +325,8 @@ class LL2W {
 
 				if (name == "call") {
 					const iname = imeta.name;
-					const destName = `${iname}:${LL2W.getArity(functions, iname, declarations)}`;
+					const arity = LL2W.getArity(functions, iname, declarations);
+					const destName = `${iname}:${arity}`;
 					if (LL2W.builtins.includes(iname)) {
 						// Because builtins are single machine instructions and not real functions,
 						// we don't include them in the control flow graph.
@@ -333,13 +334,11 @@ class LL2W {
 					}
 
 					_.push(meta.out, destName);
-					if (!(destName in basicBlocks)) {
-						console.warn(WARN, `Couldn't find a basic block called ${chalk.bold(destName.replace(/:.+/, "")) + chalk.bold.dim(destName.substr(destName.indexOf(":")))}.`);
-					} else {
+					if (destName in basicBlocks) {
 						// First, make a link from this block to the start of the called function.
 						const destBlock = basicBlocks[destName];
 						_.push(destBlock[0].in, fullName);
-
+						
 						// Next, we link each return statement from the called function back to this block.
 						// Depending on the exact circumstances, some of the returns (but not all) might not ever return
 						// control to this block, but I imagine it would be extremely tricky to determine which do, so
@@ -352,6 +351,10 @@ class LL2W {
 								_.push(meta.in, `${iname}:${calledName}`);
 							}
 						}
+					} else if (!(iname in declarations)) {
+						console.warn(WARN,
+							`Couldn't find a basic block called ${chalk.bold(iname + chalk.dim(":" + arity))}.`);
+						
 					}
 				}
 			}
