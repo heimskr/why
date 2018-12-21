@@ -244,9 +244,11 @@ class LL2W {
 			// LLVM helpfully indicates basic blocks with comments and labels.
 			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
-
 			const basicBlocks = [];
-			let currentBasicBlock = ["start", {preds: [], in: [], out: []}, []];
+			
+			// The first basic block is implicitly given a label whose name is equal to the function's arity.
+			const numArgs = (meta.types || []).length;
+			let currentBasicBlock = [numArgs, {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
@@ -264,6 +266,7 @@ class LL2W {
 
 			functions[meta.name] = basicBlocks.map(this.extractBasicBlockVariables);
 			basicBlocks.forEach(([name, ...etc]) => allBlocks[meta.name + ":" + name] = etc);
+			functions[meta.name].meta = meta;
 		});
 
 		return [functions, allBlocks];
@@ -431,8 +434,11 @@ class LL2W {
 	}
 
 	computeLiveRanges(fn) {
+		// The arguments of the function are stored in %0, %1, ...
+		const numArgs = (fn.meta.types || []).length;
+
 		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
-		let allVars = [];
+		let allVars = _.range(0, numArgs);
 		let i = 0;
 		for (const instruction of instructions) {
 			const {read, written, assigner} = LL2W.extractOperands(instruction);
@@ -442,10 +448,8 @@ class LL2W {
 		}
 
 		console.log();
-
 		allVars = _.uniq(allVars);
-		const ranges = _.fromPairs(allVars.map(v => [v, [null, null]]));
-
+		const ranges = _.fromPairs(allVars.map(v => [v, [v < numArgs? 0 : null, null]]));
 		const _warned = [];
 
 		for (const v of allVars) {
@@ -577,6 +581,8 @@ if (require.main === module) {
 		console.log(chalk.underline("\n\n\nLive range for " + fn) + ":\n");
 		compiler.computeLiveRanges(compiler.functions[fn]);
 	}
+
+	// jsome(compiler.ast);
 }
 
 /*
