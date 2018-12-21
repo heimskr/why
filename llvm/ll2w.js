@@ -371,7 +371,10 @@ class LL2W {
 			}
 			
 			if (meta.destinationValue[0] == "variable") {
-				written.push(meta.destinationValue[1]);
+				// Yes, the store writes a value, but it doesn't write it to a variable.
+				// Instead, it writes it to memoryat the position contained in the destination pointer.
+				// That means it has two reads and no writes!
+				read.push(meta.destinationValue[1]);
 				assigner = meta.destinationValue[1];
 			}
 		} else if (type == "load") {
@@ -428,17 +431,37 @@ class LL2W {
 	computeLiveRanges(fn) {
 		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
 		let allVars = [];
-		for (const inst of instructions) {
-			const {read, written, assigner} = LL2W.extractOperands(inst);
+		let i = 0;
+		for (const instruction of instructions) {
+			const {read, written, assigner} = LL2W.extractOperands(instruction);
 			allVars = [...allVars, ...read, ...written];
-			console.log(chalk.bold((inst[1] + ":").padEnd("br_unconditional:".length, " ")), read.join(", ") || chalk.dim("."), "→", (written.join(", ") || chalk.dim(".")) + ";", assigner);
+			process.stdout.write(i+++": ");
+			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:".length, " ")), read.join(", ") || chalk.dim("."), "→", (written.join(", ") || chalk.dim(".")) + ";", assigner);
 		}
 		
 		allVars = _.uniq(allVars);
-		console.log(allVars);
+		const ranges = _.fromPairs(allVars.map(v => [v, [null, null]]));
 
+		for (const v of allVars) {
+			let range = ranges[v]; // [position first written, position last read]
+			instructions.forEach((instruction, i) => {
+				const {read, written} = LL2W.extractOperands(instruction);
 
-		// console.log(instructions.map(x => x.slice(1)));
+				if (range[0] == null && written.includes(v)) {
+					// If we haven't already set the starting position and this instruction writes to the variable,
+					// set this instruction's position as the starting point of the variable's live range.
+					range[0] = i;
+				}
+
+				if (read.includes(v)) {
+					// If this instruction reads from the variable, set it as the end position.
+					// It doesn't matter if the end position has already been set.
+					range[1] = i;
+				}
+			});
+		}
+
+		console.log(ranges);
 	}
 
 	/**
