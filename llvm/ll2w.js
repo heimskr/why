@@ -446,15 +446,22 @@ class LL2W {
 		allVars = _.uniq(allVars);
 		const ranges = _.fromPairs(allVars.map(v => [v, [null, null]]));
 
+		const _warned = [];
+
 		for (const v of allVars) {
 			let range = ranges[v]; // [position first written, position last read]
 			instructions.forEach((instruction, i) => {
 				const {read, written} = LL2W.extractOperands(instruction);
 
-				if (range[0] == null && written.includes(v)) {
-					// If we haven't already set the starting position and this instruction writes to the variable,
-					// set this instruction's position as the starting point of the variable's live range.
-					range[0] = i;
+				if (written.includes(v)) {
+					if (range[0] == null) {
+						// If we haven't already set the starting position and this instruction writes to the variable,
+						// set this instruction's position as the starting point of the variable's live range.
+						range[0] = i;
+					} else if (!_warned.includes(v)) {
+						console.warn(WARN, "Variable", chalk.bold("%" + v), "is assigned multiple times.\n");
+						_warned.push(v);
+					}
 				}
 
 				if (read.includes(v)) {
@@ -465,7 +472,7 @@ class LL2W {
 			});
 
 			if (range[0] == null && range[1] != null) {
-				console.log(WARN, "Variable", chalk.bold(v), "is assigned but never read.\n");
+				console.warn(WARN, "Variable", chalk.bold("%" + v), "is read but never assigned.\n");
 			}
 		}
 
