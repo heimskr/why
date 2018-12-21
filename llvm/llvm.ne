@@ -267,7 +267,8 @@ fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse" |
 						 "readonly" | "writeonly" | "argmemonly" | "returns_twice" |
 						 "safestack" | "inaccessiblememonly" | "cold" | "noreturn" |
 						 "nonlazybind" | "sanitize_thread" | "thunk" | "sspstrong" |
-						 "sanitize_address" | "noinline" | "ssp")					{% _ %}
+						 "sanitize_address" | "noinline" | "ssp" | "speculatable"  |
+						 "sanitize_hwaddress")										{% _ %}
 					 |	"alignstack(" decimal ")"									{% d => d["alignstack", d[1]] %}
 					 |	"allocsize(" decimal ("," _ decimal):? ")"					{% d => d["allocsize", d[1], d[2]? d[2][2] : null] %}
 					 |	"patchable-function=\"prologue-short-redirect\""			{% d => [d[0], d[2].replace(/^"|"$/g, "")] %}
