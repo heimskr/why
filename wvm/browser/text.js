@@ -88,4 +88,11 @@ module.exports = {
 	lni: "Copies the word stored in memory at address imm into the memory beginning at the address pointed to by rd.",
 	lbni: "Copies the byte stored in memory at address imm into the memory address pointed to by rd.",
 	set: "Sets a register to the given immediate value.",
+
+	rit: "Registers an interrupt table. Requires kernel mode.",
+	int: "Causes an interrupt.",
+	ring: "Sets the ring.",
+	ringi: "Sets the ring.",
+	time: "Starts a timer. Requires kernel mode.",
+	timei: "Starts a timer. Requires kernel mode.",
 };
