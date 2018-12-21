@@ -334,7 +334,7 @@ class LL2W {
 
 					_.push(meta.out, destName);
 					if (!(destName in basicBlocks)) {
-						console.warn(`Warning: couldn't find a basic block called ${destName}.`);
+						console.warn(WARN, `Couldn't find a basic block called ${chalk.bold(destName.replace(/:.+/, "")) + chalk.bold.dim(destName.substr(destName.indexOf(":")))}.`);
 					} else {
 						// First, make a link from this block to the start of the called function.
 						const destBlock = basicBlocks[destName];
