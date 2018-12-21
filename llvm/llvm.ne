@@ -439,7 +439,7 @@ i_switch			->	"switch"
 i_store				->	"store"
 						" volatile":?
 						spaced[type_any]
-						operand
+						(operand | getelementptr_expr)
 						", "
 						type_any
 						"* "
@@ -449,7 +449,7 @@ i_store				->	"store"
 						{% d => ["instruction", "store", {
 							volatile:       !!d[1],
 							storeType:        d[2][0],
-							storeValue:       d[3],
+							storeValue:       d[3][0],
 							destinationType:  d[5],
 							destinationValue: d[7][0],
 							align:            d[8]? d[8][1] : null,
