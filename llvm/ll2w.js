@@ -366,14 +366,19 @@ class LL2W {
 		const [, type, meta] = instruction;
 		let read = [], written = [], assigner = null;
 
-		if (type == "phi" || type == "alloca") {
-			// TODO: do phi instructions count as reads?
+		if (["phi", "alloca", "conversion", "load", "binary", "icmp", "getelementptr"].includes(type)) {
 			written.push(meta.destination[1]);
 			assigner = meta.destination[1];
-		} else if (["conversion"].includes(type)) {
-			written.push(meta.destination[1]);
-			assigner = meta.destination[1];
+		}
 
+		if (type == "phi") {
+			// TODO: do phi instructions count as reads?
+			for (const [v, src] of meta.pairs) {
+				if (v instanceof Array && v[0] == "variable") {
+					read.push(v[1]);
+				}
+			}
+		} else if (["conversion"].includes(type)) {
 			if (meta.sourceValue[0] == "variable") {
 				read.push(meta.sourceValue[1]);
 			}
@@ -401,16 +406,10 @@ class LL2W {
 				assigner = meta.destinationValue[1];
 			}
 		} else if (type == "load") {
-			written.push(meta.destination[1]);
-			assigner = meta.destination[1];
-			
 			if (meta.pointerValue[0] == "variable") {
 				read.push(meta.pointerValue[1]);
 			}
 		} else if (type == "binary" || type == "icmp") {
-			written.push(meta.destination[1]);
-			assigner = meta.destination[1];
-
 			[meta.op1, meta.op2].forEach(o => o[0] == "variable" && read.push(o[1]));
 		} else if (type == "br_conditional") {
 			// TODO: do branch targets count as reads?
@@ -420,9 +419,6 @@ class LL2W {
 				read.push(meta.value[1]);
 			}
 		} else if (type == "getelementptr") {
-			written.push(meta.destination[1]);
-			assigner = meta.destination[1];
-
 			if (meta.pointerValue[0] == "variable") {
 				read.push(meta.pointerValue[1]);
 			}
