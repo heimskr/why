@@ -223,7 +223,8 @@ function_header		->	(" " linkage):?
 							prefix:       d[18]? d[18][1] : null,
 							prologue:     d[19]? d[19][1] : null,
 							personality:  d[20]? d[20][1] : null,
-							bangs:        select(d[21], 1)
+							bangs:        select(d[21], 1),
+							arity:        d[10][0]? d[10][0][0].length : 0
 						}] %}
 
 declaration			->	"declare" function_header									{% d => ["declaration", d[1]] %}
