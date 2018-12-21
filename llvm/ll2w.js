@@ -392,6 +392,11 @@ class LL2W {
 				written.push(assigner = meta.assign[1]);
 			}
 
+			if (typeof meta.name == "number") {
+				// This call is to a function pointer.
+				read.push(meta.name);
+			}
+
 			for (const arg of meta.args) {
 				tryRead(arg[1]);
 			}
