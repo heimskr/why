@@ -14,40 +14,6 @@ define i32 @retvar() #0 {
 }
 
 ; Function Attrs: noinline nounwind optnone ssp uwtable
-define i32 @phitest() #0 {
-  %1 = alloca i32, align 4
-  store i32 0, i32* %1, align 4
-  %2 = load i32, i32* @i, align 4
-  %3 = icmp ne i32 %2, 0
-  br i1 %3, label %4, label %7
-
-; <label>:4:                                      ; preds = %0
-  %5 = load i32, i32* %1, align 4
-  %6 = add nsw i32 %5, 1
-  store i32 %6, i32* %1, align 4
-  br label %7
-
-; <label>:7:                                      ; preds = %4, %0
-  %8 = load i32, i32* %1, align 4
-  %9 = add nsw i32 %8, 2
-  store i32 %9, i32* %1, align 4
-  %10 = load i32, i32* @i, align 4
-  %11 = icmp ne i32 %10, 0
-  br i1 %11, label %15, label %12
-
-; <label>:12:                                     ; preds = %7
-  %13 = load i32, i32* %1, align 4
-  %14 = add nsw i32 %13, 3
-  store i32 %14, i32* %1, align 4
-  br label %15
-
-; <label>:15:                                     ; preds = %12, %7
-  %16 = load i32, i32* %1, align 4
-  %17 = sub nsw i32 %16, 1
-  ret i32 %17
-}
-
-; Function Attrs: noinline nounwind optnone ssp uwtable
 define void @_main() #0 {
   %1 = alloca i32, align 4
   %2 = call i32 @retvar()

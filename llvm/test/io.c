@@ -4,21 +4,6 @@
 int i = 5;
 int retvar() { return i; }
 
-int phitest() {
-	int a = 0;
-	if (i) {
-		a++;
-	}
-
-	a += 2;
-
-	if (!i) {
-		a += 3;
-	}
-
-	return a - 1;
-}
-
 void _main() {
 	int x = retvar();
 	foo:
