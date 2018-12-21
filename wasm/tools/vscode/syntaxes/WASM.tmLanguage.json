@@ -14,37 +14,31 @@
 		{"include": "#label"},
 		{"include": "#block"},
 		{"include": "#subroutine"},
-		{
-			"match": "#(m(eta)?|i(ncludes)?|c(ode)?|d(ata)?)",
-			"name": "variable.other.enummember.wasm"
-		},
-		{
-			"begin": "/\\*",
-			"end": "\\*/",
-			"name": "comment.block.wasm"
-		},
-		{
-			"begin": "//",
-			"end": "$\\n?",
-			"name": "comment.line.double-slash.wasm"
-		},
-		{
-			"match": "(-|\\+)?\\s*[0-9]+(\\.[0-9]+)?",
-			"name": "constant.numeric.wasm"
-		},
-		{
-			"match": "\\b(name|author|orcid|version|library)\\b",
-			"name": "support.type.property-name.wasm"
-		},
-		{
-			"match": "\\b(print|halt)\\b",
-			"name": "support.constant.ext.wasm"
-		},
+
+		{"match": "#(m(eta)?|i(ncludes)?|c(ode)?|d(ata)?)",
+		 "name": "variable.other.enummember.wasm"},
+
+		{"begin": "/\\*",
+		 "end": "\\*/",
+		 "name": "comment.block.wasm"},
+
+		{"begin": "//",
+		 "end": "$\\n?",
+		 "name": "comment.line.double-slash.wasm"},
+
+		{"match": "(-|\\+)?\\s*[0-9]+(\\.[0-9]+)?",
+		 "name": "constant.numeric.wasm"},
+
+		{"match": "\\b(name|author|orcid|version|library)\\b",
+		 "name": "support.type.property-name.wasm"},
+
+		{"match": "\\b(print|halt|pr[cdx]?|sleep|timei?|ringi?|int|rit)\\b",
+		 "name": "support.constant.special.wasm"},
+
 		{"include": "#operator_token"},
-		{
-			"match": "/[bu]\\b",
-			"name": "constant.language.modifier.wasm"
-		}
+
+		{"match": "/[bu]\\b",
+		 "name": "constant.language.modifier.wasm"}
 	],
 	"repository": {
 		"subroutine": {
