@@ -3,6 +3,7 @@ COMPILED	= llvm.js
 COMPILE		= nearleyc
 TEST		= tree.js
 CHECK		= \x1b[32m\xe2\x9c\x94\x1b[0m
+LLDIR		= ../wvm/c/ll
 
 all: $(COMPILED) _
 
@@ -14,8 +15,11 @@ $(COMPILED): $(SYNTAX) _
 ttest: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
 
-ntest: $(TEST) $(COMPILED) net.ll
-	node ll2w.js -d net.ll
+ntest: $(TEST) $(COMPILED) $(LLDIR)/net.ll
+	node ll2w.js -d $(LLDIR)/net.ll
+
+wtest: $(TEST) $(COMPILED) $(LLDIR)/wvm.ll
+	node ll2w.js -d $(LLDIR)/wvm.ll
 
 itest: $(TEST) $(COMPILED) io.ll
 	node ll2w.js -d io.ll
