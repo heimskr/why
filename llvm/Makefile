@@ -7,7 +7,7 @@ LLDIR		= ../wvm/c/ll
 
 all: $(COMPILED) _
 
-test: tmtest
+test: mtest
 
 $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
@@ -23,6 +23,9 @@ wtest: $(TEST) $(COMPILED) $(LLDIR)/wvm.ll
 
 tmtest: $(TEST) $(COMPILED) $(LLDIR)/timer.ll
 	node ll2w.js -d $(LLDIR)/timer.ll
+
+mtest: $(TEST) $(COMPILED) $(LLDIR)/main.ll
+	node ll2w.js -d $(LLDIR)/main.ll
 
 itest: $(TEST) $(COMPILED) io.ll
 	node ll2w.js -d io.ll
