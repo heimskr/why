@@ -352,15 +352,13 @@ class LL2W {
 							}
 						}
 					} else if (!(iname in declarations)) {
-						console.warn(WARN,
-							`Couldn't find a basic block called ${chalk.bold(iname + chalk.dim(":" + arity))}.`);
-						
+						console.warn(WARN, `Couldn't find a basic block called ${chalk.bold(iname + chalk.dim(":" + arity))}.`);
 					}
 				}
 			}
 		}
 
-		Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
+		// Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
 		// console.log(functions);
 	}
 
@@ -457,7 +455,9 @@ class LL2W {
 		// The arguments of the function are stored in %0, %1, ...
 		const numArgs = fn.meta.arity;
 
-		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
+		const instructions = fn.reduce((a, b) => a.concat(b[2]), []);
+		const assigners = fn.reduce((a, b) => ({...a, ...b[1].assigners}), {});
+
 		let allVars = _.range(0, numArgs);
 		let i = 0;
 		for (const instruction of instructions) {
@@ -496,10 +496,18 @@ class LL2W {
 			});
 
 			if (range[0] == null && range[1] != null) {
-				console.warn(WARN, "Variable", chalk.bold("%" + v), "is read but never assigned.\n");
+				console.warn(WARN, "Variable", chalk.bold("%" + v), "is read but never assigned.");
+			} else if (range[0] != null && range[1] == null) {
+				// Sometimes, the return value of a call is stored in a variable that isn't ever read.
+				range[1] = range[0];
+				if (numArgs <= range[0] && !(assigners[v] instanceof Array && assigners[v][1] == "call")) {
+					// Don't warn if the function arguments aren't read. The compiler has already complained about it.
+					console.warn(WARN, "Variable", chalk.bold("%" + v), "is assigned but never read.", assigners[v]);
+				}
 			}
 		}
 
+		console.log();
 		console.log(ranges);
 	}
 
