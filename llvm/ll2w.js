@@ -16,6 +16,8 @@ let minimist = require("minimist"),
 const {displayIOError, mixins} = require("../util.js");
 mixins(_);
 
+const controlTransfers = ["br_conditional", "br_unconditional", "ret"];
+
 /**
  * `ll2w` is an LLVM intermediate representation to WVM compiler (thus
  * <code><b>ll</b>vm<b>2w</b>vm</code>) written from scratch.
@@ -337,76 +339,95 @@ class LL2W {
 		// console.log(functions);
 	}
 
+	static extractOperands(instruction) { // -> {read: var[], written: var[], assigner: ?var }
+		const [, type, meta] = instruction;
+		let read = [], written = [], assigner = null;
+
+		if (type == "phi" || type == "alloca") {
+			// TODO: do phi instructions count as reads?
+			written.push(meta.destination[1]);
+			assigner = meta.destination[1];
+		} else if (["conversion"].includes(type)) {
+			written.push(meta.destination[1]);
+			assigner = meta.destination[1];
+
+			if (meta.sourceValue[0] == "variable") {
+				read.push(meta.sourceValue[1]);
+			}
+		} else if (type == "call") {
+			if (meta.assign) {
+				written.push(meta.assign[1]);
+				assigner = meta.assign[1];
+			}
+
+			for (const arg of meta.args) {
+				if (arg[1] && arg[1][0] == "variable") {
+					read.push(parseInt(arg[1][1]));
+				}
+			}
+		} else if (type == "store") {
+			if (meta.storeValue[0] == "variable") {
+				read.push(meta.storeValue[1]);
+			}
+			
+			if (meta.destinationValue[0] == "variable") {
+				written.push(meta.destinationValue[1]);
+				assigner = meta.destinationValue[1];
+			}
+		} else if (type == "load") {
+			written.push(meta.destination[1]);
+			assigner = meta.destination[1];
+			
+			if (meta.pointerValue[0] == "variable") {
+				read.push(meta.pointerValue[1]);
+			}
+		} else if (type == "binary" || type == "icmp") {
+			written.push(meta.destination[1]);
+			assigner = meta.destination[1];
+
+			[meta.op1, meta.op2].forEach(o => o[0] == "variable" && read.push(o[1]));
+		} else if (type == "br_conditional") {
+			// TODO: do branch targets count as reads?
+			read.push(meta.cond[1]);
+		} else if (type == "ret") {
+			if (meta.value && meta.value[0] == "variable") {
+				read.push(meta.value[1]);
+			}
+		} else if (type == "getelementptr") {
+			written.push(meta.destination[1]);
+			assigner = meta.destination[1];
+
+			if (meta.pointerValue[0] == "variable") {
+				read.push(meta.pointerValue[1]);
+			}
+			
+			meta.indices.filter(i => i[1][0] == "variable").forEach(i => read.push(i[1][1]));
+		}
+
+		return {read, written, assigner};
+	}
+
 	extractBasicBlockVariables(basicBlock) {
 		let read = [], written = [], assigners = {};
-		for (const instruction of basicBlock[2]) {
-			const [, type, meta] = instruction;
-			if (type == "phi" || type == "alloca") {
-				// TODO: do phi instructions count as reads?
-				written.push(meta.destination[1]);
-				assigners[meta.destination[1]] = instruction;
-			} else if (["conversion"].includes(type)) {
-				written.push(meta.destination[1]);
-				assigners[meta.destination[1]] = instruction;
 
-				if (meta.sourceValue[0] == "variable") {
-					read.push(meta.sourceValue[1]);
-				}
-			} else if (type == "call") {
-				if (meta.assign) {
-					written.push(meta.assign[1]);
-					assigners[meta.assign[1]] = instruction;
-				}
+		const add = (instruction) => {
+			const result = LL2W.extractOperands(instruction);
+			read = read.concat(result.read);
+			written = written.concat(result.written);
+			if (result.assigner) assigners[result.assigner] = instruction;
+		};
 
-				for (const arg of meta.args) {
-					if (arg[1] && arg[1][0] == "variable") {
-						read.push(parseInt(arg[1][1]));
-					}
-				}
-			} else if (type == "store") {
-				if (meta.storeValue[0] == "variable") {
-					read.push(meta.storeValue[1]);
-				}
-				
-				if (meta.destinationValue[0] == "variable") {
-					written.push(meta.destinationValue[1]);
-					assigners[meta.destinationValue[1]] = instruction;
-				}
-			} else if (type == "load") {
-				written.push(meta.destination[1]);
-				assigners[meta.destination[1]] = instruction;
-				
-				if (meta.pointerValue[0] == "variable") {
-					read.push(meta.pointerValue[1]);
-				}
-			} else if (type == "binary" || type == "icmp") {
-				written.push(meta.destination[1]);
-				assigners[meta.destination[1]] = instruction;
-
-				[meta.op1, meta.op2].forEach(o => o[0] == "variable" && read.push(o[1]));
-			} else if (type == "br_conditional") {
-				// TODO: do branch targets count as reads?
-				read.push(meta.cond[1]);
-			} else if (type == "ret") {
-				if (meta.value && meta.value[0] == "variable") {
-					read.push(meta.value[1]);
-				}
-			} else if (type == "getelementptr") {
-				written.push(meta.destination[1]);
-				assigners[meta.destination[1]] = instruction;
-
-				if (meta.pointerValue[0] == "variable") {
-					read.push(meta.pointerValue[1]);
-				}
-				
-				meta.indices.filter(i => i[1][0] == "variable").forEach(i => read.push(i[1][1]));
-			}
-		}
+		basicBlock[2].forEach(add);
 		
 		basicBlock[1].read = _.uniq(read);
 		basicBlock[1].written = _.uniq(written);
 		basicBlock[1].assigners = assigners;
 		return basicBlock;
+	}
+
+	computeLiveRanges(fn) {
+		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
+		
 	}
 
 	/**
@@ -501,7 +522,8 @@ if (require.main === module) {
 		constants: compiler.globalConstants,
 	}));
 
-	// console.log(compiler.ast);
+	// const live = compiler.computeLiveRanges(compiler.functions._main);
+	jsome(compiler.functions);
 }
 
 /*
