@@ -18,7 +18,7 @@ mixins(_);
 
 const WARN = chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]");
 
-const controlTransfers = ["br_conditional", "br_unconditional", "ret"];
+const {BUILTINS} = require("./constants.js");
 
 /**
  * `ll2w` is an LLVM intermediate representation to WVM compiler (thus
@@ -247,8 +247,7 @@ class LL2W {
 			const basicBlocks = [];
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
-			const numArgs = (meta.types || []).length;
-			let currentBasicBlock = [numArgs, {preds: [], in: [], out: []}, []];
+			let currentBasicBlock = [meta.arity, {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
@@ -308,7 +307,7 @@ class LL2W {
 
 				if (name == "call") {
 					const iname = imeta.name;
-					const destName = `${iname}:start`;
+					const destName = `${iname}:${LL2W.getArity(functions, iname)}`;
 					if (LL2W.builtins.includes(iname)) {
 						// Because builtins are single machine instructions and not real functions,
 						// we don't include them in the control flow graph.
@@ -435,7 +434,7 @@ class LL2W {
 
 	computeLiveRanges(fn) {
 		// The arguments of the function are stored in %0, %1, ...
-		const numArgs = (fn.meta.types || []).length;
+		const numArgs = fn.meta.arity;
 
 		const instructions = fn.map(block => block[2]).reduce((a, b) => a.concat(b), []);
 		let allVars = _.range(0, numArgs);
@@ -481,6 +480,18 @@ class LL2W {
 		}
 
 		console.log(ranges);
+	}
+
+	static getArity(functions, functionName) {
+		if (functionName in functions) {
+			return functions[functionName].meta.arity;
+		}
+
+		if (functionName in BUILTINS) {
+			return BUILTINS[functionName].arity;
+		}
+
+		return -1;
 	}
 
 	/**
