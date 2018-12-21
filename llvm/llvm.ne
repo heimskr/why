@@ -316,7 +316,7 @@ i_load				->	variable
 
 operand				->	(variable | decimal | global)								{% __  %}
 					 |	"null"														{% d => ["null"] %}
-floperand			->	(float | variable | decimal)								{% __  %}
+floperand			->	(float | variable | decimal | global)						{% __  %}
 
 i_icmp				->	variable
 						" = icmp "
