@@ -16,6 +16,8 @@ let minimist = require("minimist"),
 const {displayIOError, mixins} = require("../util.js");
 mixins(_);
 
+const WARN = chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]");
+
 const controlTransfers = ["br_conditional", "br_unconditional", "ret"];
 
 /**
@@ -436,9 +438,11 @@ class LL2W {
 			const {read, written, assigner} = LL2W.extractOperands(instruction);
 			allVars = [...allVars, ...read, ...written];
 			process.stdout.write((i+++":").padEnd(4, " "));
-			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:  ".length, " ")), (read.join(", ") || chalk.dim("  . ")).padEnd(4, " "), chalk.red("→"), written.join(", ") || chalk.dim("."), chalk.red("/"), chalk.cyan.dim(assigner));
+			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:  ".length, " ")), (read.join(", ") || chalk.dim("  .   ")).padEnd(6, " "), chalk.red(" → "), (written.join(", ") || chalk.dim(". ")).padEnd(2, " "), chalk.red(" /"), chalk.cyan.dim(assigner));
 		}
-		
+
+		console.log();
+
 		allVars = _.uniq(allVars);
 		const ranges = _.fromPairs(allVars.map(v => [v, [null, null]]));
 
@@ -459,6 +463,10 @@ class LL2W {
 					range[1] = i;
 				}
 			});
+
+			if (range[0] == null && range[1] != null) {
+				console.log(WARN, "Variable", chalk.bold(v), "is assigned but never read.\n");
+			}
 		}
 
 		console.log(ranges);
@@ -539,6 +547,8 @@ if (require.main === module) {
 		process.exit(1);
 	}
 
+	console.log();
+
 	compiler.extractInformation();
 	compiler.extractAttributes();
 	compiler.extractStructs();
@@ -556,7 +566,10 @@ if (require.main === module) {
 		constants: compiler.globalConstants,
 	}));
 
-	const live = compiler.computeLiveRanges(compiler.functions._main);
+	for (const fn in compiler.functions) {
+		console.log(chalk.underline("\n\n\nLive range for " + fn) + ":\n");
+		compiler.computeLiveRanges(compiler.functions[fn]);
+	}
 }
 
 /*
