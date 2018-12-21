@@ -254,6 +254,9 @@ class LL2W {
 				if (name == "label_c") {
 					basicBlocks.push(currentBasicBlock);
 					currentBasicBlock = [args[0], {preds: args[1], in: [], out: []}, []];
+				} else if (name == "label") {
+					basicBlocks.push(currentBasicBlock);
+					currentBasicBlock = [args[0], {preds: [], in: [], out: []}, []];
 				} else {
 					currentBasicBlock[2].push(instruction);
 				}
@@ -569,6 +572,7 @@ if (require.main === module) {
 		process.exit(1);
 	}
 
+	// jsome(compiler.ast);
 	console.log();
 
 	compiler.extractInformation();

@@ -14,15 +14,15 @@ const select = (multidim, index) => multidim.map(arr => arr[index]);
 const _ = arg => {
 	if (arg instanceof Array) {
 		return arg[0];
-	};
+	}
 
 	if (typeof arg == "number") {
 		return d => d[arg];
-	};
+	}
 
 	if (arg === null || typeof arg == "undefined") {
 		return d => null;
-	};
+	}
 
 	return () => { throw "Unknown type given to _." };
 };
@@ -30,11 +30,11 @@ const _ = arg => {
 const __ = (x, y) => {
 	if (x instanceof Array) {
 		return x[0][0];
-	};
+	}
 
 	if (typeof x == "number") {
 		return typeof y == "undefined"? d => d[x][0] : d => d[x][y];
-	};
+	}
 
 	return () => { throw "Unknown type given to __." };
 };
@@ -48,6 +48,7 @@ const parseLabelComment = (d, l, r) => {
 };
 
 const parseLabel = (d, l, r) => {
+	if (!d[3]) return d[1];
 	const m = d[3].match(/^preds = (%[^,]+(, %[^,]+)*)$/);
 	return m? ["label_c", d[1][1], m[1].split(/, /).map(x => x.substr(1))] : d[1];
 };
@@ -231,7 +232,7 @@ declaration			->	"declare" function_header									{% d => ["declaration", d[1]]
 function_type		->	type_any (_ parattr):* (" " variable):?
 function_def		->	"define" function_header " {" function_line:* "}"			{% d => [...d[1], filter(d[3])] %}
 
-function_line		->	_ label " ":* comment newline								{% parseLabel %}
+function_line		->	_ label " ":* comment:? newline								{% parseLabel %}
 					 |	_ comment newline											{% parseLabelComment %}
 					 |	_ newline													{% _( ) %}
 					 |	_ instruction												{% _(1) %}
