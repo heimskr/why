@@ -7,7 +7,7 @@ let _ = require("lodash");
  * @module util
  */
 
-const getID = (node) => node instanceof Node? node.id : node;
+const getID = node => node instanceof Node? node.id : node;
 
 /**
  * Represents a directed graph datatype.
@@ -25,15 +25,15 @@ class Graph {
 		 */
 
 		this.reset(n);
-	};
+	}
 
 	/**
 	 * Deletes all nodes in the graph.
 	 * @param {number} n - The number of new empty nodes to replace the old nodes.
 	 */
 	reset(n) {
-		this.nodes = _.range(0, n).map((i) => new Node(i, this));
-	};
+		this.nodes = _.range(0, n).map(i => new Node(i, this));
+	}
 
 	/**
 	 * Returns the nth node of the graph.
@@ -42,7 +42,7 @@ class Graph {
 	 */
 	getNode(n) {
 		return typeof n == "number"? this.nodes[n] : n;
-	};
+	}
 
 	/**
 	 * Adds a unidirectional connection from one node to another.
@@ -51,15 +51,15 @@ class Graph {
 	 */
 	arc(source, destination) {
 		this.nodes[getID(source)].arc(destination);
-	};
+	}
 
 	/**
 	 * Batch-adds arcs from an array of [source, ...destinations] sets.
 	 * @param {...Array<Array<number, ...number>>} arcs - An array of arc sets to add.
 	 */
 	arcs(...sets) {
-		sets.forEach(([source, ...destinations]) => destinations.forEach((destination) => this.arc(source, destination)));
-	};
+		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
+	}
 
 	/**
 	 * Removes an edge from one node to another.
@@ -68,7 +68,7 @@ class Graph {
 	 */
 	removeArc(source, destination) {
 		this.nodes[getID(source)].removeArc(destination);
-	};
+	}
 
 	/**
 	 * Adds a bidirectional connection between two nodes.
@@ -78,7 +78,7 @@ class Graph {
 	edge(a, b) {
 		this.nodes[getID(a)].arc(b);
 		this.nodes[getID(b)].arc(a);
-	};
+	}
 
 	/**
 	 * Removes all connections between two nodes.
@@ -88,33 +88,33 @@ class Graph {
 	disconnect(a, b) {
 		this.nodes[getID(a)].removeArc(b);
 		this.nodes[getID(b)].removeArc(a);
-	};
+	}
 
 	/**
 	 * Runs a depth-first search on the graph.
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
 	dfs() {
-		const parents    = _.range(0, this.nodes.length).map(() => null);
-		const discovered = _.range(0, this.nodes.length).map(() => null);
-		const finished   = _.range(0, this.nodes.length).map(() => null);
+		const parents    = _.fill(Array(this.nodes.length), null);
+		const discovered = _.fill(Array(this.nodes.length), null);
+		const finished   = _.fill(Array(this.nodes.length), null);
 		let time = 0;
 
-		const visit = (u) => {
+		const visit = u => {
 			discovered[u] = ++time;
-			this.nodes[u].out.forEach((v) => {
+			this.nodes[u].out.forEach(v => {
 				if (discovered[v] == null) {
 					parents[v] = u;
 					visit(v);
-				};
+				}
 			});
 
 			finished[u] = ++time;
 		};
 
-		_.range(0, this.nodes.length).forEach((u) => discovered[u] == null && visit(u));
+		_.range(0, this.nodes.length).forEach(u => discovered[u] == null && visit(u));
 
-		return { parents, discovered, finished };
+		return {parents, discovered, finished};
 	};
 
 	/**
@@ -124,15 +124,15 @@ class Graph {
 	get components() {
 		const visited = _.fill(Array(this.nodes.length), false);
 		const parents = _.fill(Array(this.nodes.length), null);
-		const components = { }; 
+		const components = {}; 
 		const l = [];
 
-		const visit = (u) => {
+		const visit = u => {
 			if (!visited[u]) {
 				visited[u] = true;
 				this.nodes[u].out.forEach(visit);
 				l.unshift(u);
-			};
+			}
 		};
 
 		const assign = (u, root) => {
@@ -142,17 +142,17 @@ class Graph {
 					components[root] = [u];
 				} else {
 					components[root].push(u);
-				};
+				}
 
 				this.getNode(u).in.forEach((v) => assign(v, root));
-			};
+			}
 		};
 
 		this.nodes.forEach((node, u) => visit(u));
-		l.forEach((u) => assign(u, u));
+		l.forEach(u => assign(u, u));
 
-		return Object.values(components).map((a) => a.map((u) => this.nodes[u]));
-	};
+		return Object.values(components).map(a => a.map(u => this.nodes[u]));
+	}
 
 	/**
 	 * Calculates a topologically sorted list of nodes using Kahn's algorithm.
@@ -161,39 +161,41 @@ class Graph {
 	 */
 	sorted() {
 		let copy = this.clone();
-		const l = [], s = copy.nodes.filter((node) => !node.in.length);
-		if (!s.length) {
+		const l = [], s = copy.nodes.filter(node => !node.in.length);
+		if (1 < this.nodes.length && !s.length) {
+			// If there are multiple nodes in the graph and none of them lack in-edges, the graph has to be cyclic.
+			// The converse isn't necessarily true, so this is just an preliminary check.
 			throw new Error("Graph is cyclic.");
-		};
+		}
 
 		while (s.length) {
 			let n = s.pop();
 			l.unshift(n);
 			
-			copy.nodes.filter((m) => m != n && m.connectsFrom(n)).forEach((m) => {
+			copy.nodes.filter(m => m != n && m.connectsFrom(n)).forEach((m) => {
 				m.removeArcFrom(n);
 				
 				if (!m.in.length) {
 					s.unshift(m);
-				};
+				}
 			});
-		};
+		}
 
-		copy.nodes.forEach((node) => {
+		copy.nodes.forEach(node => {
 			if (node.out.length) {
 				throw new Error("Graph contains a cycle.");
-			};
+			}
 		});
 
-		return l.map((node) => this.nodes[node.id]);
-	};
+		return l.map(node => this.nodes[node.id]);
+	}
 
 	/**
 	 * Removes all loop edges from the graph.
 	 */
 	removeLoops() {
-		this.nodes.forEach((node) => this.disconnect(node, node));
-	};
+		this.nodes.forEach(node => this.disconnect(node, node));
+	}
 
 	/**
 	 * Calculates and returns the transpose of the graph.
@@ -201,10 +203,10 @@ class Graph {
 	 */
 	get transpose() {
 		let graph = new Graph(this.nodes.length);
-		this.nodes.forEach(({ out }, u) => out.forEach((v) => graph.arc(v, u)));
+		this.nodes.forEach(({out}, u) => out.forEach((v) => graph.arc(v, u)));
 
 		return graph;
-	};
+	}
 
 	/**
 	 * Returns a copy of this graph.
@@ -212,18 +214,18 @@ class Graph {
 	 */
 	clone() {
 		let newGraph = new Graph(this.nodes.length);
-		newGraph.nodes = this.nodes.map((node) => node.clone(newGraph));
+		newGraph.nodes = this.nodes.map(node => node.clone(newGraph));
 		return newGraph;
-	};
+	}
 
 	/**
 	 * Returns a string containing each node's adjacency list.
 	 * @return {string} A string representation of the graph.
 	 */
 	toString() {
-		return this.nodes.map(({ out }, u) => `${u} => ${out.join(", ")}`).join("\n");
-	};
-};
+		return this.nodes.map(({out}, u) => `${u} => ${out.join(", ")}`).join("\n");
+	}
+}
 
 /**
  * Represents a node in a graph.
@@ -280,13 +282,13 @@ class Node {
 		n = getID(n);
 		if (!this.out.includes(n)) {
 			this.out.push(n);
-		};
+		}
 
-		n = this.graph.nodes[n];
-		if (!n.in.includes(this.id)) {
-			n.in.push(this.id);
-		};
-	};
+		const node = this.graph.nodes[n];
+		if (!node.in.includes(this.id)) {
+			node.in.push(this.id);
+		}
+	}
 
 	/**
 	 * Adds a node to this node's inward edge list and adds this node to the node's outward edge list.
@@ -296,13 +298,13 @@ class Node {
 		n = getID(n);
 		if (!this.in.includes(n)) {
 			this.in.push(n);
-		};
+		}
 
-		n = this.graph.nodes[n];
-		if (!n.out.includes(this.id)) {
-			n.out.push(this.id);
-		};
-	};
+		const node = this.graph.nodes[n];
+		if (!node.out.includes(this.id)) {
+			node.out.push(this.id);
+		}
+	}
 
 	/**
 	 * Removes an outward connection from this node and the other node's corresponding inward connection.
@@ -310,9 +312,9 @@ class Node {
 	 */
 	removeArc(n) {
 		n = getID(n);
-		this.out = this.out.filter((edge) => edge != n);
-		this.graph.nodes[n].in = this.graph.nodes[n].in.filter((edge) => edge != this.id);
-	};
+		this.out = this.out.filter(edge => edge != n);
+		this.graph.nodes[n].in = this.graph.nodes[n].in.filter(edge => edge != this.id);
+	}
 
 	/**
 	 * Removes an inward connection to this node and the other node's corresponding outward connection.
@@ -320,9 +322,9 @@ class Node {
 	 */
 	removeArcFrom(n) {
 		n = getID(n);
-		this.in = this.in.filter((edge) => edge != n);
-		this.graph.nodes[n].out = this.graph.nodes[n].out.filter((edge) => edge != this.id);
-	};
+		this.in = this.in.filter(edge => edge != n);
+		this.graph.nodes[n].out = this.graph.nodes[n].out.filter(edge => edge != this.id);
+	}
 
 	/**
 	 * Checks for the existence of a connection from this node to another.
@@ -331,7 +333,7 @@ class Node {
 	 */
 	connectsTo(n) {
 		return this.out.includes(getID(n));
-	};
+	}
 
 	/**
 	 * Checks for the existence of a connection to this node from another.
@@ -340,7 +342,7 @@ class Node {
 	 */
 	connectsFrom(n) {
 		return this.in.includes(getID(n));
-	};
+	}
 
 	/**
 	 * Checks for the existence of a bidirectional connection between this node and another.
@@ -349,7 +351,7 @@ class Node {
 	 */
 	connects(n) {
 		return this.connectsTo(n) && this.connectsFrom(n);
-	};
+	}
 
 	/**
 	 * Returns a copy of this node.
@@ -361,8 +363,8 @@ class Node {
 		newNode.out = this.out.slice(0);
 		newNode.in = this.in.slice(0);
 		return newNode;
-	};
-};
+	}
+}
 
 module.exports = Graph;
 module.exports.Node = Node;
@@ -396,7 +398,7 @@ if (require.main === module) {
 	} else {
 		console.error(`${chalk.bold(`"${choice}"`)} isn't a recognized sample graph.`);
 		process.exit(1);
-	};
+	}
 
 	console.log(`${chalk.bold("G:")}`);
 	console.log(g.toString());
@@ -414,6 +416,6 @@ if (require.main === module) {
 			console.log("(graph is cyclic)");
 		} else {
 			throw e;
-		};
-	};
-};
+		}
+	}
+}
