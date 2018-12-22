@@ -19,8 +19,8 @@ const opt = minimist(process.argv.slice(2), {
 }), filename = opt._[0];
 
 if (!filename) {
-	die("Invalid filename.", { opt });
-};
+	die("Invalid filename.", {opt});
+}
 
 
 let name = "llvm", grammar, parser;
@@ -40,11 +40,11 @@ if (opt.dev) {
 		console.error(`Couldn't read ${grammar}.js.`);
 		if (opt.dev) {
 			console.log(e);
-		};
+		}
 
 		process.exit(1);
-	};
-};
+	}
+}
 
 // generate parser
 parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart)
@@ -59,10 +59,10 @@ try {
 	console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(source, e.offset) - 1}:${e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length - 1}`) + ":");
 	if (opt.dev) {
 		console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => { const _line = getline(source, e.offset) - 1; return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length - 1 + $2})` }));
-	};
+	}
 
 	process.exit(1);
-};
+}
 
 const printTree = (tree) => jsome(tree || "[null]");
 
@@ -77,5 +77,5 @@ if (trees.length > 1 && opt.dev) {
 		console.log(`${chalk.green("✔")} Successfully parsed ${chalk.bold(filename)}.`);
 	} else {
 		opt.simple? console.log(JSON.stringify(trees[0], null, 4)) : printTree(trees[0])
-	};
-};
+	}
+}

@@ -629,7 +629,7 @@ let App = window.App = class App {
 			}
 		}
 	}
-};
+}
 
 function initializeUI(app) {
 	for (let i = 0; i < 128; i++) {
