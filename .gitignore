@@ -16,3 +16,4 @@
 /yarn-error.log
 !/wvm/dist/index.html
 /llvm/llvm2why/tmp
+/**/*.s
