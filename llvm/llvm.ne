@@ -72,26 +72,26 @@ pars[X]				->	"(" $X ")"													{% _(1) %}
 
 cstring				->	"c" string													{% _(1) %}
 float				->	"-":? [0-9]:+ "." [0-9]:+									{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
-decimal				->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
+dec				->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
 					 |	"true"														{% d => 1 %}
 					 |	"false"														{% d => 0 %}
 natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}
 vector				->	"<" commalist[type_any __ value] ">"						{% d => ["vector", d[1][0]] %}
 
-value				->	(float | decimal | vector | variable | "null")				{% __ %}
+value				->	(float | dec | vector | variable | "null")				{% __ %}
 
 source_filename		->	"source_filename = " string									{% d => ["source_filename", d[1]] %}
 
-target				->	"target " targetname " = " string							{% d => ["target", d[1], d[3]] %}
+target				->	("target" __) targetname eq string							{% d => ["target", d[1], d[3]] %}
 targetname			->	("datalayout" | "triple")									{% __(0, 0) %}
 
-attributes			->	"attributes #" decimal " = { " list[attribute] " }"			{% d => ["attributes", d[1], d[3]] %}
+attributes			->	("attributes" __ "#") dec (eq "{" _) list[attribute] _ "}"			{% d => ["attributes", d[1], d[3]] %}
 attribute			->	string "=" string											{% d => [d[0], d[2]] %}
 					 |	string														{% d => [d[0], true] %}
 					 |  fnattr														{% d => [d[0]] %}
 
 metadata_def		-> "!"
-						(decimal | var)
+						(dec | var)
 						" ="
 						" distinct":?
 						" !{"
@@ -100,10 +100,10 @@ metadata_def		-> "!"
 metadata			->	constant													{% d => d[0].slice(0, 2) %}
 					 |	"!" string													{% d => d[1] %}
 					 |	"null"														{% d => null %}
-					 |	"!" decimal													{% d => d[1] %}
+					 |	"!" dec													{% d => d[1] %}
 
 
-variable			->	"%" (var | decimal | string)								{% d => ["variable", d[1][0]] %}
+variable			->	"%" (var | dec | string)								{% d => ["variable", d[1][0]] %}
 
 type_struct			->	"%struct." var												{% d => ["struct", d[1]] %}
 struct				->	type_struct _ "= type opaque"								{% d => [...d[0], "opaque"] %}
@@ -146,7 +146,7 @@ global_def			->	global
 						(" " initial_value):?
 						(", section " string):?
 						(", comdat $" var):?
-						(", align " decimal):?
+						(", align " dec):?
 						#// not sure what "(, !name !N)*" is supposed to mean, but it doesn't to be used in various things I found online, so whatever ¯\_(ツ)_/¯
 						{% d => ["global constant", {
 							name:                    d[ 0],
@@ -172,17 +172,17 @@ visibility			->	"default"													{% d => 0 %}
 					 |	"hidden"													{% d => 1 %}
 					 |	"protected"													{% d => 2 %}
 dll_storage_class	->	("dllimport" | "dllexport")									{% __ %}
-thread_local		->	"thread_local(" ("localdynamic" | "initialexec" | "localexec") ")"
-																					{% d => d[1][0] %}
+thread_local		->	"thread_local" lpar ("localdynamic" | "initialexec" | "localexec") rpar
+																					{% d => d[2][0] %}
 unnamed_addr		->	("local_unnamed_addr" | "unnamed_addr")						{% __ %}
-addrspace			->	"addrspace(" decimal ")"									{% _(1) %}
+addrspace			->	"addrspace" lpar dec rpar									{% _(2) %}
 global_constant		->	("global" | "constant")										{% __ %}
 initial_value		->	cstring														{% d => ["string",  d[0]] %}
 					 |	float														{% d => ["float",   d[0]] %}
-					 |	decimal														{% d => ["decimal", d[0]] %}
+					 |	dec															{% d => ["decimal", d[0]] %}
 					 |	(type_any _):? "zeroinitializer"							{% d => ["zero", d[0]? d[0][0] : null] %}
 					 |	"null"														{% d => ["null"] %}
-					 |	type_any __ (float | decimal | "null")						{% d => ["typed", d[0], d[2][0]] %}
+					 |	type_any __ (float | dec | "null")							{% d => ["typed", d[0], d[2][0]] %}
 					 |	"{" _ commalist[initial_value] _ "}"						{% d => ["set", d[2]] %}
 
 type_list			-> commalist[function_type] ", ...":?							{% d => [d[0], !!d[1]] %}
@@ -200,10 +200,10 @@ function_header		->	(" " linkage):?
 						(type_list | _)
 						")"
 						(" " unnamed_addr):?
-						((" " fnattr):+ | " #" decimal):?
+						((" " fnattr):+ | " #" dec):?
 						("  section " string):?
 						("  comdat $" var):?
-						("  align " decimal):?
+						("  align " dec):?
 						("  gc " string):?
 						("  prefix " constant):? # what about that "@md" thing?
 						("  prologue " constant):?
@@ -253,8 +253,7 @@ cconv				->	("ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" |
 						 "arm_aapcscc" | "spir_kernel")								{% __ %}
 
 retattr				->	("zeroext" | "signext" | "inreg" | "noalias" | "nonnull")	{% d => [d[0][0]] %}
-					 |	("dereferenceable" | "deferenceable_or_null") " (" decimal
-						")"															{% d => [d[0][0], d[2]] %}
+					 |	("dereferenceable" | "deferenceable_or_null") lpar dec rpar	{% d => [d[0][0], d[2]] %}
 
 parattr				->	("byval" | "inalloca" | "sret" | "nocapture" | "readonly")	{% _  %}
 					 |	retattr														{% _  %}
@@ -269,8 +268,8 @@ fnattr				->	("alwaysinline" | "noredzone" | "convergent" | "norecurse" |
 						 "nonlazybind" | "sanitize_thread" | "thunk" | "sspstrong" |
 						 "sanitize_address" | "noinline" | "ssp" | "speculatable"  |
 						 "sanitize_hwaddress")										{% _ %}
-					 |	"alignstack(" decimal ")"									{% d => d["alignstack", d[1]] %}
-					 |	"allocsize(" decimal ("," _ decimal):? ")"					{% d => d["allocsize", d[1], d[2]? d[2][2] : null] %}
+					 |	"alignstack(" dec ")"										{% d => d["alignstack", d[1]] %}
+					 |	"allocsize(" dec ("," _ dec):? ")"							{% d => d["allocsize", d[1], d[2]? d[2][2] : null] %}
 					 |	"patchable-function=\"prologue-short-redirect\""			{% d => [d[0], d[2].replace(/^"|"$/g, "")] %}
 
 bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __ %}
@@ -280,7 +279,7 @@ bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __
 
 llvm_bang			->	"llvm." ("loop" | "mem.parallel_loop_access")				{% d => d[0] + d[1][0] %}
 
-bang[X]				->	"!" $X " !" decimal											{% d => [d[1], d[3]] %}
+bang[X]				->	"!" $X " !" dec												{% d => [d[1], d[3]] %}
 bang_any			->	bang[bang_type]												{% _ %}
 instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store)	{% __ %}
 					 |	(i_getelementptr | i_unreachable | i_br | i_binary | i_phi)	{% __ %}
@@ -307,9 +306,9 @@ i_alloca			->	variable
 						" = alloca "
 						"inalloca ":?
 						type_any
-						(", " type_any " " decimal):?
-						(", align " decimal):?
-						(", addrspace(" decimal ")"):?
+						(comma type_any __ dec):?
+						((comma "align" __) dec):?
+						((comma "addrspace" lpar) dec rpar):?
 						{% d => ["instruction", "alloca", {
 							destination: d[0],
 							inalloca:  !!d[2],
@@ -323,7 +322,7 @@ i_load				->	variable
 						" = load "
 						"volatile ":?
 						(type_any ", " type_any "* " operand)
-						(", align " decimal):?
+						(", align " dec):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "load", {
 							destination:           d[0],
@@ -335,9 +334,9 @@ i_load				->	variable
 							bangs:                 d[5]? d[5][1] : []
 						}] %}
 
-operand				->	(variable | decimal | global | getelementptr_expr)			{% __  %}
+operand				->	(variable | dec | global | getelementptr_expr)				{% __  %}
 					 |	"null"														{% d => ["null"] %}
-floperand			->	(float | variable | decimal | global)						{% __  %}
+floperand			->	(float | variable | dec | global)							{% __  %}
 
 i_icmp				->	variable
 						" = icmp "
@@ -363,7 +362,7 @@ i_br_conditional	->	"br"
 						variable
 						", label "
 						variable
-						(", !llvm.loop !" decimal):?
+						(", !llvm.loop !" dec):?
 						{% d => ["instruction", "br_conditional", {
 							type:    d[1][0],
 							cond:    d[2],
@@ -386,7 +385,7 @@ i_call				->	(variable " = "):?
 						(commalist[constant] | _)
 						")"
 						# todo: fn attrs
-						(_ list["#" decimal]):?
+						(_ list["#" dec]):?
 						{% d => ["instruction", "call", {
 							assign:     d[ 0]? d[0][0] : null,
 							tail:       d[ 1]? d[1][0][0] : null,
@@ -410,7 +409,7 @@ i_getelementptr_1	->	variable
 						type_ptr
 						" "
 						(variable | global)
-						(", " "inrange ":? type_int " " (variable | decimal)):+
+						(", " "inrange ":? type_int " " (variable | dec)):+
 						{% d => ["instruction", "getelementptr", {
 							destination: d[0],
 							inbounds: !!d[2],
@@ -429,7 +428,7 @@ i_getelementptr_2	->	variable
 						types
 						"}* "
 						(variable | global)
-						(", " "inrange ":? type_int " " (variable | decimal)):+
+						(", " "inrange ":? type_int " " (variable | dec)):+
 						{% d => ["instruction", "getelementptr", {
 							destination: d[0],
 							inbounds: !!d[2],
@@ -440,7 +439,7 @@ i_getelementptr_2	->	variable
 							flavor: "multi"
 						}] %}
 
-i_switch_line		->	_ type_int " " decimal ", label " variable					{% d => [d[1], d[3], d[5]] %}
+i_switch_line		->	_ type_int " " dec ", label " variable						{% d => [d[1], d[3], d[5]] %}
 					 |	_ lineend													{% _() %}
 i_switch			->	"switch"
 						spaced[type_int]
@@ -465,7 +464,7 @@ i_store				->	"store"
 						type_any
 						"* "
 						operand
-						(", align " decimal):?
+						(", align " dec):?
 						(", " commalist[bang_any]):?
 						{% d => ["instruction", "store", {
 							volatile:       !!d[1],
@@ -548,13 +547,13 @@ i_binary_dangerous	->	variable
 							flavor: "dangerous"
 						}] %}
 
-i_phi_pair			->	"[ " floperand ", " variable " ]"							{% d => [d[1], d[3]] %}
-					 |	"[ undef, " variable " ]"									{% d => [["undefined"], d[1]] %}
-					 |	"[ null, " variable " ]"									{% d => [["null"], d[1]] %}
+i_phi_pair			->	"[" _ floperand comma variable rbrk							{% d => [d[2], d[4]] %}
+					 |	"[" _ "undef"   comma variable rbrk							{% d => [["undefined"], d[4]] %}
+					 |	"[" _ "null"    comma variable rbrk							{% d => [["null"], d[4]] %}
 i_phi				->	variable
-						" = phi "
+						(eq "phi" __)
 						type_any
-						" "
+						__
 						commalist[i_phi_pair]
 						{% d => ["instruction", "phi", {
 							destination: d[0],
@@ -564,13 +563,13 @@ i_phi				->	variable
 
 i_conversion		->	(i_conversion_ext)											{% __ %}
 i_conversion_ext	->	variable
-						" = "
+						eq
 						("bitcast" | "fpext" | "fptosi" | "fptoui" | "fptrunc" | "inttoptr" | "ptrtoint" | "sext" | "sitofp" | "trunc" | "uitofp" | "zext")
-						" "
+						__
 						type_any
-						" "
+						__
 						value
-						" to "
+						to
 						type_any
 						{% d => ["instruction", "conversion", {
 							destination: d[0],
@@ -580,35 +579,42 @@ i_conversion_ext	->	variable
 							flavor: d[2][0],
 						}] %}
 
-i_ret				->	"ret " type_any " " value									{% d => ["instruction", "ret", { type: d[1], value: d[3] }] %}
-					 |	"ret void"													{% d => ["instruction", "ret", { type: ["void"], value: null }] %}
+i_ret				->	("ret" __) type_any __ value								{% d => ["instruction", "ret", { type: d[1], value: d[3] }] %}
+					 |	"ret" __ "void"												{% d => ["instruction", "ret", { type: ["void"], value: null }] %}
 
 
+to					-> __ "to" __													{% _() %}
+comma				-> _ "," _														{% _() %}
+eq					-> _ "=" _														{% _() %}
+lpar				-> _ "(" _														{% _() %}
+rpar				-> _ ")" _														{% _() %}
+lbrk				-> _ "[" _														{% _() %}
+rbrk				-> _ "]" _														{% _() %}
 
-call_fnty			->	type_any " (" commalist[type_any] ", ...":? ")"				{% d => [d[0], d[2][0], !!d[3]] %}
-					 |	type_any " (...)"											{% d => [d[0], [], true] %}
+call_fnty			->	type_any (__ "(") commalist[type_any] ("," _ "..."):? _ ")"	{% d => [d[0], d[2][0], !!d[3]] %}
+					 |	type_any _ "(...)"											{% d => [d[0], [], true] %}
 function_name		->	"@" (var | string)											{% d => d[1][0] %}
 					 |	variable													{% d => d[0][1] %}
 
-fast_math_flags		->	list[fast_math_flag]											{% compileFastMathFlags %}
+fast_math_flags		->	list[fast_math_flag]										{% compileFastMathFlags %}
 fast_math_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
 
-constant			->	type_any (" " parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map(x => x[0])] %}
-cst_to_type[X]		->	$X " " constant " to " type_any								{% d => [d[0], ...d[2], d[4]] %}
+constant			->	type_any (__ parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map(x => x[0])] %}
+cst_to_type[X]		->	$X __ constant to type_any									{% d => [d[0], ...d[2], d[4]] %}
 cst_to_types		->	("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
 																					{% __ %}
 const_expr			->	cst_to_type[cst_to_types]									{% d => ["expr", d[0]] /* need to test this. */ %}
 
-getelementptr_expr	->	"getelementptr "
-						"inbounds ":?
-						"("
+getelementptr_expr	->	"getelementptr"
+						(__ "inbounds"):?
+						lpar
 						type_any
-						", "
+						comma
 						type_any
-						"* "
+						("*" __)
 						global
-						(", " type_int " " decimal):*
-						")"
+						(comma type_int __ dec):*
+						rpar
 						{% d => ["expr", "getelement", {
 							inbounds: !!d[1],
 							type: d[3],
