@@ -361,7 +361,7 @@ class LL2W {
 			}
 		}
 
-		// Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
+		Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
 		// console.log(functions);
 	}
 
@@ -488,19 +488,21 @@ class LL2W {
 				}
 			});
 
-			if (range[0] == null && range[1] != null) {
+			if (range[0] == null && range[1] != null && typeof v == "number" && numArgs < v) {
 				console.warn(WARN, "Variable", chalk.bold("%" + v), "is read but never assigned in",
-					chalk.bold(fn.meta.name) + "."); } else if (range[0] != null && range[1] == null) {
+					chalk.bold(fn.meta.name) + ".");
+			} else if (range[0] != null && range[1] == null) {
 				// Sometimes, the return value of a call is stored in a variable that isn't ever read.
 				range[1] = range[0];
 				if (numArgs <= range[0] && !(assigners[v] instanceof Array && assigners[v][1] == "call")) {
 					// Don't warn if the function arguments aren't read. The compiler has already complained about it.
 					console.warn(WARN, "Variable", chalk.bold("%" + v), "is assigned but never read in",
-						chalk.bold(fn.meta.name) + ".", assigners[v]);
+						chalk.bold(fn.meta.name) + ".");
 				}
 			}
 		}
 
+		console.log();
 		console.log(ranges);
 	}
 
