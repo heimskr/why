@@ -367,7 +367,7 @@ class LL2W {
 			}
 		}
 
-		Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
+		// Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
 		// console.log(functions);
 	}
 
@@ -452,8 +452,29 @@ class LL2W {
 		return basicBlock;
 	}
 
-	static getAllVariables(allBlocks) {
-		return _.uniq(_.values(allBlocks).reduce((a, b) => [...a, ...b[0].read, ...b[0].written], []));
+	static getAllVariables(fn) {
+		const {arity} = fn.meta;
+		const out = [];
+		
+		for (const [k, {read, written}] of fn) {
+			_.pushAll(out, [...read, ...written].filter(x => typeof x != "number" || arity < x));
+		}
+		
+		return out;
+	}
+
+	static fromSameFunction(...blockNames) {
+		if (blockNames.length < 2) {
+			return blockNames.length == 1;
+		}
+
+		const firstName = blockNames[0].substr(0, blockNames[0].indexOf(":"));
+		for (const nextName of blockNames.slice(1)) {
+			if (firstName != nextName)
+				return false;
+		}
+
+		return true;
 	}
 
 	computeLivenessSet(fns, blocks) {
@@ -466,14 +487,17 @@ class LL2W {
 		const liveIn  = _.objectify(_.keys(blocks), () => []);
 		const liveOut = _.objectify(_.keys(blocks), () => []);
 
-		// For each pair in each phi instruction in the block, take the first element of the pair
+		// For each pair in each phi instruction in a set of instructions, take the first element of the pair
 		// (the source variable) and take its second element (the name of the variable).
 		// This results in an array containing every variable in the function that's used in the block's phi functions.
-		const phiUses = b => _.uniq(_.flatten(blocks[b][1].filter(i => i[1] == "phi").map(i => i[2].pairs.map(p => p[0][1]))));
+		const phiUses = instrs => _.uniq(_.flatten(instrs.filter(i => i[1] == "phi").map(i => i[2].pairs.map(p => p[0][1]))));
 
 		const _b = chalk.bold;
 
-		const upAndMark = (b, v) => {
+		const _same = LL2W.fromSameFunction;
+		const s = 0;
+
+		const upAndMark = (blocks, name, fullName, v) => {
 			/* Algorithm 9.10: Optimized path exploration using a stack-like data structure.
 				Function Up_and_Mark_Stack(B, v) {
 					// Killed in the block, stop
@@ -500,37 +524,43 @@ class LL2W {
 				}
 			*/
 
-			const def = blocks[b][0].assigners[v];
+			// console.log(name, blocks[name]);
+
+			const def = blocks[name].assigners[v];
 
 			// Killed in the block.
 			if (def && def[1] != "phi") {
-				console.log(chalk.red(`${_b(v)} killed in ${_b(b)}.`));
+				s||console.log(chalk.red(`${_b(v)} killed in ${_b(fullName)}.`));
 				return;
 			}
 
 			// Propagation already done.
-			if (_.last(liveIn[b]) == v) {
-				console.log(chalk.yellow(`Propagation already done for ${_b(v)} in ${_b(b)}.`));
+			if (_.last(liveIn[fullName]) == v) {
+				s||console.log(chalk.yellow(`Propagation already done for ${_b(v)} in ${_b(fullName)}.`));
 				return;
 			}
 
-			console.log(`liveIn[${_b(b)}].push(${_b(v)})`);
-			liveIn[b].push(v);
+			s||console.log(`liveIn[${_b(fullName)}].push(${_b(v)})`);
+			liveIn[fullName].push(v);
 
 			// Do not propagate φ definitions.
 			if (def && def[1] == "phi") {
-				console.log(chalk.cyan(`Not propagating φ definition for ${_b(v)} in ${_b(b)}.`));
+				s||console.log(chalk.cyan(`Not propagating φ definition for ${_b(v)} in ${_b(fullName)}.`));
 				return;
 			}
 
-			// Propagate backwards.
-			for (const p of blocks[b][0].in) {
-				if (_.last(liveOut[p]) != v) {
-					console.log(chalk.green(`Yep, top(liveOut[${_b(p)}]) ≠ ${_b(v)}`) + ` (${_b(_.last(liveOut[p]))})`);
-					liveOut[p].push(v);
-				} else console.log(chalk.magenta(`Nope, top(liveOut[${_b(p)}]) = ${_b(v)}`));
+			// console.log({in:blocks[name].in});
 
-				upAndMark(p, v);
+			// Propagate backwards.
+			for (const p of blocks[name].in) {
+				if (!_same(fullName, p)) continue;
+
+				if (_.last(liveOut[p]) != v) {
+					s||console.log(chalk.green(`Yep, top(liveOut[${_b(p)}]) ≠ ${_b(v)}`) + ` (${_b(_.last(liveOut[p]))})`);
+					liveOut[p].push(v);
+				} else s||console.log(chalk.magenta(`Nope, top(liveOut[${_b(p)}]) = ${_b(v)}`));
+
+				upAndMark(blocks, p.substr(1 + p.indexOf(":")), p, v);
 			}
 		};
 
@@ -547,20 +577,40 @@ class LL2W {
 				}
 			}
 		*/
-		for (const v of LL2W.getAllVariables(blocks)) {
-			// Loop through each block where v is used.
-			_.keys(blocks).filter(b => blocks[b][0].read.includes(v)).map(b => {
-				if (phiUses(b).includes(v)) {
-					console.log(chalk.dim(`${_b(v)} ∈ PhiUses(${_b(b)})`));
-					_.push(liveOut[b], v);
-				}
 
-				upAndMark(b, v);
-			});
+		for (const [fname, fn] of Object.entries(fns)) {
+			for (const v of LL2W.getAllVariables(fn)) {
+				// Loop through each block where v is used.
+				fn.filter(b => b[1].read.includes(v)).map(block => {
+					const b = `${fname}:${block[0]}`;
+					const blocks = _.fromPairs(fn.map(([id, meta]) => [id, meta]));
+
+					if (phiUses(block[2]).includes(v)) {
+						s||console.log(chalk.dim(`${_b(v)} ∈ PhiUses(${_b(b)})`));
+						_.push(liveOut[b], v);
+					}
+	
+					upAndMark(blocks, block[0], b, v);
+				});
+			}
 		}
 
-		console.log();
 		return {liveIn, liveOut};
+
+		// for (const v of LL2W.getAllVariables(fns, blocks)) {
+		// 	// Loop through each block where v is used.
+		// 	_.keys(blocks).filter(b => blocks[b][0].read.includes(v)).map(b => {
+		// 		if (phiUses(b).includes(v)) {
+		// 			s||console.log(chalk.dim(`${_b(v)} ∈ PhiUses(${_b(b)})`));
+		// 			_.push(liveOut[b], v);
+		// 		}
+
+		// 		upAndMark(b, v);
+		// 	});
+		// }
+
+		// s||console.log();
+		// return {liveIn, liveOut};
 	}
 
 	computeLiveRanges(fn) {

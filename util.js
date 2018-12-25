@@ -34,9 +34,15 @@ exports.mixins = (_) => {
 		},
 
 		// Pushes a value to an array, but only if the value isn't already in the array.
-		push(dest, val) {
-			if (!dest.includes(val)) {
-				dest.push(val);
+		push(dest, ...vals) {
+			return _.pushAll(dest, vals);
+		},
+
+		pushAll(dest, vals) {
+			for (const val of vals) {
+				if (!dest.includes(val)) {
+					dest.push(val);
+				}
 			}
 		},
 
