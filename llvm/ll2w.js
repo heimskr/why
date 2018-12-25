@@ -16,7 +16,7 @@ let minimist = require("minimist"),
 const {displayIOError, mixins} = require("../util.js");
 mixins(_);
 
-const WARN = chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]");
+const warn = (...a) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]"), ...a);
 
 const {BUILTINS} = require("./constants.js");
 
@@ -242,7 +242,7 @@ class LL2W {
 			const [, meta] = dec;
 			const {name, type, types, arity, unnamedAddr} = meta;
 			if (name in decs) {
-				console.warn(WARN, "Duplicate declaration for", chalk.bold(name) + ".");
+				warn("Duplicate declaration for", chalk.bold(name) + ".");
 			}
 
 			decs[name] = {type, types, arity, isLocalUnnamed: unnamedAddr == "local_unnamed_addr"};
@@ -355,7 +355,7 @@ class LL2W {
 						// If the function name is a number, that means the function is actually a function pointer.
 						// As those could point anywhere, it's not possible to do anything with them, so we do nothing.
 					} else if (!(iname in declarations)) {
-						console.warn(WARN, `Couldn't find a basic block called ${chalk.bold(iname + chalk.dim(":" + arity))}.`);
+						warn(`Couldn't find a basic block called ${chalk.bold(iname + chalk.dim(":" + arity))}.`);
 					}
 				}
 			}
@@ -476,7 +476,7 @@ class LL2W {
 						// set this instruction's position as the starting point of the variable's live range.
 						range[0] = i;
 					} else if (!_warned.includes(v)) {
-						console.warn(WARN, "Variable", chalk.bold("%" + v), "is assigned multiple times.\n");
+						warn(`Variable ${chalk.bold(`%${v}`)} is assigned multiple times.\n`);
 						_warned.push(v);
 					}
 				}
@@ -489,15 +489,13 @@ class LL2W {
 			});
 
 			if (range[0] == null && range[1] != null && typeof v == "number" && numArgs < v) {
-				console.warn(WARN, "Variable", chalk.bold("%" + v), "is read but never assigned in",
-					chalk.bold(fn.meta.name) + ".");
+				warn(`Variable ${chalk.bold(`%${v}`)} is read but never assigned in ${chalk.bold(fn.meta.name)}.`);
 			} else if (range[0] != null && range[1] == null) {
 				// Sometimes, the return value of a call is stored in a variable that isn't ever read.
 				range[1] = range[0];
 				if (numArgs <= range[0] && !(assigners[v] instanceof Array && assigners[v][1] == "call")) {
 					// Don't warn if the function arguments aren't read. The compiler has already complained about it.
-					console.warn(WARN, "Variable", chalk.bold("%" + v), "is assigned but never read in",
-						chalk.bold(fn.meta.name) + ".");
+					warn(`Variable ${chalk.bold(`%${v}`)} is assigned but never read in ${chalk.bold(fn.meta.name)}.`);
 				}
 			}
 		}
