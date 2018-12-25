@@ -38,6 +38,10 @@ exports.mixins = (_) => {
 			if (!dest.includes(val)) {
 				dest.push(val);
 			}
+		},
+
+		objectify(arr, initial) {
+			return _.fromPairs(arr.map(v => [v, initial]));
 		}
 	});
 };

@@ -281,9 +281,15 @@ class LL2W {
 				basicBlocks.push(currentBasicBlock);
 			}
 
-			functions[meta.name] = basicBlocks.map(this.extractBasicBlockVariables);
+			let allVars = [];
+			functions[meta.name] = basicBlocks.map(block => {
+				const blockVars = this.extractBasicBlockVariables(block);
+				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
+				return blockVars;
+			});
 			basicBlocks.forEach(([name, ...etc]) => allBlocks[meta.name + ":" + name] = etc);
 			functions[meta.name].meta = meta;
+			functions[meta.name].vars = _.uniq(allVars);
 		});
 
 		return [functions, allBlocks];
@@ -431,7 +437,7 @@ class LL2W {
 	extractBasicBlockVariables(basicBlock) {
 		let read = [], written = [], assigners = {};
 
-		const add = (instruction) => {
+		const add = instruction => {
 			const result = LL2W.extractOperands(instruction);
 			read = read.concat(result.read);
 			written = written.concat(result.written);
@@ -444,6 +450,107 @@ class LL2W {
 		basicBlock[1].written = _.uniq(written);
 		basicBlock[1].assigners = assigners;
 		return basicBlock;
+	}
+
+	static getAllVariables(allBlocks) {
+		return _.uniq(_.values(allBlocks).reduce((a, b) => [...a, ...b[0].read, ...b[0].written], []));
+	}
+
+	computeLivenessSet(fns, blocks) {
+		// Based on Algorithm 9.9 ("Compute liveness sets per variable using def-use chains")
+		// and Algorithm 9.10 ("Optimized path exploration using a stack-like data structure")
+		// from http://ssabook.gforge.inria.fr/latest/book-full.pdf
+
+		const liveIn  = _.objectify(_.keys(blocks), []);
+		const liveOut = _.objectify(_.keys(blocks), []);
+
+		
+		// For each pair in each phi instruction in the block, take the first element of the pair
+		// (the source variable) and take its second element (the name of the variable).
+		// This results in an array containing every variable in the function that's used in the block's phi functions.
+		const phiUses = b => _.uniq(_.flatten(blocks[b][1].filter(i => i[1] == "phi").map(i => i[2].pairs.map(p => p[0][1]))));
+
+		const upAndMark = (b, v) => {
+			/* Algorithm 9.10: Optimized path exploration using a stack-like data structure.
+				Function Up_and_Mark_Stack(B, v) {
+					// Killed in the block, stop
+					if def(v) ∈ B (φ excluded)
+						return
+
+					// Propagation already done, stop
+					if top(LiveIn(B)) = v
+						return
+					
+					push(LiveIn(B), v)
+					
+					// Do not propagate φ definitions
+					if v ∈ PhiDefs(B)
+						return
+
+					// Propagate backwards
+					foreach P ∈ CFG_preds(B) {
+						if top(LiveOut(P)) ≠ v
+							push(LiveOut(P), v)
+						
+						Up_and_Mark_Stack(P, v)
+					}
+				}
+			*/
+
+			const def = blocks[b][0].assigners[v];
+
+			// Killed in the block.
+			if (def && def[1] != "phi") {
+				return;
+			}
+
+			// Propagation already done.
+			if (_.last(liveIn[b]) == v) {
+				return;
+			}
+
+			liveIn[b].push(v);
+
+			// Do not propagate φ definitions.
+			if (def && def[1] == "phi") {
+				return;
+			}
+
+			// Propagate backwards.
+			for (const p of blocks[b][0].in) {
+				if (_.last(liveOut[p]) != v) {
+					liveOut[p].push(v);
+				}
+
+				upAndMark(p, v);
+			}
+		};
+
+		/* Algorithm 9.9: Compute liveness sets per variable using def-use chains
+			Function Compute_LiveSets_SSA_ByVar(CFG) {
+				foreach variable v {
+					foreach block B where v is used {
+						// Used in the φ of a successor block
+						if v ∈ PhiUses(B)
+							LiveOut(B) = LiveOut(B) ∪ {v}
+
+						Up_and_Mark(B, v)
+					}
+				}
+			}
+		*/
+		for (const v of LL2W.getAllVariables(blocks)) {
+			// Loop through each block where v is used.
+			_.keys(blocks).filter(b => blocks[b][0].read.includes(v)).map(b => {
+				if (phiUses(b).includes(v)) {
+					_.push(liveOut[b], v);
+				}
+
+				upAndMark(b, v);
+			});
+		}
+
+		return {liveIn, liveOut};
 	}
 
 	computeLiveRanges(fn) {
@@ -622,10 +729,12 @@ if (require.main === module) {
 		constants: compiler.globalConstants,
 	}));
 
-	for (const fn in compiler.functions) {
-		console.log(chalk.underline("\n\n\nLive range for " + fn) + ":\n");
-		compiler.computeLiveRanges(compiler.functions[fn]);
-	}
+	console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
+
+	// for (const fn in compiler.functions) {
+		// console.log(chalk.underline("\n\n\nLive range for " + fn) + ":\n");
+		// compiler.computeLiveRanges(compiler.functions[fn]);
+	// }
 
 	// jsome(compiler.ast);
 }
