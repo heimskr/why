@@ -15,6 +15,9 @@ $(COMPILED): $(SYNTAX) _
 ttest: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
 
+rtest: $(TEST) $(COMPILED) regalloc.ll
+	node ll2w.js -d regalloc.ll
+
 ntest: $(TEST) $(COMPILED) $(LLDIR)/net.ll
 	node ll2w.js -d $(LLDIR)/net.ll
 
