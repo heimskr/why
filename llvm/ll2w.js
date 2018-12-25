@@ -445,6 +445,10 @@ class LL2W {
 	}
 
 	computeLiveRanges(fn) {
+		// Is this actually how it's done? In some examples, it's done backwards.
+		// I'd imagine live variable analysis is less complicated in SSA because variables are assigned once,
+		// which should mean that each variable's live range shouldn't be made of multiple separate components.
+
 		// The arguments of the function are stored in %0, %1, ...
 		const numArgs = fn.meta.arity;
 
