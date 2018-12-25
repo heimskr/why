@@ -131,22 +131,23 @@ type_floatvec		->	type_float													{% _ %}
 
 global				->	"@" var														{% d => ["global", d[1]] %}
 label				->	var ":"														{% d => ["label", d[0]] %}
+
 global_def			->	global
-						" ="
-						(" " linkage):?
-						(" " visibility):?
-						(" " dll_storage_class):?
-						(" " thread_local):?
-						(" " unnamed_addr):?
-						(" " addrspace):?
-						(" externally_initialized"):?
-						(" " global_constant):?
-						" "
+						(_ "=")
+						(_ linkage):?
+						(_ visibility):?
+						(_ dll_storage_class):?
+						(_ thread_local):?
+						(_ unnamed_addr):?
+						(_ addrspace):?
+						(_ "externally_initialized"):?
+						(_ global_constant):?
+						_
 						type_any
-						(" " initial_value):?
-						(", section " string):?
-						(", comdat $" var):?
-						(", align " dec):?
+						(__ initial_value):?
+						(comma "section" __ string):?
+						(comma "comdat" _ "$" var):?
+						(comma "align" __ dec):?
 						#// not sure what "(, !name !N)*" is supposed to mean, but it doesn't to be used in various things I found online, so whatever ¯\_(ツ)_/¯
 						{% d => ["global constant", {
 							name:                    d[ 0],
@@ -160,9 +161,9 @@ global_def			->	global
 							globalConstant:          d[ 9]? d[ 9][1] : null,
 							type:                    d[11],
 							initialValue:            d[12]? d[12][1] : null,
-							section:                 d[13]? d[13][1] : null,
-							comdat:                  d[14]? d[14][1] : null,
-							align:                   d[15]? d[15][1] : null
+							section:                 d[13]? d[13][3] : null,
+							comdat:                  d[14]? d[14][4] : null,
+							align:                   d[15]? d[15][3] : null
 						}] %}
 
 linkage				->	("private" | "appending" | "available_externally" | "weak" |
