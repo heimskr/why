@@ -415,7 +415,9 @@ class LL2W {
 			[meta.op1, meta.op2].forEach(o => isVar(o) && read.push(o[1]));
 		} else if (type == "br_conditional") {
 			// TODO: do branch targets count as reads?
-			read.push(meta.cond[1]);
+			if (typeof meta.cond != "number") {
+				read.push(meta.cond[1]);
+			}
 		} else if (type == "ret") {
 			tryRead(meta.value);
 		} else if (type == "getelementptr") {

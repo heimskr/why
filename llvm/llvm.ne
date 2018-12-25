@@ -72,13 +72,13 @@ pars[X]				->	"(" $X ")"													{% _(1) %}
 
 cstring				->	"c" string													{% _(1) %}
 float				->	"-":? [0-9]:+ "." [0-9]:+									{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
-dec				->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
+dec				->	"-":? [0-9]:+													{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
 					 |	"true"														{% d => 1 %}
 					 |	"false"														{% d => 0 %}
 natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}
 vector				->	"<" commalist[type_any __ value] ">"						{% d => ["vector", d[1][0]] %}
 
-value				->	(float | dec | vector | variable | "null")				{% __ %}
+value				->	(float | dec | vector | variable | "null")					{% __ %}
 
 source_filename		->	"source_filename = " string									{% d => ["source_filename", d[1]] %}
 
@@ -100,10 +100,10 @@ metadata_def		-> "!"
 metadata			->	constant													{% d => d[0].slice(0, 2) %}
 					 |	"!" string													{% d => d[1] %}
 					 |	"null"														{% d => null %}
-					 |	"!" dec													{% d => d[1] %}
+					 |	"!" dec														{% d => d[1] %}
 
 
-variable			->	"%" (var | dec | string)								{% d => ["variable", d[1][0]] %}
+variable			->	"%" (var | dec | string)									{% d => ["variable", d[1][0]] %}
 
 type_struct			->	"%struct." var												{% d => ["struct", d[1]] %}
 struct				->	type_struct _ "= type opaque"								{% d => [...d[0], "opaque"] %}
@@ -355,18 +355,18 @@ i_icmp				->	variable
 						}] %}
 
 i_br				->	(i_br_conditional | i_br_unconditional)						{% __ %}
-i_br_unconditional	->	"br label " variable										{% d => ["instruction", "br_unconditional", { dest: d[1] }] %}
+i_br_unconditional	->	("br" __ "label" __) variable								{% d => ["instruction", "br_unconditional", {dest: d[1]}] %}
 i_br_conditional	->	"br"
-						spaced[type_any]
+						(__ type_any __)
+						(variable | dec)
+						(comma "label" __)
 						variable
-						", label "
+						(comma "label" __)
 						variable
-						", label "
-						variable
-						(", !llvm.loop !" dec):?
+						((comma "!llvm.loop" __ "!") dec):?
 						{% d => ["instruction", "br_conditional", {
-							type:    d[1][0],
-							cond:    d[2],
+							type:    d[1][1],
+							cond:    d[2][0],
 							iftrue:  d[4],
 							iffalse: d[6],
 							loop:    d[7]? d[7][1] : null
