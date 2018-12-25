@@ -40,8 +40,8 @@ exports.mixins = (_) => {
 			}
 		},
 
-		objectify(arr, initial) {
-			return _.fromPairs(arr.map(v => [v, initial]));
+		objectify(arr, initial = () => undefined) {
+			return _.fromPairs(arr.map(v => [v, initial()]));
 		}
 	});
 };

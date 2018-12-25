@@ -460,15 +460,18 @@ class LL2W {
 		// Based on Algorithm 9.9 ("Compute liveness sets per variable using def-use chains")
 		// and Algorithm 9.10 ("Optimized path exploration using a stack-like data structure")
 		// from http://ssabook.gforge.inria.fr/latest/book-full.pdf
-
-		const liveIn  = _.objectify(_.keys(blocks), []);
-		const liveOut = _.objectify(_.keys(blocks), []);
-
 		
+		console.log();
+		
+		const liveIn  = _.objectify(_.keys(blocks), () => []);
+		const liveOut = _.objectify(_.keys(blocks), () => []);
+
 		// For each pair in each phi instruction in the block, take the first element of the pair
 		// (the source variable) and take its second element (the name of the variable).
 		// This results in an array containing every variable in the function that's used in the block's phi functions.
 		const phiUses = b => _.uniq(_.flatten(blocks[b][1].filter(i => i[1] == "phi").map(i => i[2].pairs.map(p => p[0][1]))));
+
+		const _b = chalk.bold;
 
 		const upAndMark = (b, v) => {
 			/* Algorithm 9.10: Optimized path exploration using a stack-like data structure.
@@ -501,26 +504,31 @@ class LL2W {
 
 			// Killed in the block.
 			if (def && def[1] != "phi") {
+				console.log(chalk.red(`${_b(v)} killed in ${_b(b)}.`));
 				return;
 			}
 
 			// Propagation already done.
 			if (_.last(liveIn[b]) == v) {
+				console.log(chalk.yellow(`Propagation already done for ${_b(v)} in ${_b(b)}.`));
 				return;
 			}
 
+			console.log(`liveIn[${_b(b)}].push(${_b(v)})`);
 			liveIn[b].push(v);
 
 			// Do not propagate φ definitions.
 			if (def && def[1] == "phi") {
+				console.log(chalk.cyan(`Not propagating φ definition for ${_b(v)} in ${_b(b)}.`));
 				return;
 			}
 
 			// Propagate backwards.
 			for (const p of blocks[b][0].in) {
 				if (_.last(liveOut[p]) != v) {
+					console.log(chalk.green(`Yep, top(liveOut[${_b(p)}]) ≠ ${_b(v)}`) + ` (${_b(_.last(liveOut[p]))})`);
 					liveOut[p].push(v);
-				}
+				} else console.log(chalk.magenta(`Nope, top(liveOut[${_b(p)}]) = ${_b(v)}`));
 
 				upAndMark(p, v);
 			}
@@ -543,6 +551,7 @@ class LL2W {
 			// Loop through each block where v is used.
 			_.keys(blocks).filter(b => blocks[b][0].read.includes(v)).map(b => {
 				if (phiUses(b).includes(v)) {
+					console.log(chalk.dim(`${_b(v)} ∈ PhiUses(${_b(b)})`));
 					_.push(liveOut[b], v);
 				}
 
@@ -550,6 +559,7 @@ class LL2W {
 			});
 		}
 
+		console.log();
 		return {liveIn, liveOut};
 	}
 
