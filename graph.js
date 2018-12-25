@@ -202,7 +202,7 @@ class Graph {
 	 * Condenses a list of nodes into a single node, removes the old nodes from the graph and inserts the new node.
 	 * The new node's in/out arrays are the unions of the given nodes' in/out arrays.
 	 * The new node is reflexive if any of the given nodes is reflexive.
-	 * @param  {(Node|number)[]} nodes A list of nodes.
+	 * @param  {Array<Node | number>} nodes A list of nodes.
 	 * @return {Node} The coalesced node.
 	 */
 	coalesce(nodes) {
