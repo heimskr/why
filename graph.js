@@ -47,7 +47,7 @@ class Graph {
 					return target.getNode(prop);
 				}
 
-				if (prop in Array.prototype) {
+				if (prop in Array.prototype && !(prop in target)) {
 					if (typeof Array.prototype[prop] == "function") {
 						return target.nodes[prop].bind(target.nodes);
 					}
@@ -165,6 +165,15 @@ class Graph {
 		return this;
 	}
 
+	findSingle(predicate) {
+		const found = this.nodes.filter(predicate);
+		if (found.length != 1) {
+			throw `Predicate matched ${found.length} results`;
+		}
+
+		return found[0];
+	}
+
 	dominance(startNode) {
 		// https://www.cs.rice.edu/~keith/Embed/dom.pdf
 		const doms =_.fill(Array(this.length), null);
@@ -174,36 +183,15 @@ class Graph {
 			startNode = this.getNode(startNode);
 		}
 
-		// const choosePred = b => {
-		// 	if (b.data) {
-		// 		console.log("\n" + b.data.fn + " " + b.data.block);
-		// 	} else {
-		// 		console.log(chalk.red("???"), b.id);
-		// 	}
-
-		// 	for (const c of this.getNode(b).pred) {
-		// 		const d = this.getNode(c).data;
-		// 		if (d === null) {
-		// 			console.log(chalk.yellow(c), "   yikes");
-		// 			continue;
-		// 		}
-
-		// 		console.log(c, "   ", d.fn.padStart(6, " ") + " " + d.block);
-		// 	}
-		// }
-
-		
 		const rpo = _.pull(this.reversePost(), startNode.id).map(x => this[x]);
 		let changed = true, newIDom;
 		while (changed) {
 			changed = false;
 			for (const b of rpo) {
-				// console.log({b});
 				newIDom = b.in[0];
 				if (!newIDom) {
-					console.log("pred is empty for", b.data);
+					// console.log("pred is empty for", b.data);
 				}
-				// newIDom = choosePred(b);
 			}
 		}
 
