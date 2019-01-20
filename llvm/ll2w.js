@@ -527,6 +527,8 @@ class LL2W {
 				g[i + 2].arc(targets[0]);
 			}
 		});
+
+		return g;
 	}
 
 	computeLivenessSet(fns, blocks) {
@@ -831,7 +833,7 @@ if (require.main === module) {
 	compiler.globalConstants = compiler.extractGlobalConstants();
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
 	compiler.connectBlocks(functions, allBlocks, declarations);
-	LL2W.computeCFG(functions, allBlocks, blockOrder);
+	const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder);
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
@@ -841,6 +843,19 @@ if (require.main === module) {
 		metadata: compiler.metadata,
 		constants: compiler.globalConstants,
 	}));
+
+	// console.log(cfg.reversePost());
+
+	// const g = new Graph(4).arcString("AB AC BD CD");
+	// const g = new Graph(6).arcString("AB BC BD CE DE EB EF");
+	// const g = new Graph(7).arcString("AB AD BC CB CG DE EF FD FG");
+
+	
+	// console.log(g.reversePost.map(x => String.fromCharCode("A".charCodeAt(0) + x)));
+	// console.log(g.reversePost.map(x => x + 1));
+
+	cfg.dominance(0);
+
 
 	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
 

@@ -155,20 +155,32 @@ class Graph {
 	}
 
 	dominance(startNode) {
-		const doms = [];
+		// https://www.cs.rice.edu/~keith/Embed/dom.pdf
+		const doms =_.fill(Array(this.length), null);
 		if (startNode === undefined) {
 			startNode = this[0];
 		} else {
 			startNode = this.getNode(startNode);
 		}
 
-		let changed = true;
-		while (changed) {
-			changed = false;
-
+		const choosePred = b => {
+			console.log("\n" + b.data.fn + " " + b.data.block);
+			for (const c in this.getNode(b).pred) {
+				const d = this.getNode(c).data;
+				console.log("   ", d.fn.padStart(6, " ") + " " + d.block);
+			}
 		}
 
-		const rpo = this.reversePost();
+		
+		const rpo = _.pull(this.reversePost(), startNode.id).map(x => this[x]);
+		let changed = true, newIDom;
+		while (changed) {
+			changed = false;
+			for (const b of rpo) {
+				newIDom = choosePred(b);
+			}
+		}
+
 	}
 
 	reversePost() {
@@ -401,14 +413,14 @@ class Node {
 		 * @type {Array<number>}
 		 * @name module:util~Node#out
 		 */
-		this.out = [];
+		this.out = this.succ = [];
 
 		/**
 		 * An array of the IDs of all nodes that connect to this node.
 		 * @type {Array<number>}
 		 * @name module:util~Node#in
 		 */
-		this.in = [];
+		this.in = this.pred = [];
 
 		/**
 		 * The data attached to the node.
