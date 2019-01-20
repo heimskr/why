@@ -174,23 +174,23 @@ class Graph {
 			startNode = this.getNode(startNode);
 		}
 
-		const choosePred = b => {
-			if (b.data) {
-				console.log("\n" + b.data.fn + " " + b.data.block);
-			} else {
-				console.log(chalk.red("???"));
-			}
+		// const choosePred = b => {
+		// 	if (b.data) {
+		// 		console.log("\n" + b.data.fn + " " + b.data.block);
+		// 	} else {
+		// 		console.log(chalk.red("???"), b.id);
+		// 	}
 
-			for (const c of this.getNode(b).pred) {
-				const d = this.getNode(c).data;
-				if (d === null) {
-					console.log(chalk.yellow(c), "   yikes");
-					continue;
-				}
+		// 	for (const c of this.getNode(b).pred) {
+		// 		const d = this.getNode(c).data;
+		// 		if (d === null) {
+		// 			console.log(chalk.yellow(c), "   yikes");
+		// 			continue;
+		// 		}
 
-				console.log(c, "   ", d.fn.padStart(6, " ") + " " + d.block);
-			}
-		}
+		// 		console.log(c, "   ", d.fn.padStart(6, " ") + " " + d.block);
+		// 	}
+		// }
 
 		
 		const rpo = _.pull(this.reversePost(), startNode.id).map(x => this[x]);
@@ -198,7 +198,12 @@ class Graph {
 		while (changed) {
 			changed = false;
 			for (const b of rpo) {
-				newIDom = choosePred(b);
+				// console.log({b});
+				newIDom = b.in[0];
+				if (!newIDom) {
+					console.log("pred is empty for", b.data);
+				}
+				// newIDom = choosePred(b);
 			}
 		}
 
