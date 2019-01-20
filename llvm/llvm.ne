@@ -1,7 +1,7 @@
 @{%
 "use strict";
 
-const { uniq: unique, some } = require("lodash");
+const {uniq: unique, some} = require("lodash");
 
 const special = {
 	chars: "=@$&*\t \":()",

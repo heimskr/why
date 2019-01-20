@@ -25,6 +25,30 @@ class Graph {
 		 */
 
 		this.reset(n);
+
+		return new Proxy(this, {
+			get(target, prop) {
+				if (Number(prop) == prop) {
+					return target.getNode(prop);
+				}
+
+				return target[prop];
+			},
+
+			set(target, prop, val) {
+				if (Number(prop) != prop) {
+					return Reflect.set(...arguments);
+				}
+				
+				const i = _.findIndex(target.nodes, node => node.id == prop);
+				if (i == -1) {
+					return Reflect.set(...arguments);
+				}
+
+				target.nodes[i] = val;
+				return true;
+			}
+		});
 	}
 
 	/**
@@ -41,7 +65,7 @@ class Graph {
 	 * @return {Node}     The node corresponding to n if n is a number; n otherwise.
 	 */
 	getNode(n) {
-		n = typeof n == "number"? n : n.id;
+		n = Number(n) == n? n : n.id;
 		return _.find(this.nodes, node => node.id == n);
 	}
 
