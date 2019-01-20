@@ -254,12 +254,16 @@ class LL2W {
 	extractFunctions() {
 		const functions = {};
 		const allBlocks = {};
+		const blockOrder = [];
+		const functionOrder = [];
 
 		this.iterateTree("function", (meta, instructions) => {
 			// LLVM helpfully indicates basic blocks with comments and labels.
 			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
 			const basicBlocks = [];
+
+			functionOrder.push(meta.name);
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
 			let currentBasicBlock = [meta.arity, {preds: [], in: [], out: []}, []];
@@ -287,12 +291,16 @@ class LL2W {
 				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
 				return blockVars;
 			});
-			basicBlocks.forEach(([name, ...etc]) => allBlocks[meta.name + ":" + name] = etc);
+			basicBlocks.forEach(([name, ...etc]) => {
+				allBlocks[meta.name + ":" + name] = etc;
+				blockOrder.push([meta.name, name]);
+			});
 			functions[meta.name].meta = meta;
 			functions[meta.name].vars = _.uniq(allVars);
+			functions[meta.name].first = basicBlocks[0][0];
 		});
 
-		return [functions, allBlocks];
+		return {functions, allBlocks, blockOrder, functionOrder};
 	}
 
 	connectBlocks(functions, basicBlocks, declarations={}) {
@@ -475,6 +483,50 @@ class LL2W {
 		}
 
 		return true;
+	}
+
+	static computeCFG(fns, blocks, blockOrder) {
+		const n = Object.keys(blocks).length;
+		const g = new Graph(n + 2);
+
+		// Entry node: 0
+		// Exit node: 1 (first need to figure out how to determine the exit node...)
+
+		if ("_main" in fns) {
+			// If a _main function exists, its first block will be chosen as the entry node.
+			g[0].data = {fn: "_main", block: fns._main.first};
+			g[1].data = {fn: "_main", block: _.last(fns._main)[0]};
+		} else {
+			// Otherwise, choose the very first block in the program. Who knows what the exit node should be.
+			g[0].data = {fn: blockOrder[0][0], block: blockOrder[0][1]};
+		}
+
+		// Assign all blocks to the rest of the nodes.
+		blockOrder.forEach(([fnName, blockIndex], i) => {
+			g[i + 2].data = {fn: fnName, block: blockIndex};
+		});
+
+		blockOrder.forEach(([fnName, blockIndex], i) => {
+			// Add an arc from the block to each of its outblocks.
+			const block = blocks[fnName + ":" + blockIndex];
+			if (!block) {
+				throw `Block "${fnName}:${blockIndex} not found.`;
+			}
+
+			for (const id of block[0].out) {
+				const targets = g.filter(({data}, j) => 2 <= j && `${data.fn}:${data.block}` == id);
+				
+				if (!targets || targets.length === undefined) {
+					throw `Couldn't find target ${id}`;
+				}
+
+				if (targets.length != 1) {
+					throw `Found ${targets.length} targets for ${id}`;
+				}
+
+				g[i + 2].arc(targets[0]);
+			}
+		});
 	}
 
 	computeLivenessSet(fns, blocks) {
@@ -775,10 +827,11 @@ if (require.main === module) {
 	compiler.extractAttributes();
 	compiler.extractStructs();
 	compiler.extractMetadata();
-	compiler.declarations = compiler.extractDeclarations();
+	const declarations = compiler.extractDeclarations();
 	compiler.globalConstants = compiler.extractGlobalConstants();
-	[compiler.functions, compiler.allBlocks] = compiler.extractFunctions();
-	compiler.connectBlocks(compiler.functions, compiler.allBlocks, compiler.declarations);
+	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
+	compiler.connectBlocks(functions, allBlocks, declarations);
+	LL2W.computeCFG(functions, allBlocks, blockOrder);
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
@@ -789,7 +842,7 @@ if (require.main === module) {
 		constants: compiler.globalConstants,
 	}));
 
-	console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
+	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
 
 	// for (const fn in compiler.functions) {
 		// console.log(chalk.underline("\n\n\nLive range for " + fn) + ":\n");
