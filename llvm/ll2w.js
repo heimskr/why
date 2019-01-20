@@ -485,29 +485,27 @@ class LL2W {
 		return true;
 	}
 
-	static computeCFG(fns, blocks, blockOrder, declarations) {
-		const n = Object.keys(blocks).length;
-		const g = new Graph(n + 2);
-
-		// Entry node: 0
-		// Exit node: 1 (first need to figure out how to determine the exit node...)
-
-		if ("_main" in fns) {
-			// If a _main function exists, its first block will be chosen as the entry node.
-			g[0].data = {fn: "_main", block: fns._main.first};
-			g[1].data = {fn: "_main", block: _.last(fns._main)[0]};
-		} else {
-			// Otherwise, choose the very first block in the program. Who knows what the exit node should be.
-			g[0].data = {fn: blockOrder[0][0], block: blockOrder[0][1]};
-		}
+	static computeCFG(fn, declarations) {
+		const g = new Graph(fn.length);
+		const name = fn.meta.name;
 
 		// Assign all blocks to the rest of the nodes.
-		blockOrder.forEach(([fnName, blockIndex], i) => {
-			g[i + 2].data = {fn: fnName, block: blockIndex};
+		fn.forEach((block, i) => {
+			g[i].data = {label: block[0]};
 		});
 
-		blockOrder.forEach(([fnName, blockIndex], i) => {
-			// Add an arc from the block to each of its outblocks.
+		// Add an arc from the block to each of its outblocks.
+		fn.forEach((block, i) => {
+			const label = block[0];
+
+			// Ignore outblocks that aren't within the same function.
+			block[1].out
+				.filter(s => s.substr(0, s.indexOf(":")) == name)
+				.map(s => s.substr(s.indexOf(":") + 1))
+				.map(s => g.findSingle(b => b.data.label == s))
+				.forEach(n => g[i].arc(n));
+
+			/*
 			const block = blocks[fnName + ":" + blockIndex];
 			if (!block) {
 				throw `Block "${fnName}:${blockIndex} not found.`;
@@ -542,7 +540,10 @@ class LL2W {
 
 				g[i + 2].arc(targets[0]);
 			}
+			*/
 		});
+
+		// console.log(g.nodes.map(({out, id}) => `${g[id].data.label} => ${out.map(n => g[n].data.label).join(", ")}`).join("\n"));
 
 		return g;
 	}
@@ -856,7 +857,8 @@ if (require.main === module) {
 	// 	return y;
 	// }));
 
-	const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
+	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
+	const cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
