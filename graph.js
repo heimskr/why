@@ -32,6 +32,14 @@ class Graph {
 					return target.getNode(prop);
 				}
 
+				if (prop in Array.prototype) {
+					if (typeof Array.prototype[prop] == "function") {
+						return target.nodes[prop].bind(target.nodes);
+					}
+					
+					return target.nodes[prop];
+				}
+
 				return target[prop];
 			},
 
