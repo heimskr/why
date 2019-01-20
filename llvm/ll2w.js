@@ -485,7 +485,7 @@ class LL2W {
 		return true;
 	}
 
-	static computeCFG(fns, blocks, blockOrder) {
+	static computeCFG(fns, blocks, blockOrder, declarations) {
 		const n = Object.keys(blocks).length;
 		const g = new Graph(n + 2);
 
@@ -520,7 +520,23 @@ class LL2W {
 					throw `Couldn't find target ${id}`;
 				}
 
-				if (targets.length != 1) {
+				if (targets.length == 0) {
+					const [ifn, ibi] = id.split(":");
+					if (ifn in declarations) {
+						// Treat the implicit function as a single block that jumps back to the calling function.
+						console.warn(chalk.yellow("Warning:"), `Adding implicit function ${chalk.bold(id)} to CFG.`);
+						targets[0] = g.add({fn: ifn, block: ibi}).arc(i + 2);
+					} else if (Number(ifn) == ifn) {
+						// If the name of the function is a number, that means it's a function pointer.
+						// I'm not sure how function pointers go with CFGs so for now we'll just try ignoring them.
+						console.warn(chalk.yellow("Warning:"), `Ignoring function pointer %${ifn}.`);
+						continue;
+					} else {
+						throw `Found no targets for ${id} and no matching declaration`;
+						// console.warn(chalk.yellow("Warning:"), `Found no targets for ${id} and no matching declaration.`);
+						// continue;
+					}
+				} else if (targets.length != 1) {
 					throw `Found ${targets.length} targets for ${id}`;
 				}
 
@@ -833,7 +849,14 @@ if (require.main === module) {
 	compiler.globalConstants = compiler.extractGlobalConstants();
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
 	compiler.connectBlocks(functions, allBlocks, declarations);
-	const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder);
+
+	// jsome(_.cloneDeep(functions.wvm_check_condition || {}).map(x => {
+	// 	const y = x.slice(0, 2);
+	// 	delete y[1].assigners;
+	// 	return y;
+	// }));
+
+	const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
@@ -854,8 +877,8 @@ if (require.main === module) {
 	// console.log(g.reversePost.map(x => String.fromCharCode("A".charCodeAt(0) + x)));
 	// console.log(g.reversePost.map(x => x + 1));
 
+	// Why does pred of _main:5 contain retvar:0?
 	cfg.dominance(0);
-
 
 	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
 
