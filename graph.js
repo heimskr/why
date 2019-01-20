@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 let _ = require("lodash");
 
+const chalk = require("chalk");
+
 /**
  * Contains various utilities.
  * 
@@ -35,10 +37,12 @@ class Graph {
 		 * @name module:util~Graph#nodes
 		 */
 
-		this.reset(n);
-
-		return new Proxy(this, {
+		return new Proxy(this.reset(n), {
 			get(target, prop) {
+				if (typeof prop == "symbol") {
+					return target[prop];
+				}
+
 				if (Number(prop) == prop || isLetter(prop)) {
 					return target.getNode(prop);
 				}
@@ -76,6 +80,13 @@ class Graph {
 	 */
 	reset(n) {
 		this.nodes = _.range(0, n).map(i => new Node(i, this));
+		return this;
+	}
+
+	add(data) {
+		const newNode = new Node(this.length, this, data);
+		this.push(newNode);
+		return newNode;
 	}
 
 	/**
@@ -164,10 +175,20 @@ class Graph {
 		}
 
 		const choosePred = b => {
-			console.log("\n" + b.data.fn + " " + b.data.block);
-			for (const c in this.getNode(b).pred) {
+			if (b.data) {
+				console.log("\n" + b.data.fn + " " + b.data.block);
+			} else {
+				console.log(chalk.red("???"));
+			}
+
+			for (const c of this.getNode(b).pred) {
 				const d = this.getNode(c).data;
-				console.log("   ", d.fn.padStart(6, " ") + " " + d.block);
+				if (d === null) {
+					console.log(chalk.yellow(c), "   yikes");
+					continue;
+				}
+
+				console.log(c, "   ", d.fn.padStart(6, " ") + " " + d.block);
 			}
 		}
 
