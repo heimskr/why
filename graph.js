@@ -7,7 +7,18 @@ let _ = require("lodash");
  * @module util
  */
 
-const getID = node => node instanceof Node? node.id : node;
+const alpha = "abcdefghijklmnopqrstuvwxyz";
+const isLetter = x => typeof x == "string" && x.length == 1 && -1 < alpha.indexOf(x.toLowerCase());
+const getID = node => {
+	if (node instanceof Node) {
+		return node.id;
+	} else if (isLetter(node)) {
+		return alpha.indexOf(node.toLowerCase());
+	} else {
+		return node;
+	}
+};
+
 
 /**
  * Represents a directed graph datatype.
@@ -28,7 +39,7 @@ class Graph {
 
 		return new Proxy(this, {
 			get(target, prop) {
-				if (Number(prop) == prop) {
+				if (Number(prop) == prop || isLetter(prop)) {
 					return target.getNode(prop);
 				}
 
@@ -73,7 +84,12 @@ class Graph {
 	 * @return {Node}     The node corresponding to n if n is a number; n otherwise.
 	 */
 	getNode(n) {
-		n = Number(n) == n? n : n.id;
+		if (isLetter(n)) {
+			n = alpha.indexOf(n.toLowerCase());
+		} else if (n.id !== undefined) {
+			n = n.id;
+		}
+
 		return _.find(this.nodes, node => node.id == n);
 	}
 
@@ -83,7 +99,18 @@ class Graph {
 	 * @param {(Node|number)} destination The destination node.
 	 */
 	arc(source, destination) {
-		this.nodes[getID(source)].arc(destination);
+		if (typeof source === "string" && isLetter(source[0]) && isLetter(source[1]) && destination === undefined) {
+			this.nodes[getID(source[0])].arc(getID(source[1]));
+		} else {
+			this.nodes[getID(source)].arc(destination);
+		}
+		
+		return this;
+	}
+
+	arcString(str) {
+		str.split(/\s+/).forEach(s => this.arc(s));
+		return this;
 	}
 
 	/**
@@ -92,6 +119,7 @@ class Graph {
 	 */
 	arcs(...sets) {
 		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
+		return this;
 	}
 
 	/**
@@ -101,6 +129,7 @@ class Graph {
 	 */
 	removeArc(source, destination) {
 		this.nodes[getID(source)].removeArc(destination);
+		return this;
 	}
 
 	/**
@@ -111,6 +140,7 @@ class Graph {
 	edge(a, b) {
 		this.nodes[getID(a)].arc(b);
 		this.nodes[getID(b)].arc(a);
+		return this;
 	}
 
 	/**
@@ -121,6 +151,28 @@ class Graph {
 	disconnect(a, b) {
 		this.nodes[getID(a)].removeArc(b);
 		this.nodes[getID(b)].removeArc(a);
+		return this;
+	}
+
+	dominance(startNode) {
+		const doms = [];
+		if (startNode === undefined) {
+			startNode = this[0];
+		} else {
+			startNode = this.getNode(startNode);
+		}
+
+		let changed = true;
+		while (changed) {
+			changed = false;
+
+		}
+
+		const rpo = this.reversePost();
+	}
+
+	reversePost() {
+		return _.sortBy(this.dfs().finished.map((x, i) => [i, x]), 1).map(x => x[0]).reverse();
 	}
 
 	/**
@@ -128,9 +180,10 @@ class Graph {
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
 	dfs() {
-		const parents    = _.fill(Array(this.nodes.length), null);
-		const discovered = _.fill(Array(this.nodes.length), null);
-		const finished   = _.fill(Array(this.nodes.length), null);
+		const n = this.nodes.length;
+		const parents    = _.fill(Array(n), null);
+		const discovered = _.fill(Array(n), null);
+		const finished   = _.fill(Array(n), null);
 		let time = 0;
 
 		const visit = u => {
@@ -145,7 +198,7 @@ class Graph {
 			finished[u] = ++time;
 		};
 
-		_.range(0, this.nodes.length).forEach(u => discovered[u] == null && visit(u));
+		_.range(0, n).forEach(u => discovered[u] == null && visit(u));
 
 		return {parents, discovered, finished};
 	}
@@ -228,6 +281,7 @@ class Graph {
 	 */
 	removeLoops() {
 		this.nodes.forEach(node => this.disconnect(node, node));
+		return this;
 	}
 
 	/**
@@ -378,6 +432,8 @@ class Node {
 		if (!node.in.includes(this.id)) {
 			node.in.push(this.id);
 		}
+
+		return this;
 	}
 
 	/**
@@ -394,6 +450,8 @@ class Node {
 		if (!node.out.includes(this.id)) {
 			node.out.push(this.id);
 		}
+
+		return this;
 	}
 
 	/**
@@ -404,6 +462,7 @@ class Node {
 		n = getID(n);
 		this.out = this.out.filter(edge => edge != n);
 		this.graph.nodes[n].in = this.graph.nodes[n].in.filter(edge => edge != this.id);
+		return this;
 	}
 
 	/**
@@ -414,6 +473,7 @@ class Node {
 		n = getID(n);
 		this.in = this.in.filter(edge => edge != n);
 		this.graph.nodes[n].out = this.graph.nodes[n].out.filter(edge => edge != this.id);
+		return this;
 	}
 
 	/**
