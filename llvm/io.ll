@@ -5,7 +5,8 @@ target triple = "x86_64-apple-macosx10.14.0"
 
 @i = global i32 5, align 4
 @.str = private unnamed_addr constant [7 x i8] c"hello\0A\00", align 1
-@.str.1 = private unnamed_addr constant [5 x i8] c"bye\0A\00", align 1
+@.str.1 = private unnamed_addr constant [4 x i8] c"bye\00", align 1
+@.str.2 = private unnamed_addr constant [2 x i8] c"\0A\00", align 1
 
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define i32 @retvar() #0 {
@@ -16,24 +17,31 @@ define i32 @retvar() #0 {
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define void @_main() #0 {
   %1 = alloca i32, align 4
-  %2 = call i32 @retvar()
-  store i32 %2, i32* %1, align 4
-  br label %3
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  %4 = call i32 @retvar()
+  store i32 %4, i32* %1, align 4
+  br label %5
 
-; <label>:3:                                      ; preds = %8, %0
+; <label>:5:                                      ; preds = %10, %0
   call void @strprint(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i32 0, i32 0))
-  %4 = load i32, i32* %1, align 4
-  %5 = add nsw i32 %4, 1
-  store i32 %5, i32* %1, align 4
-  %6 = load i32, i32* @i, align 4
-  %7 = icmp slt i32 %5, %6
-  br i1 %7, label %8, label %9
+  %6 = load i32, i32* %1, align 4
+  %7 = add nsw i32 %6, 1
+  store i32 %7, i32* %1, align 4
+  %8 = load i32, i32* @i, align 4
+  %9 = icmp slt i32 %7, %8
+  br i1 %9, label %10, label %11
 
-; <label>:8:                                      ; preds = %3
-  br label %3
+; <label>:10:                                     ; preds = %5
+  br label %5
 
-; <label>:9:                                      ; preds = %3
-  call void @strprint(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.1, i32 0, i32 0))
+; <label>:11:                                     ; preds = %5
+  call void @strprint(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.1, i32 0, i32 0))
+  call void @strprint(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.2, i32 0, i32 0))
+  %12 = call i32 @retvar()
+  store i32 %12, i32* %2, align 4
+  %13 = call i32 @retvar()
+  store i32 %13, i32* %3, align 4
   ret void
 }
 

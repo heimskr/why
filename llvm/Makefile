@@ -7,7 +7,7 @@ LLDIR		= ../wvm/c/ll
 
 all: $(COMPILED) _
 
-test: wtest
+test: itest
 
 $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."

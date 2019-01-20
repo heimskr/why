@@ -12,7 +12,10 @@ void _main() {
 		goto foo;
 	}
 
-	strprint("bye\n");
+	strprint("bye");
+	strprint("\n");
+	int y = retvar();
+	int z = retvar();
 }
 
 void strprint(char *str) {
