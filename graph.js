@@ -510,17 +510,14 @@ class Graph {
 
 	validateDirections() {
 		for (const node of this.nodes) {
-			// console.log(`${("["+node.in.join(", ")+"]").padEnd(6," ")}  =>  ${node.id}  =>  [${node.out.join(", ")}]`);
 			for (const o of node.out) {
 				if (!this[o].in.includes(node.id)) {
-					console.warn("; o");
 					return false;
 				}
 			}
 
 			for (const i of node.in) {
 				if (!this[i].out.includes(node.id)) {
-					console.warn("; i");
 					return false;
 				}
 			}
