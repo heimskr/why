@@ -214,7 +214,7 @@ class LL2W {
 			this.metadata[name] = {recursive, distinct, items: toAdd};
 		});
 
-		graph.sorted().forEach(({id: name}) => graph.getNode(name).out.forEach(dependency => {
+		graph.sortedDFS().map(n => graph[n]).forEach(({id: name}) => graph.getNode(name).out.forEach(dependency => {
 			this.metadata[name].items = _.unionWith(this.metadata[name].items, this.metadata[dependency].items, _.isEqual);
 		}));
 
@@ -819,7 +819,10 @@ if (require.main === module) {
 	// }));
 
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
-	const cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
+	let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
+
+	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
+	// console.log(cfg.toString());
 
 	0&&compiler.debug(() => jsome({
 		sourceFilename: compiler.sourceFilename,
@@ -841,7 +844,30 @@ if (require.main === module) {
 	// console.log(g.reversePost.map(x => x + 1));
 
 	// Why does pred of _main:5 contain retvar:0?
-	cfg.dominance(0);
+
+	// console.log(cfg.dominance(0).map((x, i) => cfg[i].data.label + " => " + (x === null? "~" : cfg[x].data.label)));
+	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
+
+	
+	cfg = new Graph(6);
+	cfg.arcString("AB BA BC CB DB DC EA FE FD");
+	cfg.forEach(n => n.data={label: (n.id + 1)+""});
+	
+	// cfg = new Graph(7);
+	// cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
+	// cfg.arc(3, 2); cfg.arc(3, 4); cfg.arc(3, 5); cfg.arc(3, 6);
+	// cfg.arc(1, 4); cfg.arc(5, 2);
+	// cfg.arc(6, 4); cfg.arc(6, 0);
+	// cfg.forEach(n => n.data={label: (n.id + 1)+""});
+
+	// console.log(cfg.reversePost());
+	// console.log(cfg.sortedDFS().map(n => n.id));
+
+	// return;
+
+	console.log(cfg.toString(x=>x+1, x=>x+1));
+	console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
+
 
 	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
 

@@ -184,71 +184,103 @@ class Graph {
 			startNode = this.getNode(startNode);
 		}
 
+		doms[startNode.id] = startNode.id;
+
 		const intersect = (b1, b2) => {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
-			while (finger1 != finger2) {
-				while (finger1 < finger2)
-					finger1 = doms[finger1];
+			const po = this.sortedDFS();
+			const getPO = (finger) => finger in po? po[finger] : Infinity;
 
-				while (finger2 < finger1)
+			console.log(`Intersect(${b1+1}, ${b2+1})`);
+			while (getPO(finger1) != getPO(finger2)) {
+				console.log([finger1+1, finger2+1], [getPO(finger1), getPO(finger2)], this.reversePost());
+				while (getPO(finger1) < getPO(finger2)) {
+					console.log(chalk.dim("    1<2 "), [finger1+1, finger2+1], [getPO(finger1), getPO(finger2)]);
+					finger1 = doms[finger1];
+				}
+				
+				while (getPO(finger2) < getPO(finger1)) {
+					console.log(chalk.dim("    2<1 "), [finger1+1, finger2+1], [getPO(finger1), getPO(finger2)]);
 					finger2 = doms[finger2];
+				}
 			}
 
 			return finger1;
 		};
 
-		const rpo = _.pull(this.reversePost(), startNode.id).map(x => this[x]);
+		const _rpo = this.reversePost();
+		const rpo = _.pull(_rpo, startNode.id).map(x => this[x]);
+		console.log("RPO:", _.pull(_rpo, startNode.id).map(x => x+1));
 		let changed = true, newIDom;
+		let iter = 1;
 		while (changed) {
+			console.log(chalk.bold(`Iteration ${iter++}:`), doms.map(x=>Number(x)==x?x+1:x));
 			changed = false;
 			for (const b of rpo) {
-				newIDom = b.in[0];
+				console.log(chalk.red(`b=${b.data.label}`));
+
+				const processedPreds = b.in.filter(n => doms[n] !== null).sort();
+				if (0 < processedPreds.length) {
+					newIDom = processedPreds[0];
+					// newIDom = _.last(processedPreds);
+				} else {
+					newIDom = b.in[0];
+					// newIDom = _.last(b.in);
+				}
+				
 				if (newIDom === undefined) {
 					console.warn("pred is empty for", b.data.label);
 					continue;
 				}
 
-				b.in.slice(1).forEach(p => {
+				_.without(b.in, newIDom).forEach(p => {
 					if (doms[p] !== null) {
 						newIDom = intersect(p, newIDom);
 					}
 				});
 
-				// if (doms[b.id] != newIDom
+				if (doms[b.id] !== newIDom) {
+					console.log((b.data.label)+":", doms[b.id], "->", newIDom+1);
+					doms[b.id] = newIDom;
+					changed = true;
+				}
 			}
 		}
 
+		return doms;
 	}
 
 	reversePost() {
-		return _.sortBy(this.dfs().finished.map((x, i) => [i, x]), 1).map(x => x[0]).reverse();
+		return this.sortedDFS().reverse();
 	}
 
 	/**
 	 * Runs a depth-first search on the graph.
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
-	dfs() {
+	dfs(start=0) {
 		const n = this.nodes.length;
 		const parents    = _.fill(Array(n), null);
 		const discovered = _.fill(Array(n), null);
 		const finished   = _.fill(Array(n), null);
+		const rpo = [];
 		let time = 0;
 
-		const visit = u => {
-			discovered[u] = ++time;
-			this.nodes[u].out.forEach(v => {
-				if (discovered[v] == null) {
-					parents[v] = u;
-					visit(v);
-				}
-			});
+		let stack = [start];
+		while (stack.length) {
+			const v = stack.pop();
+			console.log("!!", v);
+			rpo.push(v);
+			if (!discovered[v]) {
+				discovered[v] = ++time;
+				// console.log({v});
+				// console.log({out: this.getNode(v).out});
+				this.getNode(v).out.forEach(w => stack.push(w));
+			}
+		}
 
-			finished[u] = ++time;
-		};
-
-		_.range(0, n).forEach(u => discovered[u] == null && visit(u));
+		console.log("disc", discovered);
 
 		return {parents, discovered, finished};
 	}
@@ -290,12 +322,37 @@ class Graph {
 		return Object.values(components).map(a => a.map(u => this.nodes[u]));
 	}
 
+	sortedDFS() {
+		const list = [];
+		const visited = _.fill(Array(this.length), false);
+		const unvisited = _.range(0, this.length);
+
+		const visit = u => {
+			visited[u] = true;
+			_.pull(unvisited, u);
+
+			for (const v of this.getNode(u).out.sort()) {
+				if (!visited[v]) {
+					visit(v);
+				}
+			}
+			
+			list.push(u);
+		};
+		
+		while (unvisited.length) {
+			visit(unvisited[0]);
+		}
+
+		return list;
+	}
+
 	/**
 	 * Calculates a topologically sorted list of nodes using Kahn's algorithm.
 	 * @return {Array<Node>} A topologically sorted list of the graph's nodes.
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
-	sorted() {
+	sortedBFS() {
 		let copy = this.clone();
 		const l = [], s = copy.nodes.filter(node => !node.in.length);
 		if (1 < this.nodes.length && !s.length) {
