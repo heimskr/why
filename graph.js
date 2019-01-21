@@ -222,17 +222,18 @@ class Graph {
 		const intersect = (b1, b2) => {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
-			console.log(`Intersect(${b1+1}, ${b2+1})`);
-			console.log({finger1, finger2});
+			const inc = x => Number(x) == x? x+1 : x;
+
+			console.log(`Intersect(${inc(b1)}, ${inc(b2)})`);
 			while (finger1 != finger2) {
-				console.log([finger1+1, finger2+1]);
+				console.log([inc(finger1), inc(finger2)]);
 				while (finger1 < finger2) {
-					console.log(chalk.dim("    1<2 "), [finger1+1, finger2+1]);
+					console.log(chalk.dim("    1<2 "), [inc(finger1), inc(finger2)]);
 					finger1 = doms[finger1];
 				}
 				
 				while (finger2 < finger1) {
-					console.log(chalk.dim("    2<1 "), [finger1+1, finger2+1]);
+					console.log(chalk.dim("    2<1 "), [inc(finger1), inc(finger2)]);
 					finger2 = doms[finger2];
 				}
 			}
@@ -262,7 +263,7 @@ class Graph {
 		// const rpomr = [...rpom].reverse();
 
 		const nonstart = _.without(this.nodes, startNode);
-		const postage = this.labelReversePost(startNode.id);
+		const postage = this.labelPostOrder(startNode.id);
 
 		doms[startNode.id] = startNode.id;
 		console.log(postage);
@@ -289,11 +290,9 @@ class Graph {
 				}
 
 				console.log("About to start others. newIDom =", newIDom+1);
-				const others = _.without(preds, newIDom).reverse();
-				// const others = _.without(b.in, newIDom);
+				const others = _.without(preds, newIDom);
 				for (const p of others) {
-					console.log({p:p+1, good: doms[p] !== null});
-					if (doms[p] !== null) {
+					if (doms[p] !== null ) {
 						newIDom = intersect(p, newIDom);
 					}
 				}
@@ -318,7 +317,7 @@ class Graph {
 		return _.sortBy(this.dfs(start).finished.map((n, i) => [i, n]), 1).map(_.head);
 	}
 
-	labelReversePost(id, state) {
+	labelPostOrder(id, state) {
 		if (state === undefined) {
 			state = {
 				n: 0,
@@ -332,7 +331,7 @@ class Graph {
 		if (obj.done === false) {
 			obj.done = true;
 			for (const c of this.getNode(id).out) {
-				this.labelReversePost(c, state);
+				this.labelPostOrder(c, state);
 			}
 
 			obj.order = state.n++;
