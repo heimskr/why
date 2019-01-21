@@ -177,7 +177,6 @@ class Graph {
 	dominance(startNode) {
 		// https://www.cs.rice.edu/~keith/Embed/dom.pdf
 		const doms =_.fill(Array(this.length), null);
-		doms[startNode.id] = startNode.id;
 		
 		if (startNode === undefined) {
 			startNode = this[0];
@@ -188,17 +187,12 @@ class Graph {
 		const intersect = (b1, b2) => {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
-			const inc = x => Number(x) == x? x+1 : x;
-			console.log(`Intersect(${inc(b1)}, ${inc(b2)})`);
 			while (finger1 != finger2) {
-				console.log([inc(finger1), inc(finger2)]);
 				while (finger1 < finger2) {
-					console.log(chalk.dim("    1<2 "), [inc(finger1), inc(finger2)]);
 					finger1 = doms[finger1];
 				}
 				
 				while (finger2 < finger1) {
-					console.log(chalk.dim("    2<1 "), [inc(finger1), inc(finger2)]);
 					finger2 = doms[finger2];
 				}
 			}
@@ -211,21 +205,16 @@ class Graph {
 		let iter = 1;
 
 		doms[startNode.id] = startNode.id;
-		console.log(postage);
 
 		while (changed) {
-			console.log(chalk.bold(`Iteration ${iter++}:`), doms.map(x=>Number(x)==x?x+1:chalk.italic("u")).join(", "));
 			changed = false;
 
 			for (let node = postage.tail; node; node = node.prev) {
-				console.log(chalk.cyan(node.id+1));
 				if (node.id == startNode.id) {
 					continue;
 				}
 
 				const b = this.getNode(node.id);
-				console.log(chalk.magenta(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}; bnr = ${node.order}`));
-
 				const preds = _.sortBy(b.in, x => postage.objs[x].order);
 				let newIDom = preds.filter(c => doms[c] !== null)[0];
 
@@ -233,7 +222,6 @@ class Graph {
 					newIDom = null;
 				}
 
-				console.log("About to start others. newIDom =", newIDom+1);
 				const others = _.without(preds, newIDom);
 				for (const p of others) {
 					if (doms[p] !== null ) {
@@ -241,14 +229,8 @@ class Graph {
 					}
 				}
 
-				if (newIDom === null) {
-					console.warn(chalk.red(`newIDom is null for ${chalk.bold(b.data.label)}`));
-				}
-
 				if (doms[node.id] !== newIDom) {
-					const oldDom = doms[node.id];
 					doms[node.id] = newIDom;
-					console.log(`doms[${node.id+1}]: ${Number(oldDom)==oldDom?oldDom+1:oldDom} -> ${newIDom+1}`);
 					changed = true;
 				}
 			}
