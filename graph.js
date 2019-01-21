@@ -223,6 +223,7 @@ class Graph {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
 			console.log(`Intersect(${b1+1}, ${b2+1})`);
+			console.log({finger1, finger2});
 			while (finger1 != finger2) {
 				console.log([finger1+1, finger2+1]);
 				while (finger1 < finger2) {
@@ -262,68 +263,51 @@ class Graph {
 
 		const nonstart = _.without(this.nodes, startNode);
 		const postage = this.labelReversePost(startNode.id);
+
+		doms[startNode.id] = startNode.id;
 		console.log(postage);
 
 		while (changed) {
 			console.log(chalk.bold(`Iteration ${iter++}:`), doms.map(x=>Number(x)==x?x+1:chalk.italic("u")).join(", "));
 			changed = false;
 
-			for (let node = postage.head; node; node = node.next) {
+			for (let node = postage.tail; node; node = node.prev) {
+			// for (let node = postage.head; node; node = node.next) {
+				console.log(chalk.cyan(node.id+1));
 				if (node.id == startNode.id) {
 					continue;
 				}
 
 				const b = this.getNode(node.id);
-				console.log(chalk.red(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}; bnr = ${node.order}`));
-				// const bnr = rp[b];
+				console.log(chalk.magenta(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}; bnr = ${node.order}`));
 
-				let newIDom = null;
+				const preds = _.sortBy(b.in, x => postage.objs[x].order);
 
-				// for (const [i, p] in Object.entries(b.in)) {
-				// b.in.map(x => rp[x]).forEach((p, i) => {
-				// b.in.map(x => rp[x]).forEach((p, i) => {
-				for (const p in b.in.sort()) {
-					const pnr = rp[p];
+				let newIDom = preds.filter(c => doms[c] !== null)[0];
+				if (newIDom === undefined) {
+					newIDom = null;
+				}
 
-					if (doms[pnr] === null) {
-						// return;
-						continue;
+				console.log("About to start others. newIDom =", newIDom+1);
+				const others = _.without(preds, newIDom).reverse();
+				// const others = _.without(b.in, newIDom);
+				for (const p of others) {
+					console.log({p:p+1, good: doms[p] !== null});
+					if (doms[p] !== null) {
+						newIDom = intersect(p, newIDom);
 					}
-
-					if (newIDom === null) {
-						newIDom = p;
-						// return;
-						continue;
-					}
-
-					newIDom = intersect(p, newIDom);
 				}
 
 				if (newIDom === null) {
 					console.warn(chalk.red(`newIDom is null for ${chalk.bold(b.data.label)}`));
-					continue;
 				}
 
-				if (doms[b.id] !== newIDom) {
-					doms[b.id] = newIDom;
+				if (doms[node.id] !== newIDom) {
+					const oldDom = doms[node.id];
+					doms[node.id] = newIDom;
+					console.log(`doms[${node.id+1}]: ${Number(oldDom)==oldDom?oldDom+1:oldDom} -> ${newIDom+1}`);
 					changed = true;
 				}
-
-				// console.log(preds, "~", newIDom);
-
-				// _.without(b.in, newIDom).forEach(p => {
-				// _.without(preds, newIDom).forEach(p => {
-				// 	console.log(`    p: ${p+1}; dom[p] = ${doms[p]+1}, rpo[p] = ${rpo[p]}, doms[rpo[p]] = ${doms[rpo[p]]}`);
-				// 	if (doms[rpo[p]] !== null) {
-				// 		newIDom = intersect(p, newIDom);
-				// 	}
-				// });
-
-				// if (doms[b.id] !== newIDom) {
-				// 	console.log((b.data.label)+":", doms[b.id], "->", newIDom+1);
-				// 	doms[b.id] = newIDom;
-				// 	changed = true;
-				// }
 			}
 		}
 
