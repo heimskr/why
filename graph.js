@@ -177,6 +177,7 @@ class Graph {
 	dominance(startNode) {
 		// https://www.cs.rice.edu/~keith/Embed/dom.pdf
 		const doms =_.fill(Array(this.length), null);
+		doms[startNode.id] = startNode.id;
 		
 		if (startNode === undefined) {
 			startNode = this[0];
@@ -184,46 +185,10 @@ class Graph {
 			startNode = this.getNode(startNode);
 		}
 
-		doms[startNode.id] = startNode.id;
-
-		const _rp = this.reversePost(startNode.id);
-		console.log("RP:", _rp.map(x => x+1), "(original)");
-		const rp = _.without(_rp, startNode.id);
-		// const rpo = this.reversePostObj(startNode.id);
-		// console.log("RPO:", rpo);
-		const rpm = rp.map(x => this[x]);
-
-		const _intersect = (b1, b2) => {
-			let finger1 = getID(b1), finger2 = getID(b2);
-
-			// const po = [...rpo].reverse();
-			const getPO = (finger) => rp[finger];
-			// const po = [...rpo];
-			// const getPO = (finger) => finger in po? po[finger] : Infinity;
-			// const getPO = (finger) => finger in po? po[finger] : -Infinity;
-
-			console.log(`Intersect(${b1+1}, ${b2+1})`);
-			while (getPO(finger1) != getPO(finger2)) {
-				// console.log([finger1+1, finger2+1], [getPO(finger1), getPO(finger2)], this.reversePost());
-				while (getPO(finger1) < getPO(finger2)) {
-					console.log(chalk.dim("    1<2 "), [finger1+1, finger2+1], [getPO(finger1), getPO(finger2)]);
-					finger1 = doms[finger1];
-				}
-				
-				while (getPO(finger2) < getPO(finger1)) {
-					console.log(chalk.dim("    2<1 "), [finger1+1, finger2+1], [getPO(finger1), getPO(finger2)]);
-					finger2 = doms[finger2];
-				}
-			}
-
-			return finger1;
-		};
-
 		const intersect = (b1, b2) => {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
 			const inc = x => Number(x) == x? x+1 : x;
-
 			console.log(`Intersect(${inc(b1)}, ${inc(b2)})`);
 			while (finger1 != finger2) {
 				console.log([inc(finger1), inc(finger2)]);
@@ -240,30 +205,10 @@ class Graph {
 
 			return finger1;
 		};
-		
-		
-		// let changed = true, newIDom;
-		// let iter = 1;
 
-		// while (changed) {
-		// 	changed = false;
-		// 	// ne
-
-		// }
-
-
-		// return doms;
-
-		// console.log("RPO:", _rpo.map(x => x+1));
-		// console.log("RPO:", _.pull(_rpo, startNode.id).map(x => x+1));
-
-
+		const postage = this.labelPostOrder(startNode.id);
 		let changed = true;
 		let iter = 1;
-		// const rpomr = [...rpom].reverse();
-
-		const nonstart = _.without(this.nodes, startNode);
-		const postage = this.labelPostOrder(startNode.id);
 
 		doms[startNode.id] = startNode.id;
 		console.log(postage);
@@ -273,7 +218,6 @@ class Graph {
 			changed = false;
 
 			for (let node = postage.tail; node; node = node.prev) {
-			// for (let node = postage.head; node; node = node.next) {
 				console.log(chalk.cyan(node.id+1));
 				if (node.id == startNode.id) {
 					continue;
@@ -283,8 +227,8 @@ class Graph {
 				console.log(chalk.magenta(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}; bnr = ${node.order}`));
 
 				const preds = _.sortBy(b.in, x => postage.objs[x].order);
-
 				let newIDom = preds.filter(c => doms[c] !== null)[0];
+
 				if (newIDom === undefined) {
 					newIDom = null;
 				}
@@ -330,7 +274,7 @@ class Graph {
 		const obj = state.objs[id];
 		if (obj.done === false) {
 			obj.done = true;
-			for (const c of this.getNode(id).out) {
+			for (const c of this.getNode(id).out.sort()) {
 				this.labelPostOrder(c, state);
 			}
 
