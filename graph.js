@@ -177,11 +177,26 @@ class Graph {
 	dominance(startNode) {
 		// https://www.cs.rice.edu/~keith/Embed/dom.pdf
 		const doms =_.fill(Array(this.length), null);
+		
 		if (startNode === undefined) {
 			startNode = this[0];
 		} else {
 			startNode = this.getNode(startNode);
 		}
+
+		const intersect = (b1, b2) => {
+			let finger1 = getID(b1), finger2 = getID(b2);
+
+			while (finger1 != finger2) {
+				while (finger1 < finger2)
+					finger1 = doms[finger1];
+
+				while (finger2 < finger1)
+					finger2 = doms[finger2];
+			}
+
+			return finger1;
+		};
 
 		const rpo = _.pull(this.reversePost(), startNode.id).map(x => this[x]);
 		let changed = true, newIDom;
@@ -189,9 +204,18 @@ class Graph {
 			changed = false;
 			for (const b of rpo) {
 				newIDom = b.in[0];
-				if (!newIDom) {
-					// console.log("pred is empty for", b.data);
+				if (newIDom === undefined) {
+					console.warn("pred is empty for", b.data.label);
+					continue;
 				}
+
+				b.in.slice(1).forEach(p => {
+					if (doms[p] !== null) {
+						newIDom = intersect(p, newIDom);
+					}
+				});
+
+				// if (doms[b.id] != newIDom
 			}
 		}
 
@@ -392,8 +416,29 @@ class Graph {
 	 * Returns a string containing each node's adjacency list.
 	 * @return {string} A string representation of the graph.
 	 */
-	toString() {
-		return _.sortBy(this.nodes, "id").map(({out, id}) => `${id} => ${out.join(", ")}`).join("\n");
+	toString(idFn = x=>x, outFn = x=>x) {
+		return _.sortBy(this.nodes, "id").map((node) => `${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`).join("\n");
+	}
+
+	validateDirections() {
+		for (const node of this.nodes) {
+			// console.log(`${("["+node.in.join(", ")+"]").padEnd(6," ")}  =>  ${node.id}  =>  [${node.out.join(", ")}]`);
+			for (const o of node.out) {
+				if (!this[o].in.includes(node.id)) {
+					console.warn("; o");
+					return false;
+				}
+			}
+
+			for (const i of node.in) {
+				if (!this[i].out.includes(node.id)) {
+					console.warn("; i");
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }
 
