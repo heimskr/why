@@ -186,24 +186,25 @@ class Graph {
 
 		doms[startNode.id] = startNode.id;
 
-		const _rpo = this.reversePost(startNode.id);
-		console.log("RPO:", _rpo.map(x => x+1), "(original)");
-		const rpo = _.without(_rpo, startNode.id);
-		// const rpo = _rpo;
-		const rpom = rpo.map(x => this[x]);
+		const _rp = this.reversePost(startNode.id);
+		console.log("RP:", _rp.map(x => x+1), "(original)");
+		const rp = _.without(_rp, startNode.id);
+		// const rpo = this.reversePostObj(startNode.id);
+		// console.log("RPO:", rpo);
+		const rpm = rp.map(x => this[x]);
 
-		const intersect = (b1, b2) => {
+		const _intersect = (b1, b2) => {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
-			// const po = this.sortedDFS();
-			const po = [...rpo].reverse();
+			// const po = [...rpo].reverse();
+			const getPO = (finger) => rp[finger];
 			// const po = [...rpo];
-			const getPO = (finger) => finger in po? po[finger] : Infinity;
+			// const getPO = (finger) => finger in po? po[finger] : Infinity;
 			// const getPO = (finger) => finger in po? po[finger] : -Infinity;
 
 			console.log(`Intersect(${b1+1}, ${b2+1})`);
 			while (getPO(finger1) != getPO(finger2)) {
-				console.log([finger1+1, finger2+1], [getPO(finger1), getPO(finger2)], this.reversePost());
+				// console.log([finger1+1, finger2+1], [getPO(finger1), getPO(finger2)], this.reversePost());
 				while (getPO(finger1) < getPO(finger2)) {
 					console.log(chalk.dim("    1<2 "), [finger1+1, finger2+1], [getPO(finger1), getPO(finger2)]);
 					finger1 = doms[finger1];
@@ -218,51 +219,111 @@ class Graph {
 			return finger1;
 		};
 
+		const intersect = (b1, b2) => {
+			let finger1 = getID(b1), finger2 = getID(b2);
+
+			console.log(`Intersect(${b1+1}, ${b2+1})`);
+			while (finger1 != finger2) {
+				console.log([finger1+1, finger2+1]);
+				while (finger1 < finger2) {
+					console.log(chalk.dim("    1<2 "), [finger1+1, finger2+1]);
+					finger1 = doms[finger1];
+				}
+				
+				while (finger2 < finger1) {
+					console.log(chalk.dim("    2<1 "), [finger1+1, finger2+1]);
+					finger2 = doms[finger2];
+				}
+			}
+
+			return finger1;
+		};
+		
+		
+		// let changed = true, newIDom;
+		// let iter = 1;
+
+		// while (changed) {
+		// 	changed = false;
+		// 	// ne
+
+		// }
+
+
+		// return doms;
+
 		// console.log("RPO:", _rpo.map(x => x+1));
-		console.log("RPO:", rpom.map(x => x.id+1));
 		// console.log("RPO:", _.pull(_rpo, startNode.id).map(x => x+1));
-		let changed = true, newIDom;
+
+
+		let changed = true;
 		let iter = 1;
-		const rpomr = [...rpom].reverse();
+		// const rpomr = [...rpom].reverse();
+
+		const nonstart = _.without(this.nodes, startNode);
+		const postage = this.labelReversePost(startNode.id);
+		console.log(postage);
+
 		while (changed) {
 			console.log(chalk.bold(`Iteration ${iter++}:`), doms.map(x=>Number(x)==x?x+1:chalk.italic("u")).join(", "));
 			changed = false;
-			for (const b of rpom) {
-				console.log(chalk.red(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}`));
 
-				const preds = [...b.in].sort().reverse();
-				// newIDom = preds[0];
-				const processedPreds = b.in.filter(n => doms[n] !== null).sort();
-				if (0 < processedPreds.length) {
-					// console.log(`0 < ${processedPreds.length} (processedPreds.length)`);
-					newIDom = processedPreds[0];
-					// newIDom = _.last(processedPreds);
-				} else {
-					// console.log(`!${processedPreds.length} (processedPreds.length) -> ${b.in[0]}`);
-					newIDom = preds[0];
-					// newIDom = _.last(b.in);
-				}
-				
-				if (newIDom === undefined) {
-					console.warn("pred is empty for", b.data.label);
+			for (let node = postage.head; node; node = node.next) {
+				if (node.id == startNode.id) {
 					continue;
 				}
 
-				console.log(preds, "~", newIDom);
+				const b = this.getNode(node.id);
+				console.log(chalk.red(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}; bnr = ${node.order}`));
+				// const bnr = rp[b];
 
-				// _.without(b.in, newIDom).forEach(p => {
-				_.without(preds, newIDom).forEach(p => {
-					console.log(`    p: ${p+1}; dom[p] = ${doms[p]+1}, rpo[p] = ${rpo[p]}, doms[rpo[p]] = ${doms[rpo[p]]}`);
-					if (doms[rpo[p]] !== null) {
-						newIDom = intersect(p, newIDom);
+				let newIDom = null;
+
+				// for (const [i, p] in Object.entries(b.in)) {
+				// b.in.map(x => rp[x]).forEach((p, i) => {
+				// b.in.map(x => rp[x]).forEach((p, i) => {
+				for (const p in b.in.sort()) {
+					const pnr = rp[p];
+
+					if (doms[pnr] === null) {
+						// return;
+						continue;
 					}
-				});
+
+					if (newIDom === null) {
+						newIDom = p;
+						// return;
+						continue;
+					}
+
+					newIDom = intersect(p, newIDom);
+				}
+
+				if (newIDom === null) {
+					console.warn(chalk.red(`newIDom is null for ${chalk.bold(b.data.label)}`));
+					continue;
+				}
 
 				if (doms[b.id] !== newIDom) {
-					console.log((b.data.label)+":", doms[b.id], "->", newIDom+1);
 					doms[b.id] = newIDom;
 					changed = true;
 				}
+
+				// console.log(preds, "~", newIDom);
+
+				// _.without(b.in, newIDom).forEach(p => {
+				// _.without(preds, newIDom).forEach(p => {
+				// 	console.log(`    p: ${p+1}; dom[p] = ${doms[p]+1}, rpo[p] = ${rpo[p]}, doms[rpo[p]] = ${doms[rpo[p]]}`);
+				// 	if (doms[rpo[p]] !== null) {
+				// 		newIDom = intersect(p, newIDom);
+				// 	}
+				// });
+
+				// if (doms[b.id] !== newIDom) {
+				// 	console.log((b.data.label)+":", doms[b.id], "->", newIDom+1);
+				// 	doms[b.id] = newIDom;
+				// 	changed = true;
+				// }
 			}
 		}
 
@@ -271,6 +332,50 @@ class Graph {
 
 	reversePost(start) {
 		return _.sortBy(this.dfs(start).finished.map((n, i) => [i, n]), 1).map(_.head);
+	}
+
+	labelReversePost(id, state) {
+		if (state === undefined) {
+			state = {
+				n: 0,
+				start: id,
+				list: [],
+				objs: this.nodes.map(x => ({id: x.id, order: null, done: false}))
+			};
+		}
+
+		const obj = state.objs[id];
+		if (obj.done === false) {
+			obj.done = true;
+			for (const c of this.getNode(id).out) {
+				this.labelReversePost(c, state);
+			}
+
+			obj.order = state.n++;
+			state.list.push(id);
+		}
+
+		if (state.list.length == this.length) {
+			for (let i = 0; i < this.length; i++) {
+				const here = _.find(state.objs, o => o.order == i);
+				const next = _.find(state.objs, o => o.order == i + 1);
+
+				delete here.done;
+
+				if (i == 0) {
+					state.head = here;
+				}
+
+				if (next) {
+					here.next = next;
+					next.prev = here;
+				} else {
+					state.tail = here;
+				}
+			}
+		}
+
+		return state;
 	}
 
 	/**
@@ -301,31 +406,6 @@ class Graph {
 
 		return {parents, discovered, finished};
 	}
-
-	// dfs(start=0) {
-	// 	const n = this.nodes.length;
-	// 	const parents    = _.fill(Array(n), null);
-	// 	const discovered = _.fill(Array(n), null);
-	// 	const finished   = _.fill(Array(n), null);
-	// 	const rpo = [];
-	// 	let time = 0;
-
-	// 	let stack = [start];
-	// 	while (stack.length) {
-	// 		const v = stack.pop();
-	// 		console.log("!!", v);
-	// 		if (!discovered[v]) {
-	// 			discovered[v] = ++time;
-	// 			// console.log({v});
-	// 			// console.log({out: this.getNode(v).out});
-	// 			this.getNode(v).out.sort().reverse().forEach(w => stack.push(w));
-	// 		}
-	// 	}
-
-	// 	console.log("disc", discovered);
-
-	// 	return {parents, discovered, finished, rpo};
-	// }
 
 	/**
 	 * Calculates and returns a list of this graph's connected components using Kosaraju's algorithm.
@@ -394,7 +474,7 @@ class Graph {
 	 * @return {Array<Node>} A topologically sorted list of the graph's nodes.
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
-	sortedBFS() {
+	topoSort() {
 		let copy = this.clone();
 		const l = [], s = copy.nodes.filter(node => !node.in.length);
 		if (1 < this.nodes.length && !s.length) {
