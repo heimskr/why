@@ -504,46 +504,7 @@ class LL2W {
 				.map(s => s.substr(s.indexOf(":") + 1))
 				.map(s => g.findSingle(b => b.data.label == s))
 				.forEach(n => g[i].arc(n));
-
-			/*
-			const block = blocks[fnName + ":" + blockIndex];
-			if (!block) {
-				throw `Block "${fnName}:${blockIndex} not found.`;
-			}
-
-			for (const id of block[0].out) {
-				const targets = g.filter(({data}, j) => 2 <= j && `${data.fn}:${data.block}` == id);
-				
-				if (!targets || targets.length === undefined) {
-					throw `Couldn't find target ${id}`;
-				}
-
-				if (targets.length == 0) {
-					const [ifn, ibi] = id.split(":");
-					if (ifn in declarations) {
-						// Treat the implicit function as a single block that jumps back to the calling function.
-						console.warn(chalk.yellow("Warning:"), `Adding implicit function ${chalk.bold(id)} to CFG.`);
-						targets[0] = g.add({fn: ifn, block: ibi}).arc(i + 2);
-					} else if (Number(ifn) == ifn) {
-						// If the name of the function is a number, that means it's a function pointer.
-						// I'm not sure how function pointers go with CFGs so for now we'll just try ignoring them.
-						console.warn(chalk.yellow("Warning:"), `Ignoring function pointer %${ifn}.`);
-						continue;
-					} else {
-						throw `Found no targets for ${id} and no matching declaration`;
-						// console.warn(chalk.yellow("Warning:"), `Found no targets for ${id} and no matching declaration.`);
-						// continue;
-					}
-				} else if (targets.length != 1) {
-					throw `Found ${targets.length} targets for ${id}`;
-				}
-
-				g[i + 2].arc(targets[0]);
-			}
-			*/
 		});
-
-		// console.log(g.nodes.map(({out, id}) => `${g[id].data.label} => ${out.map(n => g[n].data.label).join(", ")}`).join("\n"));
 
 		return g;
 	}
