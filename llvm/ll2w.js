@@ -850,8 +850,13 @@ if (require.main === module) {
 
 	
 	cfg = new Graph(6);
-	cfg.arcString("AB BA BC CB DB DC EA FE FD");
+	cfg.arcString("AB BA BC CB DB DC EA FE FD"); // 0 2 1 3 4 5
 	cfg.forEach(n => n.data={label: (n.id + 1)+""});
+
+	// console.log("RPO:", cfg.reversePost(5));
+
+	// console.log("DFS:", cfg.dfs(5));
+	// return;
 	
 	// cfg = new Graph(7);
 	// cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
@@ -859,6 +864,7 @@ if (require.main === module) {
 	// cfg.arc(1, 4); cfg.arc(5, 2);
 	// cfg.arc(6, 4); cfg.arc(6, 0);
 	// cfg.forEach(n => n.data={label: (n.id + 1)+""});
+	// cfg.forEach(n => n.data={label: (n.id)+""});
 
 	// console.log(cfg.reversePost());
 	// console.log(cfg.sortedDFS().map(n => n.id));
@@ -891,4 +897,7 @@ Potentially useful links:
 	Register allocation:
 		https://en.wikipedia.org/wiki/Register_allocation#Iterated_Register_Coalescing
 		https://www.cs.cmu.edu/~fp/courses/15411-f09/lectures/03-regalloc.pdf
+
+	https://patchwork.kernel.org/patch/10295821/
+	https://github.com/lucvoo/sparse-dev
 */

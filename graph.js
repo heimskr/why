@@ -186,11 +186,20 @@ class Graph {
 
 		doms[startNode.id] = startNode.id;
 
+		const _rpo = this.reversePost(startNode.id);
+		console.log("RPO:", _rpo.map(x => x+1), "(original)");
+		const rpo = _.without(_rpo, startNode.id);
+		// const rpo = _rpo;
+		const rpom = rpo.map(x => this[x]);
+
 		const intersect = (b1, b2) => {
 			let finger1 = getID(b1), finger2 = getID(b2);
 
-			const po = this.sortedDFS();
+			// const po = this.sortedDFS();
+			const po = [...rpo].reverse();
+			// const po = [...rpo];
 			const getPO = (finger) => finger in po? po[finger] : Infinity;
+			// const getPO = (finger) => finger in po? po[finger] : -Infinity;
 
 			console.log(`Intersect(${b1+1}, ${b2+1})`);
 			while (getPO(finger1) != getPO(finger2)) {
@@ -209,23 +218,28 @@ class Graph {
 			return finger1;
 		};
 
-		const _rpo = this.reversePost();
-		const rpo = _.pull(_rpo, startNode.id).map(x => this[x]);
-		console.log("RPO:", _.pull(_rpo, startNode.id).map(x => x+1));
+		// console.log("RPO:", _rpo.map(x => x+1));
+		console.log("RPO:", rpom.map(x => x.id+1));
+		// console.log("RPO:", _.pull(_rpo, startNode.id).map(x => x+1));
 		let changed = true, newIDom;
 		let iter = 1;
+		const rpomr = [...rpom].reverse();
 		while (changed) {
-			console.log(chalk.bold(`Iteration ${iter++}:`), doms.map(x=>Number(x)==x?x+1:x));
+			console.log(chalk.bold(`Iteration ${iter++}:`), doms.map(x=>Number(x)==x?x+1:chalk.italic("u")).join(", "));
 			changed = false;
-			for (const b of rpo) {
-				console.log(chalk.red(`b=${b.data.label}`));
+			for (const b of rpom) {
+				console.log(chalk.red(`b = ${b.data.label} <- ${b.in.map(x=>this[x].data.label).join(", ")}`));
 
+				const preds = [...b.in].sort().reverse();
+				// newIDom = preds[0];
 				const processedPreds = b.in.filter(n => doms[n] !== null).sort();
 				if (0 < processedPreds.length) {
+					// console.log(`0 < ${processedPreds.length} (processedPreds.length)`);
 					newIDom = processedPreds[0];
 					// newIDom = _.last(processedPreds);
 				} else {
-					newIDom = b.in[0];
+					// console.log(`!${processedPreds.length} (processedPreds.length) -> ${b.in[0]}`);
+					newIDom = preds[0];
 					// newIDom = _.last(b.in);
 				}
 				
@@ -234,8 +248,12 @@ class Graph {
 					continue;
 				}
 
-				_.without(b.in, newIDom).forEach(p => {
-					if (doms[p] !== null) {
+				console.log(preds, "~", newIDom);
+
+				// _.without(b.in, newIDom).forEach(p => {
+				_.without(preds, newIDom).forEach(p => {
+					console.log(`    p: ${p+1}; dom[p] = ${doms[p]+1}, rpo[p] = ${rpo[p]}, doms[rpo[p]] = ${doms[rpo[p]]}`);
+					if (doms[rpo[p]] !== null) {
 						newIDom = intersect(p, newIDom);
 					}
 				});
@@ -251,8 +269,8 @@ class Graph {
 		return doms;
 	}
 
-	reversePost() {
-		return this.sortedDFS().reverse();
+	reversePost(start) {
+		return _.sortBy(this.dfs(start).finished.map((n, i) => [i, n]), 1).map(_.head);
 	}
 
 	/**
@@ -264,26 +282,50 @@ class Graph {
 		const parents    = _.fill(Array(n), null);
 		const discovered = _.fill(Array(n), null);
 		const finished   = _.fill(Array(n), null);
-		const rpo = [];
 		let time = 0;
 
-		let stack = [start];
-		while (stack.length) {
-			const v = stack.pop();
-			console.log("!!", v);
-			rpo.push(v);
-			if (!discovered[v]) {
-				discovered[v] = ++time;
-				// console.log({v});
-				// console.log({out: this.getNode(v).out});
-				this.getNode(v).out.forEach(w => stack.push(w));
-			}
-		}
+		const visit = u => {
+			discovered[u] = ++time;
+			this.nodes[u].out.sort().forEach(v => {
+			// this.nodes[u].out.forEach(v => {
+				if (discovered[v] == null) {
+					parents[v] = u;
+					visit(v);
+				}
+			});
 
-		console.log("disc", discovered);
+			finished[u] = ++time;
+		};
+
+		visit(start);
 
 		return {parents, discovered, finished};
 	}
+
+	// dfs(start=0) {
+	// 	const n = this.nodes.length;
+	// 	const parents    = _.fill(Array(n), null);
+	// 	const discovered = _.fill(Array(n), null);
+	// 	const finished   = _.fill(Array(n), null);
+	// 	const rpo = [];
+	// 	let time = 0;
+
+	// 	let stack = [start];
+	// 	while (stack.length) {
+	// 		const v = stack.pop();
+	// 		console.log("!!", v);
+	// 		if (!discovered[v]) {
+	// 			discovered[v] = ++time;
+	// 			// console.log({v});
+	// 			// console.log({out: this.getNode(v).out});
+	// 			this.getNode(v).out.sort().reverse().forEach(w => stack.push(w));
+	// 		}
+	// 	}
+
+	// 	console.log("disc", discovered);
+
+	// 	return {parents, discovered, finished, rpo};
+	// }
 
 	/**
 	 * Calculates and returns a list of this graph's connected components using Kosaraju's algorithm.
