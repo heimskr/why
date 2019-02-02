@@ -849,14 +849,17 @@ if (require.main === module) {
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 
 	
-	cfg = new Graph(6);
-	cfg.arcString("AB BA BC CB DB DC EA FE FD"); // 0 2 1 3 4 5
-	cfg.forEach(n => n.data={label: (n.id + 1)+""});
-
+	// cfg = new Graph(6);
+	// cfg.arcString("AB BA BC CB DB DC EA FE FD"); // 0 2 1 3 4 5
+	// cfg.forEach(n => n.data={label: (n.id + 1)+""});
+	
 	// console.log("RPO:", cfg.reversePost(5));
-
+	
 	// console.log("DFS:", cfg.dfs(5));
 	// return;
+
+	cfg = new Graph(6);
+	cfg.arcString("AB BC BD BF CE DE EB");
 	
 	// cfg = new Graph(7);
 	// cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
@@ -872,7 +875,9 @@ if (require.main === module) {
 	// return;
 
 	console.log(cfg.toString(x=>x+1, x=>x+1));
-	console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
+	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
+
+	cfg.dTree(0).forEach((b, a) => console.log(`idom[${a+1}] = ${b+1}`));
 
 
 	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));

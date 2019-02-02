@@ -174,9 +174,91 @@ class Graph {
 		return found[0];
 	}
 
+	fill(value = null) {
+		return _.fill(Array(this.length), value);
+	}
+
+	map(...args) {
+		return this.nodes.map(...args);
+	}
+
+	get length() {
+		return this.nodes.length;
+	}
+
+	dTree(startNode=0) {
+		// Source: "The Lengauer Tarjan Algorithm for Computing the Immediate Dominator Tree of a Flowgraph"
+		//          by Martin Richards
+		// https://www.cl.cam.ac.uk/~mr10/lengtarj.pdf
+
+		const n = this.length;
+		const {parents} = this.dfs(startNode);
+		const succs = this.map(v => v.out);
+		const preds = this.map(v => v.in);
+		const semis = this.map(v => v.id);
+		const idoms = this.fill(null);
+		const ancestors = this.fill(null);
+		const best = this.map(v => v.id);
+		const bucket = this.fill([]);
+
+		const doEval = v => {
+			if (ancestors[v] === null) {
+				return v;
+			}
+
+			compress(v);
+			return best[v];
+		};
+
+		const compress = v => {
+			const a = ancestors[v];
+			// console.log(`${v}.ancestor = ${a}, ${a}.ancestor = ${ancestors[a]}`);
+			if (ancestors[a] === null) {
+				return;
+			}
+
+			// console.log(`${v} -> ${a}`);
+			compress(a);
+			if (semis[best[v]] > semis[best[a]]) {
+				best[v] = best[a];
+			}
+
+			ancestors[v] = ancestors[a];
+		};
+
+		const link = (v, w) => ancestors[w] = v;
+
+		for (let w = n - 1 ; 1 <= w; w--) {
+			const p = parents[w];
+			for (const v of this[w].pred) {
+				const u = doEval(v);
+				if (semis[w] > semis[u])
+					semis[w] = semis[u];
+			}
+
+			bucket[semis[w]].push(w);
+			link(p, w);
+
+			for (const v of bucket[p]) {
+				const u = doEval(v);
+				idoms[v] = semis[u] < semis[v]? u : p;
+			}
+
+			bucket[p] = [];
+		}
+
+		for (let w = 1; w < n; w++) {
+			if (idoms[w] != semis[w])
+				idoms[w] = idoms[idoms[w]];
+		}
+
+		idoms[startNode] = null;
+		return idoms;
+	}
+
 	dominance(startNode) {
 		// https://www.cs.rice.edu/~keith/Embed/dom.pdf
-		const doms =_.fill(Array(this.length), null);
+		const doms = this.fill();
 		
 		if (startNode === undefined) {
 			startNode = this[0];
@@ -293,9 +375,9 @@ class Graph {
 	 */
 	dfs(start=0) {
 		const n = this.nodes.length;
-		const parents    = _.fill(Array(n), null);
-		const discovered = _.fill(Array(n), null);
-		const finished   = _.fill(Array(n), null);
+		const parents    = this.fill();
+		const discovered = this.fill();
+		const finished   = this.fill();
 		let time = 0;
 
 		const visit = u => {
@@ -311,7 +393,9 @@ class Graph {
 			finished[u] = ++time;
 		};
 
+		console.log("\n");
 		visit(start);
+		console.log("\n");
 
 		return {parents, discovered, finished};
 	}
@@ -321,8 +405,8 @@ class Graph {
 	 * @type {Array<Array<Node>>}
 	 */
 	get components() {
-		const visited = _.fill(Array(this.nodes.length), false);
-		const parents = _.fill(Array(this.nodes.length), null);
+		const visited = this.fill(false);
+		const parents = this.fill();
 		const components = {}; 
 		const l = [];
 
@@ -355,7 +439,7 @@ class Graph {
 
 	sortedDFS() {
 		const list = [];
-		const visited = _.fill(Array(this.length), false);
+		const visited = this.fill(false);
 		const unvisited = _.range(0, this.length);
 
 		const visit = u => {
@@ -721,7 +805,7 @@ if (require.main === module) {
 	console.log(g.dfs());
 	console.log(`\n${chalk.bold("Sorted(G):")}`);
 	try {
-		console.log(g.sorted());
+		console.log(g.sortedDFS());
 	} catch(e) {
 		if (e.message.match(/cycl/)) {
 			console.log("(graph is cyclic)");
