@@ -174,32 +174,54 @@ class Graph {
 		return found[0];
 	}
 
-	fill(value = null) {
+	fill(value=null) {
 		return _.fill(Array(this.length), value);
 	}
 
-	map(...args) {
-		return this.nodes.map(...args);
+	fillObj(value=null) {
+		const out = {};
+		this.forEach(v => out[v.id] = value);
+		return out;
+	}
+
+	mapObj(fn) {
+		const out = {};
+		this.forEach((v, i) => out[v.id] = fn(v, i));
+		return out;
 	}
 
 	get length() {
 		return this.nodes.length;
 	}
 
-	dTree(startNode=0) {
+	dTree(startID = 0) {
+		const out = new Graph(this.length);
+
+		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => {
+			if (v === null) {
+				out.arc(k, k);
+			} else {
+				out.arc(v, k);
+			}
+		});
+
+		return out;
+	}
+
+	lengauerTarjan(startID=0) {
 		// Source: "The Lengauer Tarjan Algorithm for Computing the Immediate Dominator Tree of a Flowgraph"
 		//          by Martin Richards
 		// https://www.cl.cam.ac.uk/~mr10/lengtarj.pdf
 
 		const n = this.length;
-		const {parents} = this.dfs(startNode);
-		const succs = this.map(v => v.out);
-		const preds = this.map(v => v.in);
-		const semis = this.map(v => v.id);
-		const idoms = this.fill(null);
-		const ancestors = this.fill(null);
-		const best = this.map(v => v.id);
-		const bucket = this.fill([]);
+		const {parents} = this.dfs(startID);
+		const succs = this.mapObj(v => v.out);
+		const preds = this.mapObj(v => v.in);
+		const semis = this.mapObj(v => v.id);
+		const idoms = this.fillObj();
+		const ancestors = this.fillObj();
+		const best = this.mapObj(v => v.id);
+		const bucket = this.fillObj([]);
 
 		const doEval = v => {
 			if (ancestors[v] === null) {
@@ -252,7 +274,7 @@ class Graph {
 				idoms[w] = idoms[idoms[w]];
 		}
 
-		idoms[startNode] = null;
+		idoms[startID] = null;
 		return idoms;
 	}
 

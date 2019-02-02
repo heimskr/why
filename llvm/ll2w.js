@@ -824,14 +824,14 @@ if (require.main === module) {
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 	// console.log(cfg.toString());
 
-	0&&compiler.debug(() => jsome({
-		sourceFilename: compiler.sourceFilename,
-		targets: compiler.targets,
-		attributes: compiler.attributes,
-		structs: compiler.structs,
-		metadata: compiler.metadata,
-		constants: compiler.globalConstants,
-	}));
+	// compiler.debug(() => jsome({
+	// 	sourceFilename: compiler.sourceFilename,
+	// 	targets: compiler.targets,
+	// 	attributes: compiler.attributes,
+	// 	structs: compiler.structs,
+	// 	metadata: compiler.metadata,
+	// 	constants: compiler.globalConstants,
+	// }));
 
 	// console.log(cfg.reversePost());
 
@@ -876,8 +876,11 @@ if (require.main === module) {
 
 	console.log(cfg.toString(x=>x+1, x=>x+1));
 	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
-
-	cfg.dTree(0).forEach((b, a) => console.log(`idom[${a+1}] = ${b+1}`));
+	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
+	
+	Object.entries(cfg.lengauerTarjan(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
+	
+	console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
 
 
 	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
