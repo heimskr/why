@@ -849,8 +849,7 @@ if (require.main === module) {
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 
 	
-	// cfg = new Graph(6);
-	// cfg.arcString("AB BA BC CB DB DC EA FE FD"); // 0 2 1 3 4 5
+	// cfg = new Graph(6).arcString("AB BA BC CB DB DC EA FE FD"); // 0 2 1 3 4 5
 	// cfg.forEach(n => n.data={label: (n.id + 1)+""});
 	
 	// console.log("RPO:", cfg.reversePost(5));
@@ -858,8 +857,7 @@ if (require.main === module) {
 	// console.log("DFS:", cfg.dfs(5));
 	// return;
 
-	cfg = new Graph(6);
-	cfg.arcString("AB BC BD BF CE DE EB");
+	// cfg = new Graph(6).arcString("AB BC BD BF CE DE EB");
 	
 	// cfg = new Graph(7);
 	// cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
@@ -871,16 +869,21 @@ if (require.main === module) {
 
 	// console.log(cfg.reversePost());
 	// console.log(cfg.sortedDFS().map(n => n.id));
-
 	// return;
+
+	// cfg = new Graph(8).arcString("AB BC BD CE DE EF FG GF GH");
+	cfg = new Graph(13).arcString("AB AC CA AD BC CB CE CF BE EM MI IF FI DG DH GJ HJ HK KJ JL LJ LA");
 
 	console.log(cfg.toString(x=>x+1, x=>x+1));
 	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
 	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
 	
-	Object.entries(cfg.lengauerTarjan(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
+	Object.entries(cfg.lengauerTarjan_(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
+
+	const q = "RABCDEFGHIJKL".split("");
+	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
+	console.log(cfg.dTree_(0).toString(x=>q[x], x=>q[x]));
 	
-	console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
 
 
 	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));

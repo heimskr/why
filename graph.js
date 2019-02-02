@@ -113,7 +113,7 @@ class Graph {
 		if (typeof source === "string" && isLetter(source[0]) && isLetter(source[1]) && destination === undefined) {
 			this.nodes[getID(source[0])].arc(getID(source[1]));
 		} else {
-			this.nodes[getID(source)].arc(destination);
+			this.getNode(source).arc(destination);
 		}
 		
 		return this;
@@ -190,8 +190,18 @@ class Graph {
 		return out;
 	}
 
-	get length() {
-		return this.nodes.length;
+	flatten(offset=0) {
+		const rename = this.mapObj((v, i) => i + offset);
+		const oldNodes = Object.values(this.nodes);
+
+		this.nodes = [];
+		oldNodes.forEach(v => {
+			["in", "out"].forEach(p => v[p] = v[p].map(i => rename[i]))
+			v.id = rename[v.id];
+			this.nodes.push(v);
+		});
+
+		return rename;
 	}
 
 	dTree(startID = 0) {
@@ -208,7 +218,154 @@ class Graph {
 		return out;
 	}
 
+	dTree_(startID = 0) {
+		const out = new Graph(this.length);
+
+		Object.entries(this.lengauerTarjan_(startID)).forEach(([k, v]) => {
+			if (v == null) {
+				out.arc(k, k);
+			} else if (k != null) {
+				out.arc(v, k);
+			} else {
+				console.log("???", v, k);
+			}
+		});
+
+		return out;
+	}
+
 	lengauerTarjan(startID=0) {
+		// Thomas Lengauer and Robert Endre Tarjan. 1979. A fast algorithm for finding dominators in a flowgraph.
+		// ACM Trans. Program. Lang. Syst. 1, 1 (January 1979), 121-141.
+		// DOI: https://doi-org.oca.ucsc.edu/10.1145/357062.357071
+		const {parents: parent} = this.dfs(startID);
+		const succ = this.mapObj(v => v.out);
+		const pred = this.fillObj([]);
+		const semi = this.fillObj(null);
+		const bucket = this.fillObj([]);
+		const dom = this.fillObj(null);
+		const vertex = {};
+		const size = this.fillObj(1);
+		const child = this.fillObj(null);
+		const ancestor = this.fillObj(0);
+		const label = this.mapObj(v => v.id);
+		let n = 0;
+
+		const _Z = 0;
+
+		const ltDFS = v => {
+			vertex[n] = v;
+			semi[v] = n;
+			n++;
+			for (const w of succ[v]) {
+				if (semi[w] == _Z) {
+					parent[w] = v;
+					ltDFS(w);
+					pred[w].push(v);
+				}
+			}
+		};
+
+		const compress = v => {
+			if (ancestor[ancestor[v]] != _Z) {
+				compress(ancestor[v]);
+				if (semi[label[ancestor[v]]] < semi[label[v]]) {
+					label[v] = label[ancestor[v]];
+				}
+
+				ancestor[v] = ancestor[ancestor[v]];
+			}
+		};
+
+		// const doEval = v => {
+		// 	if (ancestor[v] == _Z) {
+		// 		return v;
+		// 	}
+
+		// 	compress(v);
+		// 	return label[v];
+		// };
+
+		// const link = (v, w) => ancestor[w] = v;
+		
+		const doEval = v => {
+			if (ancestor[v] == _Z) {
+				return label[v];
+			}
+			
+			compress(v);
+			if (semi[label[ancestor[v]]] >= semi[label[v]]) {
+				return label[v];
+			} else {
+				return label[ancestor[v]];
+			}
+		};
+
+		const link = (v, w) => {
+			let s = w;
+			while (semi[label[w]] < semi[label[child[s]]]) {
+				if (size[s] + size[child[child[s]]] >= 2 * size[child[s]]) {
+					parent[child[s]] = s;
+					child[s] = child[child[s]];
+				} else {
+					size[child[s]] = size[s];
+					s = parent[s] = child[s];
+				}
+			}
+
+			label[s] = label[w];
+			size[v] += size[w];
+			if (size[v] < 2 * size[w]) {
+				[s, child[v]] = [child[v], s];
+			}
+
+			while (s != null) {
+				parent[s] = v;
+				s = child[s];
+			}
+		};
+
+		// Step 1
+		this.forEach(v => {
+			pred[v.id] = [];
+			semi[v.id] = _Z;
+			ltDFS(v.id);
+		});
+
+		// Steps 2 and 3
+
+		let u;
+		for (let i = n - 1; 1 <= i; i--) {
+			const w = vertex[i];
+			for (const v of pred[w]) {
+				u = doEval(v);
+				if (semi[u] < semi[w]) {
+					semi[w] = semi[u];
+				}
+			}
+
+			bucket[vertex[semi[w]]].push(w);
+			link(parent[w], w);
+			for (const v of bucket[parent[w]]) {
+				_.pull(bucket[parent[w]], v);
+				u = doEval(v);
+				dom[v] = semi[u] < semi[v]? u : parent[w];
+			}
+		}
+
+		// Step 4
+		for (let i = 1; i < n; i++) {
+			const w = vertex[i];
+			if (dom[w] != vertex[semi[w]]) {
+				dom[w] = dom[dom[w]];
+			}
+		}
+
+		dom[startID] = null;
+		return dom;
+	}
+
+	lengauerTarjan_(startID=0) {
 		// Source: "The Lengauer Tarjan Algorithm for Computing the Immediate Dominator Tree of a Flowgraph"
 		//          by Martin Richards
 		// https://www.cl.cam.ac.uk/~mr10/lengtarj.pdf
@@ -663,14 +820,14 @@ class Node {
 		 * @type {Array<number>}
 		 * @name module:util~Node#out
 		 */
-		this.out = this.succ = [];
+		this.out = [];
 
 		/**
 		 * An array of the IDs of all nodes that connect to this node.
 		 * @type {Array<number>}
 		 * @name module:util~Node#in
 		 */
-		this.in = this.pred = [];
+		this.in = [];
 
 		/**
 		 * The data attached to the node.
@@ -679,6 +836,11 @@ class Node {
 		 */
 		this.data = data;
 	}
+
+	get succ() { return this.out }
+	get pred() { return this.in  }
+	set succ(to) { return this.out = to }
+	set pred(to) { return this.in = to }
 
 	/**
 	 * Adds a node to this node's outward edge list and adds this node to the node's inward edge list.
@@ -690,7 +852,7 @@ class Node {
 			this.out.push(n);
 		}
 
-		const node = this.graph.nodes[n];
+		const node = this.graph.getNode(n);
 		if (!node.in.includes(this.id)) {
 			node.in.push(this.id);
 		}
