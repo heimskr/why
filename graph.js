@@ -207,15 +207,7 @@ class Graph {
 
 	dTree(startID = 0) {
 		const out = new Graph(this.length);
-
-		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => {
-			if (v === null) {
-				out.arc(k, k);
-			} else {
-				out.arc(v, k);
-			}
-		});
-
+		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => out.arc(v === null? k : v, k));
 		return out;
 	}
 
