@@ -872,17 +872,27 @@ if (require.main === module) {
 	// return;
 
 	// cfg = new Graph(8).arcString("AB BC BD CE DE EF FG GF GH");
-	cfg = new Graph(13).arcString("AB AC CA AD BC CB CE CF BE EM MI IF FI DG DH GJ HJ HK KJ JL LJ LA");
+	cfg = new Graph(13);
+	const q = "RABCDEFGHIJKL".split("");
+	for (const pair of "RA RB RC AB AD BA BD BE BR CF CG DL EH FI GI GJ HE HK IK JI KI KR LH".split(" ")) {
+		cfg.arc(q.indexOf(pair[0]), q.indexOf(pair[1]));
+	}
 
-	console.log(cfg.toString(x=>x+1, x=>x+1));
 	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
 	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
 	
-	Object.entries(cfg.lengauerTarjan_(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
+	
+	// console.log(cfg.toString(x=>x+1, x=>x+1));
+	console.log(cfg.toString(x=>q[x], x=>q[x]));
+	console.log("");
+	// cfg.lengauerTarjan(0);
 
-	const q = "RABCDEFGHIJKL".split("");
+	// Object.entries(cfg.lengauerTarjan(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
+	
 	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
-	console.log(cfg.dTree_(0).toString(x=>q[x], x=>q[x]));
+	console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
+	console.log("");
+	console.log(cfg.dominance(0));
 	
 
 

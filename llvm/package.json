@@ -12,6 +12,7 @@
   "author": "Kai Tamkun",
   "license": "MIT",
   "dependencies": {
+    "dominators": "^1.1.2",
     "rimraf": "^2.6.2"
   }
 }
