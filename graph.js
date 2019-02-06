@@ -230,7 +230,7 @@ class Graph {
 	djTree(startID = 0) {
 		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
 		this.allEdges()
-			.filter(([src, dst]) => sdom[src].includes(dst))
+			.filter(([src, dst]) => !sdom[src].includes(dst))
 			.forEach(p => dt.arc(...p));
 		return dt;
 	}
@@ -461,7 +461,11 @@ class Graph {
 	 * Returns a string containing each node's adjacency list.
 	 * @return {string} A string representation of the graph.
 	 */
-	toString(idFn = x=>x, outFn = x=>x) {
+	toString(idFn = x=>x, outFn) {
+		if (outFn === undefined) {
+			outFn = idFn;
+		}
+		
 		return _.sortBy(this.nodes, "id").map((node) => `${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`).join("\n");
 	}
 
