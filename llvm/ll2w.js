@@ -890,7 +890,8 @@ if (require.main === module) {
 	// Object.entries(cfg.lengauerTarjan(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
 	
 	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
-	console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
+	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
+	console.log(cfg.djTree(0).toString(x=>q[x], x=>q[x]));
 	
 
 

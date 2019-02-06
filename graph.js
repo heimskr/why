@@ -15,7 +15,6 @@ const {alpha, isLetter} = require("./util.js");
 
 const getID = Node.getID;
 
-
 /**
  * Represents a directed graph datatype.
  */
@@ -202,6 +201,44 @@ class Graph {
 		const out = new Graph(this.length);
 		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => out.arc(v === null? k : v, k));
 		return out;
+	}
+
+	static strictDominators(dt) {
+		const out = {};
+		for (const node of dt.nodes) {
+			let parent = dt[node.in[0]];
+			out[node.id] = [];
+			while (parent) {
+				out[node.id].push(parent.id);
+				if (parent.in[0] == parent.id) {
+					break;
+				}
+
+				parent = dt[parent.in[0]];
+			}
+		}
+
+		return out;
+	}
+
+	allEdges() {
+		return this.reduce((a, {id: src, out}) =>
+			[...a, ...out.map(dest => [src, dest])],
+		[]);
+	}
+
+	djTree(startID = 0) {
+		const dt = this.dTree(startID);
+		const q = "RABCDEFGHIJKL".split("");
+		console.log(chalk.red("".padStart(32, "=")));
+		console.log("DT:");
+		console.log(dt.toString(x=>q[x], x=>q[x]));
+		console.log("Strict dominators:");
+		console.log(Graph.strictDominators(dt));
+		console.log("allEdges():");
+		console.log(this.allEdges());
+		console.log(chalk.green("".padStart(32, "=")));
+		return dt;
 	}
 
 	lengauerTarjan(startID=0) {
