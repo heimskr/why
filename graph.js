@@ -228,6 +228,7 @@ class Graph {
 	}
 
 	djTree(startID = 0) {
+		// TODO: should all D-edges be bidirectional?
 		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[src].includes(dst))
