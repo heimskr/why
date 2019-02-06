@@ -64,3 +64,7 @@ exports.displayIOError = (error, filename="file", mode="r", print=console.error)
 		print(intro, e.message);
 	}
 };
+
+const alpha = "abcdefghijklmnopqrstuvwxyz";
+exports.alpha = alpha;
+exports.isLetter = x => typeof x == "string" && x.length == 1 && -1 < alpha.indexOf(x.toLowerCase());
