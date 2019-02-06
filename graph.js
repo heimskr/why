@@ -223,21 +223,15 @@ class Graph {
 
 	allEdges() {
 		return this.reduce((a, {id: src, out}) =>
-			[...a, ...out.map(dest => [src, dest])],
+			[...a, ...out.map(dst => [src, dst])],
 		[]);
 	}
 
 	djTree(startID = 0) {
-		const dt = this.dTree(startID);
-		const q = "RABCDEFGHIJKL".split("");
-		console.log(chalk.red("".padStart(32, "=")));
-		console.log("DT:");
-		console.log(dt.toString(x=>q[x], x=>q[x]));
-		console.log("Strict dominators:");
-		console.log(Graph.strictDominators(dt));
-		console.log("allEdges():");
-		console.log(this.allEdges());
-		console.log(chalk.green("".padStart(32, "=")));
+		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
+		this.allEdges()
+			.filter(([src, dst]) => sdom[src].includes(dst))
+			.forEach(p => dt.arc(...p));
 		return dt;
 	}
 
