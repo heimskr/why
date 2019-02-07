@@ -13,7 +13,7 @@ let minimist = require("minimist"),
 	path = require("path"),
 	jsome = require("jsome");
 
-const {displayIOError, mixins} = require("../util.js");
+const {displayIOError, mixins, isNumeric} = require("../util.js");
 mixins(_);
 
 const warn = (...a) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]"), ...a);
@@ -887,8 +887,13 @@ if (require.main === module) {
 	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
 	
 	cfg = new Graph(11).arcString("AB BK BC CD CH DE EF FE FG GB HI IF IJ JH");
+
+	cfg.renameNode(4, "e");
+	cfg.renameNode(1, "b");
 	
-	console.log(cfg.toString(x=>x+1, x=>x+1));
+	const ts = x => typeof x == "number"? x+1 : x;
+
+	console.log(cfg.toString(ts));
 	// console.log(cfg.toString(x=>q[x], x=>q[x]));
 	console.log("");
 	// cfg.lengauerTarjan(0);
@@ -898,7 +903,7 @@ if (require.main === module) {
 	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
 	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djTree(0).toString(x=>q[x], x=>q[x]));
-	console.log(cfg.djTree(0).toString(x=>+x+1));
+	console.log(cfg.djTree(0).toString(ts));
 	
 
 

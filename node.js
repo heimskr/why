@@ -1,12 +1,10 @@
-const {alpha, isLetter, numerize} = require("./util.js");
+const {alpha, numerize} = require("./util.js");
 
 const getID = node => {
 	if (node instanceof Node) {
 		return node.id;
-	} else if (isLetter(node)) {
-		return alpha.indexOf(node.toLowerCase());
 	} else {
-		return node;
+		return numerize(node);
 	}
 };
 

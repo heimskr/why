@@ -5,7 +5,7 @@ const chalk = require("chalk");
 const {lt} = require("dominators");
 
 const Node = require("./node.js");
-const {alpha, isLetter} = require("./util.js");
+const {alpha, numerize} = require("./util.js");
 
 /**
  * Contains various utilities.
@@ -36,7 +36,7 @@ class Graph {
 					return target[prop];
 				}
 
-				if (Number(prop) == prop || isLetter(prop)) {
+				if (Number(prop) == prop) {
 					return target.getNode(prop);
 				}
 
@@ -92,13 +92,12 @@ class Graph {
 			return n;
 		}
 
-		if (isLetter(n)) {
-			n = alpha.indexOf(n.toLowerCase());
-		} else if (n == undefined) {
+		if (n == undefined) {
 			throw new Error("Graph.getID() called with undefined");
 		}
 
-		return _.find(this.nodes, node => node.id == n);
+		n = numerize(n);
+		return _.find(this.nodes, node => numerize(node.id) == n);
 	}
 
 	/**
@@ -107,17 +106,13 @@ class Graph {
 	 * @param {(Node|number)} destination The destination node.
 	 */
 	arc(source, destination) {
-		if (typeof source === "string" && isLetter(source[0]) && isLetter(source[1]) && destination === undefined) {
-			this.nodes[getID(source[0])].arc(getID(source[1]));
-		} else {
-			this.getNode(source).arc(destination);
-		}
+		this.getNode(source).arc(destination);
 		
 		return this;
 	}
 
 	arcString(str) {
-		str.split(/\s+/).forEach(s => this.arc(s));
+		str.split(/\s+/).forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
 		return this;
 	}
 
