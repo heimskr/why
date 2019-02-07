@@ -64,7 +64,7 @@ class Node {
 
 	/**
 	 * Adds a node to this node's outward edge list and adds this node to the node's inward edge list.
-	 * @param {(Node|number)} n The node to add.
+	 * @param {(Node|number|string)} n The node to add.
 	 */
 	arc(n) {
 		n = getID(n);
@@ -82,7 +82,7 @@ class Node {
 
 	/**
 	 * Adds a node to this node's inward edge list and adds this node to the node's outward edge list.
-	 * @param {(Node|number)} n The node to add.
+	 * @param {(Node|number|string)} n The node to add.
 	 */
 	arcFrom(n) {
 		n = getID(n);
@@ -100,7 +100,7 @@ class Node {
 
 	/**
 	 * Removes an outward connection from this node and the other node's corresponding inward connection.
-	 * @param {(Node|number)} n The node whose arc will be removed.
+	 * @param {(Node|number|string)} n The node whose arc will be removed.
 	 */
 	removeArc(n) {
 		n = getID(n);
@@ -111,7 +111,7 @@ class Node {
 
 	/**
 	 * Removes an inward connection to this node and the other node's corresponding outward connection.
-	 * @param {(Node|number)} n The node whose arc will be removed.
+	 * @param {(Node|number|string)} n The node whose arc will be removed.
 	 */
 	removeArcFrom(n) {
 		n = getID(n);
@@ -122,7 +122,7 @@ class Node {
 
 	/**
 	 * Checks for the existence of a connection from this node to another.
-	 * @param  {(Node|number)} n The node to check.
+	 * @param  {(Node|number|string)} n The node to check.
 	 * @return {boolean}         Whether there exists an connection from this node to the other.
 	 */
 	connectsTo(n) {
@@ -131,7 +131,7 @@ class Node {
 
 	/**
 	 * Checks for the existence of a connection to this node from another.
-	 * @param  {(Node|number)} n The node to check.
+	 * @param  {(Node|number|string)} n The node to check.
 	 * @return {boolean}         Whether there exists an connection to this node from the other.
 	 */
 	connectsFrom(n) {
@@ -140,7 +140,7 @@ class Node {
 
 	/**
 	 * Checks for the existence of a bidirectional connection between this node and another.
-	 * @param  {(Node|number)} n The node to check.
+	 * @param  {(Node|*)} n The node to check.
 	 * @return {boolean}         Whether there exists a bidirectional connection between this node and the other.
 	 */
 	connects(n) {
@@ -157,6 +157,17 @@ class Node {
 		newNode.out = this.out.slice(0);
 		newNode.in = this.in.slice(0);
 		return newNode;
+	}
+
+	/**
+	 * Assigns the node a new ID and updates the in/out arrays of all other nodes in the graph accordingly.
+	 * @param {number|string} newID The new ID for this node.
+	 */
+	rename(newID) {
+		const oldID = this.id;
+		const replace = (o, ...ps) => ps.forEach(p => o[p] = o[p].map(x => x == oldID? newID : x));
+		this.graph.nodes.forEach(n => replace(n, "out", "in"));
+		this.id = newID;
 	}
 
 	get isReflexive() {
