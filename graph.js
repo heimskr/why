@@ -256,12 +256,14 @@ class Graph {
 		[]);
 	}
 
-	djTree(startID = 0) {
+	djTree(startID=0, bidirectional=false) {
 		// TODO: should all D-edges be bidirectional?
 		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[src].includes(dst))
-			.forEach(p => dt.arc(...p));
+			.forEach(bidirectional?
+				p => dt.edge(...p)
+			  : p => dt.arc(...p));
 		return dt;
 	}
 
