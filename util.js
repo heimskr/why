@@ -1,27 +1,28 @@
-let jsome = require("jsome"),
-	chalk = require("chalk");
+const _ = require("lodash"),
+	  jsome = require("jsome"),
+	  chalk = require("chalk");
 
-exports.mixins = (_) => {
+exports.mixins = (__) => {
 	if (typeof Object.values == "undefined") {
 		Object.values = (obj) => Object.keys(obj).map((key) => obj[key]);
 	}
 
-	_.mixin({
+	__.mixin({
 		// Stringifies a long representing 8 characters.
 		longString(long) {
-			return long instanceof Array? long.map(_.longString) : _.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
+			return long instanceof Array? long.map(__.longString) : __.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => String.fromCharCode(parseInt(x.join(""), 16))).join("");
 		},
 
 		// Converts a sequence of longs to strings and splits by \0.
 		longStrings(longs) {
-			return _.longString(longs).join("").split("\0");
+			return __.longString(longs).join("").split("\0");
 		},
 
 		// Like _.invert, but it doesn't overwrite duplicates; instead, every value in the
 		// new object is an array of all keys containing that value in the original object.
 		multiInvert(obj) {
-			let entries = _.entries(obj);
-			return _.fromPairs(_(obj).values().uniq().value().map((val) => [val, entries.filter((item) => item[1] == val).map((item) => item[0])]));
+			let entries = __.entries(obj);
+			return __.fromPairs(__(obj).values().uniq().value().map((val) => [val, entries.filter((item) => item[1] == val).map((item) => item[0])]));
 		},
 
 		pretty(obj) {
@@ -35,7 +36,7 @@ exports.mixins = (_) => {
 
 		// Pushes a value to an array, but only if the value isn't already in the array.
 		push(dest, ...vals) {
-			return _.pushAll(dest, vals);
+			return __.pushAll(dest, vals);
 		},
 
 		pushAll(dest, vals) {
@@ -47,7 +48,7 @@ exports.mixins = (_) => {
 		},
 
 		objectify(arr, initial = () => undefined) {
-			return _.fromPairs(arr.map(v => [v, initial()]));
+			return __.fromPairs(arr.map(v => [v, initial()]));
 		}
 	});
 };
@@ -66,5 +67,8 @@ exports.displayIOError = (error, filename="file", mode="r", print=console.error)
 };
 
 const alpha = "abcdefghijklmnopqrstuvwxyz";
+const isNumeric = x => typeof x == "string" && _.every(x, y => "0123456789".includes(y));
 exports.alpha = alpha;
 exports.isLetter = x => typeof x == "string" && x.length == 1 && -1 < alpha.indexOf(x.toLowerCase());
+exports.isNumeric = isNumeric;
+exports.numerize = x => isNumeric(x)? parseInt(x) : x;
