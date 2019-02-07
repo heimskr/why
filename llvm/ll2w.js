@@ -904,8 +904,8 @@ if (require.main === module) {
 	
 	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
 	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
-	// console.log(cfg.djTree(0).toString(x=>q[x], x=>q[x]));
-	console.log(cfg.djTree(0).toString(ts));
+	// console.log(cfg.djGraph(0).toString(x=>q[x], x=>q[x]));
+	console.log(cfg.djGraph(0).toString(ts));
 	
 
 

@@ -83,8 +83,30 @@ class Graph {
 		return this;
 	}
 
+	/**
+	 * Generates an ID not already assigned to any nodes in the graph.
+	 * @return {number} An available numeric ID.
+	 */
+	newID() {
+		let id = this.length;
+		if (!this.getNode(id)) {
+			// There isn't already a node whose ID is equal to the number of nodes, which makes things easy.
+			return id;
+		}
+		
+		// Otherwise, we start from 0 and keep incrementing until we find an ID that isn't in use.
+		id = 0;
+		for (id = 0; this.getNode(id); ++id);
+		return id;
+	}
+
+	/**
+	 * Adds a new node with a given piece of data.
+	 * @param  {*} data The node's data.
+	 * @return {Node} The new node.
+	 */
 	add(data) {
-		const newNode = new Node(this.length, this, data);
+		const newNode = new Node(this.newID(), this, data);
 		this.push(newNode);
 		return newNode;
 	}
@@ -225,7 +247,12 @@ class Graph {
 		return renameMap;
 	}
 
-	dTree(startID = 0) {
+	/**
+	 * Calculates the dominator tree of the graph for a given start node.
+	 * @param  {number|string} [startID=0] The ID of the start node.
+	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
+	 */
+	dTree(startID=0) {
 		const lentar = this.lengauerTarjan(startID);
 		const out = new Graph(Object.keys(lentar).map(numerize));
 		Object.entries(lentar).forEach(([k, v]) => out.arc(v == undefined? k : v, k));
@@ -256,7 +283,13 @@ class Graph {
 		[]);
 	}
 
-	djTree(startID=0, bidirectional=false) {
+	/**
+	 * Computes the DJ-graph of the graph for a given start node.
+	 * @param  {number|string} [startID=0] The ID of the start node.
+	 * @param  {boolean} [bidirectional=false] Whether D-edges should be bidirectional.
+	 * @return {Graph} A DJ-graph.
+	 */
+	djGraph(startID=0, bidirectional=false) {
 		// TODO: should all D-edges be bidirectional?
 		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
 		this.allEdges()
