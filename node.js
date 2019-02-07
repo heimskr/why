@@ -1,4 +1,4 @@
-const {alpha, isLetter} = require("./util.js");
+const {alpha, isLetter, numerize} = require("./util.js");
 
 const getID = node => {
 	if (node instanceof Node) {
@@ -67,7 +67,8 @@ class Node {
 	 * @param {(Node|number|string)} n The node to add.
 	 */
 	arc(n) {
-		n = getID(n);
+		n = numerize(getID(n));
+
 		if (!this.out.includes(n)) {
 			this.out.push(n);
 		}
