@@ -16,6 +16,10 @@ const {alpha, numerize} = require("./util.js");
 const getID = Node.getID;
 
 /**
+ * @typedef {number|string} NodeID
+ */
+
+/**
  * Represents a directed graph datatype.
  */
 class Graph {
@@ -30,7 +34,12 @@ class Graph {
 		 * @name module:util~Graph#nodes
 		 */
 
+		// This is where we exploit the black magic of proxies to enable some syntactic sugar.
 		return new Proxy(this.reset(n), {
+			// Symbols are always directly mapped to the graph.
+			// All numeric properties are mapped to the node with a matching ID, or `undefined` if none exists.
+			// All functions in Array.prototype that aren't already defined in `Graph` return the functions bound
+			// to the graph's nodes. Anything else is mapped to the graph.
 			get(target, prop) {
 				if (typeof prop == "symbol") {
 					return target[prop];
@@ -51,6 +60,9 @@ class Graph {
 				return target[prop];
 			},
 
+			// All sets for non-numberic properties are not interfered with.
+			// Sets for numeric properties are passed to this.nodes instead,
+			// unless the corresponding node doesn't exist.
 			set(target, prop, val) {
 				if (Number(prop) != prop) {
 					return Reflect.set(...arguments);
@@ -113,7 +125,7 @@ class Graph {
 
 	/**
 	 * Returns the node with a given ID.
-	 * @param  {Node|string|number} n The ID of the node to return.
+	 * @param  {Node|NodeID} n The ID of the node to return.
 	 * @return {Node} The node corresponding to n if n is a number; n otherwise.
 	 */
 	getNode(n) {
@@ -131,14 +143,20 @@ class Graph {
 
 	/**
 	 * Adds a unidirectional connection from one node to another.
-	 * @param {(Node|number)} source      The source node.
-	 * @param {(Node|number)} destination The destination node.
+	 * @param {Node|NodeID} source      The source node.
+	 * @param {Node|NodeID} destination The destination node.
 	 */
 	arc(source, destination) {
 		this.getNode(source).arc(destination);
 		return this;
 	}
 
+	/**
+	 * Convenience method to batch-link nodes.
+	 * @param  {string} str A space-separated string of letter pairs, e.g. "AB DE AF".
+	 *                      "A" corresponds to 0, "B" to 1, "C" to 2 and so on.
+	 * @return {Graph} The same graph the method was called on.
+	 */
 	arcString(str) {
 		str.split(/\s+/).forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
 		return this;
@@ -146,7 +164,8 @@ class Graph {
 
 	/**
 	 * Batch-adds arcs from an array of [source, ...destinations] sets.
-	 * @param {...Array<Array<number, ...number>>} arcs - An array of arc sets to add.
+	 * @param  {...Array<Array<number, ...number>>} arcs An array of arc sets to add.
+	 * @return {Graph} The same graph the method was called on.
 	 */
 	arcs(...sets) {
 		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
@@ -155,8 +174,9 @@ class Graph {
 
 	/**
 	 * Removes an edge from one node to another.
-	 * @param {(Node|number)} source      The source node.
-	 * @param {(Node|number)} destination The destination node.
+	 * @param  {Node|NodeID} source      The source node.
+	 * @param  {Node|NodeID} destination The destination node.
+	 * @return {Graph} The same graph the method was called on.
 	 */
 	removeArc(source, destination) {
 		this.nodes[getID(source)].removeArc(destination);
@@ -165,8 +185,9 @@ class Graph {
 
 	/**
 	 * Adds a bidirectional connection between two nodes.
-	 * @param {(Node|number)} a The first node.
-	 * @param {(Node|number)} b The second node.
+	 * @param  {Node|NodeID} a The first node.
+	 * @param  {Node|NodeID} b The second node.
+	 * @return {Graph} The same graph the method was called on.
 	 */
 	edge(a, b) {
 		this.nodes[getID(a)].arc(b);
@@ -176,8 +197,9 @@ class Graph {
 
 	/**
 	 * Removes all connections between two nodes.
-	 * @param {(Node|number)} a The first node.
-	 * @param {(Node|number)} b The second node.
+	 * @param  {Node|NodeID} a The first node.
+	 * @param  {Node|NodeID} b The second node.
+	 * @return {Graph} The same graph the method was called on.
 	 */
 	disconnect(a, b) {
 		this.nodes[getID(a)].removeArc(b);
@@ -185,6 +207,12 @@ class Graph {
 		return this;
 	}
 
+	/**
+	 * Attempts to find a single node matching a predicate.
+	 * @param  {Function} predicate A function mapping a node to a boolean.
+	 * @return {Node} The result of the search.
+	 * @throws Throws an exception if the number of nodes matching the predicate isn't exactly 1.
+	 */
 	findSingle(predicate) {
 		const found = this.nodes.filter(predicate);
 		if (found.length != 1) {
@@ -231,7 +259,7 @@ class Graph {
 	/**
 	 * Renames all nodes in the graph such that they have numeric IDs in the range [offset, n + offset).
 	 * @param  {number} [offset=0] The starting point of the range.
-	 * @return {Object<string|number, number>} A map of old IDs to new IDs.
+	 * @return {Object<NodeID, number>} A map of old IDs to new IDs.
 	 */
 	normalize(offset=0) {
 		const renameMap = this.mapValues((v, i) => i + offset);
@@ -249,7 +277,7 @@ class Graph {
 
 	/**
 	 * Calculates the dominator tree of the graph for a given start node.
-	 * @param  {number|string} [startID=0] The ID of the start node.
+	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
 	dTree(startID=0) {
@@ -259,6 +287,12 @@ class Graph {
 		return out;
 	}
 
+	/**
+	 * Extracts the strict dominators of a D-tree.
+	 * @param  {Graph} dt A D-tree.
+	 * @return {Object<NodeID, NodeID[]>}
+	 *         An object mapping a node ID to an array of the IDs of its strict dominators.
+	 */
 	static strictDominators(dt) {
 		const out = {};
 		for (const node of dt.nodes) {
@@ -277,6 +311,10 @@ class Graph {
 		return out;
 	}
 
+	/**
+	 * Returns an array of all edge pairs in the graph.
+	 * @return {Array<[number, number]>} An array of edge pairs.
+	 */
 	allEdges() {
 		return this.reduce((a, {id: src, out}) =>
 			[...a, ...out.map(dst => [src, dst])],
@@ -285,12 +323,11 @@ class Graph {
 
 	/**
 	 * Computes the DJ-graph of the graph for a given start node.
-	 * @param  {number|string} [startID=0] The ID of the start node.
-	 * @param  {boolean} [bidirectional=false] Whether D-edges should be bidirectional.
+	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
+	 * @param  {boolean} [bidirectional=true] Whether D-edges should be bidirectional.
 	 * @return {Graph} A DJ-graph.
 	 */
-	djGraph(startID=0, bidirectional=false) {
-		// TODO: should all D-edges be bidirectional?
+	djGraph(startID=0, bidirectional=true) {
 		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[src].includes(dst))
@@ -303,14 +340,14 @@ class Graph {
 	/**
 	 * Finds the dominators of each node given a start node using the Lengauer-Tarjan algorithm.
 	 * This is a wrapper for the `lt` function from the `dominators` package by Julian Jensen.
-	 * @param  {number|string} [startID=0] The ID of the start node.
-	 * @return {Object<number|string, number|string>} A map of node IDs to the IDs of their dominators.
+	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
+	 * @return {Object<NodeID, NodeID>} A map of node IDs to the IDs of their dominators.
 	 */
 	lengauerTarjan(startID=0) {
 		const normalized = this.clone();
 		const renames = _.mapValues(_.invert(normalized.normalize()), v => numerize(v));
 		const formatted = normalized.map(v => v.out);
-		return lt(formatted, startID).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
+		return lt(formatted, getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
 	/**
@@ -322,7 +359,7 @@ class Graph {
 
 	/**
 	 * Runs a depth-first search on the graph.
-	 * @param  {number|string} [startID=0] The ID of the start node.
+	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
 	dfs(startID=0) {
@@ -334,7 +371,7 @@ class Graph {
 
 		const visit = u => {
 			discovered[u] = ++time;
-			this.nodes[u].out.sort().forEach(v => {
+			this.getNode(u).out.sort().forEach(v => {
 				if (discovered[v] == null) {
 					parents[v] = u;
 					visit(v);
@@ -350,8 +387,8 @@ class Graph {
 
 	/**
 	 * Renames the node with a given ID (if one exists) to a new ID.
-	 * @param  {number|string} oldID The old ID of the node to rename.
-	 * @param  {number|string} newID The new ID to assign to the node.
+	 * @param  {Node|NodeID} oldID The old ID of the node to rename.
+	 * @param  {NodeID} newID The new ID to assign to the node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	renameNode(oldID, newID) {
@@ -437,8 +474,15 @@ class Graph {
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
 	topoSort() {
-		let copy = this.clone();
-		const l = [], s = copy.nodes.filter(node => !node.in.length);
+		// We need to clone the graph to prevent any changes to it.
+		const copy = this.clone();
+
+		// The sorted list.
+		const l = [];
+
+		// An array containing every node that has no in-edges.
+		const s = copy.nodes.filter(node => !node.in.length);
+
 		if (1 < this.nodes.length && !s.length) {
 			// If there are multiple nodes in the graph and none of them lack in-edges, the graph has to be cyclic.
 			// The converse isn't necessarily true, so this is just an preliminary check.
@@ -554,7 +598,10 @@ class Graph {
 	}
 
 	/**
-	 * Returns a string containing each node's adjacency list.
+	 * Returns a string listing each node's adjacency array.
+	 * @param  {Function} [idFn] A function mapping a node ID and its corresponding Node to a string representation.
+	 *                           By default, it returns the node ID.
+	 * @param  {Function} [outFn] Another mapping function. If none is given, it will be equal to idFn.
 	 * @return {string} A string representation of the graph.
 	 */
 	toString(idFn = x=>x, outFn) {
@@ -562,9 +609,15 @@ class Graph {
 			outFn = idFn;
 		}
 		
-		return _.sortBy(this.nodes, "id").map((node) => `${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`).join("\n");
+		return _.sortBy(this.nodes, "id").map(node =>
+			`${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`
+		).join("\n");
 	}
 
+	/**
+	 * Checks whether all `in` arrays and `out` arrays match up (i.e., ∀N,M∈G M∈In(N) ⟷ N∈Out(M)).
+	 * @return {boolean} Whether the graph's `in` and `out` arrays match up.
+	 */
 	validateDirections() {
 		for (const node of this.nodes) {
 			for (const o of node.out) {
