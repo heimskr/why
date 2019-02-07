@@ -169,6 +169,10 @@ class Node {
 		this.id = newID;
 	}
 
+	/**
+	 * Indicates whether the node links to itself.
+	 * @type {boolean}
+	 */
 	get isReflexive() {
 		// If one of these conditions is true, the other should also be true...
 		return this.out.includes(this.id) || this.in.includes(this.id);

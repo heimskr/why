@@ -81,7 +81,8 @@ class Graph {
 
 	/**
 	 * Deletes all nodes in the graph.
-	 * @param {number|Array} n The number of new empty nodes to replace the old nodes, or an array of IDs to make new nodes with.
+	 * @param {number|Array} n The number of new empty nodes to replace the old nodes
+	 *                         or an array of IDs to make new nodes with.
 	 */
 	reset(n) {
 		if (n == undefined) {
@@ -313,7 +314,7 @@ class Graph {
 
 	/**
 	 * Returns an array of all edge pairs in the graph.
-	 * @return {Array<[number, number]>} An array of edge pairs.
+	 * @return {Array<Array<number, number>>} An array of edge pairs.
 	 */
 	allEdges() {
 		return this.reduce((a, {id: src, out}) =>

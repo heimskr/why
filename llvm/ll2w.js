@@ -21,8 +21,8 @@ const warn = (...a) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + cha
 const {BUILTINS} = require("./constants.js");
 
 /**
- * `ll2w` is an LLVM intermediate representation to WVM compiler (thus
- * <code><b>ll</b>vm<b>2w</b>vm</code>) written from scratch.
+ * `ll2w` is an LLVM intermediate representation to WVM compiler (hence <code><b>ll</b>vm<b>2w</b>vm</code>)
+ * written from scratch.
  * 
  * @module llvm/ll2w
  */
