@@ -83,15 +83,19 @@ class Graph {
 	}
 
 	/**
-	 * Returns the nth node of the graph.
-	 * @param  {number} n The ID of the node to return.
-	 * @return {Node}     The node corresponding to n if n is a number; n otherwise.
+	 * Returns the node with a given ID.
+	 * @param  {Node|string|number} n The ID of the node to return.
+	 * @return {Node} The node corresponding to n if n is a number; n otherwise.
 	 */
 	getNode(n) {
+		if (n instanceof Node) {
+			return n;
+		}
+
 		if (isLetter(n)) {
 			n = alpha.indexOf(n.toLowerCase());
-		} else if (n.id !== undefined) {
-			n = n.id;
+		} else if (n == undefined) {
+			throw new Error("Graph.getID() called with undefined");
 		}
 
 		return _.find(this.nodes, node => node.id == n);
@@ -183,6 +187,11 @@ class Graph {
 		return out;
 	}
 
+	/**
+	 * Renames all nodes in the graph such that they have numeric IDs in the range [offset, n + offset).
+	 * @param {number} [offset=0] The starting point of the range.
+	 * @return {Object<string|number, number>} A map of old IDs to new IDs.
+	 */
 	normalize(offset=0) {
 		const renameMap = this.mapObj((v, i) => i + offset);
 		const oldNodes = Object.values(this.nodes);
@@ -199,7 +208,7 @@ class Graph {
 
 	dTree(startID = 0) {
 		const out = new Graph(this.length);
-		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => out.arc(v === null? k : v, k));
+		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => out.arc(v == undefined? k : v, k));
 		return out;
 	}
 
@@ -236,18 +245,25 @@ class Graph {
 		return dt;
 	}
 
+	/**
+	 * Finds the dominators of each node given a start node using the Lengauer-Tarjan algorithm.
+	 * This is a wrapper for the `lt` function from the `dominators` package by Julian Jensen.
+	 * @param {number|string} [startID=0] The ID of the start node.
+	 * @return {Object<number|string, number|string>} A map of node IDs to the IDs of their dominators.
+	 */
 	lengauerTarjan(startID=0) {
 		const normalized = this.clone();
-		const renames = normalized.normalize();
-		const formatted = normalized.map(v => v.out.map(i => i));
-		return lt(formatted, startID);
+		const renames = _.mapValues(_.invert(normalized.normalize()), v => parseInt(v));
+		const formatted = normalized.map(v => v.out);
+		return lt(formatted, startID).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
 	/**
 	 * Runs a depth-first search on the graph.
+	 * @param {number|string} [startID=0] The ID of the start node.
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
-	dfs(start=0) {
+	dfs(startID=0) {
 		const n = this.nodes.length;
 		const parents    = this.fill();
 		const discovered = this.fill();
@@ -257,7 +273,6 @@ class Graph {
 		const visit = u => {
 			discovered[u] = ++time;
 			this.nodes[u].out.sort().forEach(v => {
-			// this.nodes[u].out.forEach(v => {
 				if (discovered[v] == null) {
 					parents[v] = u;
 					visit(v);
@@ -268,10 +283,25 @@ class Graph {
 		};
 
 		console.log("\n");
-		visit(start);
+		visit(startID);
 		console.log("\n");
 
 		return {parents, discovered, finished};
+	}
+
+	/**
+	 * Renames the node with a given ID (if one exists) to a new ID.
+	 * @param {number|string} oldID The old ID of the node to rename.
+	 * @param {number|string} newID The new ID to assign to the node.
+	 * @return {Graph} The same graph the method was called on.
+	 */
+	renameNode(oldID, newID) {
+		const node = this.getNode(oldID);
+		if (node) {
+			node.rename(newID);
+		}
+
+		return this;
 	}
 
 	/**
