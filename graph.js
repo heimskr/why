@@ -172,17 +172,35 @@ class Graph {
 		return found[0];
 	}
 
+	/**
+	 * Returns an array whose length is equal to the number of nodes in this graph
+	 * and fills it with a predefined value.
+	 * @param  {*} [value=null] A value to fill the array with.
+	 * @return {Array} The filled array.
+	 */
 	fill(value=null) {
 		return _.fill(Array(this.length), value);
 	}
 
+	/**
+	 * Returns an object whose keys are the IDs of each node in the graph
+	 * and whose values are all equal to the given value.
+	 * @param  {*} value A value to use as the value of each entry in the object.
+	 * @return {Object} The filled object.
+	 */
 	fillObj(value=null) {
 		const out = {};
 		this.forEach(v => out[v.id] = value);
 		return out;
 	}
 
-	mapObj(fn) {
+	/**
+	 * Returns an object whose keys are the IDs of each node in the graph and whose values
+	 * are the return value of the given function when called with a Node object.
+	 * @param  {Function} fn A function that takes a Node and returns any value.
+	 * @return {Object} The mapped object.
+	 */
+	mapValues(fn) {
 		const out = {};
 		this.forEach((v, i) => out[v.id] = fn(v, i));
 		return out;
@@ -190,11 +208,11 @@ class Graph {
 
 	/**
 	 * Renames all nodes in the graph such that they have numeric IDs in the range [offset, n + offset).
-	 * @param {number} [offset=0] The starting point of the range.
+	 * @param  {number} [offset=0] The starting point of the range.
 	 * @return {Object<string|number, number>} A map of old IDs to new IDs.
 	 */
 	normalize(offset=0) {
-		const renameMap = this.mapObj((v, i) => i + offset);
+		const renameMap = this.mapValues((v, i) => i + offset);
 		const oldNodes = Object.values(this.nodes);
 
 		this.nodes = [];
@@ -250,7 +268,7 @@ class Graph {
 	/**
 	 * Finds the dominators of each node given a start node using the Lengauer-Tarjan algorithm.
 	 * This is a wrapper for the `lt` function from the `dominators` package by Julian Jensen.
-	 * @param {number|string} [startID=0] The ID of the start node.
+	 * @param  {number|string} [startID=0] The ID of the start node.
 	 * @return {Object<number|string, number|string>} A map of node IDs to the IDs of their dominators.
 	 */
 	lengauerTarjan(startID=0) {
@@ -261,15 +279,22 @@ class Graph {
 	}
 
 	/**
+	 * @typedef {Object} DFSResult
+	 * @property {number[]} parents    A list of each node's parent (null if nonexistent).
+	 * @property {number[]} discovered A list of the times each node was discovered.
+	 * @property {number[]} finished   A list of the times each node was finished.
+	 */
+
+	/**
 	 * Runs a depth-first search on the graph.
-	 * @param {number|string} [startID=0] The ID of the start node.
+	 * @param  {number|string} [startID=0] The ID of the start node.
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
 	dfs(startID=0) {
 		const n = this.nodes.length;
-		const parents    = this.fill();
-		const discovered = this.fill();
-		const finished   = this.fill();
+		const parents    = this.fill(null);
+		const discovered = this.fill(null);
+		const finished   = this.fill(null);
 		let time = 0;
 
 		const visit = u => {
@@ -284,17 +309,14 @@ class Graph {
 			finished[u] = ++time;
 		};
 
-		console.log("\n");
 		visit(startID);
-		console.log("\n");
-
 		return {parents, discovered, finished};
 	}
 
 	/**
 	 * Renames the node with a given ID (if one exists) to a new ID.
-	 * @param {number|string} oldID The old ID of the node to rename.
-	 * @param {number|string} newID The new ID to assign to the node.
+	 * @param  {number|string} oldID The old ID of the node to rename.
+	 * @param  {number|string} newID The new ID to assign to the node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	renameNode(oldID, newID) {
@@ -307,12 +329,12 @@ class Graph {
 	}
 
 	/**
-	 * Calculates and returns a list of this graph's connected components using Kosaraju's algorithm.
-	 * @type {Array<Array<Node>>}
+	 * Returns an array of this graph's connected components using Kosaraju's algorithm.
+	 * @return {Array<Array<Node>>} An array of connected components.
 	 */
-	get components() {
+	components() {
 		const visited = this.fill(false);
-		const parents = this.fill();
+		const parents = this.fill(null);
 		const components = {}; 
 		const l = [];
 
@@ -343,6 +365,12 @@ class Graph {
 		return Object.values(components).map(a => a.map(u => this.nodes[u]));
 	}
 
+	/**
+	 * Runs a DFS on each node that hasn't been visited, appending each discovered node to the output array,
+	 * until no unvisited nodes remain. The initial list of unvisited nodes is ordered the same as the `nodes`
+	 * array of this Graph object.
+	 * @return {Node[]} An array of ordered nodes.
+	 */
 	sortedDFS() {
 		const list = [];
 		const visited = this.fill(false);
@@ -352,7 +380,7 @@ class Graph {
 			visited[u] = true;
 			_.pull(unvisited, u);
 
-			for (const v of this.getNode(u).out.sort()) {
+			for (const v of this.nodes[u].out.sort()) {
 				if (!visited[v]) {
 					visit(v);
 				}
@@ -365,12 +393,12 @@ class Graph {
 			visit(unvisited[0]);
 		}
 
-		return list;
+		return list.map(n => this.nodes[n]);
 	}
 
 	/**
 	 * Calculates a topologically sorted list of nodes using Kahn's algorithm.
-	 * @return {Array<Node>} A topologically sorted list of the graph's nodes.
+	 * @return {Node[]} A topologically sorted list of the graph's nodes.
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
 	topoSort() {
@@ -523,10 +551,3 @@ class Graph {
 
 module.exports = Graph;
 module.exports.Node = Node;
-
-/**
- * @typedef {Object} DFSResult
- * @property {Array<number>} parents    A list of each node's parent (null if nonexistent).
- * @property {Array<number>} discovered A list of the times each node was discovered.
- * @property {Array<number>} finished   A list of the times each node was finished.
- */

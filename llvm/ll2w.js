@@ -198,28 +198,28 @@ class LL2W {
 		const metas = this.ast.filter(([type]) => type == "metadata");
 		const graph = new Graph(metas.length);
 
-		metas.filter(([, name]) => _.isNumber(name)).forEach(([, name, distinct, ...items]) => {
+		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]) => {
 			let recursive = false, toAdd = [];
 
 			items.forEach((item, i) => {
-				if (item == name) {
+				if (item == id) {
 					recursive = true;
 				} else if (typeof item == "number") {
-					graph.arc(name, item);
+					graph.arc(id, item);
 				} else {
 					toAdd.push(item);
 				}
 			});
 
-			this.metadata[name] = {recursive, distinct, items: toAdd};
+			this.metadata[id] = {recursive, distinct, items: toAdd};
 		});
 
-		graph.sortedDFS().map(n => graph[n]).forEach(({id: name}) => graph.getNode(name).out.forEach(dependency => {
-			this.metadata[name].items = _.unionWith(this.metadata[name].items, this.metadata[dependency].items, _.isEqual);
+		graph.sortedDFS().forEach(({id}) => graph.getNode(id).out.forEach(dependency => {
+			this.metadata[id].items = _.unionWith(this.metadata[id].items, this.metadata[dependency].items, _.isEqual);
 		}));
 
-		metas.filter(([, name]) => !_.isNumber(name)).forEach(([, name, distinct, ...items]) => {
-			this.metadata[name] = {
+		metas.filter(([, id]) => !_.isNumber(id)).forEach(([, id, distinct, ...items]) => {
+			this.metadata[id] = {
 				recursive: false,
 				distinct, 
 				items: _.uniqWith(_.flatten(items.map(i => this.metadata[i].items)), _.isEqual)
@@ -829,14 +829,16 @@ if (require.main === module) {
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 	// console.log(cfg.toString());
 
-	// compiler.debug(() => jsome({
-	// 	sourceFilename: compiler.sourceFilename,
-	// 	targets: compiler.targets,
-	// 	attributes: compiler.attributes,
-	// 	structs: compiler.structs,
-	// 	metadata: compiler.metadata,
-	// 	constants: compiler.globalConstants,
-	// }));
+	compiler.debug(() => jsome({
+		// sourceFilename: compiler.sourceFilename,
+		// targets: compiler.targets,
+		// attributes: compiler.attributes,
+		// structs: compiler.structs,
+		metadata: compiler.metadata,
+		// constants: compiler.globalConstants,
+	}));
+
+	return;
 
 	// console.log(cfg.reversePost());
 
