@@ -69,10 +69,17 @@ class Graph {
 
 	/**
 	 * Deletes all nodes in the graph.
-	 * @param {number} n The number of new empty nodes to replace the old nodes.
+	 * @param {number|Array} n The number of new empty nodes to replace the old nodes, or an array of IDs to make new nodes with.
 	 */
 	reset(n) {
-		this.nodes = _.range(0, n).map(i => new Node(i, this));
+		if (n == undefined) {
+			this.nodes = [];
+		} else if (typeof n == "number") {
+			this.nodes = _.range(0, n).map(i => new Node(i, this));
+		} else {
+			this.nodes = _.range(0, n.length).map(i => new Node(n[i], this));
+		}
+
 		return this;
 	}
 
@@ -107,7 +114,6 @@ class Graph {
 	 */
 	arc(source, destination) {
 		this.getNode(source).arc(destination);
-		
 		return this;
 	}
 
@@ -202,8 +208,9 @@ class Graph {
 	}
 
 	dTree(startID = 0) {
-		const out = new Graph(this.length);
-		Object.entries(this.lengauerTarjan(startID)).forEach(([k, v]) => out.arc(v == undefined? k : v, k));
+		const lentar = this.lengauerTarjan(startID);
+		const out = new Graph(Object.keys(lentar).map(numerize));
+		Object.entries(lentar).forEach(([k, v]) => out.arc(v == undefined? k : v, k));
 		return out;
 	}
 
@@ -248,7 +255,7 @@ class Graph {
 	 */
 	lengauerTarjan(startID=0) {
 		const normalized = this.clone();
-		const renames = _.mapValues(_.invert(normalized.normalize()), v => parseInt(v));
+		const renames = _.mapValues(_.invert(normalized.normalize()), v => numerize(v));
 		const formatted = normalized.map(v => v.out);
 		return lt(formatted, startID).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
