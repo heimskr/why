@@ -12,6 +12,9 @@ test: wtest
 $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
 
+atest: $(TEST) $(COMPILED) asm.ll
+	node $(TEST) asm.ll
+
 ttest: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
 
@@ -48,8 +51,8 @@ qtest: $(TEST) $(COMPILED) test.ll
 ptest: $(TEST) $(COMPILED) printf.ll
 	node $(TEST) printf.ll
 
-io.ll: test/io.c
-	clang -S -emit-llvm test/io.c
+%.ll: test/%.c
+	clang -S -emit-llvm $<
 
 clean:
 	rm -f $(COMPILED)

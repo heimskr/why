@@ -1,37 +1,22 @@
-#include "io.h"
-
+#include "../whysa.h"
 
 int i = 5;
-int retvar() {
+int test1() {
 	int wow, uh;
 	int j = i + 1;
-	int k = j + 2;
+	int k = j - 2;
 
 	asm (
-		"$a0 + $a1 -> $q"
-		: "=r" (wow), "+l" (uh)
-		: "a" (j), "a" (k)
+		"%2 + %3 -> %0; [%4] -> %1; ring %3; ring %[foo]"
+		: "=r" (wow), "=y" (uh)
+		: "a" (j), "b" (k), [foo] "e" (664L)
 		: "cc"
 	);
+
 
 	return wow;
 }
 
-void _main() {
-	int x = retvar();
-	foo:
-	strprint("hello\n");
-	if (++x < i) {
-		goto foo;
-	}
-
-	strprint("bye");
-	strprint("\n");
-	int y = retvar();
-	int z = retvar();
-}
-
-void strprint(char *str) {
-	for (int i = 0; str[i] != '\0'; i++)
-		_prc(str[i]);
+void test2() {
+	asm ("ring $a0" : : "a" (i));
 }
