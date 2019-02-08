@@ -885,8 +885,8 @@ if (require.main === module) {
 	
 	cfg = new Graph(11).arcString("AB BK BC CD CH DE EF FE FG GB HI IF IJ JH");
 
-	cfg.renameNode(4, "e");
-	cfg.renameNode(1, "b");
+	// cfg.renameNode(4, "e");
+	// cfg.renameNode(1, "b");
 	
 	const ts = x => typeof x == "number"? x+1 : x;
 
@@ -901,7 +901,9 @@ if (require.main === module) {
 	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djGraph(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djGraph(0).toString(ts));
-	console.log(cfg.bfs().map(n => ts(n.id)));
+	// console.log(cfg.bfs().map(n => ts(n.id)));
+
+	console.log(cfg.mergeSets());
 	
 
 

@@ -64,21 +64,26 @@ class Node {
 
 	/**
 	 * Adds a node to this node's outward edge list and adds this node to the node's inward edge list.
-	 * @param {(Node|number|string)} n The node to add.
+	 * @param  {(Node|number|string)} n The node to add.
+	 * @return {boolean} Whether the arc already existed.
 	 */
 	arc(n) {
 		n = numerize(getID(n));
 
+		let existed = false;
+
 		if (!this.out.includes(n)) {
+			existed = true;
 			this.out.push(n);
 		}
 
 		const node = this.graph.getNode(n);
 		if (!node.in.includes(this.id)) {
+			existed = true;
 			node.in.push(this.id);
 		}
 
-		return this;
+		return existed;
 	}
 
 	/**

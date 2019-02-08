@@ -7,6 +7,8 @@ const {lt} = require("dominators");
 const Node = require("./node.js");
 const {alpha, numerize} = require("./util.js");
 
+const ts = x => typeof x == "number"? x+1 : x;
+
 /**
  * Contains various utilities.
  * 
@@ -144,12 +146,12 @@ class Graph {
 
 	/**
 	 * Adds a unidirectional connection from one node to another.
-	 * @param {Node|NodeID} source      The source node.
-	 * @param {Node|NodeID} destination The destination node.
+	 * @param  {Node|NodeID} source      The source node.
+	 * @param  {Node|NodeID} destination The destination node.
+	 * @return {boolean} Whether the connection already existed.
 	 */
 	arc(source, destination) {
-		this.getNode(source).arc(destination);
-		return this;
+		return this.getNode(source).arc(destination);
 	}
 
 	/**
@@ -279,13 +281,13 @@ class Graph {
 	/**
 	 * Calculates the dominator tree of the graph for a given start node.
 	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
-	 * @param  {boolean} [bidirectional=true] Whether the D-edges should be bidirectional.
+	 * @param  {boolean} [bidirectional=false] Whether the D-edges should be bidirectional.
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
-	dTree(startID=0, bidirectional=true) {
+	dTree(startID=0, bidirectional=false) {
 		const lentar = this.lengauerTarjan(startID);
 		const out = new Graph(Object.keys(lentar).map(numerize));
-		const fn = bidirectional? out.edge : out.arc;
+		const fn = (bidirectional? out.edge : out.arc).bind(out);
 		Object.entries(lentar).forEach(([k, v]) => fn(v == undefined? k : v, k));
 		return out;
 	}
@@ -327,15 +329,17 @@ class Graph {
 	/**
 	 * Computes the DJ-graph of the graph for a given start node.
 	 * @param  {Node|NodeID|Graph} [start=0] The ID of the start node, or a precomputed D-tree.
-	 * @param  {boolean} [bidirectional=true] Whether D-edges should be bidirectional.
+	 * @param  {boolean} [bidirectional=false] Whether D-edges should be bidirectional.
 	 * @return {Graph} A DJ-graph.
 	 */
-	djGraph(start=0, bidirectional=true) {
+	djGraph(start=0, bidirectional=false) {
 		const dt = start instanceof Graph? start.clone() : this.dTree(start, bidirectional);
 		const sdom = Graph.strictDominators(dt);
 		dt.jEdges = [];
+		console.log("All:", this.allEdges().map(x=>x.map(ts)));
+		this.forEach(node => console.log(ts(node.id), "sdom:", sdom[node.id].map(ts)));
 		this.allEdges()
-			.filter(([src, dst]) => !sdom[src].includes(dst))
+			.filter(([src, dst]) => !sdom[dst].includes(src))
 			.forEach(p => (dt.arc(...p), dt.jEdges.push(p)));
 		return dt;
 	}
@@ -353,47 +357,88 @@ class Graph {
 		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
-	mergeSet(startID=0) {
+	mergeSets(startID=0) {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
+		let t; let T = s => console.time(t = s); let E = s => { console.timeEnd(t); if (s) T(s) };
+		T("dTree");
 		const dTree = this.dTree(startID);
+		E("djTree");
 		const djTree = this.djGraph(dTree);
+		E("bfs");
 		const bfs = djTree.bfs(startID);
 		const {jEdges} = djTree;
 		const visited = djTree.fillObj({}); // out node ID => in node ID
 		const merge = djTree.fillObj({}); // node ID => IDs in merge set
 		let reqPass = false;
 
+		E("fns");
+
+		console.log("\nD-Tree:");
+		console.log(dTree.toString(ts));
+		console.log("\nDJ-Tree:");
+		console.log(djTree.toString(ts));
+		console.log("\nJ-edges:");
+		console.log(jEdges.map(x => x.map(ts)));
+		console.log();
+
 		const parent = node => dTree.getNode(node.in[0]);
-		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
+		const isJEdge = (es, ed) => {
+			console.time("J");
+			const o = _.some(jEdges, ([js, jd]) => js == es && jd == ed);
+			console.timeEnd("J");
+			return o;
+		};
+
 		const level = node => {
+			// console.time("level");
 			let n;
-			for (n = 0; node.id != startID; n++)
-				node = dTree.getNode(parent(node));
+			for (n = 0; node.id != startID; n++) {
+				const next = dTree.getNode(parent(node));
+				// console.log(`node = ${ts(node.id)}, node.in = [${node.in.map(ts).join(" ")}], next = ${ts(next.id)}`);
+				node = next;
+			}
+			// console.timeEnd("level");
 			return n;
 		};
 
+		E("do while");
+
 		do {
 			for (const node of bfs) {
+				console.log(ts(node.id), "node of bfs");
 				const id = node.id;
 				for (const e of node.in) {
+					// if (e == id) {
+					// 	continue;
+					// }
+
+					console.log(ts(e), ts(id), "e of node.in");
 					// if (e is a J-edge ∧ e not visited)
 					if (isJEdge(e, id) && !visited[e][id]) {
+						console.log(ts(e), ts(id), "yep, it's a j edge.");
 						visited[e][id] = true;
 						const sNode = dTree.getNode(e);
 						const tNode = node; // dTree.getNode(id) would be redundant.
 						let tmp = sNode;
 						let lNode = null;
-						while (level(tNode) <= level(tmp)) {
+						// console.log(ts(e), "wow");
+						console.log(`level(${ts(tmp.id)}), level(${ts(tNode.id)}) -> ${level(tmp)} >= ${level(tNode)}`);
+						while (level(tmp) >= level(tNode)) {
+							console.log(ts(tNode.id), ts(tmp.id), "level(tNode) <= level(tmp)");
 							// Merge(tmp) = Merge(tmp) ∪ Merge(tnode) ∪ {tnode}
 							merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], tNode.id);
+							console.log(`lNode: ${lNode} -> ${tmp}`);
 							lNode = tmp;
 							tmp = parent(tmp);
 						}
 
+						// console.log("we're here.");
+
 						const lID = lNode.id;
 						// for (all incoming edges to lnode)
 						for (const e_ of lNode.in) {
+							console.log(ts(e_), "e_ of lNode.in");
 							if (isJEdge(e_, lID) && visited[e][lID]) {
 								//// const sNode_ = dTree.getNode(e_);
 								// if (Merge(snode') ⊉ Merge(lnode))
@@ -405,7 +450,11 @@ class Graph {
 					}
 				}
 			}
+
+			console.log("looped.");
 		} while (reqPass);
+
+		E();
 
 		return merge;
 	}
