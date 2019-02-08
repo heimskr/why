@@ -903,7 +903,8 @@ if (require.main === module) {
 	// console.log(cfg.djGraph(0).toString(ts));
 	// console.log(cfg.bfs().map(n => ts(n.id)));
 
-	console.log(cfg.mergeSets());
+	console.log(_.mapKeys(_.mapValues(cfg.mergeSets(), x=>x.map(ts)), (v,k)=>+k+1));
+	// console.log(cfg.mergeSets());
 	
 
 

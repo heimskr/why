@@ -361,18 +361,13 @@ class Graph {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
 		let t; let T = s => console.time(t = s); let E = s => { console.timeEnd(t); if (s) T(s) };
-		T("dTree");
 		const dTree = this.dTree(startID);
-		E("djTree");
 		const djTree = this.djGraph(dTree);
-		E("bfs");
 		const bfs = djTree.bfs(startID);
 		const {jEdges} = djTree;
 		const visited = djTree.fillObj({}); // out node ID => in node ID
-		const merge = djTree.fillObj({}); // node ID => IDs in merge set
+		const merge = djTree.fillObj([]); // node ID => IDs in merge set
 		let reqPass = false;
-
-		E("fns");
 
 		console.log("\nD-Tree:");
 		console.log(dTree.toString(ts));
@@ -383,40 +378,28 @@ class Graph {
 		console.log();
 
 		const parent = node => dTree.getNode(node.in[0]);
-		const isJEdge = (es, ed) => {
-			console.time("J");
-			const o = _.some(jEdges, ([js, jd]) => js == es && jd == ed);
-			console.timeEnd("J");
-			return o;
-		};
+		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
 
 		const level = node => {
-			// console.time("level");
 			let n;
-			for (n = 0; node.id != startID; n++) {
-				const next = dTree.getNode(parent(node));
-				// console.log(`node = ${ts(node.id)}, node.in = [${node.in.map(ts).join(" ")}], next = ${ts(next.id)}`);
-				node = next;
-			}
-			// console.timeEnd("level");
+			for (n = 0; node.id != startID; n++)
+				node = dTree.getNode(parent(node));
 			return n;
 		};
 
-		E("do while");
-
 		do {
 			for (const node of bfs) {
-				console.log(ts(node.id), "node of bfs");
+				// console.log(ts(node.id), "node of bfs");
 				const id = node.id;
 				for (const e of node.in) {
 					// if (e == id) {
 					// 	continue;
 					// }
 
-					console.log(ts(e), ts(id), "e of node.in");
+					// console.log(ts(e), ts(id), "e of node.in");
 					// if (e is a J-edge ∧ e not visited)
 					if (isJEdge(e, id) && !visited[e][id]) {
-						console.log(ts(e), ts(id), "yep, it's a j edge.");
+						// console.log(ts(e), ts(id), "yep, it's a j edge.");
 						visited[e][id] = true;
 						const sNode = dTree.getNode(e);
 						const tNode = node; // dTree.getNode(id) would be redundant.
@@ -425,10 +408,11 @@ class Graph {
 						// console.log(ts(e), "wow");
 						console.log(`level(${ts(tmp.id)}), level(${ts(tNode.id)}) -> ${level(tmp)} >= ${level(tNode)}`);
 						while (level(tmp) >= level(tNode)) {
-							console.log(ts(tNode.id), ts(tmp.id), "level(tNode) <= level(tmp)");
+							// console.log(ts(tNode.id), ts(tmp.id), "level(tNode) <= level(tmp)");
+							console.log(`level(${ts(tNode.id)}), ${level(tNode)} >= ${level(tmp)}, level(${ts(tmp.id)})`);
 							// Merge(tmp) = Merge(tmp) ∪ Merge(tnode) ∪ {tnode}
-							merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], tNode.id);
-							console.log(`lNode: ${lNode} -> ${tmp}`);
+							merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], [tNode.id]);
+							console.log(`lNode: ${lNode? ts(lNode.id) : lNode} -> ${ts(tmp.id)}`);
 							lNode = tmp;
 							tmp = parent(tmp);
 						}
@@ -438,7 +422,7 @@ class Graph {
 						const lID = lNode.id;
 						// for (all incoming edges to lnode)
 						for (const e_ of lNode.in) {
-							console.log(ts(e_), "e_ of lNode.in");
+							// console.log(ts(e_), "e_ of lNode.in");
 							if (isJEdge(e_, lID) && visited[e][lID]) {
 								//// const sNode_ = dTree.getNode(e_);
 								// if (Merge(snode') ⊉ Merge(lnode))
@@ -454,7 +438,7 @@ class Graph {
 			console.log("looped.");
 		} while (reqPass);
 
-		E();
+		// E();
 
 		return merge;
 	}
