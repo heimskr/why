@@ -159,8 +159,7 @@ class Graph {
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	arcString(str) {
-		for (const s of str.split(/\s+/))
-			this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase())));
+		str.split(/\s+/).forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
 		return this;
 	}
 
@@ -170,11 +169,7 @@ class Graph {
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	arcs(...sets) {
-		for (const [src, ...dests] of sets) {
-			for (const dest of dests)
-				this.arc(src, dest);
-		}
-
+		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
 		return this;
 	}
 
@@ -246,8 +241,7 @@ class Graph {
 	 */
 	fillObj(value=null) {
 		const out = {};
-		for (const v of this.nodes)
-			out[v.id] = value;
+		this.forEach(v => out[v.id] = value);
 		return out;
 	}
 
@@ -436,12 +430,12 @@ class Graph {
 
 		const visit = u => {
 			discovered[u] = ++time;
-			for (const v of this.getNode(u).out.sort()) {
+			this.getNode(u).out.sort().forEach(v => {
 				if (discovered[v] == null) {
 					parents[v] = u;
 					visit(v);
 				}
-			}
+			});
 
 			finished[u] = ++time;
 		};
@@ -463,14 +457,14 @@ class Graph {
 		visited[startID] = true;
 
 		while (queue.length) {
-			for (const id of queue.shift().out) {
+			queue.shift().out.forEach(id => {
 				if (!visited[id]) {
 					visited[id] = true;
 					node = this.getNode(id);
 					order.push(node);
 					queue.push(node);
 				}
-			}
+			});
 		}
 
 		return order;
@@ -504,8 +498,7 @@ class Graph {
 		const visit = u => {
 			if (!visited[u]) {
 				visited[u] = true;
-				for (const v of this.nodes[u].out)
-					visit(v);
+				this.nodes[u].out.forEach(visit);
 				l.unshift(u);
 			}
 		};
@@ -513,21 +506,18 @@ class Graph {
 		const assign = (u, root) => {
 			if (parents[u] == null) {
 				parents[u] = root;
-
-				if (!components[root])
+				if (!components[root]) {
 					components[root] = [u];
-				else
+				} else {
 					components[root].push(u);
+				}
 
-				for (const v of this.getNode(u).in)
-					assign(v, root);
+				this.getNode(u).in.forEach(v => assign(v, root));
 			}
 		};
 
 		this.nodes.forEach((node, u) => visit(u));
-		for (const u of l) {
-			assign(u, u);
-		}
+		l.forEach(u => assign(u, u));
 
 		return Object.values(components).map(a => a.map(u => this.nodes[u]));
 	}
@@ -588,19 +578,20 @@ class Graph {
 			let n = s.pop();
 			l.unshift(n);
 			
-			for (const m of copy.nodes.filter(m => m != n && m.connectsFrom(n))) {
+			copy.nodes.filter(m => m != n && m.connectsFrom(n)).forEach(m => {
 				m.removeArcFrom(n);
 				
 				if (!m.in.length) {
 					s.unshift(m);
 				}
-			}
+			});
 		}
 
-		for (const node of copy.nodes) {
-			if (node.out.length)
+		copy.nodes.forEach(node => {
+			if (node.out.length) {
 				throw new Error("Graph contains a cycle.");
-		}
+			}
+		});
 
 		return l.map(node => this.nodes[node.id]);
 	}
@@ -609,8 +600,7 @@ class Graph {
 	 * Removes all loop edges from the graph.
 	 */
 	removeLoops() {
-		for (const node of this.nodes)
-			this.disconnect(node, node);
+		this.nodes.forEach(node => this.disconnect(node, node));
 		return this;
 	}
 
@@ -677,10 +667,7 @@ class Graph {
 	 */
 	get transpose() {
 		let graph = new Graph(this.nodes.length);
-		this.nodes.forEach(({out}, u) => {
-			for (const v of out)
-				graph.arc(v, u);
-		});
+		this.nodes.forEach(({out}, u) => out.forEach(v => graph.arc(v, u)));
 
 		return graph;
 	}
