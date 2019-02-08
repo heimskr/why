@@ -824,7 +824,7 @@ if (require.main === module) {
 	// }));
 
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
-	let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
+	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 	// console.log(cfg.toString());
