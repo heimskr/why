@@ -191,8 +191,8 @@ class Graph {
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	edge(a, b) {
-		this.nodes[getID(a)].arc(b);
-		this.nodes[getID(b)].arc(a);
+		this.getNode(a).arc(b);
+		this.getNode(b).arc(a);
 		return this;
 	}
 
@@ -348,7 +348,7 @@ class Graph {
 		const normalized = this.clone();
 		const renames = _.mapValues(_.invert(normalized.normalize()), v => numerize(v));
 		const formatted = normalized.map(v => v.out);
-		return lt(formatted, getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
+		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
 	/**
@@ -364,7 +364,6 @@ class Graph {
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
 	dfs(startID=0) {
-		const n = this.nodes.length;
 		const parents    = this.fill(null);
 		const discovered = this.fill(null);
 		const finished   = this.fill(null);
@@ -384,6 +383,27 @@ class Graph {
 
 		visit(startID);
 		return {parents, discovered, finished};
+	}
+
+	bfs(startID=0) {
+		let node = this.getNode(startID);
+		const visited = this.fillObj(false);
+		const queue = [node];
+		const order = [node.id];
+		visited[startID] = true;
+
+		while (queue.length) {
+			queue.shift().out.forEach(id => {
+				if (!visited[id]) {
+					visited[id] = true;
+					node = this.getNode(id);
+					order.push(node.id);
+					queue.push(node);
+				}
+			});
+		}
+
+		return order;
 	}
 
 	/**

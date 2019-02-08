@@ -648,6 +648,8 @@ class LL2W {
 	static computeMergeSet(cfg) {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
+		const dj = cfg.djGraph(0);
+		let reqPass = false;
 	}
 
 	computeLiveRanges(fn) {
@@ -834,11 +836,11 @@ if (require.main === module) {
 		// targets: compiler.targets,
 		// attributes: compiler.attributes,
 		// structs: compiler.structs,
-		metadata: compiler.metadata,
+		// metadata: compiler.metadata,
 		// constants: compiler.globalConstants,
 	}));
 
-	return;
+	// return;
 
 	// console.log(cfg.reversePost());
 
@@ -905,7 +907,8 @@ if (require.main === module) {
 	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
 	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djGraph(0).toString(x=>q[x], x=>q[x]));
-	console.log(cfg.djGraph(0).toString(ts));
+	// console.log(cfg.djGraph(0).toString(ts));
+	console.log(cfg.bfs().map(ts));
 	
 
 
