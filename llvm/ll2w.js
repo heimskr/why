@@ -824,14 +824,14 @@ if (require.main === module) {
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 	// console.log(cfg.toString());
 
-	compiler.debug(() => jsome({
+	// compiler.debug(() => jsome({
 		// sourceFilename: compiler.sourceFilename,
 		// targets: compiler.targets,
 		// attributes: compiler.attributes,
 		// structs: compiler.structs,
 		// metadata: compiler.metadata,
 		// constants: compiler.globalConstants,
-	}));
+	// }));
 
 	// return;
 
@@ -901,7 +901,7 @@ if (require.main === module) {
 	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djGraph(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djGraph(0).toString(ts));
-	console.log(cfg.bfs().map(ts));
+	console.log(cfg.bfs().map(n => ts(n.id)));
 	
 
 

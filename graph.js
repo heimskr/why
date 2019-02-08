@@ -368,7 +368,7 @@ class Graph {
 		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
 		const level = node => {
 			let n;
-			while (n = 0; node.id != startID; n++)
+			for (n = 0; node.id != startID; n++)
 				node = dTree.getNode(parent(node));
 			return n;
 		};
