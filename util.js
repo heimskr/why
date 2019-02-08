@@ -49,6 +49,24 @@ exports.mixins = (__) => {
 
 		objectify(arr, initial = () => undefined) {
 			return __.fromPairs(arr.map(v => [v, initial()]));
+		},
+
+		notSuperOrEq(setA, setB) {
+			return __.some(setB, v => !setA.has(v));
+		},
+
+		filterSet(set, pred) {
+			return new Set([...set].filter(pred));
+		},
+
+		pullSet(set, values) {
+			const vSet = new Set(values);
+			set.forEach(value => vSet.has(value) && set.remove(value));
+			return set;
+		},
+
+		pullSetBy(set, pred) {
+			set.forEach(value => pred(value) && set.remove(value));
 		}
 	});
 };
