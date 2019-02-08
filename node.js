@@ -8,6 +8,8 @@ const getID = node => {
 	}
 };
 
+// TODO: use Node references inside Node.in and Node.out instead of IDs.
+
 /**
  * Represents a node in a graph.
  */

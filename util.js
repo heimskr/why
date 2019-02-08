@@ -51,23 +51,10 @@ exports.mixins = (__) => {
 			return __.fromPairs(arr.map(v => [v, initial()]));
 		},
 
-		notSuperOrEq(setA, setB) {
-			return __.some(setB, v => !setA.has(v));
+		notSuperOrEq(a, b) {
+			// If b contains any value not in a, then a ⊉ b.
+			return __.some(b, v => !a.has(v));
 		},
-
-		filterSet(set, pred) {
-			return new Set([...set].filter(pred));
-		},
-
-		pullSet(set, values) {
-			const vSet = new Set(values);
-			set.forEach(value => vSet.has(value) && set.remove(value));
-			return set;
-		},
-
-		pullSetBy(set, pred) {
-			set.forEach(value => pred(value) && set.remove(value));
-		}
 	});
 };
 
