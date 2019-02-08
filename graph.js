@@ -336,8 +336,6 @@ class Graph {
 		const dt = start instanceof Graph? start.clone() : this.dTree(start, bidirectional);
 		const sdom = Graph.strictDominators(dt);
 		dt.jEdges = [];
-		console.log("All:", this.allEdges().map(x=>x.map(ts)));
-		this.forEach(node => console.log(ts(node.id), "sdom:", sdom[node.id].map(ts)));
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[dst].includes(src))
 			.forEach(p => (dt.arc(...p), dt.jEdges.push(p)));
@@ -369,10 +367,10 @@ class Graph {
 		const merge = djTree.fillObj([]); // node ID => IDs in merge set
 		let reqPass = false;
 
-		console.log("\nD-Tree:");
-		console.log(dTree.toString(ts));
-		console.log("\nDJ-Tree:");
-		console.log(djTree.toString(ts));
+		// console.log("\nD-Tree:");
+		// console.log(dTree.toString(ts));
+		// console.log("\nDJ-Tree:");
+		// console.log(djTree.toString(ts));
 		console.log("\nJ-edges:");
 		console.log(jEdges.map(x => x.map(ts)));
 		console.log();
@@ -406,13 +404,16 @@ class Graph {
 						let tmp = sNode;
 						let lNode = null;
 						// console.log(ts(e), "wow");
-						console.log(`level(${ts(tmp.id)}), level(${ts(tNode.id)}) -> ${level(tmp)} >= ${level(tNode)}`);
+						// console.log(`level(${ts(tmp.id)}), level(${ts(tNode.id)}) -> ${level(tmp)} >= ${level(tNode)}`);
 						while (level(tmp) >= level(tNode)) {
 							// console.log(ts(tNode.id), ts(tmp.id), "level(tNode) <= level(tmp)");
-							console.log(`level(${ts(tNode.id)}), ${level(tNode)} >= ${level(tmp)}, level(${ts(tmp.id)})`);
+							// console.log(`level(${ts(tNode.id)}), ${level(tNode)} >= ${level(tmp)}, level(${ts(tmp.id)})`);
 							// Merge(tmp) = Merge(tmp) ∪ Merge(tnode) ∪ {tnode}
+
+							console.log(chalk.yellow(ts(tmp.id).toString().padStart(2," "))+":", merge[tmp.id], "<-", merge[tNode.id].map(ts), [ts(tNode.id)]);
+
 							merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], [tNode.id]);
-							console.log(`lNode: ${lNode? ts(lNode.id) : lNode} -> ${ts(tmp.id)}`);
+							// console.log(`lNode: ${lNode? ts(lNode.id) : lNode} -> ${ts(tmp.id)}`);
 							lNode = tmp;
 							tmp = parent(tmp);
 						}
@@ -427,6 +428,9 @@ class Graph {
 								//// const sNode_ = dTree.getNode(e_);
 								// if (Merge(snode') ⊉ Merge(lnode))
 								//// if (_.notSuperOrEq(merge[sNode_.id], merge[lID]))
+
+								console.log(merge[e_], merge[lID], _.notSuperOrEq(merge[e_], merge[lID]));
+
 								if (_.notSuperOrEq(merge[e_], merge[lID]))
 									reqPass = true;
 							}
@@ -434,8 +438,6 @@ class Graph {
 					}
 				}
 			}
-
-			console.log("looped.");
 		} while (reqPass);
 
 		// E();
