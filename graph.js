@@ -159,7 +159,8 @@ class Graph {
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	arcString(str) {
-		str.split(/\s+/).forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
+		for (const s of str.split(/\s+/))
+			this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase())));
 		return this;
 	}
 
@@ -169,7 +170,11 @@ class Graph {
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	arcs(...sets) {
-		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
+		for (const [src, ...dests] of sets) {
+			for (const dest of dests)
+				this.arc(src, dest);
+		}
+
 		return this;
 	}
 
@@ -241,7 +246,8 @@ class Graph {
 	 */
 	fillObj(value=null) {
 		const out = {};
-		this.forEach(v => out[v.id] = value);
+		for (const v of this.nodes)
+			out[v.id] = value;
 		return out;
 	}
 
@@ -279,12 +285,14 @@ class Graph {
 	/**
 	 * Calculates the dominator tree of the graph for a given start node.
 	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
+	 * @param  {boolean} [bidirectional=true] Whether the D-edges should be bidirectional.
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
-	dTree(startID=0) {
+	dTree(startID=0, bidirectional=true) {
 		const lentar = this.lengauerTarjan(startID);
 		const out = new Graph(Object.keys(lentar).map(numerize));
-		Object.entries(lentar).forEach(([k, v]) => out.arc(v == undefined? k : v, k));
+		const fn = bidirectional? out.edge : out.arc;
+		Object.entries(lentar).forEach(([k, v]) => fn(v == undefined? k : v, k));
 		return out;
 	}
 
@@ -324,17 +332,17 @@ class Graph {
 
 	/**
 	 * Computes the DJ-graph of the graph for a given start node.
-	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
+	 * @param  {Node|NodeID|Graph} [start=0] The ID of the start node, or a precomputed D-tree.
 	 * @param  {boolean} [bidirectional=true] Whether D-edges should be bidirectional.
 	 * @return {Graph} A DJ-graph.
 	 */
-	djGraph(startID=0, bidirectional=true) {
-		const dt = this.dTree(startID), sdom = Graph.strictDominators(dt);
+	djGraph(start=0, bidirectional=true) {
+		const dt = start instanceof Graph? start.clone() : this.dTree(start, bidirectional);
+		const sdom = Graph.strictDominators(dt);
+		dt.jEdges = [];
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[src].includes(dst))
-			.forEach(bidirectional?
-				p => dt.edge(...p)
-			  : p => dt.arc(...p));
+			.forEach(p => (dt.arc(...p), dt.jEdges.push(p)));
 		return dt;
 	}
 
@@ -349,6 +357,63 @@ class Graph {
 		const renames = _.mapValues(_.invert(normalized.normalize()), v => numerize(v));
 		const formatted = normalized.map(v => v.out);
 		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
+	}
+
+	mergeSet(startID=0) {
+		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
+		// Das and Ramakrishna (2005)
+		const dTree = this.dTree(startID);
+		const djTree = this.djGraph(dTree);
+		const bfs = djTree.bfs(startID);
+		const {jEdges} = djTree;
+		const visited = djTree.fillObj({}); // out node ID => in node ID
+		const merge = djTree.fillObj({}); // node ID => IDs in merge set
+		let reqPass = false;
+
+		const parent = node => dTree.getNode(node.in[0]);
+		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
+		const level = node => {
+			let n;
+			while (n = 0; node.id != startID; n++)
+				node = dTree.getNode(parent(node));
+			return n;
+		};
+
+		do {
+			for (const node of bfs) {
+				const id = node.id;
+				for (const e of node.in) {
+					// if (e is a J-edge ∧ e not visited)
+					if (isJEdge(e, id) && !visited[e][id]) {
+						visited[e][id] = true;
+						const sNode = dTree.getNode(e);
+						const tNode = node; // dTree.getNode(id) would be redundant.
+						let tmp = sNode;
+						let lNode = null;
+						while (level(tNode) <= level(tmp)) {
+							// Merge(tmp) = Merge(tmp) ∪ Merge(tnode) ∪ {tnode}
+							merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], tNode.id);
+							lNode = tmp;
+							tmp = parent(tmp);
+						}
+
+						const lID = lNode.id;
+						// for (all incoming edges to lnode)
+						for (const e_ of lNode.in) {
+							if (isJEdge(e_, lID) && visited[e][lID]) {
+								//// const sNode_ = dTree.getNode(e_);
+								// if (Merge(snode') ⊉ Merge(lnode))
+								//// if (_.notSuperOrEq(merge[sNode_.id], merge[lID]))
+								if (_.notSuperOrEq(merge[e_], merge[lID]))
+									reqPass = true;
+							}
+						}
+					}
+				}
+			}
+		} while (reqPass);
+
+		return merge;
 	}
 
 	/**
@@ -371,12 +436,12 @@ class Graph {
 
 		const visit = u => {
 			discovered[u] = ++time;
-			this.getNode(u).out.sort().forEach(v => {
+			for (const v of this.getNode(u).out.sort()) {
 				if (discovered[v] == null) {
 					parents[v] = u;
 					visit(v);
 				}
-			});
+			}
 
 			finished[u] = ++time;
 		};
@@ -385,22 +450,27 @@ class Graph {
 		return {parents, discovered, finished};
 	}
 
+	/**
+	 * Performs a breadth-first search of the graph from a given start node.
+	 * @param {Node|NodeID} startID The ID of the start node.
+	 * @return {Node[]} An array of nodes in BFS order.
+	 */
 	bfs(startID=0) {
 		let node = this.getNode(startID);
 		const visited = this.fillObj(false);
 		const queue = [node];
-		const order = [node.id];
+		const order = [node];
 		visited[startID] = true;
 
 		while (queue.length) {
-			queue.shift().out.forEach(id => {
+			for (const id of queue.shift().out) {
 				if (!visited[id]) {
 					visited[id] = true;
 					node = this.getNode(id);
-					order.push(node.id);
+					order.push(node);
 					queue.push(node);
 				}
-			});
+			}
 		}
 
 		return order;
@@ -434,7 +504,8 @@ class Graph {
 		const visit = u => {
 			if (!visited[u]) {
 				visited[u] = true;
-				this.nodes[u].out.forEach(visit);
+				for (const v of this.nodes[u].out)
+					visit(v);
 				l.unshift(u);
 			}
 		};
@@ -442,18 +513,21 @@ class Graph {
 		const assign = (u, root) => {
 			if (parents[u] == null) {
 				parents[u] = root;
-				if (!components[root]) {
-					components[root] = [u];
-				} else {
-					components[root].push(u);
-				}
 
-				this.getNode(u).in.forEach(v => assign(v, root));
+				if (!components[root])
+					components[root] = [u];
+				else
+					components[root].push(u);
+
+				for (const v of this.getNode(u).in)
+					assign(v, root);
 			}
 		};
 
 		this.nodes.forEach((node, u) => visit(u));
-		l.forEach(u => assign(u, u));
+		for (const u of l) {
+			assign(u, u);
+		}
 
 		return Object.values(components).map(a => a.map(u => this.nodes[u]));
 	}
@@ -514,20 +588,19 @@ class Graph {
 			let n = s.pop();
 			l.unshift(n);
 			
-			copy.nodes.filter(m => m != n && m.connectsFrom(n)).forEach(m => {
+			for (const m of copy.nodes.filter(m => m != n && m.connectsFrom(n))) {
 				m.removeArcFrom(n);
 				
 				if (!m.in.length) {
 					s.unshift(m);
 				}
-			});
+			}
 		}
 
-		copy.nodes.forEach(node => {
-			if (node.out.length) {
+		for (const node of copy.nodes) {
+			if (node.out.length)
 				throw new Error("Graph contains a cycle.");
-			}
-		});
+		}
 
 		return l.map(node => this.nodes[node.id]);
 	}
@@ -536,7 +609,8 @@ class Graph {
 	 * Removes all loop edges from the graph.
 	 */
 	removeLoops() {
-		this.nodes.forEach(node => this.disconnect(node, node));
+		for (const node of this.nodes)
+			this.disconnect(node, node);
 		return this;
 	}
 
@@ -603,7 +677,10 @@ class Graph {
 	 */
 	get transpose() {
 		let graph = new Graph(this.nodes.length);
-		this.nodes.forEach(({out}, u) => out.forEach(v => graph.arc(v, u)));
+		this.nodes.forEach(({out}, u) => {
+			for (const v of out)
+				graph.arc(v, u);
+		});
 
 		return graph;
 	}
