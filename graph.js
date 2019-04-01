@@ -393,31 +393,21 @@ class Graph {
 		let reqPass = false;
 		do {
 			for (const node of bfs) {
-				for (const e of allIn(node)) {
-					// if (e is a J-edge ∧ e not visited)
-					if (isJEdge(e, node.id) && node.id != exitID && !visited[e][node.id]) {
-						visited[e][node.id] = true;
-						const sNode = djTree.getNode(e);
-						const tNode = node; // djTree.getNode(id) would be redundant.
-						let tmp = sNode;
-						let lNode = null;
-						while (level(tmp) >= level(tNode)) {
-							merge[tmp.id].push(merge[tNode.id]);
-							merge[tmp.id].push(tNode.id);
-							lNode = tmp;
-							tmp = parent(tmp);
-						}
+				const id = node.id;
+				for (const e of allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id])) {
+					visited[e][id] = true;
+					let lNode = null, tmp = djTree.getNode(e);
+					while (level(tmp) >= level(node)) {
+						merge[tmp.id].push(merge[id]);
+						merge[tmp.id].push(id);
+						tmp = parent(lNode = tmp);
+					}
 
-						const originalLNodeID = lNode.id;
-
-						// for (all incoming edges to lnode)
-						for (const e_ of lNode.in) {
-							if (isJEdge(e_, originalLNodeID) && visited[e][originalLNodeID]) {
-								// if (Merge(snode') ⊉ Merge(lnode))
-								if (_.notSuperOrEq(merge[e_], merge[originalLNodeID]))
-									reqPass = true;
-							}
-						}
+					const originalLNodeID = lNode.id;
+					for (const e_ of lNode.in) {
+						reqPass |= isJEdge(e_, originalLNodeID)
+								&& visited[e ][originalLNodeID]
+								&& _.notSuperOrEq(merge[e_], merge[originalLNodeID]);
 					}
 				}
 			}
@@ -427,10 +417,10 @@ class Graph {
 		// won't include the items added in later computed merge sets), so we need to combine them all together.
 		// _.flattenDeep doesn't handle circular references, so we need to flatten the merge sets ourselves.
 		const flatten = (x, out=[]) => {
-			if (typeof x == "number") {
-				out.push(x);
-			} else if (x instanceof Array) {
+			if (x instanceof Array) {
 				x.forEach(y => x != y && flatten(y, out));
+			} else {
+				out.push(x);
 			}
 
 			return out;
