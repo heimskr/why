@@ -890,10 +890,10 @@ if (require.main === module) {
 	
 	const ts = x => typeof x == "number"? x+1 : x;
 
-	console.log(chalk.dim("CFG:"));
-	console.log(cfg.toString(ts));
+	// console.log(chalk.dim("CFG:"));
+	// console.log(cfg.toString(ts));
+	// console.log("");
 	// console.log(cfg.toString(x=>q[x], x=>q[x]));
-	console.log("");
 	// cfg.lengauerTarjan(0);
 
 	// Object.entries(cfg.lengauerTarjan(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
@@ -902,9 +902,9 @@ if (require.main === module) {
 	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
 	// console.log(cfg.djGraph(0).toString(x=>q[x], x=>q[x]));
 	// console.log(chalk.green(cfg.djGraph(0).jEdges.toString(ts)));
-	console.log("\x1b[32m");
-	console.log(cfg.djGraph(0).jEdges);
 	// console.log(cfg.bfs().map(n => ts(n.id)));
+	// console.log("\x1b[32m");
+	// console.log(cfg.djGraph(0).jEdges);
 	
 	const dj254gap = new Graph(24);
 	const pairs254gapLtR = "01 02 23 34 35 3-23 38 j45 56 57 j23-5 j23-8 j67 j75 j78 89 8-10 8-14 j9-10 14-15 14-16 j15-16 10-11 11-12 12-13 j13-1 16-22 j22-10 16-17 17-21 j21-22 17-18 18-19 18-20 j19-20 j20-18 j20-21".split(" ");
@@ -914,11 +914,11 @@ if (require.main === module) {
 	const jpairs254gap = pairs254gap.filter(s => s[0] == "j").map(s => s.substr(1));
 	const jedges254gap = jpairs254gap.map(s => s.includes("-")? s.split(/-/).map(n => parseInt(n)) : [parseInt(s[0]), parseInt(s[1])]);
 	const str254gap = pairs254gap.filter(s => s[0] != "j").join(" ");
-	console.log({jpairs254gap, jedges254gap, str254gap});
+	// console.log({jpairs254gap, jedges254gap, str254gap});
 	dj254gap.arcString(str254gap);
 	dj254gap.jEdges = jedges254gap;
-	console.log("dj254gap:", dj254gap);
-	console.log("dj254gap:\n" + dj254gap.toString());
+	// console.log("dj254gap:", dj254gap);
+	// console.log("dj254gap:\n" + dj254gap.toString());
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();
