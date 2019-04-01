@@ -380,29 +380,9 @@ class Graph {
 		const visited = djTree.fillObj({}); // out node ID => in node ID
 		const merge = djTree.fillObj([]); // node ID => IDs in merge set
 
-		// console.log("\nD-Tree:");
-		// console.log(dTree.toString(ts));
-		// console.log("\nDJ-Tree:");
-		// console.log(djTree.toString(ts));
-		console.log("\nJ-edges:");
-		console.log(jEdges);
-		console.log("\nBFS:", bfs.map(n => n.id).join(" ") + "\n");
-
-
 		const parent = node => djTree.getNode(node.in[0]);
 		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
-		const allIn = node => {
-			// console.log("searching for id", node.id);
-			const js = jEdges.filter(j => {
-				// console.log("J:", j);
-				return j[1] == node.id;
-			}).map(j => {
-				// console.log(chalk.red("!!!"), j, "→", j[0]);
-				return j[0];
-			});
-			return _.uniq([...node.in, ...js]);
-		};
-
+		const allIn = node => _.uniq([...node.in, ...jEdges.filter(([s, d]) => d == node.id).map(([s, d]) => s)]);
 		const level = node => {
 			let n;
 			for (n = 0; node.id != startID; n++)
@@ -410,70 +390,32 @@ class Graph {
 			return n;
 		};
 
-		let pass = 0;
 		let reqPass = false;
 		do {
-			console.log(`\n\x1b[1;38;5;202m█████ PASS ${++pass} █████\x1b[0m`);
-
 			for (const node of bfs) {
-				// console.log(ts(node.id), "node of bfs");
-				const id = node.id;
-				console.log("\nNode", chalk.green(id) + ":", allIn(node).map(x => chalk.dim(x)).join(" "));
 				for (const e of allIn(node)) {
-					console.log("   ←", chalk.yellow(e));
-					// if (e == id) {
-					// 	continue;
-					// }
-
-					// console.log(ts(e), ts(id), "e of node.in");
 					// if (e is a J-edge ∧ e not visited)
-					if (isJEdge(e, id) && id != exitID) {
-						console.log("Encountered J-edge:", chalk.bold.cyan(e + " " + id), "...", visited[e][id]? chalk.red("visited") : chalk.green("not visited"));
-						console.log(visited);
-						if (!visited[e][id]) {
-							// console.log(ts(e), ts(id), "yep, it's a j edge.");
-							visited[e][id] = true;
-							const sNode = djTree.getNode(e);
-							const tNode = node; // djTree.getNode(id) would be redundant.
-							let tmp = sNode;
-							let lNode = null;
-							// console.log(ts(e), "wow");
-							// console.log(`level(${ts(tmp.id)}), level(${ts(tNode.id)}) -> ${level(tmp)} >= ${level(tNode)}`);
-							while (1) {
-								const good = level(tmp) >= level(tNode);
-								console.log(chalk.cyan("::"), chalk[good? "green" : "red"](`level(tmp ${chalk.dim(("["+tmp.id+"]").padStart(4, " "))}) >= level(tNode ${chalk.dim(("["+tNode.id+"]").padStart(4, " "))})  ${chalk.dim("::")}  ${chalk.bold(level(tmp))} >= ${chalk.bold(level(tNode))}`));
-								if (!good) break;
-								// console.log(ts(tNode.id), ts(tmp.id), "level(tNode) <= level(tmp)");
-								// console.log(`level(${ts(tNode.id)}), ${level(tNode)} >= ${level(tmp)}, level(${ts(tmp.id)})`);
-								// Merge(tmp) = Merge(tmp) ∪ Merge(tnode) ∪ {tnode}
+					if (isJEdge(e, node.id) && node.id != exitID && !visited[e][node.id]) {
+						visited[e][node.id] = true;
+						const sNode = djTree.getNode(e);
+						const tNode = node; // djTree.getNode(id) would be redundant.
+						let tmp = sNode;
+						let lNode = null;
+						while (level(tmp) >= level(tNode)) {
+							merge[tmp.id].push(merge[tNode.id]);
+							merge[tmp.id].push(tNode.id);
+							lNode = tmp;
+							tmp = parent(tmp);
+						}
 
-								console.log("     " + chalk.magenta(`Merge(tmp ${chalk.dim("["+tmp.id+"]")}) = Merge(tmp ${chalk.dim("["+tmp.id+"]")}) ∪ Merge(tnode ${chalk.dim("["+tNode.id+"]")}) ∪ {tnode ${chalk.dim("["+tNode.id+"]")}}`));
-								console.log("     " + chalk.yellow(tmp.id.toString().padStart(2," "))+":", merge[tmp.id], "<-", merge[tNode.id], "+", tNode.id);
+						const originalLNodeID = lNode.id;
 
-								merge[tmp.id].push(merge[tNode.id]);
-								merge[tmp.id].push(tNode.id);
-								// merge[tmp.id] = [merge[tmp.id], merge[tNode.id], [tNode.id]];
-								// console.log(`lNode: ${lNode? ts(lNode.id) : lNode} -> ${ts(tmp.id)}`);
-								lNode = tmp;
-								tmp = parent(tmp);
-							}
-
-							// console.log("we're here.");
-
-							const lID = lNode.id;
-							// for (all incoming edges to lnode)
-							for (const e_ of lNode.in) {
-								// console.log(ts(e_), "e_ of lNode.in");
-								if (isJEdge(e_, lID) && visited[e][lID]) {
-									//// const sNode_ = djTree.getNode(e_);
-									// if (Merge(snode') ⊉ Merge(lnode))
-									//// if (_.notSuperOrEq(merge[sNode_.id], merge[lID]))
-
-									console.log(merge[e_], merge[lID], _.notSuperOrEq(merge[e_], merge[lID]));
-
-									if (_.notSuperOrEq(merge[e_], merge[lID]))
-										reqPass = true;
-								}
+						// for (all incoming edges to lnode)
+						for (const e_ of lNode.in) {
+							if (isJEdge(e_, originalLNodeID) && visited[e][originalLNodeID]) {
+								// if (Merge(snode') ⊉ Merge(lnode))
+								if (_.notSuperOrEq(merge[e_], merge[originalLNodeID]))
+									reqPass = true;
 							}
 						}
 					}
