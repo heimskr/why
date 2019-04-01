@@ -922,9 +922,9 @@ if (require.main === module) {
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();
-	const ms = Graph.mergeSets(dj254gap);
+	const ms = Graph.mergeSets(dj254gap, 0, 1);
 	console.log(chalk.dim("\nResults:"));
-	console.log(_.mapKeys(_.mapValues(ms, x=>x.map(ts)), (v,k)=>+k+1));
+	console.log(ms);
 	// console.log(cfg.mergeSets());
 	
 
