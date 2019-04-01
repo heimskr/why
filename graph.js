@@ -369,7 +369,7 @@ class Graph {
 		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
-	static mergeSets(djTree, startID=0) {
+	static mergeSets(djTree, startID=0, exitID=1) {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
 		// Top Down Merge Set Computation (TDMSC-I)
@@ -386,18 +386,18 @@ class Graph {
 		// console.log(djTree.toString(ts));
 		console.log("\nJ-edges:");
 		console.log(jEdges);
-		console.log("\nBFS:", bfs.map(n => n.id).join(" "));
+		console.log("\nBFS:", bfs.map(n => n.id).join(" ") + "\n");
 
 
 		const parent = node => djTree.getNode(node.in[0]);
 		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
 		const allIn = node => {
-			console.log("searching for id", node.id);
+			// console.log("searching for id", node.id);
 			const js = jEdges.filter(j => {
 				// console.log("J:", j);
 				return j[1] == node.id;
 			}).map(j => {
-				console.log(chalk.red("!!!"), j, "→", j[0]);
+				// console.log(chalk.red("!!!"), j, "→", j[0]);
 				return j[0];
 			});
 			return _.uniq([...node.in, ...js]);
@@ -413,12 +413,12 @@ class Graph {
 		let pass = 0;
 		let reqPass = false;
 		do {
-			console.log("Pass", ++pass);
+			console.log(`\n\x1b[1;38;5;202m█████ PASS ${++pass} █████\x1b[0m`);
 
 			for (const node of bfs) {
 				// console.log(ts(node.id), "node of bfs");
 				const id = node.id;
-				console.log("\nNode", chalk.green(id) + ":", allIn(node).map(chalk.yellow).join(" "));
+				console.log("\nNode", chalk.green(id) + ":", allIn(node).map(x => chalk.dim(x)).join(" "));
 				for (const e of allIn(node)) {
 					console.log("   ←", chalk.yellow(e));
 					// if (e == id) {
@@ -427,7 +427,7 @@ class Graph {
 
 					// console.log(ts(e), ts(id), "e of node.in");
 					// if (e is a J-edge ∧ e not visited)
-					if (isJEdge(e, id) && !visited[e][id]) {
+					if (isJEdge(e, id) && !visited[e][id] && id != exitID) {
 						console.log("Encountered J-edge:", e, id);
 						// console.log(ts(e), ts(id), "yep, it's a j edge.");
 						visited[e][id] = true;
@@ -437,12 +437,16 @@ class Graph {
 						let lNode = null;
 						// console.log(ts(e), "wow");
 						// console.log(`level(${ts(tmp.id)}), level(${ts(tNode.id)}) -> ${level(tmp)} >= ${level(tNode)}`);
-						while (level(tmp) >= level(tNode)) {
+						while (1) {
+							const good = level(tmp) >= level(tNode);
+							console.log(chalk.cyan("::"), chalk[good? "green" : "red"](`level(tmp ${chalk.dim(("["+tmp.id+"]").padStart(4, " "))}) >= level(tNode ${chalk.dim(("["+tNode.id+"]").padStart(4, " "))})  ${chalk.dim("::")}  ${chalk.bold(level(tmp))} >= ${chalk.bold(level(tNode))}`));
+							if (!good) break;
 							// console.log(ts(tNode.id), ts(tmp.id), "level(tNode) <= level(tmp)");
 							// console.log(`level(${ts(tNode.id)}), ${level(tNode)} >= ${level(tmp)}, level(${ts(tmp.id)})`);
 							// Merge(tmp) = Merge(tmp) ∪ Merge(tnode) ∪ {tnode}
 
-							console.log(chalk.yellow(ts(tmp.id).toString().padStart(2," "))+":", merge[tmp.id], "<-", merge[tNode.id].map(ts), [ts(tNode.id)]);
+							console.log("     " + chalk.magenta(`Merge(tmp ${chalk.dim("["+tmp.id+"]")}) = Merge(tmp ${chalk.dim("["+tmp.id+"]")}) ∪ Merge(tnode ${chalk.dim("["+tNode.id+"]")}) ∪ {tnode ${chalk.dim("["+tNode.id+"]")}}`));
+							console.log("     " + chalk.yellow(tmp.id.toString().padStart(2," "))+":", merge[tmp.id], "<-", merge[tNode.id], "+", tNode.id);
 
 							merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], [tNode.id]);
 							// console.log(`lNode: ${lNode? ts(lNode.id) : lNode} -> ${ts(tmp.id)}`);

@@ -924,7 +924,7 @@ if (require.main === module) {
 	// const ms = cfg.mergeSets();
 	const ms = Graph.mergeSets(dj254gap, 0, 1);
 	console.log(chalk.dim("\nResults:"));
-	console.log(ms);
+	console.log(_.keys(ms).filter(k => ms[k].length).map(k => `${chalk.green(k.padStart(3, " "))}: ${[...ms[k]].sort().map(x => chalk.yellow(x)).join(", ")}`).join("\n"));
 	// console.log(cfg.mergeSets());
 	
 
