@@ -158,10 +158,24 @@ class Graph {
 	 * Convenience method to batch-link nodes.
 	 * @param  {string} str A space-separated string of letter pairs, e.g. "AB DE AF".
 	 *                      "A" corresponds to 0, "B" to 1, "C" to 2 and so on.
+	 *                      Can also be a space-separated string of pairs of numbers joined by hyphens,
+	 *                      e.g. "0-1 1-2 1-3 2-3". If a pair is simply a string of two digits, there's
+	 *                      an implicit hyphen between the two digits.
 	 * @return {Graph} The same graph the method was called on.
 	 */
 	arcString(str) {
-		str.split(/\s+/).forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
+		let pairs = str.split(/\s+/);
+		if (str.match(/\d/)) {
+			pairs.forEach(pair =>  {
+				if (pair.match(/^\d{2}$/)) {
+					this.arc(parseInt(pair[0]), parseInt(pair[1]));
+				} else {
+					this.arc(...pair.split("-").map(s => parseInt(s)));
+				}
+			});
+		} else {
+			pairs.forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
+		}
 		return this;
 	}
 
@@ -355,12 +369,12 @@ class Graph {
 		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
-	mergeSets(startID=0) {
+	static mergeSets(djTree, startID=0) {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
+		// Top Down Merge Set Computation (TDMSC-I)
+
 		let t; let T = s => console.time(t = s); let E = s => { console.timeEnd(t); if (s) T(s) };
-		const dTree = this.dTree(startID);
-		const djTree = this.djGraph(dTree);
 		const bfs = djTree.bfs(startID);
 		const {jEdges} = djTree;
 		const visited = djTree.fillObj({}); // out node ID => in node ID
@@ -375,13 +389,13 @@ class Graph {
 		console.log(jEdges.map(x => x.map(ts)));
 		console.log();
 
-		const parent = node => dTree.getNode(node.in[0]);
+		const parent = node => djTree.getNode(node.in[0]);
 		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
 
 		const level = node => {
 			let n;
 			for (n = 0; node.id != startID; n++)
-				node = dTree.getNode(parent(node));
+				node = djTree.getNode(parent(node));
 			return n;
 		};
 
@@ -399,8 +413,8 @@ class Graph {
 					if (isJEdge(e, id) && !visited[e][id]) {
 						// console.log(ts(e), ts(id), "yep, it's a j edge.");
 						visited[e][id] = true;
-						const sNode = dTree.getNode(e);
-						const tNode = node; // dTree.getNode(id) would be redundant.
+						const sNode = djTree.getNode(e);
+						const tNode = node; // djTree.getNode(id) would be redundant.
 						let tmp = sNode;
 						let lNode = null;
 						// console.log(ts(e), "wow");
@@ -425,7 +439,7 @@ class Graph {
 						for (const e_ of lNode.in) {
 							// console.log(ts(e_), "e_ of lNode.in");
 							if (isJEdge(e_, lID) && visited[e][lID]) {
-								//// const sNode_ = dTree.getNode(e_);
+								//// const sNode_ = djTree.getNode(e_);
 								// if (Merge(snode') ⊉ Merge(lnode))
 								//// if (_.notSuperOrEq(merge[sNode_.id], merge[lID]))
 
