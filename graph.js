@@ -450,7 +450,9 @@ class Graph {
 								console.log("     " + chalk.magenta(`Merge(tmp ${chalk.dim("["+tmp.id+"]")}) = Merge(tmp ${chalk.dim("["+tmp.id+"]")}) ∪ Merge(tnode ${chalk.dim("["+tNode.id+"]")}) ∪ {tnode ${chalk.dim("["+tNode.id+"]")}}`));
 								console.log("     " + chalk.yellow(tmp.id.toString().padStart(2," "))+":", merge[tmp.id], "<-", merge[tNode.id], "+", tNode.id);
 
-								merge[tmp.id] = _.union(merge[tmp.id], merge[tNode.id], [tNode.id]);
+								merge[tmp.id].push(merge[tNode.id]);
+								merge[tmp.id].push(tNode.id);
+								// merge[tmp.id] = [merge[tmp.id], merge[tNode.id], [tNode.id]];
 								// console.log(`lNode: ${lNode? ts(lNode.id) : lNode} -> ${ts(tmp.id)}`);
 								lNode = tmp;
 								tmp = parent(tmp);
@@ -479,9 +481,20 @@ class Graph {
 			}
 		} while (reqPass);
 
-		// E();
+		// The merge sets are defined in terms of each other (if you just push in order, earlier computed merge sets
+		// won't include the items added in later computed merge sets), so we need to combine them all together.
+		// _.flattenDeep doesn't handle circular references, so we need to flatten the merge sets ourselves.
+		const flatten = (x, out=[]) => {
+			if (typeof x == "number") {
+				out.push(x);
+			} else if (x instanceof Array) {
+				x.forEach(y => x != y && flatten(y, out));
+			}
 
-		return merge;
+			return out;
+		};
+
+		return _.fromPairs(_.keys(merge).map(key => [key, _.uniq(flatten(merge[key])).sort()]));
 	}
 
 	/**
