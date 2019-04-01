@@ -379,18 +379,29 @@ class Graph {
 		const {jEdges} = djTree;
 		const visited = djTree.fillObj({}); // out node ID => in node ID
 		const merge = djTree.fillObj([]); // node ID => IDs in merge set
-		let reqPass = false;
 
 		// console.log("\nD-Tree:");
 		// console.log(dTree.toString(ts));
 		// console.log("\nDJ-Tree:");
 		// console.log(djTree.toString(ts));
 		console.log("\nJ-edges:");
-		console.log(jEdges.map(x => x.map(ts)));
-		console.log();
+		console.log(jEdges);
+		console.log("\nBFS:", bfs.map(n => n.id).join(" "));
+
 
 		const parent = node => djTree.getNode(node.in[0]);
 		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
+		const allIn = node => {
+			console.log("searching for id", node.id);
+			const js = jEdges.filter(j => {
+				// console.log("J:", j);
+				return j[1] == node.id;
+			}).map(j => {
+				console.log(chalk.red("!!!"), j, "→", j[0]);
+				return j[0];
+			});
+			return _.uniq([...node.in, ...js]);
+		};
 
 		const level = node => {
 			let n;
@@ -399,11 +410,17 @@ class Graph {
 			return n;
 		};
 
+		let pass = 0;
+		let reqPass = false;
 		do {
+			console.log("Pass", ++pass);
+
 			for (const node of bfs) {
 				// console.log(ts(node.id), "node of bfs");
 				const id = node.id;
-				for (const e of node.in) {
+				console.log("\nNode", chalk.green(id) + ":", allIn(node).map(chalk.yellow).join(" "));
+				for (const e of allIn(node)) {
+					console.log("   ←", chalk.yellow(e));
 					// if (e == id) {
 					// 	continue;
 					// }
@@ -411,6 +428,7 @@ class Graph {
 					// console.log(ts(e), ts(id), "e of node.in");
 					// if (e is a J-edge ∧ e not visited)
 					if (isJEdge(e, id) && !visited[e][id]) {
+						console.log("Encountered J-edge:", e, id);
 						// console.log(ts(e), ts(id), "yep, it's a j edge.");
 						visited[e][id] = true;
 						const sNode = djTree.getNode(e);
