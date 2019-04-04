@@ -111,11 +111,11 @@ function render(graph, opts={}) {
 		width: opts.width,
 		height: opts.height,
 		background: opts.background
-	}));
+	})).then(image => (snap.stop(), image));
 }
 
 function iterm(graph, opts={}) {
-	return render(graph, opts).then(b64 => console.log(`\x1b]1337;File=inline=1:${b64}\u0007\n`));
+	return render(graph, opts).then(b64 => process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`));
 }
 
 module.exports = {render, iterm};
