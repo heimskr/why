@@ -314,6 +314,8 @@ class LL2W {
 			const [funcName, name] = fullName.split(":");
 			const [meta, instructions] = block;
 			const last = _.last(instructions);
+
+			meta.unreachable = false;
 			
 			if (last[1] == "br_unconditional") {
 				const destName = `${funcName}:${last[2].dest[1]}`;
@@ -333,6 +335,16 @@ class LL2W {
 				_.push(basicBlocks[falseName][0].in, fullName);
 				_.push(meta.out, trueName);
 				_.push(meta.out, falseName);
+			} else if (last[1] == "switch") {
+				const imeta = last[2];
+				const targets = [imeta.default, ...imeta.table.map(([,, v]) => v)];
+				for (const [, target] of targets) {
+					const tname = `${funcName}:${target}`;
+					_.push(basicBlocks[tname][0].in, fullName);
+					_.push(meta.out, tname);
+				}
+			} else if (last[1] == "unreachable") {
+				meta.unreachable = true;
 			} else {
 				// console.log(last[1]);
 			}
@@ -400,7 +412,9 @@ class LL2W {
 			// TODO: do phi instructions count as reads?
 			meta.pairs.forEach(([v, src]) => tryRead(v));
 		} else if (type == "switch") {
+			meta.table.forEach(([,, dest]) => tryRead(dest));
 			tryRead(meta.operand);
+			tryRead(meta.default);
 		} else if (type == "select") {
 			written.push(assigner = meta.destination[1]);
 			read.push(meta.condition[1]);
@@ -495,6 +509,8 @@ class LL2W {
 		const g = new Graph(fn.length);
 		const name = fn.meta.name;
 
+		g.unreachable = [];
+
 		// Assign all blocks to the rest of the nodes.
 		fn.forEach((block, i) => {
 			g[i].data = {label: block[0]};
@@ -505,6 +521,10 @@ class LL2W {
 
 			if (block[0] == fn.exit) {
 				g.exit = i;
+			}
+
+			if (block[1].unreachable) {
+				g.unreachable.push(i);
 			}
 		});
 
@@ -834,7 +854,14 @@ if (require.main === module) {
 
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
-	LL2W.computeCFG(functions.wvm_get_string, declarations).display({width: 1000, height: 500}).then(() => console.log());
+	// const fn = functions.wvm_print_memory;
+	// const fn = functions.wvm_get_string;
+	const fn = functions.wvm_check_condition;
+	// console.log(Object.keys(functions).map(key => [key, functions[key].length]));
+	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
+	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
+	LL2W.computeCFG(fn, declarations).display().then(() => console.log());
+	// // LL2W.computeCFG(fn, declarations).display().then(() => console.log());
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));

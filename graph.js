@@ -724,8 +724,9 @@ class Graph {
 	}
 
 	display(opts={}) {
-		if (this.enter) opts.enter = this.enter;
-		if (this.exit)  opts.exit  = this.exit;
+		if (this.enter !== undefined) opts.enter = this.enter;
+		if (this.exit  !== undefined) opts.exit  = this.exit;
+		if (this.unreachable !== undefined) opts.unreachable = [...this.unreachable];
 		return renderGraph.iterm(this, Object.assign({layout: "dagre"}, opts));
 	}
 

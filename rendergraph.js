@@ -19,18 +19,20 @@ function render(graph, opts={}) {
 			width: 1.5
 		},
 		layout: "dagre",
-		rankDir: "LR",
+		layoutExtras: {rankDir: "LR"},
 		enter: 0,
 		exit: 1,
+		unreachable: [],
 		enterColor: "#0f0",
 		exitColor: "#f00",
+		unreachableColor: "#ff0",
 		curveStyle: "bezier",
 		arrowShape: "triangle",
 		centeredMax: 2,
 		width: 2560,
 		height: 1000,
 		format: "png",
-		type: "base64"
+		type: "base64",
 	};
 
 	const assign = (target, source) => {
@@ -55,7 +57,10 @@ function render(graph, opts={}) {
 		...graph.map(({id, data}) => ({
 			data: {id, label: data && data.label? data.label : id},
 			classes: [
-				id == opts.enter? "node-enter" : id == opts.exit? "node-exit" : null,
+				id == opts.enter? "node-enter"
+					: id == opts.exit? "node-exit"
+					: opts.unreachable.includes(id)? "node-unreachable"
+					: null,
 				id.toString().length <= opts.centeredMax? "centered" : null
 			].filter(x => x !== null).join(" "),
 		})),
@@ -66,7 +71,7 @@ function render(graph, opts={}) {
 		elements,
 		layout: {
 			name: opts.layout,
-			rankDir: opts.rankDir,
+			...opts.layoutExtras,
 		},
 
 		style: [{
@@ -94,6 +99,9 @@ function render(graph, opts={}) {
 		}, {
 			selector: ".node-exit",
 			style: {"background-color": opts.exitColor}
+		}, {
+			selector: ".node-unreachable",
+			style: {"background-color": opts.unreachableColor}
 		}, {
 			selector: ".centered",
 			style: {"text-halign": "center", "text-valign": "center"}
