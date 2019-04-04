@@ -7,21 +7,37 @@ function renderBase64(graph, opts={}) {
 		background: "#171717",
 		node: "#fff",
 		edge: "#ccc",
+		label: "#fff",
+		labelOutline: {color: opts.background === undefined? opts.background : "#171717", opacity: 1, width: 1.5},
 		layout: "cose-bilkent",
-		rankDir: "LR"
+		rankDir: "LR",
+		enter: 0,
+		exit: 1,
+		enterColor: "#0f0",
+		exitColor: "#f00",
 	};
 
-	Object.keys(defaults).forEach(key => {
-		if (opts[key] === undefined) {
-			opts[key] = defaults[key];
-		}
-	});
+	const assign = (target, source) => {
+		Object.keys(source).forEach(key => {
+			const tval = target[key], sval = source[key];
+			if (tval === undefined) {
+				target[key] = sval;
+			} else if (typeof tval == "object" && typeof sval == "object") {
+				assign(tval, sval);
+			}
+		});
+	};
+
+	assign(opts, defaults);
 
 	cytosnap.use(["cytoscape-" + opts.layout]);
 
 	const snap = cytosnap();
 	const elements = [
-		...graph.map((node) => ({data: {id: node.id}})),
+		...graph.map(({id}) => ({
+			data: {id},
+			classes: id == opts.enter? "node-enter" : id == opts.exit? "node-exit" : ""
+		})),
 		...graph.allEdges().map(([source, target]) => ({data: {source, target}}))
 	];
 	
@@ -34,13 +50,30 @@ function renderBase64(graph, opts={}) {
 
 		style: [{
 			selector: "node",
-			style: {"background-color": opts.node}
+			style: {"background-color": opts.node, label: "data(id)"}
 		}, {
 			selector: "edge",
 			style: {
-				"line-color": opts.edge
-
+				"line-color": opts.edge,
+				"curve-style": "bezier",
+				"target-arrow-shape": "triangle",
+				"target-arrow-color": opts.edge,
 			}
+		}, {
+			selector: "label",
+			style: {
+				"color": opts.label,
+				// "text-shadow": opts.labelShadow? `1px 1px 0px ${opts.labelShadow}` : "",
+				"text-outline-color": opts.labelOutline.color,
+				"text-outline-opacity": opts.labelOutline.opacity,
+				"text-outline-width": opts.labelOutline.width,
+			},
+		}, {
+			selector: ".node-enter",
+			style: {"background-color": opts.enterColor}
+		}, {
+			selector: ".node-exit",
+			style: {"background-color": opts.exitColor}
 		}],
 
 		resolvesTo: "base64",
@@ -48,25 +81,6 @@ function renderBase64(graph, opts={}) {
 		width: 2560,
 		height: 1000,
 		background: opts.background
-
-		// style: [
-		// 	{
-		// 		selector: 'node',
-		// 		style: {
-		// 			'background-color': '#dd4de2'
-		// 		}
-		// 	},
-		// 	{
-		// 		selector: 'edge',
-		// 		style: {
-		// 			'curve-style': 'bezier',
-		// 			'target-arrow-shape': 'triangle',
-		// 			'line-color': '#dd4de2',
-		// 			'target-arrow-color': '#dd4de2',
-		// 			'opacity': 0.5
-		// 		}
-		// 	}
-		// ],
 	}));
 };
 
