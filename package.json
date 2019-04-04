@@ -32,6 +32,8 @@
 		"babel-plugin-transform-class-properties": "^6.24.1",
 		"babel-preset-env": "^1.7.0",
 		"chalk": "^1.1.3",
+		"cytoscape-dagre": "^2.2.2",
+		"cytosnap": "^3.1.0",
 		"dominators": "^1.1.2",
 		"get-line-from-pos": "^1.0.0",
 		"jsome": "^2.3.26",
