@@ -498,6 +498,14 @@ class LL2W {
 		// Assign all blocks to the rest of the nodes.
 		fn.forEach((block, i) => {
 			g[i].data = {label: block[0]};
+
+			if (block[0] == fn.first) {
+				g.enter = i;
+			}
+
+			if (block[0] == fn.exit) {
+				g.exit = i;
+			}
 		});
 
 		// Add an arc from the block to each of its outblocks.
@@ -826,8 +834,8 @@ if (require.main === module) {
 
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
-	console.log(functions.wvm_get_string);
-	LL2W.computeCFG(functions.wvm_get_string, declarations)//.display();
+	LL2W.computeCFG(functions.wvm_get_string, declarations).display();
+	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 	// console.log(cfg.toString());
