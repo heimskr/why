@@ -12,6 +12,11 @@
   "author": "Kai Tamkun",
   "license": "MIT",
   "dependencies": {
+    "cytoscape": "^3.5.2",
+    "cytoscape-cose-bilkent": "^4.0.0",
+    "cytoscape-dagre": "^2.2.2",
+    "cytoscape-klay": "^3.1.2",
+    "cytosnap": "^3.1.0",
     "dominators": "^1.1.2",
     "rimraf": "^2.6.2"
   }
