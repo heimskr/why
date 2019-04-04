@@ -37,7 +37,9 @@ function renderBase64(graph, opts={}) {
 
 	assign(opts, defaults);
 
-	cytosnap.use(["cytoscape-" + opts.layout]);
+	if (opts.layout) {
+		cytosnap.use(["cytoscape-" + opts.layout]);
+	}
 
 	const snap = cytosnap();
 	const elements = [
@@ -102,16 +104,20 @@ function renderBase64(graph, opts={}) {
 		height: 1000,
 		background: opts.background
 	}));
-};
+}
 
-module.exports = {base64: renderBase64};
+function iTermPrint(graph, opts={}) {
+	return renderBase64(graph, opts).then(b64 => console.log(`\x1b]1337;File=inline=1:${b64}\u0007\n`));
+}
+
+module.exports = {
+	base64: renderBase64,
+	iterm: iTermPrint,
+};
 
 if (require.main === module) {
 	const Graph = require("../graph.js");
 	const g = new Graph(24);
 	g.arcString("01 02 23 34 35 3-23 38 45 56 57 23-5 23-8 67 75 78 89 8-10 8-14 9-10 14-15 14-16 15-16 10-11 11-12 12-13 13-1 16-22 22-10 16-17 17-21 21-22 17-18 18-19 18-20 19-20 20-18 20-21");
-	renderBase64(g, {layout: "dagre"}).then(b64 => {
-		console.log(`\x1b]1337;File=inline=1:${b64}\u0007\n`);
-		process.exit(0);
-	});
+	iTermPrint(g, {}).then(() => process.exit(0));
 }
