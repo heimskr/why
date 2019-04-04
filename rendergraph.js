@@ -8,12 +8,13 @@ function render(graph, opts={}) {
 	}
 	
 	const defaults = {
-		background: "#171717",
+		background: "#000",
 		node: "#fff",
 		edge: "#ccc",
 		label: "#fff",
+		arrow: "#888",
 		labelOutline: {
-			color: opts.background === undefined? opts.background : "#171717",
+			color: opts.background === undefined? opts.background : "#000",
 			opacity: 1,
 			width: 1.5
 		},
@@ -51,8 +52,8 @@ function render(graph, opts={}) {
 
 	const snap = cytosnap();
 	const elements = [
-		...graph.map(({id}) => ({
-			data: {id},
+		...graph.map(({id, data}) => ({
+			data: {id, label: data && data.label? data.label : id},
 			classes: [
 				id == opts.enter? "node-enter" : id == opts.exit? "node-exit" : null,
 				id.toString().length <= opts.centeredMax? "centered" : null
@@ -70,14 +71,14 @@ function render(graph, opts={}) {
 
 		style: [{
 			selector: "node",
-			style: {"background-color": opts.node, label: "data(id)"}
+			style: {"background-color": opts.node, label: "data(label)"}
 		}, {
 			selector: "edge",
 			style: {
 				"line-color": opts.edge,
 				"curve-style": opts.curveStyle,
 				"target-arrow-shape": opts.arrowShape,
-				"target-arrow-color": opts.edge,
+				"target-arrow-color": opts.arrow,
 			}
 		}, {
 			selector: "label",

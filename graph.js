@@ -726,7 +726,7 @@ class Graph {
 	display(opts={}) {
 		if (this.enter) opts.enter = this.enter;
 		if (this.exit)  opts.exit  = this.exit;
-		return renderGraph.iterm(this, opts);
+		return renderGraph.iterm(this, Object.assign({layout: "dagre"}, opts));
 	}
 
 	/**
