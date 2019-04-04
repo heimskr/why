@@ -6,6 +6,7 @@ const {lt} = require("dominators");
 
 const Node = require("./node.js");
 const {alpha, numerize} = require("./util.js");
+const renderGraph = require("./rendergraph.js");
 
 const ts = x => typeof x == "number"? x+1 : x;
 
@@ -716,6 +717,14 @@ class Graph {
 		return _.sortBy(this.nodes, "id").map(node =>
 			`${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`
 		).join("\n");
+	}
+
+	render(opts={}) {
+		return renderGraph.render(this, opts);
+	}
+
+	display(opts={}) {
+		return renderGraph.iterm(this, opts);
 	}
 
 	/**

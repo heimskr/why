@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
-const cytosnap = require("cytosnap");
+let cytosnap = null;
 
-function renderBase64(graph, opts={}) {
+function render(graph, opts={}) {
+	if (cytosnap === null) {
+		cytosnap = require("cytosnap");
+	}
+	
 	const defaults = {
 		background: "#171717",
 		node: "#fff",
@@ -13,7 +17,7 @@ function renderBase64(graph, opts={}) {
 			opacity: 1,
 			width: 1.5
 		},
-		layout: "cose-bilkent",
+		layout: "dagre",
 		rankDir: "LR",
 		enter: 0,
 		exit: 1,
@@ -21,7 +25,11 @@ function renderBase64(graph, opts={}) {
 		exitColor: "#f00",
 		curveStyle: "bezier",
 		arrowShape: "triangle",
-		centeredMax: 2
+		centeredMax: 2,
+		width: 2560,
+		height: 1000,
+		format: "png",
+		type: "base64"
 	};
 
 	const assign = (target, source) => {
@@ -98,26 +106,23 @@ function renderBase64(graph, opts={}) {
 			}
 		}],
 
-		resolvesTo: "base64",
-		format: "png",
-		width: 2560,
-		height: 1000,
+		resolvesTo: opts.type,
+		format: opts.format,
+		width: opts.width,
+		height: opts.height,
 		background: opts.background
 	}));
 }
 
-function iTermPrint(graph, opts={}) {
-	return renderBase64(graph, opts).then(b64 => console.log(`\x1b]1337;File=inline=1:${b64}\u0007\n`));
+function iterm(graph, opts={}) {
+	return render(graph, opts).then(b64 => console.log(`\x1b]1337;File=inline=1:${b64}\u0007\n`));
 }
 
-module.exports = {
-	base64: renderBase64,
-	iterm: iTermPrint,
-};
+module.exports = {render, iterm};
 
 if (require.main === module) {
 	const Graph = require("../graph.js");
 	const g = new Graph(24);
 	g.arcString("01 02 23 34 35 3-23 38 45 56 57 23-5 23-8 67 75 78 89 8-10 8-14 9-10 14-15 14-16 15-16 10-11 11-12 12-13 13-1 16-22 22-10 16-17 17-21 21-22 17-18 18-19 18-20 19-20 20-18 20-21");
-	iTermPrint(g, {}).then(() => process.exit(0));
+	iterm(g, {}).then(() => process.exit(0));
 }

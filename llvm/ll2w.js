@@ -919,6 +919,8 @@ if (require.main === module) {
 	dj254gap.jEdges = jedges254gap;
 	// console.log("dj254gap:", dj254gap);
 	// console.log("dj254gap:\n" + dj254gap.toString());
+
+	dj254gap.display();
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();
