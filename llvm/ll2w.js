@@ -263,10 +263,12 @@ class LL2W {
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
 			const basicBlocks = [];
 
+			let exitBlock = null;
+
 			functionOrder.push(meta.name);
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
-			let currentBasicBlock = [meta.arity, {preds: [], in: [], out: []}, []];
+			let currentBasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
@@ -277,6 +279,7 @@ class LL2W {
 					basicBlocks.push(currentBasicBlock);
 					currentBasicBlock = [args[0], {preds: [], in: [], out: []}, []];
 				} else {
+					exitBlock = currentBasicBlock[0];
 					currentBasicBlock[2].push(instruction);
 				}
 			}
@@ -285,19 +288,22 @@ class LL2W {
 				basicBlocks.push(currentBasicBlock);
 			}
 
-			let allVars = [];
-			functions[meta.name] = basicBlocks.map(block => {
-				const blockVars = this.extractBasicBlockVariables(block);
-				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
-				return blockVars;
-			});
 			basicBlocks.forEach(([name, ...etc]) => {
 				allBlocks[meta.name + ":" + name] = etc;
 				blockOrder.push([meta.name, name]);
 			});
-			functions[meta.name].meta = meta;
-			functions[meta.name].vars = _.uniq(allVars);
-			functions[meta.name].first = basicBlocks[0][0];
+			
+			let allVars = [];
+			const fn = functions[meta.name] = basicBlocks.map(block => {
+				const blockVars = this.extractBasicBlockVariables(block);
+				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
+				return blockVars;
+			});
+
+			fn.meta = meta;
+			fn.vars = _.uniq(allVars);
+			fn.first = basicBlocks[0][0];
+			fn.exit = exitBlock;
 		});
 
 		return {functions, allBlocks, blockOrder, functionOrder};
@@ -820,6 +826,8 @@ if (require.main === module) {
 
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
+	console.log(functions.wvm_get_string);
+	LL2W.computeCFG(functions.wvm_get_string, declarations)//.display();
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
 	// console.log(cfg.toString());
@@ -920,7 +928,7 @@ if (require.main === module) {
 	// console.log("dj254gap:", dj254gap);
 	// console.log("dj254gap:\n" + dj254gap.toString());
 
-	dj254gap.display();
+	// dj254gap.display();
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();
