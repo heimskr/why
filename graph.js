@@ -243,7 +243,7 @@ class Graph {
 		}
 
 		if (found.length != 1) {
-			throw `Predicate matched ${found.length} results`;
+			throw new Error(`Predicate matched ${found.length} results.`);
 		}
 
 		return found[0];

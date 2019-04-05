@@ -803,28 +803,26 @@ class LL2W {
 			console.warn(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
 		}
 
-		// console.log(cfg);
-
-		// return dt.display().then(() => (console.log(), cfg.display())).then(() => (console.log(), dj.display()));
-		cfg.title = "Control Flow Graph";
-		Graph.displayMultiple({height: 300}, dj, dt, cfg);
-		return;
+		// cfg.title = "Control Flow Graph";
+		// Graph.displayMultiple({height: 300}, dj, dt, cfg);
 		// return dt.writePNG("dt.png");
-
 		// console.log("readers:", readers.map(([id]) => id));
 
-		for (let t of readers) {
-			while (t != definition) {
+		// for t ∈ uses(a)
+		for (let [t] of readers) {
+			// while t ≠ def(a)
+			while (t != definition[0]) {
+				// Return true if t ∩ M^r(n)
 				if (modifiedMergeSet.includes(t)) {
 					return true;
 				}
 
+				// t = dom-parent(t)
+				t = dt.nodes[dt.findSingle(node => node.data.label == t).in[0]].data.label;
 			}
 		}
-		// console.log("assigners:", _.fromPairs(fn.map(b => [b[0], b[1].assigners])));
-		// fn.forEach(b => console.log(b[0], b[1].assigners));
 
-		
+		return false;
 	}
 
 	static getArity(functions, functionName, declarations={}) {
