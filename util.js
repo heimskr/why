@@ -53,7 +53,7 @@ exports.mixins = (__) => {
 
 		notSuperOrEq(a, b) {
 			// If b contains any value not in a, then a ⊉ b.
-			return __.some(b, v => !a.has(v));
+			return __.some(b, v => !a.includes(v));
 		},
 	});
 };

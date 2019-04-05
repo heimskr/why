@@ -66,7 +66,7 @@ function render(graph, opts={}) {
 		})),
 		...graph.allEdges().map(([source, target]) => ({data: {source, target}}))
 	];
-	
+
 	return snap.start().then(() => snap.shot({
 		elements,
 		layout: {

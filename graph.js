@@ -1,12 +1,14 @@
 #!/usr/bin/env node
-let _ = require("lodash");
+const fs = require("fs");
 
+const _ = require("lodash");
 const chalk = require("chalk");
 const {lt} = require("dominators");
 
 const Node = require("./node.js");
-const {alpha, numerize} = require("./util.js");
 const renderGraph = require("./rendergraph.js");
+const {alpha, numerize, mixins} = require("./util.js");
+mixins(_);
 
 const ts = x => typeof x == "number"? x+1 : x;
 
@@ -227,12 +229,18 @@ class Graph {
 
 	/**
 	 * Attempts to find a single node matching a predicate.
-	 * @param  {Function} predicate A function mapping a node to a boolean.
+	 * @param  {Function|string} predicate A function mapping a node to a boolean or a string corresponding to a label.
 	 * @return {Node} The result of the search.
 	 * @throws Throws an exception if the number of nodes matching the predicate isn't exactly 1.
 	 */
 	findSingle(predicate) {
-		const found = this.nodes.filter(predicate);
+		let found;
+		if (typeof predicate == "function") {
+			found = this.nodes.filter(predicate);
+		} else {
+			found = this.nodes.filter(node => node.data.label == predicate);
+		}
+
 		if (found.length != 1) {
 			throw `Predicate matched ${found.length} results`;
 		}
@@ -370,24 +378,24 @@ class Graph {
 		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
 	}
 
-	static mergeSets(djTree, startID=0, exitID=1) {
+	static mergeSets(djGraph, startID=0, exitID=1) {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
 		// Top Down Merge Set Computation (TDMSC-I)
 
 		let t; let T = s => console.time(t = s); let E = s => { console.timeEnd(t); if (s) T(s) };
-		const bfs = djTree.bfs(startID);
-		const {jEdges} = djTree;
-		const visited = djTree.fillObj({}); // out node ID => in node ID
-		const merge = djTree.fillObj([]); // node ID => IDs in merge set
+		const bfs = djGraph.bfs(startID);
+		const {jEdges} = djGraph;
+		const visited = djGraph.fillObj({}); // out node ID => in node ID
+		const merge = djGraph.fillObj([]); // node ID => IDs in merge set
 
-		const parent = node => djTree.getNode(node.in[0]);
+		const parent = node => djGraph.getNode(node.in[0]);
 		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
 		const allIn = node => _.uniq([...node.in, ...jEdges.filter(([s, d]) => d == node.id).map(([s, d]) => s)]);
 		const level = node => {
 			let n;
 			for (n = 0; node.id != startID; n++)
-				node = djTree.getNode(parent(node));
+				node = djGraph.getNode(parent(node));
 			return n;
 		};
 
@@ -397,7 +405,7 @@ class Graph {
 				const id = node.id;
 				for (const e of allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id])) {
 					visited[e][id] = true;
-					let lNode = null, tmp = djTree.getNode(e);
+					let lNode = null, tmp = djGraph.getNode(e);
 					while (level(tmp) >= level(node)) {
 						merge[tmp.id].push(merge[id]);
 						merge[tmp.id].push(id);
@@ -719,15 +727,44 @@ class Graph {
 		).join("\n");
 	}
 
-	render(opts={}) {
-		return renderGraph.render(this, opts);
-	}
-
-	display(opts={}) {
+	render(opts={}, display=false) {
 		if (this.enter !== undefined) opts.enter = this.enter;
 		if (this.exit  !== undefined) opts.exit  = this.exit;
 		if (this.unreachable !== undefined) opts.unreachable = [...this.unreachable];
-		return renderGraph.iterm(this, Object.assign({layout: "dagre"}, opts));
+		
+		const newOpts = Object.assign({layout: "dagre"}, opts);
+		if (display) {
+			return renderGraph.iterm(this, newOpts);
+		}
+
+		return renderGraph.render(this, newOpts);
+	}
+
+	display(opts={}) {
+		return this.render(opts, true);
+	}
+
+	static displayMultiple(opts={}, ...graphs) {
+		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
+		if (graphs.length == 0) return;
+		console.log(graphs);
+		const p = graphs[0].display(opts).then(() => console.log());
+		for (const graph of graphs.slice(1)) {
+			p.then(() => graph.display(opts)).then(() => console.log());
+		}
+
+		return p;
+	}
+
+	writePNG(path, opts={}) {
+		if (!path) throw new Error("Expected path");
+
+		// return this.render(opts, true);
+
+		return this.render({...opts, type: "stream"}, false).catch((e) => console.log("Error:", e)).then((stream) => {
+			// console.log({stream: stream.read()});
+			fs.writeFileSync(path, stream.read());
+		});
 	}
 
 	/**

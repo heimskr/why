@@ -679,7 +679,7 @@ class LL2W {
 		// return {liveIn, liveOut};
 	}
 
-	computeLiveRanges(fn) {
+	computeLiveRanges_old(fn) {
 		// Is this actually how it's done? In some examples, it's done backwards.
 		// I'd imagine live variable analysis is less complicated in SSA because variables are assigned once,
 		// which should mean that each variable's live range shouldn't be made of multiple separate components.
@@ -741,6 +741,87 @@ class LL2W {
 
 		console.log();
 		console.log(ranges);
+	}
+
+	static getReaders(fn, varName) {
+		varName = varName.toString();
+		return fn.filter(([id, {read}]) => read.map(x => x.toString()).includes(varName));
+	}
+
+	static getWriters(fn, varName) {
+		varName = varName.toString();
+		return fn.filter(([id, {written}]) => written.map(x => x.toString()).includes(varName));
+	}
+
+	static getUsefulLivenessData(cfg) {
+		let dj = cfg._djGraph;
+		let dt = cfg._dTree;
+		let ms = cfg._mergeSets;
+		if (!dt) {
+			dt = cfg._dTree = cfg.dTree(cfg.enter);
+		}
+		
+		if (!dj) {
+			dj = cfg._djGraph = cfg.djGraph(dt);
+		}
+		
+		if (!ms) {
+			ms = cfg._mergeSets = Graph.mergeSets(dj, cfg.enter, cfg.exit);
+		}
+
+		return {djTree: dj, dTree: dt, mergeSets: ms};
+	}
+
+	static invalidateUsefulLivenessData(cfg) {
+		cfg._djGraph = cfg._dTree = cfg._mergeSets = undefined;
+	}
+
+	/**
+	 * Determines whether a variable is live-in at a certain block.
+	 * @param {IRFunction} fn An LLVM IR function as formed by {@link extractFunctions}.
+	 * @param {Graph} cfg The control flow graph for the function.
+	 * @param {IRBlock} block A basic block as formed in {@link extractFunctions}.
+	 * @param {number|string} varName The name of the variable to check.
+	 * @return {boolean} Whether the variable is live-in.
+	 */
+	static isLiveInUsingMergeSet(fn, cfg, block, varName) {
+		varName = varName.toString();
+
+		let {djTree: dj, dTree: dt, mergeSets} = LL2W.getUsefulLivenessData(cfg);
+		// console.log("fn:", fn);
+		// console.log("mergeSets:", mergeSets);
+		// console.log("block:", block);
+		// console.log("varName:", varName);
+		const modifiedMergeSet = _.uniq([...mergeSets[varName], varName].map(x => x.toString()));
+		// console.log("modifiedMergeSet:", modifiedMergeSet);
+		const readers = LL2W.getReaders(fn, varName);
+		const writers = LL2W.getWriters(fn, varName);
+		let definition = null;
+		if (writers.length == 1) {
+			definition = writers[0];
+		} else {
+			console.warn(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
+		}
+
+		console.log(cfg);
+		// return dt.display().then(() => (console.log(), cfg.display())).then(() => (console.log(), dj.display()));
+		return Graph.displayMultiple({height: 300}, dj, dt, cfg);
+		// return dt.writePNG("dt.png");
+
+		// console.log("readers:", readers.map(([id]) => id));
+
+		for (let t of readers) {
+			while (t != definition) {
+				if (modifiedMergeSet.includes(t)) {
+					return true;
+				}
+
+			}
+		}
+		// console.log("assigners:", _.fromPairs(fn.map(b => [b[0], b[1].assigners])));
+		// fn.forEach(b => console.log(b[0], b[1].assigners));
+
+		
 	}
 
 	static getArity(functions, functionName, declarations={}) {
@@ -855,13 +936,22 @@ if (require.main === module) {
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
 	// const fn = functions.wvm_print_memory;
-	// const fn = functions.wvm_get_string;
-	const fn = functions.wvm_check_condition;
+	const fn = functions.wvm_get_string;
+	// const fn = functions.wvm_check_condition;
 	// console.log(Object.keys(functions).map(key => [key, functions[key].length]));
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
-	LL2W.computeCFG(fn, declarations).display().then(() => console.log());
-	// // LL2W.computeCFG(fn, declarations).display().then(() => console.log());
+	const cfg = LL2W.computeCFG(fn, declarations);
+	/* cfg.display({height: 350}).then(() => */ {
+		console.log();
+		// console.log(cfg.enter, cfg.exit);
+		const ms = Graph.mergeSets(cfg.djGraph(cfg.enter), cfg.enter, cfg.exit);
+		const node20 = cfg.findSingle("20");
+		const block20 = fn.filter(([l]) => l == "20")[0];
+		console.log("isLiveIn:", LL2W.isLiveInUsingMergeSet(fn, cfg, block20, "5"));
+	}//);
+
+	// });
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
