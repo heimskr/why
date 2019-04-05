@@ -806,6 +806,7 @@ class LL2W {
 		// console.log(cfg);
 
 		// return dt.display().then(() => (console.log(), cfg.display())).then(() => (console.log(), dj.display()));
+		cfg.title = "Control Flow Graph";
 		Graph.displayMultiple({height: 300}, dj, dt, cfg);
 		return;
 		// return dt.writePNG("dt.png");

@@ -98,6 +98,7 @@ class Graph {
 			this.nodes = _.range(0, n.length).map(i => new Node(n[i], this));
 		}
 
+		this.title = null;
 		return this;
 	}
 
@@ -316,6 +317,7 @@ class Graph {
 			fn(v == undefined? k : v, k)
 		});
 
+		out.title = "Dominator Tree";
 		return out;
 	}
 
@@ -366,6 +368,7 @@ class Graph {
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[dst].includes(src))
 			.forEach(p => (dj.arc(...p), dj.jEdges.push(p)));
+		dj.title = "DJ Graph";
 		return dj;
 	}
 
@@ -754,12 +757,17 @@ class Graph {
 		return this.render(opts, true);
 	}
 
+	printTitle() {
+		if (this.title) console.log(this.title + ":");
+		return this;
+	}
+
 	static displayMultiple(opts={}, ...graphs) {
 		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
 		if (graphs.length == 0) return;
-		const p = graphs[0].display(opts).then(() => console.log());
+		const p = graphs[0].printTitle().display(opts).then(() => console.log());
 		for (const graph of graphs.slice(1)) {
-			p.then(() => graph.display(opts)).then(() => console.log());
+			p.then(() => graph.printTitle()).then(() => graph.display(opts)).then(() => console.log());
 		}
 
 		return p;
