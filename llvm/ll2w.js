@@ -803,9 +803,11 @@ class LL2W {
 			console.warn(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
 		}
 
-		console.log(cfg);
+		// console.log(cfg);
+
 		// return dt.display().then(() => (console.log(), cfg.display())).then(() => (console.log(), dj.display()));
-		return Graph.displayMultiple({height: 300}, dj, dt, cfg);
+		Graph.displayMultiple({height: 300}, dj, dt, cfg);
+		return;
 		// return dt.writePNG("dt.png");
 
 		// console.log("readers:", readers.map(([id]) => id));

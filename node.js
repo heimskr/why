@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const {alpha, numerize} = require("./util.js");
 
 const getID = node => {
@@ -156,10 +157,12 @@ class Node {
 	/**
 	 * Returns a copy of this node.
 	 * @param  {?Graph} newGraph If non-null, this will be the cloned node's parent graph.
-	 * @return {Node}            A copy of the node.
+	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
+	 * @return {Node} A copy of the node.
 	 */
-	clone(newGraph=null) {
+	clone(newGraph=null, cloneData=true) {
 		let newNode = new Node(this.id, newGraph === null? this.graph : newGraph);
+		newNode.data = cloneData? _.cloneDeep(this.data) : this.data;
 		newNode.out = this.out.slice(0);
 		newNode.in = this.in.slice(0);
 		return newNode;

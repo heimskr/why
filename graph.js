@@ -308,10 +308,14 @@ class Graph {
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
 	dTree(startID=0, bidirectional=false) {
-		const lentar = this.lengauerTarjan(startID);
+		const [lentar, renameMap] = this.lengauerTarjan(startID);
 		const out = new Graph(Object.keys(lentar).map(numerize));
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
-		Object.entries(lentar).forEach(([k, v]) => fn(v == undefined? k : v, k));
+		Object.entries(lentar).forEach(([k, v]) => {
+			out.nodes[k].data = this.nodes[k].data;
+			fn(v == undefined? k : v, k)
+		});
+
 		return out;
 	}
 
@@ -356,26 +360,31 @@ class Graph {
 	 * @return {Graph} A DJ-graph.
 	 */
 	djGraph(start=0, bidirectional=false) {
-		const dt = start instanceof Graph? start.clone() : this.dTree(start, bidirectional);
-		const sdom = Graph.strictDominators(dt);
-		dt.jEdges = [];
+		const dj = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
+		const sdom = Graph.strictDominators(dj);
+		dj.jEdges = [];
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[dst].includes(src))
-			.forEach(p => (dt.arc(...p), dt.jEdges.push(p)));
-		return dt;
+			.forEach(p => (dj.arc(...p), dj.jEdges.push(p)));
+		return dj;
 	}
 
 	/**
 	 * Finds the dominators of each node given a start node using the Lengauer-Tarjan algorithm.
 	 * This is a wrapper for the `lt` function from the `dominators` package by Julian Jensen.
 	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
-	 * @return {Object<NodeID, NodeID>} A map of node IDs to the IDs of their dominators.
+	 * @return {Array<Object<NodeID, NodeID>, Object<NodeID, NodeID>>}
+	 *         A tuple that has a map of node IDs to the IDs of their dominators and a map of old IDs to normalized IDs.
 	 */
 	lengauerTarjan(startID=0) {
 		const normalized = this.clone();
-		const renames = _.mapValues(_.invert(normalized.normalize()), v => numerize(v));
+		const renameMap = normalized.normalize();
+		const renames = _.mapValues(_.invert(renameMap), v => numerize(v));
 		const formatted = normalized.map(v => v.out);
-		return lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {});
+		return [
+			lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {}),
+			renameMap
+		];
 	}
 
 	static mergeSets(djGraph, startID=0, exitID=1) {
@@ -702,11 +711,12 @@ class Graph {
 
 	/**
 	 * Returns a copy of this graph.
+	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
 	 * @return {Graph} A copy of the graph.
 	 */
-	clone() {
+	clone(cloneData=true) {
 		let newGraph = new Graph(this.nodes.length);
-		newGraph.nodes = this.nodes.map(node => node.clone(newGraph));
+		newGraph.nodes = this.nodes.map(node => node.clone(newGraph, cloneData));
 		return newGraph;
 	}
 
@@ -747,7 +757,6 @@ class Graph {
 	static displayMultiple(opts={}, ...graphs) {
 		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
 		if (graphs.length == 0) return;
-		console.log(graphs);
 		const p = graphs[0].display(opts).then(() => console.log());
 		for (const graph of graphs.slice(1)) {
 			p.then(() => graph.display(opts)).then(() => console.log());
