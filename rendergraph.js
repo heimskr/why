@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+const util = require("./util.js");
 let cytosnap = null;
 
 function render(graph, opts={}) {
@@ -33,6 +33,7 @@ function render(graph, opts={}) {
 		height: 1000,
 		format: "png",
 		type: "base64",
+		idOffset: 0,
 	};
 
 	const assign = (target, source) => {
@@ -55,7 +56,12 @@ function render(graph, opts={}) {
 	const snap = cytosnap();
 	const elements = [
 		...graph.map(({id, data}) => ({
-			data: {id, label: data && data.label? data.label : id},
+			data: {
+				id,
+				label: data && data.label? data.label
+			         : util.isNumeric(id)? parseInt(id) + opts.idOffset
+					 : id
+			},
 			classes: [
 				id == opts.enter? "node-enter"
 					: id == opts.exit? "node-exit"

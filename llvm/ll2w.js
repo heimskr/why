@@ -934,6 +934,16 @@ if (require.main === module) {
 	// 	return y;
 	// }));
 
+
+	const g = new Graph(11);
+	g.arcString("01 12 23 27 34 45 54 56 61 78 85 89 97 1-10");
+	// g.display().then(() => g.djGraph(0).display());
+	// Graph.displayMultiple({idOffset: 1}, g, g.djGraph(0));
+	const gDJ = g.djGraph(0);
+	const gMS = Graph.mergeSets(gDJ, 0, 10);
+	console.log(gMS)
+	return;
+
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
 	// const fn = functions.wvm_print_memory;

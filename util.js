@@ -72,7 +72,7 @@ exports.displayIOError = (error, filename="file", mode="r", print=console.error)
 };
 
 const alpha = "abcdefghijklmnopqrstuvwxyz";
-const isNumeric = x => typeof x == "string" && _.every(x, y => "0123456789".includes(y));
+const isNumeric = x => typeof x == "number" || typeof x == "string" && _.every(x, y => "0123456789".includes(y));
 exports.alpha = alpha;
 exports.isLetter = x => typeof x == "string" && x.length == 1 && -1 < alpha.indexOf(x.toLowerCase());
 exports.isNumeric = isNumeric;

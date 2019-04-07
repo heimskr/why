@@ -411,11 +411,13 @@ class Graph {
 			return n;
 		};
 
-		let reqPass = false;
+		let reqPass;
 		do {
+			reqPass = false;
 			for (const node of bfs) {
 				const id = node.id;
-				for (const e of allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id])) {
+				const unvisitedJEdges = allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id]);
+				for (const e of unvisitedJEdges) {
 					visited[e][id] = true;
 					let lNode = null, tmp = djGraph.getNode(e);
 					while (level(tmp) >= level(node)) {
@@ -426,9 +428,10 @@ class Graph {
 
 					const originalLNodeID = lNode.id;
 					for (const e_ of lNode.in) {
-						reqPass |= isJEdge(e_, originalLNodeID)
-								&& visited[e ][originalLNodeID]
-								&& _.notSuperOrEq(merge[e_], merge[originalLNodeID]);
+						if (isJEdge(e_, originalLNodeID) && visited[e ][originalLNodeID] &&
+						    _.notSuperOrEq(merge[e_], merge[originalLNodeID])) {
+							reqPass = true;
+						}
 					}
 				}
 			}
@@ -437,9 +440,14 @@ class Graph {
 		// The merge sets are defined in terms of each other (if you just push in order, earlier computed merge sets
 		// won't include the items added in later computed merge sets), so we need to combine them all together.
 		// _.flattenDeep doesn't handle circular references, so we need to flatten the merge sets ourselves.
-		const flatten = (x, out=[]) => {
+		const flatten = (x, out=[], processed=[]) => {
 			if (x instanceof Array) {
-				x.forEach(y => x != y && flatten(y, out));
+				x.forEach(y => {
+					if (x != y && !processed.includes(y)) {
+						processed.push(y);
+						flatten(y, out, processed)
+					}
+				});
 			} else {
 				out.push(x);
 			}
