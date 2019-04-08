@@ -557,19 +557,16 @@ class LL2W {
 
 		// A list of pairs of block IDs and the name of a variable that is read during some instruction in the block.
 		// For example, if there's an instruction in block 5 that reads %y, one of the pairs will be ["5", "y"].
-		const reads = fn.reduce((a, b) => [...a, ...b[1].read.map(v => [b[0], v])], []);
+		const reads  = fn.reduce((a, b) => [...a, ...b[1].read.map(v    => [b[0], v])], []);
 		const writes = fn.reduce((a, b) => [...a, ...b[1].written.map(v => [b[0], v])], []);
-		console.log("Reads:", reads);
 
-		const emptyLive = () => _.fromPairs(vars.map(v => [v, []]));
-		const emptyProcessed = () =>
-			_.fromPairs(blockNames.map(block => [block, _.fromPairs(vars.map(v => [v, false]))]));
-
+		const emptyLive      = () => _.fromPairs(vars.map(v => [v, []]));
+		const emptyProcessed = () => _.fromPairs(blockNames.map(b => [b, _.fromPairs(vars.map(v => [v, false]))]));
 		const liveIn = emptyLive(), liveOut = emptyLive();
 		const processedIn = emptyProcessed(), processedOut = emptyProcessed();
 
 		for (const varName of vars) {
-			const varReads = reads.filter(([, v]) => v == varName).map(([b, ]) => b);
+			const varReads  =  reads.filter(([, v]) => v == varName).map(([b, ]) => b);
 			const varWrites = writes.filter(([, v]) => v == varName).map(([b, ]) => b);
 			console.log(varName, {reads: varReads, writes: varWrites});
 		}
