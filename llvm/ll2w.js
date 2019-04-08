@@ -855,11 +855,13 @@ class LL2W {
 		}
 
 		// M_s(n) = ∅
+		// Copy the merge sets and set the node's merge set to the empty set.
 		const Ms = {..._.cloneDeep(modifiedMergeSet), [n]: []};
 
 		// for w ∈ succ(n)
 		for (const w of succ(n)) {
 			// Ms(n) = Ms(n) ∪ Mr(w)
+			// Add the merge set of the successor to the merge set of the node.
 			Ms[n] = _.union(Ms[n], modifiedMergeSet[w]);
 		}
 
@@ -868,12 +870,13 @@ class LL2W {
 			// while t ≠ def(a) 
 			while (t != definition) {
 				// if t ∩ M_s(n)
+				// Return true if the node's merge set includes the reader.
 				if (Ms[n].includes(t)) {
 					return true;
 				}
 
 				// t = dom-parent(t)
-				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label
+				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
 			}
 		}
 
