@@ -543,10 +543,22 @@ class LL2W {
 		return g;
 	}
 
+	/**
+	 * Computes an object that indicates in which blocks of a function a given variable used in that function
+	 * is live-in/live-out.
+	 * @param {IRFunction} fn An LLVM IR function as formed by {@link extractFunctions}.
+	 * @return {Object} A map of variable names to maps of block names to tuples of whether the variable is live-in in
+	 *                  the block and whether the variable is live-out in the block.
+	 */
 	computeLivenessForFunction(fn) {
+		// An array of all variable names used in the function.
 		const {vars} = fn;
+
+		// An array of the labels of all basic blocks in the function.
 		const blockNames = fn.map(([blockName]) => blockName);
 
+		// Maps variable names to the instruction where they're defined.
+		// assigners[var][2].block indicates the name of the block.
 		const assigners = fn.reduce((a, b) => ({
 			...a,
 			..._.mapValues(b[1].assigners, x => {
@@ -560,12 +572,15 @@ class LL2W {
 		const reads  = fn.reduce((a, b) => [...a, ...b[1].read.map(v    => [b[0], v])], []);
 		const writes = fn.reduce((a, b) => [...a, ...b[1].written.map(v => [b[0], v])], []);
 
+		// live*: A map of variable names to lists of blocks in which the variable is live.
+		// processed*: A map of blocks to maps of variables to whether the variable has been processed for the block.
 		const emptyLive      = () => _.fromPairs(vars.map(v => [v, []]));
 		const emptyProcessed = () => _.fromPairs(blockNames.map(b => [b, _.fromPairs(vars.map(v => [v, false]))]));
-		const liveIn = emptyLive(), liveOut = emptyLive();
-		const processedIn = emptyProcessed(), processedOut = emptyProcessed();
+		const liveIn  = emptyLive(), processedIn  = emptyProcessed(),
+			  liveOut = emptyLive(), processedOut = emptyProcessed();
 
 		for (const varName of vars) {
+			// varReads, varWrites: Arrays of blocks where the variable is read/written.
 			const varReads  =  reads.filter(([, v]) => v == varName).map(([b, ]) => b);
 			const varWrites = writes.filter(([, v]) => v == varName).map(([b, ]) => b);
 			console.log(varName, {reads: varReads, writes: varWrites});
