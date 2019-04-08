@@ -4,7 +4,7 @@ define void @liveness() #0 {
 	%q = alloca i1, align 4 ; dummy variable
 	br label %2
 
-; <label>:2:                                      ; preds = %0, %7
+; <label>:2:                                     ; preds = %0, %7
 	br i1 %q, label %3, label %11
 
 ; <label>:3:                                     ; preds = %2
@@ -34,9 +34,9 @@ define void @liveness() #0 {
 	call void @strprint(i32 %x)
 	br i1 %q, label %6, label %10
 
-; <label>:10:                                     ; preds = %9
+; <label>:10:                                    ; preds = %9
 	br label %8
 
-; <label>:11:                                     ; preds = %2
+; <label>:11:                                    ; preds = %2
 	ret void
 }

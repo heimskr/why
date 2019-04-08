@@ -838,12 +838,9 @@ class LL2W {
 		}
 		
 		if (forceAll) {
-			ms = cfg._mergeSets =
-			_.mapKeys(
-				_.mapValues(
-					Graph.mergeSets(dj, cfg.enter, cfg.exit)
-				, value => value.map(id => dj.nodes[id].data.label))
-			, (value, key) => dj.nodes[key].data.label)
+			ms = cfg._mergeSets = _.mapKeys(_.mapValues(Graph.mergeSets(dj, cfg.enter, cfg.exit),
+			                                            value => value.map(id => dj.nodes[id].data.label)),
+			                                (value, key) => dj.nodes[key].data.label);
 		}
 
 		return {djTree: dj, dTree: dt, mergeSets: ms};
