@@ -309,7 +309,7 @@ class Graph {
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
 	dTree(startID=0, bidirectional=false) {
-		const [lentar, {renameMap, renames, labelMap}] = this.lengauerTarjan(startID);
+		const [lentar, renameMap, renames] = this.lengauerTarjan(startID);
 		const out = new Graph(Object.keys(lentar).map(numerize));
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
 		Object.entries(lentar).forEach(([k, v]) => {
@@ -317,7 +317,6 @@ class Graph {
 			fn(v == undefined? k : v, k)
 		});
 		
-		out.labelMap = labelMap;
 		out.title = "Dominator Tree";
 		return out;
 	}
@@ -387,7 +386,8 @@ class Graph {
 		const formatted = normalized.map(v => v.out);
 		return [
 			lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {}),
-			{renameMap, renames, labelMap}
+			renameMap,
+			renames
 		];
 	}
 

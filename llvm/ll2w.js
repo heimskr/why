@@ -593,16 +593,17 @@ class LL2W {
 		
 		// An array of the labels of all basic blocks in the function.
 		const blockNames = fn.map(([blockName]) => blockName);
+		const blockPairs = fn.map(([blockName], blockIndex) => [blockName, blockIndex]);
 
 		const out = {};
 		const cfg = LL2W.computeCFG(fn);
 
 		for (const varName of vars) {
 			out[varName] = {};
-			for (const blockName of blockNames) {
+			for (const [blockName, blockIndex] of blockPairs) {
 				out[varName][blockName] = [
-					LL2W.isLiveInUsingMergeSet (fn, cfg, fn[blockName], varName),
-					LL2W.isLiveOutUsingMergeSet(fn, cfg, fn[blockName], varName)
+					LL2W.isLiveInUsingMergeSet (fn, cfg, fn[blockIndex], varName),
+					LL2W.isLiveOutUsingMergeSet(fn, cfg, fn[blockIndex], varName)
 				];
 			}
 		}
@@ -837,7 +838,12 @@ class LL2W {
 		}
 		
 		if (forceAll) {
-			ms = cfg._mergeSets = Graph.mergeSets(dj, cfg.enter, cfg.exit);
+			ms = cfg._mergeSets =
+			_.mapKeys(
+				_.mapValues(
+					Graph.mergeSets(dj, cfg.enter, cfg.exit)
+				, value => value.map(id => dj.nodes[id].data.label))
+			, (value, key) => dj.nodes[key].data.label)
 		}
 
 		return {djTree: dj, dTree: dt, mergeSets: ms};
@@ -858,6 +864,10 @@ class LL2W {
 	static isLiveInUsingMergeSet(fn, cfg, block, varName) {
 		varName = varName.toString();
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
+		if (block === undefined) {
+			debugger;
+		}
+
 		const originalMergeSet = mergeSets[block[0]];
 		console.log({block: block[0], var: varName, originalMergeSet, mergeSets});
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
@@ -904,7 +914,7 @@ class LL2W {
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
 		const writers = LL2W.getWriters(fn, varName);
-		const succ = n => cfg.getNode(n).out;
+		const succ = n => cfg.findSingle(n).out;
 		// const succ = n => cfg.getNode(n).out.map(s => {
 			// console.log([s]); return s.toString().substr(s.indexOf(":") + 1)});
 		// const rename = n => `${fnname}:${n}`;
