@@ -788,7 +788,6 @@ class LL2W {
 	 */
 	static isLiveInUsingMergeSet(fn, cfg, block, varName) {
 		varName = varName.toString();
-
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
 		const originalMergeSet = mergeSets[block[0]];
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
@@ -796,7 +795,7 @@ class LL2W {
 		const writers = LL2W.getWriters(fn, varName);
 		let definition = null;
 		if (writers.length == 1) {
-			definition = writers[0];
+			definition = writers[0][0];
 		} else {
 			throw new Error(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
 		}
@@ -804,7 +803,7 @@ class LL2W {
 		// for t ∈ uses(a)
 		for (let [t] of readers) {
 			// while t ≠ def(a)
-			while (t != definition[0]) {
+			while (t != definition) {
 				// Return true if t ∩ M^r(n)
 				if (modifiedMergeSet.includes(t)) {
 					return true;
@@ -812,6 +811,69 @@ class LL2W {
 
 				// t = dom-parent(t)
 				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Determines whether a variable is live-out at a certain block.
+	 * @param {IRFunction} fn An LLVM IR function as formed by {@link extractFunctions}.
+	 * @param {Graph} cfg The control flow graph for the function.
+	 * @param {IRBlock} block A basic block as formed in {@link extractFunctions}.
+	 * @param {number|string} varName The name of the variable to check.
+	 * @return {boolean} Whether the variable is live-out.
+	 */
+	static isLiveOutUsingMergeSet(fn, cfg, block, varName) {
+		varName = varName.toString();
+		const fnname = fn.meta.name;
+		const n = block[0];
+		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
+		const originalMergeSet = mergeSets[n];
+		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
+		const readers = LL2W.getReaders(fn, varName);
+		const writers = LL2W.getWriters(fn, varName);
+		const succ = n => cfg.getNode(n).out;
+		// const succ = n => cfg.getNode(n).out.map(s => {
+			// console.log([s]); return s.toString().substr(s.indexOf(":") + 1)});
+		// const rename = n => `${fnname}:${n}`;
+		let definition = null;
+		if (writers.length == 1) {
+			definition = writers[0][0];
+		} else {
+			throw new Error(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
+		}
+
+		console.log(`def(a) = n  ~  ${definition} = ${n}  ~  ${definition == n}`);
+
+		if (definition == n) {
+			console.log(`return _.without([...${readers.length}], ${n}) ≠ ∅ ->`, !!_.without(readers, n).length);
+			// I'm assuming "φ" in the paper refers to the empty set.
+			// return uses(a)\def(a) ≠ ∅
+			return !!_.without(readers, n).length;
+		}
+
+		// M_s(n) = ∅
+		const Ms = {..._.cloneDeep(modifiedMergeSet), [n]: []};
+
+		// for w ∈ succ(n)
+		for (const w of succ(n)) {
+			// Ms(n) = Ms(n) ∪ Mr(w)
+			Ms[n] = _.union(Ms[n], modifiedMergeSet[w]);
+		}
+
+		// for t ∈ uses(a)
+		for (let [t] of readers) {
+			// while t ≠ def(a) 
+			while (t != definition) {
+				// if t ∩ M_s(n)
+				if (Ms[n].includes(t)) {
+					return true;
+				}
+
+				// t = dom-parent(t)
+				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label
 			}
 		}
 
@@ -941,10 +1003,10 @@ if (require.main === module) {
 	cfg = LL2W.computeCFG(fn, declarations);
 	dj = cfg.djGraph(cfg.enter);
 	ms = Graph.mergeSets(dj, cfg.enter, cfg.exit);
-	const blockID = "10";
+	const blockID = "8";
 	const varName = "w";
 	const block = fn.filter(([l]) => l == blockID)[0];
-	console.log(`isLiveIn(${blockID}, ${varName}):`, LL2W.isLiveInUsingMergeSet(fn, cfg, block, varName));
+	console.log(`isLiveOut(${blockID}, ${varName}):`, LL2W.isLiveOutUsingMergeSet(fn, cfg, block, varName));
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
