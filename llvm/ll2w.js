@@ -869,7 +869,6 @@ class LL2W {
 		}
 
 		const originalMergeSet = mergeSets[block[0]];
-		console.log({block: block[0], var: varName, originalMergeSet, mergeSets});
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
 		const writers = LL2W.getWriters(fn, varName);
@@ -925,10 +924,10 @@ class LL2W {
 			throw new Error(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
 		}
 
-		console.log(`def(a) = n  ~  ${definition} = ${n}  ~  ${definition == n}`);
+		// console.log(`def(a) = n  ~  ${definition} = ${n}  ~  ${definition == n}`);
 
 		if (definition == n) {
-			console.log(`return _.without([...${readers.length}], ${n}) ≠ ∅ ->`, !!_.without(readers, n).length);
+			// console.log(`return _.without([...${readers.length}], ${n}) ≠ ∅ ->`, !!_.without(readers, n).length);
 			// I'm assuming "φ" in the paper refers to the empty set.
 			// return uses(a)\def(a) ≠ ∅
 			return !!_.without(readers, n).length;
