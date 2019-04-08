@@ -505,7 +505,7 @@ class LL2W {
 		return true;
 	}
 
-	static computeCFG(fn, declarations) {
+	static computeCFG(fn) {
 		const g = new Graph(fn.length);
 		const name = fn.meta.name;
 
@@ -550,12 +550,9 @@ class LL2W {
 	 * @return {Object} A map of variable names to maps of block names to tuples of whether the variable is live-in in
 	 *                  the block and whether the variable is live-out in the block.
 	 */
-	computeLivenessForFunction(fn) {
-		// An array of all variable names used in the function.
-		const {vars} = fn;
+	static computeLivenessForFunction(fn) {
 
-		// An array of the labels of all basic blocks in the function.
-		const blockNames = fn.map(([blockName]) => blockName);
+		/*
 
 		// Maps variable names to the instruction where they're defined.
 		// assigners[var][2].block indicates the name of the block.
@@ -581,27 +578,36 @@ class LL2W {
 				...writes.filter(([wb, wv]) => v == wv).map(([wb, wv]) => wb),
 			])
 		]));
-
+		
 		// live*: A map of variable names to lists of blocks in which the variable is live.
 		// processed*: A map of blocks to maps of variables to whether the variable has been processed for the block.
 		const emptyLive      = () => _.fromPairs(vars.map(v => [v, []]));
 		const emptyProcessed = () => _.fromPairs(blockNames.map(b => [b, _.fromPairs(vars.map(v => [v, false]))]));
 		const liveIn  = emptyLive(), processedIn  = emptyProcessed(),
-			  liveOut = emptyLive(), processedOut = emptyProcessed();
+		liveOut = emptyLive(), processedOut = emptyProcessed();
+		
+		//*/
 
-		// As stated in the function documentation, this is a map of variable names to maps of block names to tuples
-		// of whether the variable is live-in in the block and whether the variable is live-out in the block.
-		const out = _.fromPairs(vars.map(v =>
-					[v, _.fromPairs(blockNames.map(blockName => [blockName, [false, false]]))]));
+		// An array of all variable names used in the function.
+		const {vars} = fn;
+		
+		// An array of the labels of all basic blocks in the function.
+		const blockNames = fn.map(([blockName]) => blockName);
 
-		// To compute the output, we go through every variable read and write and calculate the variable's livenesses at
-		// the block in which the read/write occurs, using processedIn/processedOut to skip any block/variable pairs
-		// that have already been covered.
+		const out = {};
+		const cfg = LL2W.computeCFG(fn);
 
 		for (const varName of vars) {
-			const varAccesses = accesses[varName];
-			console.log(varName, {varAccesses});
+			out[varName] = {};
+			for (const blockName of blockNames) {
+				out[varName][blockName] = [
+					LL2W.isLiveInUsingMergeSet (fn, cfg, fn[blockName], varName),
+					LL2W.isLiveOutUsingMergeSet(fn, cfg, fn[blockName], varName)
+				];
+			}
 		}
+
+		return out;
 	}
 
 	computeLivenessSet(fns, blocks) {
@@ -853,6 +859,7 @@ class LL2W {
 		varName = varName.toString();
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
 		const originalMergeSet = mergeSets[block[0]];
+		console.log({block: block[0], var: varName, originalMergeSet, mergeSets});
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
 		const writers = LL2W.getWriters(fn, varName);
@@ -1074,7 +1081,7 @@ if (require.main === module) {
 	const block = fn.filter(([l]) => l == blockID)[0];
 	// console.log(`isLiveOut(${blockID}, ${varName}):`, LL2W.isLiveOutUsingMergeSet(fn, cfg, block, varName));
 	// console.log("liveness set:", compiler.computeLivenessSet(functions, allBlocks));
-	console.log("liveness set:", compiler.computeLivenessForFunction(fn));
+	console.log("liveness set:", LL2W.computeLivenessForFunction(fn));
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
