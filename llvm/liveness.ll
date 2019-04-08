@@ -9,6 +9,7 @@ target triple = "x86_64-apple-macosx10.14.0"
 
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define void @liveness() #0 {
+	%q = alloca i1, align 4 ; dummy variable
 	br label %2
 
 ; <label>:2:                                      ; preds = %0, %7

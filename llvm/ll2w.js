@@ -543,6 +543,38 @@ class LL2W {
 		return g;
 	}
 
+	computeLivenessForFunction(fn) {
+		const {vars} = fn;
+		const blockNames = fn.map(([blockName]) => blockName);
+
+		const assigners = fn.reduce((a, b) => ({
+			...a,
+			..._.mapValues(b[1].assigners, x => {
+				x[2].block = b[0];
+				return x;
+			})
+		}), {});
+
+		// A list of pairs of block IDs and the name of a variable that is read during some instruction in the block.
+		// For example, if there's an instruction in block 5 that reads %y, one of the pairs will be ["5", "y"].
+		const reads = fn.reduce((a, b) => [...a, ...b[1].read.map(v => [b[0], v])], []);
+		const writes = fn.reduce((a, b) => [...a, ...b[1].written.map(v => [b[0], v])], []);
+		console.log("Reads:", reads);
+
+		const emptyLive = () => _.fromPairs(vars.map(v => [v, []]));
+		const emptyProcessed = () =>
+			_.fromPairs(blockNames.map(block => [block, _.fromPairs(vars.map(v => [v, false]))]));
+
+		const liveIn = emptyLive(), liveOut = emptyLive();
+		const processedIn = emptyProcessed(), processedOut = emptyProcessed();
+
+		for (const varName of vars) {
+			const varReads = reads.filter(([, v]) => v == varName).map(([b, ]) => b);
+			const varWrites = writes.filter(([, v]) => v == varName).map(([b, ]) => b);
+			console.log(varName, {reads: varReads, writes: varWrites});
+		}
+	}
+
 	computeLivenessSet(fns, blocks) {
 		// Based on Algorithm 9.9 ("Compute liveness sets per variable using def-use chains")
 		// and Algorithm 9.10 ("Optimized path exploration using a stack-like data structure")
@@ -556,7 +588,9 @@ class LL2W {
 		// For each pair in each phi instruction in a set of instructions, take the first element of the pair
 		// (the source variable) and take its second element (the name of the variable).
 		// This results in an array containing every variable in the function that's used in the block's phi functions.
-		const phiUses = instrs => _.uniq(_.flatten(instrs.filter(i => i[1] == "phi").map(i => i[2].pairs.map(p => p[0][1]))));
+		const phiUses = instructions =>
+			_.uniq(_.flatten(instructions.filter(([, instructionName]) => instructionName == "phi")
+										 .map(([,, {pairs}]) => pairs.map(pair => pair[0][1]))));
 
 		const _b = chalk.bold;
 
@@ -1009,7 +1043,9 @@ if (require.main === module) {
 	const blockID = "8";
 	const varName = "w";
 	const block = fn.filter(([l]) => l == blockID)[0];
-	console.log(`isLiveOut(${blockID}, ${varName}):`, LL2W.isLiveOutUsingMergeSet(fn, cfg, block, varName));
+	// console.log(`isLiveOut(${blockID}, ${varName}):`, LL2W.isLiveOutUsingMergeSet(fn, cfg, block, varName));
+	// console.log("liveness set:", compiler.computeLivenessSet(functions, allBlocks));
+	console.log("liveness set:", compiler.computeLivenessForFunction(fn));
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
