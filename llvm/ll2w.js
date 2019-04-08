@@ -572,6 +572,16 @@ class LL2W {
 		const reads  = fn.reduce((a, b) => [...a, ...b[1].read.map(v    => [b[0], v])], []);
 		const writes = fn.reduce((a, b) => [...a, ...b[1].written.map(v => [b[0], v])], []);
 
+		// A combination of the `reads` and `writes` variables that maps variable names
+		// to all blocks in which the variables are read or written.
+		const accesses = _.fromPairs(vars.map(v => [
+			v,
+			_.uniq([
+				... reads.filter(([rb, rv]) => v == rv).map(([rb, rv]) => rb),
+				...writes.filter(([wb, wv]) => v == wv).map(([wb, wv]) => wb),
+			])
+		]));
+
 		// live*: A map of variable names to lists of blocks in which the variable is live.
 		// processed*: A map of blocks to maps of variables to whether the variable has been processed for the block.
 		const emptyLive      = () => _.fromPairs(vars.map(v => [v, []]));
@@ -579,11 +589,18 @@ class LL2W {
 		const liveIn  = emptyLive(), processedIn  = emptyProcessed(),
 			  liveOut = emptyLive(), processedOut = emptyProcessed();
 
+		// As stated in the function documentation, this is a map of variable names to maps of block names to tuples
+		// of whether the variable is live-in in the block and whether the variable is live-out in the block.
+		const out = _.fromPairs(vars.map(v =>
+					[v, _.fromPairs(blockNames.map(blockName => [blockName, [false, false]]))]));
+
+		// To compute the output, we go through every variable read and write and calculate the variable's livenesses at
+		// the block in which the read/write occurs, using processedIn/processedOut to skip any block/variable pairs
+		// that have already been covered.
+
 		for (const varName of vars) {
-			// varReads, varWrites: Arrays of blocks where the variable is read/written.
-			const varReads  =  reads.filter(([, v]) => v == varName).map(([b, ]) => b);
-			const varWrites = writes.filter(([, v]) => v == varName).map(([b, ]) => b);
-			console.log(varName, {reads: varReads, writes: varWrites});
+			const varAccesses = accesses[varName];
+			console.log(varName, {varAccesses});
 		}
 	}
 
