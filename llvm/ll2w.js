@@ -753,19 +753,21 @@ class LL2W {
 		return fn.filter(([id, {written}]) => written.map(x => x.toString()).includes(varName));
 	}
 
-	static getUsefulLivenessData(cfg) {
+	static getUsefulLivenessData(cfg, ignore={dt: false, dj: false, ms: false}) {
 		let dj = cfg._djGraph;
 		let dt = cfg._dTree;
 		let ms = cfg._mergeSets;
-		if (!dt) {
+		const forceAll = !ms && !ignore.ms;
+
+		if (forceAll || !dt && !ignore.dt) {
 			dt = cfg._dTree = cfg.dTree(cfg.enter);
 		}
 		
-		if (!dj) {
+		if (forceAll || !dj && !ignore.dj) {
 			dj = cfg._djGraph = cfg.djGraph(dt);
 		}
 		
-		if (!ms) {
+		if (forceAll) {
 			ms = cfg._mergeSets = Graph.mergeSets(dj, cfg.enter, cfg.exit);
 		}
 
@@ -787,26 +789,17 @@ class LL2W {
 	static isLiveInUsingMergeSet(fn, cfg, block, varName) {
 		varName = varName.toString();
 
-		let {djTree: dj, dTree: dt, mergeSets} = LL2W.getUsefulLivenessData(cfg);
-		// console.log("fn:", fn);
-		// console.log("mergeSets:", mergeSets);
-		// console.log("block:", block);
-		// console.log("varName:", varName);
-		const modifiedMergeSet = _.uniq([...mergeSets[varName], varName].map(x => x.toString()));
-		// console.log("modifiedMergeSet:", modifiedMergeSet);
+		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
+		const originalMergeSet = mergeSets[block[0]];
+		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
 		const writers = LL2W.getWriters(fn, varName);
 		let definition = null;
 		if (writers.length == 1) {
 			definition = writers[0];
 		} else {
-			console.warn(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
+			throw new Error(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
 		}
-
-		// cfg.title = "Control Flow Graph";
-		// Graph.displayMultiple({height: 300}, dj, dt, cfg);
-		// return dt.writePNG("dt.png");
-		// console.log("readers:", readers.map(([id]) => id));
 
 		// for t ∈ uses(a)
 		for (let [t] of readers) {
@@ -818,7 +811,7 @@ class LL2W {
 				}
 
 				// t = dom-parent(t)
-				t = dt.nodes[dt.findSingle(node => node.data.label == t).in[0]].data.label;
+				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
 			}
 		}
 
@@ -928,41 +921,30 @@ if (require.main === module) {
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
 	compiler.connectBlocks(functions, allBlocks, declarations);
 
+	let cfg, ms, fn, dj;
+
 	// jsome(_.cloneDeep(functions.wvm_check_condition || {}).map(x => {
 	// 	const y = x.slice(0, 2);
 	// 	delete y[1].assigners;
 	// 	return y;
 	// }));
 
-
-	const g = new Graph(11);
-	g.arcString("01 12 23 27 34 45 54 56 61 78 85 89 97 1-10");
-	// g.display().then(() => g.djGraph(0).display());
-	// Graph.displayMultiple({idOffset: 1}, g, g.djGraph(0));
-	const gDJ = g.djGraph(0);
-	const gMS = Graph.mergeSets(gDJ, 0, 10);
-	console.log(gMS)
-	return;
-
 	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
 	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
 	// const fn = functions.wvm_print_memory;
-	const fn = functions.wvm_get_string;
+	// const fn = functions.wvm_get_string;
 	// const fn = functions.wvm_check_condition;
+	fn = functions.liveness;
 	// console.log(Object.keys(functions).map(key => [key, functions[key].length]));
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
-	const cfg = LL2W.computeCFG(fn, declarations);
-	/* cfg.display({height: 350}).then(() => */ {
-		console.log();
-		// console.log(cfg.enter, cfg.exit);
-		const ms = Graph.mergeSets(cfg.djGraph(cfg.enter), cfg.enter, cfg.exit);
-		const node20 = cfg.findSingle("20");
-		const block20 = fn.filter(([l]) => l == "20")[0];
-		console.log("isLiveIn:", LL2W.isLiveInUsingMergeSet(fn, cfg, block20, "5"));
-	}//);
-
-	// });
+	cfg = LL2W.computeCFG(fn, declarations);
+	dj = cfg.djGraph(cfg.enter);
+	ms = Graph.mergeSets(dj, cfg.enter, cfg.exit);
+	const blockID = "10";
+	const varName = "w";
+	const block = fn.filter(([l]) => l == blockID)[0];
+	console.log(`isLiveIn(${blockID}, ${varName}):`, LL2W.isLiveInUsingMergeSet(fn, cfg, block, varName));
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
@@ -1068,7 +1050,7 @@ if (require.main === module) {
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();
-	const ms = Graph.mergeSets(dj254gap, 0, 1);
+	ms = Graph.mergeSets(dj254gap, 0, 1);
 	console.log(chalk.dim("\nResults:"));
 	console.log(_.keys(ms).filter(k => ms[k].length).map(k => `${chalk.green(k.padStart(3, " "))}: ${[...ms[k]].sort().map(x => chalk.yellow(x)).join(", ")}`).join("\n"));
 	// console.log(cfg.mergeSets());
