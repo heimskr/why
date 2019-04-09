@@ -661,6 +661,9 @@ class LL2W {
 			debugger;
 		}
 
+		debug(`Computing live-in for ${chalk.bold(varName)} in ${block[0] == fn.meta.arity?
+		      chalk.magenta("block " + block[0]) : "block " + chalk.bold(block[0])}.`);
+
 		const originalMergeSet = mergeSets[block[0]];
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
@@ -668,6 +671,10 @@ class LL2W {
 		let definition = null;
 		if (writers.length == 1) {
 			definition = writers[0][0];
+		} else if (isNumeric(varName) && parseInt(varName) <= fn.meta.arity) {
+			// Function arguments exist without any explicit defining instruction.
+			// We'll assume they're implicitly defined in the first block.
+			definition = fn.first;
 		} else {
 			throw new Error(`Variable %${varName} has ${writers.length} definitions; expected 1.`);
 		}
@@ -678,6 +685,8 @@ class LL2W {
 			while (t != definition) {
 				// Return true if t ∩ M^r(n)
 				if (modifiedMergeSet.includes(t)) {
+					debug(`Finished computing live-in  for ${chalk.bold(varName)} in block ${chalk.bold(block[0])}:`,
+					      `${chalk.bold("true")} because t ∩ M^r(n).`);
 					return true;
 				}
 
@@ -686,6 +695,8 @@ class LL2W {
 			}
 		}
 
+		debug(`Finished computing live-in  for ${chalk.bold(varName)} in block ${chalk.bold(block[0])}:`,
+		      `${chalk.bold("false")} by default.`);
 		return false;
 	}
 
@@ -701,6 +712,8 @@ class LL2W {
 		varName = varName.toString();
 		const fnname = fn.meta.name;
 		const n = block[0];
+		debug(`Computing live-out for ${chalk.bold(varName)} in ${block[0] == fn.meta.arity? chalk.magenta("block " +
+		      block[0]) : "block " + chalk.bold(block[0])}.`);
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
 		const originalMergeSet = mergeSets[n];
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
@@ -713,8 +726,12 @@ class LL2W {
 		let definition = null;
 		if (writers.length == 1) {
 			definition = writers[0][0];
+		} else if (isNumeric(varName) && parseInt(varName) <= fn.meta.arity) {
+			// Function arguments exist without any explicit defining instruction.
+			// We'll assume they're implicitly defined in the first block.
+			definition = fn.first;
 		} else {
-			throw new Error(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
+			throw new Error(`Variable %${varName} has ${writers.length} definitions; expected 1.`);
 		}
 
 		// console.log(`def(a) = n  ~  ${definition} = ${n}  ~  ${definition == n}`);
@@ -723,7 +740,10 @@ class LL2W {
 			// console.log(`return _.without([...${readers.length}], ${n}) ≠ ∅ ->`, !!_.without(readers, n).length);
 			// I'm assuming "φ" in the paper refers to the empty set.
 			// return uses(a)\def(a) ≠ ∅
-			return !!_.without(readers, n).length;
+			const out = !!_.without(readers, n).length
+			debug(`Finished computing live-out for ${chalk.bold(varName)} in block ${chalk.bold(n)}:`,
+			      `def(a) = n → (uses(a)\\def(a) ≠ ∅) == ${chalk.bold(out)}.`);
+			return out;
 		}
 
 		// M_s(n) = ∅
@@ -744,6 +764,8 @@ class LL2W {
 				// if t ∩ M_s(n)
 				// Return true if the node's merge set includes the reader.
 				if (Ms[n].includes(t)) {
+					debug(`Finished computing live-out for ${chalk.bold(varName)} in block ${chalk.bold(n)}:`
+					      `${chalk.bold("true")} because t ∩ M_s(n).`);
 					return true;
 				}
 
@@ -752,6 +774,8 @@ class LL2W {
 			}
 		}
 
+		debug(`Finished computing live-out for ${chalk.bold(varName)} in block ${chalk.bold(n)}:`,
+		      `${chalk.bold("false")} by default.`);
 		return false;
 	}
 
@@ -819,12 +843,18 @@ LL2W.builtins = ["_int", "_rit", "_time", "_gettime", "_halt", "_prc", "_prd", "
 
 module.exports = LL2W;
 
+let debug = () => {};
+
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
 		alias: {d: "debug"},
 		boolean: ["debug"],
-		default: {d: false}
+		default: {debug: true}
 	}), infile = options._[0];
+
+	if (options.debug) {
+		debug = (...a) => console.log("🐞", ...a);
+	}
 
 	if (!infile) {
 		console.log("Usage: ./ll2w.js <filename> [out]");
