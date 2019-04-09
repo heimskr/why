@@ -661,10 +661,11 @@ class LL2W {
 			debugger;
 		}
 
-		debug(`Computing live-in for ${chalk.bold(varName)} in ${block[0] == fn.meta.arity?
-		      chalk.magenta("block " + block[0]) : "block " + chalk.bold(block[0])}.`);
+		const n = block[0];
+		const blockDebug = n == fn.meta.arity? chalk.magenta("block " + n) : "block " + chalk.bold(n);
+		debug(`Computing live-in for ${chalk.bold(varName)} in ${blockDebug}.`);
 
-		const originalMergeSet = mergeSets[block[0]];
+		const originalMergeSet = mergeSets[n];
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
 		const writers = LL2W.getWriters(fn, varName);
@@ -685,17 +686,31 @@ class LL2W {
 			while (t != definition) {
 				// Return true if t ∩ M^r(n)
 				if (modifiedMergeSet.includes(t)) {
-					debug(`Finished computing live-in  for ${chalk.bold(varName)} in block ${chalk.bold(block[0])}:`,
+					debug(`Finished computing live-in  for ${chalk.bold(varName)} in ${blockDebug}:`,
 					      `${chalk.bold("true")} because t ∩ M^r(n).`);
 					return true;
 				}
 
 				// t = dom-parent(t)
-				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+				const parent = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+				if (t != parent) {
+					t = parent;
+					continue;
+				}
+
+				if (t.toString() == fn.meta.arity.toString()) {
+					// TODO: Is it correct to return false here?
+					debug(chalk.yellow("Warning:"), `parent of ${t} is ${parent}. Returning ${chalk.red("false")}.`);
+					return false;
+				} else {
+					debug(chalk.yellow("Warning:"), `parent of ${t} is ${parent}.`, chalk.red("This shouldn't happen."),
+					      `Returning ${chalk.red("false")} to prevent an infinite loop.`);
+					return false;
+				}
 			}
 		}
 
-		debug(`Finished computing live-in  for ${chalk.bold(varName)} in block ${chalk.bold(block[0])}:`,
+		debug(`Finished computing live-in  for ${chalk.bold(varName)} in ${blockDebug}:`,
 		      `${chalk.bold("false")} by default.`);
 		return false;
 	}
@@ -712,8 +727,8 @@ class LL2W {
 		varName = varName.toString();
 		const fnname = fn.meta.name;
 		const n = block[0];
-		debug(`Computing live-out for ${chalk.bold(varName)} in ${block[0] == fn.meta.arity? chalk.magenta("block " +
-		      block[0]) : "block " + chalk.bold(block[0])}.`);
+		const blockDebug = n == fn.meta.arity? chalk.cyan("block " + n) : "block " + chalk.bold(n);
+		debug(`Computing live-out for ${chalk.bold(varName)} in ${blockDebug}.`);
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
 		const originalMergeSet = mergeSets[n];
 		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
@@ -741,7 +756,7 @@ class LL2W {
 			// I'm assuming "φ" in the paper refers to the empty set.
 			// return uses(a)\def(a) ≠ ∅
 			const out = !!_.without(readers, n).length
-			debug(`Finished computing live-out for ${chalk.bold(varName)} in block ${chalk.bold(n)}:`,
+			debug(`Finished computing live-out for ${chalk.bold(varName)} in ${blockDebug}:`,
 			      `def(a) = n → (uses(a)\\def(a) ≠ ∅) == ${chalk.bold(out)}.`);
 			return out;
 		}
@@ -764,17 +779,31 @@ class LL2W {
 				// if t ∩ M_s(n)
 				// Return true if the node's merge set includes the reader.
 				if (Ms[n].includes(t)) {
-					debug(`Finished computing live-out for ${chalk.bold(varName)} in block ${chalk.bold(n)}:`
+					debug(`Finished computing live-out for ${chalk.bold(varName)} in ${blockDebug}:`
 					      `${chalk.bold("true")} because t ∩ M_s(n).`);
 					return true;
 				}
 
 				// t = dom-parent(t)
-				t = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+				const parent = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+				if (t != parent) {
+					t = parent;
+					continue;
+				}
+
+				if (t.toString() == fn.meta.arity.toString()) {
+					// TODO: Is it correct to return false here?
+					debug(chalk.yellow("Warning:"), `parent of ${t} is ${parent}. Returning ${chalk.red("false")}.`);
+					return false;
+				} else {
+					debug(chalk.yellow("Warning:"), `parent of ${t} is ${parent}.`, chalk.red("This shouldn't happen."),
+					      `Returning ${chalk.red("false")} to prevent an infinite loop.`);
+					return false;
+				}
 			}
 		}
 
-		debug(`Finished computing live-out for ${chalk.bold(varName)} in block ${chalk.bold(n)}:`,
+		debug(`Finished computing live-out for ${chalk.bold(varName)} in ${blockDebug}:`,
 		      `${chalk.bold("false")} by default.`);
 		return false;
 	}
@@ -849,7 +878,7 @@ if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
 		alias: {d: "debug"},
 		boolean: ["debug"],
-		default: {debug: true}
+		default: {debug: false}
 	}), infile = options._[0];
 
 	if (options.debug) {
