@@ -137,7 +137,7 @@ class Graph {
 	 */
 	getNode(n) {
 		if (n instanceof Node) {
-			return n;
+			return n.graph == this? n : getNode(node.id);
 		}
 
 		if (n == undefined) {
@@ -655,9 +655,9 @@ class Graph {
 
 	/**
 	 * Condenses a list of nodes into a single node, removes the old nodes from the graph and inserts the new node.
-	 * The new node's in/out arrays are the unions of the given nodes' in/out arrays.
-	 * The new node is reflexive if any of the given nodes is reflexive.
-	 * @param  {Array<Node | number>} nodes A list of nodes.
+	 * The new node's in/out arrays are the unions of the given nodes' in/out arrays. The new node's data is the same
+	 * as the data of the first node in the arguments. The new node is reflexive if any of the given nodes is reflexive.
+	 * @param  {Array<Node | NodeID>} nodes A list of nodes or node IDs.
 	 * @return {Node} The coalesced node.
 	 */
 	coalesce(nodes) {
@@ -665,7 +665,7 @@ class Graph {
 			return undefined;
 		}
 
-		// The input may contain either Nodes or numeric IDs. Convert all the IDs to nodes.
+		// The input may contain either Nodes or node IDs. Convert all the IDs to nodes.
 		nodes = nodes.map(n => this.nodes[getID(n)]);
 
 		// Calculate the union of all in/out edges, but don't include edges between any of the given nodes.
@@ -692,7 +692,7 @@ class Graph {
 		}
 
 		if (!newNode) {
-			newNode = new Node(newID, this);
+			newNode = new Node(newID, this, nodes[0].data);
 		}
 
 		newNode.in  = _.without(combinedIn,  ...allIDs);
