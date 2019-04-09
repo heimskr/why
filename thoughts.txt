@@ -34,3 +34,6 @@
 ;	nodes in an interference graph represent. Are they basic blocks or individual instructions? If they do represent
 ;	basic blocks, why is that a sufficient level of granularity?
 ---------------------
+[2019/04/09 12:07:07] %llvm, %ll2w, %liveness
+;	The nodes of an interference graph represent variables in a function.
+---------------------
