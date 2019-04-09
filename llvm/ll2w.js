@@ -415,7 +415,7 @@ class LL2W {
 		// console.log(functions);
 	}
 
-	static extractOperands(instruction) { // -> {read: var[], written: var[], assigner: ?var }
+	static computeOperands(instruction) { // -> {read: var[], written: var[], assigner: ?var }
 		const [, type, meta] = instruction;
 		let read = [], written = [], assigner = null;
 
@@ -480,11 +480,11 @@ class LL2W {
 		return {read, written, assigner};
 	}
 
-	static extractBasicBlockVariables(basicBlock) {
+	static computeBasicBlockVariables(basicBlock) {
 		let read = [], written = [], assigners = {};
 
 		basicBlock[2].forEach(instruction => {
-			const result = LL2W.extractOperands(instruction);
+			const result = LL2W.computeOperands(instruction);
 			read = read.concat(result.read);
 			written = written.concat(result.written);
 			if (result.assigner) assigners[result.assigner] = instruction;
