@@ -28,6 +28,27 @@ type FunctionExtractions = {
 	blockOrder: Object[];
 	functionOrder: Object[];
 };
+type ASTTypeAny = ASTTypeInt | ASTTypePtr | ASTTypeArray;
+type ASTTypeInt = ["int", number];
+interface ASTTypePtr   {0: "ptr",   1: ASTTypeAny, 2: number};
+interface ASTTypeArray {0: "array", 1: number,     2: ASTTypeAny};
+type ASTRetAttr  = ["zeroext" | "signext" | "inreg" | "noalias" | "nonnull"]
+                 | ["dereferenceable" | "deferenceable_or_null", number];
+type ASTParAttr  = ["byval" | "inalloca" | "sret" | "nocapture" | "readonly"] | ASTRetAttr;
+type ASTVariable = ["variable", string | number];
+type ASTFunctionType = [ASTTypeAny, ASTParAttr[], ASTVariable | null];
+type ASTFunction = ["function", {
+	name: string,
+	type: ASTTypeAny,
+	types: ASTFunctionType[],
+	arity: number,
+	unnamedAddr: "local_unnamed_addr" | "unnamed_addr" | null
+}];
+type ASTDeclaration = ["declaration", ASTFunction];
+type ASTMetadata = ["metadata", string | number, boolean, ...any[]];
+
+type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
+type DeclarationType = {type: ASTTypeAny, types: ASTFunctionType[], arity: number, isLocalUnnamed: boolean};
 
 const {displayIOError, mixins, isNumeric} = require("../util.js");
 mixins(_);
@@ -57,8 +78,9 @@ class LL2W {
 	targets: {[key: string]: string};
 	attributes: {[key: string]: Object};
 	structs: {[key: string]: Object};
-	metadata: {[key: string]: Object};
+	metadata: {[key: string]: MetadataType};
 	globalConstants: {[key: string]: Object};
+	declarations: {[key: string]: DeclarationType};
 
 
 	/**
@@ -233,7 +255,9 @@ class LL2W {
 		const metas = this.ast.filter(([type]) => type == "metadata");
 		const graph = new Graph(metas.length);
 
-		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]) => {
+		
+
+		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
 			let recursive = false, toAdd = [];
 
 			items.forEach((item, i) => {
@@ -253,7 +277,7 @@ class LL2W {
 			this.metadata[id].items = _.unionWith(this.metadata[id].items, this.metadata[dependency].items, _.isEqual);
 		}));
 
-		metas.filter(([, id]) => !_.isNumber(id)).forEach(([, id, distinct, ...items]) => {
+		metas.filter(([, id]) => !_.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
 			this.metadata[id] = {
 				recursive: false,
 				distinct, 
@@ -290,9 +314,8 @@ class LL2W {
 		 */
 		this.declarations = {};
 		
-		this.iterateTree("declaration", dec => {
-			const [, meta] = dec;
-			const {name, type, types, arity, unnamedAddr} = meta;
+		this.iterateTree("declaration", (dec: ASTFunction) => {
+			const [, {name, type, types, arity, unnamedAddr}] = dec;
 			if (name in this.declarations) {
 				warn("Duplicate declaration for", chalk.bold(name) + ".");
 			}

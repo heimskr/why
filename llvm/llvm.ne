@@ -234,7 +234,7 @@ function_header		->	(" " linkage):?
 						}] %}
 
 declaration			->	"declare" function_header									{% d => ["declaration", d[1]] %}
-function_type		->	type_any (_ parattr):* (" " variable):?
+function_type		->	type_any (_ parattr):* (" " variable):?						{% d => [d[0], d[1].map(x => x[1][0]), d[2]? d[2][1] : null] %}
 function_def		->	"define" function_header " {" function_line:* "}"			{% d => [...d[1], filter(d[3])] %}
 
 function_line		->	_ label " ":* comment:? newline								{% parseLabel %}
