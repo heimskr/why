@@ -7,7 +7,7 @@ LLDIR		= ../wvm/c/ll
 
 all: $(COMPILED) _
 
-test: ltest
+test: dtest
 
 $(COMPILED): $(SYNTAX) _
 	@ $(COMPILE) $(SYNTAX) -o $(COMPILED) && echo "$(CHECK) Compiled $(SYNTAX) to $(COMPILED)."
@@ -53,6 +53,9 @@ ptest: $(TEST) $(COMPILED) printf.ll
 
 ltest: $(TEST) $(COMPILED) liveness.ll
 	node ll2w.js liveness.ll
+
+dtest: $(TEST) $(COMPILED) $(LLDIR)/disassemble.ll
+	node ll2w.js $(LLDIR)/disassemble.ll
 
 %.ll: test/%.c
 	clang -S -emit-llvm $<

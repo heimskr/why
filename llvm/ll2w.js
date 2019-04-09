@@ -1013,7 +1013,6 @@ if (require.main === module) {
 		process.exit(1);
 	}
 
-	// jsome(compiler.ast);
 	console.log();
 
 	compiler.extractInformation();
@@ -1025,26 +1024,17 @@ if (require.main === module) {
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
 	compiler.connectBlocks(functions, allBlocks, declarations);
 
-	let cfg, ms, fn, dj;
+	const ts = x => typeof x == "number"? x+1 : x;
+}
 
-	// jsome(_.cloneDeep(functions.wvm_check_condition || {}).map(x => {
-	// 	const y = x.slice(0, 2);
-	// 	delete y[1].assigners;
-	// 	return y;
-	// }));
-
-	// const cfg = LL2W.computeCFG(functions, allBlocks, blockOrder, declarations);
-	// let cfg = LL2W.computeCFG(functions.wvm_get_string, declarations);
-	// const fn = functions.wvm_print_memory;
-	// const fn = functions.wvm_get_string;
-	// const fn = functions.wvm_check_condition;
-	fn = functions.liveness;
+function testLiveness(functions, declarations) {
+	const fn = functions.liveness;
 	// console.log(Object.keys(functions).map(key => [key, functions[key].length]));
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
-	cfg = LL2W.computeCFG(fn, declarations);
-	dj = cfg.djGraph(cfg.enter);
-	ms = Graph.mergeSets(dj, cfg.enter, cfg.exit);
+	const cfg = LL2W.computeCFG(fn, declarations);
+	const dj = cfg.djGraph(cfg.enter);
+	const ms = Graph.mergeSets(dj, cfg.enter, cfg.exit);
 	const blockID = "8";
 	const varName = "w";
 	const block = fn.filter(([l]) => l == blockID)[0];
@@ -1053,92 +1043,25 @@ if (require.main === module) {
 	console.log("liveness sets:");
 	console.log(LL2W.computeLivenessForFunction(fn));
 	return;
+}
 
-	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
-	// console.log(cfg.toString());
-
-	// compiler.debug(() => jsome({
-		// sourceFilename: compiler.sourceFilename,
-		// targets: compiler.targets,
-		// attributes: compiler.attributes,
-		// structs: compiler.structs,
-		// metadata: compiler.metadata,
-		// constants: compiler.globalConstants,
-	// }));
-
-	// return;
-
-	// console.log(cfg.reversePost());
-
-	// const g = new Graph(4).arcString("AB AC BD CD");
-	// const g = new Graph(6).arcString("AB BC BD CE DE EB EF");
-	// const g = new Graph(7).arcString("AB AD BC CB CG DE EF FD FG");
-
+function testReversePost() {
+	const cfg = new Graph(6).arcString("AB BC BD BF CE DE EB");
 	
-	// console.log(g.reversePost.map(x => String.fromCharCode("A".charCodeAt(0) + x)));
-	// console.log(g.reversePost.map(x => x + 1));
+	cfg = new Graph(7);
+	cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
+	cfg.arc(3, 2); cfg.arc(3, 4); cfg.arc(3, 5); cfg.arc(3, 6);
+	cfg.arc(1, 4); cfg.arc(5, 2);
+	cfg.arc(6, 4); cfg.arc(6, 0);
+	cfg.forEach(n => n.data={label: (n.id + 1)+""});
+	cfg.forEach(n => n.data={label: (n.id)+""});
 
-	// Why does pred of _main:5 contain retvar:0?
+	console.log(cfg.reversePost());
+	console.log(cfg.sortedDFS().map(n => n.id));
+	return;
+}
 
-	// console.log(cfg.dominance(0).map((x, i) => cfg[i].data.label + " => " + (x === null? "~" : cfg[x].data.label)));
-	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
-
-	
-	// cfg = new Graph(6).arcString("AB BA BC CB DB DC EA FE FD"); // 0 2 1 3 4 5
-	// cfg.forEach(n => n.data={label: (n.id + 1)+""});
-	
-	// console.log("RPO:", cfg.reversePost(5));
-	
-	// console.log("DFS:", cfg.dfs(5));
-	// return;
-
-	// cfg = new Graph(6).arcString("AB BC BD BF CE DE EB");
-	
-	// cfg = new Graph(7);
-	// cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
-	// cfg.arc(3, 2); cfg.arc(3, 4); cfg.arc(3, 5); cfg.arc(3, 6);
-	// cfg.arc(1, 4); cfg.arc(5, 2);
-	// cfg.arc(6, 4); cfg.arc(6, 0);
-	// cfg.forEach(n => n.data={label: (n.id + 1)+""});
-	// cfg.forEach(n => n.data={label: (n.id)+""});
-
-	// console.log(cfg.reversePost());
-	// console.log(cfg.sortedDFS().map(n => n.id));
-	// return;
-
-	// cfg = new Graph(8).arcString("AB BC BD CE DE EF FG GF GH");
-	cfg = new Graph(13);
-	const q = "RABCDEFGHIJKL".split("");
-	for (const pair of "RA RB RC AB AD BA BD BE BR CF CG DL EH FI GI GJ HE HK IK JI KI KR LH".split(" ")) {
-		cfg.arc(q.indexOf(pair[0]), q.indexOf(pair[1]));
-	}
-
-	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
-	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
-	
-	cfg = new Graph(11).arcString("AB BK BC CD CH DE EF FE FG GB HI IF IJ JH");
-
-	// cfg.renameNode(4, "e");
-	// cfg.renameNode(1, "b");
-	
-	const ts = x => typeof x == "number"? x+1 : x;
-
-	// console.log(chalk.dim("CFG:"));
-	// console.log(cfg.toString(ts));
-	// console.log("");
-	// console.log(cfg.toString(x=>q[x], x=>q[x]));
-	// cfg.lengauerTarjan(0);
-
-	// Object.entries(cfg.lengauerTarjan(0)).forEach(([a, b]) => console.log(`idom[${+a+1}] = ${b+1}`));
-	
-	// console.log(cfg.dTree(0).toString(x=>+x+1, x=>+x+1));
-	// console.log(cfg.dTree(0).toString(x=>q[x], x=>q[x]));
-	// console.log(cfg.djGraph(0).toString(x=>q[x], x=>q[x]));
-	// console.log(chalk.green(cfg.djGraph(0).jEdges.toString(ts)));
-	// console.log(cfg.bfs().map(n => ts(n.id)));
-	// console.log("\x1b[32m");
-	// console.log(cfg.djGraph(0).jEdges);
-	
+function test254Gap() {
 	const dj254gap = new Graph(24);
 	const pairs254gapLtR = "01 02 23 34 35 3-23 38 j45 56 57 j23-5 j23-8 j67 j75 j78 89 8-10 8-14 j9-10 14-15 14-16 j15-16 10-11 11-12 12-13 j13-1 16-22 j22-10 16-17 17-21 j21-22 17-18 18-19 18-20 j19-20 j20-18 j20-21".split(" ");
 	const pairs254gapSorted = "01 02 23 34 35 38 3-23 j45 56 57 j23-5 j23-8 j67 j75 j78 89 8-10 8-14 j9-10 14-15 14-16 j15-16 10-11 11-12 12-13 j13-1 16-17 j22-10 16-22 17-18 j21-22 17-21 18-19 18-20 j19-20 j20-18 j20-21".split(" ");
@@ -1161,17 +1084,18 @@ if (require.main === module) {
 	console.log(chalk.dim("\nResults:"));
 	console.log(_.keys(ms).filter(k => ms[k].length).map(k => `${chalk.green(k.padStart(3, " "))}: ${[...ms[k]].sort().map(x => chalk.yellow(x)).join(", ")}`).join("\n"));
 	// console.log(cfg.mergeSets());
-	
+}
 
+function testMisc1() {
+	// cfg = new Graph(8).arcString("AB BC BD CE DE EF FG GF GH");
+	const cfg = new Graph(13);
+	const q = "RABCDEFGHIJKL".split("");
+	for (const pair of "RA RB RC AB AD BA BD BE BR CF CG DL EH FI GI GJ HE HK IK JI KI KR LH".split(" ")) {
+		cfg.arc(q.indexOf(pair[0]), q.indexOf(pair[1]));
+	}
 
-	// console.log(compiler.computeLivenessSet(compiler.functions, compiler.allBlocks));
-
-	// for (const fn in compiler.functions) {
-		// console.log(chalk.underline("\n\n\nLive range for " + fn) + ":\n");
-		// compiler.computeLiveRanges(compiler.functions[fn]);
-	// }
-
-	// jsome(compiler.ast);
+	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
+	// console.log(cfg.dominance(5).map((x, i) => i+1 + " => " + (Number(x)==x?Number(x)+1:x)));
 }
 
 /*
