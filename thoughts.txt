@@ -24,3 +24,8 @@
 ;	Probably the best of all the .ll files, honestly. Phi functions seem pretty rare!
 ;	There are only a couple occurrences among all the .ll files I have here.
 ---------------------
+[2019/04/09 03:09:41] %llvm, %ll2w, %liveness
+;	I just realized that the arguments to a function are variables that have no instruction defining them.
+;	This seems to make computing their liveness more difficult, because the algorithms need to know the definitions
+;	of the variables. I'm going to try implicitly considering their definitions to occur in the function's first block.
+---------------------
