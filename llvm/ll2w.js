@@ -595,8 +595,6 @@ class LL2W {
 			}
 		}
 
-		// Perform a second pass to coalesce 
-
 		return null;
 	}
 
@@ -898,7 +896,7 @@ let debug = () => {};
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
-		alias: {d: "debug"},
+		alias: {d: "debug", c: "cfg"},
 		boolean: ["debug"],
 		default: {debug: false}
 	}), infile = options._[0];
@@ -927,8 +925,6 @@ if (require.main === module) {
 		process.exit(1);
 	}
 
-	console.log();
-
 	compiler.extractInformation();
 	compiler.extractAttributes();
 	compiler.extractStructs();
@@ -938,7 +934,19 @@ if (require.main === module) {
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
 	LL2W.connectBlocks(functions, allBlocks, declarations);
 
-	testInterference(functions, allBlocks, declarations);
+	if (options.cfg) {
+		if (!(options.cfg in functions)) {
+			console.error(`Can't print CFG: couldn't find function ${chalk.bold(options.cfg)}.`);
+			process.exit(1);
+		}
+
+		return LL2W.computeCFG(functions[options.cfg], declarations).display();
+	}
+
+	console.log();
+
+	// testInterference(functions, allBlocks, declarations);
+	testLiveness(functions.liveness, declarations);
 }
 
 function testInterference(functions, allBlocks, declarations) {
@@ -952,8 +960,7 @@ function testInterference(functions, allBlocks, declarations) {
 	console.log(LL2W.computeInterference(fn, cfg, liveness));
 }
 
-function testLiveness(functions, declarations) {
-	const fn = functions.liveness;
+function testLiveness(fn, declarations) {
 	// console.log(Object.keys(functions).map(key => [key, functions[key].length]));
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
