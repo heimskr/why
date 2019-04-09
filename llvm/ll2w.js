@@ -236,7 +236,7 @@ class LL2W {
 
 	/**
 	 * Finds and extracts global constant defintions from the AST.
-	 * @return {Object} The generated constant definitions.
+	 * @return {Object} The extracted constant definitions.
 	 */
 	extractGlobalConstants() {
 		/**
@@ -249,6 +249,10 @@ class LL2W {
 		return this.globalConstants;
 	}
 
+	/**
+	 * Finds and extracts function declarations from the AST.
+	 * @return {Object<string, IRDeclaration>} The extracted function declarations.
+	 */
 	extractDeclarations() {
 		/**
 		 * A map of function declarations.
@@ -269,6 +273,10 @@ class LL2W {
 		return this.declarations;
 	}
 
+	/**
+	 * Finds and extracts function declarations from the AST.
+	 * @return {Object<string, IRFunction>} The extracted function declarations.
+	 */
 	extractFunctions() {
 		const functions = {};
 		const allBlocks = {};
@@ -363,8 +371,6 @@ class LL2W {
 				}
 			} else if (last[1] == "unreachable") {
 				meta.unreachable = true;
-			} else {
-				// console.log(last[1]);
 			}
 
 			for (const instruction of instructions) {
@@ -410,9 +416,6 @@ class LL2W {
 				}
 			}
 		}
-
-		// Object.keys(basicBlocks).forEach(k => console.log(chalk.bold(k), "in:", basicBlocks[k][0].in, "out:", basicBlocks[k][0].out));
-		// console.log(functions);
 	}
 
 	static computeOperands(instruction) { // -> {read: var[], written: var[], assigner: ?var }
