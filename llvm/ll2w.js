@@ -313,7 +313,7 @@ class LL2W {
 			
 			let allVars = [];
 			const fn = functions[meta.name] = basicBlocks.map(block => {
-				const blockVars = LL2W.extractBasicBlockVariables(block);
+				const blockVars = LL2W.computeBasicBlockVariables(block);
 				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
 				return blockVars;
 			});
@@ -565,6 +565,20 @@ class LL2W {
 	}
 
 	/**
+	 * Computes the interference graph for a function.
+	 * @param {IRFunction} fn       An LLVM IR function as formed by {@link extractFunctions}.
+	 * @param {Graph}      cfg      A control flow graph as computed by {@link computeCFG}.
+	 * @param {Object}     liveness A liveness map as computed by {@link computeLivenessForFunction}.
+	 * @return {Graph} A graph with an extra `indexMap` property that maps instruction indices to the
+	 *                 corresponding {@link Node} objects.
+	 */
+	static computeInterference(fn, cfg, liveness) {
+		console.log({fn});
+
+		return null;
+	}
+
+	/**
 	 * Computes an object that indicates in which blocks of a function a given variable used in that function
 	 * is live-in/live-out.
 	 * @param {IRFunction} fn An LLVM IR function as formed by {@link extractFunctions}.
@@ -655,7 +669,7 @@ class LL2W {
 		if (writers.length == 1) {
 			definition = writers[0][0];
 		} else {
-			throw new Error(`Variable ${varName} has ${writers.length} definitions; expected 1.`);
+			throw new Error(`Variable %${varName} has ${writers.length} definitions; expected 1.`);
 		}
 
 		// for t ∈ uses(a)
@@ -851,6 +865,10 @@ function testInterference(functions, allBlocks, declarations) {
 	const fn = functions.wvm_disassemble_r_alt_op;
 	
 	const cfg = LL2W.computeCFG(fn, declarations);
+	const liveness = LL2W.computeLivenessForFunction(fn);
+
+	console.log("Interference:");
+	console.log(LL2W.computeInterference(fn, cfg, liveness));
 }
 
 function testLiveness(functions, declarations) {
