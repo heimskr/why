@@ -579,16 +579,23 @@ class LL2W {
 		// An array that contains all the IRInstructions in the function.
 		const instructions = _.flatten(fn.map(block => block[2].map(instr => { instr.block = block; return instr; })));
 		
-		// Create an array of all phi instructions. It contains tuples of the instruction index and the phi pairs
-		// (in the form [variable name, source block name]).
+		// Create an empty interference graph, then add all the instructions to the graph while making a note of all
+		// phi instructions in an array. The array contains tuples of the instruction node and the phi pairs, which are
+		// in the form [variable name, source block name].
+		// The graph node data is in the form [instruction index, instruction type, instruction metadata].
+		const graph = new Graph(instructions.length);
 		const phis = [];
 		for (let i = instructions.length - 1; 0 <= i; --i) {
 			const [, type, meta] = instructions[i];
-			if (type != "phi") continue;
-			phis.unshift([i, meta.pairs.map(pair => pair.map(([, varName]) => varName))]);
+			
+			const node = graph.add([i, type, meta]);
+
+			if (type == "phi") {
+				phis.unshift([node, meta.pairs.map(pair => pair.map(([, varName]) => varName))]);
+			}
 		}
 
-		jsome(phis);
+		// Perform a second pass to coalesce 
 
 		return null;
 	}
