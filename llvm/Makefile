@@ -4,6 +4,7 @@ COMPILE		= nearleyc
 TEST		= tree.js
 CHECK		= \x1b[32m\xe2\x9c\x94\x1b[0m
 LLDIR		= ../wvm/c/ll
+LL2W		= tsnode ll2w.ts
 
 all: $(COMPILED) _
 
@@ -19,25 +20,25 @@ ttest: $(TEST) $(COMPILED) test.ll
 	node $(TEST) test.ll
 
 rtest: $(TEST) $(COMPILED) regalloc.ll
-	node ll2w.js -d regalloc.ll
+	$(LL2W) -d regalloc.ll
 
 ntest: $(TEST) $(COMPILED) $(LLDIR)/net.ll
-	node ll2w.js -d $(LLDIR)/net.ll
+	$(LL2W) -d $(LLDIR)/net.ll
 
 wtest: $(TEST) $(COMPILED) $(LLDIR)/wvm.ll
-	node ll2w.js -d $(LLDIR)/wvm.ll
+	$(LL2W) -d $(LLDIR)/wvm.ll
 
 tmtest: $(TEST) $(COMPILED) $(LLDIR)/timer.ll
-	node ll2w.js -d $(LLDIR)/timer.ll
+	$(LL2W) -d $(LLDIR)/timer.ll
 
 mtest: $(TEST) $(COMPILED) $(LLDIR)/main.ll
-	node ll2w.js -d $(LLDIR)/main.ll
+	$(LL2W) -d $(LLDIR)/main.ll
 
 itest: $(TEST) $(COMPILED) io.ll
-	node ll2w.js -d io.ll
+	$(LL2W) -d io.ll
 
 otest: $(TEST) $(COMPILED) optimized.ll
-	node ll2w.js -d optimized.ll
+	$(LL2W) -d optimized.ll
 
 itree: $(TEST) $(COMPILED) io.ll
 	node $(TEST) io.ll
@@ -52,10 +53,10 @@ ptest: $(TEST) $(COMPILED) printf.ll
 	node $(TEST) printf.ll
 
 ltest: $(TEST) $(COMPILED) liveness.ll
-	node ll2w.js liveness.ll
+	$(LL2W) liveness.ll
 
 dtest: $(TEST) $(COMPILED) $(LLDIR)/disassemble.ll
-	node ll2w.js $(LLDIR)/disassemble.ll
+	$(LL2W) $(LLDIR)/disassemble.ll
 
 %.ll: test/%.c
 	clang -S -emit-llvm $<

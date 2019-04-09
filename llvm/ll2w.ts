@@ -1,22 +1,38 @@
 #!/usr/bin/env node
-let minimist = require("minimist"),
-	fs = require("fs"),
-	chalk = require("chalk"),
-	getline = require("get-line-from-pos"),
-	nearley = require("nearley"),
-	Graph = require("../graph.js"),
-	_ = require("lodash"),
-	util = require("util"),
-	exec = util.promisify(require("child_process").exec),
-	rimraf = require("rimraf"),
-	shell_escape = require("shell-escape"),
-	path = require("path"),
-	jsome = require("jsome");
+import minimist = require("minimist");
+import fs = require("fs");
+import chalk = require("chalk");
+import getline = require("get-line-from-pos");
+import nearley = require("nearley");
+import Graph = require("../graph.js");
+import _ = require("lodash");
+import util = require("util");
+import child_process = require("child_process");
+import rimraf = require("rimraf");
+import shell_escape = require("shell-escape");
+import path = require("path");
+import jsome = require("jsome");
+const exec = util.promisify(child_process.exec);
+
+type IRFunction = {};
+type AnyNode = Node | string | number;
+type Instruction = ["instruction", string, Object];
+type BasicBlock = [
+	string, // arity
+	{preds: AnyNode[], in: AnyNode[], out: AnyNode[]}, // edges
+	Instruction[] // instructions
+];
+type FunctionExtractions = {
+	functions: Object;
+	allBlocks: {[key: string]: BasicBlock};
+	blockOrder: Object[];
+	functionOrder: Object[];
+};
 
 const {displayIOError, mixins, isNumeric} = require("../util.js");
 mixins(_);
 
-const warn = (...a) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]"), ...a);
+const warn = (...a: any[]) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]"), ...a);
 
 const {BUILTINS} = require("./constants.js");
 
@@ -32,6 +48,19 @@ const {BUILTINS} = require("./constants.js");
  * compilation process and various fields representing the internal state of the compiler.
  */
 class LL2W {
+	options: {debug: boolean, cfg: boolean, dev: boolean};
+	grammar: nearley.CompiledRules;
+	parser: nearley.Parser;
+	source: string;
+	ast: Object[][];
+	sourceFilename: string;
+	targets: {[key: string]: string};
+	attributes: {[key: string]: Object};
+	structs: {[key: string]: Object};
+	metadata: {[key: string]: Object};
+	globalConstants: {[key: string]: Object};
+
+
 	/**
 	 * Creates a new compiler instance.
 	 * @param {Object} options - An object containing various configuration options.
@@ -69,7 +98,8 @@ class LL2W {
 		 * The LLVM IR parser.
 		 * @type {nearley.Parser}
 		 */
-		this.parser = new nearley.Parser(this.grammar.ParserRules, this.grammar.ParserStart);
+		// this.parser = new nearley.Parser(this.grammar.ParserRules, this.grammar.ParserStart);
+		this.parser = new nearley.Parser(nearley.Grammar.fromCompiled(this.grammar));
 	}
 
 	/**
@@ -277,7 +307,7 @@ class LL2W {
 	 * Finds and extracts function declarations from the AST.
 	 * @return {Object<string, IRFunction>} The extracted function declarations.
 	 */
-	extractFunctions() {
+	extractFunctions(): FunctionExtractions {
 		const functions = {};
 		const allBlocks = {};
 		const blockOrder = [];
@@ -289,12 +319,12 @@ class LL2W {
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
 			const basicBlocks = [];
 
-			let exitBlock = null;
+			let exitBlock: string = null;
 
 			functionOrder.push(meta.name);
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
-			let currentBasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
+			let currentBasicBlock: BasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
@@ -940,20 +970,23 @@ if (require.main === module) {
 			process.exit(1);
 		}
 
-		return LL2W.computeCFG(functions[options.cfg], declarations).display();
+		LL2W.computeCFG(functions[options.cfg]).display();
+		process.exit(0);
 	}
 
 	console.log();
 
 	// testInterference(functions, allBlocks, declarations);
-	testLiveness(functions.liveness, declarations);
+	if ("liveness" in functions) {
+		testLiveness(functions.liveness, declarations);
+	}
 }
 
 function testInterference(functions, allBlocks, declarations) {
 	// Expecting disassemble.ll (dtest).
 	const fn = functions.wvm_disassemble_r_alt_op;
 	
-	const cfg = LL2W.computeCFG(fn, declarations);
+	const cfg = LL2W.computeCFG(fn);
 	const liveness = LL2W.computeLivenessForFunction(fn);
 
 	console.log("Interference:");
@@ -964,7 +997,7 @@ function testLiveness(fn, declarations) {
 	// console.log(Object.keys(functions).map(key => [key, functions[key].length]));
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
-	const cfg = LL2W.computeCFG(fn, declarations);
+	const cfg = LL2W.computeCFG(fn);
 	const dj = cfg.djGraph(cfg.enter);
 	const ms = Graph.mergeSets(dj, cfg.enter, cfg.exit);
 	const blockID = "8";
@@ -978,7 +1011,8 @@ function testLiveness(fn, declarations) {
 }
 
 function testReversePost() {
-	const cfg = new Graph(6).arcString("AB BC BD BF CE DE EB");
+	let cfg;
+	// cfg = new Graph(6).arcString("AB BC BD BF CE DE EB");
 	
 	cfg = new Graph(7);
 	cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
@@ -1012,7 +1046,7 @@ function test254Gap() {
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();
-	ms = Graph.mergeSets(dj254gap, 0, 1);
+	const ms = Graph.mergeSets(dj254gap, 0, 1);
 	console.log(chalk.dim("\nResults:"));
 	console.log(_.keys(ms).filter(k => ms[k].length).map(k => `${chalk.green(k.padStart(3, " "))}: ${[...ms[k]].sort().map(x => chalk.yellow(x)).join(", ")}`).join("\n"));
 	// console.log(cfg.mergeSets());
