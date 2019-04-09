@@ -551,43 +551,6 @@ class LL2W {
 	 *                  the block and whether the variable is live-out in the block.
 	 */
 	static computeLivenessForFunction(fn) {
-
-		/*
-
-		// Maps variable names to the instruction where they're defined.
-		// assigners[var][2].block indicates the name of the block.
-		const assigners = fn.reduce((a, b) => ({
-			...a,
-			..._.mapValues(b[1].assigners, x => {
-				x[2].block = b[0];
-				return x;
-			})
-		}), {});
-
-		// A list of pairs of block IDs and the name of a variable that is read during some instruction in the block.
-		// For example, if there's an instruction in block 5 that reads %y, one of the pairs will be ["5", "y"].
-		const reads  = fn.reduce((a, b) => [...a, ...b[1].read.map(v    => [b[0], v])], []);
-		const writes = fn.reduce((a, b) => [...a, ...b[1].written.map(v => [b[0], v])], []);
-
-		// A combination of the `reads` and `writes` variables that maps variable names
-		// to all blocks in which the variables are read or written.
-		const accesses = _.fromPairs(vars.map(v => [
-			v,
-			_.uniq([
-				... reads.filter(([rb, rv]) => v == rv).map(([rb, rv]) => rb),
-				...writes.filter(([wb, wv]) => v == wv).map(([wb, wv]) => wb),
-			])
-		]));
-		
-		// live*: A map of variable names to lists of blocks in which the variable is live.
-		// processed*: A map of blocks to maps of variables to whether the variable has been processed for the block.
-		const emptyLive      = () => _.fromPairs(vars.map(v => [v, []]));
-		const emptyProcessed = () => _.fromPairs(blockNames.map(b => [b, _.fromPairs(vars.map(v => [v, false]))]));
-		const liveIn  = emptyLive(), processedIn  = emptyProcessed(),
-		liveOut = emptyLive(), processedOut = emptyProcessed();
-		
-		//*/
-
 		// An array of all variable names used in the function.
 		const {vars} = fn;
 		
@@ -1087,7 +1050,8 @@ if (require.main === module) {
 	const block = fn.filter(([l]) => l == blockID)[0];
 	// console.log(`isLiveOut(${blockID}, ${varName}):`, LL2W.isLiveOutUsingMergeSet(fn, cfg, block, varName));
 	// console.log("liveness set:", compiler.computeLivenessSet(functions, allBlocks));
-	console.log("liveness set:", LL2W.computeLivenessForFunction(fn));
+	console.log("liveness sets:");
+	console.log(LL2W.computeLivenessForFunction(fn));
 	return;
 
 	// console.log(cfg.toString((i, n) => n.data.label, o => cfg[o].data.label));
