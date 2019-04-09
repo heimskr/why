@@ -576,7 +576,19 @@ class LL2W {
 	 *                 corresponding {@link Node} objects.
 	 */
 	static computeInterference(fn, cfg, liveness) {
-		console.log({fn});
+		// An array that contains all the IRInstructions in the function.
+		const instructions = _.flatten(fn.map(block => block[2].map(instr => { instr.block = block; return instr; })));
+		
+		// Create an array of all phi instructions. It contains tuples of the instruction index and the phi pairs
+		// (in the form [variable name, source block name]).
+		const phis = [];
+		for (let i = instructions.length - 1; 0 <= i; --i) {
+			const [, type, meta] = instructions[i];
+			if (type != "phi") continue;
+			phis.unshift([i, meta.pairs.map(pair => pair.map(([, varName]) => varName))]);
+		}
+
+		jsome(phis);
 
 		return null;
 	}
