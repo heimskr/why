@@ -1,8 +1,9 @@
-[2019/04/08 01:37:22] #llvm, #ll2w, #regalloc, #liveness
-	It *seems* I've gotten liveness calculation working. (The papers I got the algorithms from didn't really have
-	many examples, so I'm not entirely sure whether my implementation is correct.) Now I need to do register
-	allocation.
-	In l6.pdf:11, I think "multiple reaching definitions" refers to phi instructions. Say you have this code:
+[2019/04/08 01:37:22] %llvm, %ll2w, %regalloc, %liveness
+;	It *seems* I've gotten liveness calculation working. (The papers I got the algorithms from didn't really have
+;	many examples, so I'm not entirely sure whether my implementation is correct.) Now I need to do register
+;	allocation.
+;	In l6.pdf:11, I think "multiple reaching definitions" refers to phi instructions. Say you have this code:
+
 		; <label>:39:    ; preds = %33
 		%40 = load ...
 		br label %43
@@ -12,8 +13,14 @@
 		br label %43
 
 		; <label>:43:    ; preds = %41, %39
-		%44 = phi i8* [ %40, %39 ], [ %42, %41 ]
-	I think this means that %40, %42 and %44 would all be merged into the same equivalence class. The way to deal
-	with phi functions is by simply making sure the source variables use the same register, and putting them into
-	one equivalence class would accomplish this.
+		%44 = phi i8* [%40, %39], [%42, %41]
+
+;	I think this means that %40, %42 and %44 would all be merged into the same equivalence class. The way to deal
+;	with phi functions is by simply making sure the source variables use the same register, and putting them into
+;	one equivalence class would accomplish this.
+---------------------
+[2019/04/08 01:45:37] %llvm, %ll2w, %regalloc
+;	disassemble.ll has two (very similar) examples of phi instructions (I used one of them in the previous entry).
+;	Probably the best of all the .ll files, honestly. Phi functions seem pretty rare!
+;	There are only a couple occurrences among all the .ll files I have here.
 ---------------------
