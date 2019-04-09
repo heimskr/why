@@ -161,6 +161,7 @@ class LL2W {
 
 	/**
 	 * Finds and extracts `attributes` entries from the AST.
+	 * @return {Object} The extracted `attributes` data.
 	 */
 	extractAttributes() {
 		/**
@@ -170,10 +171,12 @@ class LL2W {
 		this.attributes = {};
 
 		this.iterateTree("attributes", (name, attrs) => this.attributes[name] = attrs);
+		return this.attributes;
 	}
 
 	/**
 	 * Finds and extracts `struct` entries from the AST.
+	 * @return {Object} The extracted `struct` data.
 	 */
 	extractStructs() {
 		/**
@@ -183,10 +186,12 @@ class LL2W {
 		this.structs = {};
 
 		this.iterateTree("struct", (name, types) => this.structs[name] = types);
+		return this.structs;
 	}
 
 	/**
 	 * Finds and extracts `metadata` entries from the AST.
+	 * @return {Object<string, object>} The extracted metadata.
 	 */
 	extractMetadata() {
 		/**
@@ -225,30 +230,43 @@ class LL2W {
 				items: _.uniqWith(_.flatten(items.map(i => this.metadata[i].items)), _.isEqual)
 			};
 		});
+
+		return this.metadata;
 	}
 
 	/**
 	 * Finds and extracts global constant defintions from the AST.
+	 * @return {Object} The generated constant definitions.
 	 */
 	extractGlobalConstants() {
-		const constants = {};
-		this.iterateTree("global constant", item => constants[item.name] = _.omit(item, "name"));
-		return constants;
+		/**
+		 * A map of global constants.
+		 * @type {Object<string, Object>}
+		 */
+		this.globalConstants = {};
+
+		this.iterateTree("global constant", item => this.globalConstants[item.name] = _.omit(item, "name"));
+		return this.globalConstants;
 	}
 
 	extractDeclarations() {
-		const decs = {};
+		/**
+		 * A map of function declarations.
+		 * @type {Object<string, Object>}
+		 */
+		this.declarations = {};
+		
 		this.iterateTree("declaration", dec => {
 			const [, meta] = dec;
 			const {name, type, types, arity, unnamedAddr} = meta;
-			if (name in decs) {
+			if (name in this.declarations) {
 				warn("Duplicate declaration for", chalk.bold(name) + ".");
 			}
 
-			decs[name] = {type, types, arity, isLocalUnnamed: unnamedAddr == "local_unnamed_addr"};
+			this.declarations[name] = {type, types, arity, isLocalUnnamed: unnamedAddr == "local_unnamed_addr"};
 		});
 
-		return decs;
+		return this.declarations;
 	}
 
 	extractFunctions() {
@@ -295,7 +313,7 @@ class LL2W {
 			
 			let allVars = [];
 			const fn = functions[meta.name] = basicBlocks.map(block => {
-				const blockVars = this.extractBasicBlockVariables(block);
+				const blockVars = LL2W.extractBasicBlockVariables(block);
 				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
 				return blockVars;
 			});
@@ -309,7 +327,7 @@ class LL2W {
 		return {functions, allBlocks, blockOrder, functionOrder};
 	}
 
-	connectBlocks(functions, basicBlocks, declarations={}) {
+	static connectBlocks(functions, basicBlocks, declarations={}) {
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
 			const [funcName, name] = fullName.split(":");
 			const [meta, instructions] = block;
@@ -462,17 +480,15 @@ class LL2W {
 		return {read, written, assigner};
 	}
 
-	extractBasicBlockVariables(basicBlock) {
+	static extractBasicBlockVariables(basicBlock) {
 		let read = [], written = [], assigners = {};
 
-		const add = instruction => {
+		basicBlock[2].forEach(instruction => {
 			const result = LL2W.extractOperands(instruction);
 			read = read.concat(result.read);
 			written = written.concat(result.written);
 			if (result.assigner) assigners[result.assigner] = instruction;
-		};
-
-		basicBlock[2].forEach(add);
+		});
 		
 		basicBlock[1].read = _.uniq(read);
 		basicBlock[1].written = _.uniq(written);
@@ -823,9 +839,9 @@ if (require.main === module) {
 	compiler.extractStructs();
 	compiler.extractMetadata();
 	const declarations = compiler.extractDeclarations();
-	compiler.globalConstants = compiler.extractGlobalConstants();
+	compiler.extractGlobalConstants();
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
-	compiler.connectBlocks(functions, allBlocks, declarations);
+	LL2W.connectBlocks(functions, allBlocks, declarations);
 
 	testInterference(functions, allBlocks, declarations);
 }
@@ -833,7 +849,8 @@ if (require.main === module) {
 function testInterference(functions, allBlocks, declarations) {
 	// Expecting disassemble.ll (dtest).
 	const fn = functions.wvm_disassemble_r_alt_op;
-
+	
+	const cfg = LL2W.computeCFG(fn, declarations);
 }
 
 function testLiveness(functions, declarations) {
