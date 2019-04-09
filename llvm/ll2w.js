@@ -505,6 +505,11 @@ class LL2W {
 		return true;
 	}
 
+	/**
+	 * Produces the control flow graph (CFG) for a given function.
+	 * @param {IRFunction} fn A function AST.
+	 * @return {Graph} A CFG with additional `enter`, `exit` and `unreachable` properties.
+	 */
 	static computeCFG(fn) {
 		const g = new Graph(fn.length);
 		const name = fn.meta.name;
@@ -572,208 +577,6 @@ class LL2W {
 		}
 
 		return out;
-	}
-
-	computeLivenessSet(fns, blocks) {
-		// Based on Algorithm 9.9 ("Compute liveness sets per variable using def-use chains")
-		// and Algorithm 9.10 ("Optimized path exploration using a stack-like data structure")
-		// from http://ssabook.gforge.inria.fr/latest/book-full.pdf
-		
-		console.log();
-		
-		const liveIn  = _.objectify(_.keys(blocks), () => []);
-		const liveOut = _.objectify(_.keys(blocks), () => []);
-
-		// For each pair in each phi instruction in a set of instructions, take the first element of the pair
-		// (the source variable) and take its second element (the name of the variable).
-		// This results in an array containing every variable in the function that's used in the block's phi functions.
-		const phiUses = instructions =>
-			_.uniq(_.flatten(instructions.filter(([, instructionName]) => instructionName == "phi")
-										 .map(([,, {pairs}]) => pairs.map(pair => pair[0][1]))));
-
-		const _b = chalk.bold;
-
-		const _same = LL2W.fromSameFunction;
-		const s = 0;
-
-		const upAndMark = (blocks, name, fullName, v) => {
-			/* Algorithm 9.10: Optimized path exploration using a stack-like data structure.
-				Function Up_and_Mark_Stack(B, v) {
-					// Killed in the block, stop
-					if def(v) ∈ B (φ excluded)
-						return
-
-					// Propagation already done, stop
-					if top(LiveIn(B)) = v
-						return
-					
-					push(LiveIn(B), v)
-					
-					// Do not propagate φ definitions
-					if v ∈ PhiDefs(B)
-						return
-
-					// Propagate backwards
-					foreach P ∈ CFG_preds(B) {
-						if top(LiveOut(P)) ≠ v
-							push(LiveOut(P), v)
-						
-						Up_and_Mark_Stack(P, v)
-					}
-				}
-			*/
-
-			// console.log(name, blocks[name]);
-
-			const def = blocks[name].assigners[v];
-
-			// Killed in the block.
-			if (def && def[1] != "phi") {
-				s||console.log(chalk.red(`${_b(v)} killed in ${_b(fullName)}.`));
-				return;
-			}
-
-			// Propagation already done.
-			if (_.last(liveIn[fullName]) == v) {
-				s||console.log(chalk.yellow(`Propagation already done for ${_b(v)} in ${_b(fullName)}.`));
-				return;
-			}
-
-			s||console.log(`liveIn[${_b(fullName)}].push(${_b(v)})`);
-			liveIn[fullName].push(v);
-
-			// Do not propagate φ definitions.
-			if (def && def[1] == "phi") {
-				s||console.log(chalk.cyan(`Not propagating φ definition for ${_b(v)} in ${_b(fullName)}.`));
-				return;
-			}
-
-			// console.log({in:blocks[name].in});
-
-			// Propagate backwards.
-			for (const p of blocks[name].in) {
-				if (!_same(fullName, p)) continue;
-
-				if (_.last(liveOut[p]) != v) {
-					s||console.log(chalk.green(`Yep, top(liveOut[${_b(p)}]) ≠ ${_b(v)}`) + ` (${_b(_.last(liveOut[p]))})`);
-					liveOut[p].push(v);
-				} else s||console.log(chalk.magenta(`Nope, top(liveOut[${_b(p)}]) = ${_b(v)}`));
-
-				upAndMark(blocks, p.substr(1 + p.indexOf(":")), p, v);
-			}
-		};
-
-		/* Algorithm 9.9: Compute liveness sets per variable using def-use chains
-			Function Compute_LiveSets_SSA_ByVar(CFG) {
-				foreach variable v {
-					foreach block B where v is used {
-						// Used in the φ of a successor block
-						if v ∈ PhiUses(B)
-							LiveOut(B) = LiveOut(B) ∪ {v}
-
-						Up_and_Mark(B, v)
-					}
-				}
-			}
-		*/
-
-		for (const [fname, fn] of Object.entries(fns)) {
-			for (const v of LL2W.getAllVariables(fn)) {
-				// Loop through each block where v is used.
-				fn.filter(b => b[1].read.includes(v)).map(block => {
-					const b = `${fname}:${block[0]}`;
-					const blocks = _.fromPairs(fn.map(([id, meta]) => [id, meta]));
-
-					if (phiUses(block[2]).includes(v)) {
-						s||console.log(chalk.dim(`${_b(v)} ∈ PhiUses(${_b(b)})`));
-						_.push(liveOut[b], v);
-					}
-	
-					upAndMark(blocks, block[0], b, v);
-				});
-			}
-		}
-
-		return {liveIn, liveOut};
-
-		// for (const v of LL2W.getAllVariables(fns, blocks)) {
-		// 	// Loop through each block where v is used.
-		// 	_.keys(blocks).filter(b => blocks[b][0].read.includes(v)).map(b => {
-		// 		if (phiUses(b).includes(v)) {
-		// 			s||console.log(chalk.dim(`${_b(v)} ∈ PhiUses(${_b(b)})`));
-		// 			_.push(liveOut[b], v);
-		// 		}
-
-		// 		upAndMark(b, v);
-		// 	});
-		// }
-
-		// s||console.log();
-		// return {liveIn, liveOut};
-	}
-
-	computeLiveRanges_old(fn) {
-		// Is this actually how it's done? In some examples, it's done backwards.
-		// I'd imagine live variable analysis is less complicated in SSA because variables are assigned once,
-		// which should mean that each variable's live range shouldn't be made of multiple separate components.
-
-		// The arguments of the function are stored in %0, %1, ...
-		const numArgs = fn.meta.arity;
-
-		const instructions = fn.reduce((a, b) => a.concat(b[2]), []);
-		const assigners = fn.reduce((a, b) => ({...a, ...b[1].assigners}), {});
-
-		let allVars = _.range(0, numArgs);
-		let i = 0;
-		for (const instruction of instructions) {
-			const {read, written, assigner} = LL2W.extractOperands(instruction);
-			allVars = [...allVars, ...read, ...written];
-			process.stdout.write((i+++":").padEnd(5, " "));
-			console.log(chalk.bold((instruction[1] + ":").padEnd("br_unconditional:  ".length, " ")), (read.join(", ") || chalk.dim("  .   ")).padEnd(6, " "), chalk.red(" → "), (written.join(", ") || chalk.dim(". ")).padEnd(2, " "), chalk.red(" /"), chalk.cyan.dim(assigner));
-		}
-
-		console.log();
-		allVars = _.uniq(allVars);
-		const ranges = _.fromPairs(allVars.map(v => [v, [v < numArgs? 0 : null, null]]));
-		const _warned = [];
-
-		for (const v of allVars) {
-			let range = ranges[v]; // [position first written, position last read]
-			instructions.forEach((instruction, i) => {
-				const {read, written} = LL2W.extractOperands(instruction);
-
-				if (written.includes(v)) {
-					if (range[0] == null) {
-						// If we haven't already set the starting position and this instruction writes to the variable,
-						// set this instruction's position as the starting point of the variable's live range.
-						range[0] = i;
-					} else if (!_warned.includes(v)) {
-						warn(`Variable ${chalk.bold(`%${v}`)} is assigned multiple times.\n`);
-						_warned.push(v);
-					}
-				}
-
-				if (read.includes(v)) {
-					// If this instruction reads from the variable, set it as the end position.
-					// It doesn't matter if the end position has already been set.
-					range[1] = i;
-				}
-			});
-
-			if (range[0] == null && range[1] != null && typeof v == "number" && numArgs < v) {
-				warn(`Variable ${chalk.bold(`%${v}`)} is read but never assigned in ${chalk.bold(fn.meta.name)}.`);
-			} else if (range[0] != null && range[1] == null) {
-				// Sometimes, the return value of a call is stored in a variable that isn't ever read.
-				range[1] = range[0];
-				if (numArgs <= range[0] && !(assigners[v] instanceof Array && assigners[v][1] == "call")) {
-					// Don't warn if the function arguments aren't read. The compiler has already complained about it.
-					warn(`Variable ${chalk.bold(`%${v}`)} is assigned but never read in ${chalk.bold(fn.meta.name)}.`);
-				}
-			}
-		}
-
-		console.log();
-		console.log(ranges);
 	}
 
 	static getReaders(fn, varName) {
@@ -1024,7 +827,13 @@ if (require.main === module) {
 	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
 	compiler.connectBlocks(functions, allBlocks, declarations);
 
-	const ts = x => typeof x == "number"? x+1 : x;
+	testInterference(functions, allBlocks, declarations);
+}
+
+function testInterference(functions, allBlocks, declarations) {
+	// Expecting disassemble.ll (dtest).
+	const fn = functions.wvm_disassemble_r_alt_op;
+
 }
 
 function testLiveness(functions, declarations) {
