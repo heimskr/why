@@ -137,7 +137,7 @@ class Graph {
 	 */
 	getNode(n) {
 		if (n instanceof Node) {
-			return n.graph == this? n : getNode(node.id);
+			return n.graph == this? n : this.getNode(n.id);
 		}
 
 		if (n == undefined) {
