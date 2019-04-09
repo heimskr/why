@@ -29,3 +29,8 @@
 ;	This seems to make computing their liveness more difficult, because the algorithms need to know the definitions
 ;	of the variables. I'm going to try implicitly considering their definitions to occur in the function's first block.
 ---------------------
+[2019/04/09 04:38:43] %llvm, %ll2w, %liveness
+;	Seems I need to read up more on live variable analysis and live ranges because I'm somewhat confused about what the
+;	nodes in an interference graph represent. Are they basic blocks or individual instructions? If they do represent
+;	basic blocks, why is that a sufficient level of granularity?
+---------------------
