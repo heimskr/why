@@ -1,1 +1,3 @@
 *.ll linguist-generated
+/wvm/dist/* linguist-generated
+/wvm/dist/index.html linguist-generated=false
