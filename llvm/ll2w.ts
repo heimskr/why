@@ -449,11 +449,11 @@ class LL2W {
 					currentBasicBlock = [args[0], {preds: [], in: [], out: []}, []];
 				} else {
 					exitBlock = currentBasicBlock[0];
-					currentBasicBlock[1][1].push(instruction);
+					currentBasicBlock[2].push(instruction);
 				}
 			}
 
-			if (currentBasicBlock[1][1].length) {
+			if (currentBasicBlock[2].length) {
 				basicBlocks.push(currentBasicBlock);
 			}
 
