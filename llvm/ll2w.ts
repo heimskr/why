@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 import minimist = require("minimist");
 import fs = require("fs");
 const chalk = require("chalk");

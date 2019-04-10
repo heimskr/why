@@ -1,12 +1,13 @@
-#!/usr/bin/env node
-const fs = require("fs");
+#!/usr/bin/env ts-node
+import fs = require("fs");
 
-const _ = require("lodash");
-const chalk = require("chalk");
-const {lt} = require("dominators");
+import _ = require("lodash");
+import chalk = require("chalk");
+import dominators = require("dominators");
+const {lt} = dominators;
 
-const Node = require("./node.js");
-const renderGraph = require("./rendergraph.js");
+import Node = require("./node.js");
+import renderGraph = require("./rendergraph.js");
 const {alpha, numerize, mixins} = require("./util.js");
 mixins(_);
 
