@@ -29,6 +29,7 @@
 	},
 	"dependencies": {
 		"@types/chalk": "^2.2.0",
+		"@types/lodash": "^4.14.123",
 		"@types/nearley": "^2.11.0",
 		"@types/node": "^11.13.2",
 		"babel-plugin-syntax-class-properties": "^6.13.0",
