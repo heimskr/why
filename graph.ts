@@ -2,39 +2,36 @@
 import fs = require("fs");
 
 import _ = require("lodash");
-import chalk = require("chalk");
 import dominators = require("dominators");
 const {lt} = dominators;
 
-import Node = require("./node.js");
+import {Node, NodeID, NodeOrID, getID} from "./node";
+export {Node} from "./node";
+
 import renderGraph = require("./rendergraph.js");
 const {alpha, numerize, mixins} = require("./util.js");
 mixins(_);
 
-const ts = x => typeof x == "number"? x+1 : x;
-
-/**
- * Contains various utilities.
- * 
- * @module util
- */
-
-const getID = Node.getID;
-
-/**
- * @typedef {number|string} NodeID
- */
+type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
 
 /**
  * Represents a directed graph datatype.
  */
-class Graph {
+export class Graph {
+	data: {[key: string]: any};
+	nodes: Node[];
+	title?: string;
+	length: number;
+	push: (node: Node) => void;
+	forEach: (fn: (node: Node, index?: number) => {}) => void;
+	map: (fn: (value: Node, index?: number, array?: Node[]) => any, thisArg?: any) => any[];
+
 	/**
 	 * Creates a new graph.
 	 * @param {number} n     The number of nodes in the graph.
 	 * @param {*}     [data] Any extra data to associate with the graph.
 	 */
-	constructor(n, data={}) {
+	constructor(n: number, data={}) {
 		this.data = data;
 
 		/**
@@ -72,14 +69,14 @@ class Graph {
 			// All sets for non-numberic properties are not interfered with.
 			// Sets for numeric properties are passed to this.nodes instead,
 			// unless the corresponding node doesn't exist.
-			set(target, prop, val) {
+			set(target: Graph, prop: string | number | symbol, val: any, receiver?: any) {
 				if (Number(prop) != prop) {
-					return Reflect.set(...arguments);
+					return Reflect.set(target, prop, val, receiver);
 				}
 				
 				const i = _.findIndex(target.nodes, node => node.id == prop);
 				if (i == -1) {
-					return Reflect.set(...arguments);
+					return Reflect.set(target, prop, val, receiver);
 				}
 
 				target.nodes[i] = val;
@@ -90,10 +87,10 @@ class Graph {
 
 	/**
 	 * Deletes all nodes in the graph.
-	 * @param {number|Array} n The number of new empty nodes to replace the old nodes
+	 * @param {number|NodeID[]} n The number of new empty nodes to replace the old nodes
 	 *                         or an array of IDs to make new nodes with.
 	 */
-	reset(n) {
+	reset(n: number | NodeID[]) {
 		if (n == undefined) {
 			this.nodes = [];
 		} else if (typeof n == "number") {
@@ -158,7 +155,7 @@ class Graph {
 	 * @param  {Node|NodeID} destination The destination node.
 	 * @return {boolean} Whether the connection already existed.
 	 */
-	arc(source, destination) {
+	arc(source: NodeOrID, destination: NodeOrID) {
 		return this.getNode(source).arc(destination);
 	}
 
@@ -171,19 +168,24 @@ class Graph {
 	 *                      an implicit hyphen between the two digits.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	arcString(str) {
+	arcString(str: string): Graph {
 		let pairs = str.split(/\s+/);
 		if (str.match(/\d/)) {
 			pairs.forEach(pair =>  {
 				if (pair.match(/^\d{2}$/)) {
 					this.arc(parseInt(pair[0]), parseInt(pair[1]));
 				} else {
-					this.arc(...pair.split("-").map(s => parseInt(s)));
+					const [src, dest] = pair.split("-").map(s => parseInt(s));
+					this.arc(src, dest);
 				}
 			});
 		} else {
-			pairs.forEach(s => this.arc(...s.split("").map(c => alpha.indexOf(c.toLowerCase()))));
+			pairs.forEach(s => {
+				const [src, dest] = s.split("").map(c => alpha.indexOf(c.toLowerCase()));
+				this.arc(src, dest);
+			});
 		}
+
 		return this;
 	}
 
@@ -192,7 +194,7 @@ class Graph {
 	 * @param  {...Array<Array<number, ...number>>} arcs An array of arc sets to add.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	arcs(...sets) {
+	arcs(...sets: [NodeID, ...NodeID[]][]): Graph {
 		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
 		return this;
 	}
@@ -203,7 +205,7 @@ class Graph {
 	 * @param  {Node|NodeID} destination The destination node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	removeArc(source, destination) {
+	removeArc(source: NodeOrID, destination: NodeOrID): Graph {
 		this.nodes[getID(source)].removeArc(destination);
 		return this;
 	}
@@ -259,7 +261,7 @@ class Graph {
 	 * @param  {*} [value=null] A value to fill the array with.
 	 * @return {Array} The filled array.
 	 */
-	fill(value=null) {
+	fill<T>(value: T = null): T[] {
 		return _.fill(Array(this.length), value);
 	}
 
@@ -271,7 +273,7 @@ class Graph {
 	 */
 	fillObj(value=null) {
 		const out = {};
-		this.forEach(v => out[v.id] = _.cloneDeep(value));
+		this.forEach((v: Node) => out[v.id] = _.cloneDeep(value));
 		return out;
 	}
 
@@ -314,7 +316,9 @@ class Graph {
 	 */
 	dTree(startID=0, bidirectional=false) {
 		const [lentar, renameMap, renames] = this.lengauerTarjan(startID);
-		const out = new Graph(Object.keys(lentar).map(numerize));
+		const keys = Object.keys(lentar);
+		const mapped = keys.map(numerize);
+		const out = new Graph(mapped);
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
 		Object.entries(lentar).forEach(([k, v]) => {
 			out.nodes[k].data = this.nodes[k].data;
@@ -383,7 +387,7 @@ class Graph {
 	 * @return {Array<Object<NodeID, NodeID>, Object<NodeID, NodeID>>}
 	 *         A tuple that has a map of node IDs to the IDs of their dominators and a map of old IDs to normalized IDs.
 	 */
-	lengauerTarjan(startID=0) {
+	lengauerTarjan(startID: number = 0): [NodeIDMap, NodeIDMap, NodeIDMap] {
 		const normalized = this.clone();
 		const renameMap = normalized.normalize();
 		const renames = _.mapValues(_.invert(renameMap), v => numerize(v));
@@ -819,6 +823,3 @@ class Graph {
 		return true;
 	}
 }
-
-module.exports = Graph;
-module.exports.Node = Node;
