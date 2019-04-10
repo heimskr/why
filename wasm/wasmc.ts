@@ -1,12 +1,12 @@
-#!/usr/bin/env node
-let fs = require("fs"),
-	nearley = require("nearley"),
-	chalk = require("chalk"),
-	getline = require("get-line-from-pos"),
-	minimist = require("minimist"),
-	Long = require("long"),
-	_ = require("lodash"),
-	crypto = require("crypto");
+#!/usr/bin/env ts-node
+import * as fs from "fs";
+import {Parser} from "nearley";
+const chalk = require("chalk");
+import getline from "get-line-from-pos";
+import minimist = require("minimist");
+import * as Long from "long";
+import _ from "../util";
+import {createHash} from "crypto";
 
 /**
  * `wasm` is the assembly language for Why.js. The `wasmc` utility parses it and compiles it to `wvm` bytecode.
@@ -17,18 +17,63 @@ let fs = require("fs"),
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} = require("./constants.js");
+const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS,
+       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} = require("./constants.js");
 const isLabelRef = x => x instanceof Array && x.length == 2 && x[0] == "label";
+
+export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | "g" | "st", 0]
+					 | ["register", "s" | "k" | "e" | "m" | "r" | "a" | "t", number];
+export type SymbolTable = {[key: string]: [number, Long]};
+export type Condition = "p" | "n" | "z" | "nz";
+export type Instruction = [string, ...any[]] & InstructionMeta;
+export type InstructionType = "r" | "i" | "j";
+export type InstructionMeta = {
+	opcode: number,
+	rs: number,
+	rd: number,
+	flags: number,
+	type: InstructionType,
+	conditions: Condition,
+	op?: string,
+	
+	rt?: number,
+	funct?: number,
+	
+	imm?: number,
+	
+	addr?: number,
+	link?: boolean,
+};
+export type DataPair = ["int" | "float", number] | ["string", string] | ["bytes", number] | ["var", string];
+export type ParsedInstruction = [string, string, ...any[]] & {inSubroutine?: boolean};
+export type WASMCParsed = {
+	code: ParsedInstruction[],
+	meta: {[key: string]: any},
+	data: {[key: string]: DataPair} 
+};
 
 /**
  * Represents a `wasmc` instance.
  */
-class WASMC {
+export default class WASMC {
+	options: {[key: string]: any};
+	ignoreFlags: boolean;
+	parsed: WASMCParsed;
+	offsets: {[key: string]: number};
+	meta: Long[];
+	data: Long[];
+	code: Long[];
+	symbolTable: Long[];
+	unknownSymbols: string[];
+	dataOffsets: {[key: string]: number};
+	dataVariables: {[key: string]: string};
+	assembled: Long[];
+
 	/**
 	 * Creates a new wasmc instance.
 	 * @param {Object} options - An object containing options for the compiler (from the command line, for example).
 	 */
-	constructor(options={}) {
+	constructor(options: Object = {}) {
 		/**
 		 * An object containing options for the compiler (from the command line, for example).
 		 * @type {Object.<string, *>}
@@ -42,14 +87,14 @@ class WASMC {
 		 * @name module:wasm~WASMC#ignoreFlags
 		 * @default
 		 */
-		this.ignoreFlags = "ignoreFlags" in options? options.ignoreFlags : false;
+		this.ignoreFlags = "ignoreFlags" in this.options? this.options.ignoreFlags : false;
 
 		/**
 		 * Contains the abstract syntax tree once {@link module:wasm~WASMC#parse WASMC.parse()} is called.
 		 * @type {Object}
 		 * @name module:wasm~WASMC#parsed
 	 	 */
-		this.parsed = {};
+		this.parsed = {meta: {}, data: {}, code: []};
 
 		/**
 		 * Contains a list of offsets/labels.
@@ -125,7 +170,7 @@ class WASMC {
 			process.exit(1);
 		}
 
-		const parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
+		const parser = new Parser(grammar.ParserRules, grammar.ParserStart);
 		source += "\n";
 
 		let trees;
@@ -158,8 +203,8 @@ class WASMC {
 			WASMC.die("Error: parser output isn't an object.");
 		}
 
-		if (typeof this.parsed.metadata == "undefined") {
-			this.parsed.metadata = {};
+		if (typeof this.parsed.meta == "undefined") {
+			this.parsed.meta = {};
 		}
 
 		if (typeof this.parsed.data == "undefined") {
@@ -167,7 +212,7 @@ class WASMC {
 		}
 
 		if (typeof this.parsed.code == "undefined") {
-			this.parsed.code = {};
+			this.parsed.code = [];
 		}
 	}
 
@@ -188,7 +233,7 @@ class WASMC {
 
 		const end = this.metaOffsetData.toInt() + this.dataLength * 8;
 		this.offsets[".end"] = end;
-		this.metaOffsetEnd = end;
+		this.metaOffsetEnd = Long.fromInt(end, true);
 
 		this.setDataOffsets(this.metaOffsetData.toInt());
 		this.reprocessData();
@@ -203,7 +248,6 @@ class WASMC {
 				meta: WASMC.longs2strs(this.meta),
 				data: WASMC.longs2strs(this.data),
 				code: WASMC.longs2strs(this.code),
-				out: WASMC.longs2strs(out),
 				offsets: this.offsets
 			});
 		}
@@ -289,11 +333,11 @@ class WASMC {
 
 	/**
 	 * Converts a data entry to an array of longs.
-	 * @param {string} type A data type.
-	 * @param {number|string} value A data value.
+	 * @param  {string} type  A data type.
+	 * @param  {number} value A data value.
 	 * @return {Long[]} The encoded form of the entry.
 	 */
-	convertDataPieces(type, value, key) {
+	convertDataPieces(type: string, value: number | string, key?: string): Long[] {
 		if (type.match(/^(in|floa)t$/)) {
 			return [Long.fromValue(value)];
 		}
@@ -303,19 +347,23 @@ class WASMC {
 		}
 
 		if (type == "bytes") {
+			if (typeof value != "number") {
+				throw new Error(`Expected numerical value for data type "bytes", received string.`);
+			}
+
 			return [...Array(Math.ceil(value / 8))].map(() => Long.fromInt(0));
 		}
 
 		if (type == "var") {
 			// Just a placeholder for now; replaced with the address in reprocessData().
 			if (key) {
-				this.dataVariables[key] = value;
+				this.dataVariables[key] = value.toString();
 			}
 
 			return [Long.UZERO];
 		}
 
-		WASMC.die(`Error: unknown data type "${type}".`);
+		throw new Error(`Error: unknown data type "${type}".`);
 	}
 
 	/**
@@ -549,17 +597,20 @@ class WASMC {
 	 * @param {Array} instruction - An uncompiled instruction.
 	 * @return {Long} The bytecode representation of the instruction.
 	 */
-	compileInstruction(instruction) {
+	compileInstruction(instruction: Instruction) {
 		const [op, ...args] = instruction;
 		const {flags} = instruction;
 		if (op == "ext") {
-			return WASMC.rType(OPCODES.ext, ...args.slice(0, 3).map(WASMC.convertRegister), args[3], flags, null);
+			const [rt, rs, rd] = args.slice(0, 3).map(WASMC.convertRegister);
+			return this.rType(OPCODES.ext, rt, rs, rd, args[3], flags, null);
 		} else if (R_TYPES.includes(OPCODES[op])) {
-			return WASMC.rType(OPCODES[op], ...args.slice(0, 3).map(WASMC.convertRegister), FUNCTS[op], flags, args[3]);
+			const [rt, rs, rd] = args.slice(0, 3).map(WASMC.convertRegister);
+			return this.rType(OPCODES[op], rt, rs, rd, FUNCTS[op], flags, args[3]);
 		} else if (I_TYPES.includes(OPCODES[op])) {
-			return WASMC.iType(OPCODES[op], ...args.slice(0, 2).map(this.convertValue, this), args[2], flags, null);
+			const [rs, rd] = args.slice(0, 2).map(this.convertValue, this);
+			return this.iType(OPCODES[op], rs, rd, args[2], flags, null);
 		} else if (J_TYPES.includes(OPCODES[op])) {
-			return WASMC.jType(OPCODES[op], this.convertValue(args[0]), args[1], args[2], flags, args[3]);
+			return this.jType(OPCODES[op], this.convertValue(args[0]), args[1], args[2], flags, args[3]);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
@@ -573,17 +624,17 @@ class WASMC {
 	 * @param {Object} instruction - An uncompiled instruction.
 	 * @return {Long} The bytecode representation of the instruction.
 	 */
-	static unparseInstruction(instruction) {
+	unparseInstruction(instruction: Instruction) {
 		const {op, type} = instruction;
 		if (type == "r") {
 			const {opcode, rt, rs, rd, funct, flags, conditions} = instruction;
-			return WASMC.rType(opcode, rt, rs, rd, funct, flags, conditions);
+			return this.rType(opcode, rt, rs, rd, funct, flags, conditions);
 		} else if (type == "i") {
 			const {opcode, rs, rd, imm, flags, conditions} = instruction;
-			return WASMC.iType(opcode, rs, rd, imm, flags, conditions);
+			return this.iType(opcode, rs, rd, imm, flags, conditions);
 		} else if (type == "j") {
 			const {opcode, rs, addr, link, flags, conditions} = instruction;
-			return WASMC.jType(opcode, rs, addr, link, flags, conditions);
+			return this.jType(opcode, rs, addr, link, flags, conditions);
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
@@ -599,7 +650,7 @@ class WASMC {
 	 * @return {number} The converted value.
 	 * @throws Will throw an exception if the input is of an unrecognized type.
 	 */
-	convertValue(x) {
+	convertValue(x: Register | number | string): number {
 		if (x instanceof Array || typeof x == "number") {
 			return WASMC.convertRegister(x);
 		}
@@ -627,7 +678,8 @@ class WASMC {
 	 * @param {boolean} [warn=true]  Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static rType(opcode, rt, rs, rd, func, flags=0, conditions=null, warn=true) {
+	rType(opcode: number, rt: number, rs: number, rd: number, func: number, flags: number = 0,
+	             conditions: string = null, warn: boolean = true) {
 		if (!R_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid r-type`);
 		if (warn) {
 			if (rt < 0 || 127 < rt) WASMC.warn(`rt (${rt}) not within the valid range (0–127)`);
@@ -636,7 +688,7 @@ class WASMC {
 			if (func < 0 || 4095 < func) WASMC.warn(`func (${func}) not within the valid range (0–4095)`);
 		}
 
-		let lower = func | (this.ignoreFlag? 0 : flags << 12) | (CONDITIONS[conditions] << 14) | ((rd & 1) << 31);
+		let lower = func | (this.ignoreFlags? 0 : flags << 12) | (CONDITIONS[conditions] << 14) | ((rd & 1) << 31);
 		let upper = (rd >> 1) | (rs << 6) | (rt << 13) | (opcode << 20);
 		let long = Long.fromBits(lower, upper, true);
 
@@ -654,7 +706,7 @@ class WASMC {
 	 * @param {boolean} [warn=true]  Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static iType(opcode, rs, rd, imm, flags=0, conditions=null, warn=true) {
+	iType(opcode, rs, rd, imm, flags=0, conditions=null, warn=true) {
 		if (!I_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid i-type`);
 		if (warn) {
 			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
@@ -680,7 +732,7 @@ class WASMC {
 	 * @param {boolean} [warn=true]  Whether to enable warnings for invalid ranges.
 	 * @return {Long} The compiled instruction.
 	 */
-	static jType(opcode, rs, addr, link=false, flags=0, conditions=null, warn=true) {
+	jType(opcode, rs, addr, link=false, flags=0, conditions=null, warn=true) {
 		if (!J_TYPES.includes(opcode)) throw new Error(`Opcode ${opcode} isn't a valid j-type`);
 		if (warn) {
 			if (rs < 0 || 127 < rs) WASMC.warn(`rs (${rs}) not within the valid range (0–127)`);
@@ -738,7 +790,7 @@ class WASMC {
 	 * @param  {boolean} [skeleton=true] Whether to set all addresses to zero at first.
 	 * @return {Long[]} An encoded symbol table.
 	 */
-	createSymbolTable(labels, skeleton = true) {
+	createSymbolTable(labels: string[], skeleton: boolean = true): Long[] {
 		return _.flatten(_.uniq([...labels, ".end"]).map(label => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
 			let type = SYMBOL_TYPES.UNKNOWN;
@@ -747,7 +799,7 @@ class WASMC {
 				const ptr = this.dataVariables[label];
 				type = ptr in this.offsets? SYMBOL_TYPES.KNOWN_POINTER : SYMBOL_TYPES.UNKNOWN_POINTER;
 				if (!(ptr in this.offsets || this.unknownSymbols.includes(ptr))) {
-					const index = (this.offsets[label] - this.metaOffsetData) / 8;
+					const index = (this.offsets[label] - this.metaOffsetData.toInt()) / 8;
 					this.data[index] = Long.fromInt(WASMC.encodeSymbol(ptr), true);
 					this.unknownSymbols.push(ptr);
 				}
@@ -766,7 +818,7 @@ class WASMC {
 	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @return {Long[]} An encoded symbol table.
 	 */
-	static encodeSymbolTable(symbolTable) {
+	static encodeSymbolTable(symbolTable: SymbolTable): Long[] {
 		return _.flatten(Object.keys(symbolTable).map(label => [
 			Long.fromBits(Math.ceil(label.length / 8), WASMC.encodeSymbol(label), true),
 			symbolTable[label][1],
@@ -778,53 +830,53 @@ class WASMC {
 	 * Returns the length in words of the data section.
 	 * @type {number}
 	 */
-	get dataLength() {
-		return Object.values(this.parsed.data).reduce((a, b) => a + this.convertDataPieces(b[0], b[1]).length, 0);
+	get dataLength(): number {
+		return Object.values(this.parsed.data).reduce((a: number, b) => a + this.convertDataPieces(b[0], b[1]).length, 0);
 	}
 
-	get metaOffsetSymbols()  { return this.meta[0]; }
-	get metaOffsetCode()     { return this.meta[1]; }
-	get metaOffsetData()     { return this.meta[2]; }
-	get metaOffsetEnd()      { return this.meta[3]; }
-	set metaOffsetSymbols(to)  { this.meta[0] = Long.fromInt(to, true); }
-	set metaOffsetCode(to)     { this.meta[1] = Long.fromInt(to, true); }
-	set metaOffsetData(to)     { this.meta[2] = Long.fromInt(to, true); }
-	set metaOffsetEnd(to)      { this.meta[3] = Long.fromInt(to, true); }
+	get metaOffsetSymbols(): Long { return this.meta[0]; }
+	get metaOffsetCode():    Long { return this.meta[1]; }
+	get metaOffsetData():    Long { return this.meta[2]; }
+	get metaOffsetEnd():     Long { return this.meta[3]; }
+	set metaOffsetSymbols(to: Long) { this.meta[0] = to; }
+	set metaOffsetCode(to: Long)    { this.meta[1] = to; }
+	set metaOffsetData(to: Long)    { this.meta[2] = to; }
+	set metaOffsetEnd(to: Long)     { this.meta[3] = to; }
 
 	/**
 	 * Prints a message to stderr and exits the process with return code 1.
-	 * @param {...*} args - The arguments to pass to `console.error`.
+	 * @param {...*} args The arguments to pass to `console.error`.
 	 */
-	static die(...a) {
+	static die(...a: any[]) {
 		console.error(...a);
 		process.exit(1);
 	}
 
 	/**
 	 * Converts an array of 8 characters into a Long.
-	 * @param {Array.<string>} chunk - An array of 8 characters.
+	 * @param  {string[]} chunk An array of 8 characters.
 	 * @return {Long} A Long containing the concatenated ASCII values of the characters.
 	 */
-	static chunk2long(chunk) {
+	static chunk2long(chunk: string[]): Long {
 		return Long.fromString(chunk.map(c => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""), true, 16);
 	}
 
 	/**
 	 * Adds nulls to the end of the string to lengthen it to a multiple of 8.
 	 * If the length is already a multiple of eight, add one null at the end.
-	 * @param {string} str - The string to be nullpadded.
+	 * @param  {string} str The string to be nullpadded.
 	 * @return {string} The concatenation of the given string and a number of null characters.
 	 */
-	static nullpad(str) {
+	static nullpad(str: string): string {
 		return str.length % 8? str.padEnd(Math.ceil(str.length / 8) * 8, "\0") : `${str}\0`;
 	}
 
 	/**
 	 * Nullpads and chunks a given string into an array of Longs.
-	 * @param {string} str - The string to convert into Longs.
-	 * @return {Array.<Long>} An array of Longs representing the input string.
+	 * @param  {string} str The string to convert into Longs.
+	 * @return {Long[]} An array of Longs representing the input string.
 	 */
-	static str2longs(str) {
+	static str2longs(str: string): Long[] {
 		if (str == "") {
 			return [Long.UZERO];
 		}
@@ -835,30 +887,31 @@ class WASMC {
 	/**
 	 * Returns an array containing the 16-length zero-padded hex representations of a given array of Longs.
 	 * If any element of the input array isn't a Long value, it will be represented as a string of 16 "x"s.
-	 * @param {Array.<Long>} longs - An array of Longs to convert to strings.
-	 * @return {Array.<string>} An array of zero-padded hex strings corresponding to the inputs.
+	 * @param  {Long[]} longs An array of Longs to convert to strings.
+	 * @return {string[]} An array of zero-padded hex strings corresponding to the inputs.
 	 */
-	static longs2strs(longs) {
-		return longs.map(l => l instanceof Long? l.toString(16).padStart(16, "0") : "x".repeat(16));
+	static longs2strs(longs: Long[]): string[] {
+		return longs.map(l => l.toString(16).padStart(16, "0"));
 	}
 
 	/**
 	 * If the input is an array (expected format: ["register", ...]), then the output is the number corresponding to
 	 * that array. Otherwise, if the input is something other than an array, then the output is same as the input.
-	 * @param {Array} x - An array representing a register, such as ["register", "return", 0] for $rt or ["register", "t", 22] for $t16.
+	 * @param  {Array} x An array representing a register, such as ["register", "return", 0] for $rt
+	 *                   or ["register", "t", 22] for $t16.
 	 * @return {number} The ID corresponding to the register.
 	 */
-	static convertRegister(x) {
-		return x instanceof Array? (x.length == 0? 0 : REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1]) : x;
+	static convertRegister(x: Register | number) {
+		return x instanceof Array? REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1] : x;
 	}
 
 	/**
 	 * Encodes the name of a symbol.
-	 * @param  {string} name - A symbol name.
+	 * @param  {string} name A symbol name.
 	 * @return {number} The symbol name encoded as a number.
 	 */
 	static encodeSymbol(name) {
-		const hash = crypto.createHash("sha256");
+		const hash = createHash("sha256");
 		hash.update(name);
 		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
 		return Math.abs(parseInt(hash.digest("hex").substr(0, 7), 16));
@@ -867,10 +920,10 @@ class WASMC {
 
 module.exports = WASMC;
 
-const _A = _.range(0, 16).map(n => ["register", "a", n]);
-const _RA = ["register", "return", 0];
-const _M = _.range(0, 16).map(n => ["register", "m", n]);
-const _0  = ["register", "zero",  0];
+const _A:  Register[] = _.range(0, 16).map(n => ["register", "a", n]);
+const _RA: Register   = ["register", "return", 0];
+const _M:  Register[] = _.range(0, 16).map(n => ["register", "m", n]);
+const _0:  Register    = ["register", "zero",  0];
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
