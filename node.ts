@@ -1,27 +1,41 @@
-const _ = require("lodash");
+#!/usr/bin/env ts-node
+import _ = require("lodash");
 const {alpha, numerize} = require("./util.js");
+import {Graph} from "./graph";
 
-const getID = node => {
+/**
+ * @typedef {number|string} NodeID
+ */
+export type NodeID = number | string;
+export type NodeOrID = Node | NodeID;
+
+export function getID(node: Node | NodeID) {
 	if (node instanceof Node) {
 		return node.id;
 	} else {
 		return numerize(node);
 	}
-};
+}
 
 // TODO: use Node references inside Node.in and Node.out instead of IDs.
 
 /**
  * Represents a node in a graph.
  */
-class Node {
+export class Node {
+	id: NodeID;
+	graph: Graph;
+	data?: {[key: string]: any};
+	out: NodeID[];
+	in: NodeID[];
+
 	/**
 	 * Creates a new node.
 	 * @param {number} id    The node's ID.
 	 * @param {Graph}  graph The graph containing this node.
 	 * @param {*}      data  The data attached to the node.
 	 */
-	constructor(id, graph, data=null) {
+	constructor(id: NodeID, graph: Graph, data=null) {
 		/**
 		 * The node's ID.
 		 * @type {number}
@@ -58,22 +72,22 @@ class Node {
 		this.data = data;
 	}
 
-	get succ() { return this.out }
-	get pred() { return this.in  }
-	set succ(to) { return this.out = to }
-	set pred(to) { return this.in = to }
+	get succ(): NodeID[] { return this.out }
+	get pred(): NodeID[] { return this.in  }
+	set succ(to: NodeID[]) { this.out = to }
+	set pred(to: NodeID[]) { this.in = to }
 
 	/**
 	 * Adds a node to this node's outward edge list and adds this node to the node's inward edge list.
 	 * @param  {(Node|number|string)} n The node to add.
 	 * @return {boolean} Whether the arc already existed.
 	 */
-	arc(n) {
+	arc(n: Node | NodeID): boolean {
 		n = numerize(getID(n));
 
 		let existed = false;
 
-		if (!this.out.includes(n)) {
+		if ((typeof n == "string" || typeof n == "number") && !this.out.includes(n)) {
 			existed = true;
 			this.out.push(n);
 		}
@@ -89,15 +103,15 @@ class Node {
 
 	/**
 	 * Adds a node to this node's inward edge list and adds this node to the node's outward edge list.
-	 * @param {(Node|number|string)} n The node to add.
+	 * @param {Node|NodeID} n The node to add.
 	 */
-	arcFrom(n) {
+	arcFrom(n: NodeOrID): Node {
 		n = getID(n);
-		if (!this.in.includes(n)) {
+		if ((typeof n == "string" || typeof n == "number") && !this.in.includes(n)) {
 			this.in.push(n);
 		}
 
-		const node = this.graph.nodes[n];
+		const node = this.graph.getNode(n);
 		if (!node.out.includes(this.id)) {
 			node.out.push(this.id);
 		}
@@ -107,12 +121,12 @@ class Node {
 
 	/**
 	 * Removes an outward connection from this node and the other node's corresponding inward connection.
-	 * @param {(Node|number|string)} n The node whose arc will be removed.
+	 * @param {Node|NodeID} n The node whose arc will be removed.
 	 */
-	removeArc(n) {
+	removeArc(n: NodeOrID): Node {
 		n = getID(n);
 		this.out = this.out.filter(edge => edge != n);
-		this.graph.nodes[n].in = this.graph.nodes[n].in.filter(edge => edge != this.id);
+		this.graph.getNode(n).in = this.graph.getNode(n).in.filter(edge => edge != this.id);
 		return this;
 	}
 
@@ -160,7 +174,7 @@ class Node {
 	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
 	 * @return {Node} A copy of the node.
 	 */
-	clone(newGraph=null, cloneData=true) {
+	clone(newGraph: Graph = null, cloneData: boolean = true): Node {
 		let newNode = new Node(this.id, newGraph === null? this.graph : newGraph);
 		newNode.data = cloneData? _.cloneDeep(this.data) : this.data;
 		newNode.out = this.out.slice(0);
@@ -172,22 +186,20 @@ class Node {
 	 * Assigns the node a new ID and updates the in/out arrays of all other nodes in the graph accordingly.
 	 * @param {number|string} newID The new ID for this node.
 	 */
-	rename(newID) {
+	rename(newID: NodeID): Node {
 		const oldID = this.id;
 		const replace = (o, ...ps) => ps.forEach(p => o[p] = o[p].map(x => x == oldID? newID : x));
 		this.graph.nodes.forEach(n => replace(n, "out", "in"));
 		this.id = newID;
+		return this;
 	}
 
 	/**
 	 * Indicates whether the node links to itself.
 	 * @type {boolean}
 	 */
-	get isReflexive() {
+	get isReflexive(): boolean {
 		// If one of these conditions is true, the other should also be true...
 		return this.out.includes(this.id) || this.in.includes(this.id);
 	}
 }
-
-module.exports = Node;
-module.exports.getID = getID;
