@@ -28,7 +28,7 @@ type ASTFunctionBlock = [string, BlockConnections & {
 	written: VariableName[],
 	assigners: {[varName: string]: Instruction},
 	unreachable: boolean
-}];
+}, Instruction[]];
 type IRFunction  = ASTFunctionBlock[] & IRFunctionMeta;
 type AnyNode     = Node | string | number;
 // type Instruction = ["instruction", string, Object];
@@ -113,12 +113,16 @@ type InstCall = InstBase<"call", {
 	args: IRConstant[]
 }>;
 type InstUnreachable = InstBase<"unreachable", {}>;
-type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable;
+interface ASTVector {0: "vector", 1: [ASTTypeAny, null, ASTValue][]};
+type ASTValue = number | ASTVector | ASTVariable | "null";
+type InstRet = InstBase<"ret", {type: ASTTypeAny, value: ASTValue}>;
+type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet;
 
 type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
 type DeclarationType = {type: ASTTypeAny, types: ASTFunctionType[], arity: number, isLocalUnnamed: boolean};
 
-const {displayIOError, mixins, isNumeric} = require("../util.js");
+import whyUtil = require("../util.js");
+const {displayIOError, mixins, isNumeric, pushAll} = whyUtil;
 mixins(_);
 
 const warn = (...a: any[]) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]"), ...a);
@@ -524,12 +528,12 @@ class LL2W {
 						// overly cautious register allocation, but it's probably not a huge concern.
 						const fn: IRFunction = functions[iname];
 						for (const instr of fn) {
+							const [calledName, {out: calledOut}, calledInstructions] = instr;
 
-							// const [calledName, {out: calledOut}, calledInstructions] = instr;
-							const [lastType, lastName] = _.last(instr);
+							const [lastType, lastName] = _.last(calledInstructions);
 							if (lastType == "instruction" && lastName == "ret") {
-								_.push(calledOut, fullName);
-								_.push(meta.in, `${iname}:${calledName}`);
+								calledOut.push(fullName);
+								meta.in.push(`${iname}:${calledName}`);
 							}
 						}
 					} else if (typeof iname == "number" || (typeof iname == "string" && iname.match(/^\d+$/))) {
@@ -629,7 +633,7 @@ class LL2W {
 		const out = [];
 		
 		for (const [k, {read, written}] of fn) {
-			_.pushAll(out, [...read, ...written].filter(x => typeof x != "number" || arity < x));
+			pushAll(out, [...read, ...written].filter(x => typeof x != "number" || arity < x));
 		}
 		
 		return out;

@@ -39,13 +39,7 @@ exports.mixins = (__) => {
 			return __.pushAll(dest, vals);
 		},
 
-		pushAll(dest, vals) {
-			for (const val of vals) {
-				if (!dest.includes(val)) {
-					dest.push(val);
-				}
-			}
-		},
+		pushAll,
 
 		objectify(arr, initial = () => undefined) {
 			return __.fromPairs(arr.map(v => [v, initial()]));
@@ -71,9 +65,18 @@ exports.displayIOError = (error, filename="file", mode="r", print=console.error)
 	}
 };
 
+function pushAll(dest, vals) {
+	for (const val of vals) {
+		if (!dest.includes(val)) {
+			dest.push(val);
+		}
+	}
+}
+
 const alpha = "abcdefghijklmnopqrstuvwxyz";
 const isNumeric = x => typeof x == "number" || typeof x == "string" && _.every(x, y => "0123456789".includes(y));
 exports.alpha = alpha;
 exports.isLetter = x => typeof x == "string" && x.length == 1 && -1 < alpha.indexOf(x.toLowerCase());
 exports.isNumeric = isNumeric;
 exports.numerize = x => isNumeric(x)? parseInt(x) : x;
+exports.pushAll = pushAll;
