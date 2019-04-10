@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import minimist = require("minimist");
 import fs = require("fs");
-import chalk = require("chalk");
+const chalk = require("chalk");
 import getline = require("get-line-from-pos");
 import nearley = require("nearley");
 import Graph = require("../graph.js");
@@ -23,12 +23,7 @@ type IRFunctionMeta = {
 	first: BlockName,
 	exit:  BlockName,
 };
-type ASTFunctionBlock = [string, BlockConnections & {
-	read: VariableName[],
-	written: VariableName[],
-	assigners: {[varName: string]: Instruction},
-	unreachable: boolean
-}, Instruction[]];
+type ASTFunctionBlock = [string, BlockConnectionsExtra, Instruction[]];
 // interface ASTFunctionBlock {
 // 	0: string,
 // 	1: BlockConnections & {
@@ -41,12 +36,19 @@ type ASTFunctionBlock = [string, BlockConnections & {
 // };
 type IRFunction  = ASTFunctionBlock[] & IRFunctionMeta;
 type AnyNode     = Node | string | number;
-// type Instruction = ["instruction", string, Object];
 type BlockConnections = {preds: AnyNode[], in: AnyNode[], out: AnyNode[]};
-type BasicBlock  = [
+type BlockConnectionsExtra = BlockConnections & {
+	read: VariableName[],
+	written: VariableName[],
+	assigners: {[varName: string]: Instruction},
+	unreachable: boolean
+}
+type BasicBlock = [
+	string,
 	BlockConnections, // edges
 	Instruction[] // instructions
 ];
+type BasicBlockExtra = [string, BlockConnectionsExtra, Instruction[]];
 type FunctionExtractions = {
 	functions: StringMap<IRFunction>,
 	allBlocks: StringMap<BasicBlock>,
@@ -428,23 +430,23 @@ class LL2W {
 			// LLVM helpfully indicates basic blocks with comments and labels.
 			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
-			const basicBlocks = [];
+			const basicBlocks: BasicBlock[] = [];
 
 			let exitBlock: string = null;
 
 			functionOrder.push(meta.name);
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
-			let currentBasicBlock: [string, BasicBlock] = [meta.arity.toString(), [{preds: [], in: [], out: []}, []]];
+			let currentBasicBlock: BasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
 				if (name == "label_c") {
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], [{preds: args[1], in: [], out: []}, []]];
+					currentBasicBlock = [args[0], {preds: args[1], in: [], out: []}, []];
 				} else if (name == "label") {
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], [{preds: [], in: [], out: []}, []]];
+					currentBasicBlock = [args[0], {preds: [], in: [], out: []}, []];
 				} else {
 					exitBlock = currentBasicBlock[0];
 					currentBasicBlock[1][1].push(instruction);
@@ -455,17 +457,17 @@ class LL2W {
 				basicBlocks.push(currentBasicBlock);
 			}
 
-			basicBlocks.forEach(([name, ...etc]) => {
-				allBlocks[meta.name + ":" + name] = etc;
-				blockOrder.push([meta.name, name]);
+			basicBlocks.forEach(block => {
+				allBlocks[meta.name + ":" + block[0]] = block;
+				blockOrder.push([meta.name, block[0]]);
 			});
 			
 			let allVars: VariableName[] = [];
 
-			const fn: IRFunction = functions[meta.name] = Object.assign(basicBlocks.map(block => {
-				const blockVars = LL2W.computeBasicBlockVariables(block);
-				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
-				return blockVars;
+			functions[meta.name] = Object.assign(basicBlocks.map(block => {
+				const computed = LL2W.computeBasicBlockVariables(block);
+				allVars = [...allVars, ...computed[1].read, ...computed[1].written];
+				return computed;
 			}), {
 				meta,
 				vars: _.uniq(allVars),
@@ -480,7 +482,7 @@ class LL2W {
 	static connectBlocks(functions: StringMap<IRFunction>, basicBlocks: StringMap<BasicBlock>, declarations={}) {
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
 			const [funcName, name] = fullName.split(":");
-			const [oldMeta, instructions] = block;
+			const [blockName, oldMeta, instructions] = block;
 			const last = _.last(instructions);
 
 			const meta = Object.assign(oldMeta, {unreachable: false});
@@ -493,14 +495,14 @@ class LL2W {
 
 				const destBlock = basicBlocks[destName];
 				meta.out.push(destName);
-				destBlock[0].in.push(fullName);
+				destBlock[1].in.push(fullName);
 			} else if (last[1] == "br_conditional") {
 				// I'm assuming that conditional branches go only to other basic blocks within the same function.
 				const {iftrue: [, iftrue], iffalse: [, iffalse]} = last[2];
 				let trueName  = `${funcName}:${iftrue}`,
 					falseName = `${funcName}:${iffalse}`;
-				basicBlocks[trueName][0].in.push(fullName);
-				basicBlocks[falseName][0].in.push(fullName);
+				basicBlocks[trueName][1].in.push(fullName);
+				basicBlocks[falseName][1].in.push(fullName);
 				meta.out.push(trueName);
 				meta.out.push(falseName);
 			} else if (last[1] == "switch") {
@@ -508,7 +510,7 @@ class LL2W {
 				const targets = [imeta.default, ...imeta.table.map(([,, v]) => v)];
 				for (const [, target] of targets) {
 					const tname = `${funcName}:${target}`;
-					basicBlocks[tname][0].in.push(fullName);
+					basicBlocks[tname][1].in.push(fullName);
 					meta.out.push(tname);
 				}
 			} else if (last[1] == "unreachable") {
@@ -534,7 +536,7 @@ class LL2W {
 					if (destName in basicBlocks) {
 						// First, make a link from this block to the start of the called function.
 						const destBlock = basicBlocks[destName];
-						destBlock[0].in.push(fullName);
+						destBlock[1].in.push(fullName);
 						
 						// Next, we link each return statement from the called function back to this block.
 						// Depending on the exact circumstances, some of the returns (but not all) might not ever return
@@ -627,20 +629,25 @@ class LL2W {
 		return {read, written, assigner};
 	}
 
-	static computeBasicBlockVariables(basicBlock) {
+	static computeBasicBlockVariables(basicBlock: BasicBlock): BasicBlockExtra {
 		let read = [], written = [], assigners = {};
 
+		// /*
 		basicBlock[2].forEach(instruction => {
 			const result = LL2W.computeOperands(instruction);
 			read = read.concat(result.read);
 			written = written.concat(result.written);
 			if (result.assigner) assigners[result.assigner] = instruction;
 		});
-		
-		basicBlock[1].read = _.uniq(read);
-		basicBlock[1].written = _.uniq(written);
-		basicBlock[1].assigners = assigners;
-		return basicBlock;
+
+		return [basicBlock[0], Object.assign(basicBlock[1], {
+			read: _.uniq(read),
+			written: _.uniq(written),
+			assigners: assigners,
+			unreachable: null
+		}), basicBlock[2]];
+		// */
+		// return basicBlock;
 	}
 
 	static getAllVariables(fn) {
@@ -677,22 +684,22 @@ class LL2W {
 		const g = new Graph(fn.length);
 		const name = fn.meta.name;
 
-		g.unreachable = [];
+		g.data.unreachable = [];
 
 		// Assign all blocks to the rest of the nodes.
 		fn.forEach((block, i) => {
 			g[i].data = {label: block[0]};
 
 			if (block[0] == fn.first) {
-				g.enter = i;
+				g.data.enter = i;
 			}
 
 			if (block[0] == fn.exit) {
-				g.exit = i;
+				g.data.exit = i;
 			}
 
 			if (block[1].unreachable) {
-				g.unreachable.push(i);
+				g.data.unreachable.push(i);
 			}
 		});
 
@@ -1117,8 +1124,8 @@ function testLiveness(fn, declarations) {
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
 	const cfg = LL2W.computeCFG(fn);
-	const dj = cfg.djGraph(cfg.enter);
-	const ms = Graph.mergeSets(dj, cfg.enter, cfg.exit);
+	const dj = cfg.djGraph(cfg.data.enter);
+	const ms = Graph.mergeSets(dj, cfg.data.enter, cfg.data.exit);
 	const blockID = "8";
 	const varName = "w";
 	const block = fn.filter(([l]) => l == blockID)[0];
@@ -1157,7 +1164,7 @@ function test254Gap() {
 	const str254gap = pairs254gap.filter(s => s[0] != "j").join(" ");
 	// console.log({jpairs254gap, jedges254gap, str254gap});
 	dj254gap.arcString(str254gap);
-	dj254gap.jEdges = jedges254gap;
+	dj254gap.data.jEdges = jedges254gap;
 	// console.log("dj254gap:", dj254gap);
 	// console.log("dj254gap:\n" + dj254gap.toString());
 
