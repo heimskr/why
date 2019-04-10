@@ -1,13 +1,44 @@
-#!/usr/bin/env node
-const util = require("./util.js");
+#!/usr/bin/env ts-node
+import * as util from "./util";
+import Graph from "./graph";
+import {NodeID} from "./node";
+
+type Color = string;
+export type RenderOptions = {
+	background?: string,
+	node?: Color,
+	edge?: Color,
+	label?: Color,
+	arrow?: Color,
+	labelOutline?: {color?: Color, opacity?: number, width?: number},
+	layout?: string,
+	layoutExtras?: {[key: string]: any},
+	enter?: NodeID,
+	exit?: NodeID,
+	unreachable?: NodeID[],
+	enterColor?: Color,
+	exitColor?: Color,
+	unreachableColor?: Color,
+	curveStyle?: "haystack" | "straight" | "bezier" | "unbundled-bezier" | "segments" | "taxi",
+	arrowShape?: "triangle" | "triangle-tee" | "triangle-cross" | "triangle-backcurve" | "vee" | "tee" | "square"
+			   | "circle" | "diamond" | "chevron" | "none" ,
+	centeredMax?: number,
+	width?: number,
+	height?: number,
+	format?: "png" | "jpg" | "jpeg",
+	quality?: number,
+	type?: "base64uri" | "base64" | "stream" | "json",
+	idOffset?: number
+};
+
 let cytosnap = null;
 
-function render(graph, opts={}) {
+export function render(graph: Graph, opts: RenderOptions = {}) {
 	if (cytosnap === null) {
 		cytosnap = require("cytosnap");
 	}
 	
-	const defaults = {
+	const defaults: RenderOptions = {
 		background: "#000",
 		node: "#fff",
 		edge: "#ccc",
@@ -32,6 +63,7 @@ function render(graph, opts={}) {
 		width: 2560,
 		height: 1000,
 		format: "png",
+		quality: 100,
 		type: "base64",
 		idOffset: 0,
 	};
@@ -59,7 +91,7 @@ function render(graph, opts={}) {
 			data: {
 				id,
 				label: data && data.label? data.label
-			         : util.isNumeric(id)? parseInt(id) + opts.idOffset
+			         : util.isNumeric(id)? parseInt(<string> id) + opts.idOffset
 					 : id
 			},
 			classes: [
@@ -123,20 +155,18 @@ function render(graph, opts={}) {
 
 		resolvesTo: opts.type,
 		format: opts.format,
+		quality: opts.quality,
 		width: opts.width,
 		height: opts.height,
 		background: opts.background
 	})).then(image => (snap.stop(), image));
 }
 
-function iterm(graph, opts={}) {
+export function iterm(graph, opts={}) {
 	return render(graph, opts).then(b64 => process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`));
 }
 
-module.exports = {render, iterm};
-
 if (require.main === module) {
-	const Graph = require("../graph.js");
 	const g = new Graph(24);
 	g.arcString("01 02 23 34 35 3-23 38 45 56 57 23-5 23-8 67 75 78 89 8-10 8-14 9-10 14-15 14-16 15-16 10-11 11-12 12-13 13-1 16-22 22-10 16-17 17-21 21-22 17-18 18-19 18-20 19-20 20-18 20-21");
 	iterm(g, {}).then(() => process.exit(0));

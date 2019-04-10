@@ -7,7 +7,7 @@ const {lt} = dominators;
 import {Node, NodeID, NodeOrID, getID} from "./node";
 export {Node} from "./node";
 
-import renderGraph = require("./rendergraph.js");
+import * as renderGraph from "./rendergraph";
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 
 type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
@@ -16,7 +16,7 @@ type RenderOpts = {enter?: NodeID, exit?: NodeID, unreachable?: NodeID[], type?:
 /**
  * Represents a directed graph datatype.
  */
-export class Graph {
+export default class Graph {
 	data: {[key: string]: any};
 	nodes: Node[];
 	title?: string;

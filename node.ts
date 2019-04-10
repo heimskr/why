@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 import _ = require("lodash");
 import {alpha, numerize} from "./util";
-import {Graph} from "./graph";
+import Graph from "./graph";
 
 /**
  * @typedef {number|string} NodeID
