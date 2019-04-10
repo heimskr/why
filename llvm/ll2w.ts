@@ -29,6 +29,16 @@ type ASTFunctionBlock = [string, BlockConnections & {
 	assigners: {[varName: string]: Instruction},
 	unreachable: boolean
 }, Instruction[]];
+// interface ASTFunctionBlock {
+// 	0: string,
+// 	1: BlockConnections & {
+// 		read: VariableName[],
+// 		written: VariableName[],
+// 		assigners: {[varName: string]: Instruction},
+// 		unreachable: boolean
+// 	},
+// 	2: Instruction[]
+// };
 type IRFunction  = ASTFunctionBlock[] & IRFunctionMeta;
 type AnyNode     = Node | string | number;
 // type Instruction = ["instruction", string, Object];
@@ -38,10 +48,10 @@ type BasicBlock  = [
 	Instruction[] // instructions
 ];
 type FunctionExtractions = {
-	functions: Object,
+	functions: StringMap<IRFunction>,
 	allBlocks: StringMap<BasicBlock>,
-	blockOrder: Object[],
-	functionOrder: Object[];
+	blockOrder: [string, string][],
+	functionOrder: string[];
 };
 type ASTTypeAny = ASTTypeInt | ASTTypePtr | ASTTypeArray;
 type ASTTypeInt = ["int", number];
@@ -72,7 +82,12 @@ type ASTGetElementPtrExpr = ["expr", "getelement", {
 }];
 type ASTOperand  = ASTVariable | number | ASTGlobal | ASTGetElementPtrExpr | ["null"];
 
-type InstBase<N extends string, M extends Object> = ["instruction", N, M];
+// type InstBase<N extends string, M extends Object> = ["instruction", N, M & {block?: ASTFunctionBlock}];
+interface InstBase<N extends string, M extends Object> {
+	0: "instruction",
+	1: N,
+	2: M & {block?: ASTFunctionBlock}
+};
 type InstBrUncond = InstBase<"br_unconditional", {dest: ASTVariable}>;
 type InstBrCond = InstBase<"br_conditional", {
 	type:    ASTTypeAny,
@@ -405,9 +420,9 @@ class LL2W {
 	 */
 	extractFunctions(): FunctionExtractions {
 		const functions: StringMap<IRFunction> = {};
-		const allBlocks = {};
-		const blockOrder = [];
-		const functionOrder = [];
+		const allBlocks: StringMap<BasicBlock> = {};
+		const blockOrder: [string, string][] = [];
+		const functionOrder: string[] = [];
 
 		this.iterateTree("function", (meta, instructions) => {
 			// LLVM helpfully indicates basic blocks with comments and labels.
@@ -530,7 +545,7 @@ class LL2W {
 						for (const instr of fn) {
 							const [calledName, {out: calledOut}, calledInstructions] = instr;
 
-							const [lastType, lastName] = _.last(calledInstructions);
+							const {0: lastType, 1: lastName} = _.last(calledInstructions);
 							if (lastType == "instruction" && lastName == "ret") {
 								calledOut.push(fullName);
 								meta.in.push(`${iname}:${calledName}`);
@@ -704,27 +719,34 @@ class LL2W {
 	 * @return {Graph} A graph with an extra `indexMap` property that maps instruction indices to the
 	 *                 corresponding {@link Node} objects.
 	 */
-	static computeInterference(fn, cfg, liveness) {
+	static computeInterference(fn: IRFunction, cfg, liveness) {
 		// An array that contains all the IRInstructions in the function.
-		const instructions = _.flatten(fn.map(block => block[2].map(instr => { instr.block = block; return instr; })));
+		// for (const block of fn) {
+		// 	for (const instr of block[2]) {
+		// 		instr[2].block = block;
+		// 	}
+		// }
+
+		// const instructions = _.flatten(fn);
 		
 		// Create an empty interference graph, then add all the instructions to the graph while making a note of all
 		// phi instructions in an array. The array contains tuples of the instruction node and the phi pairs, which are
 		// in the form [variable name, source block name].
 		// The graph node data is in the form [instruction index, instruction type, instruction metadata].
-		const graph = new Graph(instructions.length);
-		const phis = [];
-		for (let i = instructions.length - 1; 0 <= i; --i) {
-			const [, type, meta] = instructions[i];
+	// 	const graph = new Graph(fn.length);
+	// 	const phis = [];
+	// 	for (let i = fn.length - 1; 0 <= i; --i) {
+	// 		const instruction = fn[i];
+	// 		const [type, meta] = instruction;
 			
-			const node = graph.add([i, type, meta]);
+	// 		const node = graph.add([i, type, meta]);
 
-			if (type == "phi") {
-				phis.unshift([node, meta.pairs.map(pair => pair.map(([, varName]) => varName))]);
-			}
-		}
+	// 		if (type == "phi") {
+	// 			phis.unshift([node, meta.pairs.map(pair => pair.map(([, varName]) => varName))]);
+	// 		}
+	// 	}
 
-		return null;
+	// 	return null;
 	}
 
 	/**
@@ -768,7 +790,7 @@ class LL2W {
 		return fn.filter(([id, {written}]) => written.map(x => x.toString()).includes(varName));
 	}
 
-	static getUsefulLivenessData(cfg, ignore={dt: false, dj: false, ms: false}) {
+	static getUsefulLivenessData(cfg, ignore: {dt?: boolean, dj?: boolean, ms?: boolean}={dt: !!0, dj: !!0, ms: !!0}) {
 		let dj = cfg._djGraph;
 		let dt = cfg._dTree;
 		let ms = cfg._mergeSets;
@@ -928,7 +950,7 @@ class LL2W {
 				// if t ∩ M_s(n)
 				// Return true if the node's merge set includes the reader.
 				if (Ms[n].includes(t)) {
-					debug(`Finished computing live-out for ${chalk.bold(varName)} in ${blockDebug}:`
+					debug(`Finished computing live-out for ${chalk.bold(varName)} in ${blockDebug}:`,
 					      `${chalk.bold("true")} because t ∩ M_s(n).`);
 					return true;
 				}
@@ -993,8 +1015,7 @@ class LL2W {
 	static async produceIR(dirName, ...filenames) {
 		let deleteDir = false;
 		if (!dirName) {
-			let {err, stdout, stderr} = await exec("mktemp -d");
-			if (err) throw err;
+			let {stdout, stderr} = await exec("mktemp -d");
 			dirName = stdout.trim();
 			deleteDir = true;
 		}
@@ -1006,10 +1027,9 @@ class LL2W {
 
 		process.chdir(dirName);
 
-		let {err, stdout, stderr} = await exec(cmd);
-		if (err) throw err;
+		let {stdout, stderr} = await exec(cmd);
 		
-		console.log({err, stdout, stderr});
+		// console.log({stdout, stderr});
 
 		if (deleteDir) {
 			rimraf.sync(dirName);
@@ -1021,7 +1041,7 @@ class LL2W {
 
 module.exports = LL2W;
 
-let debug = () => {};
+let debug = (...a: any[]) => {};
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
@@ -1031,7 +1051,7 @@ if (require.main === module) {
 	}), infile = options._[0];
 
 	if (options.debug) {
-		debug = (...a) => console.log("🐞", ...a);
+		debug = (...a: any[]) => console.log("🐞", ...a);
 	}
 
 	if (!infile) {
