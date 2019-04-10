@@ -30,9 +30,12 @@ const getID = Node.getID;
 class Graph {
 	/**
 	 * Creates a new graph.
-	 * @param {number} n The number of nodes in the graph.
+	 * @param {number} n     The number of nodes in the graph.
+	 * @param {*}     [data] Any extra data to associate with the graph.
 	 */
-	constructor(n) {
+	constructor(n, data={}) {
+		this.data = data;
+
 		/**
 		 * An array of all the nodes in the graph.
 		 * @type {Array<Node>}
@@ -364,10 +367,10 @@ class Graph {
 	djGraph(start=0, bidirectional=false) {
 		const dj = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
 		const sdom = Graph.strictDominators(dj);
-		dj.jEdges = [];
+		dj.data.jEdges = [];
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[dst].includes(src))
-			.forEach(p => (dj.arc(...p), dj.jEdges.push(p)));
+			.forEach(p => (dj.arc(...p), dj.data.jEdges.push(p)));
 		dj.title = "DJ Graph";
 		return dj;
 	}
@@ -398,7 +401,7 @@ class Graph {
 
 		let t; let T = s => console.time(t = s); let E = s => { console.timeEnd(t); if (s) T(s) };
 		const bfs = djGraph.bfs(startID);
-		const {jEdges} = djGraph;
+		const {jEdges} = djGraph.data;
 		const visited = djGraph.fillObj({}); // out node ID => in node ID
 		const merge = djGraph.fillObj([]); // node ID => IDs in merge set
 
