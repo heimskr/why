@@ -11,6 +11,7 @@ import renderGraph = require("./rendergraph.js");
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 
 type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
+type RenderOpts = {enter?: NodeID, exit?: NodeID, unreachable?: NodeID[], type?: string};
 
 /**
  * Represents a directed graph datatype.
@@ -135,7 +136,7 @@ export class Graph {
 	 * @param  {Node|NodeID} n The ID of the node to return.
 	 * @return {Node} The node corresponding to n if n is a number; n otherwise.
 	 */
-	getNode(n) {
+	getNode(n: NodeOrID): Node {
 		if (n instanceof Node) {
 			return n.graph == this? n : this.getNode(n.id);
 		}
@@ -144,8 +145,8 @@ export class Graph {
 			throw new Error("Graph.getID() called with undefined");
 		}
 
-		n = numerize(n);
-		return _.find(this.nodes, node => numerize(node.id) == n);
+		const numerized = numerize(n);
+		return _.find(this.nodes, (node: Node) => numerize(node.id) == numerized);
 	}
 
 	/**
@@ -313,8 +314,8 @@ export class Graph {
 	 * @param  {boolean} [bidirectional=false] Whether the D-edges should be bidirectional.
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
-	dTree(startID=0, bidirectional=false) {
-		const [lentar, renameMap, renames] = this.lengauerTarjan(startID);
+	dTree(startID: NodeOrID = 0, bidirectional: boolean = false) {
+		const [lentar, renameMap, renames] = this.lengauerTarjan(getID(startID));
 		const out = new Graph(Object.keys(lentar).length);
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
 		Object.entries(lentar).forEach(([k, v]) => {
@@ -366,13 +367,13 @@ export class Graph {
 	 * @param  {boolean} [bidirectional=false] Whether D-edges should be bidirectional.
 	 * @return {Graph} A DJ-graph.
 	 */
-	djGraph(start=0, bidirectional=false) {
-		const dj = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
+	djGraph(start: NodeOrID | Graph = 0, bidirectional: boolean = false) {
+		const dj: Graph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
 		const sdom = Graph.strictDominators(dj);
 		dj.data.jEdges = [];
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[dst].includes(src))
-			.forEach(p => (dj.arc(...p), dj.data.jEdges.push(p)));
+			.forEach(([src, dst]) => (dj.arc(src, dst), dj.data.jEdges.push([src, dst])));
 		dj.title = "DJ Graph";
 		return dj;
 	}
@@ -384,7 +385,7 @@ export class Graph {
 	 * @return {Array<Object<NodeID, NodeID>, Object<NodeID, NodeID>>}
 	 *         A tuple that has a map of node IDs to the IDs of their dominators and a map of old IDs to normalized IDs.
 	 */
-	lengauerTarjan(startID: number = 0): [NodeIDMap, NodeIDMap, NodeIDMap] {
+	lengauerTarjan(startID: NodeOrID = 0): [NodeIDMap, NodeIDMap, NodeIDMap] {
 		const normalized = this.clone();
 		const renameMap = normalized.normalize();
 		const renames = _.mapValues(_.invert(renameMap), v => numerize(v));
@@ -543,13 +544,13 @@ export class Graph {
 	 * Returns an array of this graph's connected components using Kosaraju's algorithm.
 	 * @return {Array<Array<Node>>} An array of connected components.
 	 */
-	components() {
-		const visited = this.fill(false);
-		const parents = this.fill(null);
-		const components = {}; 
-		const l = [];
+	components(): Node[][] {
+		const visited: boolean[] = this.fill(false);
+		const parents: NodeID[] = this.fill(null);
+		const components: {[key: string]: NodeID[], [key: number]: NodeID[]} = {}; 
+		const l: NodeID[] = [];
 
-		const visit = u => {
+		const visit = (u: NodeID) => {
 			if (!visited[u]) {
 				visited[u] = true;
 				this.nodes[u].out.forEach(visit);
@@ -557,7 +558,7 @@ export class Graph {
 			}
 		};
 
-		const assign = (u, root) => {
+		const assign = (u: NodeID, root: NodeID) => {
 			if (parents[u] == null) {
 				parents[u] = root;
 				if (!components[root]) {
@@ -566,7 +567,7 @@ export class Graph {
 					components[root].push(u);
 				}
 
-				this.getNode(u).in.forEach(v => assign(v, root));
+				this.getNode(u).in.forEach((v: NodeID) => assign(v, root));
 			}
 		};
 
@@ -708,8 +709,8 @@ export class Graph {
 			newNode.out.push(newID);
 		}
 
-		newNode.in  = _.sortBy(newNode.in,  getID);
-		newNode.out = _.sortBy(newNode.out, getID);
+		newNode.in  = _.sortBy(newNode.in,  numerize);
+		newNode.out = _.sortBy(newNode.out, numerize);
 		
 		this.nodes.push(newNode);
 		return newNode;
@@ -744,20 +745,20 @@ export class Graph {
 	 * @param  {Function} [outFn] Another mapping function. If none is given, it will be equal to idFn.
 	 * @return {string} A string representation of the graph.
 	 */
-	toString(idFn = x=>x, outFn) {
+	toString(idFn: (id: NodeID, node?: Node) => string = (x,y)=>x.toString(), outFn) {
 		if (outFn === undefined) {
 			outFn = idFn;
 		}
 		
-		return _.sortBy(this.nodes, "id").map(node =>
+		return _.sortBy(this.nodes, "id").map((node: Node) =>
 			`${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`
 		).join("\n");
 	}
 
-	render(opts={}, display=false) {
-		if (this.enter !== undefined) opts.enter = this.enter;
-		if (this.exit  !== undefined) opts.exit  = this.exit;
-		if (this.unreachable !== undefined) opts.unreachable = [...this.unreachable];
+	render(opts: RenderOpts = {}, display: boolean = false) {
+		if (this.data.enter !== undefined) opts.enter = this.data.enter;
+		if (this.data.exit  !== undefined) opts.exit  = this.data.exit;
+		if (this.data.unreachable !== undefined) opts.unreachable = [...this.data.unreachable];
 		
 		const newOpts = Object.assign({layout: "dagre"}, opts);
 		if (display) {
