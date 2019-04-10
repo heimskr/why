@@ -1,7 +1,6 @@
 #!/usr/bin/env ts-node
 import fs = require("fs");
 
-import _ = require("lodash");
 import dominators = require("dominators");
 const {lt} = dominators;
 
@@ -9,8 +8,7 @@ import {Node, NodeID, NodeOrID, getID} from "./node";
 export {Node} from "./node";
 
 import renderGraph = require("./rendergraph.js");
-const {alpha, numerize, mixins} = require("./util.js");
-mixins(_);
+import _, {alpha, numerize} from "./util";
 
 type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
 

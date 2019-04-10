@@ -14,35 +14,35 @@ export function longString(long: Long[] | Long): string {
 }
 
 // Converts a sequence of longs to strings and splits by \0.
-export function longStrings(longs) {
+export function longStrings(longs: Long[]): string[] {
 	return longString(longs).split("\0");
 }
 
 // Like _.invert, but it doesn't overwrite duplicates; instead, every value in the
 // new object is an array of all keys containing that value in the original object.
-export function multiInvert(obj) {
+export function multiInvert(obj: object): object {
 	let entries = _.entries(obj);
 	return _.fromPairs(_(obj).values().uniq().value().map((val) => [
 		val, entries.filter(([, x]) => x == val).map(([y]) => y)
 	]));
 }
 
-export function pretty(obj) {
+export function pretty(obj: any): string {
 	return jsome.getColoredString(obj);
 }
 
-export function replaceChar(str, index, replacement) {
+export function replaceChar(str: string, index: number, replacement: string): string {
 	console.log(`Replacing ${str[index] == "\n"? "\\n" : str[index] == " "? "space" : str[index]} ` +
 	            `with ${replacement == "\n"? "\\n" : replacement}`);
 	return str.substr(0, index) + replacement + str.substr(index + replacement.length);
 }
 
 // Pushes a value to an array, but only if the value isn't already in the array.
-export function push<T>(dest: T[], ...vals: T[]) {
-	return pushAll(dest, vals);
+export function push<T>(dest: T[], ...vals: T[]): void {
+	pushAll(dest, vals);
 }
 
-export function pushAll<T>(dest: T[], vals: T[]) {
+export function pushAll<T>(dest: T[], vals: T[]): void {
 	for (const val of vals) {
 		if (!dest.includes(val)) {
 			dest.push(val);
@@ -50,13 +50,25 @@ export function pushAll<T>(dest: T[], vals: T[]) {
 	}
 }
 
-export function objectify<T>(arr: T[], initial: () => any = () => undefined): Object {
+export function objectify<T>(arr: T[], initial: () => any = () => undefined): object {
 	return _.fromPairs(arr.map(v => [v, initial()]));
 }
 
 export function notSuperOrEq(a: any[], b: any[]): boolean {
 	// If b contains any value not in a, then a ⊉ b.
 	return _.some(b, v => !a.includes(v));
+}
+
+interface LoDashMixins extends _.LoDashStatic {
+	longString: (long: Long[] | Long) => string;
+	longStrings: (longs: Long[]) => string[];
+	multiInvert: (obj: object) => object;
+	pretty: (obj: any) => string;
+	replaceChar: (str: string, index: number, replacement: string) => string;
+	push: <T>(dest: T[], ...vals: T[]) => void;
+	pushAll: <T>(dest: T[], vals: T[]) => void;
+	objectify: <T>(arr: T[], initial: () => any) => object;
+	notSuperOrEq: (a: any[], b: any[]) => boolean;
 }
 
 _.mixin({
@@ -97,3 +109,5 @@ export function isLetter(x: any): boolean {
 export function numerize(x: string | number): string | number {
 	return typeof x == "number"? x : isNumeric(x)? parseInt(x) : x;
 }
+
+export default <LoDashMixins> _;
