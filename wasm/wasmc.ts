@@ -874,16 +874,16 @@ const _0  = ["register", "zero",  0];
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {
-			alias: {
-				b: "binary",
-				d: "debug"
-			},
-			boolean: ["binary", "debug"],
-			default: {
-				binary: false,
-				debug: false
-			}
-		}), filename = options._[0];
+		alias: {
+			b: "binary",
+			d: "debug"
+		},
+		boolean: ["binary", "debug"],
+		default: {
+			binary: false,
+			debug: false
+		}
+	}), filename = options._[0];
 
 	if (!filename) {
 		console.log("Usage: ./wasmc.js <filename> [out]");
