@@ -6,6 +6,15 @@ const long = require("long");
 
 type Long = typeof long.UZERO;
 
+export type ForeachFunction<T> = (fn: (node: T, index?: number) => void) => void;
+
+export type ReduceFunction<T> = (
+	fn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => any,
+	initialValue: any
+) => any;
+
+export type MapFunction<T> = (fn: (value: T, index?: number, array?: T[]) => any, thisArg?: any) => any[];
+
 // Stringifies a long representing 8 characters.
 export function longString(long: Long[] | Long): string {
 	return (long instanceof Array? long.map(longString)

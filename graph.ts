@@ -8,7 +8,7 @@ import {Node, NodeID, NodeOrID, getID} from "./node";
 export {Node} from "./node";
 
 import renderGraph = require("./rendergraph.js");
-import _, {alpha, numerize} from "./util";
+import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 
 type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
 
@@ -21,8 +21,9 @@ export class Graph {
 	title?: string;
 	length: number;
 	push: (node: Node) => void;
-	forEach: (fn: (node: Node, index?: number) => {}) => void;
-	map: (fn: (value: Node, index?: number, array?: Node[]) => any, thisArg?: any) => any[];
+	forEach: ForeachFunction<Node>;
+	map: MapFunction<Node>;
+	reduce: ReduceFunction<Node>;
 
 	/**
 	 * Creates a new graph.
@@ -314,9 +315,7 @@ export class Graph {
 	 */
 	dTree(startID=0, bidirectional=false) {
 		const [lentar, renameMap, renames] = this.lengauerTarjan(startID);
-		const keys = Object.keys(lentar);
-		const mapped = keys.map(numerize);
-		const out = new Graph(mapped);
+		const out = new Graph(Object.keys(lentar).length);
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
 		Object.entries(lentar).forEach(([k, v]) => {
 			out.nodes[k].data = this.nodes[k].data;
