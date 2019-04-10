@@ -390,8 +390,8 @@ i_call				->	(variable " = "):?
 						{% d => ["instruction", "call", {
 							assign:     d[ 0]? d[0][0] : null,
 							tail:       d[ 1]? d[1][0][0] : null,
-							fastmath:   d[ 3] || null,
-							cconv:      d[ 4] || null,
+							fastmath:   d[ 3]? d[3][1] : null,
+							cconv:      d[ 4]? d[4][1] : null,
 							retattr:    d[ 5]? d[5].map(x => x[1]) : [],
 							returnType: d[ 7][0],
 							name:       d[ 9],
@@ -600,8 +600,8 @@ function_name		->	"@" (var | string)											{% d => d[1][0] %}
 fast_math_flags		->	list[fast_math_flag]										{% compileFastMathFlags %}
 fast_math_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
 
-constant			->	type_any (__ parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map(x => x[0])] %}
-cst_to_type[X]		->	$X __ constant to type_any									{% d => [d[0], ...d[2], d[4]] %}
+constant			->	type_any (__ parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
+cst_to_type[X]		->	$X __ constant to type_any									{% d => [d[0], d[2], d[4]] %}
 cst_to_types		->	("trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp" | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast")
 																					{% __ %}
 const_expr			->	cst_to_type[cst_to_types]									{% d => ["expr", d[0]] /* need to test this. */ %}

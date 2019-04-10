@@ -23,7 +23,13 @@ type IRFunctionMeta = {
 	first: BlockName,
 	exit:  BlockName,
 };
-type IRFunction  = VariableName[] & IRFunctionMeta;
+type ASTFunctionBlock = [string, BlockConnections & {
+	read: VariableName[],
+	written: VariableName[],
+	assigners: {[varName: string]: Instruction},
+	unreachable: boolean
+}];
+type IRFunction  = ASTFunctionBlock[] & IRFunctionMeta;
 type AnyNode     = Node | string | number;
 // type Instruction = ["instruction", string, Object];
 type BlockConnections = {preds: AnyNode[], in: AnyNode[], out: AnyNode[]};
@@ -41,11 +47,10 @@ type ASTTypeAny = ASTTypeInt | ASTTypePtr | ASTTypeArray;
 type ASTTypeInt = ["int", number];
 interface ASTTypePtr   {0: "ptr",   1: ASTTypeAny, 2: number};
 interface ASTTypeArray {0: "array", 1: number,     2: ASTTypeAny};
-type ASTRetAttr  = ["zeroext" | "signext" | "inreg" | "noalias" | "nonnull"]
-                 | ["dereferenceable" | "deferenceable_or_null", number];
-type ASTParAttr  = ["byval" | "inalloca" | "sret" | "nocapture" | "readonly"] | ASTRetAttr;
-type ASTVariable = ["variable", string | number];
-type ASTFunctionType = [ASTTypeAny, ASTParAttr[], ASTVariable | null];
+type IRRetAttr  = ["zeroext" | "signext" | "inreg" | "noalias" | "nonnull"]
+                | ["dereferenceable" | "deferenceable_or_null", number];
+type IRParAttr  = ["byval" | "inalloca" | "sret" | "nocapture" | "readonly"] | IRRetAttr;
+type ASTFunctionType = [ASTTypeAny, IRParAttr[], ASTVariable | null];
 type ASTFunctionMeta = {
 	name: string,
 	type: ASTTypeAny,
@@ -53,9 +58,19 @@ type ASTFunctionMeta = {
 	arity: number,
 	unnamedAddr: "local_unnamed_addr" | "unnamed_addr" | null
 };
-type ASTFunction = ["function", ASTFunctionMeta];
 type ASTDeclaration = ["declaration", ASTFunction];
+type ASTFunction = ["function", ASTFunctionMeta];
 type ASTMetadata = ["metadata", string | number, boolean, ...any[]];
+type ASTVariable = ["variable", string | number];
+type ASTGlobal   = ["global", string];
+type ASTGetElementPtrExpr = ["expr", "getelement", {
+	inbounds: boolean,
+	type: ASTTypeAny,
+	ptr: ASTTypeAny,
+	name: ASTGlobal,
+	indices: [ASTTypeInt, number][]
+}];
+type ASTOperand  = ASTVariable | number | ASTGlobal | ASTGetElementPtrExpr | ["null"];
 
 type InstBase<N extends string, M extends Object> = ["instruction", N, M];
 type InstBrUncond = InstBase<"br_unconditional", {dest: ASTVariable}>;
@@ -66,7 +81,39 @@ type InstBrCond = InstBase<"br_conditional", {
 	iffalse: ASTVariable,
 	loop:    number | null
 }>;
-type Instruction = InstBrUncond | InstBrCond;
+type ASTSwitchLine = [ASTTypeInt, number, ASTVariable];
+type InstSwitch = InstBase<"switch", {
+	type: ASTTypeAny,
+	operand: ASTOperand,
+	default: ASTVariable,
+	table: ASTSwitchLine[]
+}>;
+type IRTailType = "tail" | "notail" | "musttail";
+type IRFastMathFlag = "nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast";
+type IRCConv = "ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" | "preserve_allcc" | "preserve_mostcc"
+             | "x86_vectorcallcc" | "cc10" | "cc11" | "arm_apcscc" | "coldcc" | "webkit_jscc" | "cc64" | "cc65" | "cc66"
+             | "ptx_device" | "x86_stdcallcc" | "cc67" | "cc68" | "cc69" | "cc70" | "cc1023" | "anyregcc" | "cc71"
+             | "cc72" | "cc75" | "msp430_intrcc" | "ptx_kernel" | "cc76" | "cc77" | "cc78" | "spir_func"
+             | "x86_64_win64cc" | "cc79" | "cc80" | "arm_aapcs_vfpcc" | "intel_ocl_bicc" | "x86_64_sysvcc"
+             | "x86_fastcallcc" | "x86_thiscallcc" | "arm_aapcscc" | "spir_kernel";
+type IRCallFnty   = [ASTTypeAny, ASTTypeAny[], boolean];
+type IRCstToTypes = "trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp"
+                  | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast";
+type IRCstToType  = [IRCstToTypes, IRConstant, ASTTypeAny];
+type IRConstExpr  = ["expr", IRCstToType];
+interface IRConstant {0: ASTTypeAny, 1: ASTOperand | IRConstExpr, 2: IRParAttr[]};
+type InstCall = InstBase<"call", {
+	assign: ASTVariable | null,
+	tail: IRTailType | null,
+	fastmath: IRFastMathFlag[] | null,
+	cconv: IRCConv | null,
+	retattr: IRRetAttr[],
+	returnType: IRCallFnty | ASTTypeAny,
+	name: string,
+	args: IRConstant[]
+}>;
+type InstUnreachable = InstBase<"unreachable", {}>;
+type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable;
 
 type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
 type DeclarationType = {type: ASTTypeAny, types: ASTFunctionType[], arity: number, isLocalUnnamed: boolean};
@@ -102,6 +149,7 @@ class LL2W {
 	metadata: StringMap<MetadataType>;
 	globalConstants: StringMap<Object>;
 	declarations: StringMap<DeclarationType>;
+	static builtins = ["_int", "_rit", "_time", "_gettime", "_halt", "_prc", "_prd", "_prx"];
 
 
 	/**
@@ -449,13 +497,12 @@ class LL2W {
 			}
 
 			for (const instruction of instructions) {
-				const [type, name, imeta] = instruction;
-				if (type != "instruction") {
+				if (instruction[0] != "instruction") {
 					continue;
 				}
 
-				if (name == "call") {
-					const iname = imeta.name;
+				if (instruction[1] == "call") {
+					const iname = instruction[2].name;
 					const arity = LL2W.getArity(functions, iname, declarations);
 					const destName = `${iname}:${arity}`;
 					if (LL2W.builtins.includes(iname)) {
@@ -464,19 +511,22 @@ class LL2W {
 						continue;
 					}
 
-					_.push(meta.out, destName);
+					meta.out.push(destName);
 					if (destName in basicBlocks) {
 						// First, make a link from this block to the start of the called function.
 						const destBlock = basicBlocks[destName];
-						_.push(destBlock[1].in, fullName);
+						destBlock[0].in.push(fullName);
 						
 						// Next, we link each return statement from the called function back to this block.
 						// Depending on the exact circumstances, some of the returns (but not all) might not ever return
 						// control to this block, but I imagine it would be extremely tricky to determine which do, so
 						// just have to assume that all of them do. This might end up decreasing performance due to
 						// overly cautious register allocation, but it's probably not a huge concern.
-						for (const [calledName, {out: calledOut}, calledInstructions] of functions[iname]) {
-							const [lastType, lastName] = _.last(calledInstructions);
+						const fn: IRFunction = functions[iname];
+						for (const instr of fn) {
+
+							// const [calledName, {out: calledOut}, calledInstructions] = instr;
+							const [lastType, lastName] = _.last(instr);
 							if (lastType == "instruction" && lastName == "ret") {
 								_.push(calledOut, fullName);
 								_.push(meta.in, `${iname}:${calledName}`);
@@ -963,7 +1013,7 @@ class LL2W {
 	}
 }
 
-LL2W.builtins = ["_int", "_rit", "_time", "_gettime", "_halt", "_prc", "_prd", "_prx"];
+// LL2W.builtins = ["_int", "_rit", "_time", "_gettime", "_halt", "_prc", "_prd", "_prx"];
 
 module.exports = LL2W;
 
