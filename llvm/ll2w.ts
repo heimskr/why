@@ -14,18 +14,27 @@ import path = require("path");
 import jsome = require("jsome");
 const exec = util.promisify(child_process.exec);
 
-type IRFunction = {};
-type AnyNode = Node | string | number;
-type Instruction = ["instruction", string, Object];
-type BasicBlock = [
-	string, // arity
-	{preds: AnyNode[], in: AnyNode[], out: AnyNode[]}, // edges
+type StringMap<T>   = {[key: string]: T};
+type VariableName   = string | number;
+type BlockName      = string | number;
+type IRFunctionMeta = {
+	meta:  ASTFunctionMeta,
+	vars:  VariableName[],
+	first: BlockName,
+	exit:  BlockName,
+};
+type IRFunction  = VariableName[] & IRFunctionMeta;
+type AnyNode     = Node | string | number;
+// type Instruction = ["instruction", string, Object];
+type BlockConnections = {preds: AnyNode[], in: AnyNode[], out: AnyNode[]};
+type BasicBlock  = [
+	BlockConnections, // edges
 	Instruction[] // instructions
 ];
 type FunctionExtractions = {
-	functions: Object;
-	allBlocks: {[key: string]: BasicBlock};
-	blockOrder: Object[];
+	functions: Object,
+	allBlocks: StringMap<BasicBlock>,
+	blockOrder: Object[],
 	functionOrder: Object[];
 };
 type ASTTypeAny = ASTTypeInt | ASTTypePtr | ASTTypeArray;
@@ -37,15 +46,27 @@ type ASTRetAttr  = ["zeroext" | "signext" | "inreg" | "noalias" | "nonnull"]
 type ASTParAttr  = ["byval" | "inalloca" | "sret" | "nocapture" | "readonly"] | ASTRetAttr;
 type ASTVariable = ["variable", string | number];
 type ASTFunctionType = [ASTTypeAny, ASTParAttr[], ASTVariable | null];
-type ASTFunction = ["function", {
+type ASTFunctionMeta = {
 	name: string,
 	type: ASTTypeAny,
 	types: ASTFunctionType[],
 	arity: number,
 	unnamedAddr: "local_unnamed_addr" | "unnamed_addr" | null
-}];
+};
+type ASTFunction = ["function", ASTFunctionMeta];
 type ASTDeclaration = ["declaration", ASTFunction];
 type ASTMetadata = ["metadata", string | number, boolean, ...any[]];
+
+type InstBase<N extends string, M extends Object> = ["instruction", N, M];
+type InstBrUncond = InstBase<"br_unconditional", {dest: ASTVariable}>;
+type InstBrCond = InstBase<"br_conditional", {
+	type:    ASTTypeAny,
+	cond:    ASTVariable | number,
+	iftrue:  ASTVariable,
+	iffalse: ASTVariable,
+	loop:    number | null
+}>;
+type Instruction = InstBrUncond | InstBrCond;
 
 type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
 type DeclarationType = {type: ASTTypeAny, types: ASTFunctionType[], arity: number, isLocalUnnamed: boolean};
@@ -75,12 +96,12 @@ class LL2W {
 	source: string;
 	ast: Object[][];
 	sourceFilename: string;
-	targets: {[key: string]: string};
-	attributes: {[key: string]: Object};
-	structs: {[key: string]: Object};
-	metadata: {[key: string]: MetadataType};
-	globalConstants: {[key: string]: Object};
-	declarations: {[key: string]: DeclarationType};
+	targets: StringMap<string>;
+	attributes: StringMap<Object>;
+	structs: StringMap<Object>;
+	metadata: StringMap<MetadataType>;
+	globalConstants: StringMap<Object>;
+	declarations: StringMap<DeclarationType>;
 
 
 	/**
@@ -178,7 +199,7 @@ class LL2W {
 	 * ignored. If null, all entries will be iterated for.
 	 * @param {function} fn - The function to call on each iteration.
 	 */
-	iterateTree(type, fn) {
+	iterateTree(type: string | null, fn: Function) {
 		if (!this.ast) {
 			throw new Error("AST not yet generated");
 		}
@@ -331,7 +352,7 @@ class LL2W {
 	 * @return {Object<string, IRFunction>} The extracted function declarations.
 	 */
 	extractFunctions(): FunctionExtractions {
-		const functions = {};
+		const functions: StringMap<IRFunction> = {};
 		const allBlocks = {};
 		const blockOrder = [];
 		const functionOrder = [];
@@ -347,23 +368,23 @@ class LL2W {
 			functionOrder.push(meta.name);
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
-			let currentBasicBlock: BasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
+			let currentBasicBlock: [string, BasicBlock] = [meta.arity.toString(), [{preds: [], in: [], out: []}, []]];
 
 			for (const instruction of instructions) {
 				const [name, ...args] = instruction;
 				if (name == "label_c") {
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], {preds: args[1], in: [], out: []}, []];
+					currentBasicBlock = [args[0], [{preds: args[1], in: [], out: []}, []]];
 				} else if (name == "label") {
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], {preds: [], in: [], out: []}, []];
+					currentBasicBlock = [args[0], [{preds: [], in: [], out: []}, []]];
 				} else {
 					exitBlock = currentBasicBlock[0];
-					currentBasicBlock[2].push(instruction);
+					currentBasicBlock[1][1].push(instruction);
 				}
 			}
 
-			if (currentBasicBlock[2].length) {
+			if (currentBasicBlock[1][1].length) {
 				basicBlocks.push(currentBasicBlock);
 			}
 
@@ -372,29 +393,30 @@ class LL2W {
 				blockOrder.push([meta.name, name]);
 			});
 			
-			let allVars = [];
-			const fn = functions[meta.name] = basicBlocks.map(block => {
+			let allVars: VariableName[] = [];
+
+			const fn: IRFunction = functions[meta.name] = Object.assign(basicBlocks.map(block => {
 				const blockVars = LL2W.computeBasicBlockVariables(block);
 				allVars = [...allVars, ...blockVars[1].read, ...blockVars[1].written];
 				return blockVars;
+			}), {
+				meta,
+				vars: _.uniq(allVars),
+				first: basicBlocks[0][0],
+				exit: exitBlock
 			});
-
-			fn.meta = meta;
-			fn.vars = _.uniq(allVars);
-			fn.first = basicBlocks[0][0];
-			fn.exit = exitBlock;
 		});
 
 		return {functions, allBlocks, blockOrder, functionOrder};
 	}
 
-	static connectBlocks(functions, basicBlocks, declarations={}) {
+	static connectBlocks(functions: StringMap<IRFunction>, basicBlocks: StringMap<BasicBlock>, declarations={}) {
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
 			const [funcName, name] = fullName.split(":");
-			const [meta, instructions] = block;
+			const [oldMeta, instructions] = block;
 			const last = _.last(instructions);
 
-			meta.unreachable = false;
+			const meta = Object.assign(oldMeta, {unreachable: false});
 			
 			if (last[1] == "br_unconditional") {
 				const destName = `${funcName}:${last[2].dest[1]}`;
@@ -403,24 +425,24 @@ class LL2W {
 				}
 
 				const destBlock = basicBlocks[destName];
-				_.push(meta.out, destName);
-				_.push(destBlock[0].in, fullName);
+				meta.out.push(destName);
+				destBlock[0].in.push(fullName);
 			} else if (last[1] == "br_conditional") {
 				// I'm assuming that conditional branches go only to other basic blocks within the same function.
 				const {iftrue: [, iftrue], iffalse: [, iffalse]} = last[2];
 				let trueName  = `${funcName}:${iftrue}`,
 					falseName = `${funcName}:${iffalse}`;
-				_.push(basicBlocks[trueName][0].in, fullName);
-				_.push(basicBlocks[falseName][0].in, fullName);
-				_.push(meta.out, trueName);
-				_.push(meta.out, falseName);
+				basicBlocks[trueName][0].in.push(fullName);
+				basicBlocks[falseName][0].in.push(fullName);
+				meta.out.push(trueName);
+				meta.out.push(falseName);
 			} else if (last[1] == "switch") {
 				const imeta = last[2];
 				const targets = [imeta.default, ...imeta.table.map(([,, v]) => v)];
 				for (const [, target] of targets) {
 					const tname = `${funcName}:${target}`;
-					_.push(basicBlocks[tname][0].in, fullName);
-					_.push(meta.out, tname);
+					basicBlocks[tname][0].in.push(fullName);
+					meta.out.push(tname);
 				}
 			} else if (last[1] == "unreachable") {
 				meta.unreachable = true;
@@ -446,7 +468,7 @@ class LL2W {
 					if (destName in basicBlocks) {
 						// First, make a link from this block to the start of the called function.
 						const destBlock = basicBlocks[destName];
-						_.push(destBlock[0].in, fullName);
+						_.push(destBlock[1].in, fullName);
 						
 						// Next, we link each return statement from the called function back to this block.
 						// Depending on the exact circumstances, some of the returns (but not all) might not ever return
