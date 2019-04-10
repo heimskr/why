@@ -8,10 +8,11 @@ import {Node, NodeID, NodeOrID, getID} from "./node";
 export {Node} from "./node";
 
 import * as renderGraph from "./rendergraph";
+import {RenderOptions} from "./rendergraph";
+
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 
 type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
-type RenderOpts = {enter?: NodeID, exit?: NodeID, unreachable?: NodeID[], type?: string};
 
 /**
  * Represents a directed graph datatype.
@@ -755,12 +756,12 @@ export default class Graph {
 		).join("\n");
 	}
 
-	render(opts: RenderOpts = {}, display: boolean = false) {
+	render(opts: RenderOptions = {}, display: boolean = false) {
 		if (this.data.enter !== undefined) opts.enter = this.data.enter;
 		if (this.data.exit  !== undefined) opts.exit  = this.data.exit;
 		if (this.data.unreachable !== undefined) opts.unreachable = [...this.data.unreachable];
 		
-		const newOpts = Object.assign({layout: "dagre"}, opts);
+		const newOpts: RenderOptions = Object.assign({layout: "dagre"}, opts);
 		if (display) {
 			return renderGraph.iterm(this, newOpts);
 		}
@@ -768,7 +769,7 @@ export default class Graph {
 		return renderGraph.render(this, newOpts);
 	}
 
-	display(opts={}) {
+	display(opts: RenderOptions = {}) {
 		return this.render(opts, true);
 	}
 
@@ -777,7 +778,7 @@ export default class Graph {
 		return this;
 	}
 
-	static displayMultiple(opts={}, ...graphs) {
+	static displayMultiple(opts: RenderOptions = {}, ...graphs: Graph[]) {
 		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
 		if (graphs.length == 0) return;
 		const p = graphs[0].printTitle().display(opts).then(() => console.log());

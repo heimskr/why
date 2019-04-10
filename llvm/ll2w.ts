@@ -925,61 +925,62 @@ module.exports = LL2W;
 let debug = (...a: any[]) => {};
 
 if (require.main === module) {
-	const options = minimist(process.argv.slice(2), {
-		alias: {d: "debug", c: "cfg"},
-		boolean: ["debug"],
-		default: {debug: false}
-	}), infile = options._[0];
+	(() => {
+		const options = minimist(process.argv.slice(2), {
+			alias: {d: "debug", c: "cfg"},
+			boolean: ["debug"],
+			default: {debug: false}
+		}), infile = options._[0];
 
-	if (options.debug) {
-		debug = (...a: any[]) => console.log("🐞", ...a);
-	}
+		if (options.debug) {
+			debug = (...a: any[]) => console.log("🐞", ...a);
+		}
 
-	if (!infile) {
-		console.log("Usage: ./ll2w.js <filename> [out]");
-		process.exit(0);
-	}
+		if (!infile) {
+			console.log("Usage: ./ll2w.js <filename> [out]");
+			process.exit(0);
+		}
 
-	let outfile = options._[1] || infile.replace(/\.ll$/, "") + ".why";
-	const compiler = new LL2W(options);
+		let outfile = options._[1] || infile.replace(/\.ll$/, "") + ".why";
+		const compiler = new LL2W(options);
 
-	if (!outfile) {
-		outfile = infile.replace(/\.ll$/, "") + ".why";
-	}
+		if (!outfile) {
+			outfile = infile.replace(/\.ll$/, "") + ".why";
+		}
 
-	try {
-		compiler.feed(fs.readFileSync(infile, "utf8"));
-	} catch(e) {
-		console.log(e);
-		displayIOError(e, infile);
-		process.exit(1);
-	}
-
-	compiler.extractInformation();
-	compiler.extractAttributes();
-	compiler.extractStructs();
-	compiler.extractMetadata();
-	const declarations = compiler.extractDeclarations();
-	compiler.extractGlobalConstants();
-	const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
-	LL2W.connectBlocks(functions, allBlocks, declarations);
-
-	if (options.cfg) {
-		if (!(options.cfg in functions)) {
-			console.error(`Can't print CFG: couldn't find function ${chalk.bold(options.cfg)}.`);
+		try {
+			compiler.feed(fs.readFileSync(infile, "utf8"));
+		} catch(e) {
+			console.log(e);
+			displayIOError(e, infile);
 			process.exit(1);
 		}
 
-		LL2W.computeCFG(functions[options.cfg]).display();
-		process.exit(0);
-	}
+		compiler.extractInformation();
+		compiler.extractAttributes();
+		compiler.extractStructs();
+		compiler.extractMetadata();
+		const declarations = compiler.extractDeclarations();
+		compiler.extractGlobalConstants();
+		const {functions, allBlocks, blockOrder, functionOrder} = compiler.extractFunctions();
+		LL2W.connectBlocks(functions, allBlocks, declarations);
 
-	console.log();
+		if (options.cfg) {
+			if (!(options.cfg in functions)) {
+				console.error(`Can't print CFG: couldn't find function ${chalk.bold(options.cfg)}.`);
+				process.exit(1);
+			}
 
-	// testInterference(functions, allBlocks, declarations);
-	if ("liveness" in functions) {
-		testLiveness(functions.liveness, declarations);
-	}
+			return LL2W.computeCFG(functions[options.cfg]).display();
+		}
+
+		console.log();
+
+		// testInterference(functions, allBlocks, declarations);
+		if ("liveness" in functions) {
+			testLiveness(functions.liveness, declarations);
+		}
+	})();
 }
 
 function testInterference(functions, allBlocks, declarations) {
