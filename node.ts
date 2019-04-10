@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import _ = require("lodash");
-const {alpha, numerize} = require("./util.js");
+import {alpha, numerize} from "./util";
 import {Graph} from "./graph";
 
 /**

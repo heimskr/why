@@ -85,14 +85,6 @@ export function displayIOError(error: Error, filename: string = "file", mode: st
 	}
 }
 
-// export function pushAll(dest, vals) {
-// 	for (const val of vals) {
-// 		if (!dest.includes(val)) {
-// 			dest.push(val);
-// 		}
-// 	}
-// }
-
 export const alpha = "abcdefghijklmnopqrstuvwxyz";
 export function isNumeric(x: any): boolean {
 	return typeof x == "number" || typeof x == "string" && _.every(x, y => "0123456789".includes(y));
@@ -102,6 +94,6 @@ export function isLetter(x: any): boolean {
 	return typeof x == "string" && x.length == 1 && -1 < alpha.indexOf(x.toLowerCase());
 }
 
-export function numerize(x: string): string | number {
-	return isNumeric(x)? parseInt(x) : x;
+export function numerize(x: string | number): string | number {
+	return typeof x == "number"? x : isNumeric(x)? parseInt(x) : x;
 }
