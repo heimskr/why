@@ -1,6 +1,40 @@
-exports.EXCEPTIONS = ["dbz"];
+#!/usr/bin/env ts-node
+export type ExceptionType = "dbz";
+export type FlagType = "IGNORE" | "KNOWN_SYMBOL" | "UNKNOWN_SYMBOL" | "SYMBOL_ID";
+export type ConstantFlags = {[key in FlagType]: number};
+export type RegisterCategory = ("zero" | 0) | "g" | "sp" | "stack" | "fp" | "return" | "hi"
+                             | ("f" | "a" | "st" | "ra" | "t" | "s") | "m" | "e" | "r" | "k" | "lo";
 
-exports.R_TYPES = [
+export type RMath = "add" | "sub" | "mult" | "multu" | "sll" | "srl" | "sra" | "mod";
+export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "land" | "lnand" | "lnor" | "lnot" | "lor" | "lxnor" | "lxor";
+export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
+export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
+export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "spush" | "spop";
+export type RSpecial = "time" | "ring";
+export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
+
+export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi";
+export type ILogic = "andi" | "nandi" | "nori" | "ori" | "xnori" | "xori";
+export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui";
+export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui";
+export type ISpecial = "timei" | "ringi" | "int" | "rit";
+export type IType = IMath | ILogic | IComp | IMem | ISpecial;
+
+export type JCond = "jp" | "jn" | "jz" | "jnz";
+export type JBasic = "j" | "jc";
+export type JType = JBasic | JCond;
+
+export type ExtName = "printr" | "halt" | "eval" | "prc" | "prd" | "prx" | "sleep"
+                    | "xn_init" | "xn_connect" | "xn_send" | "xn_recv";
+export type PseudoType = "mv" | "ret" | "push" | "pop" | "jeq" | "sge" | "sg" | "sgeu" | "sgu" | "sgeui" | "sgui";
+
+export type OpName = RType | IType | JType | "ext";
+export type AllOps = OpName | ExtName | PseudoType;
+
+
+export const EXCEPTIONS: ExceptionType[] = ["dbz"];
+
+export const R_TYPES = [
 	0b000000000001, // Math
 	0b000000000010, // Logic
 	0b000000001100, // Move From HI Register, Move From LO Register
@@ -12,7 +46,7 @@ exports.R_TYPES = [
 	0b000000110010, // Change Ring
 ];
 
-exports.I_TYPES = [
+export const I_TYPES: number[] = [
 	0b000000000011, // Add Immediate
 	0b000000000100, // Subtract Immediate
 	0b000000000101, // Multiply Immediate
@@ -51,7 +85,7 @@ exports.I_TYPES = [
 	0b000000110011, // Change Ring Immediate
 ];
 
-exports.J_TYPES = [
+export const J_TYPES: number[] = [
 	0b000000001111, // Jump
 	0b000000010000, // Jump Conditional
 	0b000000101100, // Jump If Positive
@@ -60,7 +94,7 @@ exports.J_TYPES = [
 	0b000000101111, // Jump If Nonzero
 ];
 
-exports.OPCODES = {
+export const OPCODES: {[key in OpName]: number} = {
 	add:    0b000000000001,
 	sll:    0b000000000001,
 	srl:    0b000000000001,
@@ -103,6 +137,8 @@ exports.OPCODES = {
 	jc:     0b000000010000,
 	jr:     0b000000010001,
 	jrc:    0b000000010001,
+	jrl:    0b000000010001,
+	jrlc:   0b000000010001,
 	c:      0b000000010010,
 	cb:     0b000000010010,
 	l:      0b000000010010,
@@ -144,7 +180,7 @@ exports.OPCODES = {
 	ringi:  0b000000110011,
 };
 
-exports.FUNCTS = {
+export const FUNCTS: {[key in RType]: number} = {
 	add:   0b000000000000,
 	and:   0b000000000000,
 	c:     0b000000000000,
@@ -189,7 +225,7 @@ exports.FUNCTS = {
 	lxor:  0b000000001110,
 };
 
-exports.REGISTER_OFFSETS = {
+export const REGISTER_OFFSETS: {[key in RegisterCategory]: number} = {
 	0:      0,
 	zero:   0,
 	g:      1,
@@ -211,7 +247,7 @@ exports.REGISTER_OFFSETS = {
 	e:    122,
 };
 
-exports.EXTS = {
+export const EXTS: {[key in ExtName]: number} = {
 	printr: 0b000000000001, // prints contents of register whose ID is stored in $rs.
 	halt:   0b000000000010, // tells the vm to stop
 	eval:   0b000000000011, // executes the string starting at a given address as JS
@@ -228,17 +264,22 @@ exports.EXTS = {
 
 // largest number of arguments allowed for a subroutine call.
 // equal to the number of arguments registers.
-exports.MAX_ARGS = exports.REGISTER_OFFSETS.t - exports.REGISTER_OFFSETS.a;
+export const MAX_ARGS = REGISTER_OFFSETS.t - REGISTER_OFFSETS.a;
 
-exports.FLAGS = {
+export const FLAGS: ConstantFlags = {
 	IGNORE: 0,
-	KNOWN_SYMBOL: 1,   // During compilation, indicates that the imm/addr refers to a label and isn't a hardcoded number.
-	UNKNOWN_SYMBOL: 2, // During compilation, indicates that the imm/addr is the ID of a symbol that wasn't defined in the program's source code.
-	SYMBOL_ID: 3,      // During linking, indicates that the imm/addr of the instruction has been replaced with the corresponding label ID.
+	
+	// During compilation, indicates that the imm/addr refers to a label and isn't a hardcoded number.
+	KNOWN_SYMBOL: 1,
+	
+	// During compilation, indicates that the imm/addr is the ID of a symbol that wasn't defined in the source code.
+	UNKNOWN_SYMBOL: 2,
+	
+	// During linking, indicates that the imm/addr of the instruction has been replaced with the corresponding label ID.
+	SYMBOL_ID: 3,
 };
 
-exports.CONDITIONS = {
-	[null]: 0,
+export const CONDITIONS: {[key: string]: number} = {
 	"": 0,
 	p:  0b1000,
 	n:  0b1001,
@@ -246,14 +287,14 @@ exports.CONDITIONS = {
 	nz: 0b1011,
 };
 
-exports.ALU_MASKS = {
+export const ALU_MASKS: {[key: string]: number} = {
 	z: 0b0001,
 	n: 0b0010,
 	c: 0b0100,
 	o: 0b1000,
 };
 
-exports.SYMBOL_TYPES = {
+export const SYMBOL_TYPES: {[key: string]: number} = {
 	UNKNOWN: 0,
 	KNOWN_POINTER: 1,
 	UNKNOWN_POINTER: 2,
@@ -261,12 +302,13 @@ exports.SYMBOL_TYPES = {
 	DATA: 4,
 };
 
-exports.RINGS = {
+export const RINGS: {[key: string]: number} = {
 	KERNEL: 0,
 	USER: 3
 };
 
-exports.INTERRUPTS = { // [ID, new mode (-1 for unchanged), max permitted mode (-1 for any)]
+export const INTERRUPTS: {[key: string]: [number, number, number]} = {
+	 // [ID, new mode (-1 for unchanged), max permitted mode (-1 for any)]
 	NULL:   [0, -1, -1],
 	SYSTEM: [1,  0, -1],
 	TIMER:  [2, -1,  0],
