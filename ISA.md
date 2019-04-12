@@ -84,11 +84,6 @@
 						<li><a href="#op-xori">Bitwise XOR Immediate</a>   (<code>xori</code>)</li>
 					</ol>
 				</li>
-				<li><a href="#ops-data-i">Data (I-Types)</a>
-					<ol>
-						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
-					</ol>
-				</li>
 				<li><a href="#ops-comp-r">Comparisons (R-Types)</a>
 					<ol>
 						<li><a href="#op-cmp">Compare</a> (<code>cmp</code>)</li>
@@ -152,6 +147,7 @@
 						<li><a href="#op-sbi">Store Byte Immediate</a> (<code>sbi</code>)</li>
 						<li><a href="#op-lbni">Load Byte Indirect Immediate</a> (<code>lbni</code>)</li>
 						<li><a href="#op-set">Set</a> (<code>set</code>)</li>
+						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-special">Special Instructions</a>
@@ -555,14 +551,6 @@ Computes the bitwise XNOR of `rs` and a constant and stores the result in `rd`.
 
 Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 
-## <a name="ops-data-i"></a>Data (I-Types)
-
-### <a name="op-lui"></a>Load Upper Immediate (`lui`)
-> `lui: imm -> $rd`  
-> `000000001101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
-
-Loads an immediate value into the upper half of the word at `rd`. The lower half is not affected.
-
 ## <a name="ops-comp-r"></a>Comparisons (R-Types)
 
 ### <a name="op-cmp"></a>Compare (`cmp`)
@@ -802,6 +790,12 @@ Copies the byte stored in memory at address `imm` into the memory address pointe
 > `000000010101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets a register to the given immediate value.
+
+### <a name="op-lui"></a>Load Upper Immediate (`lui`)
+> `lui: imm -> $rd`  
+> `000000001101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Loads an immediate value into the upper half of the word at `rd`. The lower half is not affected.
 
 ## <a name="ops-special"></a>Special Instructions
 
