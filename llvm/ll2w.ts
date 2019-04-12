@@ -3,13 +3,13 @@ import minimist = require("minimist");
 import fs = require("fs");
 const chalk = require("chalk");
 import getline = require("get-line-from-pos");
-import nearley = require("nearley");
+import {Grammar, Parser, CompiledRules} from "nearley";
 import Graph from "../graph";
 import util = require("util");
 import child_process = require("child_process");
-import rimraf = require("rimraf");
-import shell_escape = require("shell-escape");
-import path = require("path");
+import rimraf from "rimraf";
+import shell_escape from "shell-escape";
+import path from "path";
 import jsome = require("jsome");
 const exec = util.promisify(child_process.exec);
 
@@ -87,7 +87,7 @@ class LL2W {
 		 * @type {nearley.Parser}
 		 */
 		// this.parser = new nearley.Parser(this.grammar.ParserRules, this.grammar.ParserStart);
-		this.parser = new nearley.Parser(nearley.Grammar.fromCompiled(this.grammar));
+		this.parser = new Parser(Grammar.fromCompiled(this.grammar));
 	}
 
 	/**

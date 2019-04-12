@@ -1,12 +1,12 @@
-#!/usr/bin/env node
-let fs = require("fs"),
-	path = require("path"),
-	chalk = require("chalk"),
-	minimist = require("minimist"),
-	Long = require("long"),
-	WASMC = require("./wasmc.js"),
-	Parser = require("../wvm/parser.js"),
-	_ = require("lodash");
+#!/usr/bin/env ts-node
+import * as fs from "fs";
+import * as path from "path";
+const chalk = require("chalk");
+import minimist = require("minimist");
+import * as Long from "long";
+import WASMC, {SymbolTable} from "./wasmc";
+import Parser from "../wvm/parser.js";
+import _ from "../util";
 
 const {FLAGS, EXCEPTIONS, SYMBOL_TYPES} = require("./constants.js");
 
@@ -21,39 +21,49 @@ require("string.prototype.padend").shim();
 /**
  * Represents a `wld` instance.
  */
-class Linker {
-	constructor(options, objects, out) {
+export default class Linker {
+	/**
+	 * The parser used to parse the main object file.
+	 */
+	parser: Parser;
+
+	options: {[key: string]: any};
+	objectFilenames: string[];
+	outputFilename: string;
+	combinedSymbols: SymbolTable;
+	combinedCode: Long[];
+	combinedData: Long[];
+	static assembler: WASMC = new WASMC();
+
+	constructor(options: {[key: string]: any}, objects: string[], out: string) {
 		this.options = options;
 		this.objectFilenames = objects;
 		this.outputFilename = out;
 
-		/**
-		 * The parser used to parse the main object file.
-		 * @type {Parser}
-		 */
 		this.parser = null;
 	}
 
 	/**
 	 * Opens the main file and handles it depending on whether it's wasm source or wvm bytecode.
-	 * @param  {string} filename The filename of the main file.
-	 * @return {Parser} A Parser instance that has been fed the main file.
+	 * @param  filename The filename of the main file.
+	 * @return A Parser instance that has been fed the main file.
 	 */
-	openMain(filename) {
-		const text = fs.readFileSync(filename, "utf8");
-		let bytecode;
+	openMain(filename: string): Parser {
+		const text: string = fs.readFileSync(filename, "utf8");
+		let bytecode: string;
 		
 		if (text.match(/#(meta|data|includes|code)/)) {
 			// The file is probably wasm source code.
 			// We take note of its #includes section and add the listed files to `objectFilenames`.
 			// We then compile it and create a parser from the compiled code.
-			const asm = new WASMC();
-			asm.compile(text);
-			bytecode = WASMC.longs2strs(asm.assembled).join("\n");
-			if (asm.parsed.includes) {
+			Linker.assembler.compile(text);
+			bytecode = WASMC.longs2strs(Linker.assembler.assembled).join("\n");
+			if (Linker.assembler.parsed.includes) {
 				// Included files are relative to the source file, so we need to resolve the paths.
-				this.objectFilenames.splice(1, 0, ...asm.parsed.includes.map(f => path.resolve(path.dirname(filename), f)));
-				// In case the main source includes a file already specified as an input from the command line, we need to remove duplicates.
+				this.objectFilenames.splice(1, 0,
+				    ...Linker.assembler.parsed.includes.map(f => path.resolve(path.dirname(filename), f)));
+				// In case the main source includes a file already specified as an input from the command line,
+				// we need to remove duplicates.
 				this.objectFilenames = _.uniq(this.objectFilenames);
 			}
 		} else {
@@ -65,7 +75,7 @@ class Linker {
 			bytecode = text;
 		}
 
-		const parser = new Parser();
+		const parser: Parser = new Parser();
 		parser.read(bytecode);
 		return parser;
 	}
@@ -173,9 +183,10 @@ class Linker {
 				const symbol = this.combinedSymbols[label];
 				const type = symbolTypes[label];
 				if (type == "code") {
-					// Step 7f: For each code symbol in the global symbol table, increase its address by the included symbol table's length.
+					// Step 7f: For each code symbol in the global symbol table,
+					// increase its address by the included symbol table's length.
 					symbol[1] = symbol[1].add(subtableLength * 8);
-				} else if (type == "data" || symbol == ".end") {
+				} else if (type == "data" || label == ".end") { // TODO: is `label == ".end"` correct?
 					// Step 7g: For each data symbol in the global symbol table, increase its address
 					// by the included data section's length + the included code section's length.
 					symbol[1] = symbol[1].add(subtableLength * 8 + subcodeLength);
@@ -274,12 +285,11 @@ class Linker {
 	}
 
 	static repointerize(data, symtab, offsets, combined) {
-		const {$end} = offsets;
 		for (const key in symtab) {
 			const [, addr, type] = symtab[key];
 			if (type == SYMBOL_TYPES.KNOWN_POINTER || type == SYMBOL_TYPES.UNKNOWN_POINTER) {
 				const index = addr.toInt() / 8;
-				const ptr = Linker.findSymbolFromID(combined[index], symtab, $end);
+				const ptr = Linker.findSymbolFromID(combined[index], symtab);
 				// console.log(key, addr.toString(), combined[index].toString(16), "\n\n\n", symtab);
 				if (symtab[ptr]) {
 					combined[index] = symtab[ptr][1];
@@ -360,9 +370,9 @@ class Linker {
 
 				const id = symbolTable[name][0];
 				if (type == "i") {
-					longs[i] = WASMC.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID, conditions);
+					longs[i] = Linker.assembler.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID, conditions);
 				} else {
-					longs[i] = WASMC.jType(opcode, rs, id, link, FLAGS.SYMBOL_ID, conditions);
+					longs[i] = Linker.assembler.jType(opcode, rs, id, link, FLAGS.SYMBOL_ID, conditions);
 				}
 			}
 		}
@@ -371,16 +381,18 @@ class Linker {
 	/**
 	 * Undoes desymbolization; converts the imm/addr values of the I-/J-type instructions marked with
 	 * the SYMBOL_ID or UNKNOWN_SYMBOL flags in a list of Longs from symbol IDs to absolute addresses.
-	 * @param {Long} longs An array of compiled code.
-	 * @param {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
+	 * @param longs An array of compiled code.
+	 * @param symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 */
-	static resymbolize(longs, symbolTable) {
+	static resymbolize(longs: Long[], symbolTable: SymbolTable) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
 			const {opcode, type, flags, rs, rd, imm, addr, link, conditions} = parsedInstruction;
 			if (flags == FLAGS.SYMBOL_ID || flags == FLAGS.UNKNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
-					throw `Found an instruction not of type I or J with \x1b[1m${flags == FLAGS.UNKNOWN_SYMBOL? "UNKNOWN_SYMBOL" : "SYMBOL_ID"}\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
+					throw new Error(`Found an instruction not of type I or J with \x1b[1m` +
+					                (flags == FLAGS.UNKNOWN_SYMBOL? "UNKNOWN_SYMBOL" : "SYMBOL_ID") + "\x1b[22m set at "
+					                + `offset \x1b[1m0x${i * 8}\x1b[22m.`);
 				}
 
 				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
@@ -394,19 +406,20 @@ class Linker {
 						continue;
 					}
 
-					throw `resymbolize: Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x${val.toString(16).padStart(16, "0")}\x1b[0m.`;
+					throw new Error(`resymbolize: Couldn't find a symbol corresponding to \x1b[0m\x1b[1m0x` +
+					                val.toString(16).padStart(16, "0") + "\x1b[0m.");
 				}
 
 				const addr = symbolTable[name][1];
 				if (addr.high != 0) {
-					console.warn(`Truncating address of label ${chalk.bold(name)} from ${chalk.bold(`0x${addr.toString(16).padStart(16, "0")}`)} to ${chalk.bold(`0x${addr.low.toString(16).padStart(16, "0")}`)}.`);
+					console.warn("Truncating address of label", chalk.bold(name),
+					             "to",   chalk.bold(`0x${addr.toString(16).padStart(16, "0")}`),
+					             "from", chalk.bold(`0x${addr.low.toString(16).padStart(16, "0")}`) + ".");
 				}
 
-				if (type == "i") {
-					longs[i] = WASMC.iType(opcode, rs, rd, addr.toInt(), FLAGS.KNOWN_SYMBOL, conditions, false);
-				} else {
-					longs[i] = WASMC.jType(opcode, rs, addr.toInt(), link, FLAGS.KNOWN_SYMBOL, conditions, false);
-				}
+				longs[i] = type == "i"?
+					Linker.assembler.iType(opcode, rs, rd, addr.toInt(),       FLAGS.KNOWN_SYMBOL, conditions, false) :
+					Linker.assembler.jType(opcode, rs,     addr.toInt(), link, FLAGS.KNOWN_SYMBOL, conditions, false);
 			}
 		}
 	}
@@ -417,7 +430,7 @@ class Linker {
 	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
-	static findSymbolFromID(id, symbolTable) {
+	static findSymbolFromID(id: number, symbolTable: SymbolTable): string | null {
 		for (const name in symbolTable) {
 			if (symbolTable[name][0] == id) {
 				return name;
@@ -429,12 +442,12 @@ class Linker {
 
 	/**
 	 * Finds a symbol name based on its address.
-	 * @param  {number} addr An address.
-	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
-	 * @param  {number} endOffset The address of the start of the heap.
-	 * @return {?string} A symbol name if one was found; `null` otherwise.
+	 * @param  addr        An address.
+	 * @param  symbolTable An object mapping a symbol name to a tuple of its ID and its address.
+	 * @param  endOffset   The address of the start of the heap.
+	 * @return A symbol name if one was found; `null` otherwise.
 	 */
-	static findSymbolFromAddress(addr, symbolTable, endOffset) {
+	static findSymbolFromAddress(addr: number, symbolTable: SymbolTable, endOffset: number): string | null {
 		for (const name in symbolTable) {
 			if (symbolTable[name][1].eq(addr)) {
 				return name;
@@ -450,27 +463,28 @@ class Linker {
 
 	/**
 	 * Writes the output of the linking process to a file.
-	 * @param {Long[]} longs The final linked output as an array of Longs.
-	 * @param {string} [outfile] A filename (`options.out` if not specified).
+	 * @param  longs    The final linked output as an array of Longs.
+	 * @param [outfile] A filename (`options.out` if not specified).
 	 */
-	writeOutput(longs, outfile=this.options.out) {
+	writeOutput(longs: Long[], outfile: string = this.options.out) {
 		fs.writeFileSync(outfile, WASMC.longs2strs(longs).join("\n"));
 	}
 
 	/**
 	 * Prints a message to the console that indicates the linking was successful.
-	 * @param {string} infile The input filename.
-	 * @param {string} outfile The output filename.
+	 * @param infile  The input filename.
+	 * @param outfile The output filename.
 	 */
-	printSuccess(infile=this.objectFilenames[0], outfile=this.options.out) {
-		console.log(chalk.green.bold(" \u2714"), `Successfully linked ${chalk.bold(path.relative(".", infile))} and saved the output to ${chalk.bold(path.relative(".", outfile))}.`);
+	printSuccess(infile: string = this.objectFilenames[0], outfile: string = this.options.out) {
+		console.log(chalk.green.bold(" \u2714"), "Successfully linked", chalk.bold(path.relative(".", infile)),
+		            "and saved the output to", chalk.bold(path.relative(".", outfile)) + ".");
 	}
 
-	warn(...args) {
+	warn(...args: any[]) {
 		console.warn(...args);
 	}
 
-	log(...args) {
+	log(...args: any[]) {
 		if (this.options.debug) {
 			console.log(...args);
 		}

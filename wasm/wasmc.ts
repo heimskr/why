@@ -49,7 +49,8 @@ export type ParsedInstruction = [string, string, ...any[]] & {inSubroutine?: boo
 export type WASMCParsed = {
 	code: ParsedInstruction[],
 	meta: {[key: string]: any},
-	data: {[key: string]: DataPair} 
+	data: {[key: string]: DataPair},
+	includes?: string[]
 };
 
 /**
