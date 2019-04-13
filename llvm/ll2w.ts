@@ -14,7 +14,7 @@ import jsome = require("jsome");
 const exec = util.promisify(child_process.exec);
 
 import {StringMap, MetadataType, DeclarationType, ASTMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
-        VariableName, BasicBlockExtra} from "./types";
+        VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction} from "./types";
 
 import _, {displayIOError, isNumeric, pushAll} from "../util";
 
@@ -35,17 +35,17 @@ import {BUILTINS} from "./constants";
  */
 class LL2W {
 	options: {debug: boolean, cfg: boolean, dev: boolean};
-	grammar: nearley.CompiledRules;
-	parser: nearley.Parser;
-	source: string;
-	ast: Object[][];
-	sourceFilename: string;
-	targets: StringMap<string>;
-	attributes: StringMap<Object>;
-	structs: StringMap<Object>;
-	metadata: StringMap<MetadataType>;
-	globalConstants: StringMap<Object>;
-	declarations: StringMap<DeclarationType>;
+	grammar?: nearley.CompiledRules;
+	parser?: nearley.Parser;
+	source: string | null = null;
+	ast?: Object[][];
+	sourceFilename: string | null = null;
+	targets?: StringMap<string>;
+	attributes?: StringMap<Object>;
+	structs?: StringMap<Object>;
+	metadata?: StringMap<MetadataType>;
+	globalConstants?: StringMap<Object>;
+	declarations?: StringMap<DeclarationType>;
 	static builtins = ["_int", "_rit", "_time", "_gettime", "_halt", "_prc", "_prd", "_prx"];
 
 
@@ -80,13 +80,17 @@ class LL2W {
 			}
 
 			process.exit(1);
+			throw e;
+		}
+
+		if (!this.grammar) {
+			throw new Error("Loading grammar failed.");
 		}
 
 		/**
 		 * The LLVM IR parser.
 		 * @type {nearley.Parser}
 		 */
-		// this.parser = new nearley.Parser(this.grammar.ParserRules, this.grammar.ParserStart);
 		this.parser = new Parser(Grammar.fromCompiled(this.grammar));
 	}
 
@@ -95,7 +99,10 @@ class LL2W {
 	 * and parses it.
 	 * @param {string} text - The source code for the compiler to use.
 	 */
-	feed(text) {
+	feed(text: string) {
+		if (!this.parser) throw new Error("Parser not initialized.");
+		if (!this.parser) throw new Error("Parser not initialized.");
+
 		this.debug(() => console.time("parse"));
 		this.initialize();
 
@@ -103,15 +110,19 @@ class LL2W {
 		 * The source code of the program as passed to feed() with one newline appended.
 		 * @type {string}
 		 */
-		this.source = text + "\n";
+		const source: string = this.source = text + "\n";
 
 		let trees;
 		try {
 			trees = this.parser.feed(this.source).results;
 		} catch (e) {
-			console.error(chalk.red("Syntax error"), "at", chalk.white(`${getline(this.source, e.offset)}:${e.offset - this.source.split(/\n/).slice(0, getline(this.source, e.offset) - 1).join("\n").length}`) + ":");
+			console.error(chalk.red("Syntax error"), "at", chalk.white(getline(source, e.offset) + ":" +
+				(e.offset - source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length) + "):"));
+
 			if (this.options.dev) {
-				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => `(@${getline(this.source, e.offset)}:${e.offset - this.source.split(/\n/).slice(0, getline(this.source, e.offset)).join("\n").length + $2})`));
+				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0: never, $1: never, $2: string) =>
+					`(@${getline(source, e.offset)}:` + (e.offset - source.split(/\n/).slice(0,
+					getline(source, e.offset)).join("\n").length) + $2 + ")"));
 			}
 
 			process.exit(1);
@@ -171,10 +182,10 @@ class LL2W {
 		 * A map of target definitions.
 		 * @type {Object<string, string>}
 		 */
-		this.targets = {};
+		const targets: StringMap<string> = this.targets = {};
 
-		this.iterateTree("source_filename", name => this.sourceFilename = name);
-		this.iterateTree("target", (key, value) => this.targets[key] = value);
+		this.iterateTree("source_filename", (name: string) => this.sourceFilename = name);
+		this.iterateTree("target", (key: string, value: string) => targets[key] = value);
 	}
 
 	/**
@@ -186,9 +197,9 @@ class LL2W {
 		 * A map of attribute definitions.
 		 * @type {Object<string, Array>}
 		 */
-		this.attributes = {};
+		const attributes: StringMap<Object> = this.attributes = {};
 
-		this.iterateTree("attributes", (name, attrs) => this.attributes[name] = attrs);
+		this.iterateTree("attributes", (name: string, attrs: Object) => attributes[name] = attrs);
 		return this.attributes;
 	}
 
@@ -201,9 +212,9 @@ class LL2W {
 		 * A map of struct definitions.
 		 * @type {Object<string, Array>}
 		 */
-		this.structs = {};
+		const structs: StringMap<Object> = this.structs = {};
 
-		this.iterateTree("struct", (name, types) => this.structs[name] = types);
+		this.iterateTree("struct", (name: string, types: Object) => structs[name] = types);
 		return this.structs;
 	}
 
@@ -216,13 +227,16 @@ class LL2W {
 		 * A map of metadata entries.
 		 * @type {Object<string, Object>}
 		 */
-		this.metadata = {};
+		const metadata: StringMap<MetadataType> = this.metadata = {};
 
-		const metas = this.ast.filter(([type]) => type == "metadata");
+		if (!this.ast) throw new Error("AST not yet generated");
+
+		const metas = this.ast.filter(([type]) => type == "metadata") as ASTMetadata[];
 		const graph = new Graph(metas.length);
 
 		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
-			let recursive = false, toAdd = [];
+			let recursive = false;
+			let toAdd: any[] = [];
 
 			items.forEach((item, i) => {
 				if (item == id) {
@@ -234,22 +248,22 @@ class LL2W {
 				}
 			});
 
-			this.metadata[id] = {recursive, distinct, items: toAdd};
+			metadata[id] = {recursive, distinct, items: toAdd};
 		});
 
-		graph.sortedDFS().forEach(({id}) => graph.getNode(id).out.forEach(dependency => {
-			this.metadata[id].items = _.unionWith(this.metadata[id].items, this.metadata[dependency].items, _.isEqual);
+		graph.sortedDFS().forEach(({id}) => graph.getNodeSafe(id).out.forEach(dependency => {
+			metadata[id].items = _.unionWith(metadata[id].items, metadata[dependency].items, _.isEqual);
 		}));
 
 		metas.filter(([, id]) => !_.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
-			this.metadata[id] = {
+			metadata[id] = {
 				recursive: false,
 				distinct, 
-				items: _.uniqWith(_.flatten(items.map(i => this.metadata[i].items)), _.isEqual)
+				items: _.uniqWith(_.flatten(items.map(i => metadata[i].items)), _.isEqual)
 			};
 		});
 
-		return this.metadata;
+		return metadata;
 	}
 
 	/**
@@ -261,9 +275,9 @@ class LL2W {
 		 * A map of global constants.
 		 * @type {Object<string, Object>}
 		 */
-		this.globalConstants = {};
+		const globalConstants: StringMap<Object> = this.globalConstants = {};
 
-		this.iterateTree("global constant", item => this.globalConstants[item.name] = _.omit(item, "name"));
+		this.iterateTree("global constant", (item: {name:string}) => globalConstants[item.name] = _.omit(item, "name"));
 		return this.globalConstants;
 	}
 
@@ -271,23 +285,23 @@ class LL2W {
 	 * Finds and extracts function declarations from the AST.
 	 * @return {Object<string, IRDeclaration>} The extracted function declarations.
 	 */
-	extractDeclarations() {
+	extractDeclarations(): StringMap<DeclarationType> {
 		/**
 		 * A map of function declarations.
 		 * @type {Object<string, Object>}
 		 */
-		this.declarations = {};
+		const declarations: StringMap<DeclarationType> = this.declarations = {};
 		
 		this.iterateTree("declaration", (dec: ASTFunction) => {
 			const [, {name, type, types, arity, unnamedAddr}] = dec;
-			if (name in this.declarations) {
+			if (name in declarations) {
 				warn("Duplicate declaration for", chalk.bold(name) + ".");
 			}
 
-			this.declarations[name] = {type, types, arity, isLocalUnnamed: unnamedAddr == "local_unnamed_addr"};
+			declarations[name] = {type, types, arity, isLocalUnnamed: unnamedAddr == "local_unnamed_addr"};
 		});
 
-		return this.declarations;
+		return declarations;
 	}
 
 	/**
@@ -300,13 +314,13 @@ class LL2W {
 		const blockOrder: [string, string][] = [];
 		const functionOrder: string[] = [];
 
-		this.iterateTree("function", (meta, instructions) => {
+		this.iterateTree("function", (meta: ASTFunctionMeta, instructions: Instruction[]) => {
 			// LLVM helpfully indicates basic blocks with comments and labels.
 			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
 			const basicBlocks: BasicBlock[] = [];
 
-			let exitBlock: string = null;
+			let exitBlock: string | null = null;
 
 			functionOrder.push(meta.name);
 			
@@ -314,7 +328,8 @@ class LL2W {
 			let currentBasicBlock: BasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
-				const [name, ...args] = instruction;
+				console.log({instruction});
+				const [name, ...args] = instruction as any; // TODO
 				if (name == "label_c") {
 					basicBlocks.push(currentBasicBlock);
 					currentBasicBlock = [args[0], {preds: args[1], in: [], out: []}, []];
@@ -338,7 +353,7 @@ class LL2W {
 			
 			let allVars: VariableName[] = [];
 
-			functions[meta.name] = Object.assign(basicBlocks.map(block => {
+			(functions as any)[meta.name] = Object.assign(basicBlocks.map(block => { // TODO
 				const computed = LL2W.computeBasicBlockVariables(block);
 				allVars = [...allVars, ...computed[1].read, ...computed[1].written];
 				return computed;
@@ -357,7 +372,7 @@ class LL2W {
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
 			const [funcName, name] = fullName.split(":");
 			const [blockName, oldMeta, instructions] = block;
-			const last = _.last(instructions);
+			const last: any = _.last(instructions); // TODO
 
 			const meta = Object.assign(oldMeta, {unreachable: false});
 			
@@ -421,7 +436,7 @@ class LL2W {
 						for (const instr of fn) {
 							const [calledName, {out: calledOut}, calledInstructions] = instr;
 
-							const {0: lastType, 1: lastName} = _.last(calledInstructions);
+							const {0: lastType, 1: lastName} = _.last(calledInstructions) as any; // TODO
 							if (lastType == "instruction" && lastName == "ret") {
 								calledOut.push(fullName);
 								meta.in.push(`${iname}:${calledName}`);
@@ -440,7 +455,7 @@ class LL2W {
 
 	static computeOperands(instruction) { // -> {read: var[], written: var[], assigner: ?var }
 		const [, type, meta] = instruction;
-		let read = [], written = [], assigner = null;
+		let read: any[] = [], written: any[] = [], assigner: any = null; // TODO
 
 		const isVar = x => x instanceof Array && x[0] == "variable";
 		const tryRead = x => isVar(x) && read.push(x[1]);
@@ -509,8 +524,8 @@ class LL2W {
 		// /*
 		basicBlock[2].forEach(instruction => {
 			const result = LL2W.computeOperands(instruction);
-			read = read.concat(result.read);
-			written = written.concat(result.written);
+			read = read.concat(result.read as any); // TODO
+			written = written.concat(result.written as any); // TODO
 			if (result.assigner) assigners[result.assigner] = instruction;
 		});
 
@@ -519,7 +534,7 @@ class LL2W {
 			written: _.uniq(written),
 			assigners: assigners,
 			unreachable: null
-		}), basicBlock[2]];
+		}) as any, basicBlock[2]]; // TODO
 		// */
 		// return basicBlock;
 	}
@@ -585,7 +600,7 @@ class LL2W {
 			block[1].out
 				.filter(s => s.substr(0, s.indexOf(":")) == name)
 				.map(s => s.substr(s.indexOf(":") + 1))
-				.map(s => g.findSingle(b => b.data.label == s))
+				.map(s => g.findSingle((b: any) => b.data.label == s)) // TODO
 				.forEach(n => g[i].arc(n));
 		});
 

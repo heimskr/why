@@ -34,7 +34,7 @@ export class Node {
 	 * @param {Graph}  graph The graph containing this node.
 	 * @param {*}      data  The data attached to the node.
 	 */
-	constructor(id: NodeID, graph: Graph, data=null) {
+	constructor(id: NodeID, graph: Graph, data: any = null) {
 		/**
 		 * The node's ID.
 		 * @type {number}

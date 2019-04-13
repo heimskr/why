@@ -38,10 +38,10 @@ module.exports = function(grunt) {
 			//				tasks: ["jsdoc"]
 			//			}
 			
-			ts: {
-				files: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
-				tasks: ["ts"]
-			}
+			// ts: {
+			// 	files: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
+			// 	tasks: ["ts"]
+			// }
 		},
 		
 		exorcise: {
@@ -103,12 +103,14 @@ module.exports = function(grunt) {
 		ts: {
 			options: {
 				compile: true,
-				target: "es6",
-				module: "commonjs",
-				sourceMap: true,
-				noImplicitAny: false,
+				// target: "es6",
+				// lib: ["es5", "es6", "ESNext"],
+				// module: "commonjs",
+				// sourceMap: true,
+				// noImplicitAny: false,
 				fast: "always",
-				rootDir: "."
+				rootDir: ".",
+				// strict: true
 			},
 			default: {
 				src: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
@@ -158,5 +160,5 @@ module.exports = function(grunt) {
 	});
 	
 	// grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
-	grunt.registerTask("default", ["ts", "nearley", "watch"]);
+	grunt.registerTask("default", ["nearley", "watch"]);
 };

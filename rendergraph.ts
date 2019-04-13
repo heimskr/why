@@ -2,6 +2,7 @@
 import * as util from "./util";
 import Graph from "./graph";
 import {NodeID} from "./node";
+import cytosnap from "cytosnap";
 
 type Color = string;
 export type RenderOptions = {
@@ -31,13 +32,7 @@ export type RenderOptions = {
 	idOffset?: number
 };
 
-let cytosnap = null;
-
 export function render(graph: Graph, opts: RenderOptions = {}) {
-	if (cytosnap === null) {
-		cytosnap = require("cytosnap");
-	}
-	
 	const defaults: RenderOptions = {
 		background: "#000",
 		node: "#fff",
@@ -68,7 +63,7 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 		idOffset: 0,
 	};
 
-	const assign = (target, source) => {
+	const assign = <T, S>(target: T, source: S): T & S => {
 		Object.keys(source).forEach(key => {
 			const tval = target[key], sval = source[key];
 			if (tval === undefined) {
@@ -77,9 +72,11 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 				assign(tval, sval);
 			}
 		});
+
+		return target as T & S;
 	};
 
-	assign(opts, defaults);
+	const fullOpts: Required<RenderOptions> = assign(opts, defaults) as Required<RenderOptions>;
 
 	if (opts.layout) {
 		cytosnap.use(["cytoscape-" + opts.layout]);
@@ -91,15 +88,15 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 			data: {
 				id,
 				label: data && data.label? data.label
-			         : util.isNumeric(id)? parseInt(<string> id) + opts.idOffset
+			         : util.isNumeric(id)? parseInt(<string> id) + fullOpts.idOffset
 					 : id
 			},
 			classes: [
 				id == opts.enter? "node-enter"
 					: id == opts.exit? "node-exit"
-					: opts.unreachable.includes(id)? "node-unreachable"
+					: fullOpts.unreachable.includes(id)? "node-unreachable"
 					: null,
-				id.toString().length <= opts.centeredMax? "centered" : null
+				id.toString().length <= fullOpts.centeredMax? "centered" : null
 			].filter(x => x !== null).join(" "),
 		})),
 		...graph.allEdges().map(([source, target]) => ({data: {source, target}}))
@@ -127,9 +124,9 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 			selector: "label",
 			style: {
 				"color": opts.label,
-				"text-outline-color": opts.labelOutline.color,
-				"text-outline-opacity": opts.labelOutline.opacity,
-				"text-outline-width": opts.labelOutline.width,
+				"text-outline-color": fullOpts.labelOutline.color,
+				"text-outline-opacity": fullOpts.labelOutline.opacity,
+				"text-outline-width": fullOpts.labelOutline.width,
 			},
 		}, {
 			selector: ".node-enter",
@@ -159,11 +156,11 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 		width: opts.width,
 		height: opts.height,
 		background: opts.background
-	})).then(image => (snap.stop(), image));
+	})).then((image: string | Object) => (snap.stop(), image));
 }
 
-export function iterm(graph, opts={}) {
-	return render(graph, opts).then(b64 => process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`));
+export async function iterm(graph: Graph, opts?: RenderOptions): Promise<void> {
+	return render(graph, opts).then((b64: string) => process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`));
 }
 
 if (require.main === module) {

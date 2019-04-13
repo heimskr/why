@@ -13,6 +13,8 @@ import {RenderOptions} from "./rendergraph";
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 
 type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
+type DFSResult = {parents: NodeID[], discovered: NodeID[], finished: NodeID[]};
+type NodeMapFunction = (id: NodeID, node?: Node) => string;
 
 /**
  * Represents a directed graph datatype.
@@ -21,11 +23,12 @@ export default class Graph {
 	data: {[key: string]: any};
 	nodes: Node[];
 	title?: string;
-	length: number;
-	push: (node: Node) => void;
-	forEach: ForeachFunction<Node>;
-	map: MapFunction<Node>;
-	reduce: ReduceFunction<Node>;
+	
+	get  length():                number { return this.nodes.length;  }
+	get    push():  (node: Node) => void { return this.nodes.push;    }
+	get forEach(): ForeachFunction<Node> { return this.nodes.forEach; }
+	get     map():     MapFunction<Node> { return this.nodes.map;     }
+	get  reduce():  ReduceFunction<Node> { return this.nodes.reduce;  }
 
 	/**
 	 * Creates a new graph.
@@ -34,6 +37,7 @@ export default class Graph {
 	 */
 	constructor(n: number, data={}) {
 		this.data = data;
+		this.nodes = [];
 
 		/**
 		 * An array of all the nodes in the graph.
@@ -100,7 +104,7 @@ export default class Graph {
 			this.nodes = _.range(0, n.length).map(i => new Node(n[i], this));
 		}
 
-		this.title = null;
+		this.title = undefined;
 		return this;
 	}
 
@@ -128,16 +132,16 @@ export default class Graph {
 	 */
 	add(data) {
 		const newNode = new Node(this.newID(), this, data);
-		this.push(newNode);
+		this.nodes.push(newNode);
 		return newNode;
 	}
 
 	/**
 	 * Returns the node with a given ID.
 	 * @param  {Node|NodeID} n The ID of the node to return.
-	 * @return {Node} The node corresponding to n if n is a number; n otherwise.
+	 * @return {?Node} The node corresponding to n if n is a number; n otherwise.
 	 */
-	getNode(n: NodeOrID): Node {
+	getNode(n: NodeOrID): Node | undefined {
 		if (n instanceof Node) {
 			return n.graph == this? n : this.getNode(n.id);
 		}
@@ -151,13 +155,27 @@ export default class Graph {
 	}
 
 	/**
+	 * Attempts to return the node with a given ID, throwing an error if one couldn't be found.
+	 * @param  {Node|NodeID} n The ID of the node to return.
+	 * @return {?Node} The node corresponding to n if n is a number; n otherwise.
+	 */
+	getNodeSafe(n: NodeOrID): Node {
+		const node = this.getNode(n);
+		if (node === undefined) {
+			throw new Error("Couldn't find node.");
+		}
+
+		return node;
+	}
+
+	/**
 	 * Adds a unidirectional connection from one node to another.
 	 * @param  {Node|NodeID} source      The source node.
 	 * @param  {Node|NodeID} destination The destination node.
 	 * @return {boolean} Whether the connection already existed.
 	 */
-	arc(source: NodeOrID, destination: NodeOrID) {
-		return this.getNode(source).arc(destination);
+	arc(source: NodeOrID, destination: NodeOrID): boolean {
+		return this.getNodeSafe(source).arc(destination);
 	}
 
 	/**
@@ -217,9 +235,9 @@ export default class Graph {
 	 * @param  {Node|NodeID} b The second node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	edge(a, b) {
-		this.getNode(a).arc(b);
-		this.getNode(b).arc(a);
+	edge(a: NodeOrID, b: NodeOrID): Graph {
+		this.getNodeSafe(a).arc(b);
+		this.getNodeSafe(b).arc(a);
 		return this;
 	}
 
@@ -229,24 +247,24 @@ export default class Graph {
 	 * @param  {Node|NodeID} b The second node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	disconnect(a, b) {
-		this.nodes[getID(a)].removeArc(b);
-		this.nodes[getID(b)].removeArc(a);
+	disconnect(a: NodeOrID, b: NodeOrID): Graph {
+		this.getNodeSafe(a).removeArc(b);
+		this.getNodeSafe(b).removeArc(a);
 		return this;
 	}
 
 	/**
 	 * Attempts to find a single node matching a predicate.
 	 * @param  {Function|string} predicate A function mapping a node to a boolean or a string corresponding to a label.
-	 * @return {Node} The result of the search.
+	 * @return {?Node} The result of the search.
 	 * @throws Throws an exception if the number of nodes matching the predicate isn't exactly 1.
 	 */
-	findSingle(predicate) {
-		let found;
+	findSingle(predicate: string | ((n: Node) => boolean)): Node | undefined {
+		let found: Node[];
 		if (typeof predicate == "function") {
 			found = this.nodes.filter(predicate);
 		} else {
-			found = this.nodes.filter(node => node.data.label == predicate);
+			found = this.nodes.filter(node => node.data && node.data.label == predicate);
 		}
 
 		if (found.length != 1) {
@@ -262,7 +280,7 @@ export default class Graph {
 	 * @param  {*} [value=null] A value to fill the array with.
 	 * @return {Array} The filled array.
 	 */
-	fill<T>(value: T = null): T[] {
+	fill<T>(value: T): T[] {
 		return _.fill(Array(this.length), value);
 	}
 
@@ -272,7 +290,7 @@ export default class Graph {
 	 * @param  {*} value A value to use as the value of each entry in the object.
 	 * @return {Object} The filled object.
 	 */
-	fillObj(value=null) {
+	fillObj(value: Object) {
 		const out = {};
 		this.forEach((v: Node) => out[v.id] = _.cloneDeep(value));
 		return out;
@@ -392,7 +410,7 @@ export default class Graph {
 		const renames = _.mapValues(_.invert(renameMap), v => numerize(v));
 		const formatted = normalized.map(v => v.out);
 		return [
-			lt(formatted, this.getNode(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {}),
+			lt(formatted, this.getNodeSafe(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {}),
 			renameMap,
 			renames
 		];
@@ -403,17 +421,23 @@ export default class Graph {
 		// Das and Ramakrishna (2005)
 		// Top Down Merge Set Computation (TDMSC-I)
 
-		let t; let T = s => console.time(t = s); let E = s => { console.timeEnd(t); if (s) T(s) };
 		const bfs = djGraph.bfs(startID);
 		const {jEdges} = djGraph.data;
-		const visited = djGraph.fillObj({}); // out node ID => in node ID
-		const merge = djGraph.fillObj([]); // node ID => IDs in merge set
+		
+		// out node ID => in node ID
+		const visited = djGraph.fillObj({});
 
-		const parent = node => djGraph.getNode(node.in[0]);
-		const isJEdge = (es, ed) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
-		const allIn = node => _.uniq([...node.in, ...jEdges.filter(([s, d]) => d == node.id).map(([s, d]) => s)]);
-		const level = node => {
-			let n;
+		// node ID => IDs in merge set
+		const merge: {[key: string]: any[], [key: number]: any[]} = djGraph.fillObj([]);
+
+		const parent = (node: Node) => djGraph.getNode(node.in[0]);
+		const isJEdge = (es: NodeID, ed: NodeID) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
+		const allIn = (node: Node) => _.uniq([
+			...node.in,
+			...jEdges.filter(([s, d]) => d == node.id).map(([s, d]) => s)
+		]);
+		const level = (node: Node) => {
+			let n: number;
 			for (n = 0; node.id != startID; n++)
 				node = djGraph.getNode(parent(node));
 			return n;
@@ -427,11 +451,16 @@ export default class Graph {
 				const unvisitedJEdges = allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id]);
 				for (const e of unvisitedJEdges) {
 					visited[e][id] = true;
-					let lNode = null, tmp = djGraph.getNode(e);
+					let lNode: Node | null = null;
+					let tmp = djGraph.getNode(e);
 					while (level(tmp) >= level(node)) {
 						merge[tmp.id].push(merge[id]);
 						merge[tmp.id].push(id);
 						tmp = parent(lNode = tmp);
+					}
+
+					if (lNode === null) {
+						throw new Error("lNode is null");
 					}
 
 					const originalLNodeID = lNode.id;
@@ -448,7 +477,7 @@ export default class Graph {
 		// The merge sets are defined in terms of each other (if you just push in order, earlier computed merge sets
 		// won't include the items added in later computed merge sets), so we need to combine them all together.
 		// _.flattenDeep doesn't handle circular references, so we need to flatten the merge sets ourselves.
-		const flatten = (x, out=[], processed=[]) => {
+		const flatten = (x, out: NodeID[] = [], processed: any[] = []) => {
 			if (x instanceof Array) {
 				x.forEach(y => {
 					if (x != y && !processed.includes(y)) {
@@ -478,15 +507,15 @@ export default class Graph {
 	 * @param  {Node|NodeID} [startID=0] The ID of the start node.
 	 * @return {module:util~DFSResult} The result of the search.
 	 */
-	dfs(startID=0) {
-		const parents    = this.fill(null);
-		const discovered = this.fill(null);
-		const finished   = this.fill(null);
+	dfs(startID: NodeOrID = 0): DFSResult {
+		const parents:    NodeID[] = [];
+		const discovered: NodeID[] = [];
+		const finished:   NodeID[] = [];
 		let time = 0;
 
-		const visit = u => {
+		const visit = (u: NodeID) => {
 			discovered[u] = ++time;
-			this.getNode(u).out.sort().forEach(v => {
+			this.getNodeSafe(u).out.sort().forEach(v => {
 				if (discovered[v] == null) {
 					parents[v] = u;
 					visit(v);
@@ -496,8 +525,8 @@ export default class Graph {
 			finished[u] = ++time;
 		};
 
-		visit(startID);
-		return {parents, discovered, finished};
+		visit(getID(startID));
+		return {parents: parents as NodeID[], discovered: discovered as NodeID[], finished: finished as NodeID[]};
 	}
 
 	/**
@@ -505,18 +534,18 @@ export default class Graph {
 	 * @param {Node|NodeID} startID The ID of the start node.
 	 * @return {Node[]} An array of nodes in BFS order.
 	 */
-	bfs(startID=0) {
-		let node = this.getNode(startID);
+	bfs(startID: NodeOrID = 0): Node[] {
+		let node = this.getNodeSafe(startID);
 		const visited = this.fillObj(false);
 		const queue = [node];
 		const order = [node];
-		visited[startID] = true;
+		visited[getID(startID)] = true;
 
-		while (queue.length) {
-			queue.shift().out.forEach(id => {
+		for (let next: Node | undefined = queue[0]; next !== undefined; next = queue.shift()) {
+			next.out.forEach(id => {
 				if (!visited[id]) {
 					visited[id] = true;
-					node = this.getNode(id);
+					node = this.getNodeSafe(id);
 					order.push(node);
 					queue.push(node);
 				}
@@ -532,7 +561,7 @@ export default class Graph {
 	 * @param  {NodeID} newID The new ID to assign to the node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	renameNode(oldID, newID) {
+	renameNode(oldID: NodeOrID, newID: NodeID): Graph {
 		const node = this.getNode(oldID);
 		if (node) {
 			node.rename(newID);
@@ -546,8 +575,8 @@ export default class Graph {
 	 * @return {Array<Array<Node>>} An array of connected components.
 	 */
 	components(): Node[][] {
-		const visited: boolean[] = this.fill(false);
-		const parents: NodeID[] = this.fill(null);
+		const visited: boolean[] = [];
+		const parents:  NodeID[] = [];
 		const components: {[key: string]: NodeID[], [key: number]: NodeID[]} = {}; 
 		const l: NodeID[] = [];
 
@@ -568,7 +597,7 @@ export default class Graph {
 					components[root].push(u);
 				}
 
-				this.getNode(u).in.forEach((v: NodeID) => assign(v, root));
+				this.getNodeSafe(u).in.forEach((v: NodeID) => assign(v, root));
 			}
 		};
 
@@ -584,12 +613,12 @@ export default class Graph {
 	 * array of this Graph object.
 	 * @return {Node[]} An array of ordered nodes.
 	 */
-	sortedDFS() {
-		const list = [];
-		const visited = this.fill(false);
-		const unvisited = _.range(0, this.length);
+	sortedDFS(): Node[] {
+		const list:      NodeID[] = [];
+		const visited:  boolean[] = this.fill(false);
+		const unvisited: NodeID[] = _.range(0, this.length);
 
-		const visit = u => {
+		const visit = (u: NodeID) => {
 			visited[u] = true;
 			_.pull(unvisited, u);
 
@@ -606,7 +635,7 @@ export default class Graph {
 			visit(unvisited[0]);
 		}
 
-		return list.map(n => this.nodes[n]);
+		return list.map(this.getNodeSafe);
 	}
 
 	/**
@@ -614,12 +643,12 @@ export default class Graph {
 	 * @return {Node[]} A topologically sorted list of the graph's nodes.
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
-	topoSort() {
+	topoSort(): Node[] {
 		// We need to clone the graph to prevent any changes to it.
-		const copy = this.clone();
+		const copy: Graph = this.clone();
 
 		// The sorted list.
-		const l = [];
+		const out: Node[] = [];
 
 		// An array containing every node that has no in-edges.
 		const s = copy.nodes.filter(node => !node.in.length);
@@ -632,7 +661,8 @@ export default class Graph {
 
 		while (s.length) {
 			let n = s.pop();
-			l.unshift(n);
+			if (!n) break;
+			out.unshift(n);
 			
 			copy.nodes.filter(m => m != n && m.connectsFrom(n)).forEach(m => {
 				m.removeArcFrom(n);
@@ -649,13 +679,13 @@ export default class Graph {
 			}
 		});
 
-		return l.map(node => this.nodes[node.id]);
+		return out.map(this.getNodeSafe);
 	}
 
 	/**
 	 * Removes all loop edges from the graph.
 	 */
-	removeLoops() {
+	removeLoops(): Graph {
 		this.nodes.forEach(node => this.disconnect(node, node));
 		return this;
 	}
@@ -664,10 +694,10 @@ export default class Graph {
 	 * Condenses a list of nodes into a single node, removes the old nodes from the graph and inserts the new node.
 	 * The new node's in/out arrays are the unions of the given nodes' in/out arrays. The new node's data is the same
 	 * as the data of the first node in the arguments. The new node is reflexive if any of the given nodes is reflexive.
-	 * @param  {Array<Node | NodeID>} nodes A list of nodes or node IDs.
-	 * @return {Node} The coalesced node.
+	 * @param  {Node[]} nodes A list of nodes or node IDs.
+	 * @return {?Node} The coalesced node.
 	 */
-	coalesce(nodes) {
+	coalesce(nodes: Node[]): Node | undefined {
 		if (!nodes.length) {
 			return undefined;
 		}
@@ -676,8 +706,8 @@ export default class Graph {
 		nodes = nodes.map(n => this.nodes[getID(n)]);
 
 		// Calculate the union of all in/out edges, but don't include edges between any of the given nodes.
-		const combinedIn  = _.without(_.union(...nodes.map(node => node.in)),  ...nodes);
-		const combinedOut = _.without(_.union(...nodes.map(node => node.out)), ...nodes);
+		const combinedIn  = _.without(_.union(...nodes.map(node => node.in)),  ...nodes.map(node => node.id));
+		const combinedOut = _.without(_.union(...nodes.map(node => node.out)), ...nodes.map(node => node.id));
 
 		const reflexive = _.some(nodes, n => n.isReflexive);
 
@@ -692,10 +722,12 @@ export default class Graph {
 		// Go through every remaining node's in/out arrays, remove the old node IDs
 		// and insert the new ID where applicable.
 		for (const node of this.nodes) {
-			if (_.intersection(node.in,   allIDs).length)
-				node.in  = _.sortBy(_.without(node.in,  ...allIDs).concat(newID), getID);
+			if (_.intersection(node.in,   allIDs).length) {
+				node.in = _.without(node.in,  ...allIDs).concat(newID).sort();
+			}
+
 			if (_.intersection(node.out,  allIDs).length)
-				node.out = _.sortBy(_.without(node.out, ...allIDs).concat(newID), getID);
+				node.out = _.without(node.out, ...allIDs).concat(newID).sort();
 		}
 
 		if (!newNode) {
@@ -721,7 +753,7 @@ export default class Graph {
 	 * Calculates and returns the transpose of the graph.
 	 * @type {Graph}
 	 */
-	get transpose() {
+	get transpose(): Graph {
 		let graph = new Graph(this.nodes.length);
 		this.nodes.forEach(({out}, u) => out.forEach(v => graph.arc(v, u)));
 
@@ -733,7 +765,7 @@ export default class Graph {
 	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
 	 * @return {Graph} A copy of the graph.
 	 */
-	clone(cloneData=true) {
+	clone(cloneData: boolean = true): Graph {
 		let newGraph = new Graph(this.nodes.length);
 		newGraph.nodes = this.nodes.map(node => node.clone(newGraph, cloneData));
 		return newGraph;
@@ -746,11 +778,7 @@ export default class Graph {
 	 * @param  {Function} [outFn] Another mapping function. If none is given, it will be equal to idFn.
 	 * @return {string} A string representation of the graph.
 	 */
-	toString(idFn: (id: NodeID, node?: Node) => string = (x,y)=>x.toString(), outFn) {
-		if (outFn === undefined) {
-			outFn = idFn;
-		}
-		
+	toString(idFn: NodeMapFunction = (x,y)=>x.toString(), outFn: NodeMapFunction = idFn): string {
 		return _.sortBy(this.nodes, "id").map((node: Node) =>
 			`${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`
 		).join("\n");

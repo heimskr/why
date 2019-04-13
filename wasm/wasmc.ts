@@ -22,6 +22,8 @@ import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS
        MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} from "./constants";
 const isLabelRef = (x: any) => x instanceof Array && x.length == 2 && x[0] == "label";
 
+
+
 export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | "g" | "st", 0]
 					 | ["register", "s" | "k" | "e" | "m" | "r" | "a" | "t", number];
 export type SymbolTable = {[key: string]: [number, Long]};
@@ -153,6 +155,8 @@ export default class WASMC {
 		 * @name module:wasm~WASMC#dataVariables
 		 */
 		 this.dataVariables = {};
+
+		 this.assembled = [];
 	}
 
 	/**
@@ -170,6 +174,7 @@ export default class WASMC {
 			}
 
 			process.exit(1);
+			throw e;
 		}
 
 		const grammar: Grammar = Grammar.fromCompiled(compiled);
@@ -184,13 +189,14 @@ export default class WASMC {
 			console.error(chalk.red("Syntax error"), `at ${chalk.white(getline(source, e.offset))}: ${e.offset -
 			              source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length}:`);
 			if (this.options.dev) {
-				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0, $1, $2) => {
+				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0: never, $1: never, $2: string) => {
 					const _line = getline(source, e.offset);
 					return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})`;
 				}));
 			}
 
 			process.exit(1);
+			throw e;
 		}
 
 		if (trees.length > 1) {
@@ -519,7 +525,7 @@ export default class WASMC {
 					add([null, "set",  _0, _M[1], args[2]]);
 					add([null, "jrc", _0, _M[0],   _M[1]]);
 				}
-			} else if (R_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
+			} else if (R_TYPES.includes(OPCODES[op]) && args.some(isLabelRef)) {
 				let [rt, rs, rd] = args;
 				let [lt, ls, ld] = [rt, rs, rd].map(isLabelRef);
 				let _label = label, getLabel = (): string => [_label, _label = null][0];
@@ -535,7 +541,7 @@ export default class WASMC {
 				if (ld) {
 					add([getLabel(), "si", _M[2], _0, rd]);
 				}
-			} else if (I_TYPES.includes(OPCODES[op]) && _.some(args, isLabelRef)) {
+			} else if (I_TYPES.includes(OPCODES[op]) && args.some(isLabelRef)) {
 				let [rs, rd, imm] = args;
 				let [ls, ld] = [rs, rd].map(isLabelRef);
 				let _label = label, getLabel = () => [_label, _label = null][0];
@@ -816,7 +822,7 @@ export default class WASMC {
 	 * @return An encoded symbol table.
 	 */
 	createSymbolTable(labels: string[], skeleton: boolean = true): Long[] {
-		return _.flatten(_.uniq([...labels, ".end"]).map(label => {
+		return _.uniq([...labels, ".end"]).map(label => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
 			let type = SYMBOL_TYPES.UNKNOWN;
 
@@ -835,7 +841,7 @@ export default class WASMC {
 				skeleton? Long.UZERO : Long.fromInt(this.offsets[label], true),
 				...WASMC.str2longs(label)
 			];
-		}));
+		}).flat();
 	}
 
 	/**

@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"lib": ["es5", "es6", "esnext", "dom"],
+		"module": "commonjs",
+		"sourceMap": true,
+		"noImplicitAny": false,
+		"rootDir": ".",
+		"strict": false,
+		"outDir": "dist",
+		"preserveConstEnums": true,
+	},
+	"include": [
+		"wasm/**/*.ts",
+		"wvm/**/*.ts",
+		"llvm/**/*.ts",
+		"*.ts"
+	],
+	"exclude": [
+		"node_modules",
+	]
+}

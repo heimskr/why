@@ -1,5 +1,7 @@
 #!/usr/bin/env ts-node
 
+import {Node} from "../node";
+
 export interface ASTVector {0: "vector", 1: [ASTTypeAny, null, ASTValue][]}
 export interface IRConstant {0: ASTTypeAny, 1: ASTOperand | IRConstExpr, 2: IRParAttr[]}
 export interface ASTTypeArray {0: "array", 1: number,     2: ASTTypeAny}
@@ -53,7 +55,7 @@ export type ASTFunctionMeta = {
 	unnamedAddr: "local_unnamed_addr" | "unnamed_addr" | null
 };
 export type ASTDeclaration = ["declaration", ASTFunction];
-export type ASTFunction = ["function", ASTFunctionMeta];
+export type ASTFunction = ["function", ASTFunctionMeta, Instruction[]];
 export type ASTMetadata = ["metadata", string | number, boolean, ...any[]];
 export type ASTVariable = ["variable", string | number];
 export type ASTGlobal   = ["global", string];
