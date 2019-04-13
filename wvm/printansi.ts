@@ -1,9 +1,10 @@
-const _ = require("lodash");
+#!/usr/bin/env ts-node
+import _ from "../util";
 
 const normal = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"];
 const bright = ["#808080", "#f00", "#0f0", "#ff0", "#00f", "#f0f", "#0ff", "#fff"]
 
-module.exports = function printansi(str) {
+export default function printansi(str: string): void {
 	let fmt = "", args = [], buffer = [];
 	let i = 0;
 	let unflushed = true;
@@ -95,11 +96,11 @@ module.exports = function printansi(str) {
 	console.log(fmt, ...args);
 };
 
-function cubecolor(n) {
+function cubecolor(n: number): string {
 	const [b, g, r] = [n % 6, Math.floor(n / 6) % 6, Math.floor(n / 36)];
 	return "#" + [r, g, b].map((x) => (51 * x).toString(16).padStart(2, "0")).join("");
 }
 
-if (process.browser) {
-	window.printansi = module.exports;
+if ((<any> process).browser) {
+	(<any> window).printansi = printansi;
 }
