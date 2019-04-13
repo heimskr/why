@@ -1,6 +1,10 @@
 #!/usr/bin/env ts-node
 export type ExceptionType = "dbz";
 export type FlagType = "IGNORE" | "KNOWN_SYMBOL" | "UNKNOWN_SYMBOL" | "SYMBOL_ID";
+export type FlagValue = 0 | 1 | 2 | 3;
+export function isFlag(x: any): x is FlagValue { return x === 0 || x === 1 || x === 2 || x === 3; }
+export type ConditionName = "p" | "n" | "z" | "nz";
+export type ALUMaskName = "z" | "n" | "c" | "o";
 export type ConstantFlags = {[key in FlagType]: number};
 export type RegisterCategory = ("zero" | 0) | "g" | "sp" | "stack" | "fp" | "return" | "hi"
                              | ("f" | "a" | "st" | "ra" | "t" | "s") | "m" | "e" | "r" | "k" | "lo";
@@ -29,8 +33,8 @@ export type ExtName = "printr" | "halt" | "eval" | "prc" | "prd" | "prx" | "slee
 export type PseudoType = "mv" | "ret" | "push" | "pop" | "jeq" | "sge" | "sg" | "sgeu" | "sgu" | "sgeui" | "sgui";
 
 export type OpName = RType | IType | JType | "ext";
+export type OpType = "r" | "i" | "j";
 export type AllOps = OpName | ExtName | PseudoType;
-
 
 export const EXCEPTIONS: ExceptionType[] = ["dbz"];
 
@@ -279,15 +283,14 @@ export const FLAGS: ConstantFlags = {
 	SYMBOL_ID: 3,
 };
 
-export const CONDITIONS: {[key: string]: number} = {
-	"": 0,
+export const CONDITIONS: {[key in ConditionName]: number} = {
 	p:  0b1000,
 	n:  0b1001,
 	z:  0b1010,
 	nz: 0b1011,
 };
 
-export const ALU_MASKS: {[key: string]: number} = {
+export const ALU_MASKS: {[key in ALUMaskName]: number} = {
 	z: 0b0001,
 	n: 0b0010,
 	c: 0b0100,
