@@ -27,9 +27,9 @@ export type SegmentOffsets = {$symtab: number, $code: number, $data: number, $en
 type MetaField = "orcid" | "name" | "version" | "author";
 type FormatRFunction = (op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue,
                         conditions: ConditionName | null) => string;
-type FormatIFunction = (op: string, rs: string, rd: string, imm: number, flags: number,
+type FormatIFunction = (op: string, rs: string, rd: string, imm: number, flags: FlagValue,
                         conditions: ConditionName | null, symbols: SymbolTable) => string;
-type FormatJFunction = (op: string, rs: string, addr: number, link: boolean, flags: number,
+type FormatJFunction = (op: string, rs: string, addr: number, link: boolean, flags: FlagValue,
                         conditions: ConditionName | null, symbols: SymbolTable) => string;
 
 export type ParserInstructionR = {
@@ -103,7 +103,7 @@ export default class Parser {
 
 	/**
 	 * Loads a program from a file and parses it.
-	 * @param {string} filename The filename of the program to load.
+	 * @param {string}   filename     The filename of the program to load.
 	 * @param {boolean} [silent=true] Whether to suppress debug output.
 	 */
 	open(filename: string, silent: boolean = true) {
@@ -121,7 +121,7 @@ export default class Parser {
 
 	/**
 	 * Stores an array of longs and {@link module:wasm~Parser#parse parses} them.
-	 * @param {Long[]} longs An array of Longs.
+	 * @param {Long[]}   longs        An array of Longs.
 	 * @param {boolean} [silent=true] Whether to suppress debug output.
 	 */
 	load(longs: Long[], silent: boolean = true) {
@@ -282,8 +282,8 @@ export default class Parser {
 	 *                  `flags` and `type` for non-NOPs; other output varies depending on the type of the instruction.
 	 */
 	static parseInstruction(instruction: Long | string): ParserInstruction {
-		const instructionString: string =
-			typeof instruction == "string"? instruction : instruction.toString(2).padStart(64, "0");
+		const instructionString: string = typeof instruction == "string"?
+			instruction : instruction.toString(2).padStart(64, "0");
 
 		const get = (from: number, length?: number) => parseInt(instructionString.substr(from, length), 2);
 		const opcode = get(0, 12);
@@ -515,11 +515,11 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatI_w(op: string, rs: string, rd: string, imm: number, flags: number = 0,
+	static formatI_w(op: string, rs: string, rd: string, imm: number, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
 
-		const mathi = (increment, opequals, op) => {
+		const mathi = (increment: string, opequals: string, op: string): string => {
 			const imms = imm.toString();
 			if (rs == rd) {
 				return imm == 1? yellow(rd) + yellow.dim(increment)
@@ -530,7 +530,7 @@ export default class Parser {
 			        + yellow(rd);
 		};
 
-		const alt_op = (oper: string) =>
+		const alt_op = (oper: string): string =>
 			`${yellow(rs)} ${Parser.colorOper(oper + (rs == rd? "=" : ""))} ${magenta(target)}` +
 			(rs != rd? dim(" -> ") + yellow(rd) : "");
 
@@ -589,7 +589,7 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatJ_w(op: string, rs: string, addr: number, link: boolean, flags: number = 0,
+	static formatJ_w(op: string, rs: string, addr: number, link: boolean, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = magenta(Parser.getTarget(addr, flags, symbols));
 		const sym = link? "::" : ":";
@@ -631,7 +631,7 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
-	static formatI_m(op: string, rs: string, rd: string, imm: number, flags: number = 0,
+	static formatI_m(op: string, rs: string, rd: string, imm: number, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
 		return `${cyan(op)} ${yellow(rs) + dim(",")} ${magenta(target)} ${dim("->")} ${yellow(rd)}`;
@@ -648,7 +648,7 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
-	static formatJ_m(op: string, rs: string, addr: number, link: boolean, flags: number = 0,
+	static formatJ_m(op: string, rs: string, addr: number, link: boolean, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = magenta(Parser.getTarget(addr, flags, symbols));
 		return `${cyan(op)}${conditions? cyan("_" + conditions) : ""} ${yellow(rs) + dim(",")} ${target}`;
@@ -679,7 +679,7 @@ export default class Parser {
 	 * @param  {number} funct The ID of the function.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatExt(rt, rs, rd, funct) {
+	static formatExt(rt: string, rs: string, rd: string, funct: number): string {
 		if (funct == EXTS.printr) return `<${cyan("print")} ${yellow(rs)}>`;
 		if (funct == EXTS.prc)    return `<${cyan("prc")} ${yellow(rs)}>`;
 		if (funct == EXTS.prd)    return `<${cyan("prd")} ${yellow(rs)}>`;
@@ -689,13 +689,13 @@ export default class Parser {
 		return `<${cyan("ext")} ${red(funct)}>`;
 	}
 
-	static getTarget(imm, flags, symbols) {
+	static getTarget(imm: number, flags: FlagValue, symbols: SymbolTable): string {
 		if (flags != FLAGS.KNOWN_SYMBOL) {
-			return imm;
+			return imm.toString();
 		}
 
 		const key = _.findKey(symbols, (s) => s[1].eq(imm));
-		return key? "&" + key : imm;
+		return key? "&" + key : imm.toString();
 	}
 }
 
