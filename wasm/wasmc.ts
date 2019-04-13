@@ -159,7 +159,7 @@ export default class WASMC {
 	 * Loads the Nearley grammar, parses a source string and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
 	 * @param {string} source Source code of a wasm program.
 	 */
-	parse(source) {
+	parse(source: string) {
 		let compiled: CompiledRules;
 		try {
 			compiled = require("./wasm.js");
@@ -261,7 +261,7 @@ export default class WASMC {
 
 	/**
 	 * Writes the output to a file.
-	 * @param {string} outfile The path to the output file.
+	 * @param {string}  outfile The path to the output file.
 	 * @param {string} [infile] The name of the input file.
 	 */
 	writeOutput(outfile: string, infile: string) {
@@ -692,9 +692,9 @@ export default class WASMC {
 	 * @return The compiled instruction.
 	 */
 	rType(opcode: number, rt: number, rs: number, rd: number, func: number, flags: number = 0,
-	      conditions: string = null, warn: boolean = true) {
+	      conditions: string = null, warn: boolean = true): Long {
 
-					if (!R_TYPES.includes(opcode))
+		if (!R_TYPES.includes(opcode))
 			throw new Error(`Opcode ${opcode} isn't a valid r-type`);
 
 		if (warn) {
@@ -793,7 +793,7 @@ export default class WASMC {
 	 * Finds an array of all labels found in the program's data and code sections.
 	 * @return {string[]} An array of labels.
 	 */
-	findAllLabels() {
+	findAllLabels(): string[] {
 		return _.uniq([
 			...Object.keys(this.parsed.data).filter(label => label[0] != "%"),
 			...this.parsed.code.map(([label]) => label).filter(label => label)
@@ -925,7 +925,7 @@ export default class WASMC {
 	 *           for $t16.
 	 * @return The ID corresponding to the register.
 	 */
-	static convertRegister(x: Register | number) {
+	static convertRegister(x: Register | number): number {
 		return x instanceof Array? REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1] : x;
 	}
 
@@ -934,7 +934,7 @@ export default class WASMC {
 	 * @param  {string} name A symbol name.
 	 * @return {number} The symbol name encoded as a number.
 	 */
-	static encodeSymbol(name) {
+	static encodeSymbol(name: string): number {
 		const hash = createHash("sha256");
 		hash.update(name);
 		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
