@@ -2,18 +2,18 @@
 import * as fs from "fs";
 import * as Long from "long";
 import _ from "../util";
-import minimist = require("minimist");
 
 import {SymbolTable} from "./wasmc";
 import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS,
-		ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+	ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+
+const minimist = require("minimist");
+const chalk = require("chalk");
+const {yellow, magenta, dim, cyan, red, green, bold} = chalk;
 
 /**
  * @module wasm
  */
-
-// const chalk = new (require("chalk")).constructor({enabled: true});
-const chalk = require("chalk");
 
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
@@ -153,14 +153,14 @@ export default class Parser {
 		 */
 		this.rawMeta = longs.slice(0, this.offsets.$symtab / 8);
 
-		const [metaName, metaVersion, metaAuthor] = _.longStrings(longs.slice(6, this.offsets.$code));
-
+		const [metaName, metaVersion, metaAuthor] = _.longStrings(longs.slice(7, this.offsets.$code));
+		
 		/**
 		 * The parsed metadata section.
 		 * @type {Object}
 		 */
 		this.meta = {
-			orcid: _.chunk(_.longString([longs[4], longs[5]]), 4).map(n => n.join("")).join("-"),
+			orcid: _.chunk(_.longString([longs[5], longs[6]]), 4).map(n => n.join("")).join("-"),
 			name: metaName,
 			version: metaVersion,
 			author: metaAuthor,
@@ -197,15 +197,23 @@ export default class Parser {
 		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
 
 		if (!silent) {
-			console.log(chalk.dim("/*"));
-			console.log(chalk.green.dim("#offsets"));
-			console.log(Object.keys(this.offsets).map((k) => `${chalk.dim(`${k}:`)} ${chalk.magenta.dim(this.offsets[k])}`).join("\n"));
-			console.log(chalk.dim("*/") + "\n");
+			console.log(dim("/*"));
+			console.log(green.dim("#offsets"));
+			console.log(Object.keys(this.offsets).map((k: string) =>
+				`${dim(`${k}:`)} ${magenta.dim(this.offsets[k])}`
+			).join("\n"));
+			console.log(dim("*/") + "\n");
 
-			console.log(chalk.green("#meta"));
-			console.log(Object.keys(this.meta).map((k) => `${chalk.cyan(k)}: ${chalk.yellow(`"${this.meta[k]}"`)}`).concat([""]).join("\n"));
+			console.log(green("#meta"));
+			console.log(Object.keys(this.meta).map((k: string) =>
+				`${cyan(k)}: ${yellow(`"${this.meta[k]}"`)}`
+			).join("\n") + "\n");
 
-			console.log([, chalk.green("#code"), ...this.code].join("\n"));
+			console.log([
+				"",
+				green("#code"),
+				...this.code.map(instr => Parser.formatInstruction(instr, this.symbols))
+			].join("\n"));
 		}
 	}
 
@@ -336,21 +344,28 @@ export default class Parser {
 	 * @return {string} A styled operator.
 	 */
 	static colorOper(oper: string): string {
-		return chalk.bold(oper);
+		return bold(oper);
 	}
 
 	/**
 	 * Decompiles an instruction to the corresponding wasm source.
-	 * @param  {Long|string} instruction An instruction represented as either a Long of a 64-long string of binary digits.
+	 * @param  {Long|string|Object} instruction An instruction represented as either a Long, a 64-long string of
+	 *                                          binary digits or an already-parsed object.
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} The wasm equivalent of the instruction.
 	 */
-	static formatInstruction(instruction: Long | string, symbols: SymbolTable): string {
+	static formatInstruction(instruction: Long | string | ParserInstruction, symbols: SymbolTable): string {
+		let parsed: ParserInstruction;
 		if (instruction instanceof Long) {
 			instruction = instruction.toString(2).padStart(64, "0");
 		}
+		
+		if (typeof instruction == "object" && "op" in instruction) {
+			parsed = instruction;
+		} else {
+			parsed = Parser.parseInstruction(instruction);
+		}
 
-		const parsed = Parser.parseInstruction(instruction);
 		const {opcode, type, flags, rs, conditions} = parsed;
 
 		if (type == "nop") {
@@ -378,7 +393,11 @@ export default class Parser {
 			return Parser.formatI(OPCODES_INV[opcode][0], srs, srd, imm, flags, conditions, symbols);
 		}
 
-		throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
+		if (typeof instruction == "string") {
+			throw new Error(`Can't parse instruction ${instruction} (opcode = ${opcode}, type = "${type}").`);
+		}
+		
+		throw new Error(`Can't parse instruction (opcode = ${opcode}, type = "${type}").`);
 	}
 
 	/**
@@ -427,61 +446,61 @@ export default class Parser {
 	static formatR_w(op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue = 0,
 		conditions: ConditionName | null = null): string {
 		const alt_op = (oper) => {
-			if (rs == rd) return `${chalk.yellow(rs)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rt)}`;
-			if (rt == rd) return `${chalk.yellow(rt)} ${Parser.colorOper(oper + "=")} ${chalk.yellow(rs)}`;
-			return `${chalk.yellow(rs)} ${Parser.colorOper(oper)} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+			if (rs == rd) return `${yellow(rs)} ${Parser.colorOper(oper + "=")} ${yellow(rt)}`;
+			if (rt == rd) return `${yellow(rt)} ${Parser.colorOper(oper + "=")} ${yellow(rs)}`;
+			return `${yellow(rs)} ${Parser.colorOper(oper)} ${yellow(rt)} ${dim("->")} ${yellow(rd)}`;
 		};
 
 		if (op == "add")   return alt_op("+");
 		if (op == "sub")   return alt_op("-");
-		if (op == "mult")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.yellow(rt)}`;
+		if (op == "mult")  return `${yellow(rs)} ${Parser.colorOper("*")} ${yellow(rt)}`;
 		if (op == "mod")   return alt_op("%");
 		if (op == "and")   return alt_op("&");
 		if (op == "nand")  return alt_op("~&");
 		if (op == "nor")   return alt_op("~|");
-		if (op == "not")   return `${Parser.colorOper("~") + chalk.yellow(rs)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "or")    return rs == "$0"? `${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}` : alt_op("|");
+		if (op == "not")   return `${Parser.colorOper("~") + yellow(rs)} ${dim("->")} ${yellow(rd)}`;
+		if (op == "or")    return rs == "$0"? `${yellow(rt)} ${dim("->")} ${yellow(rd)}` : alt_op("|");
 		if (op == "xnor")  return alt_op("~x");
 		if (op == "xor")   return alt_op("x");
 		if (op == "land")  return alt_op("&&");
 		if (op == "lnand") return alt_op("!&&");
 		if (op == "lnor")  return alt_op("!||");
-		if (op == "lnot")  return Parser.colorOper("!") + chalk.yellow(rs) +
-		                           (rs == rd? "." : ` ${chalk.dim("->")} ${chalk.yellow(rd)}`);
-		if (op == "lor")   return rs == "$0"? `${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}` : alt_op("||");
+		if (op == "lnot")  return Parser.colorOper("!") + yellow(rs) +
+		                           (rs == rd? "." : ` ${dim("->")} ${yellow(rd)}`);
+		if (op == "lor")   return rs == "$0"? `${yellow(rt)} ${dim("->")} ${yellow(rd)}` : alt_op("||");
 		if (op == "lxnor") return alt_op("!xx");
 		if (op == "lxor")  return alt_op("xx");
 		if (op == "sll")   return alt_op("<<");
 		if (op == "srl")   return alt_op(">>>");
 		if (op == "sra")   return alt_op(">>");
-		if (op == "mfhi")  return `${chalk.green("%hi")} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "mflo")  return `${chalk.green("%lo")} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "sl")    return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.yellow(rt)} ${chalk.dim("->")}`
-		                        + ` ${chalk.yellow(rd)}`;
-		if (op == "sle")   return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")}`
-		                        + ` ${chalk.yellow(rd)}`;
-		if (op == "seq")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.yellow(rt)} ${chalk.dim("->")}`
-		                        + ` ${chalk.yellow(rd)}`;
-		if (op == "jr")    return `${chalk.dim(":") } ${chalk.yellow(rd)}`;
-		if (op == "jrl")   return `${chalk.dim("::")} ${chalk.yellow(rd)}`;
-		if (op == "jrc")   return `${chalk.dim(":") } ${chalk.yellow(rd)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
-		if (op == "jrlc")  return `${chalk.dim("::")} ${chalk.yellow(rd)} ${chalk.red("if")} ${chalk.yellow(rs)}`;
-		if (op == "c")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
-		if (op == "l")     return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd) }`;
-		if (op == "s")     return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
-		if (op == "multu") return `${chalk.yellow(rs)} ${Parser.colorOper("*") } ${chalk.yellow(rt)} /u`;
-		if (op == "slu")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.yellow(rt)} ${chalk.dim("->")}`
-		                        + ` ${chalk.yellow(rd)} /u`;
-		if (op == "sleu")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.yellow(rt)} ${chalk.dim("->")}`
-		                        + ` ${chalk.yellow(rd)} /u`;
+		if (op == "mfhi")  return `${green("%hi")} ${dim("->")} ${yellow(rd)}`;
+		if (op == "mflo")  return `${green("%lo")} ${dim("->")} ${yellow(rd)}`;
+		if (op == "sl")    return `${yellow(rs)} ${Parser.colorOper("<") } ${yellow(rt)} ${dim("->")}`
+		                        + ` ${yellow(rd)}`;
+		if (op == "sle")   return `${yellow(rs)} ${Parser.colorOper("<=")} ${yellow(rt)} ${dim("->")}`
+		                        + ` ${yellow(rd)}`;
+		if (op == "seq")   return `${yellow(rs)} ${Parser.colorOper("==")} ${yellow(rt)} ${dim("->")}`
+		                        + ` ${yellow(rd)}`;
+		if (op == "jr")    return `${dim(":") } ${yellow(rd)}`;
+		if (op == "jrl")   return `${dim("::")} ${yellow(rd)}`;
+		if (op == "jrc")   return `${dim(":") } ${yellow(rd)} ${red("if")} ${yellow(rs)}`;
+		if (op == "jrlc")  return `${dim("::")} ${yellow(rd)} ${red("if")} ${yellow(rs)}`;
+		if (op == "c")     return `[${yellow(rs)}] ${dim("->")} [${yellow(rd)}]`;
+		if (op == "l")     return `[${yellow(rs)}] ${dim("->")} ${ yellow(rd) }`;
+		if (op == "s")     return `${ yellow(rs) } ${dim("->")} [${yellow(rd)}]`;
+		if (op == "multu") return `${yellow(rs)} ${Parser.colorOper("*") } ${yellow(rt)} /u`;
+		if (op == "slu")   return `${yellow(rs)} ${Parser.colorOper("<") } ${yellow(rt)} ${dim("->")}`
+		                        + ` ${yellow(rd)} /u`;
+		if (op == "sleu")  return `${yellow(rs)} ${Parser.colorOper("<=")} ${yellow(rt)} ${dim("->")}`
+		                        + ` ${yellow(rd)} /u`;
 		if (op == "ext")   return Parser.formatExt(rt, rs, rd, funct);
-		if (op == "cb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
-		if (op == "lb")    return `[${chalk.yellow(rs)}] ${chalk.dim("->")} ${ chalk.yellow(rd) } /b`;
-		if (op == "sb")    return `${ chalk.yellow(rs) } ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
-		if (op == "spush") return `${chalk.dim("[")} ${chalk.yellow(rs)}`;
-		if (op == "spop")  return `\xa0\xa0${chalk.yellow(rd)} ${chalk.dim("]")}`;
-		if (op == "time")  return `${chalk.cyan("time")} ${chalk.yellow(rs)}`;
-		if (op == "ring")  return `${chalk.cyan("ring")} ${chalk.yellow(rs)}`;
+		if (op == "cb")    return `[${yellow(rs)}] ${dim("->")} [${yellow(rd)}] /b`;
+		if (op == "lb")    return `[${yellow(rs)}] ${dim("->")} ${ yellow(rd) } /b`;
+		if (op == "sb")    return `${ yellow(rs) } ${dim("->")} [${yellow(rd)}] /b`;
+		if (op == "spush") return `${dim("[")} ${yellow(rs)}`;
+		if (op == "spop")  return `\xa0\xa0${yellow(rd)} ${dim("]")}`;
+		if (op == "time")  return `${cyan("time")} ${yellow(rs)}`;
+		if (op == "ring")  return `${cyan("ring")} ${yellow(rs)}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 
@@ -501,23 +520,24 @@ export default class Parser {
 		const target = Parser.getTarget(imm, flags, symbols);
 
 		const mathi = (increment, opequals, op) => {
+			const imms = imm.toString();
 			if (rs == rd) {
-				return imm == 1? chalk.yellow(rd) + chalk.yellow.dim(increment)
-				               : `${chalk.yellow(rs)} ${Parser.colorOper(opequals)} ${chalk.magenta(imm)}`;
+				return imm == 1? yellow(rd) + yellow.dim(increment)
+				               : `${yellow(rs)} ${Parser.colorOper(opequals)} ${magenta(imms)}`;
 			}
 
-			return `${chalk.yellow(rs)} ${Parser.colorOper(op)} ${chalk.magenta(imm)} ${chalk.dim("->")} `
-			        + chalk.yellow(rd);
+			return `${yellow(rs)} ${Parser.colorOper(op)} ${magenta(imms)} ${dim("->")} `
+			        + yellow(rd);
 		};
 
 		const alt_op = (oper: string) =>
-			`${chalk.yellow(rs)} ${Parser.colorOper(oper + (rs == rd? "=" : ""))} ${chalk.magenta(target)}` +
-			(rs != rd? chalk.dim(" -> ") + chalk.yellow(rd) : "");
+			`${yellow(rs)} ${Parser.colorOper(oper + (rs == rd? "=" : ""))} ${magenta(target)}` +
+			(rs != rd? dim(" -> ") + yellow(rd) : "");
 
 		if (op == "addi")   return mathi("++", "+=", "+");
 		if (op == "subi")   return mathi("--", "-=", "-");
-		if (op == "multi")  return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(target)}`;
-		if (op == "multui") return `${chalk.yellow(rs)} ${Parser.colorOper("*")} ${chalk.magenta(target)} /u`;
+		if (op == "multi")  return `${yellow(rs)} ${Parser.colorOper("*")} ${magenta(target)}`;
+		if (op == "multui") return `${yellow(rs)} ${Parser.colorOper("*")} ${magenta(target)} /u`;
 		if (op == "modi")   return alt_op("%");
 		if (op == "andi")   return alt_op("&");
 		if (op == "nandi")  return alt_op("~&");
@@ -528,33 +548,33 @@ export default class Parser {
 		if (op == "slli")   return alt_op("<<");
 		if (op == "srli")   return alt_op(">>>");
 		if (op == "srai")   return alt_op(">>");
-		if (op == "lui")    return `${chalk.dim("lui:")} ${chalk.magenta(target)} ${chalk.dim("->")} `
-		                         + chalk.yellow(rd);
-		if (op == "li")     return `[${chalk.magenta(target)}] ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "si")     return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(target)}]`;
-		if (op == "set")    return `${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "sli")    return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "slei")   return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "sgi")    return `${chalk.yellow(rs)} ${Parser.colorOper(">") } ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "sgei")   return `${chalk.yellow(rs)} ${Parser.colorOper(">=")} ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "seqi")   return `${chalk.yellow(rs)} ${Parser.colorOper("==")} ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)}`;
-		if (op == "slui")   return `${chalk.yellow(rs)} ${Parser.colorOper("<") } ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "sleui")  return `${chalk.yellow(rs)} ${Parser.colorOper("<=")} ${chalk.magenta(target)} `
-		                         + `${chalk.dim("->")} ${chalk.yellow(rd)} /u`;
-		if (op == "lbi")    return `[${chalk.magenta(target)}] ${chalk.dim("->")} ${chalk.yellow(rd)} /b`;
-		if (op == "sbi")    return `${chalk.yellow(rs)} ${chalk.dim("->")} [${chalk.magenta(target)}] /b`;
-		if (op == "lni")    return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}]`;
-		if (op == "lbni")   return `[${chalk.magenta(target)}] ${chalk.dim("->")} [${chalk.yellow(rd)}] /b`;
-		if (op == "int")    return `${chalk.cyan("int")} ${imm}`;
-		if (op == "rit")    return `${chalk.cyan("rit")} ${chalk.magenta(target)}`;
-		if (op == "timei")  return `${chalk.cyan("time")} ${imm}`;
-		if (op == "ringi")  return `${chalk.cyan("ring")} ${imm}`;
+		if (op == "lui")    return `${dim("lui:")} ${magenta(target)} ${dim("->")} `
+		                         + yellow(rd);
+		if (op == "li")     return `[${magenta(target)}] ${dim("->")} ${yellow(rd)}`;
+		if (op == "si")     return `${yellow(rs)} ${dim("->")} [${magenta(target)}]`;
+		if (op == "set")    return `${magenta(target)} ${dim("->")} ${yellow(rd)}`;
+		if (op == "sli")    return `${yellow(rs)} ${Parser.colorOper("<") } ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)}`;
+		if (op == "slei")   return `${yellow(rs)} ${Parser.colorOper("<=")} ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)}`;
+		if (op == "sgi")    return `${yellow(rs)} ${Parser.colorOper(">") } ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)}`;
+		if (op == "sgei")   return `${yellow(rs)} ${Parser.colorOper(">=")} ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)}`;
+		if (op == "seqi")   return `${yellow(rs)} ${Parser.colorOper("==")} ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)}`;
+		if (op == "slui")   return `${yellow(rs)} ${Parser.colorOper("<") } ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)} /u`;
+		if (op == "sleui")  return `${yellow(rs)} ${Parser.colorOper("<=")} ${magenta(target)} `
+		                         + `${dim("->")} ${yellow(rd)} /u`;
+		if (op == "lbi")    return `[${magenta(target)}] ${dim("->")} ${yellow(rd)} /b`;
+		if (op == "sbi")    return `${yellow(rs)} ${dim("->")} [${magenta(target)}] /b`;
+		if (op == "lni")    return `[${magenta(target)}] ${dim("->")} [${yellow(rd)}]`;
+		if (op == "lbni")   return `[${magenta(target)}] ${dim("->")} [${yellow(rd)}] /b`;
+		if (op == "int")    return `${cyan("int")} ${imm}`;
+		if (op == "rit")    return `${cyan("rit")} ${magenta(target)}`;
+		if (op == "timei")  return `${cyan("time")} ${imm}`;
+		if (op == "ringi")  return `${cyan("ring")} ${imm}`;
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 
@@ -571,11 +591,11 @@ export default class Parser {
 	 */
 	static formatJ_w(op: string, rs: string, addr: number, link: boolean, flags: number = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
-		const target = chalk.magenta(Parser.getTarget(addr, flags, symbols));
+		const target = magenta(Parser.getTarget(addr, flags, symbols));
 		const sym = link? "::" : ":";
 		const cond = {"p": "+", "n": "-", "z": "0", "nz": "*"}[conditions] || "";
-		if (op == "j")   return `${chalk.dim(cond + sym)} ${target}`;
-		if (op == "jc")  return `${chalk.dim(sym)} ${target} ${chalk.red("if")} ${chalk.yellow(rs)}`;
+		if (op == "j")   return `${dim(cond + sym)} ${target}`;
+		if (op == "jc")  return `${dim(sym)} ${target} ${red("if")} ${yellow(rs)}`;
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 
@@ -592,12 +612,12 @@ export default class Parser {
 	 */
 	static formatR_m(op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null): string {
-		let base = chalk.cyan(op);
+		let base = cyan(op);
 		if (op == "ext") {
-			base = chalk.cyan.bold(Object.keys(EXTS).filter(t => funct == EXTS[t])[0] || ("ext " + funct));
+			base = cyan.bold(Object.keys(EXTS).filter(t => funct == EXTS[t])[0] || ("ext " + funct));
 		}
 
-		return `${base} ${chalk.yellow(rs)}${chalk.dim(",")} ${chalk.yellow(rt)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		return `${base} ${yellow(rs)}${dim(",")} ${yellow(rt)} ${dim("->")} ${yellow(rd)}`;
 	}
 
 	/**
@@ -614,7 +634,7 @@ export default class Parser {
 	static formatI_m(op: string, rs: string, rd: string, imm: number, flags: number = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
-		return `${chalk.cyan(op)} ${chalk.yellow(rs) + chalk.dim(",")} ${chalk.magenta(target)} ${chalk.dim("->")} ${chalk.yellow(rd)}`;
+		return `${cyan(op)} ${yellow(rs) + dim(",")} ${magenta(target)} ${dim("->")} ${yellow(rd)}`;
 	}
 
 	/**
@@ -630,8 +650,8 @@ export default class Parser {
 	 */
 	static formatJ_m(op: string, rs: string, addr: number, link: boolean, flags: number = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
-		const target = chalk.magenta(Parser.getTarget(addr, flags, symbols));
-		return `${chalk.cyan(op)}${conditions? chalk.cyan("_" + conditions) : ""} ${chalk.yellow(rs) + chalk.dim(",")} ${target}`;
+		const target = magenta(Parser.getTarget(addr, flags, symbols));
+		return `${cyan(op)}${conditions? cyan("_" + conditions) : ""} ${yellow(rs) + dim(",")} ${target}`;
 	}
 
 	static get formatStyle(): FormatStyle {
@@ -660,13 +680,13 @@ export default class Parser {
 	 * @return {string} A line of wasm source.
 	 */
 	static formatExt(rt, rs, rd, funct) {
-		if (funct == EXTS.printr) return `<${chalk.cyan("print")} ${chalk.yellow(rs)}>`;
-		if (funct == EXTS.prc)    return `<${chalk.cyan("prc")} ${chalk.yellow(rs)}>`;
-		if (funct == EXTS.prd)    return `<${chalk.cyan("prd")} ${chalk.yellow(rs)}>`;
-		if (funct == EXTS.prx)    return `<${chalk.cyan("prx")} ${chalk.yellow(rs)}>`;
-		if (funct == EXTS.halt)   return `<${chalk.cyan("halt")}>`;
-		if (funct == EXTS.sleep)  return `<${chalk.cyan("sleep")} ${chalk.yellow(rs)}>`;
-		return `<${chalk.cyan("ext")} ${chalk.red(funct)}>`;
+		if (funct == EXTS.printr) return `<${cyan("print")} ${yellow(rs)}>`;
+		if (funct == EXTS.prc)    return `<${cyan("prc")} ${yellow(rs)}>`;
+		if (funct == EXTS.prd)    return `<${cyan("prd")} ${yellow(rs)}>`;
+		if (funct == EXTS.prx)    return `<${cyan("prx")} ${yellow(rs)}>`;
+		if (funct == EXTS.halt)   return `<${cyan("halt")}>`;
+		if (funct == EXTS.sleep)  return `<${cyan("sleep")} ${yellow(rs)}>`;
+		return `<${cyan("ext")} ${red(funct)}>`;
 	}
 
 	static getTarget(imm, flags, symbols) {
@@ -678,8 +698,6 @@ export default class Parser {
 		return key? "&" + key : imm;
 	}
 }
-
-module.exports = Parser;
 
 if (require.main === module) {
 	const opt = minimist(process.argv.slice(2), {

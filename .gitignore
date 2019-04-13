@@ -18,3 +18,5 @@
 /llvm/llvm2why/tmp
 /**/*.s
 /**/_*.js
+/.tscache
+/dist

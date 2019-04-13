@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
-import fs = require("fs");
+import * as fs from "fs";
 
-import dominators = require("dominators");
+const dominators = require("dominators");
 const {lt} = dominators;
 
 import {Node, NodeID, NodeOrID, getID} from "./node";

@@ -5,16 +5,15 @@ const chalk = require("chalk");
 import minimist = require("minimist");
 import * as Long from "long";
 import WASMC, {SymbolTable} from "./wasmc";
-import Parser from "./parser";
+import Parser, {ParserInstruction, ParserInstructionI, ParserInstructionJ} from "./parser";
 import _ from "../util";
 
-const {FLAGS, EXCEPTIONS, SYMBOL_TYPES} = require("./constants.js");
+import {FLAGS, EXCEPTIONS, SYMBOL_TYPES} from "./constants";
 
 /**
  * @module wasm
  */
 
-require("../util.js");
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
@@ -74,6 +73,8 @@ export default class Linker {
 
 			bytecode = text;
 		}
+
+		console.log({Parser});
 
 		const parser: Parser = new Parser();
 		parser.read(bytecode);
@@ -355,13 +356,14 @@ export default class Linker {
 	static desymbolize(longs, symbolTable, offsets) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
-			const {opcode, type, flags, rs, rd, link, conditions} = parsedInstruction;
+			const {opcode, type, flags, rs, conditions} = parsedInstruction;
 			if (flags == FLAGS.KNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
 					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
 				}
 
-				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
+				const val = type == "i"? (<ParserInstructionI> parsedInstruction).imm
+				                       : (<ParserInstructionJ> parsedInstruction).addr;
 				const name = Linker.findSymbolFromAddress(val, symbolTable, offsets.$end);
 
 				if (!name || !symbolTable[name]) {
@@ -370,8 +372,10 @@ export default class Linker {
 
 				const id = symbolTable[name][0];
 				if (type == "i") {
+					const {rd} = <ParserInstructionI> parsedInstruction;
 					longs[i] = Linker.assembler.iType(opcode, rs, rd, id, FLAGS.SYMBOL_ID, conditions);
 				} else {
+					const {link} = <ParserInstructionJ> parsedInstruction;
 					longs[i] = Linker.assembler.jType(opcode, rs, id, link, FLAGS.SYMBOL_ID, conditions);
 				}
 			}
@@ -387,7 +391,7 @@ export default class Linker {
 	static resymbolize(longs: Long[], symbolTable: SymbolTable) {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
-			const {opcode, type, flags, rs, rd, imm, addr, link, conditions} = parsedInstruction;
+			const {opcode, type, flags, rs, conditions} = parsedInstruction;
 			if (flags == FLAGS.SYMBOL_ID || flags == FLAGS.UNKNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
 					throw new Error(`Found an instruction not of type I or J with \x1b[1m` +
@@ -395,7 +399,9 @@ export default class Linker {
 					                + `offset \x1b[1m0x${i * 8}\x1b[22m.`);
 				}
 
-				const val = type == "i" ? parsedInstruction.imm : parsedInstruction.addr;
+				
+				const val = type == "i"? (<ParserInstructionI> parsedInstruction).imm
+				                       : (<ParserInstructionJ> parsedInstruction).addr;
 				const name = Linker.findSymbolFromID(val, symbolTable);
 				if (!name || !symbolTable[name]) {
 					if (flags == FLAGS.UNKNOWN_SYMBOL) {
@@ -417,9 +423,15 @@ export default class Linker {
 					             "from", chalk.bold(`0x${addr.low.toString(16).padStart(16, "0")}`) + ".");
 				}
 
-				longs[i] = type == "i"?
-					Linker.assembler.iType(opcode, rs, rd, addr.toInt(),       FLAGS.KNOWN_SYMBOL, conditions, false) :
-					Linker.assembler.jType(opcode, rs,     addr.toInt(), link, FLAGS.KNOWN_SYMBOL, conditions, false);
+				if (type == "i") {
+					const {rd} = <ParserInstructionI> parsedInstruction;
+					longs[i] =
+					Linker.assembler.iType(opcode, rs, rd, addr.toInt(), FLAGS.KNOWN_SYMBOL, conditions, false);
+				} else {
+					const {link} = <ParserInstructionJ> parsedInstruction;
+					longs[i] =
+						Linker.assembler.jType(opcode, rs, addr.toInt(), link, FLAGS.KNOWN_SYMBOL, conditions, false);
+				}
 			}
 		}
 	}
@@ -490,8 +502,6 @@ export default class Linker {
 		}
 	}
 }
-
-module.exports = Linker;
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {

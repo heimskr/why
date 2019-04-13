@@ -9,7 +9,7 @@ import util = require("util");
 import child_process = require("child_process");
 import rimraf from "rimraf";
 import shell_escape from "shell-escape";
-import path from "path";
+import * as path from "path";
 import jsome = require("jsome");
 const exec = util.promisify(child_process.exec);
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env ts-node
 import * as _ from "lodash";
-import jsome from "jsome";
 import * as Long from "long";
 const chalk = require("chalk");
+const jsome = require("jsome");
 
 export type ForeachFunction<T> = (fn: (node: T, index?: number) => void) => void;
 
@@ -66,6 +66,10 @@ export function notSuperOrEq(a: any[], b: any[]): boolean {
 	return _.some(b, v => !a.includes(v));
 }
 
+export function hexPad(n: number | Long | string, use0x: boolean = true): string {
+	return (use0x? "0x" : "") + (typeof n == "string"? n : n.toString(16)).padStart(16, "0");
+}
+
 interface LoDashMixins extends _.LoDashStatic {
 	longString: (long: Long[] | Long) => string;
 	longStrings: (longs: Long[]) => string[];
@@ -76,6 +80,7 @@ interface LoDashMixins extends _.LoDashStatic {
 	pushAll: <T>(dest: T[], vals: T[]) => void;
 	objectify: <T>(arr: T[], initial: () => any) => object;
 	notSuperOrEq: (a: any[], b: any[]) => boolean;
+	hexPad: (n: number | Long | string, use0x?: boolean) => string;
 }
 
 _.mixin({
@@ -87,7 +92,8 @@ _.mixin({
 	push,
 	pushAll,
 	objectify,
-	notSuperOrEq
+	notSuperOrEq,
+	hexPad
 });
 
 // Wouldn't seem particularly idiomatic to make this a lodash mixin.

@@ -1,13 +1,13 @@
 let shellescape = require("shell-escape"),
-	child_process = require("child_process"),
-	path = require("path"),
-	chalk = require("chalk");
+child_process = require("child_process"),
+path = require("path"),
+chalk = require("chalk");
 
 module.exports = function(grunt) {
 	const jsdoc_files = ["*.js", "wasm/*.js", "wvm/*.js", "wvm/browser/*.js", "llvm/*.js"];
 	grunt.initConfig({
 		pkg: grunt.file.readJSON("package.json"),
-
+		
 		watch: {
 			sass: {
 				files: "wvm/style/*.scss",
@@ -16,29 +16,34 @@ module.exports = function(grunt) {
 					spawn: false
 				}
 			},
-
+			
 			browserify: {
 				files: ["wvm/dist/app.js"],
 				options: { spawn: false },
 				tasks: ["exorcise"]
 			},
-
+			
 			wasm: {
 				files: ["**/*.wasm"],
 				tasks: ["wasmc"]
 			},
-
+			
 			nearley: {
 				files: ["wasm/wasm.ne"],
 				tasks: ["nearley"]
 			},
-
-//			jsdoc: {
-//				files: ["jsdoc.json", ...jsdoc_files],
-//				tasks: ["jsdoc"]
-//			}
+			
+			//			jsdoc: {
+			//				files: ["jsdoc.json", ...jsdoc_files],
+			//				tasks: ["jsdoc"]
+			//			}
+			
+			ts: {
+				files: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
+				tasks: ["ts"]
+			}
 		},
-
+		
 		exorcise: {
 			bundle: {
 				options: { },
@@ -47,19 +52,19 @@ module.exports = function(grunt) {
 				}
 			}
 		},
-
+		
 		sass: {
 			options: {
 				sourceMap: true
 			},
-
+			
 			dist: {
 				files: {
 					"wvm/dist/app.css": "wvm/style/app.scss"
 				}
 			}
 		},
-
+		
 		browserify: {
 			dev: {
 				src: ["wvm/browser/**/*.js", "wvm/browser/**/*.jsx"],
@@ -83,7 +88,7 @@ module.exports = function(grunt) {
 				}
 			}
 		},
-
+		
 		jsdoc: {
 			dist: {
 				src: jsdoc_files,
@@ -93,16 +98,33 @@ module.exports = function(grunt) {
 					template: "./node_modules/docdash"
 				}
 			}
+		},
+
+		ts: {
+			options: {
+				compile: true,
+				target: "es6",
+				module: "commonjs",
+				sourceMap: true,
+				noImplicitAny: false,
+				fast: "always",
+				rootDir: "."
+			},
+			default: {
+				src: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
+				outDir: "dist"
+			}
 		}
 	});
-
+	
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-sass");
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks("grunt-babel");
 	grunt.loadNpmTasks("grunt-exorcise");
 	grunt.loadNpmTasks("grunt-jsdoc");
-
+	grunt.loadNpmTasks("grunt-ts");
+	
 	grunt.registerTask("wasmc", "Dummy task for wasmc.js.", () => { });
 	grunt.registerTask("nearley", "Compiles WASM's nearley source.", () => {
 		child_process.exec("node node_modules/nearley/bin/nearleyc.js wasm/wasm.ne -o wasm/wasm.js", (error, stdout, stderr) => {
@@ -116,11 +138,11 @@ module.exports = function(grunt) {
 			};
 		});
 	});
-
+	
 	grunt.event.on("watch", (action, file, name) => {
 		// There's almost certainly a better way to do this.
 		if (name == "wasm") {
-			child_process.exec(shellescape(["node", "wasm/wld.js", file, "-o", `wasm/compiled/${path.basename(file).replace(/\.wasm$/i, "")}.why`]), (error, stdout, stderr) => {
+			child_process.exec(shellescape(["ts-node", "wasm/wld.ts", file, "-o", `wasm/compiled/${path.basename(file).replace(/\.wasm$/i, "")}.why`]), (error, stdout, stderr) => {
 				if (error) {
 					console.error(chalk.red(`Couldn't compile ${file}:`));
 					console.error(chalk.red(error.message));
@@ -134,6 +156,7 @@ module.exports = function(grunt) {
 			});
 		};
 	});
-
-	grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
+	
+	// grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
+	grunt.registerTask("default", ["ts", "nearley", "watch"]);
 };

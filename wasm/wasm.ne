@@ -3,7 +3,7 @@
 
 const S = Symbol.for;
 
-const {EXTS} = require("./constants.js");
+const {EXTS} = require("../dist/wasm/constants.js");
 
 const special = {
 	chars: "@$&*\t \":`./",

@@ -1,12 +1,13 @@
 #!/usr/bin/env ts-node
 import * as fs from "fs";
 import {Grammar, Parser, CompiledRules} from "nearley";
-const chalk = require("chalk");
-import getline from "get-line-from-pos";
-import minimist = require("minimist");
 import * as Long from "long";
 import _ from "../util";
 import {createHash} from "crypto";
+
+const minimist = require("minimist");
+const chalk = require("chalk");
+const getline = require("get-line-from-pos");
 
 /**
  * `wasm` is the assembly language for Why.js. The `wasmc` utility parses it and compiles it to `wvm` bytecode.
@@ -17,8 +18,8 @@ import {createHash} from "crypto";
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS,
-       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} = require("./constants.js");
+import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS,
+       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} from "./constants";
 const isLabelRef = (x: any) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | "g" | "st", 0]
@@ -940,8 +941,6 @@ export default class WASMC {
 		return Math.abs(parseInt(hash.digest("hex").substr(0, 7), 16));
 	}
 }
-
-module.exports = WASMC;
 
 const _A:  Register[] = _.range(0, 16).map(n => ["register", "a", n]);
 const _RA: Register   = ["register", "return", 0];

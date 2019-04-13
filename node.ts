@@ -1,6 +1,5 @@
 #!/usr/bin/env ts-node
-import _ = require("lodash");
-import {alpha, numerize} from "./util";
+import _, {numerize} from "./util";
 import Graph from "./graph";
 
 /**
