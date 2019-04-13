@@ -1,10 +1,8 @@
 #!/usr/bin/env ts-node
 import * as _ from "lodash";
 import jsome from "jsome";
+import * as Long from "long";
 const chalk = require("chalk");
-const long = require("long");
-
-type Long = typeof long.UZERO;
 
 export type ForeachFunction<T> = (fn: (node: T, index?: number) => void) => void;
 

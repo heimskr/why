@@ -5,7 +5,7 @@ const chalk = require("chalk");
 import minimist = require("minimist");
 import * as Long from "long";
 import WASMC, {SymbolTable} from "./wasmc";
-import Parser from "../wvm/parser.js";
+import Parser from "./parser";
 import _ from "../util";
 
 const {FLAGS, EXCEPTIONS, SYMBOL_TYPES} = require("./constants.js");
