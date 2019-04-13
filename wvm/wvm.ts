@@ -1,15 +1,23 @@
-#!/usr/bin/env node
-let Long = require("long"),
-	_ = require("lodash"),
-	minimist = require("minimist"),
-	chalk = require("chalk"),
-	Parser = require("./parser.js"),
-	printansi = require("./printansi.js");
+#!/usr/bin/env ts-node
+import * as Long from "long";
+import _ from "../util";
+import Parser, {SegmentOffsets, ParserMeta, ParserInstruction} from "../wasm/parser";
+import {SymbolTable} from "../wasm/wasmc";
+import printansi from "./printansi.js";
+const minimist = require("minimist");
+const chalk = require("chalk");
 
 require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
-const {REGISTER_OFFSETS, EXTS, ALU_MASKS, RINGS, INTERRUPTS} = require("../wasm/constants.js");
+import {REGISTER_OFFSETS, EXTS, ALU_MASKS, RINGS, INTERRUPTS, Ring, ConditionName, isRing} from "../wasm/constants";
+
+export type Program = {
+	offsets: SegmentOffsets,
+	meta: ParserMeta,
+	code: ParserInstruction[],
+	symbols: SymbolTable
+};
 
 /**
  * `wvm` is the virtual machine for why.js. It executes bytecode produced by `wasmc`.
@@ -20,13 +28,37 @@ const {REGISTER_OFFSETS, EXTS, ALU_MASKS, RINGS, INTERRUPTS} = require("../wasm/
 /**
  * Class representing a virtual machine.
  */
-class WVM {
-	constructor({ memorySize=640000, program, memory: initial }={}) {
+export default class WVM {
+	initial: Long[];
+	memory: Uint8Array;
+	registers: Long[];
+	memorySize: number;
+	meta: ParserMeta;
+	code: ParserInstruction[];
+	symbols: SymbolTable;
+	programCounter: number;
+	active: boolean;
+	cycles: number;
+	interruptTableAddress: number | null;
+	timeoutID: number;
+	prcBuffer: string;
+	noBuffer: boolean;
+
+	onPrintChar: ((val: string) => void) | null;
+	onChangeRing: (newRing: number) => void = () => {};
+	onSetByte: (addr: number, byte: number) => void = () => {};
+	onSetWord: (addr: number, word: Long) => void = () => {};
+	onTick: () => void = () => {};
+	
+	private _ring: Ring;
+
+	offsets: SegmentOffsets;
+	constructor(program: Program, raw: Long[], memorySize: number = 640000) {
 		if (typeof program != "object") {
 			throw "Unable to load program.";
 		}
 
-		if (!(initial instanceof Array)) {
+		if (!(raw instanceof Array)) {
 			throw "Unable to load memory.";
 		}
 
@@ -36,14 +68,14 @@ class WVM {
 			code: this.code,
 			symbols: this.symbols
 		} = program);
-		this.initial = initial;
+		this.initial = raw;
 		this.memorySize = memorySize;
 		this.resetMemory();
 		this.resetRegisters();
 		this.programCounter = this.offsets.$code;
 		this.active = true;
 		this.cycles = 0;
-		this.ring = RINGS.KERNEL;
+		this.ring = RINGS.kernel;
 		this.interruptTableAddress = null;
 		this.timeoutID = 0;
 
@@ -56,23 +88,18 @@ class WVM {
 	set ring(to) { this.onChangeRing(this._ring = to); }
 	get ring() { return this._ring; }
 
-	onTick() { }
-	onSetWord(/*addr, val*/) { }
-	onSetByte(/*addr, val*/) { }
-	onChangeRing(/*newRing*/) { }
-
 	/**
 	 * Returns the instruction currently pointed to by the program counter.
 	 * @return {Long} A word containing an instruction.
 	 */
-	loadInstruction() {
+	loadInstruction(): Long {
 		return this.getWord(this.programCounter);
 	}
 
 	/**
 	 * Starts executing instructions in a loop until the VM is no longer active.
 	 */
-	start() {
+	start(): void {
 		while (this.active) {
 			this.tick();
 		}
@@ -81,7 +108,7 @@ class WVM {
 	/**
 	 * Loads and executes a single instruction.
 	 */
-	tick() {
+	tick(): void {
 		const loaded = this.loadInstruction();
 		let instr = Parser.parseInstruction(loaded);
 		if (!instr) {
@@ -91,7 +118,7 @@ class WVM {
 			return;
 		}
 
-		let skipPC = false;
+		let skipPC: boolean = false;
 		if (instr.op == "nop") {
 			// Do nothing.
 		} else if (typeof this[`op_${instr.op}`] == "undefined") {
@@ -99,11 +126,11 @@ class WVM {
 		} else {
 			const fn = this[`op_${instr.op}`].bind(this);
 			if (instr.type == "r") {
-				skipPC = fn(instr.rt, instr.rs, instr.rd, instr.funct, instr.conditions);
+				skipPC = !!fn(instr.rt, instr.rs, instr.rd, instr.funct, instr.conditions);
 			} else if (instr.type == "i") {
-				skipPC = fn(instr.rs, instr.rd, instr.imm);
+				skipPC = !!fn(instr.rs, instr.rd, instr.imm);
 			} else if (instr.type == "j") {
-				skipPC = fn(instr.rs, instr.addr, instr.link, instr.conditions);
+				skipPC = !!fn(instr.rs, instr.addr, instr.link, instr.conditions);
 			}
 		}
 
@@ -118,7 +145,7 @@ class WVM {
 	/**
 	 * Resets all values in the memory to zero.
 	 */
-	resetMemory() {
+	resetMemory(): void {
 		this.memory = new Uint8Array(this.memorySize * 8);
 		this.initial.forEach((long, i) => this.setWord(8*i, long));
 	}
@@ -126,7 +153,7 @@ class WVM {
 	/**
 	 * Resets all registers to zero, except the stack pointer, which is set to point at the end of the memory.
 	 */
-	resetRegisters() {
+	resetRegisters(): void {
 		this.registers = _.range(0, 128).map(() => Long.ZERO);
 		this.sp = Long.fromInt(8*(this.memorySize - 1), true);
 	}
@@ -240,12 +267,12 @@ class WVM {
 		}
 	}
 
-	get flagZ() { return !!(this.st & ALU_MASKS.z); }
-	get flagN() { return !!(this.st & ALU_MASKS.n); }
-	get flagC() { return !!(this.st & ALU_MASKS.c); }
-	get flagO() { return !!(this.st & ALU_MASKS.o); }
+	get flagZ() { return !!(this.st.toInt() & ALU_MASKS.z); }
+	get flagN() { return !!(this.st.toInt() & ALU_MASKS.n); }
+	get flagC() { return !!(this.st.toInt() & ALU_MASKS.c); }
+	get flagO() { return !!(this.st.toInt() & ALU_MASKS.o); }
 	
-	checkConditions(cond) {
+	checkConditions(cond: ConditionName): boolean {
 		switch (cond) {
 			case "p": return !(this.flagZ || this.flagN);
 			case "n": return this.flagN;
@@ -256,8 +283,8 @@ class WVM {
 		return true;
 	}
 
-	checkKernel(opName) {
-		if (RINGS.KERNEL < this.ring) {
+	checkKernel(opName: string): boolean {
+		if (RINGS.kernel < this.ring) {
 			console.error(`Called ${opName} outside of kernel mode; halting.`);
 			this.stop();
 			return false;
@@ -266,7 +293,7 @@ class WVM {
 		return true;
 	}
 
-	interrupt(id, override) {
+	interrupt(id: number, override: boolean = false): boolean {
 		if (!this.interruptTableAddress) {
 			console.warn("No interrupt table registered; ignoring interrupt.");
 			return false;
@@ -290,7 +317,7 @@ class WVM {
 		this.e0 = Long.fromInt(this.programCounter + 8, true);
 		this.e1 = Long.fromInt(this.ring, true);
 
-		if (-1 < newRing) {
+		if (isRing(newRing)) {
 			this.ring = newRing;
 		}
 
@@ -314,115 +341,115 @@ class WVM {
 
 	setTimer(micro) {
 		clearTimeout(this.timeoutID);
-		this.timeoutID = setTimeout(() => this.timerExpired(), micro / 1e3);
+		this.timeoutID = setTimeout((() => this.timerExpired()) as TimerHandler, micro / 1e3);
 	}
 
-	op_add(rt, rs, rd) {
+	op_add(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(this.registers[rt].toSigned()));
 	}
 
 	// mult
 
-	op_sub(rt, rs, rd) {
+	op_sub(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().subtract(this.registers[rt].toSigned()));
 	}
 
 	// multu
 
-	op_sll(rt, rs, rd) {
+	op_sll(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(this.registers[rt]));
 	}
 
-	op_srl(rt, rs, rd) {
+	op_srl(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(this.registers[rt]));
 	}
 
-	op_sra(rt, rs, rd) {
+	op_sra(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRight(this.registers[rt]));
 	}
 
-	op_mod(rt, rs, rd) {
+	op_mod(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(this.registers[rt].toSigned()));
 	}
 
-	op_and(rt, rs, rd) {
+	op_and(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]));
 	}
 
-	op_nand(rt, rs, rd) {
+	op_nand(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		let { low, high, unsigned } = this.registers[rs].and(this.registers[rt]);
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_nor(rt, rs, rd) {
+	op_nor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		let { low, high, unsigned } = this.registers[rs].or(this.registers[rt]);
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_not(rt, rs, rd) {
+	op_not(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		let { low, high, unsigned } = this.registers[rs];
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_or(rt, rs, rd) {
+	op_or(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].or(this.registers[rt]));
 	}
 
-	op_xnor(rt, rs, rd) {
+	op_xnor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		let { low, high, unsigned } = this.registers[rs].xor(this.registers[rt]);
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_xor(rt, rs, rd) {
+	op_xor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].xor(this.registers[rt]));
 	}
 
-	op_land(rt, rs, rd) {
+	op_land(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE);
 	}
 
-	op_lnand(rt, rs, rd) {
+	op_lnand(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO);
 	}
 
-	op_lnor(rt, rs, rd) {
+	op_lnor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO);
 	}
 
-	op_lnot(rt, rs, rd) {
+	op_lnot(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].eq(0)? Long.ONE : Long.ZERO);
 	}
 
-	op_lor(rt, rs, rd) {
+	op_lor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].or(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE);
 	}
 
-	op_lxnor(rt, rs, rd) {
+	op_lxnor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ONE : Long.ZERO);
 	}
 
-	op_lxor(rt, rs, rd) {
+	op_lxor(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].xor(this.registers[rt]).eq(0)? Long.ZERO : Long.ONE);
 	}
 
-	op_addi(rs, rd, imm) {
+	op_addi(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().add(
 			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
-	op_subi(rs, rd, imm) {
-		this.updateFlags(this.registers[rd] = Long.fromInt(this.registers[rs], false).subtract(
+	op_subi(rs: number, rd: number, imm: Long): boolean | void {
+		this.updateFlags(this.registers[rd] = this.registers[rs].subtract(
 			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
-	op_modi(rs, rd, imm) {
+	op_modi(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(
 			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
 	// multi
 
-	op_multui(rs, rd, imm) {
+	op_multui(rs: number, rd: number, imm: Long): boolean | void {
 		let i = imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true);
 		let n = this.registers[rs].toUnsigned();
 
@@ -432,7 +459,7 @@ class WVM {
 		let nhii = new Long(nhi, 0, true).multiply(i);
 		let nloi = new Long(nlo, 0, true).multiply(i);
 
-		let nhiihi = new Long(nhii.high,  0, true);
+		let nhiihi = new Long(nhii.high, 0, true);
 		let nhiilo = new Long(nhii.low,  0, true);
 		let nloihi = new Long(nloi.high, 0, true);
 		let nloilo = new Long(nloi.low,  0, true);
@@ -442,7 +469,7 @@ class WVM {
 		let abhi = ab.high;
 
 		this.hi = nhiihi.add(abhi);
-		this.lo = new Long(nloilo.toInt(), ablo.toInt(), true);
+		this.lo = new Long(nloilo.toInt(), ablo, true);
 
 		if (this.hi.isZero() && this.lo.isZero()) {
 			this.updateFlags(0);
@@ -453,195 +480,191 @@ class WVM {
 		}
 	}
 
-	op_int(rs, rd, imm) {
-		const i = imm instanceof Long? imm.toInt() : imm;
-
-		if (imm < 0 || Object.keys(INTERRUPTS).length <= imm) {
+	op_int(rs: number, rd: number, imm: Long): boolean | void {
+		if (imm.isNegative() || imm.greaterThanOrEqual(Object.keys(INTERRUPTS).length)) {
 			console.error("Invalid interrupt ID:", imm);
 			this.stop();
 			return;
 		}
 
-		return this.interrupt(imm);
+		return this.interrupt(imm.toUnsigned().toInt());
 	}
 
-	op_rit(rs, rd, imm) {
-		if (this.checkKernel()) {
+	op_rit(rs: number, rd: number, imm: Long): boolean | void {
+		if (this.checkKernel("rit")) {
 			this.interruptTableAddress = imm instanceof Long? imm.toInt() : imm;
 		}
 	}
 
-	op_time(rt, rs, rd) {
-		if (this.checkKernel()) {
+	op_time(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		if (this.checkKernel("time")) {
 			this.setTimer(this.registers[rs].toUnsigned().toInt());
 		}
 	}
 
-	op_timei(rs, rd, imm) {
-		if (this.checkKernel()) {
+	op_timei(rs: number, rd: number, imm: Long): boolean | void {
+		if (this.checkKernel("timei")) {
 			this.setTimer(imm instanceof Long? imm.toInt() : imm);
 		}
 	}
 
-	op_ring(rt, rs, rd) {
-		const rsv = this.registers[rs];
-		const r = Object.values(RINGS);
-		if (rsv < _.min(r) || _.max(r) < rsv) {
-			console.warn("Unknown ring:", rsv);
-			return;
+	op_ring(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		const ring = this.registers[rs].toUnsigned().toInt();
+
+		if (!isRing(ring)) {
+			console.warn("Unknown ring:", ring);
 		}
 
-		if (rsv < this.ring) {
+		if (ring < this.ring || !isRing(ring)) {
 			this.interrupt(INTERRUPTS.PROTEC[0], true);
 		} else {
-			this.ring = rsv;
+			this.ring = ring;
 		}
 	}
 
-	op_ringi(rs, rd, imm) {
-		const i = imm instanceof Long? imm.toInt() : imm;
-		const r = Object.values(RINGS);
-		if (i < _.min(r) || _.max(r) < i) {
-			console.warn("Unknown ring:", i);
-			return;
+	op_ringi(rs: number, rd: number, imm: Long): boolean | void {
+		const ring = imm.toUnsigned().toInt();
+
+		if (!isRing(ring)) {
+			console.warn("Unknown ring:", ring);
 		}
 
-		if (i < this.ring) {
+		if (ring < this.ring || !isRing(ring)) {
 			this.interrupt(INTERRUPTS.PROTEC[0], true);
 		} else {
-			this.ring = i;
+			this.ring = ring;
 		}
 	}
 
-	op_slli(rs, rd, imm) {
+	op_slli(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftLeft(
 			imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
-	op_srli(rs, rd, imm) {
+	op_srli(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRightUnsigned(
 			imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
-	op_srai(rs, rd, imm) {
+	op_srai(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().shiftRight(
 			imm instanceof Long? imm.toUnsigned() : imm));
 	}
 
-	op_andi(rs, rd, imm) {
+	op_andi(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].and(imm));
 	}
 
-	op_nandi(rs, rd, imm) {
+	op_nandi(rs: number, rd: number, imm: Long): boolean | void {
 		let { low, high, unsigned } = this.registers[rs].and(imm);
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_nori(rs, rd, imm) {
+	op_nori(rs: number, rd: number, imm: Long): boolean | void {
 		let { low, high, unsigned } = this.registers[rs].or(imm);
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_ori(rs, rd, imm) {
+	op_ori(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].or(imm));
 	}
 
-	op_xnori(rs, rd, imm) {
+	op_xnori(rs: number, rd: number, imm: Long): boolean | void {
 		let { low, high, unsigned } = this.registers[rs].xor(imm);
 		this.updateFlags(this.registers[rd] = new Long(~low, ~high, unsigned));
 	}
 
-	op_xori(rs, rd, imm) {
+	op_xori(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].xor(imm));
 	}
 
-	op_lui(rs, rd, imm) {
-		this.registers[rd].high = imm;
+	op_lui(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd].high = imm.getLowBitsUnsigned();
 	}
 
-	op_sl(rt, rs, rd) {
+	op_sl(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.registers[rs].toSigned().lessThan(this.registers[rt].toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_sle(rt, rs, rd) {
+	op_sle(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(this.registers[rt].toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_seq(rt, rs, rd) {
+	op_seq(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.registers[rs].toUnsigned().equals(this.registers[rt].toUnsigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_slu(rt, rs, rd) {
+	op_slu(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(this.registers[rt].toUnsigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_sleu(rt, rs, rd) {
+	op_sleu(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(this.registers[rt].toUnsigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_sli(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().lessThan(Long.fromInt(imm, false))?
+	op_sli(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toSigned().lessThan(imm.toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_slei(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(Long.fromInt(imm, false))?
+	op_slei(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toSigned().lessThanOrEqual(imm.toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_seqi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().equals(Long.fromInt(imm, false))?
+	op_seqi(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toUnsigned().equals(imm.toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_sgi(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().greaterThan(Long.fromInt(imm, false))?
+	op_sgi(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toSigned().greaterThan(imm.toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_sgei(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toSigned().greaterThanOrEqual(Long.fromInt(imm, false))?
+	op_sgei(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toSigned().greaterThanOrEqual(imm.toSigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_slui(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(Long.fromInt(imm, true))?
+	op_slui(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThan(imm.toUnsigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_sleui(rs, rd, imm) {
-		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(Long.fromInt(imm, true))?
+	op_sleui(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = this.registers[rs].toUnsigned().lessThanOrEqual(imm.toUnsigned())?
 			Long.UONE : Long.UZERO;
 	}
 
-	op_j(rs, addr, link, cond) {
+	op_j(rs: number, addr: Long, link: boolean, cond: ConditionName): boolean | void {
 		if (this.checkConditions(cond)) {
 			if (link) this.link();
-			if (addr == 0) {
+			if (addr.isZero() || !addr.isPositive()) {
 				console.error("Invalid jump address:", addr);
 				this.stop();
 				return true;
 			}
 
-			this.programCounter = Long.fromInt(addr, true).toInt();
+			this.programCounter = addr.toUnsigned().toInt();
 			return true;
 		}
 	}
 
-	op_jc(rs, addr, link, cond) {
+	op_jc(rs: number, addr: Long, link: boolean, cond: ConditionName): boolean | void {
 		if (link) this.link();
 		if (!this.registers[rs].equals(0)) {
-			this.programCounter = Long.fromInt(addr, true).toInt();
+			this.programCounter = addr.toUnsigned().toInt();
 			return true;
 		}
 	}
 
-	op_jr(rt, rs, rd, funct, cond) {
+	op_jr(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean {
 		if (this.checkConditions(cond)) {
 			const addr = this.registers[rd].toUnsigned().toInt();
 			
@@ -656,47 +679,51 @@ class WVM {
 		}
 	}
 	
-	op_jrc(rt, rs, rd) {
+	op_jrc(rt: number, rs: number, rd: number): boolean {
 		if (!this.registers[rs].equals(0)) {
 			this.programCounter = this.registers[rd].toUnsigned().toInt();
 			return true;
 		}
+		
+		return false;
 	}
 
-	op_jrl(rt, rs, rd, funct, cond) {
+	op_jrl(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean {
 		if (this.checkConditions(cond)) {
 			this.link();
 			this.programCounter = this.registers[rd].toUnsigned().toInt();
 			return true;
 		}
+
+		return false;
 	}
 	
-	op_jrlc(rt, rs, rd) {
+	op_jrlc(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.link();
 		return this.op_jrc(rt, rs, rd);
 	}
 
-	op_c(rt, rs, rd) {
+	op_c(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.setWord(this.registers[rd], this.getWord(this.registers[rs]));
 	}
 
-	op_l(rt, rs, rd) {
+	op_l(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.getWord(this.registers[rs]);
 	}
 
-	op_s(rt, rs, rd) {
+	op_s(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.setWord(this.registers[rd], this.registers[rs]);
 	}
 
-	op_cb(rt, rs, rd) {
+	op_cb(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.setByte(this.registers[rd], this.getByte(this.registers[rs]));
 	}
 
-	op_lb(rt, rs, rd) {
+	op_lb(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = Long.fromInt(this.getByte(this.registers[rs]));
 	}
 
-	op_sb(rt, rs, rd) {
+	op_sb(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.setByte(this.registers[rd], this.registers[rs].and(0xff));
 	}
 
@@ -704,31 +731,31 @@ class WVM {
 		this.stackPush(this.registers[rs]);
 	}
 
-	op_spop(rt, rs, rd) {
+	op_spop(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.registers[rd] = this.stackPop();
 	}
 
-	op_li(rs, rd, imm) {
+	op_li(rs: number, rd: number, imm: Long): boolean | void {
 		this.registers[rd] = this.getWord(imm);
 	}
 
-	op_si(rs, rd, imm) {
+	op_si(rs: number, rd: number, imm: Long): boolean | void {
 		this.setWord(imm, this.registers[rs]);
 	}
 
-	op_lbi(rs, rd, imm) {
+	op_lbi(rs: number, rd: number, imm: Long): boolean | void {
 		this.registers[rd] = Long.fromInt(this.getByte(imm));
 	}
 
-	op_sbi(rs, rd, imm) {
+	op_sbi(rs: number, rd: number, imm: Long): boolean | void {
 		this.setByte(imm, this.registers[rs].and(0xff));
 	}
 
-	op_set(rs, rd, imm) {
-		this.registers[rd] = Long.fromInt(imm, true);
+	op_set(rs: number, rd: number, imm: Long): boolean | void {
+		this.registers[rd] = imm;
 	}
 
-	op_ext(rt, rs, rd, funct) {
+	op_ext(rt: number, rs: number, rd: number, funct: number): boolean {
 		if (funct == EXTS.printr) {
 			this.flushPrcBuffer();
 			this.log(`${Parser.getRegister(rs)}: 0x${this.registers[rs].toString(16)}`);
@@ -741,7 +768,7 @@ class WVM {
 			const n = this.registers[rs].toUnsigned().toInt() & 0xff;
 			const c = String.fromCharCode(n);
 			if (this.onPrintChar) {
-				this.onPrintChar(n);
+				this.onPrintChar(n.toString());
 			} else if (this.noBuffer) {
 				console.log(c);
 			} else if (c == "\n") {
@@ -754,11 +781,13 @@ class WVM {
 		} else if (funct == EXTS.prx) {
 			this.prcBuffer += "0x" + this.registers[rs].toString(16);
 		} else {
-			console.log("Unknown external:", {rt, rs, rd, shift, funct});
+			console.log("Unknown external:", {rt, rs, rd, funct});
 		}
+
+		return false;
 	}
 
-	flushPrcBuffer(force = false) {
+	flushPrcBuffer(force: boolean = false): void {
 		if (force || this.prcBuffer) {
 			printansi(this.prcBuffer);
 			this.prcBuffer = "";
@@ -789,13 +818,14 @@ if (require.main === module) {
 		process.exit(0);
 	}
 
-	let { parsed, raw } = Parser.open(filename);
-	let { offsets, meta, code } = parsed;
-	let vm = new WVM({ program: { offsets, meta, code }, memory: raw });
+	const parser = new Parser();
+	parser.open(filename);
+	const {offsets, meta, code, raw, symbols} = parser;
+	const vm = new WVM({offsets, meta, code, symbols}, raw);
 	vm.tick();
 }
 
-if (process.browser) {
-	window.WVM = WVM;
-	window.Parser = Parser;
+if ((<any> process).browser) {
+	(<any> window).WVM = WVM;
+	(<any> window).Parser = Parser;
 }
