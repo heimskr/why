@@ -36,6 +36,10 @@ export type OpName = RType | IType | JType | "ext";
 export type OpType = "r" | "i" | "j";
 export type AllOps = OpName | ExtName | PseudoType;
 
+export type RingName = "kernel" | "user";
+export type Ring = 0 | 3;
+export function isRing(x: any): x is Ring { return x == 0 || x == 3; }
+
 export const EXCEPTIONS: ExceptionType[] = ["dbz"];
 
 export const R_TYPES = [
@@ -305,9 +309,9 @@ export const SYMBOL_TYPES: {[key: string]: number} = {
 	DATA: 4,
 };
 
-export const RINGS: {[key: string]: number} = {
-	KERNEL: 0,
-	USER: 3
+export const RINGS: {[key in RingName]: Ring} = {
+	kernel: 0,
+	user: 3
 };
 
 export const INTERRUPTS: {[key: string]: [number, number, number]} = {

@@ -68,6 +68,7 @@ export type ParserInstructionJ = {
 
 export type ParserNOP = {op: "nop", type: "nop", opcode: null, flags: null, rs: null, conditions: null};
 export type ParserInstruction = ParserInstructionR | ParserInstructionI | ParserInstructionJ | ParserNOP;
+export type ParserMeta = {[key in MetaField]: string};
 type FormatStyle = "wasm" | "mnem";
 
 /**
@@ -79,7 +80,7 @@ export default class Parser {
 	rawMeta: Long[];
 	rawCode: Long[];
 	rawData: Long[];
-	meta: {[key in MetaField]: string};
+	meta: ParserMeta;
 	
 	private static _formatStyle: FormatStyle = "wasm";
 	static formatR: FormatRFunction = Parser.formatR_w;
