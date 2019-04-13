@@ -28,7 +28,6 @@
 		"node-sass": "^4.11.0"
 	},
 	"dependencies": {
-		"@types/chalk": "^2.2.0",
 		"@types/lodash": "^4.14.123",
 		"@types/long": "^4.0.0",
 		"@types/minimist": "^1.2.0",
@@ -39,6 +38,7 @@
 		"babel-plugin-transform-class-properties": "^6.24.1",
 		"babel-preset-env": "^1.7.0",
 		"chalk": "^2.4.2",
+		"cytoscape": "^3.2.0",
 		"cytoscape-cose-bilkent": "^4.0.0",
 		"cytoscape-dagre": "^2.2.2",
 		"cytosnap": "^3.1.0",
