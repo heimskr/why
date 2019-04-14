@@ -11,16 +11,20 @@ import * as renderGraph from "./rendergraph";
 import {RenderOptions} from "./rendergraph";
 
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
+import {isCFG} from "./llvm/ll2w";
 
-type NodeIDMap = {[key: string]: NodeID, [key: number]: NodeID};
+type BothMap<T> = {[key: string]: T, [key: number]: T};
+type NodeIDMap = BothMap<NodeID>;
 type DFSResult = {parents: NodeID[], discovered: NodeID[], finished: NodeID[]};
 type NodeMapFunction = (id: NodeID, node?: Node) => string;
+
+export type DJGraph = Graph<{jEdges: [NodeID, NodeID][]}>;
 
 /**
  * Represents a directed graph datatype.
  */
-export default class Graph {
-	data: {[key: string]: any};
+export default class Graph<T extends Object> {
+	data: T;
 	nodes: Node[];
 	title?: string;
 	
@@ -35,7 +39,7 @@ export default class Graph {
 	 * @param {number} n     The number of nodes in the graph.
 	 * @param {*}     [data] Any extra data to associate with the graph.
 	 */
-	constructor(n: number, data={}) {
+	constructor(n: number, data: T) {
 		this.data = data;
 		this.nodes = [];
 
@@ -74,7 +78,7 @@ export default class Graph {
 			// All sets for non-numberic properties are not interfered with.
 			// Sets for numeric properties are passed to this.nodes instead,
 			// unless the corresponding node doesn't exist.
-			set(target: Graph, prop: string | number | symbol, val: any, receiver?: any) {
+			set(target: Graph<T>, prop: string | number | symbol, val: any, receiver?: any) {
 				if (Number(prop) != prop) {
 					return Reflect.set(target, prop, val, receiver);
 				}
@@ -187,7 +191,7 @@ export default class Graph {
 	 *                      an implicit hyphen between the two digits.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	arcString(str: string): Graph {
+	arcString(str: string): Graph<T> {
 		let pairs = str.split(/\s+/);
 		if (str.match(/\d/)) {
 			pairs.forEach(pair =>  {
@@ -213,7 +217,7 @@ export default class Graph {
 	 * @param  {...Array<Array<number, ...number>>} arcs An array of arc sets to add.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	arcs(...sets: [NodeID, ...NodeID[]][]): Graph {
+	arcs(...sets: [NodeID, ...NodeID[]][]): Graph<T> {
 		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
 		return this;
 	}
@@ -224,7 +228,7 @@ export default class Graph {
 	 * @param  {Node|NodeID} destination The destination node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	removeArc(source: NodeOrID, destination: NodeOrID): Graph {
+	removeArc(source: NodeOrID, destination: NodeOrID): Graph<T> {
 		this.nodes[getID(source)].removeArc(destination);
 		return this;
 	}
@@ -235,7 +239,7 @@ export default class Graph {
 	 * @param  {Node|NodeID} b The second node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	edge(a: NodeOrID, b: NodeOrID): Graph {
+	edge(a: NodeOrID, b: NodeOrID): Graph<T> {
 		this.getNodeSafe(a).arc(b);
 		this.getNodeSafe(b).arc(a);
 		return this;
@@ -247,7 +251,7 @@ export default class Graph {
 	 * @param  {Node|NodeID} b The second node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	disconnect(a: NodeOrID, b: NodeOrID): Graph {
+	disconnect(a: NodeOrID, b: NodeOrID): Graph<T> {
 		this.getNodeSafe(a).removeArc(b);
 		this.getNodeSafe(b).removeArc(a);
 		return this;
@@ -290,7 +294,7 @@ export default class Graph {
 	 * @param  {*} value A value to use as the value of each entry in the object.
 	 * @return {Object} The filled object.
 	 */
-	fillObj(value: Object) {
+	fillObj<T>(value: T): BothMap<T> {
 		const out = {};
 		this.forEach((v: Node) => out[v.id] = _.cloneDeep(value));
 		return out;
@@ -302,7 +306,7 @@ export default class Graph {
 	 * @param  {Function} fn A function that takes a Node and returns any value.
 	 * @return {Object} The mapped object.
 	 */
-	mapValues(fn) {
+	mapValues<T>(fn: (node: Node, index?: number) => T): BothMap<T> {
 		const out = {};
 		this.forEach((v, i) => out[v.id] = fn(v, i));
 		return out;
@@ -313,8 +317,8 @@ export default class Graph {
 	 * @param  {number} [offset=0] The starting point of the range.
 	 * @return {Object<NodeID, number>} A map of old IDs to new IDs.
 	 */
-	normalize(offset=0) {
-		const renameMap = this.mapValues((v, i) => i + offset);
+	normalize(offset: number = 0): BothMap<number> {
+		const renameMap: BothMap<number> = this.mapValues((v, i) => i + offset);
 		const oldNodes = Object.values(this.nodes);
 
 		this.nodes = [];
@@ -333,9 +337,9 @@ export default class Graph {
 	 * @param  {boolean} [bidirectional=false] Whether the D-edges should be bidirectional.
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
-	dTree(startID: NodeOrID = 0, bidirectional: boolean = false) {
-		const [lentar, renameMap, renames] = this.lengauerTarjan(getID(startID));
-		const out = new Graph(Object.keys(lentar).length);
+	dTree(startID: NodeOrID = 0, bidirectional: boolean = false): Graph<{}> {
+		const [lentar] = this.lengauerTarjan(getID(startID));
+		const out = new Graph(Object.keys(lentar).length, {});
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
 		Object.entries(lentar).forEach(([k, v]) => {
 			out.nodes[k].data = this.nodes[k].data;
@@ -352,7 +356,7 @@ export default class Graph {
 	 * @return {Object<NodeID, NodeID[]>}
 	 *         An object mapping a node ID to an array of the IDs of its strict dominators.
 	 */
-	static strictDominators(dt) {
+	static strictDominators(dt: Graph<{}>): BothMap<NodeID[]> {
 		const out = {};
 		for (const node of dt.nodes) {
 			let parent = dt[node.in[0]];
@@ -374,7 +378,7 @@ export default class Graph {
 	 * Returns an array of all edge pairs in the graph.
 	 * @return {Array<Array<number, number>>} An array of edge pairs.
 	 */
-	allEdges() {
+	allEdges(): [NodeID, NodeID][] {
 		return this.reduce((a, {id: src, out}) =>
 			[...a, ...out.map(dst => [src, dst])],
 		[]);
@@ -384,10 +388,10 @@ export default class Graph {
 	 * Computes the DJ-graph of the graph for a given start node.
 	 * @param  {Node|NodeID|Graph} [start=0] The ID of the start node, or a precomputed D-tree.
 	 * @param  {boolean} [bidirectional=false] Whether D-edges should be bidirectional.
-	 * @return {Graph} A DJ-graph.
+	 * @return {DJGraph} A DJ-graph.
 	 */
-	djGraph(start: NodeOrID | Graph = 0, bidirectional: boolean = false) {
-		const dj: Graph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
+	djGraph(start: NodeOrID | Graph<any> = 0, bidirectional: boolean = false): DJGraph {
+		const dj: DJGraph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
 		const sdom = Graph.strictDominators(dj);
 		dj.data.jEdges = [];
 		this.allEdges()
@@ -416,7 +420,7 @@ export default class Graph {
 		];
 	}
 
-	static mergeSets(djGraph, startID=0, exitID=1) {
+	static mergeSets(djGraph: DJGraph, startID: number = 0, exitID: number = 1): BothMap<NodeID[]> {
 		// "A Practical and Fast Iterative Algorithm for φ-Function Computation Using DJ Graphs"
 		// Das and Ramakrishna (2005)
 		// Top Down Merge Set Computation (TDMSC-I)
@@ -443,7 +447,7 @@ export default class Graph {
 			return n;
 		};
 
-		let reqPass;
+		let reqPass: boolean;
 		do {
 			reqPass = false;
 			for (const node of bfs) {
@@ -561,7 +565,7 @@ export default class Graph {
 	 * @param  {NodeID} newID The new ID to assign to the node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	renameNode(oldID: NodeOrID, newID: NodeID): Graph {
+	renameNode(oldID: NodeOrID, newID: NodeID): Graph<T> {
 		const node = this.getNode(oldID);
 		if (node) {
 			node.rename(newID);
@@ -645,7 +649,7 @@ export default class Graph {
 	 */
 	topoSort(): Node[] {
 		// We need to clone the graph to prevent any changes to it.
-		const copy: Graph = this.clone();
+		const copy: Graph<T> = this.clone();
 
 		// The sorted list.
 		const out: Node[] = [];
@@ -685,7 +689,7 @@ export default class Graph {
 	/**
 	 * Removes all loop edges from the graph.
 	 */
-	removeLoops(): Graph {
+	removeLoops(): Graph<T> {
 		this.nodes.forEach(node => this.disconnect(node, node));
 		return this;
 	}
@@ -751,8 +755,8 @@ export default class Graph {
 	 * Calculates and returns the transpose of the graph.
 	 * @type {Graph}
 	 */
-	get transpose(): Graph {
-		let graph = new Graph(this.nodes.length);
+	get transpose(): Graph<T> {
+		const graph: Graph<T> = new Graph(this.nodes.length, this.data);
 		this.nodes.forEach(({out}, u) => out.forEach(v => graph.arc(v, u)));
 
 		return graph;
@@ -760,12 +764,13 @@ export default class Graph {
 
 	/**
 	 * Returns a copy of this graph.
-	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
+	 * @param {boolean} [cloneNodeData=true]  Whether to clone the node data instead of copying the references.
+	 * @param {boolean} [cloneGraphData=true] Whether to clone the graph data instead of copying the reference.
 	 * @return {Graph} A copy of the graph.
 	 */
-	clone(cloneData: boolean = true): Graph {
-		let newGraph = new Graph(this.nodes.length);
-		newGraph.nodes = this.nodes.map(node => node.clone(newGraph, cloneData));
+	clone(cloneNodeData: boolean = true, cloneGraphData: boolean = true): Graph<T> {
+		const newGraph: Graph<T> = new Graph(this.nodes.length, cloneGraphData? _.cloneDeep(this.data) : this.data);
+		newGraph.nodes = this.nodes.map(node => node.clone(newGraph, cloneNodeData));
 		return newGraph;
 	}
 
@@ -783,9 +788,11 @@ export default class Graph {
 	}
 
 	render(opts: RenderOptions = {}, display: boolean = false) {
-		if (this.data.enter !== undefined) opts.enter = this.data.enter;
-		if (this.data.exit  !== undefined) opts.exit  = this.data.exit;
-		if (this.data.unreachable !== undefined) opts.unreachable = [...this.data.unreachable];
+		if (isCFG(this)) {
+			opts.enter = this.data.enter;
+			opts.exit  = this.data.exit;
+			opts.unreachable = [...this.data.unreachable];
+		}
 		
 		const newOpts: RenderOptions = Object.assign({layout: "dagre"}, opts);
 		if (display) {
@@ -804,7 +811,7 @@ export default class Graph {
 		return this;
 	}
 
-	static displayMultiple(opts: RenderOptions = {}, ...graphs: Graph[]) {
+	static displayMultiple(opts: RenderOptions = {}, ...graphs: Graph<any>[]) {
 		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
 		if (graphs.length == 0) return;
 		const p = graphs[0].printTitle().display(opts).then(() => console.log());
@@ -815,7 +822,7 @@ export default class Graph {
 		return p;
 	}
 
-	writePNG(path, opts={}) {
+	writePNG(path: string, opts: RenderOptions = {}) {
 		if (!path) throw new Error("Expected path");
 
 		// return this.render(opts, true);
@@ -830,7 +837,7 @@ export default class Graph {
 	 * Checks whether all `in` arrays and `out` arrays match up (i.e., ∀N,M∈G M∈In(N) ⟷ N∈Out(M)).
 	 * @return {boolean} Whether the graph's `in` and `out` arrays match up.
 	 */
-	validateDirections() {
+	validateDirections(): boolean {
 		for (const node of this.nodes) {
 			for (const o of node.out) {
 				if (!this[o].in.includes(node.id)) {

@@ -23,7 +23,7 @@ export function getID(node: Node | NodeID) {
  */
 export class Node {
 	id: NodeID;
-	graph: Graph;
+	graph: Graph<any>;
 	data?: {[key: string]: any};
 	out: NodeID[];
 	in: NodeID[];
@@ -34,7 +34,7 @@ export class Node {
 	 * @param {Graph}  graph The graph containing this node.
 	 * @param {*}      data  The data attached to the node.
 	 */
-	constructor(id: NodeID, graph: Graph, data: any = null) {
+	constructor(id: NodeID, graph: Graph<any>, data: any = null) {
 		/**
 		 * The node's ID.
 		 * @type {number}
@@ -173,7 +173,7 @@ export class Node {
 	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
 	 * @return {Node} A copy of the node.
 	 */
-	clone(newGraph: Graph = null, cloneData: boolean = true): Node {
+	clone<T>(newGraph: Graph<T> = null, cloneData: boolean = true): Node {
 		let newNode = new Node(this.id, newGraph === null? this.graph : newGraph);
 		newNode.data = cloneData? _.cloneDeep(this.data) : this.data;
 		newNode.out = this.out.slice(0);

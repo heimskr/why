@@ -13,14 +13,21 @@ import * as path from "path";
 import jsome = require("jsome");
 const exec = util.promisify(child_process.exec);
 
-import {StringMap, MetadataType, DeclarationType, ASTMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
-        VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction} from "./types";
-
 import _, {displayIOError, isNumeric, pushAll} from "../util";
+import {BUILTINS} from "./constants";
+
+import {StringMap, MetadataType, DeclarationType, ASTMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
+	VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction} from "./types";
+
+// * @return {Object} A map of variable names to maps of block names to tuples of whether the variable is live-in in
+// *                  the block and whether the variable is live-out in the block.
+export type LivenessMap = {[varName: string]: {[blockName: string]: [boolean, boolean]}};
+export type CFG = Graph<{enter: number, exit: number, unreachable: number[]}>;
+export function isCFG(x: Graph<any>): x is CFG {
+	return "enter" in x.data && "exit" in x.data && "unreachable" in x.data;
+}
 
 const warn = (...a: any[]) => console.log(chalk.dim("[") + chalk.bold.yellow("!") + chalk.dim("]"), ...a);
-
-import {BUILTINS} from "./constants";
 
 /**
  * `ll2w` is an LLVM intermediate representation to WVM compiler (hence <code><b>ll</b>vm<b>2w</b>vm</code>)
@@ -100,9 +107,6 @@ class LL2W {
 	 * @param {string} text - The source code for the compiler to use.
 	 */
 	feed(text: string) {
-		if (!this.parser) throw new Error("Parser not initialized.");
-		if (!this.parser) throw new Error("Parser not initialized.");
-
 		this.debug(() => console.time("parse"));
 		this.initialize();
 
@@ -232,7 +236,7 @@ class LL2W {
 		if (!this.ast) throw new Error("AST not yet generated");
 
 		const metas = this.ast.filter(([type]) => type == "metadata") as ASTMetadata[];
-		const graph = new Graph(metas.length);
+		const graph: Graph<null> = new Graph<null>(metas.length, null);
 
 		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
 			let recursive = false;
@@ -569,42 +573,38 @@ class LL2W {
 	 * @param {IRFunction} fn A function AST.
 	 * @return {Graph} A CFG with additional `enter`, `exit` and `unreachable` properties.
 	 */
-	static computeCFG(fn) {
-		const g = new Graph(fn.length);
+	static computeCFG(fn: IRFunction): CFG {
+		const out: CFG = new Graph(fn.length, {enter: -1, exit: -1, unreachable: []});
 		const name = fn.meta.name;
-
-		g.data.unreachable = [];
 
 		// Assign all blocks to the rest of the nodes.
 		fn.forEach((block, i) => {
-			g[i].data = {label: block[0]};
+			out[i].data = {label: block[0]};
 
 			if (block[0] == fn.first) {
-				g.data.enter = i;
+				out.data.enter = i;
 			}
 
 			if (block[0] == fn.exit) {
-				g.data.exit = i;
+				out.data.exit = i;
 			}
 
 			if (block[1].unreachable) {
-				g.data.unreachable.push(i);
+				out.data.unreachable.push(i);
 			}
 		});
 
 		// Add an arc from the block to each of its outblocks.
-		fn.forEach((block, i) => {
-			const label = block[0];
-
+		fn.forEach((block: BasicBlockExtra, i: number) => {
 			// Ignore outblocks that aren't within the same function.
 			block[1].out
-				.filter(s => s.substr(0, s.indexOf(":")) == name)
-				.map(s => s.substr(s.indexOf(":") + 1))
-				.map(s => g.findSingle((b: any) => b.data.label == s)) // TODO
-				.forEach(n => g[i].arc(n));
+				.filter(s => s.toString().substr(0, s.toString().indexOf(":")) == name)
+				.map(s => s.toString().substr(s.toString().indexOf(":") + 1))
+				.map(s => out.findSingle((b: any) => b.data.label == s)) // TODO
+				.forEach(n => out[i].arc(n));
 		});
 
-		return g;
+		return out;
 	}
 
 	/**
@@ -652,7 +652,7 @@ class LL2W {
 	 * @return {Object} A map of variable names to maps of block names to tuples of whether the variable is live-in in
 	 *                  the block and whether the variable is live-out in the block.
 	 */
-	static computeLivenessForFunction(fn) {
+	static computeLivenessForFunction(fn: IRFunction): LivenessMap {
 		// An array of all variable names used in the function.
 		const {vars} = fn;
 		
@@ -1030,7 +1030,7 @@ function testReversePost() {
 	let cfg;
 	// cfg = new Graph(6).arcString("AB BC BD BF CE DE EB");
 	
-	cfg = new Graph(7);
+	cfg = new Graph(7, null);
 	cfg.arc(0, 5); cfg.arc(0, 1); cfg.arc(0, 2);
 	cfg.arc(3, 2); cfg.arc(3, 4); cfg.arc(3, 5); cfg.arc(3, 6);
 	cfg.arc(1, 4); cfg.arc(5, 2);
@@ -1044,7 +1044,7 @@ function testReversePost() {
 }
 
 function test254Gap() {
-	const dj254gap = new Graph(24);
+	const dj254gap = new Graph(24, null);
 	const pairs254gapLtR = "01 02 23 34 35 3-23 38 j45 56 57 j23-5 j23-8 j67 j75 j78 89 8-10 8-14 j9-10 14-15 14-16 j15-16 10-11 11-12 12-13 j13-1 16-22 j22-10 16-17 17-21 j21-22 17-18 18-19 18-20 j19-20 j20-18 j20-21".split(" ");
 	const pairs254gapSorted = "01 02 23 34 35 38 3-23 j45 56 57 j23-5 j23-8 j67 j75 j78 89 8-10 8-14 j9-10 14-15 14-16 j15-16 10-11 11-12 12-13 j13-1 16-17 j22-10 16-22 17-18 j21-22 17-21 18-19 18-20 j19-20 j20-18 j20-21".split(" ");
 	const pairs254gap = pairs254gapLtR;
@@ -1070,7 +1070,7 @@ function test254Gap() {
 
 function testMisc1() {
 	// cfg = new Graph(8).arcString("AB BC BD CE DE EF FG GF GH");
-	const cfg = new Graph(13);
+	const cfg = new Graph(13, null);
 	const q = "RABCDEFGHIJKL".split("");
 	for (const pair of "RA RB RC AB AD BA BD BE BR CF CG DL EH FI GI GJ HE HK IK JI KI KR LH".split(" ")) {
 		cfg.arc(q.indexOf(pair[0]), q.indexOf(pair[1]));

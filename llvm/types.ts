@@ -85,14 +85,14 @@ export type InstSwitch = InstBase<"switch", {
 export type IRTailType = "tail" | "notail" | "musttail";
 export type IRFastMathFlag = "nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast";
 export type IRCConv = "ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" | "preserve_allcc" | "preserve_mostcc"
-			| "x86_vectorcallcc" | "cc10" | "cc11" | "arm_apcscc" | "coldcc" | "webkit_jscc" | "cc64" | "cc65" | "cc66"
-			| "ptx_device" | "x86_stdcallcc" | "cc67" | "cc68" | "cc69" | "cc70" | "cc1023" | "anyregcc" | "cc71"
-			| "cc72" | "cc75" | "msp430_intrcc" | "ptx_kernel" | "cc76" | "cc77" | "cc78" | "spir_func"
-			| "x86_64_win64cc" | "cc79" | "cc80" | "arm_aapcs_vfpcc" | "intel_ocl_bicc" | "x86_64_sysvcc"
-			| "x86_fastcallcc" | "x86_thiscallcc" | "arm_aapcscc" | "spir_kernel";
+                    | "x86_vectorcallcc" | "cc10" | "cc11" | "arm_apcscc" | "coldcc" | "webkit_jscc" | "cc64" | "cc65"
+                    | "anyregcc" | "cc71" | "cc66" | "ptx_device" | "x86_stdcallcc" | "cc67" | "cc68" | "cc69" | "cc70"
+                    | "cc1023" | "cc72" | "cc75" | "msp430_intrcc" | "ptx_kernel" | "cc76" | "cc77" | "cc78"
+                    | "spir_func" | "x86_64_win64cc" | "cc79" | "cc80" | "arm_aapcs_vfpcc" | "intel_ocl_bicc"
+                    | "x86_64_sysvcc" | "x86_fastcallcc" | "x86_thiscallcc" | "arm_aapcscc" | "spir_kernel";
 export type IRCallFnty   = [ASTTypeAny, ASTTypeAny[], boolean];
 export type IRCstToTypes = "trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp"
-				| "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast";
+                         | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast";
 export type IRCstToType  = [IRCstToTypes, IRConstant, ASTTypeAny];
 export type IRConstExpr  = ["expr", IRCstToType];
 export type InstCall = InstBase<"call", {

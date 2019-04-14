@@ -3,6 +3,7 @@ import * as util from "./util";
 import Graph from "./graph";
 import {NodeID} from "./node";
 import cytosnap from "cytosnap";
+import {Stream} from "stream";
 
 type Color = string;
 export type RenderOptions = {
@@ -32,7 +33,7 @@ export type RenderOptions = {
 	idOffset?: number
 };
 
-export function render(graph: Graph, opts: RenderOptions = {}) {
+export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<string | Object | Stream> {
 	const defaults: RenderOptions = {
 		background: "#000",
 		node: "#fff",
@@ -102,7 +103,7 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 		...graph.allEdges().map(([source, target]) => ({data: {source, target}}))
 	];
 
-	return snap.start().then(() => snap.shot({
+	const promise = snap.start().then(() => snap.shot({
 		elements,
 		layout: {
 			name: opts.layout,
@@ -157,14 +158,22 @@ export function render(graph: Graph, opts: RenderOptions = {}) {
 		height: opts.height,
 		background: opts.background
 	})).then((image: string | Object) => (snap.stop(), image));
+
+	if (opts.type == "json") {
+		return promise as Promise<Object>;
+	} else if (opts.type == "stream") {
+		return promise as Promise<Stream>;
+	}
 }
 
-export async function iterm(graph: Graph, opts?: RenderOptions): Promise<void> {
-	return render(graph, opts).then((b64: string) => process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`));
+export async function iterm<T>(graph: Graph<T>, opts?: RenderOptions): Promise<void> {
+	return render(graph, Object.assign(opts, {type: "base64"})).then((b64: string) => {
+		process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`);
+	});
 }
 
 if (require.main === module) {
-	const g = new Graph(24);
+	const g = new Graph(24, {});
 	g.arcString("01 02 23 34 35 3-23 38 45 56 57 23-5 23-8 67 75 78 89 8-10 8-14 9-10 14-15 14-16 15-16 10-11 11-12 12-13 13-1 16-22 22-10 16-17 17-21 21-22 17-18 18-19 18-20 19-20 20-18 20-21");
 	iterm(g, {}).then(() => process.exit(0));
 }
