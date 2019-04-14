@@ -803,7 +803,7 @@ export default class Graph<D extends Object> {
 		return renderGraph.render(this, newOpts);
 	}
 
-	display(opts: RenderOptions = {}) {
+	display(opts: RenderOptions = {}): GraphRenderPromise {
 		return this.render(opts, true);
 	}
 
@@ -812,7 +812,7 @@ export default class Graph<D extends Object> {
 		return this;
 	}
 
-	static displayMultiple<G>(opts: RenderOptions = {}, ...graphs: Graph<G>[]) {
+	static displayMultiple<G>(opts: RenderOptions = {}, ...graphs: Graph<G>[]): GraphRenderPromise {
 		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
 		if (graphs.length == 0) return;
 		const p = graphs[0].printTitle().display(opts).then(() => console.log());
@@ -843,15 +843,13 @@ export default class Graph<D extends Object> {
 	validateDirections(): boolean {
 		for (const node of this.nodes) {
 			for (const o of node.out) {
-				if (!this[o].in.includes(node.id)) {
+				if (!this[o].in.includes(node.id))
 					return false;
-				}
 			}
 
 			for (const i of node.in) {
-				if (!this[i].out.includes(node.id)) {
+				if (!this[i].out.includes(node.id))
 					return false;
-				}
 			}
 		}
 
