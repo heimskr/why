@@ -9,7 +9,7 @@ import {Node, NodeID, NodeOrID, getID} from "./node";
 export {Node} from "./node";
 
 import * as renderGraph from "./rendergraph";
-import {RenderOptions} from "./rendergraph";
+import {RenderOptions, GraphRenderPromise} from "./rendergraph";
 
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 import {isCFG} from "./llvm/ll2w";
@@ -192,7 +192,7 @@ export default class Graph<T extends Object> {
 	 *                      an implicit hyphen between the two digits.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	arcString(str: string): Graph<T> {
+	arcString(str: string): this {
 		let pairs = str.split(/\s+/);
 		if (str.match(/\d/)) {
 			pairs.forEach(pair =>  {
@@ -218,7 +218,7 @@ export default class Graph<T extends Object> {
 	 * @param  {...Array<Array<number, ...number>>} arcs An array of arc sets to add.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	arcs(...sets: [NodeID, ...NodeID[]][]): Graph<T> {
+	arcs(...sets: [NodeID, ...NodeID[]][]): this {
 		sets.forEach(([src, ...dests]) => dests.forEach(dest => this.arc(src, dest)));
 		return this;
 	}
@@ -229,7 +229,7 @@ export default class Graph<T extends Object> {
 	 * @param  {Node|NodeID} destination The destination node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	removeArc(source: NodeOrID, destination: NodeOrID): Graph<T> {
+	removeArc(source: NodeOrID, destination: NodeOrID): this {
 		this.nodes[getID(source)].removeArc(destination);
 		return this;
 	}
@@ -240,7 +240,7 @@ export default class Graph<T extends Object> {
 	 * @param  {Node|NodeID} b The second node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	edge(a: NodeOrID, b: NodeOrID): Graph<T> {
+	edge(a: NodeOrID, b: NodeOrID): this {
 		this.getNodeSafe(a).arc(b);
 		this.getNodeSafe(b).arc(a);
 		return this;
@@ -252,7 +252,7 @@ export default class Graph<T extends Object> {
 	 * @param  {Node|NodeID} b The second node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	disconnect(a: NodeOrID, b: NodeOrID): Graph<T> {
+	disconnect(a: NodeOrID, b: NodeOrID): this {
 		this.getNodeSafe(a).removeArc(b);
 		this.getNodeSafe(b).removeArc(a);
 		return this;
@@ -566,7 +566,7 @@ export default class Graph<T extends Object> {
 	 * @param  {NodeID} newID The new ID to assign to the node.
 	 * @return {Graph} The same graph the method was called on.
 	 */
-	renameNode(oldID: NodeOrID, newID: NodeID): Graph<T> {
+	renameNode(oldID: NodeOrID, newID: NodeID): this {
 		const node = this.getNode(oldID);
 		if (node) {
 			node.rename(newID);
@@ -690,7 +690,7 @@ export default class Graph<T extends Object> {
 	/**
 	 * Removes all loop edges from the graph.
 	 */
-	removeLoops(): Graph<T> {
+	removeLoops(): this {
 		this.nodes.forEach(node => this.disconnect(node, node));
 		return this;
 	}
@@ -782,13 +782,13 @@ export default class Graph<T extends Object> {
 	 * @param  {Function} [outFn] Another mapping function. If none is given, it will be equal to idFn.
 	 * @return {string} A string representation of the graph.
 	 */
-	toString(idFn: NodeMapFunction = (x,y)=>x.toString(), outFn: NodeMapFunction = idFn): string {
+	toString(idFn: NodeMapFunction = x => x.toString(), outFn: NodeMapFunction = idFn): string {
 		return _.sortBy(this.nodes, "id").map((node: Node) =>
 			`${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`
 		).join("\n");
 	}
 
-	render(opts: RenderOptions = {}, display: boolean = false): Promise<string | Object | Readable | void> {
+	async render(opts: RenderOptions = {}, display: boolean = false): GraphRenderPromise {
 		if (isCFG(this)) {
 			opts.enter = this.data.enter;
 			opts.exit  = this.data.exit;
@@ -807,7 +807,7 @@ export default class Graph<T extends Object> {
 		return this.render(opts, true);
 	}
 
-	printTitle() {
+	printTitle(): this {
 		if (this.title) console.log(this.title + ":");
 		return this;
 	}
@@ -823,7 +823,7 @@ export default class Graph<T extends Object> {
 		return p;
 	}
 
-	writePNG(path: string, opts: RenderOptions = {}) {
+	async writePNG(path: string, opts: RenderOptions = {}): Promise<void> {
 		if (!path) throw new Error("Expected path");
 
 		// return this.render(opts, true);

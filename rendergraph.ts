@@ -5,6 +5,7 @@ import {NodeID} from "./node";
 import cytosnap from "cytosnap";
 import {Stream, Readable} from "stream";
 
+export type GraphRenderPromise = Promise<string | Object | Readable | void>;
 type Color = string;
 export type RenderOptions = {
 	background?: string,
