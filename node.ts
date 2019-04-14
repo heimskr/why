@@ -6,9 +6,9 @@ import Graph from "./graph";
  * @typedef {number|string} NodeID
  */
 export type NodeID = number | string;
-export type NodeOrID = Node | NodeID;
+export type NodeOrID = Node<any> | NodeID;
 
-export function getID(node: Node | NodeID) {
+export function getID(node: Node<any> | NodeID) {
 	if (node instanceof Node) {
 		return node.id;
 	} else {
@@ -21,10 +21,10 @@ export function getID(node: Node | NodeID) {
 /**
  * Represents a node in a graph.
  */
-export class Node {
+export class Node<D> {
 	id: NodeID;
 	graph: Graph<any>;
-	data?: {[key: string]: any};
+	data: D;
 	out: NodeID[];
 	in: NodeID[];
 
@@ -34,7 +34,7 @@ export class Node {
 	 * @param {Graph}  graph The graph containing this node.
 	 * @param {*}      data  The data attached to the node.
 	 */
-	constructor(id: NodeID, graph: Graph<any>, data: any = null) {
+	constructor(id: NodeID, graph: Graph<any>, data: D = null) {
 		/**
 		 * The node's ID.
 		 * @type {number}
@@ -81,7 +81,7 @@ export class Node {
 	 * @param  {(Node|number|string)} n The node to add.
 	 * @return {boolean} Whether the arc already existed.
 	 */
-	arc(n: Node | NodeID): boolean {
+	arc(n: NodeOrID): boolean {
 		n = numerize(getID(n));
 
 		let existed = false;
@@ -104,7 +104,7 @@ export class Node {
 	 * Adds a node to this node's inward edge list and adds this node to the node's outward edge list.
 	 * @param {Node|NodeID} n The node to add.
 	 */
-	arcFrom(n: NodeOrID): Node {
+	arcFrom(n: NodeOrID): this {
 		n = getID(n);
 		if ((typeof n == "string" || typeof n == "number") && !this.in.includes(n)) {
 			this.in.push(n);
@@ -122,7 +122,7 @@ export class Node {
 	 * Removes an outward connection from this node and the other node's corresponding inward connection.
 	 * @param {Node|NodeID} n The node whose arc will be removed.
 	 */
-	removeArc(n: NodeOrID): Node {
+	removeArc(n: NodeOrID): this {
 		n = getID(n);
 		this.out = this.out.filter(edge => edge != n);
 		this.graph.getNode(n).in = this.graph.getNode(n).in.filter(edge => edge != this.id);
@@ -133,7 +133,7 @@ export class Node {
 	 * Removes an inward connection to this node and the other node's corresponding outward connection.
 	 * @param {(Node|number|string)} n The node whose arc will be removed.
 	 */
-	removeArcFrom(n) {
+	removeArcFrom(n: NodeOrID): this {
 		n = getID(n);
 		this.in = this.in.filter(edge => edge != n);
 		this.graph.nodes[n].out = this.graph.nodes[n].out.filter(edge => edge != this.id);
@@ -145,7 +145,7 @@ export class Node {
 	 * @param  {(Node|number|string)} n The node to check.
 	 * @return {boolean}         Whether there exists an connection from this node to the other.
 	 */
-	connectsTo(n) {
+	connectsTo(n: NodeOrID): boolean {
 		return this.out.includes(getID(n));
 	}
 
@@ -154,7 +154,7 @@ export class Node {
 	 * @param  {(Node|number|string)} n The node to check.
 	 * @return {boolean}         Whether there exists an connection to this node from the other.
 	 */
-	connectsFrom(n) {
+	connectsFrom(n: NodeOrID): boolean {
 		return this.in.includes(getID(n));
 	}
 
@@ -163,7 +163,7 @@ export class Node {
 	 * @param  {(Node|*)} n The node to check.
 	 * @return {boolean}         Whether there exists a bidirectional connection between this node and the other.
 	 */
-	connects(n) {
+	connects(n: NodeOrID): boolean {
 		return this.connectsTo(n) && this.connectsFrom(n);
 	}
 
@@ -173,11 +173,12 @@ export class Node {
 	 * @param {boolean} [cloneData=true] Whether to clone the node data instead of copying the references.
 	 * @return {Node} A copy of the node.
 	 */
-	clone<T>(newGraph: Graph<T> = null, cloneData: boolean = true): Node {
-		let newNode = new Node(this.id, newGraph === null? this.graph : newGraph);
-		newNode.data = cloneData? _.cloneDeep(this.data) : this.data;
+	clone<G>(newGraph: Graph<G> = null, cloneData: boolean = true): Node<D> {
+		const nodeGraph: Graph<any> = newGraph === null? this.graph : newGraph;
+		const nodeData: D = cloneData? _.cloneDeep(this.data) : this.data;
+		const newNode = new Node<D>(this.id, nodeGraph, nodeData);
 		newNode.out = this.out.slice(0);
-		newNode.in = this.in.slice(0);
+		newNode.in  = this.in.slice(0);
 		return newNode;
 	}
 
@@ -185,9 +186,11 @@ export class Node {
 	 * Assigns the node a new ID and updates the in/out arrays of all other nodes in the graph accordingly.
 	 * @param {number|string} newID The new ID for this node.
 	 */
-	rename(newID: NodeID): Node {
+	rename(newID: NodeID): this {
 		const oldID = this.id;
-		const replace = (o, ...ps) => ps.forEach(p => o[p] = o[p].map(x => x == oldID? newID : x));
+		const replace = (o: Node<any>, ...ps: ["out", "in"]) => {
+			ps.forEach(p => o[p] = o[p].map(x => x == oldID? newID : x));
+		};
 		this.graph.nodes.forEach(n => replace(n, "out", "in"));
 		this.id = newID;
 		return this;

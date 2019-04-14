@@ -21,7 +21,7 @@ export type IRFunctionMeta = {
 };
 export type ASTFunctionBlock = [string, BlockConnectionsExtra, Instruction[]];
 export type IRFunction  = ASTFunctionBlock[] & IRFunctionMeta;
-export type AnyNode     = Node | string | number;
+export type AnyNode     = Node<any> | string | number;
 export type BlockConnections = {preds: AnyNode[], in: AnyNode[], out: AnyNode[]};
 export type BlockConnectionsExtra = BlockConnections & {
 	read: VariableName[],

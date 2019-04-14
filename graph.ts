@@ -17,30 +17,30 @@ import {isCFG} from "./llvm/ll2w";
 type BothMap<T> = {[key: string]: T, [key: number]: T};
 type NodeIDMap = BothMap<NodeID>;
 type DFSResult = {parents: NodeID[], discovered: NodeID[], finished: NodeID[]};
-type NodeMapFunction = (id: NodeID, node?: Node) => string;
+type NodeMapFunction<T> = (id: NodeID, node?: Node<T>) => string;
 
 export type DJGraph = Graph<{jEdges: [NodeID, NodeID][]}>;
 
 /**
  * Represents a directed graph datatype.
  */
-export default class Graph<T extends Object> {
-	data: T;
-	nodes: Node[];
+export default class Graph<D extends Object> {
+	data: D;
+	nodes: Node<any>[];
 	title?: string;
 	
-	get  length():                number { return this.nodes.length;  }
-	get    push():  (node: Node) => void { return this.nodes.push;    }
-	get forEach(): ForeachFunction<Node> { return this.nodes.forEach; }
-	get     map():     MapFunction<Node> { return this.nodes.map;     }
-	get  reduce():  ReduceFunction<Node> { return this.nodes.reduce;  }
+	get  length():                     number { return this.nodes.length;  }
+	get    push():  (node: Node<any>) => void { return this.nodes.push;    }
+	get forEach(): ForeachFunction<Node<any>> { return this.nodes.forEach; }
+	get     map():     MapFunction<Node<any>> { return this.nodes.map;     }
+	get  reduce():  ReduceFunction<Node<any>> { return this.nodes.reduce;  }
 
 	/**
 	 * Creates a new graph.
 	 * @param {number} n     The number of nodes in the graph.
 	 * @param {*}     [data] Any extra data to associate with the graph.
 	 */
-	constructor(n: number, data: T) {
+	constructor(n: number, data: D) {
 		this.data = data;
 		this.nodes = [];
 
@@ -79,7 +79,7 @@ export default class Graph<T extends Object> {
 			// All sets for non-numberic properties are not interfered with.
 			// Sets for numeric properties are passed to this.nodes instead,
 			// unless the corresponding node doesn't exist.
-			set(target: Graph<T>, prop: string | number | symbol, val: any, receiver?: any) {
+			set(target: Graph<D>, prop: string | number | symbol, val: any, receiver?: any) {
 				if (Number(prop) != prop) {
 					return Reflect.set(target, prop, val, receiver);
 				}
@@ -100,7 +100,7 @@ export default class Graph<T extends Object> {
 	 * @param {number|NodeID[]} n The number of new empty nodes to replace the old nodes
 	 *                         or an array of IDs to make new nodes with.
 	 */
-	reset(n: number | NodeID[]) {
+	reset(n: number | NodeID[]): this {
 		if (n == undefined) {
 			this.nodes = [];
 		} else if (typeof n == "number") {
@@ -117,7 +117,7 @@ export default class Graph<T extends Object> {
 	 * Generates an ID not already assigned to any nodes in the graph.
 	 * @return {number} An available numeric ID.
 	 */
-	newID() {
+	newID(): number {
 		let id = this.length;
 		if (!this.getNode(id)) {
 			// There isn't already a node whose ID is equal to the number of nodes, which makes things easy.
@@ -135,8 +135,8 @@ export default class Graph<T extends Object> {
 	 * @param  {*} data The node's data.
 	 * @return {Node} The new node.
 	 */
-	add(data) {
-		const newNode = new Node(this.newID(), this, data);
+	add<N>(data: N): Node<N> {
+		const newNode = new Node<N>(this.newID(), this, data);
 		this.nodes.push(newNode);
 		return newNode;
 	}
@@ -146,7 +146,7 @@ export default class Graph<T extends Object> {
 	 * @param  {Node|NodeID} n The ID of the node to return.
 	 * @return {?Node} The node corresponding to n if n is a number; n otherwise.
 	 */
-	getNode(n: NodeOrID): Node | undefined {
+	getNode<N>(n: NodeOrID): Node<N> | undefined {
 		if (n instanceof Node) {
 			return n.graph == this? n : this.getNode(n.id);
 		}
@@ -156,16 +156,16 @@ export default class Graph<T extends Object> {
 		}
 
 		const numerized = numerize(n);
-		return _.find(this.nodes, (node: Node) => numerize(node.id) == numerized);
+		return _.find(this.nodes, (node: Node<any>) => numerize(node.id) == numerized);
 	}
 
 	/**
 	 * Attempts to return the node with a given ID, throwing an error if one couldn't be found.
 	 * @param  {Node|NodeID} n The ID of the node to return.
-	 * @return {?Node} The node corresponding to n if n is a number; n otherwise.
+	 * @return {Node} The node corresponding to n if n is a number; n otherwise.
 	 */
-	getNodeSafe(n: NodeOrID): Node {
-		const node = this.getNode(n);
+	getNodeSafe<N>(n: NodeOrID): Node<N> {
+		const node = this.getNode<N>(n);
 		if (node === undefined) {
 			throw new Error("Couldn't find node.");
 		}
@@ -264,8 +264,8 @@ export default class Graph<T extends Object> {
 	 * @return {?Node} The result of the search.
 	 * @throws Throws an exception if the number of nodes matching the predicate isn't exactly 1.
 	 */
-	findSingle(predicate: string | ((n: Node) => boolean)): Node | undefined {
-		let found: Node[];
+	findSingle<N>(predicate: string | ((n: Node<N>) => boolean)): Node<N> | undefined {
+		let found: Node<N>[];
 		if (typeof predicate == "function") {
 			found = this.nodes.filter(predicate);
 		} else {
@@ -297,7 +297,7 @@ export default class Graph<T extends Object> {
 	 */
 	fillObj<T>(value: T): BothMap<T> {
 		const out = {};
-		this.forEach((v: Node) => out[v.id] = _.cloneDeep(value));
+		this.forEach((v: Node<any>) => out[v.id] = _.cloneDeep(value));
 		return out;
 	}
 
@@ -307,7 +307,7 @@ export default class Graph<T extends Object> {
 	 * @param  {Function} fn A function that takes a Node and returns any value.
 	 * @return {Object} The mapped object.
 	 */
-	mapValues<T>(fn: (node: Node, index?: number) => T): BothMap<T> {
+	mapValues<T>(fn: (node: Node<any>, index?: number) => T): BothMap<T> {
 		const out = {};
 		this.forEach((v, i) => out[v.id] = fn(v, i));
 		return out;
@@ -435,13 +435,13 @@ export default class Graph<T extends Object> {
 		// node ID => IDs in merge set
 		const merge: {[key: string]: any[], [key: number]: any[]} = djGraph.fillObj([]);
 
-		const parent = (node: Node) => djGraph.getNode(node.in[0]);
+		const parent = (node: Node<any>) => djGraph.getNode(node.in[0]);
 		const isJEdge = (es: NodeID, ed: NodeID) => _.some(jEdges, ([js, jd]) => js == es && jd == ed);
-		const allIn = (node: Node) => _.uniq([
+		const allIn = (node: Node<any>) => _.uniq([
 			...node.in,
 			...jEdges.filter(([s, d]) => d == node.id).map(([s, d]) => s)
 		]);
-		const level = (node: Node) => {
+		const level = (node: Node<any>) => {
 			let n: number;
 			for (n = 0; node.id != startID; n++)
 				node = djGraph.getNode(parent(node));
@@ -456,7 +456,7 @@ export default class Graph<T extends Object> {
 				const unvisitedJEdges = allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id]);
 				for (const e of unvisitedJEdges) {
 					visited[e][id] = true;
-					let lNode: Node | null = null;
+					let lNode: Node<any> | null = null;
 					let tmp = djGraph.getNode(e);
 					while (level(tmp) >= level(node)) {
 						merge[tmp.id].push(merge[id]);
@@ -539,14 +539,14 @@ export default class Graph<T extends Object> {
 	 * @param {Node|NodeID} startID The ID of the start node.
 	 * @return {Node[]} An array of nodes in BFS order.
 	 */
-	bfs(startID: NodeOrID = 0): Node[] {
+	bfs(startID: NodeOrID = 0): Node<any>[] {
 		let node = this.getNodeSafe(startID);
 		const visited = this.fillObj(false);
 		const queue = [node];
 		const order = [node];
 		visited[getID(startID)] = true;
 
-		for (let next: Node | undefined = queue[0]; next !== undefined; next = queue.shift()) {
+		for (let next: Node<any> | undefined = queue[0]; next !== undefined; next = queue.shift()) {
 			next.out.forEach(id => {
 				if (!visited[id]) {
 					visited[id] = true;
@@ -579,7 +579,7 @@ export default class Graph<T extends Object> {
 	 * Returns an array of this graph's connected components using Kosaraju's algorithm.
 	 * @return {Array<Array<Node>>} An array of connected components.
 	 */
-	components(): Node[][] {
+	components<N>(): Node<N>[][] {
 		const visited: boolean[] = [];
 		const parents:  NodeID[] = [];
 		const components: {[key: string]: NodeID[], [key: number]: NodeID[]} = {}; 
@@ -618,7 +618,7 @@ export default class Graph<T extends Object> {
 	 * array of this Graph object.
 	 * @return {Node[]} An array of ordered nodes.
 	 */
-	sortedDFS(): Node[] {
+	sortedDFS<N>(): Node<N>[] {
 		const list:      NodeID[] = [];
 		const visited:  boolean[] = this.fill(false);
 		const unvisited: NodeID[] = _.range(0, this.length);
@@ -640,7 +640,7 @@ export default class Graph<T extends Object> {
 			visit(unvisited[0]);
 		}
 
-		return list.map(this.getNodeSafe);
+		return list.map(n => this.getNodeSafe(n));
 	}
 
 	/**
@@ -648,12 +648,12 @@ export default class Graph<T extends Object> {
 	 * @return {Node[]} A topologically sorted list of the graph's nodes.
 	 * @throws Will throw an error if the graph is cyclic.
 	 */
-	topoSort(): Node[] {
+	topoSort<N>(): Node<N>[] {
 		// We need to clone the graph to prevent any changes to it.
-		const copy: Graph<T> = this.clone();
+		const copy: Graph<D> = this.clone();
 
 		// The sorted list.
-		const out: Node[] = [];
+		const out: Node<N>[] = [];
 
 		// An array containing every node that has no in-edges.
 		const s = copy.nodes.filter(node => !node.in.length);
@@ -684,7 +684,7 @@ export default class Graph<T extends Object> {
 			}
 		});
 
-		return out.map(this.getNodeSafe);
+		return out.map(n => this.getNodeSafe(n));
 	}
 
 	/**
@@ -702,7 +702,7 @@ export default class Graph<T extends Object> {
 	 * @param  {Node[]} nodes A list of nodes or node IDs.
 	 * @return {?Node} The coalesced node.
 	 */
-	coalesce(nodes: Node[]): Node | undefined {
+	coalesce<N>(nodes: Node<N>[]): Node<N> | undefined {
 		if (!nodes.length) {
 			return undefined;
 		}
@@ -719,7 +719,7 @@ export default class Graph<T extends Object> {
 		const allIDs = nodes.map(node => node.id);
 		const newID = nodes[0].id;
 		const oldIDs = _.without(allIDs, newID);
-		let newNode = this.getNode(newID);
+		let newNode: Node<N> = this.getNode(newID);
 		
 		// Remove all the old nodes from the graph.
 		_.remove(this.nodes, v => allIDs.includes(getID(v)));
@@ -756,8 +756,8 @@ export default class Graph<T extends Object> {
 	 * Calculates and returns the transpose of the graph.
 	 * @type {Graph}
 	 */
-	get transpose(): Graph<T> {
-		const graph: Graph<T> = new Graph(this.nodes.length, this.data);
+	get transpose(): Graph<D> {
+		const graph: Graph<D> = new Graph(this.nodes.length, this.data);
 		this.nodes.forEach(({out}, u) => out.forEach(v => graph.arc(v, u)));
 
 		return graph;
@@ -769,8 +769,8 @@ export default class Graph<T extends Object> {
 	 * @param {boolean} [cloneGraphData=true] Whether to clone the graph data instead of copying the reference.
 	 * @return {Graph} A copy of the graph.
 	 */
-	clone(cloneNodeData: boolean = true, cloneGraphData: boolean = true): Graph<T> {
-		const newGraph: Graph<T> = new Graph(this.nodes.length, cloneGraphData? _.cloneDeep(this.data) : this.data);
+	clone(cloneNodeData: boolean = true, cloneGraphData: boolean = true): Graph<D> {
+		const newGraph: Graph<D> = new Graph(this.nodes.length, cloneGraphData? _.cloneDeep(this.data) : this.data);
 		newGraph.nodes = this.nodes.map(node => node.clone(newGraph, cloneNodeData));
 		return newGraph;
 	}
@@ -782,8 +782,8 @@ export default class Graph<T extends Object> {
 	 * @param  {Function} [outFn] Another mapping function. If none is given, it will be equal to idFn.
 	 * @return {string} A string representation of the graph.
 	 */
-	toString(idFn: NodeMapFunction = x => x.toString(), outFn: NodeMapFunction = idFn): string {
-		return _.sortBy(this.nodes, "id").map((node: Node) =>
+	toString<N>(idFn: NodeMapFunction<N> = x => x.toString(), outFn: NodeMapFunction<N> = idFn): string {
+		return _.sortBy(this.nodes, "id").map((node: Node<N>) =>
 			`${idFn(node.id, node)} => ${node.out.map(out => outFn(out, node)).join(", ")}`
 		).join("\n");
 	}
@@ -812,7 +812,7 @@ export default class Graph<T extends Object> {
 		return this;
 	}
 
-	static displayMultiple(opts: RenderOptions = {}, ...graphs: Graph<any>[]) {
+	static displayMultiple<G>(opts: RenderOptions = {}, ...graphs: Graph<G>[]) {
 		if (!(graphs instanceof Array)) throw new Error("Expected an array.");
 		if (graphs.length == 0) return;
 		const p = graphs[0].printTitle().display(opts).then(() => console.log());
