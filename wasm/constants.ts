@@ -41,7 +41,7 @@ export type Ring = 0 | 3;
 export function isRing(x: any): x is Ring { return x == 0 || x == 3; }
 
 export type SymbolTypeName = "unknown" | "knownPointer" | "unknownPointer" | "code" | "data";
-export type SymbolType = 0 | 1 | 2 | 3 | 4;
+export type SymbolEnum = 0 | 1 | 2 | 3 | 4;
 
 export const EXCEPTIONS: ExceptionType[] = ["dbz"];
 
@@ -304,7 +304,7 @@ export const ALU_MASKS: {[key in ALUMaskName]: number} = {
 	o: 0b1000,
 };
 
-export const SYMBOL_TYPES: {[key in SymbolTypeName]: SymbolType} = {
+export const SYMBOL_TYPES: {[key in SymbolTypeName]: SymbolEnum} = {
 	unknown: 0,
 	knownPointer: 1,
 	unknownPointer: 2,

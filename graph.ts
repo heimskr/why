@@ -14,12 +14,13 @@ import {RenderOptions, GraphRenderPromise} from "./rendergraph";
 import _, {alpha, numerize, ForeachFunction, MapFunction, ReduceFunction} from "./util";
 import {isCFG} from "./llvm/ll2w";
 
-type BothMap<T> = {[key: string]: T, [key: number]: T};
-type NodeIDMap = BothMap<NodeID>;
-type DFSResult = {parents: NodeID[], discovered: NodeID[], finished: NodeID[]};
-type NodeMapFunction<T> = (id: NodeID, node?: Node<T>) => string;
+export type BothMap<T> = {[key: string]: T, [key: number]: T};
+export type NodeIDMap = BothMap<NodeID>;
+export type DFSResult = {parents: NodeID[], discovered: NodeID[], finished: NodeID[]};
+export type NodeMapFunction<T> = (id: NodeID, node?: Node<T>) => string;
 
 export type DJGraph = Graph<{jEdges: [NodeID, NodeID][]}>;
+export type DTree = Graph<{}>;
 
 /**
  * Represents a directed graph datatype.
@@ -338,7 +339,7 @@ export default class Graph<D extends Object> {
 	 * @param  {boolean} [bidirectional=false] Whether the D-edges should be bidirectional.
 	 * @return {Graph} A tree in which each node other than the start node is linked to by its immediate dominator.
 	 */
-	dTree(startID: NodeOrID = 0, bidirectional: boolean = false): Graph<{}> {
+	dTree(startID: NodeOrID = 0, bidirectional: boolean = false): DTree {
 		const [lentar] = this.lengauerTarjan(getID(startID));
 		const out = new Graph(Object.keys(lentar).length, {});
 		const fn = (bidirectional? out.edge : out.arc).bind(out);
@@ -357,7 +358,7 @@ export default class Graph<D extends Object> {
 	 * @return {Object<NodeID, NodeID[]>}
 	 *         An object mapping a node ID to an array of the IDs of its strict dominators.
 	 */
-	static strictDominators(dt: Graph<{}>): BothMap<NodeID[]> {
+	static strictDominators(dt: DTree): BothMap<NodeID[]> {
 		const out = {};
 		for (const node of dt.nodes) {
 			let parent = dt[node.in[0]];
@@ -482,7 +483,7 @@ export default class Graph<D extends Object> {
 		// The merge sets are defined in terms of each other (if you just push in order, earlier computed merge sets
 		// won't include the items added in later computed merge sets), so we need to combine them all together.
 		// _.flattenDeep doesn't handle circular references, so we need to flatten the merge sets ourselves.
-		const flatten = (x, out: NodeID[] = [], processed: any[] = []) => {
+		const flatten = (x: any, out: NodeID[] = [], processed: any[] = []) => {
 			if (x instanceof Array) {
 				x.forEach(y => {
 					if (x != y && !processed.includes(y)) {

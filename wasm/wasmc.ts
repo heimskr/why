@@ -19,14 +19,14 @@ require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
 import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS,
-       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES, SymbolType} from "./constants";
+       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES, SymbolEnum} from "./constants";
 const isLabelRef = (x: any) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 
 
 export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | "g" | "st", 0]
 					 | ["register", "s" | "k" | "e" | "m" | "r" | "a" | "t", number];
-export type SymbolTable = {[key: string]: [number, Long, SymbolType]};
+export type SymbolTable = {[key: string]: [number, Long, SymbolEnum]};
 export type Condition = "p" | "n" | "z" | "nz";
 export type Instruction = [string, string, ...any[]] & InstructionMeta; // [label, op, ...args]
 export type InstructionType = "r" | "i" | "j";
@@ -55,6 +55,7 @@ export type WASMCParsed = {
 	data: {[key: string]: DataPair},
 	includes?: string[]
 };
+export type SymbolType = "data" | "code" | "other";
 
 /**
  * Represents a `wasmc` instance.
@@ -77,7 +78,7 @@ export default class WASMC {
 	 * Creates a new wasmc instance.
 	 * @param options An object containing options for the compiler (from the command line, for example).
 	 */
-	constructor(options: Object = {}) {
+	constructor(options: {[key: string]: any} = {}) {
 		/**
 		 * An object containing options for the compiler (from the command line, for example).
 		 * @type {Object.<string, *>}
@@ -163,7 +164,7 @@ export default class WASMC {
 	 * Loads the Nearley grammar, parses a source string and stores the AST in {@link module:wasm~WASMC#parsed parsed}.
 	 * @param {string} source Source code of a wasm program.
 	 */
-	parse(source: string) {
+	parse(source: string): void {
 		let compiled: CompiledRules;
 		try {
 			compiled = require("./wasm.js");
@@ -270,7 +271,7 @@ export default class WASMC {
 	 * @param {string}  outfile The path to the output file.
 	 * @param {string} [infile] The name of the input file.
 	 */
-	writeOutput(outfile: string, infile: string) {
+	writeOutput(outfile: string, infile: string): void {
 		const frozen = WASMC.longs2strs(this.assembled).join("\n");
 
 		fs.writeFileSync(outfile, frozen);
@@ -286,7 +287,7 @@ export default class WASMC {
 	/**
 	 * Extracts and processes the program's metadata and stores it in {@link module:wasm~WASMC#meta meta}.
 	 */
-	processMetadata() {
+	processMetadata(): void {
 		const [name, version, author] = [this.parsed.meta.name || "?", this.parsed.meta.version || "?",
 		                                 this.parsed.meta.author || "?"];
 		
@@ -313,7 +314,7 @@ export default class WASMC {
 	/**
 	 * Extracts and processes the program's data and stores it in {@link module:wasm~WASMC#data data}.
 	 */
-	processData() {
+	processData(): void {
 		let length = 0;
 		_(this.parsed.data).forEach(([type, value], key) => {
 			if (key[0] != "%") {
@@ -330,7 +331,7 @@ export default class WASMC {
 	/**
 	 * Replaces variable reference placeholders in the data section with the proper values of the pointers.
 	 */
-	reprocessData() {
+	reprocessData(): void {
 		for (const key in this.dataVariables) {
 			const ref = this.dataVariables[key];
 			const index = this.dataOffsets[key] / 8;
@@ -342,7 +343,7 @@ export default class WASMC {
 	 * Adds an offset to each data offset and inserts the results into the offsets object.
 	 * @param dataSectionStart The start offset of the data section.
 	 */
-	setDataOffsets(dataSectionStart: number) {
+	setDataOffsets(dataSectionStart: number): void {
 		Object.keys(this.dataOffsets).forEach(key => this.offsets[key] = this.dataOffsets[key] + dataSectionStart);
 	}
 
@@ -385,7 +386,7 @@ export default class WASMC {
 	 * Copies an array of expanded code into the {@link module:wasm~WASMC#code main code array}.
 	 * @param expanded The list of expanded instructions to compile and store.
 	 */
-	processCode(expanded: Instruction[]) {
+	processCode(expanded: Instruction[]): void {
 		expanded.forEach(item => this.addCode(item));
 	}
 
@@ -607,7 +608,7 @@ export default class WASMC {
 	 * Compiles an instruction and adds it to the {@link module:wasm~WASMC#code code array}.
 	 * @param item The instruction to compile and add.
 	 */
-	addCode(item: Instruction) {
+	addCode(item: Instruction): void {
 		this.code.push(this.compileInstruction(item));
 	}
 
@@ -781,7 +782,7 @@ export default class WASMC {
 	 * Prints a warning.
 	 * @param args The arguments to pass to console.log.
 	 */
-	static warn(...args: any[]) {
+	static warn(...args: any[]): void {
 		console.warn(...args);
 	}
 
@@ -789,7 +790,7 @@ export default class WASMC {
 	 * Prints a message if the debug {@link module:wasm~WASMC#options option} is set.
 	 * @param args The arguments to pass to console.log.
 	 */
-	log(...args: any[]) {
+	log(...args: any[]): void {
 		if (this.options.debug) {
 			console.log(...args);
 		}
@@ -877,9 +878,10 @@ export default class WASMC {
 	 * Prints a message to stderr and exits the process with return code 1.
 	 * @param args The arguments to pass to `console.error`.
 	 */
-	static die(...a: any[]) {
+	static die(...a: any[]): never {
 		console.error(...a);
 		process.exit(1);
+		throw a;
 	}
 
 	/**

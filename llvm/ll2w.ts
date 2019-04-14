@@ -17,10 +17,9 @@ import _, {displayIOError, isNumeric, pushAll} from "../util";
 import {BUILTINS} from "./constants";
 
 import {StringMap, MetadataType, DeclarationType, ASTMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
-	VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction} from "./types";
+	VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction, ComputedOperands, ASTFunctionBlock, CachingCFG, UsefulLivenessData} from "./types";
 
-// * @return {Object} A map of variable names to maps of block names to tuples of whether the variable is live-in in
-// *                  the block and whether the variable is live-out in the block.
+export type LL2WOptions = {debug?: boolean, cfg?: boolean, dev?: boolean};
 export type LivenessMap = {[varName: string]: {[blockName: string]: [boolean, boolean]}};
 export type CFG = Graph<{enter: number, exit: number, unreachable: number[]}>;
 export function isCFG(x: Graph<any>): x is CFG {
@@ -41,7 +40,7 @@ const warn = (...a: any[]) => console.log(chalk.dim("[") + chalk.bold.yellow("!"
  * compilation process and various fields representing the internal state of the compiler.
  */
 class LL2W {
-	options: {debug: boolean, cfg: boolean, dev: boolean};
+	options: LL2WOptions;
 	grammar?: nearley.CompiledRules;
 	parser?: nearley.Parser;
 	source: string | null = null;
@@ -61,7 +60,7 @@ class LL2W {
 	 * @param {Object} options - An object containing various configuration options.
 	 * @param {boolean} options.debug - Whether to output debug information.
 	 */
-	constructor(options) {
+	constructor(options: LL2WOptions = {}) {
 		/**
 		 * The initial options supplied.
 		 * @type {Object}
@@ -73,7 +72,7 @@ class LL2W {
 	/**
 	 * Sets up the compiler to use the LLVM parser.
 	 */
-	initialize() {
+	initialize(): void {
 		try {
 			/**
 			 * The grammar rules for the LLVM IR parser.
@@ -106,7 +105,7 @@ class LL2W {
 	 * and parses it.
 	 * @param {string} text - The source code for the compiler to use.
 	 */
-	feed(text: string) {
+	feed(text: string): void {
 		this.debug(() => console.time("parse"));
 		this.initialize();
 
@@ -159,7 +158,7 @@ class LL2W {
 	 * ignored. If null, all entries will be iterated for.
 	 * @param {function} fn - The function to call on each iteration.
 	 */
-	iterateTree(type: string | null, fn: Function) {
+	iterateTree(type: string | null, fn: Function): void {
 		if (!this.ast) {
 			throw new Error("AST not yet generated");
 		}
@@ -174,7 +173,7 @@ class LL2W {
 	/**
 	 * Finds and extracts `source_filename` and `target` entries from the AST.
 	 */
-	extractInformation() {
+	extractInformation(): void {
 		/**
 		 * The value of the source_filename entry in the source.
 		 * Equal to `null` if the source doesn't contain a source_filename entry.
@@ -196,7 +195,7 @@ class LL2W {
 	 * Finds and extracts `attributes` entries from the AST.
 	 * @return {Object} The extracted `attributes` data.
 	 */
-	extractAttributes() {
+	extractAttributes(): StringMap<Object> {
 		/**
 		 * A map of attribute definitions.
 		 * @type {Object<string, Array>}
@@ -211,7 +210,7 @@ class LL2W {
 	 * Finds and extracts `struct` entries from the AST.
 	 * @return {Object} The extracted `struct` data.
 	 */
-	extractStructs() {
+	extractStructs(): StringMap<Object> {
 		/**
 		 * A map of struct definitions.
 		 * @type {Object<string, Array>}
@@ -226,7 +225,7 @@ class LL2W {
 	 * Finds and extracts `metadata` entries from the AST.
 	 * @return {Object<string, object>} The extracted metadata.
 	 */
-	extractMetadata() {
+	extractMetadata(): StringMap<Object> {
 		/**
 		 * A map of metadata entries.
 		 * @type {Object<string, Object>}
@@ -274,7 +273,7 @@ class LL2W {
 	 * Finds and extracts global constant defintions from the AST.
 	 * @return {Object} The extracted constant definitions.
 	 */
-	extractGlobalConstants() {
+	extractGlobalConstants(): StringMap<Object> {
 		/**
 		 * A map of global constants.
 		 * @type {Object<string, Object>}
@@ -372,7 +371,9 @@ class LL2W {
 		return {functions, allBlocks, blockOrder, functionOrder};
 	}
 
-	static connectBlocks(functions: StringMap<IRFunction>, basicBlocks: StringMap<BasicBlock>, declarations={}) {
+	static connectBlocks(functions: StringMap<IRFunction>, basicBlocks: StringMap<BasicBlock>, declarations = {}):
+		void {
+
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
 			const [funcName, name] = fullName.split(":");
 			const [blockName, oldMeta, instructions] = block;
@@ -457,8 +458,9 @@ class LL2W {
 		}
 	}
 
-	static computeOperands(instruction) { // -> {read: var[], written: var[], assigner: ?var }
-		const [, type, meta] = instruction;
+	static computeOperands(instruction: Instruction): ComputedOperands {
+		const type: any = instruction[1]; // TODO
+		const meta: any = instruction[2];
 		let read: any[] = [], written: any[] = [], assigner: any = null; // TODO
 
 		const isVar = x => x instanceof Array && x[0] == "variable";
@@ -543,18 +545,18 @@ class LL2W {
 		// return basicBlock;
 	}
 
-	static getAllVariables(fn) {
+	static getAllVariables(fn: IRFunction): VariableName[] {
 		const {arity} = fn.meta;
-		const out = [];
+		const out: VariableName[] = [];
 		
-		for (const [k, {read, written}] of fn) {
+		for (const [, {read, written}] of fn) {
 			pushAll(out, [...read, ...written].filter(x => typeof x != "number" || arity < x));
 		}
 		
 		return out;
 	}
 
-	static fromSameFunction(...blockNames) {
+	static fromSameFunction(...blockNames: string[]): boolean {
 		if (blockNames.length < 2) {
 			return blockNames.length == 1;
 		}
@@ -609,13 +611,13 @@ class LL2W {
 
 	/**
 	 * Computes the interference graph for a function.
-	 * @param {IRFunction} fn       An LLVM IR function as formed by {@link extractFunctions}.
-	 * @param {Graph}      cfg      A control flow graph as computed by {@link computeCFG}.
-	 * @param {Object}     liveness A liveness map as computed by {@link computeLivenessForFunction}.
+	 * @param {IRFunction}  fn       An LLVM IR function as formed by {@link extractFunctions}.
+	 * @param {CFG}         cfg      A control flow graph as computed by {@link computeCFG}.
+	 * @param {LivenessMap} liveness A liveness map as computed by {@link computeLivenessForFunction}.
 	 * @return {Graph} A graph with an extra `indexMap` property that maps instruction indices to the
 	 *                 corresponding {@link Node} objects.
 	 */
-	static computeInterference(fn: IRFunction, cfg, liveness) {
+	static computeInterference(fn: IRFunction, cfg: CFG, liveness: LivenessMap): Graph<never> {
 		// An array that contains all the IRInstructions in the function.
 		// for (const block of fn) {
 		// 	for (const instr of block[2]) {
@@ -642,7 +644,7 @@ class LL2W {
 	// 		}
 	// 	}
 
-	// 	return null;
+		return null;
 	}
 
 	/**
@@ -676,24 +678,26 @@ class LL2W {
 		return out;
 	}
 
-	static getReaders(fn, varName) {
-		varName = varName.toString();
-		return fn.filter(([id, {read}]) => read.map(x => x.toString()).includes(varName));
+	static getReaders(fn: IRFunction, varName: VariableName): ASTFunctionBlock[] {
+		const varString: string = varName.toString();
+		return fn.filter(([id, {read}]) => read.map(x => x.toString()).includes(varString));
 	}
 
-	static getWriters(fn, varName) {
-		varName = varName.toString();
-		return fn.filter(([id, {written}]) => written.map(x => x.toString()).includes(varName));
+	static getWriters(fn: IRFunction, varName: VariableName): ASTFunctionBlock[] {
+		const varString: string = varName.toString();
+		return fn.filter(([id, {written}]) => written.map(x => x.toString()).includes(varString));
 	}
 
-	static getUsefulLivenessData(cfg, ignore: {dt?: boolean, dj?: boolean, ms?: boolean}={dt: !!0, dj: !!0, ms: !!0}) {
+	static getUsefulLivenessData(cfg: CachingCFG,
+		ignore: {dt?: boolean, dj?: boolean, ms?: boolean} = {dt: false, dj: false, ms: false}): UsefulLivenessData {
+
 		let dj = cfg._djGraph;
 		let dt = cfg._dTree;
 		let ms = cfg._mergeSets;
 		const forceAll = !ms && !ignore.ms;
 
 		if (forceAll || !dt && !ignore.dt) {
-			dt = cfg._dTree = cfg.dTree(cfg.enter);
+			dt = cfg._dTree = cfg.dTree(cfg.data.enter);
 		}
 		
 		if (forceAll || !dj && !ignore.dj) {
@@ -701,15 +705,15 @@ class LL2W {
 		}
 		
 		if (forceAll) {
-			ms = cfg._mergeSets = _.mapKeys(_.mapValues(Graph.mergeSets(dj, cfg.enter, cfg.exit),
+			ms = cfg._mergeSets = _.mapKeys(_.mapValues(Graph.mergeSets(dj, cfg.data.enter, cfg.data.exit),
 			                                            value => value.map(id => dj.nodes[id].data.label)),
 			                                (value, key) => dj.nodes[key].data.label);
 		}
 
-		return {djTree: dj, dTree: dt, mergeSets: ms};
+		return {djGraph: dj, dTree: dt, mergeSets: ms};
 	}
 
-	static invalidateUsefulLivenessData(cfg) {
+	static invalidateUsefulLivenessData(cfg: CachingCFG): void {
 		cfg._djGraph = cfg._dTree = cfg._mergeSets = undefined;
 	}
 
@@ -721,7 +725,7 @@ class LL2W {
 	 * @param {number|string} varName The name of the variable to check.
 	 * @return {boolean} Whether the variable is live-in.
 	 */
-	static isLiveInUsingMergeSet(fn, cfg, block, varName) {
+	static isLiveInUsingMergeSet(fn: IRFunction, cfg: CachingCFG, block: ASTFunctionBlock, varName: VariableName): boolean {
 		varName = varName.toString();
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
 		if (block === undefined) {
@@ -729,7 +733,7 @@ class LL2W {
 		}
 
 		const n = block[0];
-		const blockDebug = n == fn.meta.arity? chalk.magenta("block " + n) : "block " + chalk.bold(n);
+		const blockDebug = n == fn.meta.arity.toString()? chalk.magenta("block " + n) : "block " + chalk.bold(n);
 		debug(`Computing live-in for ${chalk.bold(varName)} in ${blockDebug}.`);
 
 		const originalMergeSet = mergeSets[n];
@@ -759,7 +763,8 @@ class LL2W {
 				}
 
 				// t = dom-parent(t)
-				const parent = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+				const parent = dTree.nodes[dTree.findSingle(node =>
+					"label" in node.data && (node.data as {label: string}).label == t).in[0]].data.label;
 				if (t != parent) {
 					t = parent;
 					continue;
@@ -852,7 +857,8 @@ class LL2W {
 				}
 
 				// t = dom-parent(t)
-				const parent = dTree.nodes[dTree.findSingle(node => node.data.label == t).in[0]].data.label;
+				const parent = dTree.nodes[dTree.findSingle(node =>
+					"label" in node.data && (node.data as {label: string}).label == t).in[0]].data.label;
 				if (t != parent) {
 					t = parent;
 					continue;
@@ -875,7 +881,8 @@ class LL2W {
 		return false;
 	}
 
-	static getArity(functions, functionName, declarations={}) {
+	static getArity(functions: {[key: string]: IRFunction}, functionName: string,
+	                declarations: {[key: string]: DeclarationType} = {}): number {
 		if (functionName in functions) {
 			return functions[functionName].meta.arity;
 		}
@@ -895,7 +902,7 @@ class LL2W {
 	 * Executes a function if options.debug is true. Does nothing otherwise.
 	 * @param {function} fn - The function to execute.
 	 **/
-	debug(fn) {
+	debug(fn: Function): void {
 		this.options.debug && fn(this);
 	}
 
@@ -903,12 +910,12 @@ class LL2W {
 	 * Prints a message to stderr and exits the process with return code 1.
 	 * @param {...*} args - The arguments to pass to `console.error`.
 	 */
-	static die(...args) {
+	static die(...args: any[]): void {
 		console.error(...args);
 		process.exit(1);
 	}
 
-	static async produceIR(dirName, ...filenames) {
+	static async produceIR(dirName: string, ...filenames: string[]): Promise<void> {
 		let deleteDir = false;
 		if (!dirName) {
 			let {stdout, stderr} = await exec("mktemp -d");
@@ -937,7 +944,7 @@ class LL2W {
 
 module.exports = LL2W;
 
-let debug = (...a: any[]) => {};
+let debug = (...a: any[]): void => {};
 
 if (require.main === module) {
 	(() => {
@@ -957,7 +964,7 @@ if (require.main === module) {
 		}
 
 		let outfile = options._[1] || infile.replace(/\.ll$/, "") + ".why";
-		const compiler = new LL2W(options);
+		const compiler = new LL2W(options as LL2WOptions);
 
 		if (!outfile) {
 			outfile = infile.replace(/\.ll$/, "") + ".why";

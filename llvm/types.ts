@@ -1,12 +1,14 @@
 #!/usr/bin/env ts-node
 
-import {Node} from "../node";
+import {Node, NodeID} from "../node";
+import Graph, {DJGraph, BothMap, DTree} from "../graph";
+import {CFG} from "./ll2w";
 
 export interface ASTVector {0: "vector", 1: [ASTTypeAny, null, ASTValue][]}
 export interface IRConstant {0: ASTTypeAny, 1: ASTOperand | IRConstExpr, 2: IRParAttr[]}
 export interface ASTTypeArray {0: "array", 1: number,     2: ASTTypeAny}
 export interface ASTTypePtr   {0: "ptr",   1: ASTTypeAny, 2: number}
-export interface InstBase<N extends string, M extends Object> {
+export interface InstBase<N extends string, M extends Object> extends Array<any> {
 	0: "instruction", 1: N, 2: M & {block?: ASTFunctionBlock}
 }
 
@@ -112,3 +114,8 @@ export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | In
 
 export type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
 export type DeclarationType = {type: ASTTypeAny, types: ASTFunctionType[], arity: number, isLocalUnnamed: boolean};
+
+export type ComputedOperands = {read: VariableName[], written: VariableName[], assigner: VariableName | null};
+export type MergeSets = BothMap<NodeID[]>;
+export type CachingCFG = CFG & {_djGraph?: DJGraph, _dTree?: DTree, _mergeSets?: MergeSets};
+export type UsefulLivenessData = {djGraph: DJGraph, dTree: DTree, mergeSets: MergeSets};

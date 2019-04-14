@@ -4,7 +4,7 @@ import * as path from "path";
 const chalk = require("chalk");
 import minimist = require("minimist");
 import * as Long from "long";
-import WASMC, {SymbolTable} from "./wasmc";
+import WASMC, {SymbolTable, SymbolType} from "./wasmc";
 import Parser, {ParserInstruction, ParserInstructionI, ParserInstructionJ, SegmentOffsets} from "./parser";
 import _ from "../util";
 
@@ -79,7 +79,7 @@ export default class Linker {
 		return parser;
 	}
 
-	link() {
+	link(): void {
 		// Step 1
 		this.parser = this.openMain(this.objectFilenames[0]);
 
@@ -114,7 +114,7 @@ export default class Linker {
 		const symbolTypes = Linker.collectSymbolTypes(this.parser.offsets, this.combinedSymbols);
 
 		// Step 3
-		Linker.desymbolize(this.combinedCode, mainSymbols, this.parser.offsets);
+		Linker.desymbolize(this.combinedCode, this.parser.offsets, mainSymbols);
 
 		// Steps 4–6
 		let extraSymbolLength = symtabLength * 8;
@@ -154,7 +154,7 @@ export default class Linker {
 			const metaDifference = metaLength - subparser.getMetaLength(); // in bytes!
 
 			// Step 7c: Replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols.
-			Linker.desymbolize(subcode, subtable, subparser.offsets);
+			Linker.desymbolize(subcode, subparser.offsets, subtable);
 
 			// Steps 7d–e
 			for (const symbol in subtable) {
@@ -163,14 +163,17 @@ export default class Linker {
 				if (type == "code") {
 					// Step 7d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
-					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference - 24);
+					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference
+					                                              - 24);
 				} else if (type == "data") {
 					// Step 7e: For each data symbol in the included symbol table, increase
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
-					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength + metaDifference - 24);
+					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength
+					                                              + metaDifference - 24);
 
 					if (type != "data" && symbol != ".end") {
-						console.warn(chalk.yellow.bold(" !"), `Encountered a symbol other than .end of type ${chalk.bold(type)}: ${chalk.bold(symbol)}`);
+						console.warn(chalk.yellow.bold(" !"), "Encountered a symbol other than .end of type",
+						                                      `${chalk.bold(type)}: ${chalk.bold(symbol)}`);
 					}
 				}
 
@@ -240,12 +243,7 @@ export default class Linker {
 		];
 
 		// Step 12:
-		Linker.repointerize(this.combinedData, this.combinedSymbols, {
-			$symtab: meta[0].toInt(),
-			$code:   meta[1].toInt(),
-			$data:   meta[2].toInt(),
-			$end:    meta[3].toInt()
-		}, combined);
+		Linker.repointerize(this.combinedSymbols, combined);
 
 		this.writeOutput(combined);
 		this.printSuccess();
@@ -283,12 +281,12 @@ export default class Linker {
 		return clone;
 	}
 
-	static repointerize(data, symtab, offsets, combined) {
+	static repointerize(symtab: SymbolTable, combined: Long[]): void {
 		for (const key in symtab) {
 			const [, addr, type] = symtab[key];
 			if (type == SYMBOL_TYPES.knownPointer || type == SYMBOL_TYPES.unknownPointer) {
 				const index = addr.toInt() / 8;
-				const ptr = Linker.findSymbolFromID(combined[index], symtab);
+				const ptr = Linker.findSymbolFromID(combined[index].toInt(), symtab);
 				// console.log(key, addr.toString(), combined[index].toString(16), "\n\n\n", symtab);
 				if (symtab[ptr]) {
 					combined[index] = symtab[ptr][1];
@@ -306,8 +304,11 @@ export default class Linker {
 	 * @param  {SymbolTable} symbolTable A symbol table.
 	 * @return {Object<string, SymbolType>} A map between symbol names and symbol types.
 	 */
-	static collectSymbolTypes(offsets, symbolTable) {
-		return _.fromPairs(Object.keys(symbolTable).map(key => [key, Linker.getSymbolType(offsets, symbolTable, key)]));
+	static collectSymbolTypes(offsets: SegmentOffsets, symbolTable: SymbolTable): {[key: string]: SymbolType} {
+		return _.fromPairs(Object.keys(symbolTable).map((key: string) => [
+			key,
+			Linker.getSymbolType(offsets, symbolTable, key)
+		]));
 	}
 
 	/**
@@ -317,7 +318,7 @@ export default class Linker {
 	 * @param  {string} symbol A symbol name.
 	 * @return {SymbolType} The type of the symbol.
 	 */
-	static getSymbolType(offsets, symbolTable, symbol) {
+	static getSymbolType(offsets: SegmentOffsets, symbolTable: SymbolTable, symbol: string): SymbolType {
 		const addr = symbolTable[symbol][1].toInt();
 		const {$code, $data, $end} = offsets;
 
@@ -337,7 +338,7 @@ export default class Linker {
 	 * @param {SymbolTable} tableOne The first symbol table.
 	 * @param {SymbolTable} tableTwo The second symbol table.
 	 */
-	static detectSymbolCollisions(tableOne, tableTwo) {
+	static detectSymbolCollisions(tableOne: SymbolTable, tableTwo: SymbolTable): void {
 		for (const key in tableTwo) {
 			if (key != ".end" && key in tableOne) {
 				throw `Encountered a symbol collision: "${key}"`;
@@ -346,18 +347,20 @@ export default class Linker {
 	}
 
 	/**
-	 * Converts the imm/addr values of the I-/J-type instructions marked with the KNOWN_SYMBOL flag in a list of Longs to their symbol representations.
-	 * @param {Long} longs An array of compiled code.
+	 * Converts the imm/addr values of the I-/J-type instructions marked with the KNOWN_SYMBOL flag in a list of Longs
+	 * to their symbol representations.
+	 * @param {Long[]} longs An array of compiled code.
 	 * @param {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @param {Object} offsets An an object of offsets.
 	 */
-	static desymbolize(longs, symbolTable, offsets) {
+	static desymbolize(longs: Long[], offsets: SegmentOffsets, symbolTable: SymbolTable): void {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
 			const {opcode, type, flags, rs, conditions} = parsedInstruction;
 			if (flags == FLAGS.KNOWN_SYMBOL) {
 				if (type != "i" && type != "j") {
-					throw `Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at \x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`;
+					throw new Error("Found an instruction not of type I or J with \x1b[1mKNOWN_SYMBOL\x1b[22m set at " +
+					                `\x1b[1m0x${i * 8 + offsets.$code}\x1b[22m.`);
 				}
 
 				const val = type == "i"? (<ParserInstructionI> parsedInstruction).imm
@@ -386,7 +389,7 @@ export default class Linker {
 	 * @param longs An array of compiled code.
 	 * @param symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 */
-	static resymbolize(longs: Long[], symbolTable: SymbolTable) {
+	static resymbolize(longs: Long[], symbolTable: SymbolTable): void {
 		for (let i = 0; i < longs.length; i++) {
 			const parsedInstruction = Parser.parseInstruction(longs[i]);
 			const {opcode, type, flags, rs, conditions} = parsedInstruction;
@@ -476,7 +479,7 @@ export default class Linker {
 	 * @param  longs    The final linked output as an array of Longs.
 	 * @param [outfile] A filename (`options.out` if not specified).
 	 */
-	writeOutput(longs: Long[], outfile: string = this.options.out) {
+	writeOutput(longs: Long[], outfile: string = this.options.out): void {
 		fs.writeFileSync(outfile, WASMC.longs2strs(longs).join("\n"));
 	}
 
@@ -485,16 +488,16 @@ export default class Linker {
 	 * @param infile  The input filename.
 	 * @param outfile The output filename.
 	 */
-	printSuccess(infile: string = this.objectFilenames[0], outfile: string = this.options.out) {
+	printSuccess(infile: string = this.objectFilenames[0], outfile: string = this.options.out): void {
 		console.log(chalk.green.bold(" \u2714"), "Successfully linked", chalk.bold(path.relative(".", infile)),
 		            "and saved the output to", chalk.bold(path.relative(".", outfile)) + ".");
 	}
 
-	warn(...args: any[]) {
+	warn(...args: any[]): void {
 		console.warn(...args);
 	}
 
-	log(...args: any[]) {
+	log(...args: any[]): void {
 		if (this.options.debug) {
 			console.log(...args);
 		}
