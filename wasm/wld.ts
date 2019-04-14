@@ -5,7 +5,7 @@ const chalk = require("chalk");
 import minimist = require("minimist");
 import * as Long from "long";
 import WASMC, {SymbolTable} from "./wasmc";
-import Parser, {ParserInstruction, ParserInstructionI, ParserInstructionJ} from "./parser";
+import Parser, {ParserInstruction, ParserInstructionI, ParserInstructionJ, SegmentOffsets} from "./parser";
 import _ from "../util";
 
 import {FLAGS, EXCEPTIONS, SYMBOL_TYPES} from "./constants";
@@ -73,8 +73,6 @@ export default class Linker {
 
 			bytecode = text;
 		}
-
-		console.log({Parser});
 
 		const parser: Parser = new Parser();
 		parser.read(bytecode);
@@ -215,7 +213,7 @@ export default class Linker {
 
 		// Step 8: Readjust the .end entry in the symbol table.
 		if (!(".end" in this.combinedSymbols)) {
-			this.combinedSymbols[".end"] = [WASMC.encodeSymbol(".end"), Long.UZERO];
+			this.combinedSymbols[".end"] = [WASMC.encodeSymbol(".end"), Long.UZERO, SYMBOL_TYPES.unknown];
 		}
 
 		const end = 8 * (this.parser.rawMeta.length + WASMC.encodeSymbolTable(this.combinedSymbols).length
@@ -261,14 +259,14 @@ export default class Linker {
 	 * @param {Object}      offsets An object of the basic offsets.
 	 * @return {SymbolTable} A clone of the input symbol table with all pointers replaced.
 	 */
-	static depointerize(symtab, data, offsets) {
+	static depointerize(symtab: SymbolTable, data: Long[], offsets: SegmentOffsets): SymbolTable {
 		const clone = _.cloneDeep(symtab);
-		const {$data, $end} = offsets;
+		const {$data} = offsets;
 
 		for (const key in clone) {
-			const [id, addr, type] = clone[key];
+			const [, addr, type] = clone[key];
 			const index = (addr.toNumber() - $data) / 8;
-			if (type == SYMBOL_TYPES.KNOWN_POINTER) {
+			if (type == SYMBOL_TYPES.knownPointer) {
 				const curValue = data[index];
 				
 				const matches = _.filter(clone, (v, k) => v[1].eq(curValue));
@@ -288,7 +286,7 @@ export default class Linker {
 	static repointerize(data, symtab, offsets, combined) {
 		for (const key in symtab) {
 			const [, addr, type] = symtab[key];
-			if (type == SYMBOL_TYPES.KNOWN_POINTER || type == SYMBOL_TYPES.UNKNOWN_POINTER) {
+			if (type == SYMBOL_TYPES.knownPointer || type == SYMBOL_TYPES.unknownPointer) {
 				const index = addr.toInt() / 8;
 				const ptr = Linker.findSymbolFromID(combined[index], symtab);
 				// console.log(key, addr.toString(), combined[index].toString(16), "\n\n\n", symtab);

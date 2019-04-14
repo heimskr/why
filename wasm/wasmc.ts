@@ -19,14 +19,14 @@ require("string.prototype.padstart").shim();
 require("string.prototype.padend").shim();
 
 import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS,
-       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES} from "./constants";
+       MAX_ARGS, FLAGS, EXTS, CONDITIONS, SYMBOL_TYPES, SymbolType} from "./constants";
 const isLabelRef = (x: any) => x instanceof Array && x.length == 2 && x[0] == "label";
 
 
 
 export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | "g" | "st", 0]
 					 | ["register", "s" | "k" | "e" | "m" | "r" | "a" | "t", number];
-export type SymbolTable = {[key: string]: [number, Long]};
+export type SymbolTable = {[key: string]: [number, Long, SymbolType]};
 export type Condition = "p" | "n" | "z" | "nz";
 export type Instruction = [string, string, ...any[]] & InstructionMeta; // [label, op, ...args]
 export type InstructionType = "r" | "i" | "j";
@@ -407,16 +407,16 @@ export default class WASMC {
 
 			const add = (x: Instruction) => expanded.push(x);
 
-			const addPush = (args, _label=label) => {
+			const addPush = (args: Register[], _label: string = label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach(reg => {
 					add([getLabel(), "spush", _0, reg, _0]);
 				});
 			};
 
-			const addPop = (args, _label=label) => {
+			const addPop = (args: Register[], _label: string = label) => {
 				const getLabel = () => [_label, _label = null][0];
-				args.forEach(reg => {
+				args.forEach((reg: Register) => {
 					add([getLabel(), "spop", _0, _0, reg]);
 				});
 			};
@@ -824,11 +824,11 @@ export default class WASMC {
 	createSymbolTable(labels: string[], skeleton: boolean = true): Long[] {
 		return _.uniq([...labels, ".end"]).map(label => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
-			let type = SYMBOL_TYPES.UNKNOWN;
+			let type = SYMBOL_TYPES.unknown;
 
 			if (!skeleton && label in this.dataVariables) {
 				const ptr = this.dataVariables[label];
-				type = ptr in this.offsets? SYMBOL_TYPES.KNOWN_POINTER : SYMBOL_TYPES.UNKNOWN_POINTER;
+				type = ptr in this.offsets? SYMBOL_TYPES.knownPointer : SYMBOL_TYPES.unknownPointer;
 				if (!(ptr in this.offsets || this.unknownSymbols.includes(ptr))) {
 					const index = (this.offsets[label] - this.metaOffsetData.toInt()) / 8;
 					this.data[index] = Long.fromInt(WASMC.encodeSymbol(ptr), true);
