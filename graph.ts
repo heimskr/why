@@ -722,10 +722,8 @@ export default class Graph {
 		// Go through every remaining node's in/out arrays, remove the old node IDs
 		// and insert the new ID where applicable.
 		for (const node of this.nodes) {
-			if (_.intersection(node.in,   allIDs).length) {
-				node.in = _.without(node.in,  ...allIDs).concat(newID).sort();
-			}
-
+			if (_.intersection(node.in,   allIDs).length)
+				node.in  = _.without(node.in,  ...allIDs).concat(newID).sort();
 			if (_.intersection(node.out,  allIDs).length)
 				node.out = _.without(node.out, ...allIDs).concat(newID).sort();
 		}

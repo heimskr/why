@@ -44,7 +44,7 @@ export type FunctionExtractions = {
 export type ASTTypeAny = ASTTypeInt | ASTTypePtr | ASTTypeArray;
 export type ASTTypeInt = ["int", number];
 export type IRRetAttr  = ["zeroext" | "signext" | "inreg" | "noalias" | "nonnull"]
-				| ["dereferenceable" | "deferenceable_or_null", number];
+                       | ["dereferenceable" | "deferenceable_or_null", number];
 export type IRParAttr  = ["byval" | "inalloca" | "sret" | "nocapture" | "readonly"] | IRRetAttr;
 export type ASTFunctionType = [ASTTypeAny, IRParAttr[], ASTVariable | null];
 export type ASTFunctionMeta = {
