@@ -3,7 +3,7 @@ import * as util from "./util";
 import Graph from "./graph";
 import {NodeID} from "./node";
 import cytosnap from "cytosnap";
-import {Stream} from "stream";
+import {Stream, Readable} from "stream";
 
 type Color = string;
 export type RenderOptions = {
@@ -33,7 +33,7 @@ export type RenderOptions = {
 	idOffset?: number
 };
 
-export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<string | Object | Stream> {
+export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<string | Object | Readable> {
 	const defaults: RenderOptions = {
 		background: "#000",
 		node: "#fff",
@@ -162,7 +162,7 @@ export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<st
 	if (opts.type == "json") {
 		return promise as Promise<Object>;
 	} else if (opts.type == "stream") {
-		return promise as Promise<Stream>;
+		return promise as Promise<Readable>;
 	}
 }
 

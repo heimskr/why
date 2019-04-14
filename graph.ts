@@ -1,5 +1,6 @@
 #!/usr/bin/env ts-node
 import * as fs from "fs";
+import {Stream, Readable} from "stream";
 
 const dominators = require("dominators");
 const {lt} = dominators;
@@ -787,7 +788,7 @@ export default class Graph<T extends Object> {
 		).join("\n");
 	}
 
-	render(opts: RenderOptions = {}, display: boolean = false) {
+	render(opts: RenderOptions = {}, display: boolean = false): Promise<string | Object | Readable | void> {
 		if (isCFG(this)) {
 			opts.enter = this.data.enter;
 			opts.exit  = this.data.exit;
@@ -829,7 +830,9 @@ export default class Graph<T extends Object> {
 
 		return this.render({...opts, type: "stream"}, false).catch((e) => console.log("Error:", e)).then((stream) => {
 			// console.log({stream: stream.read()});
-			fs.writeFileSync(path, stream.read());
+			if (stream instanceof Readable) {
+				fs.writeFileSync(path, stream.read());
+			}
 		});
 	}
 
