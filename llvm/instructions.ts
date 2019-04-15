@@ -1,5 +1,6 @@
-import {InstBase, IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastMathFlag, IRCConv, IRRetAttr,
-        IRCallFnty, IRConstant, IRValue, VariableName, BlockName, IRFunctionBlock, IRConversionType} from "./types";
+import {InstBase, IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastmathFlag, IRCConv, IRRetAttr,
+        IRCallFnty, IRConstant, IRValue, VariableName, BlockName, IRFunctionBlock, IRConversionType, IRBang, IRVector,
+        IRBinaryFlavor} from "./types";
 
 type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
 export interface InstBase<N extends string, M extends Object> extends Array<any> {
@@ -52,8 +53,24 @@ export type InstLoad = InstBase<"load", {
 	pointerValue: IRVariable,
 	align: number | null,
 	bangs: IRBang[]}>;
+export type InstBinaryNormal = InstBinaryBase<"normal", "and" | "or" | "xor" | "urem" | "srem", {}>;
+export type InstBinaryExact = InstBinaryBase<"exact", "ashr" | "lshr" | "sdiv" | "udiv", {exact: boolean}>;
+export type InstBinaryFastmath = InstBinaryBase<"fastmath", "fadd" | "fcmp" | "fdiv" | "fmul" | "frem" | "fsub", {
+	flags: IRFastmathFlag[]}>;
+export type InstBinaryDangerous = InstBinaryBase<"dangerous", "add" | "mul" | "shl" | "sub", {
+	nuw: boolean,
+	nsw: boolean}>;
 
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion;
+                        | InstAlloca | InstConversion | InstBinary;
 
 export const isPhi = isInstructionType<InstPhi>("phi");
+
+export type InstBinary = InstBinaryNormal | InstBinaryExact | InstBinaryFastmath | InstBinaryDangerous;
+export type InstBinaryBase<F, O, M> = InstBase<"binary", M & {
+	destination: IRVariable,
+	operation: O,
+	type: IRVector,
+	op1: IROperand,
+	op2: IROperand,
+	flavor: F}>;

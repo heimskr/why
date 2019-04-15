@@ -375,7 +375,7 @@ i_br_conditional	->	"br"
 i_call				->	(variable " = "):?
 						(("tail" | "notail" | "musttail") " "):?
 						"call"
-						(" " fast_math_flags):?
+						(" " fastmath_flags):?
 						(" " cconv):?
 						(" " retattr):*
 						_
@@ -514,7 +514,7 @@ i_binary_exact		->	variable
 i_binary_fastmath	->	variable
 						" = "
 						("fadd" | "fcmp" | "fdiv" | "fmul" | "frem" | "fsub")
-						(" " fast_math_flags):?
+						(" " fastmath_flags):?
 						spaced[type_floatvec]
 						floperand
 						", "
@@ -522,7 +522,7 @@ i_binary_fastmath	->	variable
 						{% d => ["instruction", "binary", {
 							destination: d[0],
 							operation: d[2][0],
-							flags: d[3]? d[3].map(x => x[1]) : [],
+							flags: d[3]? d[3][1] : [],
 							type: d[4][0],
 							op1: d[5],
 							op2: d[7],
@@ -597,8 +597,8 @@ call_fnty			->	type_any (__ "(") commalist[type_any] ("," _ "..."):? _ ")"	{% d 
 function_name		->	"@" (var | string)											{% d => d[1][0] %}
 					 |	variable													{% d => d[0][1] %}
 
-fast_math_flags		->	list[fast_math_flag]										{% compileFastMathFlags %}
-fast_math_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
+fastmath_flags		->	list[fastmath_flag]											{% compileFastMathFlags %}
+fastmath_flag		->	("nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast")	{% __ %}
 
 constant			->	type_any (__ parattr):* " " (operand | const_expr)			{% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
 cst_to_type[X]		->	$X __ constant to type_any									{% d => [d[0], d[2], d[4]] %}

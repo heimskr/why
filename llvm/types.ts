@@ -7,7 +7,7 @@ import {Instruction} from "./instructions";
 export * from "./instructions";
 
 export interface IRConstant  {0: IRTypeAny, 1: IROperand | IRConstExpr, 2: IRParAttr[]}
-export interface IRVector    {0: "vector", 1: [IRTypeAny, null, IRValue][]}
+export interface IRVector    {0: "vector", 1: [IRTypeAny, null /*???*/, IRValue][]}
 export interface IRTypeArray {0: "array",  1: number,     2: IRTypeAny}
 export interface IRTypePtr   {0: "ptr",    1: IRTypeAny, 2: number}
 
@@ -67,7 +67,6 @@ export type IRGetElementPtrExpr = ["expr", "getelement", {
 	indices: [IRTypeInt, number][]}];
 export type IROperand  = IRVariable | number | IRGlobal | IRGetElementPtrExpr | ["null"];
 export type IRTailType = "tail" | "notail" | "musttail";
-export type IRFastMathFlag = "nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast";
 export type IRCConv = "ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" | "preserve_allcc" | "preserve_mostcc"
                     | "x86_vectorcallcc" | "cc10" | "cc11" | "arm_apcscc" | "coldcc" | "webkit_jscc" | "cc64" | "cc65"
                     | "anyregcc" | "cc71" | "cc66" | "ptx_device" | "x86_stdcallcc" | "cc67" | "cc68" | "cc69" | "cc70"
@@ -88,6 +87,10 @@ export type IRBangType = "dereferenceable_or_null" | "dereferenceable" | "nonnul
                        | "nontemporal.group" | "align" | "tbaa" | "range" | "llvm.loop"
                        | "llvm.mem.parallel_loop_access";
 export type IRBang = [IRBangType, number];
+export type IRBinaryType = "and" | "or" | "xor" | "urem" | "srem" | "ashr" | "lshr" | "sdiv" | "udiv" | "fadd" | "fcmp"
+                         | "fdiv" | "fmul" | "frem" | "fsub" | "add" | "mul" | "shl" | "sub";
+export type IRBinaryFlavor = "normal" | "exact" | "fastmath" | "dangerous";
+export type IRFastmathFlag = "nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast";
 
 export type LabelComment = ["label_c", BlockName, BlockName[]]; // [, name of following block, names of preds]
 export type Label = ["label", BlockName];
