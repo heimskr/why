@@ -81,9 +81,18 @@ export type InstSelect = InstBase<"select", {
 	leftValue: IROperand,
 	rightType: IRTypeAny,
 	rightValue: IROperand}>;
+export type InstStore = InstBase<"store", {
+	volatile: boolean,
+	storeType: IRTypeAny,
+	storeValue: IROperand,
+	destinationType: IRTypeAny,
+	destinationValue: IROperand,
+	align: number | null,
+	bangs: IRBang[]}>;
 
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion | InstBinary | InstICMP | InstGetElementPtr | InstSelect;
+                        | InstAlloca | InstConversion | InstBinary | InstICMP | InstGetElementPtr | InstSelect
+                        | InstStore;
 
 export const isPhi = isInstructionType<InstPhi>("phi");
 
