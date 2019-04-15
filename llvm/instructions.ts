@@ -91,8 +91,8 @@ export type InstStore = InstBase<"store", {
 	bangs: IRBang[]}>;
 
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion | InstBinary | InstICMP | InstGetElementPtr | InstSelect
-                        | InstStore;
+                        | InstAlloca | InstConversion | InstLoad | InstBinary | InstICMP | InstGetElementPtr
+                        | InstSelect | InstStore;
 
 export const isPhi = isInstructionType<InstPhi>("phi");
 
