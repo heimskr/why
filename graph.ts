@@ -5,8 +5,8 @@ import {Stream, Readable} from "stream";
 const dominators = require("dominators");
 const {lt} = dominators;
 
-import {Node, NodeID, NodeOrID, getID} from "./node";
-export {Node} from "./node";
+import Node, {NodeID, NodeOrID, getID} from "./node";
+export {Node, NodeID, NodeOrID, getID};
 
 import * as renderGraph from "./rendergraph";
 import {RenderOptions, GraphRenderPromise} from "./rendergraph";

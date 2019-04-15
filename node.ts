@@ -21,7 +21,7 @@ export function getID(node: Node<any> | NodeID) {
 /**
  * Represents a node in a graph.
  */
-export class Node<D> {
+export default class Node<D> {
 	id: NodeID;
 	graph: Graph<any>;
 	data: D;
