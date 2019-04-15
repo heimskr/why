@@ -4,7 +4,7 @@ import fs = require("fs");
 const chalk = require("chalk");
 import getline = require("get-line-from-pos");
 import {Grammar, Parser, CompiledRules} from "nearley";
-import Graph from "../graph";
+import Graph, {BothMap, Node, NodeID} from "../graph";
 import util = require("util");
 import child_process = require("child_process");
 import rimraf from "rimraf";
@@ -17,7 +17,8 @@ import _, {displayIOError, isNumeric, pushAll} from "../util";
 import {BUILTINS} from "./constants";
 
 import {StringMap, MetadataType, DeclarationType, ASTMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
-	VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction, ComputedOperands, ASTFunctionBlock, CachingCFG, UsefulLivenessData} from "./types";
+	VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction, ComputedOperands, ASTFunctionBlock,
+	CachingCFG, UsefulLivenessData, isLabelComment, LabelComment, isLabel, BlockName, Label} from "./types";
 
 export type LL2WOptions = {debug?: boolean, cfg?: boolean, dev?: boolean};
 export type LivenessMap = {[varName: string]: {[blockName: string]: [boolean, boolean]}};
@@ -314,31 +315,31 @@ class LL2W {
 	extractFunctions(): FunctionExtractions {
 		const functions: StringMap<IRFunction> = {};
 		const allBlocks: StringMap<BasicBlock> = {};
-		const blockOrder: [string, string][] = [];
+		const blockOrder: [string, BlockName][] = [];
 		const functionOrder: string[] = [];
 
-		this.iterateTree("function", (meta: ASTFunctionMeta, instructions: Instruction[]) => {
+		this.iterateTree("function", (meta: ASTFunctionMeta, instructions: (Instruction | LabelComment | Label)[]) => {
 			// LLVM helpfully indicates basic blocks with comments and labels.
 			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
 			const basicBlocks: BasicBlock[] = [];
 
-			let exitBlock: string | null = null;
+			let exitBlock: BlockName | null = null;
 
 			functionOrder.push(meta.name);
 			
 			// The first basic block is implicitly given a label whose name is equal to the function's arity.
-			let currentBasicBlock: BasicBlock = [meta.arity.toString(), {preds: [], in: [], out: []}, []];
+			let currentBasicBlock: BasicBlock = [meta.arity, {preds: [], in: [], out: []}, []];
 
 			for (const instruction of instructions) {
-				console.log({instruction});
-				const [name, ...args] = instruction as any; // TODO
-				if (name == "label_c") {
+				if (isLabelComment(instruction)) {
+					const [, name, preds] = instruction;
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], {preds: args[1], in: [], out: []}, []];
-				} else if (name == "label") {
+					currentBasicBlock = [name, {preds, in: [], out: []}, []];
+				} else if (isLabel(instruction)) {
+					const [, name] = instruction;
 					basicBlocks.push(currentBasicBlock);
-					currentBasicBlock = [args[0], {preds: [], in: [], out: []}, []];
+					currentBasicBlock = [name, {preds: [], in: [], out: []}, []];
 				} else {
 					exitBlock = currentBasicBlock[0];
 					currentBasicBlock[2].push(instruction);
@@ -356,7 +357,7 @@ class LL2W {
 			
 			let allVars: VariableName[] = [];
 
-			(functions as any)[meta.name] = Object.assign(basicBlocks.map(block => { // TODO
+			functions[meta.name] = Object.assign(basicBlocks.map(block => {
 				const computed = LL2W.computeBasicBlockVariables(block);
 				allVars = [...allVars, ...computed[1].read, ...computed[1].written];
 				return computed;
@@ -371,13 +372,13 @@ class LL2W {
 		return {functions, allBlocks, blockOrder, functionOrder};
 	}
 
-	static connectBlocks(functions: StringMap<IRFunction>, basicBlocks: StringMap<BasicBlock>, declarations = {}):
+	static connectBlocks(functions: StringMap<IRFunction>, basicBlocks: BothMap<BasicBlock>, declarations = {}):
 		void {
 
 		for (const [fullName, block] of Object.entries(basicBlocks)) {
-			const [funcName, name] = fullName.split(":");
-			const [blockName, oldMeta, instructions] = block;
-			const last: any = _.last(instructions); // TODO
+			const [funcName] = fullName.split(":");
+			const [, oldMeta, instructions] = block;
+			const last: Instruction = _.last(instructions);
 
 			const meta = Object.assign(oldMeta, {unreachable: false});
 			
@@ -441,7 +442,7 @@ class LL2W {
 						for (const instr of fn) {
 							const [calledName, {out: calledOut}, calledInstructions] = instr;
 
-							const {0: lastType, 1: lastName} = _.last(calledInstructions) as any; // TODO
+							const [lastType, lastName] = _.last(calledInstructions);
 							if (lastType == "instruction" && lastName == "ret") {
 								calledOut.push(fullName);
 								meta.in.push(`${iname}:${calledName}`);
@@ -525,13 +526,13 @@ class LL2W {
 	}
 
 	static computeBasicBlockVariables(basicBlock: BasicBlock): BasicBlockExtra {
-		let read = [], written = [], assigners = {};
+		let read: VariableName[] = [], written: VariableName[] = [], assigners: BothMap<Instruction> = {};
 
 		// /*
 		basicBlock[2].forEach(instruction => {
 			const result = LL2W.computeOperands(instruction);
-			read = read.concat(result.read as any); // TODO
-			written = written.concat(result.written as any); // TODO
+			read = read.concat(result.read);
+			written = written.concat(result.written);
 			if (result.assigner) assigners[result.assigner] = instruction;
 		});
 
@@ -540,7 +541,7 @@ class LL2W {
 			written: _.uniq(written),
 			assigners: assigners,
 			unreachable: null
-		}) as any, basicBlock[2]]; // TODO
+		}), basicBlock[2]];
 		// */
 		// return basicBlock;
 	}
@@ -602,7 +603,7 @@ class LL2W {
 			block[1].out
 				.filter(s => s.toString().substr(0, s.toString().indexOf(":")) == name)
 				.map(s => s.toString().substr(s.toString().indexOf(":") + 1))
-				.map(s => out.findSingle((b: any) => b.data.label == s)) // TODO
+				.map(s => out.findSingle((b: Node<{label: string}>) => b.data.label == s))
 				.forEach(n => out[i].arc(n));
 		});
 
@@ -737,7 +738,7 @@ class LL2W {
 		debug(`Computing live-in for ${chalk.bold(varName)} in ${blockDebug}.`);
 
 		const originalMergeSet = mergeSets[n];
-		const modifiedMergeSet = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
+		const modifiedMergeSet: NodeID[] = _.uniq([...originalMergeSet, varName].map(x => x.toString()));
 		const readers = LL2W.getReaders(fn, varName);
 		const writers = LL2W.getWriters(fn, varName);
 		let definition = null;
@@ -1021,6 +1022,7 @@ function testLiveness(fn, declarations) {
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
 	const cfg = LL2W.computeCFG(fn);
+	console.log(cfg.toString());
 	const dj = cfg.djGraph(cfg.data.enter);
 	const ms = Graph.mergeSets(dj, cfg.data.enter, cfg.data.exit);
 	const blockID = "8";
