@@ -16,9 +16,9 @@ const exec = util.promisify(child_process.exec);
 import _, {displayIOError, isNumeric, pushAll} from "../util";
 import {BUILTINS} from "./constants";
 
-import {StringMap, MetadataType, DeclarationType, ASTMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
-	VariableName, BasicBlockExtra, ASTDeclaration, ASTFunctionMeta, Instruction, ComputedOperands, ASTFunctionBlock,
-	CachingCFG, UsefulLivenessData, isLabelComment, LabelComment, isLabel, BlockName, Label} from "./types";
+import {StringMap, MetadataType, DeclarationType, IRMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
+	VariableName, BasicBlockExtra, ASTDeclaration, IRFunctionMeta, Instruction, ComputedOperands, IRFunctionBlock,
+	CachingCFG, UsefulLivenessData, isLabelComment, LabelComment, isLabel, BlockName, Label, isASTVariable, isPhi, LLVMFunctionMeta} from "./types";
 
 export type LL2WOptions = {debug?: boolean, cfg?: boolean, dev?: boolean};
 export type LivenessMap = {[varName: string]: {[blockName: string]: [boolean, boolean]}};
@@ -235,10 +235,10 @@ class LL2W {
 
 		if (!this.ast) throw new Error("AST not yet generated");
 
-		const metas = this.ast.filter(([type]) => type == "metadata") as ASTMetadata[];
+		const metas = this.ast.filter(([type]) => type == "metadata") as IRMetadata[];
 		const graph: Graph<null> = new Graph<null>(metas.length, null);
 
-		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
+		metas.filter(([, id]) => _.isNumber(id)).forEach(([, id, distinct, ...items]: IRMetadata) => {
 			let recursive = false;
 			let toAdd: any[] = [];
 
@@ -259,7 +259,7 @@ class LL2W {
 			metadata[id].items = _.unionWith(metadata[id].items, metadata[dependency].items, _.isEqual);
 		}));
 
-		metas.filter(([, id]) => !_.isNumber(id)).forEach(([, id, distinct, ...items]: ASTMetadata) => {
+		metas.filter(([, id]) => !_.isNumber(id)).forEach(([, id, distinct, ...items]: IRMetadata) => {
 			metadata[id] = {
 				recursive: false,
 				distinct, 
@@ -318,7 +318,7 @@ class LL2W {
 		const blockOrder: [string, BlockName][] = [];
 		const functionOrder: string[] = [];
 
-		this.iterateTree("function", (meta: ASTFunctionMeta, instructions: (Instruction | LabelComment | Label)[]) => {
+		this.iterateTree("function", (meta: LLVMFunctionMeta, instructions: (Instruction | LabelComment | Label)[]) => {
 			// LLVM helpfully indicates basic blocks with comments and labels.
 			// If we cheat, we can exploit this to avoid having to implement an actual basic block scanning algorithm.
 			// (Even though it wouldn't be very difficult to implement such an algorithm.)
@@ -462,16 +462,17 @@ class LL2W {
 	static computeOperands(instruction: Instruction): ComputedOperands {
 		const type: any = instruction[1]; // TODO
 		const meta: any = instruction[2];
-		let read: any[] = [], written: any[] = [], assigner: any = null; // TODO
+		let read: VariableName[] = [], written: VariableName[] = [], assigner: any = null; // TODO
 
-		const isVar = x => x instanceof Array && x[0] == "variable";
-		const tryRead = x => isVar(x) && read.push(x[1]);
+		const tryRead = (x: any) => isASTVariable(x) && read.push(x[1]);
+
+		if (type == "conversion") { console.log("instruction:"); console.log(instruction); }
 
 		if (["phi", "alloca", "conversion", "load", "binary", "icmp", "getelementptr"].includes(type)) {
 			written.push(assigner = meta.destination[1]);
 		}
 
-		if (type == "phi") {
+		if (isPhi(instruction)) {
 			// TODO: do phi instructions count as reads?
 			meta.pairs.forEach(([v, src]) => tryRead(v));
 		} else if (type == "switch") {
@@ -500,7 +501,7 @@ class LL2W {
 		} else if (type == "store") {
 			tryRead(meta.storeValue);
 			
-			if (isVar(meta.destinationValue)) {
+			if (isASTVariable(meta.destinationValue)) {
 				// Yes, the store writes a value, but it doesn't write it to a variable.
 				// Instead, it writes it to memoryat the position contained in the destination pointer.
 				// That means it has two reads and no writes!
@@ -509,7 +510,7 @@ class LL2W {
 		} else if (type == "load") {
 			tryRead(meta.pointerValue);
 		} else if (type == "binary" || type == "icmp") {
-			[meta.op1, meta.op2].forEach(o => isVar(o) && read.push(o[1]));
+			[meta.op1, meta.op2].forEach(o => isASTVariable(o) && read.push(o[1]));
 		} else if (type == "br_conditional") {
 			// TODO: do branch targets count as reads?
 			if (typeof meta.cond != "number") {
@@ -519,7 +520,7 @@ class LL2W {
 			tryRead(meta.value);
 		} else if (type == "getelementptr") {
 			tryRead(meta.pointerValue);
-			meta.indices.filter(i => isVar(i[1])).forEach(i => read.push(i[1][1]));
+			meta.indices.filter(i => isASTVariable(i[1])).forEach(i => read.push(i[1][1]));
 		}
 
 		return {read, written, assigner};
@@ -679,12 +680,12 @@ class LL2W {
 		return out;
 	}
 
-	static getReaders(fn: IRFunction, varName: VariableName): ASTFunctionBlock[] {
+	static getReaders(fn: IRFunction, varName: VariableName): IRFunctionBlock[] {
 		const varString: string = varName.toString();
 		return fn.filter(([id, {read}]) => read.map(x => x.toString()).includes(varString));
 	}
 
-	static getWriters(fn: IRFunction, varName: VariableName): ASTFunctionBlock[] {
+	static getWriters(fn: IRFunction, varName: VariableName): IRFunctionBlock[] {
 		const varString: string = varName.toString();
 		return fn.filter(([id, {written}]) => written.map(x => x.toString()).includes(varString));
 	}
@@ -726,7 +727,7 @@ class LL2W {
 	 * @param {number|string} varName The name of the variable to check.
 	 * @return {boolean} Whether the variable is live-in.
 	 */
-	static isLiveInUsingMergeSet(fn: IRFunction, cfg: CachingCFG, block: ASTFunctionBlock, varName: VariableName): boolean {
+	static isLiveInUsingMergeSet(fn: IRFunction, cfg: CachingCFG, block: IRFunctionBlock, varName: VariableName): boolean {
 		varName = varName.toString();
 		const {dTree, mergeSets} = LL2W.getUsefulLivenessData(cfg, {dj: true});
 		if (block === undefined) {
@@ -1029,8 +1030,8 @@ function testLiveness(fn, declarations) {
 	const block = fn.filter(([l]) => l == blockID)[0];
 	// console.log(`isLiveOut(${blockID}, ${varName}):`, LL2W.isLiveOutUsingMergeSet(fn, cfg, block, varName));
 	// console.log("liveness set:", compiler.computeLivenessSet(functions, allBlocks));
-	console.log("liveness sets:");
-	console.log(LL2W.computeLivenessForFunction(fn));
+	// console.log("liveness sets:");
+	// console.log(LL2W.computeLivenessForFunction(fn));
 	return;
 }
 

@@ -28,14 +28,14 @@ export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | 
 					 | ["register", "s" | "k" | "e" | "m" | "r" | "a" | "t", number];
 export type SymbolTable = {[key: string]: [number, Long, SymbolEnum]};
 export type Condition = "p" | "n" | "z" | "nz";
-export type Instruction = [string, string, ...any[]] & InstructionMeta; // [label, op, ...args]
-export type InstructionType = "r" | "i" | "j";
-export type InstructionMeta = {
+export type ASMInstruction = [string, string, ...any[]] & ASMInstructionMeta; // [label, op, ...args]
+export type ASMInstructionType = "r" | "i" | "j";
+export type ASMInstructionMeta = {
 	opcode?: number,
 	rs?: number,
 	rd?: number,
 	flags?: number,
-	type?: InstructionType,
+	type?: ASMInstructionType,
 	conditions?: Condition,
 	op?: string,
 	
@@ -48,9 +48,9 @@ export type InstructionMeta = {
 	link?: boolean,
 };
 export type DataPair = ["int" | "float", number] | ["string", string] | ["bytes", number] | ["var", string];
-export type ParsedInstruction = [string, string, ...any[]] & {inSubroutine?: boolean};
-export type WASMCParsed = {
-	code: ParsedInstruction[],
+export type ASMParsedInstruction = [string, string, ...any[]] & {inSubroutine?: boolean};
+export type ASMParsed = {
+	code: ASMParsedInstruction[],
 	meta: {[key: string]: any},
 	data: {[key: string]: DataPair},
 	includes?: string[]
@@ -63,7 +63,7 @@ export type SymbolType = "data" | "code" | "other";
 export default class WASMC {
 	options: {[key: string]: any};
 	ignoreFlags: boolean;
-	parsed: WASMCParsed;
+	parsed: ASMParsed;
 	offsets: {[key: string]: number};
 	meta: Long[];
 	data: Long[];
@@ -386,7 +386,7 @@ export default class WASMC {
 	 * Copies an array of expanded code into the {@link module:wasm~WASMC#code main code array}.
 	 * @param expanded The list of expanded instructions to compile and store.
 	 */
-	processCode(expanded: Instruction[]): void {
+	processCode(expanded: ASMInstruction[]): void {
 		expanded.forEach(item => this.addCode(item));
 	}
 
@@ -394,8 +394,8 @@ export default class WASMC {
 	 * Returns a copy of {@link module:wasm~WASMC#parsed parsed}.code with all pseudoinstructions expanded.
 	 * @return An array of expanded instructions.
 	 */
-	expandCode(): Instruction[] {
-		const expanded: Instruction[] = [];
+	expandCode(): ASMInstruction[] {
+		const expanded: ASMInstruction[] = [];
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions have to be
 		// processed once again after labels have been sorted out so we can replace variable references with addresses.
 		this.parsed.code.forEach(item => {
@@ -406,7 +406,7 @@ export default class WASMC {
 				         "based on an expanded length equal to", chalk.bold(expanded.length));
 			}
 
-			const add = (x: Instruction) => expanded.push(x);
+			const add = (x: ASMInstruction) => expanded.push(x);
 
 			const addPush = (args: Register[], _label: string = label) => {
 				const getLabel = () => [_label, _label = null][0];
@@ -573,7 +573,7 @@ export default class WASMC {
 	 * @param  expanded An array of expanded instructions (see {@link module:wasm~WASMC#expandCode expandCode}).
 	 * @return The mutated input array with label references replaced with memory addresses.
 	 */
-	expandLabels(expanded: Instruction[]): Instruction[] {
+	expandLabels(expanded: ASMInstruction[]): ASMInstruction[] {
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
 		expanded.forEach(item => {
@@ -608,7 +608,7 @@ export default class WASMC {
 	 * Compiles an instruction and adds it to the {@link module:wasm~WASMC#code code array}.
 	 * @param item The instruction to compile and add.
 	 */
-	addCode(item: Instruction): void {
+	addCode(item: ASMInstruction): void {
 		this.code.push(this.compileInstruction(item));
 	}
 
@@ -617,7 +617,7 @@ export default class WASMC {
 	 * @param  instruction An uncompiled instruction.
 	 * @return The bytecode representation of the instruction.
 	 */
-	compileInstruction(instruction: Instruction): Long {
+	compileInstruction(instruction: ASMInstruction): Long {
 		const [op, ...args] = instruction;
 		const {flags} = instruction;
 		if (op == "ext") {
@@ -644,7 +644,7 @@ export default class WASMC {
 	 * @param  instruction An uncompiled instruction.
 	 * @return The bytecode representation of the instruction.
 	 */
-	unparseInstruction(instruction: Instruction): Long {
+	unparseInstruction(instruction: ASMInstruction): Long {
 		const {op, type} = instruction;
 		if (type == "r") {
 			const {opcode, rt, rs, rd, funct, flags, conditions} = instruction;
