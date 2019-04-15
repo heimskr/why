@@ -18,7 +18,7 @@ import {BUILTINS} from "./constants";
 
 import {StringMap, MetadataType, DeclarationType, IRMetadata, ASTFunction, IRFunction, BasicBlock, FunctionExtractions,
 	VariableName, BasicBlockExtra, ASTDeclaration, IRFunctionMeta, Instruction, ComputedOperands, IRFunctionBlock,
-	CachingCFG, UsefulLivenessData, isLabelComment, LabelComment, isLabel, BlockName, Label, isASTVariable, isPhi, LLVMFunctionMeta} from "./types";
+	CachingCFG, UsefulLivenessData, isLabelComment, LabelComment, isLabel, BlockName, Label, isASTVariable, isPhi, LLVMFunctionMeta, isSwitch, isSelect, isConversion, isCall, isStore, isLoad, isBinary, isICMP, isBrCond, isRet, isGetElementPtr} from "./types";
 
 export type LL2WOptions = {debug?: boolean, cfg?: boolean, dev?: boolean};
 export type LivenessMap = {[varName: string]: {[blockName: string]: [boolean, boolean]}};
@@ -473,17 +473,17 @@ class LL2W {
 		if (isPhi(instruction)) {
 			// TODO: do phi instructions count as reads?
 			meta.pairs.forEach(([v, src]) => tryRead(v));
-		} else if (type == "switch") {
+		} else if (isSwitch(instruction)) {
 			meta.table.forEach(([,, dest]) => tryRead(dest));
 			tryRead(meta.operand);
 			tryRead(meta.default);
-		} else if (type == "select") {
+		} else if (isSelect(instruction)) {
 			written.push(assigner = meta.destination[1]);
 			read.push(meta.condition[1]);
 			[meta.leftValue, meta.rightValue].forEach(tryRead);
-		} else if (type == "conversion") {
+		} else if (isConversion(instruction)) {
 			tryRead(meta.sourceValue)
-		} else if (type == "call") {
+		} else if (isCall(instruction)) {
 			if (meta.assign) {
 				written.push(assigner = meta.assign[1]);
 			}
@@ -496,7 +496,7 @@ class LL2W {
 			for (const arg of meta.args) {
 				tryRead(arg[1]);
 			}
-		} else if (type == "store") {
+		} else if (isStore(instruction)) {
 			tryRead(meta.storeValue);
 			
 			if (isASTVariable(meta.destinationValue)) {
@@ -505,18 +505,18 @@ class LL2W {
 				// That means it has two reads and no writes!
 				read.push(assigner = meta.destinationValue[1]);
 			}
-		} else if (type == "load") {
+		} else if (isLoad(instruction)) {
 			tryRead(meta.pointerValue);
-		} else if (type == "binary" || type == "icmp") {
+		} else if (isBinary(instruction) || isICMP(instruction)) {
 			[meta.op1, meta.op2].forEach(o => isASTVariable(o) && read.push(o[1]));
-		} else if (type == "br_conditional") {
+		} else if (isBrCond(instruction)) {
 			// TODO: do branch targets count as reads?
 			if (typeof meta.cond != "number") {
 				read.push(meta.cond[1]);
 			}
-		} else if (type == "ret") {
+		} else if (isRet(instruction)) {
 			tryRead(meta.value);
-		} else if (type == "getelementptr") {
+		} else if (isGetElementPtr(instruction)) {
 			tryRead(meta.pointerValue);
 			meta.indices.filter(i => isASTVariable(i[1])).forEach(i => read.push(i[1][1]));
 		}
