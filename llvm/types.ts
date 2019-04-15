@@ -76,7 +76,7 @@ export type IRCConv = "ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" 
                     | "x86_64_sysvcc" | "x86_fastcallcc" | "x86_thiscallcc" | "arm_aapcscc" | "spir_kernel";
 
 export type IRConversionType = "bitcast" | "fpext" | "fptosi" | "fptoui" | "fptrunc" | "inttoptr" | "ptrtoint" | "sext"
-                             | "sitofp" | "trunc" | "uitofp" | "zext";
+                             | "sitofp"  | "trunc" | "uitofp" | "zext";
 export type IRCallFnty   = [IRTypeAny, IRTypeAny[], boolean];
 export type IRCstToTypes = "trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fptoui" | "fptosi" | "uitofp" | "sitofp"
                          | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast";
