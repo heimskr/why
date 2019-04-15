@@ -28,20 +28,13 @@ module.exports = function(grunt) {
 				tasks: ["wasmc"]
 			},
 			
-			nearley: {
-				files: ["wasm/wasm.ne"],
-				tasks: ["nearley"]
-			},
+			nearley_wasm: { files: ["wasm/wasm.ne"], tasks: ["nearley_wasm"] },
+			nearley_llvm: { files: ["llvm/llvm.ne"], tasks: ["nearley_llvm"] },
 			
 			//			jsdoc: {
 			//				files: ["jsdoc.json", ...jsdoc_files],
 			//				tasks: ["jsdoc"]
 			//			}
-			
-			// ts: {
-			// 	files: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
-			// 	tasks: ["ts"]
-			// }
 		},
 		
 		exorcise: {
@@ -128,18 +121,24 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-ts");
 	
 	grunt.registerTask("wasmc", "Dummy task for wasmc.js.", () => { });
-	grunt.registerTask("nearley", "Compiles WASM's nearley source.", () => {
-		child_process.exec("node node_modules/nearley/bin/nearleyc.js wasm/wasm.ne -o wasm/wasm.js", (error, stdout, stderr) => {
-			if (error) {
-				console.error(chalk.red(`Couldn't compile wasm.ne:`));
-				console.error(chalk.red.dim(error.message));
-			} else if (stderr) {
-				console.error(`Error during compilation:`, stderr);
-			} else {
-				console.log(chalk.green(stdout));
-			};
+
+	function registerNearley(path, id) {
+		grunt.registerTask(`nearley_${id}`, `Compiles nearley source for ${path}.ne.`, function() {
+			child_process.exec(`node node_modules/nearley/bin/nearleyc.js ${path}.ne -o ${path}.js`, (error, stdout, stderr) => {
+				if (error) {
+					console.error(chalk.red(`Couldn't compile ${path}.ne:`));
+					console.error(chalk.red.dim(error.message));
+				} else if (stderr) {
+					console.error(`Error while compilating ${path}.ne:`, stderr);
+				} else {
+					console.log(chalk.green(stdout));
+				};
+			});
 		});
-	});
+	}
+
+	registerNearley("wasm/wasm", "wasm");
+	registerNearley("llvm/llvm", "llvm");
 	
 	grunt.event.on("watch", (action, file, name) => {
 		// There's almost certainly a better way to do this.
@@ -160,5 +159,5 @@ module.exports = function(grunt) {
 	});
 	
 	// grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
-	grunt.registerTask("default", ["nearley", "watch"]);
+	grunt.registerTask("default", ["nearley_wasm", "nearley_llvm", "watch"]);
 };
