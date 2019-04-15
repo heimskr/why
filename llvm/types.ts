@@ -1,7 +1,6 @@
 #!/usr/bin/env ts-node
 
-import {Node, NodeID} from "../node";
-import Graph, {DJGraph, BothMap, DTree} from "../graph";
+import Graph, {Node, NodeID, DJGraph, BothMap, DTree} from "../graph";
 import {CFG} from "./ll2w";
 
 export interface ASTVector {0: "vector", 1: [ASTTypeAny, null, ASTValue][]}
