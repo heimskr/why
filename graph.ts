@@ -30,11 +30,11 @@ export default class Graph<D extends Object> {
 	nodes: Node<any>[];
 	title?: string;
 	
-	get  length():                     number { return this.nodes.length;  }
-	get    push():  (node: Node<any>) => void { return this.nodes.push;    }
-	get forEach(): ForeachFunction<Node<any>> { return this.nodes.forEach; }
-	get     map():     MapFunction<Node<any>> { return this.nodes.map;     }
-	get  reduce():  ReduceFunction<Node<any>> { return this.nodes.reduce;  }
+	get  length():                     number { return this.nodes.length; }
+	get    push():  (node: Node<any>) => void { return this.nodes.push.bind(this.nodes);    }
+	get forEach(): ForeachFunction<Node<any>> { return this.nodes.forEach.bind(this.nodes); }
+	get     map():     MapFunction<Node<any>> { return this.nodes.map.bind(this.nodes);     }
+	get  reduce():  ReduceFunction<Node<any>> { return this.nodes.reduce.bind(this.nodes);  }
 
 	/**
 	 * Creates a new graph.
@@ -414,9 +414,12 @@ export default class Graph<D extends Object> {
 		const normalized = this.clone();
 		const renameMap = normalized.normalize();
 		const renames = _.mapValues(_.invert(renameMap), v => numerize(v));
-		const formatted = normalized.map(v => v.out);
+		const formatted = normalized.nodes.map(v => v.out);
 		return [
-			lt(formatted, this.getNodeSafe(startID).id).reduce((a, b, i) => ({...a, [renames[i]]: renames[b]}), {}),
+			lt(formatted, this.getNodeSafe(startID).id).reduce((a: {[key: number]: number}, b: number, i: number) => ({
+				...a,
+				[renames[i]]: renames[b]
+			}), {}),
 			renameMap,
 			renames
 		];

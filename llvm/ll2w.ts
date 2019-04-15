@@ -1022,7 +1022,6 @@ function testLiveness(fn, declarations) {
 	// LL2W.computeCFG(fn, declarations).display({width: 1000, height: 500}).then(() => console.log());
 	// LL2W.computeCFG(fn, declarations).display({width: 4000*1, height: 1000*1}).then(() => console.log());
 	const cfg = LL2W.computeCFG(fn);
-	console.log(cfg.toString());
 	const dj = cfg.djGraph(cfg.data.enter);
 	const ms = Graph.mergeSets(dj, cfg.data.enter, cfg.data.exit);
 	const blockID = "8";
