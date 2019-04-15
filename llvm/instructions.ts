@@ -1,10 +1,6 @@
-import {InstBase, IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastmathFlag, IRCConv, IRRetAttr,
+import {IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastmathFlag, IRCConv, IRRetAttr,
         IRCallFnty, IRConstant, IRValue, VariableName, BlockName, IRFunctionBlock, IRConversionType, IRBang, IRVector,
-        IRBinaryFlavor,
-		IRComparisonType,
-		IRTypePtr,
-		IRGlobal,
-		IRGEPTriple} from "./types";
+        IRComparisonType, IRGlobal, IRGEPTriple} from "./types";
 
 type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
 export interface InstBase<N extends string, M extends Object> extends Array<any> {
@@ -77,9 +73,17 @@ export type InstGetElementPtr = InstBase<"getelementptr", {
 	pointerValue: IRVariable | IRGlobal,
 	indices: IRGEPTriple,
 	flavor: "single" | "multi"}>;
+export type InstSelect = InstBase<"select", {
+	destination: IRVariable,
+	conditionType: IRTypeAny,
+	condition: IRVariable,
+	leftType: IRTypeAny,
+	leftValue: IROperand,
+	rightType: IRTypeAny,
+	rightValue: IROperand}>;
 
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion | InstBinary | InstICMP | InstGetElementPtr;
+                        | InstAlloca | InstConversion | InstBinary | InstICMP | InstGetElementPtr | InstSelect;
 
 export const isPhi = isInstructionType<InstPhi>("phi");
 
