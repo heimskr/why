@@ -1,7 +1,10 @@
 import {InstBase, IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastmathFlag, IRCConv, IRRetAttr,
         IRCallFnty, IRConstant, IRValue, VariableName, BlockName, IRFunctionBlock, IRConversionType, IRBang, IRVector,
         IRBinaryFlavor,
-		IRComparisonType} from "./types";
+		IRComparisonType,
+		IRTypePtr,
+		IRGlobal,
+		IRGEPTriple} from "./types";
 
 type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
 export interface InstBase<N extends string, M extends Object> extends Array<any> {
@@ -66,10 +69,17 @@ export type InstICMP = InstBase<"icmp", {
 	operator: IRComparisonType,
 	op1: IRVariable,
 	op2: IRVariable}>;
-
+export type InstGetElementPtr = InstBase<"getelementptr", {
+	destination: IRVariable,
+	inbounds: boolean,
+	type: IRTypeAny,
+	pointerType: IRTypeAny, // IRTypePtr?
+	pointerValue: IRVariable | IRGlobal,
+	indices: IRGEPTriple,
+	flavor: "single" | "multi"}>;
 
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion | InstBinary | InstICMP;
+                        | InstAlloca | InstConversion | InstBinary | InstICMP | InstGetElementPtr;
 
 export const isPhi = isInstructionType<InstPhi>("phi");
 

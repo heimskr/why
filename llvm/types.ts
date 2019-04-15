@@ -92,6 +92,7 @@ export type IRBinaryType = "and" | "or" | "xor" | "urem" | "srem" | "ashr" | "ls
 export type IRBinaryFlavor = "normal" | "exact" | "fastmath" | "dangerous";
 export type IRFastmathFlag = "nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast";
 export type IRComparisonType = "eq" | "ne" | "ugt" | "uge" | "ult" | "ule" | "sgt" | "sge" | "slt" | "sle";
+export type IRGEPTriple = [IRTypeInt, IRVariable | number, boolean];
 
 export type LabelComment = ["label_c", BlockName, BlockName[]]; // [, name of following block, names of preds]
 export type Label = ["label", BlockName];
