@@ -280,7 +280,7 @@ bang_type			->	("dereferenceable_or_null" | "dereferenceable" | "nonnull")	{% __
 
 llvm_bang			->	"llvm." ("loop" | "mem.parallel_loop_access")				{% d => d[0] + d[1][0] %}
 
-bang[X]				->	"!" $X " !" dec												{% d => [d[1], d[3]] %}
+bang[X]				->	"!" $X " !" dec												{% d => [d[1][0], d[3]] %}
 bang_any			->	bang[bang_type]												{% _ %}
 instruction			->	(i_alloca | i_load | i_icmp | i_call | i_switch | i_store)	{% __ %}
 					 |	(i_getelementptr | i_unreachable | i_br | i_binary | i_phi)	{% __ %}

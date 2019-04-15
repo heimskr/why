@@ -1,9 +1,6 @@
 import {InstBase, IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastMathFlag, IRCConv, IRRetAttr,
         IRCallFnty, IRConstant, IRValue, VariableName, BlockName, IRFunctionBlock, IRConversionType} from "./types";
 
-export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion;
-
 type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
 export interface InstBase<N extends string, M extends Object> extends Array<any> {
 	0: "instruction", 1: N, 2: M & {block?: IRFunctionBlock}}
@@ -47,5 +44,16 @@ export type InstConversion = InstBase<"conversion", {
 	sourceValue: IRVariable,
 	destinationType: IRTypeAny,
 	flavor: IRConversionType}>;
+export type InstLoad = InstBase<"load", {
+	destination: IRVariable,
+	volatile: boolean,
+	type: IRTypeAny,
+	pointerType: IRTypeAny,
+	pointerValue: IRVariable,
+	align: number | null,
+	bangs: IRBang[]}>;
+
+export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
+                        | InstAlloca | InstConversion;
 
 export const isPhi = isInstructionType<InstPhi>("phi");

@@ -84,6 +84,10 @@ export type IRCstToType  = [IRCstToTypes, IRConstant, IRTypeAny];
 export type IRConstExpr  = ["expr", IRCstToType];
 export type IRValue = number | IRVector | IRVariable | "null";
 export type IRSwitchLine = [IRTypeInt, number, IRVariable];
+export type IRBangType = "dereferenceable_or_null" | "dereferenceable" | "nonnull" | "invariant" | "invariant.load"
+                       | "nontemporal.group" | "align" | "tbaa" | "range" | "llvm.loop"
+                       | "llvm.mem.parallel_loop_access";
+export type IRBang = [IRBangType, number];
 
 export type LabelComment = ["label_c", BlockName, BlockName[]]; // [, name of following block, names of preds]
 export type Label = ["label", BlockName];
