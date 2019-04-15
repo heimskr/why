@@ -60,6 +60,7 @@ export type ASTDeclaration = ["declaration", ASTFunction];
 export type ASTFunction = ["function", ASTFunctionMeta, Instruction[]];
 export type ASTMetadata = ["metadata", VariableName, boolean, ...any[]];
 export type ASTVariable = ["variable", VariableName];
+export function isASTVariable(x: any): x is ASTVariable { return x instanceof Array && x[0] == "variable"; }
 export type ASTGlobal   = ["global", string];
 export type ASTGetElementPtrExpr = ["expr", "getelement", {
 	inbounds: boolean,
@@ -69,21 +70,6 @@ export type ASTGetElementPtrExpr = ["expr", "getelement", {
 	indices: [ASTTypeInt, number][]
 }];
 export type ASTOperand  = ASTVariable | number | ASTGlobal | ASTGetElementPtrExpr | ["null"];
-export type InstBrUncond = InstBase<"br_unconditional", {dest: ASTVariable}>;
-export type InstBrCond = InstBase<"br_conditional", {
-	type:    ASTTypeAny,
-	cond:    ASTVariable | number,
-	iftrue:  ASTVariable,
-	iffalse: ASTVariable,
-	loop:    number | null
-}>;
-export type ASTSwitchLine = [ASTTypeInt, number, ASTVariable];
-export type InstSwitch = InstBase<"switch", {
-	type: ASTTypeAny,
-	operand: ASTOperand,
-	default: ASTVariable,
-	table: ASTSwitchLine[]
-}>;
 export type IRTailType = "tail" | "notail" | "musttail";
 export type IRFastMathFlag = "nnan" | "ninf" | "nsz" | "arcp" | "constract" | "fast";
 export type IRCConv = "ccc" | "cxx_fast_tlscc" | "fastcc" | "ghccc" | "swiftcc" | "preserve_allcc" | "preserve_mostcc"
@@ -97,6 +83,21 @@ export type IRCstToTypes = "trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "fp
                          | "ptrtoint" | "inttoptr" | "bitcast" | "addrspacecast";
 export type IRCstToType  = [IRCstToTypes, IRConstant, ASTTypeAny];
 export type IRConstExpr  = ["expr", IRCstToType];
+export type ASTValue = number | ASTVector | ASTVariable | "null";
+export type ASTSwitchLine = [ASTTypeInt, number, ASTVariable];
+
+export type InstBrUncond = InstBase<"br_unconditional", {dest: ASTVariable}>;
+export type InstBrCond = InstBase<"br_conditional", {
+	type:    ASTTypeAny,
+	cond:    ASTVariable | number,
+	iftrue:  ASTVariable,
+	iffalse: ASTVariable,
+	loop:    number | null}>;
+export type InstSwitch = InstBase<"switch", {
+	type: ASTTypeAny,
+	operand: ASTOperand,
+	default: ASTVariable,
+	table: ASTSwitchLine[]}>;
 export type InstCall = InstBase<"call", {
 	assign: ASTVariable | null,
 	tail: IRTailType | null,
@@ -105,22 +106,24 @@ export type InstCall = InstBase<"call", {
 	retattr: IRRetAttr[],
 	returnType: IRCallFnty | ASTTypeAny,
 	name: string,
-	args: IRConstant[]
-}>;
+	args: IRConstant[]}>;
 export type InstUnreachable = InstBase<"unreachable", {}>;
-export type ASTValue = number | ASTVector | ASTVariable | "null";
 export type InstRet = InstBase<"ret", {type: ASTTypeAny, value: ASTValue}>;
-export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet;
-export type LabelComment = ["label_c", BlockName, BlockName[]]; // [, name of following block, names of preds]
-export type Label = ["label", BlockName];
-export function isLabelComment(x: any[]): x is LabelComment { return x[0] == "label_c"; }
-export function isLabel(x: any[]): x is Label { return x[0] == "label"; }
+export type InstPhi = InstBase<"phi", {destination: ASTVariable, type: ASTTypeAny, pairs: [VariableName, BlockName][]}>;
 
+
+export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi;
 type InstShape = [string, ...any[]];
 type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
 function isInstructionType<T extends Instruction>(type: string): IsTypeFn<T> {
 	return ((x: Instruction) => x[1] == type) as IsTypeFn<T>;
 }
+
+export type LabelComment = ["label_c", BlockName, BlockName[]]; // [, name of following block, names of preds]
+export type Label = ["label", BlockName];
+export function isLabelComment(x: any[]): x is LabelComment { return x[0] == "label_c"; }
+export function isLabel(x: any[]): x is Label { return x[0] == "label"; }
+
 
 
 export type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
