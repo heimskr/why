@@ -466,8 +466,6 @@ class LL2W {
 
 		const tryRead = (x: any) => isASTVariable(x) && read.push(x[1]);
 
-		if (type == "store") { console.log("instruction:"); console.log((instruction)); }
-
 		if (["phi", "alloca", "conversion", "load", "binary", "icmp", "getelementptr"].includes(type)) {
 			written.push(assigner = meta.destination[1]);
 		}
