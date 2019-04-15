@@ -2,7 +2,6 @@
 import * as util from "./util";
 import Graph from "./graph";
 import {NodeID} from "./node";
-import cytosnap from "cytosnap";
 import {Stream, Readable} from "stream";
 
 export type GraphRenderPromise = Promise<string | Object | Readable | void>;
@@ -34,7 +33,18 @@ export type RenderOptions = {
 	idOffset?: number
 };
 
+let cytosnap = null;
+
+export function render<T>(graph: Graph<T>, opts: RenderOptions & {type: "json"}): Promise<Object>;
+export function render<T>(graph: Graph<T>, opts: RenderOptions & {type: "stream"}): Promise<Readable>;
+export function render<T>(graph: Graph<T>, opts: RenderOptions & {type: "base64uri"}): Promise<string>;
+export function render<T>(graph: Graph<T>, opts: RenderOptions & {type: "base64"}): Promise<string>;
+export function render<T>(graph: Graph<T>, opts: RenderOptions): Promise<string | Object | Readable>;
 export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<string | Object | Readable> {
+	if (cytosnap === null) {
+		cytosnap = require("cytosnap");
+	}
+
 	const defaults: RenderOptions = {
 		background: "#000",
 		node: "#fff",
@@ -165,10 +175,12 @@ export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<st
 	} else if (opts.type == "stream") {
 		return promise as Promise<Readable>;
 	}
+	
+	return promise as Promise<string>;
 }
 
 export async function iterm<T>(graph: Graph<T>, opts?: RenderOptions): Promise<void> {
-	return render(graph, Object.assign(opts, {type: "base64"})).then((b64: string) => {
+	return render(graph, Object.assign(opts, {type: "base64"})).then(b64 => {
 		process.stdout.write(`\x1b]1337;File=inline=1:${b64}\u0007`);
 	});
 }
