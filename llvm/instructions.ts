@@ -1,6 +1,7 @@
 import {InstBase, IRVariable, IRTypeAny, IROperand, IRSwitchLine, IRTailType, IRFastmathFlag, IRCConv, IRRetAttr,
         IRCallFnty, IRConstant, IRValue, VariableName, BlockName, IRFunctionBlock, IRConversionType, IRBang, IRVector,
-        IRBinaryFlavor} from "./types";
+        IRBinaryFlavor,
+		IRComparisonType} from "./types";
 
 type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
 export interface InstBase<N extends string, M extends Object> extends Array<any> {
@@ -23,7 +24,7 @@ export type InstSwitch = InstBase<"switch", {
 export type InstCall = InstBase<"call", {
 	assign: IRVariable | null,
 	tail: IRTailType | null,
-	fastmath: IRFastMathFlag[] | null,
+	fastmath: IRFastmathFlag[] | null,
 	cconv: IRCConv | null,
 	retattr: IRRetAttr[],
 	returnType: IRCallFnty | IRTypeAny,
@@ -60,9 +61,15 @@ export type InstBinaryFastmath = InstBinaryBase<"fastmath", "fadd" | "fcmp" | "f
 export type InstBinaryDangerous = InstBinaryBase<"dangerous", "add" | "mul" | "shl" | "sub", {
 	nuw: boolean,
 	nsw: boolean}>;
+export type InstICMP = InstBase<"icmp", {
+	destination: IRVariable,
+	operator: IRComparisonType,
+	op1: IRVariable,
+	op2: IRVariable}>;
+
 
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet | InstPhi
-                        | InstAlloca | InstConversion | InstBinary;
+                        | InstAlloca | InstConversion | InstBinary | InstICMP;
 
 export const isPhi = isInstructionType<InstPhi>("phi");
 
