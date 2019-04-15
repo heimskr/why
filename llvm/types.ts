@@ -15,33 +15,34 @@ export interface InstBase<N extends string, M extends Object> extends Array<any>
 export type StringMap<T>   = {[key: string]: T};
 export type VariableName   = string | number;
 export type BlockName      = string | number;
+export type FunctionName   = string;
 export type IRFunctionMeta = {
 	meta:  ASTFunctionMeta,
 	vars:  VariableName[],
 	first: BlockName,
 	exit:  BlockName,
 };
-export type ASTFunctionBlock = [string, BlockConnectionsExtra, Instruction[]];
+export type ASTFunctionBlock = [FunctionName, BlockConnectionsExtra, Instruction[]];
 export type IRFunction  = ASTFunctionBlock[] & IRFunctionMeta;
-export type AnyNode     = Node<any> | string | number;
+export type AnyNode     = Node<any> | NodeID;
 export type BlockConnections = {preds: AnyNode[], in: AnyNode[], out: AnyNode[]};
 export type BlockConnectionsExtra = BlockConnections & {
 	read: VariableName[],
 	written: VariableName[],
-	assigners: {[varName: string]: Instruction},
+	assigners: BothMap<Instruction>,
 	unreachable: boolean
 }
 export type BasicBlock = [
-	string,
+	BlockName,
 	BlockConnections, // edges
 	Instruction[] // instructions
 ];
-export type BasicBlockExtra = [string, BlockConnectionsExtra, Instruction[]];
+export type BasicBlockExtra = [BlockName, BlockConnectionsExtra, Instruction[]];
 export type FunctionExtractions = {
 	functions: StringMap<IRFunction>,
 	allBlocks: StringMap<BasicBlock>,
-	blockOrder: [string, string][],
-	functionOrder: string[];
+	blockOrder: [FunctionName, BlockName][],
+	functionOrder: FunctionName[];
 };
 export type ASTTypeAny = ASTTypeInt | ASTTypePtr | ASTTypeArray;
 export type ASTTypeInt = ["int", number];
@@ -50,7 +51,7 @@ export type IRRetAttr  = ["zeroext" | "signext" | "inreg" | "noalias" | "nonnull
 export type IRParAttr  = ["byval" | "inalloca" | "sret" | "nocapture" | "readonly"] | IRRetAttr;
 export type ASTFunctionType = [ASTTypeAny, IRParAttr[], ASTVariable | null];
 export type ASTFunctionMeta = {
-	name: string,
+	name: FunctionName,
 	type: ASTTypeAny,
 	types: ASTFunctionType[],
 	arity: number,
@@ -58,8 +59,8 @@ export type ASTFunctionMeta = {
 };
 export type ASTDeclaration = ["declaration", ASTFunction];
 export type ASTFunction = ["function", ASTFunctionMeta, Instruction[]];
-export type ASTMetadata = ["metadata", string | number, boolean, ...any[]];
-export type ASTVariable = ["variable", string | number];
+export type ASTMetadata = ["metadata", VariableName, boolean, ...any[]];
+export type ASTVariable = ["variable", VariableName];
 export type ASTGlobal   = ["global", string];
 export type ASTGetElementPtrExpr = ["expr", "getelement", {
 	inbounds: boolean,
@@ -111,6 +112,17 @@ export type InstUnreachable = InstBase<"unreachable", {}>;
 export type ASTValue = number | ASTVector | ASTVariable | "null";
 export type InstRet = InstBase<"ret", {type: ASTTypeAny, value: ASTValue}>;
 export type Instruction = InstBrUncond | InstBrCond | InstSwitch | InstCall | InstUnreachable | InstRet;
+export type LabelComment = ["label_c", BlockName, BlockName[]]; // [, name of following block, names of preds]
+export type Label = ["label", BlockName];
+export function isLabelComment(x: any[]): x is LabelComment { return x[0] == "label_c"; }
+export function isLabel(x: any[]): x is Label { return x[0] == "label"; }
+
+type InstShape = [string, ...any[]];
+type IsTypeFn<T extends Instruction> = (x: Instruction) => x is T;
+function isInstructionType<T extends Instruction>(type: string): IsTypeFn<T> {
+	return ((x: Instruction) => x[1] == type) as IsTypeFn<T>;
+}
+
 
 export type MetadataType = {recursive: boolean, distinct: boolean, items: any[]};
 export type DeclarationType = {type: ASTTypeAny, types: ASTFunctionType[], arity: number, isLocalUnnamed: boolean};
