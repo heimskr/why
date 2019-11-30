@@ -21,6 +21,7 @@ require("string.prototype.padend").shim();
 const OPCODES_INV = _.multiInvert(OPCODES);
 const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
 const CONDITIONS_INV = <{[key: number]: ConditionName}> _.invert(CONDITIONS);
+console.log({REGISTER_OFFSETS});
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
 
 export type SegmentOffsets = {$symtab: number, $code: number, $data: number, $end: number};

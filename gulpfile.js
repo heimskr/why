@@ -50,7 +50,7 @@ gulp.task("ts", () =>
 			module: "commonjs",
 			moduleResolution: "node",
 			rootDirs: ["./", "./wvm", "./wasm", "./llvm"],
-			outDir: "./dist"
+			// outDir: "./dist"
 		}))
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest("dist")));
@@ -69,9 +69,9 @@ gulp.task("dev", gulp.series("ts", () =>
 		// .require("./dist/util.js", {expose: "../util"})
 		// .require("./dist/parser.js", {expose: "../wasm/parser"})
 		.require("./wasm/wasm.js", {expose: "./wasm.js"})
+		.require("./dist/constants.js", {expose: "../dist/wasm/constants.js"})
 		.bundle()
 		.pipe(source("app.js"))
-		// .pipe(derequire())
 		.pipe(buffer())
 		.pipe(gulp.dest("wvm/dist"))));
 
