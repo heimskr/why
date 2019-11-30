@@ -9,6 +9,9 @@ const buffer = require("vinyl-buffer");
 const source = require("vinyl-source-stream");
 const sourcemaps = require("gulp-sourcemaps");
 const browserify = require("browserify");
+const babelify = require("babelify");
+const tsify = require("tsify");
+const tsc = require("typescript");
 
 const debug = true;
 
@@ -40,7 +43,15 @@ gulp.task("sass:watch", () => gulp.watch("wvm/style/*.scss", ["sass"]));
 gulp.task("ts", () => 
 	gulp.src(paths.scriptsSrc)
 		.pipe(sourcemaps.init())
-		.pipe(tsProject())
+		.pipe(ts({
+			noResolve: false,
+			target: "es6",
+			lib: ["es6", "esnext", "dom"],
+			module: "commonjs",
+			moduleResolution: "node",
+			rootDirs: ["./", "./wvm", "./wasm", "./llvm"],
+			outDir: "./dist"
+		}))
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest("dist")));
 
@@ -48,8 +59,19 @@ gulp.task("dev", gulp.series("ts", () =>
 	browserify({entries: [paths.entry], debug: true})
 		.on("error", gutil.log)
 		.on("log", gutil.log)
+		.plugin(tsify, {typescript: tsc})
+		.transform(babelify.configure({
+			presets: ["@babel/env"],
+			plugins: [
+				"syntax-class-properties",
+				"transform-class-properties"
+			]}))
+		// .require("./dist/util.js", {expose: "../util"})
+		// .require("./dist/parser.js", {expose: "../wasm/parser"})
+		.require("./wasm/wasm.js", {expose: "./wasm.js"})
 		.bundle()
 		.pipe(source("app.js"))
+		// .pipe(derequire())
 		.pipe(buffer())
 		.pipe(gulp.dest("wvm/dist"))));
 
