@@ -16,12 +16,10 @@ const paths = {
 	entry: "./wvm/browser/app.js",
 	scriptsSrc: ["*.ts", "wvm/**/*.ts", "wasm/**/*.ts", "llvm/**/*.ts"],
 	scriptsDst: "dist",
-	outDev: "bundle.dev.js",
-	outFinal: "bundle.js",
 	tempDst: "dist/tmp"
 };
 
-const tsProject = ts.createProject("tsconfig.json", {noResolve: false});
+const tsProject = ts.createProject("tsconfig.json");
 
 gulp.task("sass", () =>
 	gulp.src("wvm/style/app.scss")
@@ -43,30 +41,29 @@ gulp.task("ts", () =>
 	gulp.src(paths.scriptsSrc)
 		.pipe(sourcemaps.init())
 		.pipe(tsProject())
-		.pipe(sourcemaps.write(".", {includeContent: false, sourceRoot: ".."}))
+		.pipe(sourcemaps.write())
 		.pipe(gulp.dest("dist")));
 
-gulp.task("dev", gulp.series("ts"), () => {
-	return browserify({entries: [paths.entry], debug: true})
-		.bundle()
+gulp.task("dev", gulp.series("ts", () =>
+	browserify({entries: [paths.entry], debug: true})
 		.on("error", gutil.log)
 		.on("log", gutil.log)
+		.bundle()
 		.pipe(source("app.js"))
 		.pipe(buffer())
-		.pipe(gulp.dest("wvm/dist"))
-});
+		.pipe(gulp.dest("wvm/dist"))));
 
-gulp.task("final", gulp.series("ts"), () => {
+gulp.task("final", gulp.series("ts", () => {
     process.env.NODE_ENV = "production";
     return browserify({entries: [paths.entry], debug: false})
-		.bundle()
 		.on("error", gutil.log)
 		.on("log", gutil.log)
-        .pipe(source(path.join(paths.scriptsDst, paths.outFinal)))
+		.bundle()
+        .pipe(source("app.js"))
         .pipe(buffer())
         .pipe(uglify())
         .pipe(gulp.dest("dist"));
-});
+}));
 
 gulp.task("watch", function() {
     return gulp.watch([...paths.scriptsSrc, paths.entry], gulp.series("dev"));

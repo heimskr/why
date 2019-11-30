@@ -5,16 +5,17 @@
 		"module": "commonjs",
 		"sourceMap": true,
 		"noImplicitAny": false,
-		"rootDir": ".",
+		"rootDir": "./dist",
+		"listEmittedFiles": true,
 		"strict": false,
-		"outDir": "dist",
+		// "outDir": "dist",
 		"preserveConstEnums": true
 	},
 	// "typeRoots": [
 		// "node_modules/@types",
 	// 	"node_modules/@types/node"
 	// ],
-	"include": [
+	"files": [
 		"wasm/**/*.ts",
 		"wvm/**/*.ts",
 		"llvm/**/*.ts",

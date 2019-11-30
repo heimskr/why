@@ -3,9 +3,9 @@ if (!process.browser) {
 	process.exit(1);
 }
 
-let WVM = require("../../dist/wvm/wvm.js"),
-	Parser = require("../../dist/wasm/parser.js").default,
-	WASMC = require("../../dist/wasm/wasmc.js"),
+let WVM = require("../../dist/wvm.js"),
+	Parser = require("../../dist/parser.js").default,
+	WASMC = require("../../dist/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
@@ -15,7 +15,7 @@ let WVM = require("../../dist/wvm/wvm.js"),
 
 require("jquery.splitter");
 
-const {REGISTER_OFFSETS, FLAGS, RINGS} = require("../../dist/wasm/constants.js");
+const {REGISTER_OFFSETS, FLAGS, RINGS} = require("../../dist/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
 const UNPRINTABLE = [...[[0, 32], [127, 159], [173, 173]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
