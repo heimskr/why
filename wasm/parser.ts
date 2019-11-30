@@ -84,7 +84,7 @@ export default class Parser {
 	
 	private static _formatStyle: FormatStyle = "wasm";
 	static formatR: FormatRFunction = Parser.formatR_w;
-	static formatI: FormatIFunction = Parser.formatI_w;
+	static formatI: FormatIFunction  = Parser.formatI_w;
 	static formatJ: FormatJFunction = Parser.formatJ_w;
 
 	offsets: SegmentOffsets;

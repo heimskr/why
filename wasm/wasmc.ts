@@ -823,7 +823,7 @@ export default class WASMC {
 	 * @return An encoded symbol table.
 	 */
 	createSymbolTable(labels: string[], skeleton: boolean = true): Long[] {
-		return _.uniq([...labels, ".end"]).map(label => {
+		return _.flatten(_.uniq([...labels, ".end"]).map(label => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
 			let type = SYMBOL_TYPES.unknown;
 
@@ -842,7 +842,7 @@ export default class WASMC {
 				skeleton? Long.UZERO : Long.fromInt(this.offsets[label], true),
 				...WASMC.str2longs(label)
 			];
-		}).flat();
+		}));
 	}
 
 	/**

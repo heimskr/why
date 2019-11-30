@@ -764,7 +764,7 @@ class LL2W {
 
 				// t = dom-parent(t)
 				const parent = dTree.nodes[dTree.findSingle(node =>
-					"label" in node.data && (node.data as {label: string}).label == t).in[0]].data.label;
+					("label" in (node.data as any)) && (node.data as {label: string}).label == t).in[0]].data.label;
 				if (t != parent) {
 					t = parent;
 					continue;
@@ -858,7 +858,7 @@ class LL2W {
 
 				// t = dom-parent(t)
 				const parent = dTree.nodes[dTree.findSingle(node =>
-					"label" in node.data && (node.data as {label: string}).label == t).in[0]].data.label;
+					("label" in (node.data as any)) && (node.data as {label: string}).label == t).in[0]].data.label;
 				if (t != parent) {
 					t = parent;
 					continue;

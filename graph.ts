@@ -792,7 +792,7 @@ export default class Graph<D extends Object> {
 		).join("\n");
 	}
 
-	async render(opts: RenderOptions = {}, display: boolean = false): GraphRenderPromise {
+	render(opts: RenderOptions = {}, display: boolean = false): GraphRenderPromise {
 		if (isCFG(this)) {
 			opts.enter = this.data.enter;
 			opts.exit  = this.data.exit;

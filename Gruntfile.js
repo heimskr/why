@@ -1,7 +1,8 @@
 let shellescape = require("shell-escape"),
-child_process = require("child_process"),
-path = require("path"),
-chalk = require("chalk");
+	child_process = require("child_process"),
+	path = require("path"),
+	chalk = require("chalk"),
+	sass = require("node-sass");
 
 module.exports = function(grunt) {
 	const jsdoc_files = ["*.js", "wasm/*.js", "wvm/*.js", "wvm/browser/*.js", "llvm/*.js"];
@@ -27,6 +28,11 @@ module.exports = function(grunt) {
 				files: ["**/*.wasm"],
 				tasks: ["wasmc"]
 			},
+
+			ts: {
+				files: ["**/*.ts"],
+				tasks: ["ts"]
+			},
 			
 			nearley_wasm: { files: ["wasm/wasm.ne"], tasks: ["nearley_wasm"] },
 			nearley_llvm: { files: ["llvm/llvm.ne"], tasks: ["nearley_llvm"] },
@@ -48,6 +54,7 @@ module.exports = function(grunt) {
 		
 		sass: {
 			options: {
+				implementation: sass,
 				sourceMap: true
 			},
 			
@@ -60,7 +67,7 @@ module.exports = function(grunt) {
 		
 		browserify: {
 			dev: {
-				src: ["wvm/browser/**/*.js", "wvm/browser/**/*.jsx"],
+				src: ["dist/wvm/browser/**/*.js", "dist/wvm/browser/**/*.jsx", "wvm/browser/*.js"],
 				dest: "wvm/dist/app.js",
 				options: {
 					transform: [
@@ -99,14 +106,14 @@ module.exports = function(grunt) {
 				// target: "es6",
 				// lib: ["es5", "es6", "ESNext"],
 				// module: "commonjs",
-				// sourceMap: true,
+				sourceMap: true,
 				// noImplicitAny: false,
 				fast: "always",
 				rootDir: ".",
 				// strict: true
 			},
 			default: {
-				src: ["wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
+				src: ["*.ts", "wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
 				outDir: "dist"
 			}
 		}
@@ -124,7 +131,7 @@ module.exports = function(grunt) {
 
 	function registerNearley(path, id) {
 		grunt.registerTask(`nearley_${id}`, `Compiles nearley source for ${path}.ne.`, function() {
-			child_process.exec(`node node_modules/nearley/bin/nearleyc.js ${path}.ne -o ${path}.js`, (error, stdout, stderr) => {
+			child_process.exec(`node node_modules/nearley/bin/nearleyc.js ${path}.ne -o dist/${path}.js`, (error, stdout, stderr) => {
 				if (error) {
 					console.error(chalk.red(`Couldn't compile ${path}.ne:`));
 					console.error(chalk.red.dim(error.message));
@@ -159,5 +166,5 @@ module.exports = function(grunt) {
 	});
 	
 	// grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
-	grunt.registerTask("default", ["nearley_wasm", "nearley_llvm", "watch"]);
+	grunt.registerTask("default", ["browserify:dev", "nearley_wasm", "nearley_llvm", "watch"]);
 };
