@@ -68,12 +68,13 @@ module.exports = function(grunt) {
 		browserify: {
 			dev: {
 				// src: ["dist/wvm/browser/**/*.js", "dist/wvm/browser/**/*.jsx", "wvm/browser/*.js"],
-				src: ["wvm/browser/**/*.js", "**/*.ts", "wvm/browser/**/*.jsx"],
+				src: ["wvm/browser/**/*.js", "*.ts", "wvm/browser/**/*.jsx", "wvm/**/*.ts", "wasm/**/*.ts", "llvm/**/*.ts"],
 				dest: "wvm/dist/app.js",
 				options: {
+					plugin: ["tsify"],
 					transform: [
 						["babelify", {
-							presets: [["env", {targets: {chrome: 64}}]],
+							presets: ["es2017"],
 							plugins: [
 								"syntax-class-properties",
 								"transform-class-properties"
@@ -81,13 +82,10 @@ module.exports = function(grunt) {
 						}],
 						["brfs"],
 					],
-					plugin: [
-						["tsify"]
-					],
 					watch: true,
 					keepAlive: false,
 					browserifyOptions: {
-						// debug: true,
+						debug: true,
 					}
 				}
 			}

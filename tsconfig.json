@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
-		"target": "es2015",
-		// "lib": ["es6", "esnext", "dom"],
-		// "module": "commonjs",
+		"target": "es6",
+		"lib": ["es6", "esnext", "dom"],
+		"module": "commonjs",
 		"sourceMap": true,
 		"noImplicitAny": false,
 		"rootDir": ".",
@@ -10,18 +10,15 @@
 		"outDir": "dist",
 		"preserveConstEnums": true
 	},
-	"typeRoots": [
+	// "typeRoots": [
 		// "node_modules/@types",
-		"node_modules/@types/node"
-	],
+	// 	"node_modules/@types/node"
+	// ],
 	"include": [
 		"wasm/**/*.ts",
 		"wvm/**/*.ts",
 		"llvm/**/*.ts",
 		"graph.ts",
 		"util.ts"
-	],
-	"exclude": [
-		"node_modules"
 	]
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env ts-node
-import * as util from "./util";
+import {isNumeric} from "./util";
 import Graph from "./graph";
 import {NodeID} from "./node";
 import {Stream, Readable} from "stream";
@@ -100,8 +100,8 @@ export function render<T>(graph: Graph<T>, opts: RenderOptions = {}): Promise<st
 			data: {
 				id,
 				label: data && data.label? data.label
-			         : util.isNumeric(id)? parseInt(<string> id) + fullOpts.idOffset
-					 : id
+			         : isNumeric(id)? parseInt(<string> id) + fullOpts.idOffset
+			         : id
 			},
 			classes: [
 				id == opts.enter? "node-enter"
