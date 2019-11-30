@@ -21,7 +21,7 @@ module.exports = function(grunt) {
 			browserify: {
 				files: ["wvm/dist/app.js"],
 				options: { spawn: false },
-				tasks: ["exorcise"]
+				// tasks: ["exorcise"]
 			},
 			
 			wasm: {
@@ -29,10 +29,10 @@ module.exports = function(grunt) {
 				tasks: ["wasmc"]
 			},
 
-			ts: {
-				files: ["**/*.ts"],
-				tasks: ["ts"]
-			},
+			// ts: {
+			// 	files: ["**/*.ts"],
+			// 	tasks: ["ts"]
+			// },
 			
 			nearley_wasm: { files: ["wasm/wasm.ne"], tasks: ["nearley_wasm"] },
 			nearley_llvm: { files: ["llvm/llvm.ne"], tasks: ["nearley_llvm"] },
@@ -67,7 +67,8 @@ module.exports = function(grunt) {
 		
 		browserify: {
 			dev: {
-				src: ["dist/wvm/browser/**/*.js", "dist/wvm/browser/**/*.jsx", "wvm/browser/*.js"],
+				// src: ["dist/wvm/browser/**/*.js", "dist/wvm/browser/**/*.jsx", "wvm/browser/*.js"],
+				src: ["wvm/browser/**/*.js", "**/*.ts", "wvm/browser/**/*.jsx"],
 				dest: "wvm/dist/app.js",
 				options: {
 					transform: [
@@ -78,12 +79,15 @@ module.exports = function(grunt) {
 								"transform-class-properties"
 							]
 						}],
-						["brfs"]
+						["brfs"],
+					],
+					plugin: [
+						["tsify"]
 					],
 					watch: true,
 					keepAlive: false,
 					browserifyOptions: {
-						debug: true,
+						// debug: true,
 					}
 				}
 			}
@@ -108,7 +112,7 @@ module.exports = function(grunt) {
 				// module: "commonjs",
 				sourceMap: true,
 				// noImplicitAny: false,
-				fast: "always",
+				fast: "watch",
 				rootDir: ".",
 				// strict: true
 			},
@@ -166,5 +170,6 @@ module.exports = function(grunt) {
 	});
 	
 	// grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
-	grunt.registerTask("default", ["browserify:dev", "nearley_wasm", "nearley_llvm", "watch"]);
+	// grunt.registerTask("default", ["ts", "nearley_wasm", "nearley_llvm", "browserify:dev", "watch"]);
+	grunt.registerTask("default", ["nearley_wasm", "nearley_llvm", "browserify:dev", "sass", "watch"]);
 };

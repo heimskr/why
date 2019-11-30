@@ -11,7 +11,7 @@ import rimraf from "rimraf";
 import shell_escape from "shell-escape";
 import * as path from "path";
 import jsome = require("jsome");
-const exec = util.promisify(child_process.exec);
+const exec = require("util").promisify(child_process.exec);
 
 import _, {displayIOError, isNumeric, pushAll} from "../util";
 import {BUILTINS} from "./constants";
