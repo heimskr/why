@@ -15,7 +15,7 @@ const die = (...a) => { console.error(...a); process.exit(1) };
 const opt = minimist(process.argv.slice(2), {
 	alias: { t: "tree", d: "dev", s: "simple", q: "quiet" },
 	boolean: ["tree", "dev", "simple", "quiet"],
-	default: { tree: true, dev: true, simple: false, quiet: false }
+	default: { tree: true, dev: false, simple: false, quiet: false }
 }), filename = opt._[0];
 
 if (!filename) {
@@ -27,7 +27,6 @@ let name = "llvm", grammar, parser;
 let lines = fs.readFileSync(filename, { encoding: "utf8" }).split("\n");
 
 if (opt.dev) {
-	let file = grammar;
 	grammar = fs.readFileSync(path.join(__dirname, `${name}.ne`), "utf8");
 	parser = new nearley.Parser(nearleyg.ParserRules, nearleyg.ParserStart);
 	grammar = nearleyc(parser.feed(grammar).results[0], { });
@@ -35,9 +34,9 @@ if (opt.dev) {
 	grammar = require(path.join(__dirname, `${name}.js`));
 } else {
 	try {
-		grammar = require(`./${grammar}.js`);
+		grammar = require(`./${name}.js`);
 	} catch (e) {
-		console.error(`Couldn't read ${grammar}.js.`);
+		console.error(`Couldn't read ${name}.js.`);
 		if (opt.dev) {
 			console.log(e);
 		}
