@@ -72,7 +72,7 @@ pars[X]				->	"(" $X ")"													{% _(1) %}
 
 cstring				->	"c" string													{% _(1) %}
 float				->	"-":? [0-9]:+ "." [0-9]:+									{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
-dec				->	"-":? [0-9]:+													{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
+dec					->	"-":? [0-9]:+												{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
 					 |	"true"														{% d => 1 %}
 					 |	"false"														{% d => 0 %}
 natural				->	[1-9] [0-9]:*												{% d => parseInt(d[0] + d[1].join("")) %}
@@ -85,7 +85,7 @@ source_filename		->	"source_filename = " string									{% d => ["source_filenam
 target				->	("target" __) targetname eq string							{% d => ["target", d[1], d[3]] %}
 targetname			->	("datalayout" | "triple")									{% __(0, 0) %}
 
-attributes			->	("attributes" __ "#") dec (eq "{" _) list[attribute] _ "}"			{% d => ["attributes", d[1], d[3]] %}
+attributes			->	("attributes" __ "#") dec (eq "{" _) list[attribute] _ "}"	{% d => ["attributes", d[1], d[3]] %}
 attribute			->	string "=" string											{% d => [d[0], d[2]] %}
 					 |	string														{% d => [d[0], true] %}
 					 |  fnattr														{% d => [d[0]] %}

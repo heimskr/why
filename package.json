@@ -67,6 +67,7 @@
 		"minimist": "^1.2.0",
 		"moment": "^2.24.0",
 		"nearley": "^2.8.0",
+		"popper.js": "^1.16.0",
 		"prettyjson": "^1.2.1",
 		"shell-escape": "^0.2.0",
 		"string.prototype.padend": "^3.0.0",

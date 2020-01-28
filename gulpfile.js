@@ -55,7 +55,7 @@ gulp.task("ts", () =>
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest("dist")));
 
-gulp.task("dev", gulp.series("ts", () =>
+gulp.task("dev", gulp.series(() =>
 	browserify({entries: [paths.entry], debug: true})
 		.on("error", gutil.log)
 		.on("log", gutil.log)

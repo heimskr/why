@@ -4,8 +4,13 @@ import * as Long from "long";
 import _ from "../util";
 
 import {SymbolTable} from "./wasmc";
-import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS,
-	ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+console.log("parser.ts. Importing from ./constants.");
+import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS, ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+// import {ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+// const {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS} = require("./constants");
+
+import * as konstants from "./constants";
+console.log({konstants});
 
 const minimist = require("minimist");
 const chalk = require("chalk");
@@ -22,7 +27,7 @@ const OPCODES_INV = _.multiInvert(OPCODES);
 const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
 const CONDITIONS_INV = <{[key: number]: ConditionName}> _.invert(CONDITIONS);
 console.log({REGISTER_OFFSETS});
-const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => b - a);
+const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => (b as any) - (a as any));
 
 export type SegmentOffsets = {$symtab: number, $code: number, $data: number, $end: number};
 type MetaField = "orcid" | "name" | "version" | "author";

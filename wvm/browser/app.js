@@ -3,9 +3,14 @@ if (!process.browser) {
 	process.exit(1);
 }
 
-let WVM = require("../../dist/wvm.js"),
-	Parser = require("../../dist/parser.js").default,
-	WASMC = require("../../dist/wasmc.js"),
+
+let WVM = require("../../dist/wvm.js");
+
+console.log("app.js. Requiring Parser.");
+let Parser = require("../../dist/parser.js").default;
+console.log("Okay.");
+
+let WASMC = require("../../dist/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
