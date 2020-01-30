@@ -21,3 +21,20 @@
 /.tscache
 /dist
 /tscommand*
+
+# Compiled Typescript
+graph.js
+llvm/instructions.js
+llvm/ll2w.js
+llvm/llconstants.js
+llvm/types.js
+node.js
+rendergraph.js
+util.js
+wasm/constants.js
+wasm/parser.js
+wasm/wasmc.js
+wasm/wld.js
+wvm/printansi.js
+wvm/wvm.js
+testgraph.js

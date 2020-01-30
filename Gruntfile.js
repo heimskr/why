@@ -68,13 +68,12 @@ module.exports = function(grunt) {
 		browserify: {
 			dev: {
 				// src: ["dist/wvm/browser/**/*.js", "dist/wvm/browser/**/*.jsx", "wvm/browser/*.js"],
-				src: ["wvm/browser/**/*.js", "*.ts", "wvm/browser/**/*.jsx", "wvm/**/*.ts", "wasm/**/*.ts", "llvm/**/*.ts"],
+				src: ["wvm/browser/**/*.js", "wvm/browser/**/*.jsx"],
 				dest: "wvm/dist/app.js",
 				options: {
-					plugin: ["tsify"],
 					transform: [
 						["babelify", {
-							presets: ["es2017"],
+							presets: [["env", {targets: {chrome: 64}}]],
 							plugins: [
 								"syntax-class-properties",
 								"transform-class-properties"
@@ -82,10 +81,13 @@ module.exports = function(grunt) {
 						}],
 						["brfs"],
 					],
+					plugin: [
+						["tsify"]
+					],
 					watch: true,
 					keepAlive: false,
 					browserifyOptions: {
-						debug: true,
+						// debug: true,
 					}
 				}
 			}
@@ -115,8 +117,8 @@ module.exports = function(grunt) {
 				// strict: true
 			},
 			default: {
-				src: ["*.ts", "wasm/*.ts", "wvm/**/*.ts", "llvm/*.ts"],
-				outDir: "dist"
+				src: ["*.ts", "wasm/*.ts", "wvm/**/*.ts"],
+				// outDir: "dist"
 			}
 		}
 	});
