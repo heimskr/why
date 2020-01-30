@@ -28,10 +28,10 @@ module.exports = function(grunt) {
 				tasks: ["wasmc"]
 			},
 
-			// ts: {
-			// 	files: ["**/*.ts"],
-			// 	tasks: ["ts"]
-			// },
+			ts: {
+				files: ["**/*.ts"],
+				tasks: ["ts"]
+			},
 			
 			nearley_wasm: { files: ["wasm/wasm.ne"], tasks: ["nearley_wasm"] },
 			nearley_llvm: { files: ["llvm/llvm.ne"], tasks: ["nearley_llvm"] },
@@ -82,7 +82,7 @@ module.exports = function(grunt) {
 					watch: true,
 					keepAlive: false,
 					browserifyOptions: {
-						// debug: true,
+						debug: true,
 					}
 				}
 			}

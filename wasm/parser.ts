@@ -27,9 +27,9 @@ export type SegmentOffsets = {$symtab: number, $code: number, $data: number, $en
 type MetaField = "orcid" | "name" | "version" | "author";
 type FormatRFunction = (op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue,
                         conditions: ConditionName | null) => string;
-type FormatIFunction = (op: string, rs: string, rd: string, imm: number, flags: FlagValue,
+type FormatIFunction = (op: string, rs: string, rd: string, imm: Long, flags: FlagValue,
                         conditions: ConditionName | null, symbols: SymbolTable) => string;
-type FormatJFunction = (op: string, rs: string, addr: number, link: boolean, flags: FlagValue,
+type FormatJFunction = (op: string, rs: string, addr: Long, link: boolean, flags: FlagValue,
                         conditions: ConditionName | null, symbols: SymbolTable) => string;
 
 export type ParserInstructionR = {
@@ -52,7 +52,7 @@ export type ParserInstructionI = {
 	flags: FlagValue,
 	rs: number,
 	rd: number,
-	imm: number
+	imm: Long
 };
 
 export type ParserInstructionJ = {
@@ -63,7 +63,7 @@ export type ParserInstructionJ = {
 	flags: FlagValue,
 	rs: number,
 	link: boolean,
-	addr: number
+	addr: Long
 };
 
 export type ParserNOP = {op: "nop", type: "nop", opcode: null, flags: null, rs: null, conditions: null};
@@ -322,7 +322,7 @@ export default class Parser {
 				flags,
 				rs: get(18, 7),
 				rd: get(25, 7),
-				imm: Long.fromString(instructionString.substr(32), false, 2).toInt(),
+				imm: Long.fromString(instructionString.substr(32), false, 2),
 				type: "i"
 			};
 		} else if (type == "j") {
@@ -333,7 +333,7 @@ export default class Parser {
 				link: !!get(19, 1),
 				conditions: CONDITIONS_INV[get(26, 4)],
 				flags,
-				addr: Long.fromString(instructionString.substr(32), false, 2).toInt(),
+				addr: Long.fromString(instructionString.substr(32), false, 2),
 				type: "j"
 			};
 		}
@@ -516,15 +516,15 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatI_w(op: string, rs: string, rd: string, imm: number, flags: FlagValue = 0,
+	static formatI_w(op: string, rs: string, rd: string, imm: Long, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
 
 		const mathi = (increment: string, opequals: string, op: string): string => {
 			const imms = imm.toString();
 			if (rs == rd) {
-				return imm == 1? yellow(rd) + yellow.dim(increment)
-				               : `${yellow(rs)} ${Parser.colorOper(opequals)} ${magenta(imms)}`;
+				return imm.eq(1)? yellow(rd) + yellow.dim(increment)
+				                : `${yellow(rs)} ${Parser.colorOper(opequals)} ${magenta(imms)}`;
 			}
 
 			return `${yellow(rs)} ${Parser.colorOper(op)} ${magenta(imms)} ${dim("->")} `
@@ -590,7 +590,7 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A line of wasm source.
 	 */
-	static formatJ_w(op: string, rs: string, addr: number, link: boolean, flags: FlagValue = 0,
+	static formatJ_w(op: string, rs: string, addr: Long, link: boolean, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = magenta(Parser.getTarget(addr, flags, symbols));
 		const sym = link? "::" : ":";
@@ -632,7 +632,7 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
-	static formatI_m(op: string, rs: string, rd: string, imm: number, flags: FlagValue = 0,
+	static formatI_m(op: string, rs: string, rd: string, imm: Long, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
 		return `${cyan(op)} ${yellow(rs) + dim(",")} ${magenta(target)} ${dim("->")} ${yellow(rd)}`;
@@ -649,7 +649,7 @@ export default class Parser {
 	 * @param  {SymbolTable} [symbols] A symbol table.
 	 * @return {string} A mnemonic representation of the instruction.
 	 */
-	static formatJ_m(op: string, rs: string, addr: number, link: boolean, flags: FlagValue = 0,
+	static formatJ_m(op: string, rs: string, addr: Long, link: boolean, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = magenta(Parser.getTarget(addr, flags, symbols));
 		return `${cyan(op)}${conditions? cyan("_" + conditions) : ""} ${yellow(rs) + dim(",")} ${target}`;
@@ -690,7 +690,7 @@ export default class Parser {
 		return `<${cyan("ext")} ${red(funct)}>`;
 	}
 
-	static getTarget(imm: number, flags: FlagValue, symbols: SymbolTable): string {
+	static getTarget(imm: Long, flags: FlagValue, symbols: SymbolTable): string {
 		if (flags != FLAGS.KNOWN_SYMBOL) {
 			return imm.toString();
 		}

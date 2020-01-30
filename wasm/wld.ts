@@ -286,7 +286,7 @@ export default class Linker {
 			const [, addr, type] = symtab[key];
 			if (type == SYMBOL_TYPES.knownPointer || type == SYMBOL_TYPES.unknownPointer) {
 				const index = addr.toInt() / 8;
-				const ptr = Linker.findSymbolFromID(combined[index].toInt(), symtab);
+				const ptr = Linker.findSymbolFromID(combined[index], symtab);
 				// console.log(key, addr.toString(), combined[index].toString(16), "\n\n\n", symtab);
 				if (symtab[ptr]) {
 					combined[index] = symtab[ptr][1];
@@ -439,13 +439,13 @@ export default class Linker {
 
 	/**
 	 * Finds a symbol name based on its ID.
-	 * @param  {number} id A numeric ID.
+	 * @param  {Long}        id A numeric ID.
 	 * @param  {SymbolTable} symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @return {?string} A symbol name if one was found; `null` otherwise.
 	 */
-	static findSymbolFromID(id: number, symbolTable: SymbolTable): string | null {
+	static findSymbolFromID(id: Long, symbolTable: SymbolTable): string | null {
 		for (const name in symbolTable) {
-			if (symbolTable[name][0] == id) {
+			if (id.eq(symbolTable[name][0])) {
 				return name;
 			}
 		}
@@ -460,14 +460,14 @@ export default class Linker {
 	 * @param  endOffset   The address of the start of the heap.
 	 * @return A symbol name if one was found; `null` otherwise.
 	 */
-	static findSymbolFromAddress(addr: number, symbolTable: SymbolTable, endOffset: number): string | null {
+	static findSymbolFromAddress(addr: Long, symbolTable: SymbolTable, endOffset: number): string | null {
 		for (const name in symbolTable) {
 			if (symbolTable[name][1].eq(addr)) {
 				return name;
 			}
 		}
 
-		if (addr == endOffset) {
+		if (addr.eq(endOffset)) {
 			return ".end";
 		}
 
