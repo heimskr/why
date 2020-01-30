@@ -81,9 +81,6 @@ module.exports = function(grunt) {
 						}],
 						["brfs"],
 					],
-					plugin: [
-						["tsify"]
-					],
 					watch: true,
 					keepAlive: false,
 					browserifyOptions: {

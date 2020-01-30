@@ -3,14 +3,9 @@ if (!process.browser) {
 	process.exit(1);
 }
 
-
-let WVM = require("../../dist/wvm.js");
-
-console.log("app.js. Requiring Parser.");
-let Parser = require("../../dist/parser.js").default;
-console.log("Okay.");
-
-let WASMC = require("../../dist/wasmc.js"),
+let WVM = require("../wvm.js"),
+	Parser = require("../../wasm/parser.js").default,
+	WASMC = require("../../wasm/wasmc.js"),
 	fs = require("fs"),
 	Long = require("long"),
 	_ = require("lodash"),
@@ -18,9 +13,9 @@ let WASMC = require("../../dist/wasmc.js"),
 	chalk = require("chalk"),
 	text = require("./text.js");
 
-require("jquery.splitter");
+require("jquery.splitter")(undefined, jQuery);
 
-const {REGISTER_OFFSETS, FLAGS, RINGS} = require("../../dist/constants.js");
+const {REGISTER_OFFSETS, FLAGS, RINGS} = require("../../wasm/constants.js");
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
 const UNPRINTABLE = [...[[0, 32], [127, 159], [173, 173]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
@@ -752,7 +747,7 @@ function initializeUI(app) {
 let parser = new Parser();
 parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/interrupts.why", "utf8"));
 let {offsets, meta, code, symbols} = parser;
-let app, vm = window.vm = new WVM({program: {offsets, meta, code, symbols}, memory: parser.raw});
+let app, vm = window.vm = new WVM({offsets, meta, code, symbols}, parser.raw);
 
 if (!localStorage.formatStyle) {
 	localStorage.formatStyle = Parser.defaultStyle;
