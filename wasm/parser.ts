@@ -7,7 +7,8 @@ import {SymbolTable} from "./wasmc";
 import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS, ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
 
 const minimist = require("minimist");
-const chalk = require("chalk");
+const chalk_ = require("chalk");
+const chalk = new chalk_.Instance({level: 1});
 const {yellow, magenta, dim, cyan, red, green, bold} = chalk;
 
 /**

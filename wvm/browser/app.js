@@ -10,12 +10,13 @@ let WVM = require("../wvm.js"),
 	Long = require("long"),
 	_ = require("lodash"),
 	ansiHTML = require("ansi-html"),
-	chalk = require("chalk"),
+	chalk_ = require("chalk"),
 	text = require("./text.js");
 
 require("jquery.splitter")(undefined, jQuery);
 
 const {REGISTER_OFFSETS, FLAGS, RINGS} = require("../../wasm/constants.js");
+const chalk = new chalk_.Instance({level: 1});
 window.Long = Long, window.WVM = WVM, window.Parser = Parser, window.WASMC = WASMC, window._ = _, window.chalk = chalk;
 
 const UNPRINTABLE = [...[[0, 32], [127, 159], [173, 173]].reduce((a, [l, r]) => a.concat(_.range(l, r)), [])];
@@ -273,6 +274,7 @@ let App = window.App = class App {
 			}
 
 			try {
+				console.log(Parser.formatInstruction(long, this.vm.symbols));
 				return ansiHTML(Parser.formatInstruction(long, this.vm.symbols))
 					.replace(/#e8bf03/g, "orange")
 					.replace(/#ff00ff/g, "#f08")
