@@ -21,7 +21,6 @@ module.exports = function(grunt) {
 			browserify: {
 				files: ["wvm/dist/app.js"],
 				options: { spawn: false },
-				// tasks: ["exorcise"]
 			},
 			
 			wasm: {
@@ -67,7 +66,6 @@ module.exports = function(grunt) {
 		
 		browserify: {
 			dev: {
-				// src: ["dist/wvm/browser/**/*.js", "dist/wvm/browser/**/*.jsx", "wvm/browser/*.js"],
 				src: ["wvm/browser/**/*.js", "wvm/browser/**/*.jsx"],
 				dest: "wvm/dist/app.js",
 				options: {
