@@ -130,12 +130,12 @@ module.exports = function(grunt) {
 
 	function registerNearley(path, id) {
 		grunt.registerTask(`nearley_${id}`, `Compiles nearley source for ${path}.ne.`, function() {
-			child_process.exec(`node node_modules/nearley/bin/nearleyc.js ${path}.ne -o dist/${path}.js`, (error, stdout, stderr) => {
+			child_process.exec(`node node_modules/nearley/bin/nearleyc.js ${path}.ne -o ${path}.js`, (error, stdout, stderr) => {
 				if (error) {
 					console.error(chalk.red(`Couldn't compile ${path}.ne:`));
 					console.error(chalk.red.dim(error.message));
 				} else if (stderr) {
-					console.error(`Error while compilating ${path}.ne:`, stderr);
+					console.error(`Error while compiling ${path}.ne:`, stderr);
 				} else {
 					console.log(chalk.green(stdout));
 				};

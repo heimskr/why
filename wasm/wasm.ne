@@ -401,3 +401,4 @@ sstrchar	-> [^\\'\n]												{% id %}
 
 strescape	-> ["\\/bfnrt]											{% id %}
 			 | "u" [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9]	{% d => d.join("") %}
+			 | "x" [a-fA-F0-9] [a-fA-F0-9]							{% d => "u00" + d.slice(1).join("") %}

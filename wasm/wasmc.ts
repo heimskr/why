@@ -189,12 +189,10 @@ export default class WASMC {
 		} catch (e) {
 			console.error(chalk.red("Syntax error"), `at ${chalk.white(getline(source, e.offset))}: ${e.offset -
 			              source.split(/\n/).slice(0, getline(source, e.offset) - 1).join("\n").length}:`);
-			if (this.options.dev) {
-				console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0: never, $1: never, $2: string) => {
-					const _line = getline(source, e.offset);
-					return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})`;
-				}));
-			}
+			console.log(e.message.replace(/\(@(\d+):([^)]+)\)/g, ($0: never, $1: never, $2: string) => {
+				const _line = getline(source, e.offset);
+				return `(@${_line}:${e.offset - source.split(/\n/).slice(0, _line).join("\n").length + $2})`;
+			}));
 
 			process.exit(1);
 			throw e;

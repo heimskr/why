@@ -7,6 +7,8 @@ version: "2"
 #data
 s_true: "true"
 s_false: "false"
+ansi_bold: "\x1b[1m"
+ansi_reset: "\x1b[0m"
 
 #code
 
