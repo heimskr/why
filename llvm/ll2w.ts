@@ -947,7 +947,8 @@ module.exports = LL2W;
 let debug = (...a: any[]): void => {};
 
 if (require.main === module) {
-	testDJ();
+	// testDJ();
+	test254Gap();
 	if (0)
 	(() => {
 		const options = minimist(process.argv.slice(2), {
@@ -1076,16 +1077,16 @@ function test254Gap() {
 	if (!dj254gap.data) dj254gap.data = {};
 	dj254gap.data.jEdges = jedges254gap;
 	// console.log("dj254gap:", dj254gap);
-	console.log("dj254gap:\n" + dj254gap.toString());
+	// console.log("dj254gap:\n" + dj254gap.toString());
 
 	dj254gap.display();
 
 	const djified = dj254gap.djGraph();
 
-	console.log("[", djified.toString(), "]");
+	// console.log("[", djified.toString(), "]");
 	// djified.display();
 
-	return;
+	// return;
 	
 	console.log(chalk.dim("Calculating merge sets."));
 	// const ms = cfg.mergeSets();

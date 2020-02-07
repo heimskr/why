@@ -13,7 +13,7 @@ export type RMath = "add" | "sub" | "mult" | "multu" | "sll" | "srl" | "sra" | "
 export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "land" | "lnand" | "lnor" | "lnot" | "lor" | "lxnor" | "lxor";
 export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
-export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "spush" | "spop";
+export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "spush" | "spop";
 export type RSpecial = "time" | "ring";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
@@ -152,10 +152,13 @@ export const OPCODES: {[key in OpName]: number} = {
 	jrlc:   0b000000010001,
 	c:      0b000000010010,
 	cb:     0b000000010010,
+	ch:     0b000000010010,
 	l:      0b000000010010,
 	lb:     0b000000010010,
+	lh:     0b000000010010,
 	s:      0b000000010010,
 	sb:     0b000000010010,
+	sh:     0b000000010010,
 	spush:  0b000000010010,
 	spop:   0b000000010010,
 	li:     0b000000010011,
@@ -223,10 +226,13 @@ export const FUNCTS: {[key in RType]: number} = {
 	sll:   0b000000000110,
 	xor:   0b000000000110,
 	spush: 0b000000000110,
+	ch:    0b000000000110,
 	srl:   0b000000000111,
 	spop:  0b000000000111,
+	lh:    0b000000000111,
 	sra:   0b000000001000,
 	land:  0b000000001000,
+	sh:    0b000000001000,
 	lnand: 0b000000001001,
 	mod:   0b000000001001,
 	lnor:  0b000000001010,

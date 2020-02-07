@@ -134,6 +134,9 @@
 						<li><a href="#op-cb">Copy Byte</a>     (<code>cb</code>)</li>
 						<li><a href="#op-lb">Load Byte</a>     (<code>lb</code>)</li>
 						<li><a href="#op-sb">Store Byte</a>    (<code>sb</code>)</li>
+						<li><a href="#op-ch">Copy Halfword</a>     (<code>ch</code>)</li>
+						<li><a href="#op-lh">Load Halfword</a>     (<code>lh</code>)</li>
+						<li><a href="#op-sh">Store Halfword</a>    (<code>sh</code>)</li>
 						<li><a href="#op-spush">Stack Push</a> (<code>spush</code>)</li>
 						<li><a href="#op-spop">Stack Pop</a>   (<code>spop</code>)</li>
 					</ol>
@@ -732,6 +735,24 @@ Loads the byte stored at the memory address pointed to by `rs` into `rd`.
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000101`
 
 Stores the lowest 8 bits of `rs` into the memory address pointed to by `rd`.
+
+### <a name="op-ch"></a>Copy Halfword (`cb`)
+> `[$rs] -> [$rd] /h`  
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000110`
+
+Copies the halfword stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
+
+### <a name="op-lh"></a>Load Halfword (`lb`)
+> `[$rs] -> $rd /h`  
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000111`
+
+Loads the halfword stored at the memory address pointed to by `rs` into `rd`.
+
+### <a name="op-sh"></a>Store Halfword (`sb`)
+> `$rs -> [$rd] /h`  
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001000`
+
+Stores the lowest 32 bits of `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-spush"></a>Stack Push (`spush`)
 > `[ $rs`  

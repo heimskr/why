@@ -141,7 +141,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
-				 | op_lni | op_lbni
+				 | op_lni | op_lbni | op_ch | op_lh | op_sh
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei | op_ring
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
@@ -213,6 +213,9 @@ op_jrlc			-> "::" _ reg __ "if" __ reg				{% d => ["jrlc",    0,  d[6], d[2]] %}
 op_cb			-> "[" _ rv _ "]" into "[" _ rv _ "]" _ "/b"{% d => ["cb",      0,  d[2], d[8]] %}
 op_lb			-> "[" _ reg _ "]" into rv _ "/b"			{% d => ["lb",      0,  d[2], d[6]] %}
 op_sb			-> rv into "[" _ rv _ "]" _ "/b"			{% d => ["sb",      0,  d[0], d[4]] %}
+op_ch			-> "[" _ rv _ "]" into "[" _ rv _ "]" _ "/h"{% d => ["ch",      0,  d[2], d[8]] %}
+op_lh			-> "[" _ reg _ "]" into rv _ "/h"			{% d => ["lh",      0,  d[2], d[6]] %}
+op_sh			-> rv into "[" _ rv _ "]" _ "/h"			{% d => ["sh",      0,  d[0], d[4]] %}
 op_c			-> "[" _ rv _ "]" into "[" _ rv _ "]"		{% d => ["c",       0,  d[2], d[8]] %}
 op_l			-> "[" _ reg _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
 op_s			-> rv into "[" _ rv _ "]"					{% d => ["s",       0,  d[0], d[4]] %}

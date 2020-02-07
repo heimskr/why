@@ -395,6 +395,7 @@ export default class Graph<D extends Object> {
 	djGraph(start: NodeOrID | Graph<any> = 0, bidirectional: boolean = false): DJGraph {
 		const dj: DJGraph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
 		const sdom = Graph.strictDominators(dj);
+		console.log({sdom});
 		dj.data.jEdges = [];
 		this.allEdges()
 			.filter(([src, dst]) => !sdom[dst].includes(src))
@@ -433,6 +434,8 @@ export default class Graph<D extends Object> {
 		const bfs = djGraph.bfs(startID);
 		const {jEdges} = djGraph.data;
 		
+		console.log({jEdges});
+		
 		// out node ID => in node ID
 		const visited = djGraph.fillObj({});
 
@@ -458,10 +461,13 @@ export default class Graph<D extends Object> {
 			for (const node of bfs) {
 				const id = node.id;
 				const unvisitedJEdges = allIn(node).filter(e => isJEdge(e, id) && id != exitID && !visited[e][id]);
+				console.log("id:", id, {allIn: allIn(node), unvisitedJEdges});
 				for (const e of unvisitedJEdges) {
+					console.log("e:", e);
 					visited[e][id] = true;
 					let lNode: Node<any> | null = null;
 					let tmp = djGraph.getNode(e);
+					console.log(level(tmp), level(node));
 					while (level(tmp) >= level(node)) {
 						merge[tmp.id].push(merge[id]);
 						merge[tmp.id].push(id);

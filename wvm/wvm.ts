@@ -48,6 +48,7 @@ export default class WVM {
 	onChangeRing: (newRing: number) => void = () => {};
 	onSetByte: (addr: number, byte: number) => void = () => {};
 	onSetWord: (addr: number, word: Long) => void = () => {};
+	onSetHalfword: (addr: number, word: number) => void = () => {};
 	onTick: () => void = () => {};
 	
 	private _ring: Ring;
@@ -160,14 +161,15 @@ export default class WVM {
 
 	/**
 	 * Gets a word from memory.
-	 * @param {number} k The index of the word to get.
-	 * @return {number} The word at the given address.
+	 * @param {number|Long} k The index of the word to get.
+	 * @return {Long} The word at the given address.
 	 */
 	getWord(k, signed=false) {
 		k = k instanceof Long? k.toInt() : k;
 
 		if (k % 8) {
-			// This isn't supposed to happen, because the key is misaligned. (The key is supposed to be a multiple of 8.
+			// This isn't supposed to happen, because the key is misaligned.
+			// (The key is supposed to be a multiple of 8.)
 			// In the future, this may cause an exception.
 		}
 
@@ -178,8 +180,8 @@ export default class WVM {
 	}
 
 	/**
-	 * @param {number} k The index of the byte to set.
-	 * @param {number} v The word to write to memory.
+	 * @param {number|Long} k The index of the byte to set.
+	 * @param {number|Long} v The word to write to memory.
 	 * @return {boolean} A boolean representing whether the word was successfully set.
 	 */
 	setWord(k, v) {
@@ -200,6 +202,45 @@ export default class WVM {
 		}
 
 		this.onSetWord(k, v);
+		return true;
+	}
+
+	/**
+	 * Gets a halfword from memory.
+	 * @param {number|Long} k The index of the halfword to get.
+	 * @return {Long} The halfword at the given address.
+	 */
+	getHalfword(k, signed=false) {
+		k = k instanceof Long? k.toInt() : k;
+
+		if (k % 4) {
+			// This isn't supposed to happen, because the key is misaligned.
+			// (The key is supposed to be a multiple of 4.)
+			// In the future, this may cause an exception.
+		}
+
+		return new Long(this.memory[k+3] | this.memory[k+2] << 8 | this.memory[k+1] << 16 | this.memory[k+0] << 24, 0,
+			signed);
+	}
+
+	/**
+	 * @param {number|Long} k The index of the byte to set.
+	 * @param {number|Long} v The halfword to write to memory.
+	 * @return {boolean} A boolean representing whether the halfword was successfully set.
+	 */
+	setHalfword(k, v) {
+		k = k instanceof Long? k.toInt() : k;
+		v = v instanceof Long? v.toInt() : v;
+
+		if (k % 4) {
+			// Another misalignment.
+		}
+
+		for (let i = 0; i < 4; i++) {
+			this.memory[k + 3 - i] = v >> 8*i & 0xff;
+		}
+
+		this.onSetHalfword(k, v);
 		return true;
 	}
 
@@ -725,6 +766,18 @@ export default class WVM {
 
 	op_sb(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.setByte(this.registers[rd], this.registers[rs].and(0xff));
+	}
+
+	op_ch(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		this.setHalfword(this.registers[rd], this.getHalfword(this.registers[rs]));
+	}
+
+	op_lh(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		this.registers[rd] = this.getHalfword(this.registers[rs]);
+	}
+
+	op_sh(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		this.setHalfword(this.registers[rd], this.registers[rs].low);
 	}
 
 	op_spush(rt, rs) {
