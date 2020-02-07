@@ -237,7 +237,7 @@ export default class WVM {
 		}
 
 		for (let i = 0; i < 4; i++) {
-			this.memory[k + 3 - i] = v >> 8*i & 0xff;
+			this.memory[k + i] = v >> 8*i & 0xff;
 		}
 
 		this.onSetHalfword(k, v);

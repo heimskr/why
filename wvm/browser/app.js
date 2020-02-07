@@ -223,10 +223,15 @@ let App = window.App = class App {
 	}
 
 	hexCell(long) {
+		if (!(long instanceof Long))
+			long = Long.fromInt(long, true);
 		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).reverse().map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
 	}
 
 	decompiledCell(long, addr) {
+		if (!(long instanceof Long))
+			long = Long.fromInt(long, true);
+
 		const {$symtab, $code, $data} = this.vm.offsets;
 
 		const inMeta = addr < 32;
@@ -348,6 +353,7 @@ let App = window.App = class App {
 
 		(this.vm.onTick = this.onTickUI.bind(this))();
 		this.vm.onSetWord = this.onSetWord.bind(this);
+		this.vm.onSetHalfword = this.onSetHalfword.bind(this);
 		this.vm.onSetByte = this.onSetByte.bind(this);
 		this.vm.onChangeRing = this.onChangeRing.bind(this);
 		this.vm.log = this.log.bind(this);
@@ -388,6 +394,14 @@ let App = window.App = class App {
 		let row = $(`#memory tr.addr-${addr / 8}`);
 		row.find("td:eq(1)").html(this.hexCell(to));
 		row.find("td:eq(2)").html(this.decompiledCell(to, addr));
+	}
+
+	onSetHalfword(addr, to) {
+		addr = addr instanceof Long? addr.toInt() : addr;
+		let word = this.vm.getWord(addr - addr % 8);
+		let row = $(`#memory tr.addr-${Math.floor(addr / 8)}`);
+		row.find("td:eq(1)").html(this.hexCell(word));
+		row.find("td:eq(2)").html(this.decompiledCell(word, addr));
 	}
 
 	onSetByte(addr) {
