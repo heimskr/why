@@ -1,0 +1,23 @@
+#meta
+version: "0.0"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+
+#data
+somewhere: 0
+
+#code
+&somewhere -> $t0
+0x89abcdef -> $t1
+lui: 0x01234567 -> $t1
+<prx $t1>
+<prc '\n'>
+$t1 -> [$t0]
+[$t0] -> $t2
+[$t0] -> $t3 /b
+$t0++; [$t0] -> $t3 /b
+$t0++; [$t0] -> $t3 /b
+$t0++; [$t0] -> $t3 /b
+$t0++; [$t0] -> $t3 /b
+$t0++; [$t0] -> $t3 /b
+$t0++; [$t0] -> $t3 /b

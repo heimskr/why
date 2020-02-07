@@ -155,7 +155,7 @@ export default class WVM {
 	 * Resets all registers to zero, except the stack pointer, which is set to point at the end of the memory.
 	 */
 	resetRegisters(): void {
-		this.registers = _.range(0, 128).map(() => Long.ZERO);
+		this.registers = _.range(0, 128).map(() => Long.UZERO);
 		this.sp = Long.fromInt(8*(this.memorySize - 1), true);
 	}
 
@@ -174,8 +174,8 @@ export default class WVM {
 		}
 
 		return new Long(
-			this.memory[k+7]       | this.memory[k+6] <<  8 | this.memory[k+5] << 16 | this.memory[k+4] << 24,
-			this.memory[k+3] << 32 | this.memory[k+2] << 40 | this.memory[k+1] << 48 | this.memory[k]   << 56,
+			this.memory[k]         | this.memory[k+1] <<  8 | this.memory[k+2] << 16 | this.memory[k+3] << 24,
+			this.memory[k+4] << 32 | this.memory[k+5] << 40 | this.memory[k+6] << 48 | this.memory[k+7] << 56,
 		signed);
 	}
 
@@ -194,11 +194,11 @@ export default class WVM {
 
 		const mask = 0xff;
 		for (let i = 0; i < 4; i++) {
-			this.memory[k + 7 - i] = v.low >> 8*i & mask;
+			this.memory[k + i] = v.low >> 8*i & mask;
 		}
 
 		for (let i = 4; i < 8; i++) {
-			this.memory[k + 7 - i] = v.high >> 8*i & mask;
+			this.memory[k + i] = v.high >> 8*i & mask;
 		}
 
 		this.onSetWord(k, v);
@@ -832,7 +832,7 @@ export default class WVM {
 		} else if (funct == EXTS.prd) {
 			this.prcBuffer += this.registers[rs].toString();
 		} else if (funct == EXTS.prx) {
-			this.prcBuffer += "0x" + this.registers[rs].toString(16);
+			this.prcBuffer += "0x" + this.registers[rs].toUnsigned().toString(16);
 		} else {
 			console.log("Unknown external:", {rt, rs, rd, funct});
 		}

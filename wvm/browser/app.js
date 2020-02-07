@@ -223,7 +223,7 @@ let App = window.App = class App {
 	}
 
 	hexCell(long) {
-		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
+		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).reverse().map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
 	}
 
 	decompiledCell(long, addr) {
@@ -746,7 +746,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/interrupts.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/halfwords.why", "utf8"));
 let {offsets, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({offsets, meta, code, symbols}, parser.raw);
 
