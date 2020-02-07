@@ -498,6 +498,9 @@ export default class Parser {
 		if (op == "cb")    return `[${yellow(rs)}] ${dim("->")} [${yellow(rd)}] /b`;
 		if (op == "lb")    return `[${yellow(rs)}] ${dim("->")} ${ yellow(rd) } /b`;
 		if (op == "sb")    return `${ yellow(rs) } ${dim("->")} [${yellow(rd)}] /b`;
+		if (op == "ch")    return `[${yellow(rs)}] ${dim("->")} [${yellow(rd)}] /h`;
+		if (op == "lh")    return `[${yellow(rs)}] ${dim("->")} ${ yellow(rd) } /h`;
+		if (op == "sh")    return `${ yellow(rs) } ${dim("->")} [${yellow(rd)}] /h`;
 		if (op == "spush") return `${dim("[")} ${yellow(rs)}`;
 		if (op == "spop")  return `\xa0\xa0${yellow(rd)} ${dim("]")}`;
 		if (op == "time")  return `${cyan("time")} ${yellow(rs)}`;
