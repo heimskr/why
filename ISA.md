@@ -217,10 +217,10 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order of significance, these are:
 <ol>
 	<li><code>Z</code> (zero):
-		Whether the last arithmetic result was zero (for `cmp`/`cmpi`, whether the compared values are equal)
+		Whether the last arithmetic result was zero (for <code>cmp</code>/<code>cmpi</code>, whether the compared values are equal)
 	</li>
 	<li><code>N</code> (negative):
-		Whether the result of the last arithmetic result was negative (for `cmp`/`cmpi`, whether the left value was less than the right value)
+		Whether the result of the last arithmetic result was negative (for <code>cmp</code>/<code>cmpi</code>, whether the left value was less than the right value)
 	</li>
 	<li><code>C</code> (carry):
 		Whether the result of an addition was truncated. (Currently not implemented for subtraction.)
@@ -234,7 +234,7 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into four sections: metadata, symbol table, data and code. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly.
+Programs are divided into four sections: metadata, symbol table, code and data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly.
 
 ## <a name="prog-meta"></a>Metadata Section
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
