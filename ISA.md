@@ -511,7 +511,7 @@ Logically shifts the value in `rs` to the right by a number of bits equal to `im
 Arithmetically shifts the value in `rs` to the right by a number of bits equal to `imm` and stores the result in `rd`.
 
 ### <a name="op-modi"></a>Modulo Immediate (`modi`)
-> `$rs >> imm -> $rd` or `$rd >>= imm`  
+> `$rs % imm -> $rd` or `$rd %= imm`  
 > `000000011110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Computes the `imm`-modulo of `rs` and stores the result in `rd`.
