@@ -498,7 +498,36 @@ export default class WVM {
 			imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)));
 	}
 
-	// multi
+	op_multi(rs: number, rd: number, imm: Long): boolean | void {
+		let i = imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false);
+		let n = this.registers[rs].toSigned();
+
+		let nhi = n.high;
+		let nlo = n.low;
+
+		let nhii = new Long(nhi, 0, false).multiply(i);
+		let nloi = new Long(nlo, 0, false).multiply(i);
+
+		let nhiihi = new Long(nhii.high, 0, false);
+		let nhiilo = new Long(nhii.low,  0, false);
+		let nloihi = new Long(nloi.high, 0, false);
+		let nloilo = new Long(nloi.low,  0, false);
+
+		let ab = nhiilo.add(nloihi);
+		let ablo = ab.low;
+		let abhi = ab.high;
+
+		this.hi = nhiihi.add(abhi);
+		this.lo = new Long(nloilo.toInt(), ablo, false);
+
+		if (this.hi.isZero() && this.lo.isZero()) {
+			this.updateFlags(0);
+		} else if (this.hi.isNegative) {
+			this.updateFlags(-1);
+		} else {
+			this.updateFlags(1);
+		}
+	}
 
 	op_multui(rs: number, rd: number, imm: Long): boolean | void {
 		let i = imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true);
