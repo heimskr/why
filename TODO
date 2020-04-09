@@ -1,0 +1,2 @@
+[2020/04/08 18:38:48] Make multiplication have the form "$rs * $rt -> $rd", storing the lower half in $rd and the upper
+                      half in $hi.
