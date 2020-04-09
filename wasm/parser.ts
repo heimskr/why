@@ -547,6 +547,10 @@ export default class Parser {
 		if (op == "modi")   return alt_op("%");
 		if (op == "divi")   return alt_op("/");
 		if (op == "divui")  return alt_op("/") + " /u";
+		if (op == "divii")  return `${magenta(target)} ${Parser.colorOper("/" + (rs == rd? "=" : ""))} ${yellow(rs)}`
+		                         + (rs != rd? dim(" -> ") + yellow(rd) : "");
+		if (op == "divuii") return `${magenta(target)} ${Parser.colorOper("/" + (rs == rd? "=" : ""))} ${yellow(rs)}`
+		                         + (rs != rd? dim(" -> ") + yellow(rd) : "") + " /u";
 		if (op == "andi")   return alt_op("&");
 		if (op == "nandi")  return alt_op("~&");
 		if (op == "nori")   return alt_op("~|");
