@@ -413,6 +413,14 @@ export default class WVM {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(this.registers[rt].toSigned()));
 	}
 
+	op_div(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().div(this.registers[rt].toSigned()));
+	}
+
+	op_divu(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		this.updateFlags(this.registers[rd] = this.registers[rs].toUnsigned().div(this.registers[rt].toUnsigned()));
+	}
+
 	op_mult(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		let i = this.registers[rt].toSigned();
 		let n = this.registers[rs].toSigned();
