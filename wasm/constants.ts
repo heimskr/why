@@ -17,7 +17,7 @@ export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "
 export type RSpecial = "time" | "ring";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
-export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui";
+export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
 export type ILogic = "andi" | "nandi" | "nori" | "ori" | "xnori" | "xori";
 export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui";
 export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui";
@@ -96,6 +96,8 @@ export const I_TYPES: number[] = [
 	0b000000110011, // Change Ring Immediate
 	0b000000110100, // Divide Immediate
 	0b000000110101, // Divide Unsigned Immediate
+	0b000000110110, // Divide Inverse Immediate
+	0b000000110111, // Divide Unsigned Inverse Immediate
 ];
 
 export const J_TYPES: number[] = [
@@ -198,6 +200,8 @@ export const OPCODES: {[key in OpName]: number} = {
 	ringi:  0b000000110011,
 	divi:   0b000000110100,
 	divui:  0b000000110101,
+	divii:  0b000000110110,
+	divuii: 0b000000110111,
 };
 
 export const FUNCTS: {[key in RType]: number} = {

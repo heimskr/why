@@ -76,6 +76,8 @@
 						<li><a href="#op-modi">Modulo Immediate</a> (<code>modi</code>)</li>
 						<li><a href="#op-divi">Divide Immediate</a> (<code>divi</code>)</li>
 						<li><a href="#op-divui">Divide Unsigned Immediate</a> (<code>divui</code>)</li>
+						<li><a href="#op-divii">Divide Inverse Immediate</a> (<code>divii</code>)</li>
+						<li><a href="#op-divuii">Divide Unsigned Inverse Immediate</a> (<code>divuii</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-i">Logic (I-Types)</a>
@@ -352,13 +354,13 @@ Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`
 > `$rs * $rt`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000010`
 
-Multiplies the value in `rs` by the value in `rt` and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by the value in `rt` and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ### <a name="op-multu"></a>Multiply Unsigned (`multu`)
 > `$rs * $rt /u`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000101`
 
-Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ### <a name="op-sll"></a>Shift Left Logical (`sll`)
 > `$rs << $rt -> $rd` or `$rd <<= $rt`  
@@ -500,13 +502,13 @@ Subtracts a constant from the value in `rs` and stores the result in `rd`.
 > `$rs * imm`  
 > `000000000101` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by a constant and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ### <a name="op-multui"></a>Multiply Unsigned Immediate (`multui`)
 > `$rs * imm /u`  
 > `000000011000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant (treating both as unsigned values) and stories the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
 
 ### <a name="op-slli"></a>Shift Left Logical Immediate (`slli`)
 > `$rs << imm -> $rd` or `$rd <<= imm`  
@@ -536,13 +538,23 @@ Computes the `imm`-modulo of `rs` and stores the result in `rd`.
 > `$rs / imm -> $rd`  
 > `000000110100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Divides the value in `rs` by a constant and stories the result in `rd`, discarding the remainder.
+Divides the value in `rs` by a constant and stores the result in `rd`, discarding the remainder.
 
 ### <a name="op-divui"></a>Divide Unsigned Immediate (`divui`)
 > `$rs / imm -> $rd /u`  
 > `000000110101` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Divides the value in `rs` by a constant (treating both as unsigned values) and stories the result in `rd`, discarding the remainder.
+### <a name="op-divii"></a>Divide Inverse Immediate (`divii`)
+> `imm / $rs -> $rd`  
+> `000000110110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Divides a constant by the value in `rs` and stores the result in `rd`, discarding the remainder.
+
+### <a name="op-divuii"></a>Divide Unsigned Inverse Immediate (`divuii`)
+> `imm / $rs -> $rd /u`  
+> `000000110111` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Divides a constant by the value in `rs` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
 
 ## <a name="ops-logic-i"></a>Logic (I-Types)
 
