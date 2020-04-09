@@ -413,6 +413,68 @@ export default class WVM {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toSigned().mod(this.registers[rt].toSigned()));
 	}
 
+	op_mult(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		let i = this.registers[rt].toSigned();
+		let n = this.registers[rs].toSigned();
+
+		let nhi = n.high;
+		let nlo = n.low;
+
+		let nhii = new Long(nhi, 0, false).multiply(i);
+		let nloi = new Long(nlo, 0, false).multiply(i);
+
+		let nhiihi = new Long(nhii.high, 0, false);
+		let nhiilo = new Long(nhii.low,  0, false);
+		let nloihi = new Long(nloi.high, 0, false);
+		let nloilo = new Long(nloi.low,  0, false);
+
+		let ab = nhiilo.add(nloihi);
+		let ablo = ab.low;
+		let abhi = ab.high;
+
+		this.hi = nhiihi.add(abhi);
+		this.lo = new Long(nloilo.toInt(), ablo, false);
+
+		if (this.hi.isZero() && this.lo.isZero()) {
+			this.updateFlags(0);
+		} else if (this.hi.isNegative) {
+			this.updateFlags(-1);
+		} else {
+			this.updateFlags(1);
+		}
+	}
+
+	op_multu(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		let i = this.registers[rt].toUnsigned();
+		let n = this.registers[rs].toUnsigned();
+
+		let nhi = n.high;
+		let nlo = n.low;
+
+		let nhii = new Long(nhi, 0, true).multiply(i);
+		let nloi = new Long(nlo, 0, true).multiply(i);
+
+		let nhiihi = new Long(nhii.high, 0, true);
+		let nhiilo = new Long(nhii.low,  0, true);
+		let nloihi = new Long(nloi.high, 0, true);
+		let nloilo = new Long(nloi.low,  0, true);
+
+		let ab = nhiilo.add(nloihi);
+		let ablo = ab.low;
+		let abhi = ab.high;
+
+		this.hi = nhiihi.add(abhi);
+		this.lo = new Long(nloilo.toInt(), ablo, true);
+
+		if (this.hi.isZero() && this.lo.isZero()) {
+			this.updateFlags(0);
+		} else if (this.hi.toSigned().isNegative) {
+			this.updateFlags(-1);
+		} else {
+			this.updateFlags(1);
+		}
+	}
+
 	op_and(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].and(this.registers[rt]));
 	}
