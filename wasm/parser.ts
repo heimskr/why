@@ -456,6 +456,8 @@ export default class Parser {
 		if (op == "sub")   return alt_op("-");
 		if (op == "mult")  return `${yellow(rs)} ${Parser.colorOper("*")} ${yellow(rt)}`;
 		if (op == "mod")   return alt_op("%");
+		if (op == "div")   return alt_op("/");
+		if (op == "divu")  return alt_op("/") + " /u";
 		if (op == "and")   return alt_op("&");
 		if (op == "nand")  return alt_op("~&");
 		if (op == "nor")   return alt_op("~|");
@@ -543,6 +545,8 @@ export default class Parser {
 		if (op == "multi")  return `${yellow(rs)} ${Parser.colorOper("*")} ${magenta(target)}`;
 		if (op == "multui") return `${yellow(rs)} ${Parser.colorOper("*")} ${magenta(target)} /u`;
 		if (op == "modi")   return alt_op("%");
+		if (op == "divi")   return alt_op("/");
+		if (op == "divui")  return alt_op("/") + " /u";
 		if (op == "andi")   return alt_op("&");
 		if (op == "nandi")  return alt_op("~&");
 		if (op == "nori")   return alt_op("~|");

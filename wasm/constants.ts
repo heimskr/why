@@ -9,7 +9,7 @@ export type ConstantFlags = {[key in FlagType]: number};
 export type RegisterCategory = ("zero" | 0) | "g" | "sp" | "stack" | "fp" | "return" | "hi"
                              | ("f" | "a" | "st" | "ra" | "t" | "s") | "m" | "e" | "r" | "k" | "lo";
 
-export type RMath = "add" | "sub" | "mult" | "multu" | "sll" | "srl" | "sra" | "mod";
+export type RMath = "add" | "sub" | "mult" | "multu" | "sll" | "srl" | "sra" | "mod" | "div" | "divu";
 export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "land" | "lnand" | "lnor" | "lnot" | "lor" | "lxnor" | "lxor";
 export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
@@ -17,7 +17,7 @@ export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "
 export type RSpecial = "time" | "ring";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
-export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi";
+export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui";
 export type ILogic = "andi" | "nandi" | "nori" | "ori" | "xnori" | "xori";
 export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui";
 export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui";
@@ -94,6 +94,8 @@ export const I_TYPES: number[] = [
 	0b000000101100, // Compare Immediate
 	0b000000110001, // Set Timer Immediate
 	0b000000110011, // Change Ring Immediate
+	0b000000110100, // Divide Immediate
+	0b000000110101, // Divide Unsigned Immediate
 ];
 
 export const J_TYPES: number[] = [
@@ -114,6 +116,8 @@ export const OPCODES: {[key in OpName]: number} = {
 	mult:   0b000000000001,
 	multu:  0b000000000001,
 	mod:    0b000000000001,
+	div:    0b000000000001,
+	divu:   0b000000000001,
 	and:    0b000000000010,
 	nand:   0b000000000010,
 	nor:    0b000000000010,
@@ -192,6 +196,8 @@ export const OPCODES: {[key in OpName]: number} = {
 	timei:  0b000000110001,
 	ring:   0b000000110010,
 	ringi:  0b000000110011,
+	divi:   0b000000110100,
+	divui:  0b000000110101,
 };
 
 export const FUNCTS: {[key in RType]: number} = {
@@ -235,7 +241,9 @@ export const FUNCTS: {[key in RType]: number} = {
 	sh:    0b000000001000,
 	lnand: 0b000000001001,
 	mod:   0b000000001001,
+	div:   0b000000001010,
 	lnor:  0b000000001010,
+	divu:  0b000000001011,
 	lnot:  0b000000001011,
 	lor:   0b000000001100,
 	lxnor: 0b000000001101,

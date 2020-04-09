@@ -42,6 +42,8 @@
 						<li><a href="#op-srl">Shift Right Logical</a> (<code>srl</code>)</li>
 						<li><a href="#op-sra">Shift Right Arithmetic</a> (<code>sra</code>)</li>
 						<li><a href="#op-mod">Modulo</a> (<code>mod</code>)</li>
+						<li><a href="#op-div">Divide</a> (<code>div</code>)</li>
+						<li><a href="#op-divu">Divide Unsigned</a> (<code>divu</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-r">Logic (R-Types)</a>
@@ -72,6 +74,8 @@
 						<li><a href="#op-srli">Shift Right Logical Immediate</a> (<code>srli</code>)</li>
 						<li><a href="#op-srai">Shift Right Arithmetic Immediate</a> (<code>srai</code>)</li>
 						<li><a href="#op-modi">Modulo Immediate</a> (<code>modi</code>)</li>
+						<li><a href="#op-divi">Divide Immediate</a> (<code>divi</code>)</li>
+						<li><a href="#op-divui">Divide Unsigned Immediate</a> (<code>divui</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-i">Logic (I-Types)</a>
@@ -380,6 +384,18 @@ Arithmetically shifts the value in `rs` to the left by a number of bits equal to
 
 Computes the `rt`-modulo of `rs` and stores the result in `rd`.
 
+### <a name="op-div"></a>Divide (`div`)
+> `$rs / $rt -> $rd`  
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001010`
+
+Divides the value in `rs` by the value in `rt` and stores the result in `rd`, discarding the remainder.
+
+### <a name="op-divu"></a>Divide Unsigned (`divu`)
+> `$rs * $rt /u`  
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001011`
+
+Divides the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
+
 ## <a name="ops-logic-r"></a>Logic (R-Types)
 
 ### <a name="op-and"></a>Bitwise AND (`and`)
@@ -515,6 +531,18 @@ Arithmetically shifts the value in `rs` to the right by a number of bits equal t
 > `000000011110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Computes the `imm`-modulo of `rs` and stores the result in `rd`.
+
+### <a name="op-divi"></a>Divide Immediate (`divi`)
+> `$rs / imm -> $rd`  
+> `000000110100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Divides the value in `rs` by a constant and stories the result in `rd`, discarding the remainder.
+
+### <a name="op-divui"></a>Divide Unsigned Immediate (`divui`)
+> `$rs / imm -> $rd /u`  
+> `000000110101` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Divides the value in `rs` by a constant (treating both as unsigned values) and stories the result in `rd`, discarding the remainder.
 
 ## <a name="ops-logic-i"></a>Logic (I-Types)
 
