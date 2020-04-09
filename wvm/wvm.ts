@@ -312,10 +312,10 @@ export default class WVM {
 	get flagN() { return !!(this.st.toInt() & ALU_MASKS.n); }
 	get flagC() { return !!(this.st.toInt() & ALU_MASKS.c); }
 	get flagO() { return !!(this.st.toInt() & ALU_MASKS.o); }
-	set flagZ(val) { this.st = val? this.st.and(~ALU_MASKS.z) : this.st.or(ALU_MASKS.z); }
-	set flagN(val) { this.st = val? this.st.and(~ALU_MASKS.n) : this.st.or(ALU_MASKS.n); }
-	set flagC(val) { this.st = val? this.st.and(~ALU_MASKS.c) : this.st.or(ALU_MASKS.c); }
-	set flagO(val) { this.st = val? this.st.and(~ALU_MASKS.o) : this.st.or(ALU_MASKS.o); }
+	set flagZ(val) { this.st = val? this.st.or(ALU_MASKS.z) : this.st.and(~ALU_MASKS.z); }
+	set flagN(val) { this.st = val? this.st.or(ALU_MASKS.n) : this.st.and(~ALU_MASKS.n); }
+	set flagC(val) { this.st = val? this.st.or(ALU_MASKS.c) : this.st.and(~ALU_MASKS.c); }
+	set flagO(val) { this.st = val? this.st.or(ALU_MASKS.o) : this.st.and(~ALU_MASKS.o); }
 	
 	checkConditions(cond: ConditionName): boolean {
 		switch (cond) {
