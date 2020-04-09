@@ -806,6 +806,10 @@ export default class WVM {
 			Long.UONE : Long.UZERO;
 	}
 
+	op_sel(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
+		this.registers[rd] = this.registers[this.checkConditions(cond)? rs : rt];
+	}
+
 	op_j(rs: number, addr: Long, link: boolean, cond: ConditionName): boolean | void {
 		if (this.checkConditions(cond)) {
 			if (link) this.link();
