@@ -14,7 +14,7 @@ export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "l
 export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
 export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "spush" | "spop";
-export type RSpecial = "time" | "ring";
+export type RSpecial = "time" | "ring" | "sel";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
 export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
@@ -55,6 +55,7 @@ export const R_TYPES = [
 	0b000000011111, // External
 	0b000000110000, // Set Timer
 	0b000000110010, // Change Ring
+	0b000000111000, // Select
 ];
 
 export const I_TYPES: number[] = [
@@ -202,6 +203,7 @@ export const OPCODES: {[key in OpName]: number} = {
 	divui:  0b000000110101,
 	divii:  0b000000110110,
 	divuii: 0b000000110111,
+	sel:    0b000000111000,
 };
 
 export const FUNCTS: {[key in RType]: number} = {
@@ -212,6 +214,7 @@ export const FUNCTS: {[key in RType]: number} = {
 	sl:    0b000000000000,
 	time:  0b000000000000,
 	ring:  0b000000000000,
+	sel:   0b000000000000,
 	jrc:   0b000000000001,
 	l:     0b000000000001,
 	nand:  0b000000000001,

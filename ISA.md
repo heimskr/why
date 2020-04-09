@@ -162,6 +162,7 @@
 				<li><a href="#ops-special">Special Instructions</a>
 					<ol>
 						<li><a href="#op-ext">External</a> (<code>ext</code>)</li>
+						<li><a href="#op-sel">Select</a> (<code>sel</code>)</li>
 						<li><a href="#op-int">Interrupt</a> (<code>int</code>)</li>
 						<li><a href="#op-rit">Register Interrupt Table</a> (<code>rit</code>)</li>
 						<li><a href="#op-time">Set Timer</a> (<code>time</code>)</li>
@@ -600,7 +601,7 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 > `$rs ~ $rt`  
 > `000000001110` `ttttttt` `sssssss` `.......` `0000000000000` `......` `000000000101`
 
-Compares the value in `rs` to the value in `rt` and updates the [status register](#reg-st).
+Compares the value in `rs` to the value in `rt` (treating both as signed values) and updates the [status register](#reg-st).
 
 ### <a name="op-sl"></a>Set on Less Than (`sl`)
 > `$rs < $rt -> $rd`  
@@ -871,6 +872,12 @@ Loads an immediate value into the upper half of the word at `rd`. The lower half
 > `000000011111` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `xxxxxxxxxxxx`
 
 Performs a special instruction, typically for interaction with the world outside the VM.
+
+### <a name="op-sel"></a>Select (`sel`)
+> `[$rs : $rt] -> $rd`  
+> `000000111000` `ttttttt` `sssssss` `ddddddd` `0000000000000` `cond` `..` `xxxxxxxxxxxx`
+
+Checks the [status register](#reg-st) and the [condition bits](#condbits). If the condition matches the status register, `rd` is set to `rs`; otherwise, it's set to `rt`.
 
 ### <a name="op-int"></a>Interrupt (`int`)
 > `int imm`  
