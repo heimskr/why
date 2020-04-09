@@ -312,6 +312,10 @@ export default class WVM {
 	get flagN() { return !!(this.st.toInt() & ALU_MASKS.n); }
 	get flagC() { return !!(this.st.toInt() & ALU_MASKS.c); }
 	get flagO() { return !!(this.st.toInt() & ALU_MASKS.o); }
+	set flagZ(val) { this.st = val? this.st.and(~ALU_MASKS.z) : this.st.or(ALU_MASKS.z); }
+	set flagN(val) { this.st = val? this.st.and(~ALU_MASKS.n) : this.st.or(ALU_MASKS.n); }
+	set flagC(val) { this.st = val? this.st.and(~ALU_MASKS.c) : this.st.or(ALU_MASKS.c); }
+	set flagO(val) { this.st = val? this.st.and(~ALU_MASKS.o) : this.st.or(ALU_MASKS.o); }
 	
 	checkConditions(cond: ConditionName): boolean {
 		switch (cond) {
@@ -925,6 +929,16 @@ export default class WVM {
 
 	op_set(rs: number, rd: number, imm: Long): boolean | void {
 		this.registers[rd] = imm;
+	}
+
+	op_cmp(rt: number, rs: number, rd: number, funct: number): boolean | void {
+		this.flagZ = this.registers[rs].eq(this.registers[rt]);
+		this.flagN = this.registers[rs].lessThan(this.registers[rt]);
+	}
+
+	op_cmpi(rs: number, rd: number, imm: Long): boolean | void {
+		this.flagZ = this.registers[rs].eq(imm);
+		this.flagN = this.registers[rs].lessThan(imm);
 	}
 
 	op_ext(rt: number, rs: number, rd: number, funct: number): boolean {
