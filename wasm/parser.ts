@@ -508,7 +508,10 @@ export default class Parser {
 		if (op == "spop")  return `\xa0\xa0${yellow(rd)} ${dim("]")}`;
 		if (op == "time")  return `${cyan("time")} ${yellow(rs)}`;
 		if (op == "ring")  return `${cyan("ring")} ${yellow(rs)}`;
-		if (op == "sel")   return `[${yellow(rs)} : ${yellow(rt)}] ${dim("->")} ${yellow(rd)}`;
+		if (op == "sel") {
+			const cond = {z: "=", p: ">", n: "<", nz: "!="}[conditions] || "?";
+			return `[${yellow(rs)} ${cond} ${yellow(rt)}] ${dim("->")} ${yellow(rd)}`;
+		}
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 

@@ -874,7 +874,10 @@ Loads an immediate value into the upper half of the word at `rd`. The lower half
 Performs a special instruction, typically for interaction with the world outside the VM.
 
 ### <a name="op-sel"></a>Select (`sel`)
-> `[$rs : $rt] -> $rd`  
+> `[$rs = $rt] -> $rd`  
+> `[$rs < $rt] -> $rd`  
+> `[$rs > $rt] -> $rd`  
+> `[$rs != $rt] -> $rd`  
 > `000000111000` `ttttttt` `sssssss` `ddddddd` `0000000000000` `cond` `..` `xxxxxxxxxxxx`
 
 Checks the [status register](#reg-st) and the [condition bits](#condbits). If the condition matches the status register, `rd` is set to `rs`; otherwise, it's set to `rt`.
