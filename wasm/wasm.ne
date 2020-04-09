@@ -141,7 +141,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
 				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
-				 | op_lni | op_lbni | op_ch | op_lh | op_sh
+				 | op_lni | op_lbni | op_ch | op_lh | op_sh | op_cmp | op_cmpi
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei | op_ring
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
@@ -187,6 +187,7 @@ op_lnot			-> "!" _ rv into rv							{% d => ["lnot",    0,  d[2], d[4]] %}
 
 op_multu		-> riap["*"] "/u"							{% d => ["multu",    ...d[0],   0 ] %}
 op_mult			-> riap["*"]								{% d => ["mult",     ...d[0],   0 ] %}
+op_cmp			-> riap["~"]								{% d => ["cmp",      ...d[0],   0 ] %}
 op_divu			-> riap["/"] into reg _ "/u"				{% d => ["divu",     ...d[0], d[2]] %}
 				 | rv _ "/=" _ rv "/u"						{% d => ["divu",  d[4], d[0], d[0]] %}
 op_div			-> riap["/"] into reg						{% d => ["div",      ...d[0], d[2]] %}
@@ -234,6 +235,7 @@ op_ring			-> "ring" __ rv								{% d => ["ring",    0,  d[2],   0 ] %}
 
 # I-Type instructions										                   rs    rd    imm
 op_multui		-> reg _ "*"   _ int _ "/u"					{% d => ["multui", d[0],   0,  d[4]] %}
+op_cmpi			-> reg _ "~"   _ int						{% d => ["cmpi",   d[0],   0,  d[4]] %}
 op_divui		-> reg _ "/"   _ int into reg "/u"			{% d => ["divui",  d[0], d[6], d[4]] %}
 				 | reg _ "/="  _ int "/u"					{% d => ["divui",  d[0], d[0], d[4]] %}
 op_addi			-> reg _ "+"   _ int into reg				{% d => ["addi",   d[0], d[6], d[4]] %}

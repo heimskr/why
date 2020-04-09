@@ -455,6 +455,7 @@ export default class Parser {
 		if (op == "add")   return alt_op("+");
 		if (op == "sub")   return alt_op("-");
 		if (op == "mult")  return `${yellow(rs)} ${Parser.colorOper("*")} ${yellow(rt)}`;
+		if (op == "cmp")   return `${yellow(rs)} ${Parser.colorOper("~")} ${yellow(rt)}`;
 		if (op == "mod")   return alt_op("%");
 		if (op == "div")   return alt_op("/");
 		if (op == "divu")  return alt_op("/") + " /u";
@@ -544,6 +545,7 @@ export default class Parser {
 		if (op == "subi")   return mathi("--", "-=", "-");
 		if (op == "multi")  return `${yellow(rs)} ${Parser.colorOper("*")} ${magenta(target)}`;
 		if (op == "multui") return `${yellow(rs)} ${Parser.colorOper("*")} ${magenta(target)} /u`;
+		if (op == "cmpi")   return `${yellow(rs)} ${Parser.colorOper("~")} ${magenta(target)}`;
 		if (op == "modi")   return alt_op("%");
 		if (op == "divi")   return alt_op("/");
 		if (op == "divui")  return alt_op("/") + " /u";

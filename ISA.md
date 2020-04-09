@@ -638,6 +638,12 @@ If the value in `rs` is less than or equal to the value in `rt` (treating both a
 
 ## <a name="ops-comp-i"></a>Comparisons (I-Types)
 
+### <a name="op-cmpi"></a>Compare Immediate (`cmpi`)
+> `$rs ~ imm`  
+> `000000101011` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Compares the value in `rs` to `imm` and updates the [status register](#reg-st).
+
 ### <a name="op-sli"></a>Set on Less Than Immediate (`sli`)
 > `$rs < imm -> $rd`  
 > `000000011001` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`

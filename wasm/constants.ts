@@ -91,7 +91,7 @@ export const I_TYPES: number[] = [
 	0b000000101000, // Load Byte Indirect Immediate
 	0b000000101001, // Set on Greater Than Immediate
 	0b000000101010, // Set on Greater Than or Equal Immediate
-	0b000000101100, // Compare Immediate
+	0b000000101011, // Compare Immediate
 	0b000000110001, // Set Timer Immediate
 	0b000000110011, // Change Ring Immediate
 	0b000000110100, // Divide Immediate
