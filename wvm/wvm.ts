@@ -563,9 +563,19 @@ export default class WVM {
 			imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false)));
 	}
 
+	op_divii(rs: number, rd: number, imm: Long): boolean | void {
+		this.updateFlags(this.registers[rd] = (imm instanceof Long? imm.toSigned() : Long.fromInt(imm, false))
+			.div(this.registers[rs].toSigned()));
+	}
+
 	op_divui(rs: number, rd: number, imm: Long): boolean | void {
 		this.updateFlags(this.registers[rd] = this.registers[rs].toUnsigned().div(
 			imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true)));
+	}
+
+	op_divuii(rs: number, rd: number, imm: Long): boolean | void {
+		this.updateFlags(this.registers[rd] = (imm instanceof Long? imm.toUnsigned() : Long.fromInt(imm, true))
+			.div(this.registers[rs].toUnsigned()));
 	}
 
 	op_multi(rs: number, rd: number, imm: Long): boolean | void {
