@@ -1,0 +1,124 @@
+#meta
+name: "FizzBuzz (LL2W)"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#includes
+
+#data
+
+#code
+
+:: main
+<halt>
+
+sub main() {
+	@__main_label2
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 4 -> $sp
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 4 -> $sp
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t2
+	$sp - 8 -> $sp
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t3
+	$sp - 4 -> $sp
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t4
+	$sp - 4 -> $sp
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t5
+	$sp - 4 -> $sp
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t6
+	$sp - 4 -> $sp
+	0 -> $m0
+	$m0 -> [$t0] /h
+	$a0 -> [$t1] /h
+	$a1 -> [$t2]
+	0 -> $m0
+	$m0 -> [$t3] /h
+	0 -> $m0
+	$m0 -> [$t4] /h
+	0 -> $m0
+	$m0 -> [$t5] /h
+	0 -> $m0
+	$m0 -> [$t6] /h
+	@__main_label10
+	[$t6] -> $t0 /h
+	$t0 <= 100 -> $t1
+	: __main_label13 if $t1
+	: __main_label38
+	@__main_label13
+	[$t6] -> $t0 /h
+	$t0 % 3 -> $t1
+	$t1 == 0 -> $t2
+	!$t2.
+	: __main_label17 if $t2
+	: __main_label20
+	@__main_label17
+	[$t3] -> $t0 /h
+	$t0 + 1 -> $t1
+	$t1 -> [$t3] /h
+	@__main_label20
+	[$t6] -> $t0 /h
+	$t0 % 5 -> $t1
+	$t1 == 0 -> $t2
+	!$t2.
+	: __main_label24 if $t2
+	: __main_label27
+	@__main_label24
+	[$t4] -> $t0 /h
+	$t0 + 1 -> $t1
+	$t1 -> [$t4] /h
+	@__main_label27
+	[$t6] -> $t0 /h
+	$t0 % 15 -> $t1
+	$t1 == 0 -> $t2
+	!$t2.
+	: __main_label31 if $t2
+	: __main_label34
+	@__main_label31
+	[$t5] -> $t0 /h
+	$t0 + 1 -> $t1
+	$t1 -> [$t5] /h
+	@__main_label34
+	[$t6] -> $t0 /h
+	$t0 + 1 -> $t1
+	$t1 -> [$t6] /h
+	: __main_label10
+	@__main_label38
+	[$t5] -> $t0 /h
+	$fp -> $sp
+
+	[$t3] -> $t0
+	<prd $t0>
+	[$t4] -> $t0
+	<prd $t0>
+	[$t5] -> $t0
+	<prd $t0>
+	[$t6] -> $t0
+	<prd $t0>
+
+	] $fp
+	] $rt
+	$t0 -> $r0
+	: $rt
+}
+
+
+
