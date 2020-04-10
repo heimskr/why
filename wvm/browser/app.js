@@ -760,7 +760,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/ops.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fizzbuzz_ll2w.why", "utf8"));
 let {offsets, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({offsets, meta, code, symbols}, parser.raw);
 

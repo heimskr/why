@@ -785,19 +785,19 @@ Stores the lowest 8 bits of `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-ch"></a>Copy Halfword (`ch`)
 > `[$rs] -> [$rd] /h`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000110`
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001000`
 
 Copies the halfword stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-lh"></a>Load Halfword (`lh`)
 > `[$rs] -> $rd /h`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000111`
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001001`
 
 Loads the halfword stored at the memory address pointed to by `rs` into `rd`.
 
 ### <a name="op-sh"></a>Store Halfword (`sh`)
 > `$rs -> [$rd] /h`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001000`
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001010`
 
 Stores the lowest 32 bits of `rs` into the memory address pointed to by `rd`.
 
