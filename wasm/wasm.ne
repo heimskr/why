@@ -387,7 +387,8 @@ reg_hi			-> "$hi"									{% d => ["hi",     0] %}
 reg_gp			-> "$g"										{% d => ["g",      0] %}
 reg_st			-> "$st"									{% d => ["st",     0] %}
 reg_asm			-> "$m" [0-9a-f]							{% d => ["m", parseInt(d[1], 16)] %}
-reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc | reg_lo | reg_hi | reg_asm | reg_gp | reg_kern | reg_st)
+reg_fp			-> "$fp"									{% d => ["fp",     0] %}
+reg				-> (reg_temp | reg_saved | reg_arg | reg_return | reg_zero | reg_retaddr | reg_stack | reg_exc | reg_lo | reg_hi | reg_asm | reg_gp | reg_kern | reg_st | reg_fp)
 															{% d => ["register", ...d[0][0]] %}
 
 var -> varchar:+ {%
