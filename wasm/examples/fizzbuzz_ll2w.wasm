@@ -67,7 +67,6 @@ sub main() {
 	[$t6] -> $t0 /h
 	$t0 % 3 -> $t1
 	$t1 == 0 -> $t2
-	!$t2.
 	: __main_label17 if $t2
 	: __main_label20
 	@__main_label17
@@ -78,7 +77,6 @@ sub main() {
 	[$t6] -> $t0 /h
 	$t0 % 5 -> $t1
 	$t1 == 0 -> $t2
-	!$t2.
 	: __main_label24 if $t2
 	: __main_label27
 	@__main_label24
@@ -89,7 +87,6 @@ sub main() {
 	[$t6] -> $t0 /h
 	$t0 % 15 -> $t1
 	$t1 == 0 -> $t2
-	!$t2.
 	: __main_label31 if $t2
 	: __main_label34
 	@__main_label31
@@ -102,23 +99,25 @@ sub main() {
 	$t1 -> [$t6] /h
 	: __main_label10
 	@__main_label38
-	[$t5] -> $t0 /h
+	[$t3] -> $t0 /h
+	$t0 -> $a0
+	:: prd
+	[$t4] -> $t1 /h
+	$t1 -> $a0
+	:: prd
+	[$t5] -> $t2 /h
+	$t2 -> $a0
+	:: prd
+	[$t5] -> $t6 /h
 	$fp -> $sp
-
-	[$t3] -> $t0
-	<prd $t0>
-	[$t4] -> $t0
-	<prd $t0>
-	[$t5] -> $t0
-	<prd $t0>
-	[$t6] -> $t0
-	<prd $t0>
-
 	] $fp
 	] $rt
-	$t0 -> $r0
+	$t6 -> $r0
 	: $rt
 }
 
-
-
+sub prd() {
+	<prd $a0>
+	<prc '\n'>
+	: $rt
+}
