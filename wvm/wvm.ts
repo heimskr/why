@@ -219,7 +219,7 @@ export default class WVM {
 			// In the future, this may cause an exception.
 		}
 
-		return new Long(this.memory[k+3] | this.memory[k+2] << 8 | this.memory[k+1] << 16 | this.memory[k+0] << 24, 0,
+		return new Long(this.memory[k] | this.memory[k+1] << 8 | this.memory[k+2] << 16 | this.memory[k+3] << 24, 0,
 			signed);
 	}
 
