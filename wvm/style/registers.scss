@@ -51,8 +51,7 @@
 
 	tr.reg-fp, tr.reg-fx, tr.reg-ex, tr.reg-kx {
 		td:first-child {
-			color: #777;
-			text-decoration: line-through;
+			color: #b0b;
 		}
 	}
 
@@ -63,7 +62,7 @@
 
 @include register(0, rgba(180, 180, 180, 0.5));
 @include register(g, #0aa);
-@include register(fp, #777);
+@include register(fp, #b0b);
 @include register(sp, #a00);
 @include register(rt, #0a0);
 @include register(lo, #a60);
