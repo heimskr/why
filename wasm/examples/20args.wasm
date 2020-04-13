@@ -1,0 +1,152 @@
+#meta
+name: "20args.c"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+
+#code
+
+::main
+<halt>
+
+sub main() {
+	@__main_label2
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	10 -> $a0
+	20 -> $a1
+	30 -> $a2
+	40 -> $a3
+	50 -> $a4
+	60 -> $a5
+	70 -> $a6
+	80 -> $a7
+	90 -> $a8
+	100 -> $a9
+	110 -> $aa
+	120 -> $ab
+	130 -> $ac
+	140 -> $ad
+	150 -> $ae
+	160 -> $af
+	200 -> $t0
+	[ $t0
+	190 -> $t1
+	[ $t1
+	180 -> $t2
+	[ $t2
+	170 -> $t3
+	[ $t3
+	:: fn
+	$fp -> $sp
+	] $fp
+	] $rt
+	0 -> $r0
+	: $rt
+}
+
+sub fn() {
+	@__fn_label20
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	// LoadArguments: $sp + to_skip -> %temp
+	$sp + 24 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t0 /h
+	// LoadArguments: $sp + to_skip -> %temp
+	$sp + 32 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t1 /h
+	// LoadArguments: $sp + to_skip -> %temp
+	$sp + 40 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t2 /h
+	// LoadArguments: $sp + to_skip -> %temp
+	$sp + 48 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t3 /h
+	@__fn_label48
+	$a0 * 20
+	$lo -> $t4
+	'\n' -> $m2
+	<prd $t4>
+	<prc $m2>
+	$a1 * 19
+	$lo -> $t5
+	<prd $t5>
+	<prc $m2>
+	$a2 * 18
+	$lo -> $t6
+	<prd $t6>
+	<prc $m2>
+	$a3 * 17
+	$lo -> $t7
+	<prd $t7>
+	<prc $m2>
+	$a4 << 4 -> $t8
+	<prd $t8>
+	<prc $m2>
+	$a5 * 15
+	$lo -> $t9
+	<prd $t9>
+	<prc $m2>
+	$a6 * 14
+	$lo -> $ta
+	<prd $ta>
+	<prc $m2>
+	$a7 * 13
+	$lo -> $tb
+	<prd $tb>
+	<prc $m2>
+	$a8 * 12
+	$lo -> $tc
+	<prd $tc>
+	<prc $m2>
+	$a9 * 11
+	$lo -> $td
+	<prd $td>
+	<prc $m2>
+	$aa * 10
+	$lo -> $te
+	<prd $te>
+	<prc $m2>
+	$ab * 9
+	$lo -> $tf
+	<prd $tf>
+	<prc $m2>
+	$ac << 3 -> $t10
+	<prd $t10>
+	<prc $m2>
+	$ad * 7
+	$lo -> $t11
+	<prd $t11>
+	<prc $m2>
+	$ae * 6
+	$lo -> $t12
+	<prd $t12>
+	<prc $m2>
+	$af * 5
+	$lo -> $t13
+	<prd $t13>
+	<prc $m2>
+	$t0 << 2 -> $t14
+	<prd $t14>
+	<prc $m2>
+	$t1 * 3
+	$lo -> $t15
+	<prd $t15>
+	<prc $m2>
+	$t2 << 1 -> $t16
+	<prd $t16>
+	<prc $m2>
+	<prd $t3>
+	<prc $m2>
+	$fp -> $sp
+	] $fp
+	] $rt
+	: $rt
+}

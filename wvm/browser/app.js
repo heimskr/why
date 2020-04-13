@@ -340,12 +340,12 @@ let App = window.App = class App {
 			this.range = [
 				[0, this.vm.offsets.$symtab - 8],
 				[this.vm.offsets.$code, this.vm.offsets.$end + (32 - 1) * 8],
-				[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
+				[8 * this.vm.memorySize - 32*8, 8 * this.vm.memorySize - 8]
 			].map((x) => x.join("-")).join(";");
 		} else {
 			this.range = [
 				[0, this.vm.offsets.$end + (32 - 1) * 8],
-				[8 * this.vm.memorySize - 128, 8 * this.vm.memorySize - 8]
+				[8 * this.vm.memorySize - 32*8, 8 * this.vm.memorySize - 8]
 			].map((x) => x.join("-")).join(";");
 		}
 
@@ -760,7 +760,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/fizzbuzz_ll2w.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/20args.why", "utf8"));
 let {offsets, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({offsets, meta, code, symbols}, parser.raw);
 
