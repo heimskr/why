@@ -888,6 +888,7 @@ export default class WASMC {
 	 * @return A Long containing the concatenated ASCII values of the characters.
 	 */
 	static chunk2long(chunk: string[]): Long {
+		console.log("joined chunk:", chunk.map(c => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""));
 		return Long.fromString(chunk.map(c => c.charCodeAt(0).toString(16).padStart(2, "0")).join(""), true, 16);
 	}
 
@@ -911,7 +912,9 @@ export default class WASMC {
 			return [Long.UZERO];
 		}
 
-		return _.chunk(str.padEnd(Math.ceil(str.length / 8) * 8, "\0").split(""), 8).map(WASMC.chunk2long);
+		const out = _.chunk(str.padEnd(Math.ceil(str.length / 8) * 8, "\0").split(""), 8).map(WASMC.chunk2long);
+		console.log({str, out});
+		return out;
 	}
 
 	/**

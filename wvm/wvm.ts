@@ -47,7 +47,7 @@ export default class WVM {
 	onPrintChar: ((val: string) => void) | null;
 	onChangeRing: (newRing: number) => void = () => {};
 	onSetByte: (addr: number, byte: number) => void = () => {};
-	onSetWord: (addr: number, word: Long) => void = () => {};
+	onSetWord: (addr: number, word: Long, littleEndian: boolean) => void = () => {};
 	onSetHalfword: (addr: number, word: number) => void = () => {};
 	onTick: () => void = () => {};
 	
@@ -148,7 +148,7 @@ export default class WVM {
 	 */
 	resetMemory(): void {
 		this.memory = new Uint8Array(this.memorySize * 8);
-		this.initial.forEach((long, i) => this.setWord(8*i, long));
+		this.initial.forEach((long, i) => this.setWord(8*i, long, false));
 	}
 
 	/**
@@ -162,9 +162,11 @@ export default class WVM {
 	/**
 	 * Gets a word from memory.
 	 * @param {number|Long} k The index of the word to get.
+	 * @param {boolean} [signed=false] Whether to treat the value as signed.
+	 * @param {boolean} [littleEndian=true] Whether to treat the value as little endian.
 	 * @return {Long} The word at the given address.
 	 */
-	getWord(k, signed=false) {
+	getWord(k, signed=false, littleEndian=false) {
 		k = k instanceof Long? k.toInt() : k;
 
 		if (k % 8) {
@@ -173,9 +175,16 @@ export default class WVM {
 			// In the future, this may cause an exception.
 		}
 
+		if (littleEndian) {
+			return new Long(
+				this.memory[k]         | this.memory[k+1] <<  8 | this.memory[k+2] << 16 | this.memory[k+3] << 24,
+				this.memory[k+4] << 32 | this.memory[k+5] << 40 | this.memory[k+6] << 48 | this.memory[k+7] << 56,
+			signed);
+		}
+
 		return new Long(
-			this.memory[k]         | this.memory[k+1] <<  8 | this.memory[k+2] << 16 | this.memory[k+3] << 24,
-			this.memory[k+4] << 32 | this.memory[k+5] << 40 | this.memory[k+6] << 48 | this.memory[k+7] << 56,
+			this.memory[k+7]       | this.memory[k+6] <<  8 | this.memory[k+5] << 16 | this.memory[k+4] << 24,
+			this.memory[k+3] << 32 | this.memory[k+2] << 40 | this.memory[k+1] << 48 | this.memory[k]   << 56,
 		signed);
 	}
 
@@ -184,7 +193,7 @@ export default class WVM {
 	 * @param {number|Long} v The word to write to memory.
 	 * @return {boolean} A boolean representing whether the word was successfully set.
 	 */
-	setWord(k, v) {
+	setWord(k, v, littleEndian=true) {
 		k = k instanceof Long? k.toInt() : k;
 		v = v instanceof Long? v : Long.fromInt(v);
 
@@ -193,15 +202,21 @@ export default class WVM {
 		}
 
 		const mask = 0xff;
-		for (let i = 0; i < 4; i++) {
-			this.memory[k + i] = v.low >> 8*i & mask;
+		if (littleEndian) {
+			for (let i = 0; i < 4; i++)
+				this.memory[k + i] = v.low >> 8*i & mask;
+
+			for (let i = 4; i < 8; i++)
+				this.memory[k + i] = v.high >> 8*i & mask;
+		} else {
+			for (let i = 0; i < 4; i++)
+				this.memory[k + 7 - i] = v.low >> 8*i & mask;
+
+			for (let i = 4; i < 8; i++)
+				this.memory[k + 7 - i] = v.high >> 8*i & mask;
 		}
 
-		for (let i = 4; i < 8; i++) {
-			this.memory[k + i] = v.high >> 8*i & mask;
-		}
-
-		this.onSetWord(k, v);
+		this.onSetWord(k, v, littleEndian);
 		return true;
 	}
 
@@ -375,13 +390,13 @@ export default class WVM {
 	}
 
 	stackPush(val) {
-		this.setWord(this.sp, val);
+		this.setWord(this.sp, val, true);
 		this.sp = this.sp.subtract(8);
 	}
 
 	stackPop() {
 		this.sp = this.sp.add(8);
-		return this.getWord(this.sp);
+		return this.getWord(this.sp, false, true);
 	}
 
 	setTimer(micro) {

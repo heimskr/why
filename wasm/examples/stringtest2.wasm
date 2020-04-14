@@ -1,0 +1,32 @@
+#meta
+name: "String Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "2"
+
+#includes
+../compiled/string.why
+
+#data
+hello: "Hello, "
+world: "World!\n"
+longer: "This is a longer string."
+heap: (64)
+
+#code
+
+&heap -> $a0
+&hello -> $a1
+:: strcat
+
+&world -> $a1
+:: strcat
+
+&heap -> $a0
+:: strprint
+
+&longer -> $a0
+:: strprint
+<prc '\n'>
+
+<halt>

@@ -225,7 +225,7 @@ let App = window.App = class App {
 	hexCell(long) {
 		if (!(long instanceof Long))
 			long = Long.fromInt(long, true);
-		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).reverse().map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
+		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
 	}
 
 	decompiledCell(long, addr) {
@@ -375,15 +375,20 @@ let App = window.App = class App {
 		}
 		
 		$(".program-counter").removeClass("program-counter");
-		$(`#memory tr.addr-${pc / 8}`).addClass("program-counter")[0].scrollIntoViewIfNeeded();
+		let pcrow = $(`#memory tr.addr-${pc / 8}`).addClass("program-counter")[0];
+		if (pcrow) {
+			pcrow.scrollIntoViewIfNeeded();
+		} else {
+			console.warn(`Program counter is at ${pc}—row not found`);
+		}
 	}
 
 	highlightStackPointer() {
 		const sp = this.vm.registers[REGISTER_OFFSETS.stack].toInt();
 
-		if (sp % 8) {
-			console.warn(`Stack pointer (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
-		}
+		// if (sp % 8) {
+		// 	console.warn(`Stack pointer (${sp}) is misaligned by ${sp % 8} byte${sp % 8 == 1? "" : "s"}.`);
+		// }
 
 		$(".stack-pointer").removeClass("stack-pointer");
 		$(`#memory tr.addr-${sp / 8}`).addClass("stack-pointer");
@@ -760,7 +765,7 @@ function initializeUI(app) {
 }
 
 let parser = new Parser();
-parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/20args.why", "utf8"));
+parser.read(fs.readFileSync(__dirname + "/../../wasm/compiled/stringtest2.why", "utf8"));
 let {offsets, meta, code, symbols} = parser;
 let app, vm = window.vm = new WVM({offsets, meta, code, symbols}, parser.raw);
 

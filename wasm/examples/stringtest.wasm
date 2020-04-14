@@ -35,6 +35,7 @@ strcat(&w0, &sixteen)
 strcat(&w0, &eight)
 strcat(&w0, &five)
 strcat(&w0, &zero)
+strprint(&w0)
 strlen(&zero)
 <print $r0>
 strlen(&five)

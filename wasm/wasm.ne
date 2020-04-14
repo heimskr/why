@@ -6,7 +6,7 @@ const S = Symbol.for;
 const {EXTS} = require("./constants.js");
 
 const special = {
-	chars: "@$&*\t \":`./",
+	chars: "@$&*\t \":`/",
 	words: "+ - / * ^ -> < > <= >= = == [ ] :".split(" ")
 };
 
