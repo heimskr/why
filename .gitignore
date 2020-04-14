@@ -38,3 +38,4 @@ wasm/wld.js
 wvm/printansi.js
 wvm/wvm.js
 testgraph.js
+.DS_Store
