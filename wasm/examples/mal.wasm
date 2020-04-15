@@ -3,7 +3,7 @@ name: "combined.c"
 
 #data
 .str.49: "]\x0A\x00"
-.str.47: "at position [\x00"
+.str.47: " at position [\x00"
 .str.46: "\x1B[0m block of size \x00"
 .str.45: "n \x1B[31mallocated\x00"
 .str.44: " \x1B[32mfree\x00"
@@ -27,7 +27,7 @@ name: "combined.c"
 .str.22: "Ptr4\x00"
 .str.10: "combined.c\x00"
 last_block: (8)
-.str.41: "bytes: \x00"
+.str.41: " bytes: \x00"
 .str.21: "Ptr3\x00"
 .str.20: "Ptr2\x00"
 __func__.fr: "fr\x00"
@@ -49,14 +49,14 @@ end: (8)
 .str.7: "no\x0A\x00"
 .str.4: "\x0A\x00"
 .str.48: ", \x00"
-.str.40: "byte: \x00"
+.str.40: " byte: \x00"
 .str.9: "\x0A       size: \x00"
 memory: (8)
 .str.32: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
 .str.5: "block->next: \x00"
 .str.3: "~ \x00"
 .str.31: "Ptr10\x00"
-.str: "%d\x0A\x00"
+.str: "%d\x00"
 global_base: (8)
 .str.2: "\x1B[38;5;226mSetting global_base\x1B[0m.\x0A\x00"
 
@@ -93,7 +93,8 @@ sub allocate() {
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t3
-	$t3 & 0 -> $t4
+	// LowerTrunc: 64 to 32, apply mask
+	$t3 & -1 -> $t4
 	$t4 -> $a0
 	:: prd
 	&.str.33 -> $a0
@@ -139,7 +140,8 @@ sub allocate() {
 	[memory] -> $t3
 	$t3 -> $t4
 	$t1 - $t4 -> $t5
-	$t5 & 0 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
 	$t6 -> $a0
 	:: prd
 	&.str.4 -> $a0
@@ -185,7 +187,8 @@ sub check_free() {
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t5
-	$t5 & 0 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
 	$t6 -> $a0
 	:: prd
 	// LowerMemory: [%local] -> %var
@@ -211,7 +214,8 @@ sub check_free() {
 	[memory] -> $t2
 	$t2 -> $t3
 	$t0 - $t3 -> $t4
-	$t4 & 0 -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
 	$t5 -> $a0
 	:: prd
 	&.str.4 -> $a0
@@ -282,7 +286,7 @@ sub fr() {
 	&.str.10 -> $a1
 	134 -> $a2
 	&.str.11 -> $a3
-	//// :: __assert_rtn
+	:: __assert_rtn
 	: __fr_label21
 	@__fr_label20
 	: __fr_label21
@@ -413,7 +417,8 @@ sub memsplit() {
 	$ta -> $tc
 	$tb - $tc -> $td
 	$td - 24 -> $te
-	$te & 0 -> $tf
+	// LowerTrunc: 64 to 32, apply mask
+	$te & -1 -> $tf
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t3] /h
 	// LowerMemory: [%local] -> %var
@@ -485,7 +490,8 @@ sub memsplit() {
 	$t9 -> $tc
 	$tb -> $td
 	$tc - $td -> $te
-	$te & 0 -> $tf
+	// LowerTrunc: 64 to 32, apply mask
+	$te & -1 -> $tf
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t4] /h
 	// LowerMemory: [%local] -> %var
@@ -565,11 +571,7 @@ sub mem_init() {
 	$t2 - $m0 -> $t2
 	$t2 -> $a0
 	4 -> $a1
-	
-	// :: calloc
-	// $r0 -> $t3
-	16128 -> $t3
-
+	&.end -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [global]
 	$t4 -> [memory]
@@ -715,7 +717,8 @@ sub mal() {
 	$lo -> $te
 	$te + $ta -> $te
 	$te -> $tf
-	$tf & 0 -> $t10
+	// LowerTrunc: 64 to 32, apply mask
+	$tf & -1 -> $t10
 	$t10 -> $a0
 	:: prd
 	&.str.4 -> $a0
@@ -768,14 +771,16 @@ sub mal() {
 	$t9 + 0 -> $ta
 	// LowerMemory: [%local] -> %var
 	[$ta] -> $tb
-	$tb & 0 -> $tc
+	// LowerTrunc: 64 to 32, apply mask
+	$tb & -1 -> $tc
 	$tc -> $a0
 	:: prd
 	&.str.9 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $td
-	$td & 0 -> $te
+	// LowerTrunc: 64 to 32, apply mask
+	$td & -1 -> $te
 	$te -> $a0
 	:: prd
 	&.str.4 -> $a0
@@ -829,7 +834,8 @@ sub dbg() {
 	[memory] -> $t2
 	$t2 -> $t3
 	$t1 - $t3 -> $t4
-	$t4 & 0 -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
 	$t5 -> $a0
 	:: prd
 	&.str.4 -> $a0
@@ -855,7 +861,8 @@ sub dbg() {
 	$t1 -> $t4
 	$t3 -> $t5
 	$t4 - $t5 -> $t6
-	$t6 & 0 -> $t7
+	// LowerTrunc: 64 to 32, apply mask
+	$t6 & -1 -> $t7
 	$t7 -> $a0
 	:: prd
 	&.str.4 -> $a0
@@ -1337,7 +1344,8 @@ sub dbg_blocks() {
 	$tb + 0 -> $tc
 	// LowerMemory: [%local] -> %var
 	[$tc] -> $td
-	$td & 0 -> $te
+	// LowerTrunc: 64 to 32, apply mask
+	$td & -1 -> $te
 	$te -> $a0
 	:: prd
 	&.str.47 -> $a0
@@ -1349,7 +1357,8 @@ sub dbg_blocks() {
 	[memory] -> $t11
 	$t11 -> $t12
 	$t10 - $t12 -> $t13
-	$t13 & 0 -> $t14
+	// LowerTrunc: 64 to 32, apply mask
+	$t13 & -1 -> $t14
 	$t14 -> $a0
 	:: prd
 	&.str.48 -> $a0
@@ -1368,7 +1377,8 @@ sub dbg_blocks() {
 	// LowerMemory: [%local] -> %var
 	[$s5] -> $s6
 	$s3 + $s6 -> $s7
-	$s7 & 0 -> $s8
+	// LowerTrunc: 64 to 32, apply mask
+	$s7 & -1 -> $s8
 	$s8 -> $a0
 	:: prd
 	&.str.49 -> $a0
@@ -1490,7 +1500,8 @@ sub main() {
 	// LowerMemory: [global] -> %var
 	[memory] -> $ta
 	$ta -> $tb
-	$tb & 0 -> $tc
+	// LowerTrunc: 64 to 32, apply mask
+	$tb & -1 -> $tc
 	$tc -> $a0
 	:: prd
 	&.str.4 -> $a0
