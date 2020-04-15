@@ -2,7 +2,6 @@ COMPILER		?= clang++
 OPTIMIZATION	?= -O0 -g
 CFLAGS			:= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
-MKBUILD			:= mkdir -p build
 
 INCLUDE_ICU		:= $(shell pkg-config --cflags icu-uc)
 LD_ICU			:= $(shell pkg-config --libs icu-uc)
@@ -14,25 +13,29 @@ SOURCES_HN		:= $(shell find haunted/src -name '*.cpp' | sed -nE '/(tests?|test_.
 	haunted/src/lib/formicine/ansi.cpp haunted/src/lib/formicine/futil.cpp haunted/src/lib/formicine/performance.cpp
 INCLUDE_HN		= -Ihaunted/include $(INCLUDE_ICU)
 OBJECTS_HN		:= $(patsubst haunted/src/%.cpp,haunted/build/%.o,$(SOURCES_HN))
+CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
 INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
 LDFLAGS			:= $(LD_ICU)
 
-.PHONY: all clean
+.PHONY: all clean test
 
 all: $(OUT)
 
 $(OUT): $(OBJECTS)
 	$(COMPILER) $(LDFLAGS) $(INCLUDE) $^ -o $@
 
+test: $(OUT)
+	./$(OUT) ../../wasm/compiled/mal.why
+
 haunted/build/%.o: haunted/src/%.cpp
 	@ mkdir -p "$(shell dirname "$@")"
-	$(COMPILER) $(CFLAGS) $(INCLUDE_HN) -c $< -o $@
+	$(COMPILER) $(CFLAGS) $(INCLUDE_HN) $(CFLAGS_HN) -c $< -o $@
 
 build/%.o: src/%.cpp
-	$(MKBUILD)
+	@ mkdir -p "$(shell dirname "$@")"
 	$(COMPILER) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
 clean:
