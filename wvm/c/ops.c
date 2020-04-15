@@ -9,6 +9,7 @@
 #include "instruction.h"
 #include "interrupts.h"
 #include "timer.h"
+#include "mult.h"
 
 void op_nop(word instruction) {
 	INC();
@@ -31,17 +32,31 @@ void op_sub(word instruction) {
 }
 
 void op_mult(word instruction) {
-	// TODO: catching overflow is hard.
+	RREGS();
+	CAT_MUL128(registers[R_HI], registers[R_LO], rsv, rtv);
 	INC();
 }
 
 void op_multu(word instruction) {
+	// TODO: mult and multu shouldn't be the same.
 	op_mult(instruction);
 }
 
 void op_mod(word instruction) {
 	RREGS();
 	wvm_alu_flags_update(rdv = rsv % rtv);
+	INC();
+}
+
+void op_div(word instruction) {
+	RREGS();
+	wvm_alu_flags_update(rdv = rsv / rtv);
+	INC();
+}
+
+void op_divu(word instruction) {
+	RREGS();
+	wvm_alu_flags_update(rdv = (uword) rsv / (uword) rtv);
 	INC();
 }
 
@@ -190,6 +205,30 @@ void op_srai(word instruction) {
 void op_modi(word instruction) {
 	IREGS();
 	wvm_alu_flags_update(rdv = rsv % (word) imm);
+	INC();
+}
+
+void op_divi(word instruction) {
+	IREGS();
+	wvm_alu_flags_update(rdv = rsv / (word) imm);
+	INC();
+}
+
+void op_divui(word instruction) {
+	IREGS();
+	wvm_alu_flags_update(rdv = (uword) rsv / (uword) imm);
+	INC();
+}
+
+void op_divii(word instruction) {
+	IREGS();
+	wvm_alu_flags_update(rdv = (word) imm / rsv);
+	INC();
+}
+
+void op_divuii(word instruction) {
+	IREGS();
+	wvm_alu_flags_update(rdv = (uword) imm / (uword) rsv);
 	INC();
 }
 
@@ -359,19 +398,19 @@ void op_jrlc(word instruction) {
 
 void op_c(word instruction) {
 	RREGS();
-	wvm_set_word(rdv, wvm_get_word(rsv));
+	wvm_set_word(rdv, wvm_get_word(rsv, true), true);
 	INC();
 }
 
 void op_l(word instruction) {
 	RREGS();
-	rdv = wvm_get_word(rsv);
+	rdv = wvm_get_word(rsv, true);
 	INC();
 }
 
 void op_s(word instruction) {
 	RREGS();
-	wvm_set_word(rdv, rsv);
+	wvm_set_word(rdv, rsv, true);
 	INC();
 }
 
@@ -395,7 +434,7 @@ void op_sb(word instruction) {
 
 void op_spush(word instruction) {
 	RREGS();
-	wvm_set_word(spv, rsv);
+	wvm_set_word(spv, rsv, true);
 	spv -= 8;
 	INC();
 }
@@ -403,19 +442,37 @@ void op_spush(word instruction) {
 void op_spop(word instruction) {
 	RREGS();
 	spv += 8;
-	rdv = wvm_get_word(spv);
+	rdv = wvm_get_word(spv, true);
+	INC();
+}
+
+void op_ch(word instruction) {
+	RREGS();
+	wvm_set_halfword(rdv, wvm_get_halfword(rsv));
+	INC();
+}
+
+void op_lh(word instruction) {
+	RREGS();
+	rdv = wvm_get_halfword(rsv);
+	INC();
+}
+
+void op_sh(word instruction) {
+	RREGS();
+	wvm_set_halfword(rdv, rsv);
 	INC();
 }
 
 void op_li(word instruction) {
 	IRD(); IIMM();
-	rdv = wvm_get_word(imm);
+	rdv = wvm_get_word(imm, true);
 	INC();
 }
 
 void op_si(word instruction) {
 	IRS(); IIMM();
-	wvm_set_word(imm, rsv);
+	wvm_set_word(imm, rsv, true);
 	INC();
 }
 
@@ -439,7 +496,7 @@ void op_sbi(word instruction) {
 
 void op_lni(word instruction) {
 	IRD(); IIMM();
-	wvm_set_word(rdv, wvm_get_word(imm));
+	wvm_set_word(rdv, wvm_get_word(imm, true), true);
 	INC();
 }
 

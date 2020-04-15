@@ -23,6 +23,8 @@
 typedef int64_t word;
 typedef uint64_t uword;
 typedef uint8_t byte;
+typedef int32_t hword;
+typedef uint32_t uhword;
 typedef enum {RING_INVALID = -2, RING_ANY = -1, RING_KERNEL = 0, RING_1 = 1, RING_2 = 2, RING_USER = 3} ring_t;
 typedef enum {
 	COND_NONE = 0,
@@ -36,10 +38,12 @@ bool wvm_init(word length);
 void wvm_free();
 int wvm_load(char *filename);
 void wvm_init_vm();
-word wvm_get_word(word addr);
-void wvm_set_word(word addr, word value);
+word wvm_get_word(word addr, bool little_endian);
+void wvm_set_word(word addr, word value, bool little_endian);
 byte wvm_get_byte(word addr);
 void wvm_set_byte(word addr, byte value);
+hword wvm_get_halfword(word addr);
+void wvm_set_halfword(word addr, hword value);
 char * wvm_get_string(word addr);
 void wvm_jump(word addr);
 void wvm_link();

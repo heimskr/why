@@ -60,7 +60,7 @@ int wvm_force_interrupt(imm_t id, ring_t new_ring) {
 	if (-1 < new_ring)
 		cur_ring = new_ring;
 
-	wvm_jump(wvm_get_word(inttab + 8 * id));
+	wvm_jump(wvm_get_word(inttab + 8 * id, false));
 	return 0;
 }
 

@@ -48,15 +48,15 @@ int wvm_load(char *filename) {
 	char line[20];
 	while (fgets(line, 18, file)) {
 		word instr = strtoul(line, NULL, 16);
-		wvm_set_word(memsize++ * 8, instr);
+		wvm_set_word(memsize++ * 8, instr, false);
 	}
 
 	fclose(file);
 
-	offset_symtab = wvm_get_word(0);
-	offset_code = wvm_get_word(8);
-	offset_data = wvm_get_word(16);
-	offset_end = wvm_get_word(24);
+	offset_symtab = wvm_get_word(0, false);
+	offset_code = wvm_get_word(8, false);
+	offset_data = wvm_get_word(16, false);
+	offset_end = wvm_get_word(24, false);
 
 	return memsize;
 }
@@ -72,13 +72,18 @@ void wvm_init_vm() {
 /**
  * Returns a word from the VM memory.
  * @param addr The byte-indexed address of the word to retrieve.
+ * @param little_endian Whether the access should be little-endian instead of big-endian.
  * @return The word at the given index.
  */
-word wvm_get_word(word addr) {
+word wvm_get_word(word addr, bool little_endian) {
 	word out = 0;
 
-	for (byte i = 0; i < 8; i++) {
-		out |= ((word) memory[addr + i]) << ((7 - i) * 8);
+	if (little_endian) {
+		for (byte i = 0; i < 8; i++)
+			out |= ((word) memory[addr + i]) << (i * 8);
+	} else {
+		for (byte i = 0; i < 8; i++)
+			out |= ((word) memory[addr + i]) << ((7 - i) * 8);
 	}
 
 	return out;
@@ -88,16 +93,16 @@ word wvm_get_word(word addr) {
  * Sets a word in the VM memory.
  * @param addr The byte-indexed starting address of the destination in the VM memory.
  * @param value The value to store in the VM memory.
+ * @param little_endian Whether the access should be little-endian instead of big-endian.
  */
-void wvm_set_word(word addr, word value) {
-	memory[addr]     = (value >> 7*8) & 0xff;
-	memory[addr + 1] = (value >> 6*8) & 0xff;
-	memory[addr + 2] = (value >> 5*8) & 0xff;
-	memory[addr + 3] = (value >> 4*8) & 0xff;
-	memory[addr + 4] = (value >> 3*8) & 0xff;
-	memory[addr + 5] = (value >> 2*8) & 0xff;
-	memory[addr + 6] = (value >> 1*8) & 0xff;
-	memory[addr + 7] =  value         & 0xff;
+void wvm_set_word(word addr, word value, bool little_endian) {
+	if (little_endian) {
+		for (int i = 0; i < 8; i++)
+			memory[addr + i] = (value >> 8*i) & 0xff;
+	} else {
+		for (int i = 0; i < 8; i++)
+			memory[addr + 7 - i] = (value >> 8*i) & 0xff;
+	}
 }
 
 /**
@@ -116,6 +121,30 @@ byte wvm_get_byte(word addr) {
  */
 void wvm_set_byte(word addr, byte value) {
 	memory[addr] = value;
+}
+
+/**
+ * Returns a halfword from the VM memory.
+ * @param addr The byte-indexed address of the word to retrieve.
+ * @return The halfword at the given index.
+ */
+hword wvm_get_halfword(word addr) {
+	hword out = 0;
+
+	for (byte i = 0; i < 4; i++)
+		out |= ((hword) memory[addr + i]) << (i * 8);
+
+	return out;
+}
+
+/**
+ * Sets a halfword in the VM memory.
+ * @param addr The byte-indexed starting address of the destination in the VM memory.
+ * @param value The value to store in the VM memory.
+ */
+void wvm_set_halfword(word addr, hword value) {
+	for (int i = 0; i < 4; i++)
+		memory[addr + i] = (value >> 8*i) & 0xff;
 }
 
 /**
@@ -187,7 +216,7 @@ int wvm_change_ring(ring_t new_ring) {
  * @return Whether to continue to the next instruction.
  */
 bool wvm_tick() {
-	word instruction = wvm_get_word(pc);
+	word instruction = wvm_get_word(pc, false);
 	op_fn op = wvm_get_fn(instruction);
 	if (op == NULL) {
 		DIEF("%s Couldn't find function for instruction %s0x%016llx%s (opcode %s%d%s) at address %s%lld%s\n", S_NOPE,
@@ -249,7 +278,7 @@ void wvm_print_memory() {
 	printf("\n┌───────┼────────────────────┼%s┤\n", sep);
 	for (int i = 0; i < memsize; i++) {
 		word boffset = i << 3;
-		word word = wvm_get_word(boffset);
+		word word = wvm_get_word(boffset, false);
 		if (boffset == offset_symtab || boffset == offset_code || boffset == offset_data)
 			printf("├───────┼────────────────────┼%s┤%s\n", sep, ANSI_RESET);
 

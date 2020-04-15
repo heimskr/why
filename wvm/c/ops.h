@@ -42,6 +42,8 @@ void op_sll(word instruction);    // 1   R 6
 void op_srl(word instruction);    // 1   R 7
 void op_sra(word instruction);    // 1   R 8
 void op_mod(word instruction);    // 1   R 9
+void op_div(word instruction);    // 1   R 10
+void op_divu(word instruction);   // 1   R 11
 
 void op_and(word instruction);    // 2   R 0
 void op_nand(word instruction);   // 2   R 1
@@ -68,6 +70,10 @@ void op_slli(word instruction);   // 34  I
 void op_srli(word instruction);   // 35  I
 void op_srai(word instruction);   // 36  I
 void op_modi(word instruction);   // 30  I
+void op_divi(word instruction);   // 52  I
+void op_divui(word instruction);  // 53  I
+void op_divii(word instruction);  // 54  I
+void op_divuii(word instruction); // 55  I
 
 void op_andi(word instruction);   // 6   I
 void op_nandi(word instruction);  // 7   I
@@ -107,6 +113,9 @@ void op_lb(word instruction);     // 18  R 4
 void op_sb(word instruction);     // 18  R 5
 void op_spush(word instruction);  // 18  R 6
 void op_spop(word instruction);   // 18  R 7
+void op_ch(word instruction);     // 18  R 8
+void op_lh(word instruction);     // 18  R 9
+void op_sh(word instruction);     // 18  R 10
 
 void op_li(word instruction);     // 19  I
 void op_si(word instruction);     // 20  I
@@ -141,6 +150,8 @@ void op_nop(word instruction);    // 0   X
 #define OP_SRL    1
 #define OP_MOD    1
 #define OP_SRA    1
+#define OP_DIV    1
+#define OP_DIVU   1
 #define OP_AND    2
 #define OP_NAND   2
 #define OP_NOR    2
@@ -185,6 +196,9 @@ void op_nop(word instruction);    // 0   X
 #define OP_SB     18
 #define OP_SPUSH  18
 #define OP_SPOP   18
+#define OP_CH     18
+#define OP_LH     18
+#define OP_SH     18
 #define OP_LI     19
 #define OP_SI     20
 #define OP_SET    21
@@ -217,6 +231,10 @@ void op_nop(word instruction);    // 0   X
 #define OP_TIMEI  49
 #define OP_RING   50
 #define OP_RINGI  51
+#define OP_DIVI   52
+#define OP_DIVUI  53
+#define OP_DIVII  54
+#define OP_DIVUII 55
 
 #define OPS_RMATH  1
 #define OPS_RLOGIC 2
@@ -265,10 +283,15 @@ void op_nop(word instruction);    // 0   X
 #define FUNCT_SLEEP  7
 #define FUNCT_SRA    8
 #define FUNCT_LAND   8
+#define FUNCT_CH     8
 #define FUNCT_LNAND  9
 #define FUNCT_MOD    9
+#define FUNCT_LH     9
 #define FUNCT_LNOR   10
+#define FUNCT_DIV    10
+#define FUNCT_SH     10
 #define FUNCT_LNOT   11
+#define FUNCT_DIVU   11
 #define FUNCT_LOR    12
 #define FUNCT_LXNOR  13
 #define FUNCT_LXOR   14
