@@ -117,7 +117,7 @@ inclusion		-> .:+ "\n"									{% (d, l, r) => { const t = d[0].join("").trim();
 				 | _ "\n" 									{% d => null %}
 
 label			-> "@" var									{% nth(1) %}
-xvar			-> (var | ".end")							{% d => d[0][0] %}
+xvar			-> var										{% d => d[0] %}
 ptr_ref			-> "&" xvar									{% nth(1) %}
 var_addr		-> ptr_ref									{% d => ["address", d[0]] %}
 
