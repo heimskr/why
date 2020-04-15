@@ -1,0 +1,3 @@
+[submodule "wvm/cpp/haunted"]
+	path = wvm/cpp/haunted
+	url = https://github.com/heimskr/haunted
