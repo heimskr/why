@@ -2,5 +2,5 @@
 #include "ansi.h"
 
 int main() {
-
+	
 }
