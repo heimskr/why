@@ -11,7 +11,7 @@
 
 char * wvm_disassemble(word instruction);
 void wvm_disassemble_r(char *str, word instruction);
-void wvm_disassemble_r_alt_op(char *str, reg_t rs, reg_t rt, reg_t rd, char *oper);
+void wvm_disassemble_r_alt_op(char *str, reg_t rs, reg_t rt, reg_t rd, char *oper, char *suffix);
 void wvm_disassemble_i(char *str, word instruction);
 void wvm_disassemble_i_comp(char *str, reg_t rs, reg_t rd, imm_t imm, char *oper);
 void wvm_disassemble_i_alt_op(char *str, reg_t rs, reg_t rd, imm_t imm, char *oper);
