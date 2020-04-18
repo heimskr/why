@@ -62,7 +62,6 @@ global_base: (8)
 
 #code
 
-&.end -> $k0
 :: main
 <halt>
 
@@ -107,16 +106,28 @@ sub allocate() {
 	$a0 -> [$t0]
 	// LowerMemory: %src -> [%dest]
 	$a1 -> [$t1]
+	[ $a0
+	[ $a1
 	&.str.32 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t3
 	// LowerTrunc: 64 to 32, apply mask
 	$t3 & -1 -> $t4
+	[ $a0
+	[ $a1
 	$t4 -> $a0
 	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.33 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t5
 	$t5 == 1 -> $t6
@@ -125,12 +136,20 @@ sub allocate() {
 	&.str.15 -> $t10
 	$t6 ~ 0
 	[$tf != $t10] -> $t8
+	[ $a0
+	[ $a1
 	$t8 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t9
+	[ $a0
+	[ $a1
 	$t9 -> $a0
 	:: mal
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $ta
 	$ta -> $tb
@@ -138,18 +157,30 @@ sub allocate() {
 	$tb -> [$t2]
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $tc
+	[ $a0
+	[ $a1
 	$tc -> $a0
 	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.34 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $td
 	$td == 0 -> $te
 	: __allocate_label18 if $te
 	: __allocate_label19
 	@__allocate_label18
+	[ $a0
+	[ $a1
 	&.str.35 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	: __allocate_label26
 	@__allocate_label19
 	// LowerMemory: [%local] -> %var
@@ -161,10 +192,18 @@ sub allocate() {
 	$t1 - $t4 -> $t5
 	// LowerTrunc: 64 to 32, apply mask
 	$t5 & -1 -> $t6
+	[ $a0
+	[ $a1
 	$t6 -> $a0
 	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.4 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	@__allocate_label26
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t0
@@ -226,22 +265,28 @@ sub check_free() {
 	$a0 -> [$t0]
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t2
+	[ $a0
 	&last_block -> $a0
 	$t2 -> $a1
 	:: find_free_block
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t1]
+	[ $a0
 	&.str.39 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t5
 	// LowerTrunc: 64 to 32, apply mask
 	$t5 & -1 -> $t6
+	[ $a0
 	$t6 -> $a0
 	:: prd
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t7
 	$t7 == 1 -> $t8
@@ -250,8 +295,10 @@ sub check_free() {
 	&.str.41 -> $te
 	$t8 ~ 0
 	[$td != $te] -> $ta
+	[ $a0
 	$ta -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $tb
 	$tb == 0 -> $tc
@@ -267,14 +314,20 @@ sub check_free() {
 	$t0 - $t3 -> $t4
 	// LowerTrunc: 64 to 32, apply mask
 	$t4 & -1 -> $t5
+	[ $a0
 	$t5 -> $a0
 	:: prd
+	] $a0
+	[ $a0
 	&.str.4 -> $a0
 	:: strprint
+	] $a0
 	: __check_free_label22
 	@__check_free_label21
+	[ $a0
 	&.str.35 -> $a0
 	:: strprint
+	] $a0
 	@__check_free_label22
 	$fp -> $sp
 	] $te
@@ -337,8 +390,10 @@ sub fr() {
 	@__fr_label7
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t2
+	[ $a0
 	$t2 -> $a0
 	:: get_block_ptr
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	// LowerMemory: %src -> [%dest]
@@ -360,11 +415,13 @@ sub fr() {
 	: __fr_label18 if $tb
 	: __fr_label20
 	@__fr_label18
+	[ $a0
 	&__func__.fr -> $a0
 	&.str.10 -> $a1
 	134 -> $a2
 	&.str.11 -> $a3
 	:: __assert_rtn
+	] $a0
 	: __fr_label21
 	@__fr_label20
 	<>
@@ -376,7 +433,9 @@ sub fr() {
 	1 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t2] /h
+	[ $a0
 	:: merge_blocks
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	@__fr_label25
@@ -511,8 +570,12 @@ sub memsplit() {
 	// LowerMemory: %src -> [%dest]
 	$tb -> [$t2]
 	$t2 -> $tc
+	[ $a0
+	[ $a1
 	$tc -> $a0
 	:: realign
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $td
 	// LowerMemory: [%local] -> %var
@@ -723,16 +786,20 @@ sub mem_init() {
 	$m0 << 31 -> $m0
 	$t1 x $m0 -> $t2
 	$t2 - $m0 -> $t2
+	[ $a0
 	$t2 -> $a0
 	4 -> $a1
 	:: calloc
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [global]
 	$t4 -> [memory]
+	[ $a0
 	&memory -> $a0
 	:: realign
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t5
 	// LowerMemory: [global] -> %var
@@ -841,9 +908,11 @@ sub mal() {
 	@__mal_label12
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t4
+	[ $a0
 	0 -> $a0
 	$t4 -> $a1
 	:: request_space
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t5
 	// LowerMemory: %src -> [%dest]
@@ -861,8 +930,10 @@ sub mal() {
 	$m0 -> [$t0]
 	: __mal_label69
 	@__mal_label18
+	[ $a0
 	&.str.2 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t4
 	// LowerMemory: %src -> [global]
@@ -875,9 +946,11 @@ sub mal() {
 	$t4 -> [$t3]
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t5
+	[ $a0
 	$t3 -> $a0
 	$t5 -> $a1
 	:: find_free_block
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t6
 	// LowerMemory: %src -> [%dest]
@@ -889,8 +962,10 @@ sub mal() {
 	: __mal_label47 if $t8
 	: __mal_label26
 	@__mal_label26
+	[ $a0
 	&.str.3 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t4
 	$t4 -> $t5
@@ -913,17 +988,23 @@ sub mal() {
 	$te -> $tf
 	// LowerTrunc: 64 to 32, apply mask
 	$tf & -1 -> $t10
+	[ $a0
 	$t10 -> $a0
 	:: prd
+	] $a0
+	[ $a0
 	&.str.4 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t11
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t12
+	[ $a0
 	$t11 -> $a0
 	$t12 -> $a1
 	:: request_space
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t13
 	// LowerMemory: %src -> [%dest]
@@ -943,8 +1024,10 @@ sub mal() {
 	@__mal_label46
 	: __mal_label64
 	@__mal_label47
+	[ $a0
 	&.str.5 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t3
 	$t3 + 8 -> $t4
@@ -957,10 +1040,14 @@ sub mal() {
 	&.str.7 -> $t14
 	$t6 ~ 0
 	[$t13 != $t14] -> $t8
+	[ $a0
 	$t8 -> $a0
 	:: strprint
+	] $a0
+	[ $a0
 	&.str.8 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t9
 	$t9 + 0 -> $ta
@@ -968,25 +1055,35 @@ sub mal() {
 	[$ta] -> $tb
 	// LowerTrunc: 64 to 32, apply mask
 	$tb & -1 -> $tc
+	[ $a0
 	$tc -> $a0
 	:: prd
+	] $a0
+	[ $a0
 	&.str.9 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $td
 	// LowerTrunc: 64 to 32, apply mask
 	$td & -1 -> $te
+	[ $a0
 	$te -> $a0
 	:: prd
+	] $a0
+	[ $a0
 	&.str.4 -> $a0
 	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $tf
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t10
+	[ $a0
 	$tf -> $a0
 	$t10 -> $a1
 	:: memsplit
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t11
 	$t11 + 16 -> $t12
@@ -1336,8 +1433,12 @@ sub request_space() {
 	$a0 -> [$t0]
 	// LowerMemory: %src -> [%dest]
 	$a1 -> [$t1]
+	[ $a0
+	[ $a1
 	&end -> $a0
 	:: realign
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	$t3 -> $t4
@@ -1919,177 +2020,409 @@ sub main() {
 	$a0 -> [$t0] /h
 	// LowerMemory: %src -> [%dest]
 	$a1 -> [$t1]
+	[ $a0
+	[ $a1
 	&.str.16 -> $a0
 	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.17 -> $a0
 	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	24 -> $a0
 	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.4 -> $a0
 	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	1048576 -> $a0
 	:: mem_init
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t9
+	[ $a0
+	[ $a1
 	&.str.18 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [global] -> %var
 	[memory] -> $ta
 	$ta -> $tb
 	// LowerTrunc: 64 to 32, apply mask
 	$tb & -1 -> $tc
+	[ $a0
+	[ $a1
 	$tc -> $a0
 	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.4 -> $a0
 	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	0 -> $a0
 	:: check_free
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	800 -> $a0
 	&.str.19 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $td
 	// LowerMemory: %src -> [%dest]
 	$td -> [$t2]
+	[ $a0
+	[ $a1
 	:: dbg
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	100 -> $a0
 	:: check_free
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	150 -> $a0
 	&.str.20 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $te
 	// LowerMemory: %src -> [%dest]
 	$te -> [$t3]
+	[ $a0
+	[ $a1
 	10 -> $a0
 	&.str.21 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $tf
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t4]
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t10
 	$t10 -> $t11
+	[ $a0
+	[ $a1
 	$t11 -> $a0
 	:: fr
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.4 -> $a0
 	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	5 -> $a0
 	:: check_free
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	100 -> $a0
 	:: check_free
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	200 -> $a0
 	:: check_free
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	601 -> $a0
 	:: check_free
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	200 -> $a0
 	&.str.22 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t12
 	// LowerMemory: %src -> [%dest]
 	$t12 -> [$t5]
+	[ $a0
+	[ $a1
 	:: dbg
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	100 -> $a0
 	&.str.23 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t13
 	// LowerMemory: %src -> [%dest]
 	$t13 -> [$t6]
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.24 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t5] -> $t14
 	$t14 -> $t15
+	[ $a0
+	[ $a1
 	$t15 -> $a0
 	:: fr
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t4] -> $t16
 	$t16 -> $s0
+	[ $a0
+	[ $a1
 	$s0 -> $a0
 	:: fr
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: merge_blocks
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $s1
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.25 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t6] -> $s2
 	$s2 -> $s3
+	[ $a0
+	[ $a1
 	$s3 -> $a0
 	:: fr
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $s4
 	$s4 -> $s5
+	[ $a0
+	[ $a1
 	$s5 -> $a0
 	:: fr
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: merge_blocks
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $s6
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	600 -> $a0
 	&.str.26 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $s7
 	// LowerMemory: %src -> [%dest]
 	$s7 -> [$t7]
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	1000 -> $a0
 	&.str.27 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $s8
 	// LowerMemory: %src -> [%dest]
 	$s8 -> [$t8]
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	&.str.28 -> $a0
 	:: strprint
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t7] -> $s9
 	$s9 -> $sa
+	[ $a0
+	[ $a1
 	$sa -> $a0
 	:: fr
+	] $a1
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t8] -> $sb
 	$sb -> $sc
+	[ $a0
+	[ $a1
 	$sc -> $a0
 	:: fr
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	300 -> $a0
 	&.str.29 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $sd
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	233 -> $a0
 	&.str.30 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $se
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	:: merge_blocks
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $sf
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
 	600 -> $a0
 	&.str.31 -> $a1
 	:: allocate
+	] $a1
+	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $s10
+	[ $a0
+	[ $a1
 	:: dbg_blocks
+	] $a1
+	] $a0
 	$fp -> $sp
 	0 -> $r0
 	] $s10
