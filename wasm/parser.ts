@@ -715,6 +715,10 @@ export default class Parser {
 		const key = _.findKey(symbols, (s) => s[1].eq(imm));
 		return key? "&" + key : imm.toString();
 	}
+
+	static reverseLong(long: Long) {
+		return Long.fromBytesBE(long.toBytesLE());
+	}
 }
 
 if (require.main === module) {
