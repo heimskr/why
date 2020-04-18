@@ -1,0 +1,11 @@
+#meta
+name: "setword"
+
+#code
+
+0x01020304 -> $t0
+$t0 <<= 32
+$t0 |= 0x05060708
+$t0 -> [.end]
+[ $t0
+<halt>
