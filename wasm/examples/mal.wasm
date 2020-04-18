@@ -62,6 +62,7 @@ global_base: (8)
 
 #code
 
+&.end -> $k0
 :: main
 <halt>
 
@@ -69,6 +70,23 @@ sub allocate() {
 	@__allocate_label2
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -113,6 +131,7 @@ sub allocate() {
 	[$t0] -> $t9
 	$t9 -> $a0
 	:: mal
+	// SetupCalls: move result from $r0
 	$r0 -> $ta
 	$ta -> $tb
 	// LowerMemory: %src -> [%dest]
@@ -146,14 +165,30 @@ sub allocate() {
 	:: prd
 	&.str.4 -> $a0
 	:: strprint
-	: __allocate_label26
 	@__allocate_label26
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t0
 	$fp -> $sp
+	$t0 -> $r0
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t0 -> $r0
 	: $rt
 }
 
@@ -161,6 +196,21 @@ sub check_free() {
 	@__check_free_label1
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -179,6 +229,7 @@ sub check_free() {
 	&last_block -> $a0
 	$t2 -> $a1
 	:: find_free_block
+	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [%dest]
@@ -224,9 +275,23 @@ sub check_free() {
 	@__check_free_label21
 	&.str.35 -> $a0
 	:: strprint
-	: __check_free_label22
 	@__check_free_label22
 	$fp -> $sp
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
 	: $rt
@@ -236,6 +301,18 @@ sub fr() {
 	@__fr_label1
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -262,6 +339,7 @@ sub fr() {
 	[$t0] -> $t2
 	$t2 -> $a0
 	:: get_block_ptr
+	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	// LowerMemory: %src -> [%dest]
 	$t3 -> [$t1]
@@ -289,7 +367,7 @@ sub fr() {
 	:: __assert_rtn
 	: __fr_label21
 	@__fr_label20
-	: __fr_label21
+	<>
 	@__fr_label21
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t0
@@ -299,10 +377,22 @@ sub fr() {
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t2] /h
 	:: merge_blocks
+	// SetupCalls: move result from $r0
 	$r0 -> $t3
-	: __fr_label25
 	@__fr_label25
 	$fp -> $sp
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
 	: $rt
@@ -312,6 +402,10 @@ sub get_block_ptr() {
 	@__get_block_ptr_label1
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -325,9 +419,13 @@ sub get_block_ptr() {
 	$t1 -> $t2
 	$t2 + -20 -> $t3
 	$fp -> $sp
+	$t3 -> $r0
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t3 -> $r0
 	: $rt
 }
 
@@ -335,6 +433,28 @@ sub memsplit() {
 	@__memsplit_label2
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -393,6 +513,7 @@ sub memsplit() {
 	$t2 -> $tc
 	$tc -> $a0
 	:: realign
+	// SetupCalls: move result from $r0
 	$r0 -> $td
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $te
@@ -469,7 +590,6 @@ sub memsplit() {
 	$t14 + 0 -> $t15
 	// LowerMemory: %src -> [%dest]
 	$t13 -> [$t15]
-	: __memsplit_label60
 	@__memsplit_label60
 	: __memsplit_label92
 	@__memsplit_label61
@@ -539,13 +659,34 @@ sub memsplit() {
 	$t10 + 8 -> $t11
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t11]
-	: __memsplit_label91
 	@__memsplit_label91
-	: __memsplit_label92
+	<>
 	@__memsplit_label92
-	: __memsplit_label93
+	<>
 	@__memsplit_label93
 	$fp -> $sp
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
 	: $rt
@@ -555,6 +696,19 @@ sub mem_init() {
 	@__mem_init_label1
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 4 -> $m0
@@ -571,12 +725,15 @@ sub mem_init() {
 	$t2 - $m0 -> $t2
 	$t2 -> $a0
 	4 -> $a1
-	&.end -> $t3
+	:: calloc
+	// SetupCalls: move result from $r0
+	$r0 -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [global]
 	$t4 -> [memory]
 	&memory -> $a0
 	:: realign
+	// SetupCalls: move result from $r0
 	$r0 -> $t5
 	// LowerMemory: [global] -> %var
 	[memory] -> $t6
@@ -595,9 +752,22 @@ sub mem_init() {
 	$ta x 1 -> $tb
 	$tb -> $tc
 	$fp -> $sp
+	$tc -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$tc -> $r0
 	: $rt
 }
 
@@ -605,6 +775,28 @@ sub mal() {
 	@__mal_label1
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -652,6 +844,7 @@ sub mal() {
 	0 -> $a0
 	$t4 -> $a1
 	:: request_space
+	// SetupCalls: move result from $r0
 	$r0 -> $t5
 	// LowerMemory: %src -> [%dest]
 	$t5 -> [$t2]
@@ -685,6 +878,7 @@ sub mal() {
 	$t3 -> $a0
 	$t5 -> $a1
 	:: find_free_block
+	// SetupCalls: move result from $r0
 	$r0 -> $t6
 	// LowerMemory: %src -> [%dest]
 	$t6 -> [$t2]
@@ -730,6 +924,7 @@ sub mal() {
 	$t11 -> $a0
 	$t12 -> $a1
 	:: request_space
+	// SetupCalls: move result from $r0
 	$r0 -> $t13
 	// LowerMemory: %src -> [%dest]
 	$t13 -> [$t2]
@@ -799,9 +994,8 @@ sub mal() {
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t12] /h
-	: __mal_label64
 	@__mal_label64
-	: __mal_label65
+	<>
 	@__mal_label65
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t1
@@ -809,14 +1003,35 @@ sub mal() {
 	$t3 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t0]
-	: __mal_label69
 	@__mal_label69
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1
 	$fp -> $sp
+	$t1 -> $r0
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t1 -> $r0
 	: $rt
 }
 
@@ -824,6 +1039,14 @@ sub dbg() {
 	@__dbg_label0
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
 	$sp -> $fp
 	&.str.36 -> $a0
 	:: strprint
@@ -867,9 +1090,16 @@ sub dbg() {
 	:: prd
 	&.str.4 -> $a0
 	:: strprint
-	: __dbg_label19
 	@__dbg_label19
 	$fp -> $sp
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
 	: $rt
@@ -879,6 +1109,27 @@ sub merge_blocks() {
 	@__merge_blocks_label0
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 4 -> $m0
@@ -898,7 +1149,6 @@ sub merge_blocks() {
 	[global_base] -> $t2
 	// LowerMemory: %src -> [%dest]
 	$t2 -> [$t1]
-	: __merge_blocks_label4
 	@__merge_blocks_label4
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t2
@@ -915,7 +1165,6 @@ sub merge_blocks() {
 	[$t3] -> $t5
 	$t5 == 0 -> $t4
 	!$t4.
-	: __merge_blocks_label12
 	@__merge_blocks_label12
 	: __merge_blocks_label14 if $t4
 	: __merge_blocks_label51
@@ -987,7 +1236,6 @@ sub merge_blocks() {
 	[$t3] -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t1]
-	: __merge_blocks_label50
 	@__merge_blocks_label50
 	: __merge_blocks_label4
 	@__merge_blocks_label51
@@ -1015,14 +1263,34 @@ sub merge_blocks() {
 	[$t6 != $t7] -> $t5
 	$t5 -> $a0
 	:: strprint
-	: __merge_blocks_label60
 	@__merge_blocks_label60
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1 /h
 	$fp -> $sp
+	$t1 -> $r0
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t1 -> $r0
 	: $rt
 }
 
@@ -1030,6 +1298,24 @@ sub request_space() {
 	@__request_space_label2
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -1052,6 +1338,7 @@ sub request_space() {
 	$a1 -> [$t1]
 	&end -> $a0
 	:: realign
+	// SetupCalls: move result from $r0
 	$r0 -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [%dest]
@@ -1070,7 +1357,6 @@ sub request_space() {
 	$t4 + 8 -> $t5
 	// LowerMemory: %src -> [%dest]
 	$t3 -> [$t5]
-	: __request_space_label14
 	@__request_space_label14
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t0
@@ -1111,9 +1397,27 @@ sub request_space() {
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t11
 	$fp -> $sp
+	$t11 -> $r0
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t11 -> $r0
 	: $rt
 }
 
@@ -1121,6 +1425,15 @@ sub find_free_block() {
 	@__find_free_block_label2
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -1145,7 +1458,6 @@ sub find_free_block() {
 	[global_base] -> $t3
 	// LowerMemory: %src -> [%dest]
 	$t3 -> [$t2]
-	: __find_free_block_label7
 	@__find_free_block_label7
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t3
@@ -1174,10 +1486,8 @@ sub find_free_block() {
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t7
 	$t6 >= $t7 -> $t8 /u
-	: __find_free_block_label21
 	@__find_free_block_label21
 	$t8 x 1 -> $t5
-	: __find_free_block_label24
 	@__find_free_block_label24
 	: __find_free_block_label26 if $t5
 	: __find_free_block_label32
@@ -1200,9 +1510,18 @@ sub find_free_block() {
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t0
 	$fp -> $sp
+	$t0 -> $r0
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t0 -> $r0
 	: $rt
 }
 
@@ -1210,6 +1529,15 @@ sub realign() {
 	@__realign_label1
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -1246,37 +1574,68 @@ sub realign() {
 	$t8 + $t7 -> $t8
 	// LowerMemory: %src -> [%dest]
 	$t8 -> [$t6]
-	: __realign_label17
 	@__realign_label17
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t2
 	$fp -> $sp
+	$t2 -> $r0
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t2 -> $r0
 	: $rt
-}
-
-sub strprint($s0) {
-	// $a0: pointer to string to print
-	// $s0: character to print
-
-	@_strprint_loop
-		[$a0] -> $s0 /b
-		: _strprint_print if $s0
-		!done
-		@_strprint_print
-		<prc $s0>
-		$a0++
-		: _strprint_loop
 }
 
 sub dbg_blocks() {
 	@__dbg_blocks_label0
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	[ $s4
+	[ $s5
+	[ $s6
+	[ $s7
+	[ $s8
+	[ $s9
+	[ $sa
+	[ $sb
+	[ $sc
+	[ $sd
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -1307,7 +1666,6 @@ sub dbg_blocks() {
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t2] /h
-	: __dbg_blocks_label5
 	@__dbg_blocks_label5
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t3
@@ -1425,6 +1783,43 @@ sub dbg_blocks() {
 	$t5 -> $a0
 	:: strprint
 	$fp -> $sp
+	] $sd
+	] $sc
+	] $sb
+	] $sa
+	] $s9
+	] $s8
+	] $s7
+	] $s6
+	] $s5
+	] $s4
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
 	: $rt
@@ -1434,6 +1829,46 @@ sub main() {
 	@__main_label2
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	[ $s4
+	[ $s5
+	[ $s6
+	[ $s7
+	[ $s8
+	[ $s9
+	[ $sa
+	[ $sb
+	[ $sc
+	[ $sd
+	[ $se
+	[ $sf
+	[ $s10
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 4 -> $m0
@@ -1494,6 +1929,7 @@ sub main() {
 	:: strprint
 	1048576 -> $a0
 	:: mem_init
+	// SetupCalls: move result from $r0
 	$r0 -> $t9
 	&.str.18 -> $a0
 	:: strprint
@@ -1512,6 +1948,7 @@ sub main() {
 	800 -> $a0
 	&.str.19 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $td
 	// LowerMemory: %src -> [%dest]
 	$td -> [$t2]
@@ -1522,12 +1959,14 @@ sub main() {
 	150 -> $a0
 	&.str.20 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $te
 	// LowerMemory: %src -> [%dest]
 	$te -> [$t3]
 	10 -> $a0
 	&.str.21 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $tf
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t4]
@@ -1552,6 +1991,7 @@ sub main() {
 	200 -> $a0
 	&.str.22 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $t12
 	// LowerMemory: %src -> [%dest]
 	$t12 -> [$t5]
@@ -1560,6 +2000,7 @@ sub main() {
 	100 -> $a0
 	&.str.23 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $t13
 	// LowerMemory: %src -> [%dest]
 	$t13 -> [$t6]
@@ -1578,6 +2019,7 @@ sub main() {
 	:: fr
 	:: dbg_blocks
 	:: merge_blocks
+	// SetupCalls: move result from $r0
 	$r0 -> $s1
 	:: dbg_blocks
 	&.str.25 -> $a0
@@ -1594,11 +2036,13 @@ sub main() {
 	:: fr
 	:: dbg_blocks
 	:: merge_blocks
+	// SetupCalls: move result from $r0
 	$r0 -> $s6
 	:: dbg_blocks
 	600 -> $a0
 	&.str.26 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $s7
 	// LowerMemory: %src -> [%dest]
 	$s7 -> [$t7]
@@ -1606,6 +2050,7 @@ sub main() {
 	1000 -> $a0
 	&.str.27 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $s8
 	// LowerMemory: %src -> [%dest]
 	$s8 -> [$t8]
@@ -1626,25 +2071,69 @@ sub main() {
 	300 -> $a0
 	&.str.29 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $sd
 	:: dbg_blocks
 	233 -> $a0
 	&.str.30 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $se
 	:: dbg_blocks
 	:: merge_blocks
+	// SetupCalls: move result from $r0
 	$r0 -> $sf
 	:: dbg_blocks
 	600 -> $a0
 	&.str.31 -> $a1
 	:: allocate
+	// SetupCalls: move result from $r0
 	$r0 -> $s10
 	:: dbg_blocks
 	$fp -> $sp
+	0 -> $r0
+	] $s10
+	] $sf
+	] $se
+	] $sd
+	] $sc
+	] $sb
+	] $sa
+	] $s9
+	] $s8
+	] $s7
+	] $s6
+	] $s5
+	] $s4
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	0 -> $r0
 	: $rt
 }
 
@@ -1652,3 +2141,26 @@ sub prd() {
 	<prd $a0>
 }
 
+sub exit() {
+	<halt>
+}
+
+sub calloc() {
+	&.end -> $r0
+}
+
+sub __assert_rtn() {}
+
+sub strprint($s0) {
+	// $a0: pointer to string to print
+	// $s0: character to print
+
+	@_strprint_loop
+		[$a0] -> $s0 /b
+		: _strprint_print if $s0
+		!done
+		@_strprint_print
+		<prc $s0>
+		$a0++
+		: _strprint_loop
+}
