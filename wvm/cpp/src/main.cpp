@@ -1,9 +1,26 @@
+#include <stdlib.h>
+#include <signal.h>
+
 #include "main.h"
-#include "ansi.h"
+#include "lib/ansi.h"
+#include "net/Server.h"
+
+WVM::Net::Server serv(44902);
+
+void cleanup() {
+	serv.stop();
+}
+
+void sigint_handler(int) {
+	cleanup();
+}
 
 int main() {
-	WVM::Main main;
-	main.start();
+	// WVM::Main main;
+	// main.start();
+	serv.run();
+	atexit(cleanup);
+	signal(SIGINT, sigint_handler);
 }
 
 namespace WVM {

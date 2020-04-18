@@ -1,0 +1,131 @@
+// Based in large part on example code from the GNU libc documentation.
+
+#include <iostream>
+
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include "net/NetError.h"
+#include "net/Server.h"
+
+namespace WVM::Net {
+	Server::Server(uint16_t port_, size_t chunk_size):
+		port(port_), chunkSize(chunk_size), buffer(new char[chunk_size]) {}
+
+	Server::~Server() {
+		delete[] buffer;
+	}
+
+	int Server::makeSocket() {
+		int sock;
+
+		sock = ::socket(PF_INET, SOCK_STREAM, 0);
+		if (sock < 0)
+			throw NetError(errno);
+
+		sockaddr_in name = {.sin_family = AF_INET, .sin_port = htons(port), .sin_addr = {.s_addr = htonl(INADDR_ANY)}};
+		if (::bind(sock, (sockaddr *) &name, sizeof(name)) < 0)
+			throw NetError(errno);
+
+		return sock;
+	}
+
+	void Server::readFromClient(int descriptor) {
+		std::string &str = buffers[descriptor];
+		str.reserve(chunkSize);
+
+		int byte_count = ::read(descriptor, buffer, chunkSize);
+		if (byte_count < 0) {
+			throw NetError("Reading", errno);
+		} else if (byte_count == 0) {
+			end(descriptor);
+		} else {
+			const size_t old_size = str.size();
+			str.insert(old_size, buffer, byte_count);
+			ssize_t index;
+			size_t delimiter_size;
+			std::tie(index, delimiter_size) = isMessageComplete(str, old_size);
+			std::cerr << "Inserting from " << descriptor << ": \"" << std::string(buffer, byte_count) << "\"\n";
+			if (index != -1) {
+				handleMessage(clients.at(descriptor), str.substr(0, index));
+				str.erase(0, index + delimiter_size);
+			}
+		}
+	}
+
+	void Server::handleMessage(int client, const std::string &message) {
+		std::cerr << "Server: got message from client " << client << ": \"" << message << "\"\n";
+	}
+
+	void Server::end(int descriptor) {
+		std::cerr << "Closing descriptor " << descriptor << "\n";
+		::close(descriptor);
+		descriptors.erase(clients.at(descriptor));
+		buffers.erase(descriptor);
+		clients.erase(descriptor);
+		FD_CLR(descriptor, &activeSet);
+	}
+
+	void Server::run() {
+		struct sockaddr_in clientname;
+		size_t size;
+
+		sock = makeSocket();
+		if (::listen(sock, 1) < 0)
+			throw NetError("Listening", errno);
+
+		// Initialize the set of active sockets.
+		FD_ZERO(&activeSet);
+		FD_SET(sock, &activeSet);
+
+		for (;;) {
+			// Block until input arrives on one or more active sockets.
+			readSet = activeSet;
+			if (::select(FD_SETSIZE, &readSet, NULL, NULL, NULL) < 0)
+				throw NetError("select()", errno);
+
+			// Service all the sockets with input pending.
+			for (int i = 0; i < FD_SETSIZE; ++i) {
+				if (FD_ISSET(i, &readSet)) {
+					if (i == sock) {
+						// Connection request on original socket.
+						int new_fd;
+						size = sizeof(clientname);
+						new_fd = ::accept(sock, (sockaddr *) &clientname, (socklen_t *) &size);
+						if (new_fd < 0)
+							throw NetError("accept()", errno);
+						std::cerr << "Server: connect from host " << inet_ntoa(clientname.sin_addr) << ", port "
+						          << ntohs(clientname.sin_port) << "\n";
+						FD_SET(new_fd, &activeSet);
+						int new_client = ++lastClient;
+						descriptors.emplace(new_client, new_fd);
+						clients.erase(new_fd);
+						clients.emplace(new_fd, new_client);
+					} else {
+						// Data arriving on an already-connected socket.
+						readFromClient(i);
+					}
+				}
+			}
+		}
+	}
+
+	void Server::stop() {
+		if (sock != -1) {
+			::close(sock);
+			std::cerr << "Closed server socket.\n";
+		}
+	}
+
+	std::pair<ssize_t, size_t> Server::isMessageComplete(const std::string &buf, size_t old_size) {
+		const size_t found = buf.find("\n", old_size);
+		return found == std::string::npos? std::pair<ssize_t, size_t>(-1, 0) : std::pair<ssize_t, size_t>(found, 1);
+	}
+}

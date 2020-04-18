@@ -11,7 +11,7 @@ namespace WVM::Net {
 			ResolutionError(int status_code):
 				std::runtime_error("Resolution failed"), statusCode(status_code) {}
 
-			virtual const char * what() const throw() override {
+			const char * what() const throw() override {
 				return gai_strerror(statusCode);
 			}
 	};

@@ -104,4 +104,8 @@ namespace WVM::Net {
 
 		return -1;
 	}
+
+	int Socket::accept() {
+
+	}
 }

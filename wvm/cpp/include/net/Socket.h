@@ -40,6 +40,8 @@ namespace WVM::Net {
 
 			/** Reads a given number of bytes into a buffer from the socket and returns the number of bytes read. */
 			ssize_t recv(void *, size_t);
+
+			int accept();
 	};
 }
 
