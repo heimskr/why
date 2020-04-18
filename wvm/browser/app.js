@@ -147,7 +147,7 @@ let App = window.App = class App {
 		this.config.range.forEach(([left, right]) => {
 			_.range(Math.floor(left / 8), Math.ceil((right + 1) / 8)).forEach((i) => {
 				const byte = i * 8;
-				const long = this.vm.getWord(byte);
+				const long = this.vm.getWord(byte, false, true);
 
 				const classes = [`addr-${i}`];
 				const dataStart = $data == byte && $data != $code;
@@ -191,7 +191,7 @@ let App = window.App = class App {
 					const labels = this.vm.symbolsAt(byte).sort();
 					const cell = $("<td></td>").appendTo(tr);
 					if (labels.length != 0) {
-						cell.text(labels[0].replace(/(.)_/g, "$1\u00a0"));
+						cell.text(labels[0]);
 						if (labels.length > 1) {
 							cell.attr("title", labels.slice(1).join(", "));
 						}
@@ -225,7 +225,7 @@ let App = window.App = class App {
 	hexCell(long) {
 		if (!(long instanceof Long))
 			long = Long.fromInt(long, true);
-		return _.chunk(long.toUnsigned().toString(16).padStart(16, "0"), 2).map((x) => `<span class="digit-group">${x.join("")}</span>`).join("");
+		return long.toUnsigned().toBytesLE().map(x => `<span class="digit-group">${x.toString(16).padStart(2, "0")}</span>`).join("");
 	}
 
 	decompiledCell(long, addr) {
@@ -239,6 +239,7 @@ let App = window.App = class App {
 		const inCode = $code <= addr && addr < $data;
 
 		if (inMeta) {
+			long = Parser.reverseLong(long);
 			return $("<a></a>").attr({href: "#"}).addClass("meta").text(long.toString()).click(() => {
 				this.vm.programCounter = long.toInt();
 				this.highlightProgramCounter();
@@ -247,6 +248,7 @@ let App = window.App = class App {
 
 		const edges = [$symtab, ...this.symbolTableEdges];
 		if (inSymtab) {
+			long = Parser.reverseLong(long);
 			if (edges.includes(addr)) { // first word: hash, type, length
 				const hash = long.high.toString(16);
 				const lengthNum = long.low & 0xffff;
@@ -262,7 +264,7 @@ let App = window.App = class App {
 			} else if (edges.includes(addr - 16)) { // at the first word of the symbol name
 				const words = [];
 				for (let i = addr; !edges.includes(i) && i < $code; i += 8) {
-					words.push(this.vm.getWord(i));
+					words.push(this.vm.getWord(i, false, false));
 				}
 
 				// Include the entire symbol name in the first row.
@@ -274,6 +276,7 @@ let App = window.App = class App {
 		}
 
 		if (inCode) {
+			long = Parser.reverseLong(long);
 			if (long.equals(0)) {
 				return "";
 			}
@@ -296,13 +299,13 @@ let App = window.App = class App {
 
 		if (this.config.attemptUTF8) {
 			try {
-				return decodeURIComponent(escape(atob(String.fromCharCode(..._.chunk(long.toString(16).padStart(16, "0"), 2).map((x) => parseInt(x.join(""), 16) || ".".charCodeAt(0))))));
+				return decodeURIComponent(escape(atob(String.fromCharCode(..._.chunk(Parser.reverseLong(long).toString(16).padStart(16, "0"), 2).map((x) => parseInt(x.join(""), 16) || ".".charCodeAt(0))))));
 			} catch(e) {
 				// Couldn't decode; just try to asciify it
 			}
 		}
 
-		return this.long2str(long, false);
+		return this.long2str(Parser.reverseLong(long), false);
 	}
 
 	long2str(long, noDim=true) {
@@ -736,7 +739,7 @@ function initializeUI(app) {
 		const {key, ctrlKey, shiftKey} = event;
 
 		if (key == ".") {
-			app.vm.active && app.vm.tick();
+			app.vm.tick();
 		} else if (ctrlKey && !shiftKey) {
 			if (key == "m") {
 				$("#console").toggle();

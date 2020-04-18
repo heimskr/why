@@ -94,7 +94,7 @@ export default class WVM {
 	 * @return {Long} A word containing an instruction.
 	 */
 	loadInstruction(): Long {
-		return this.getWord(this.programCounter);
+		return this.getWord(this.programCounter, false, false);
 	}
 
 	/**
@@ -166,7 +166,7 @@ export default class WVM {
 	 * @param {boolean} [littleEndian=true] Whether to treat the value as little endian.
 	 * @return {Long} The word at the given address.
 	 */
-	getWord(k, signed=false, littleEndian=false) {
+	getWord(k, signed=false, littleEndian=true) {
 		k = k instanceof Long? k.toInt() : k;
 
 		if (k % 8) {
@@ -202,18 +202,19 @@ export default class WVM {
 		}
 
 		const mask = 0xff;
+
 		if (littleEndian) {
 			for (let i = 0; i < 4; i++)
-				this.memory[k + i] = v.low >> 8*i & mask;
+				this.memory[k + i] = (v.low >> (8*i)) & mask;
 
 			for (let i = 4; i < 8; i++)
-				this.memory[k + i] = v.high >> 8*i & mask;
+				this.memory[k + i] = (v.high >> (8*(i-4))) & mask;
 		} else {
 			for (let i = 0; i < 4; i++)
-				this.memory[k + 7 - i] = v.low >> 8*i & mask;
+				this.memory[k + 7 - i] = (v.low >> (8*i)) & mask;
 
 			for (let i = 4; i < 8; i++)
-				this.memory[k + 7 - i] = v.high >> 8*i & mask;
+				this.memory[k + 7 - i] = (v.high >> (8*(i-4))) & mask;
 		}
 
 		this.onSetWord(k, v, littleEndian);
@@ -887,7 +888,7 @@ export default class WVM {
 	}
 
 	op_c(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
-		this.setWord(this.registers[rd], this.getWord(this.registers[rs]));
+		this.setWord(this.registers[rd], this.getWord(this.registers[rs], false, true));
 	}
 
 	op_l(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
@@ -895,7 +896,7 @@ export default class WVM {
 	}
 
 	op_s(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
-		this.setWord(this.registers[rd], this.registers[rs]);
+		this.setWord(this.registers[rd], this.registers[rs], true);
 	}
 
 	op_cb(rt: number, rs: number, rd: number, funct: number, cond: ConditionName): boolean | void {
@@ -935,7 +936,7 @@ export default class WVM {
 	}
 
 	op_si(rs: number, rd: number, imm: Long): boolean | void {
-		this.setWord(imm, this.registers[rs]);
+		this.setWord(imm, this.registers[rs], true);
 	}
 
 	op_lbi(rs: number, rd: number, imm: Long): boolean | void {
