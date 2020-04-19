@@ -11,6 +11,8 @@ namespace WVM::Unparser {
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions, int funct);
 	std::string stringifyIType(int opcode, int rs, int rd, Conditions, HWord immediate);
 	std::string stringifyJType(int opcode, int rs, bool link, Conditions, HWord address);
+
+	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix = "");
 }
 
 #endif

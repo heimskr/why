@@ -5,6 +5,7 @@
 
 #include "mult.h"
 #include "Operations.h"
+#include "Unparser.h"
 #include "Util.h"
 #include "VM.h"
 
@@ -32,8 +33,7 @@ namespace WVM::Operations {
 			Conditions conditions;
 			int flags, funct;
 			decodeRType(instruction, rs, rt, rd, conditions, flags, funct);
-			info() << "R: Opcode[" << opcode << "], $" << Why::registerName(rs) << " $" << Why::registerName(rt)
-			       << " -> $" << Why::registerName(rd) << ", " << "Funct[" << funct << "]\n";
+			info() << Unparser::stringifyRType(opcode, rs, rt, rd, conditions, funct) << "\n";
 			executeRType(opcode, vm, vm.registers[rs], vm.registers[rt], vm.registers[rd], conditions, flags, funct);
 		} else if (ISet.count(opcode) == 1) {
 			int rs, rd;
@@ -41,8 +41,7 @@ namespace WVM::Operations {
 			int flags;
 			HWord immediate;
 			decodeIType(instruction, rs, rd, conditions, flags, immediate);
-			info() << "I: Opcode[" << opcode << "], $" << Why::registerName(rs) << " " << immediate << " -> $"
-			       << Why::registerName(rd) << "\n";
+			info() << Unparser::stringifyIType(opcode, rs, rd, conditions, immediate) << "\n";
 			executeIType(opcode, vm, vm.registers[rs], vm.registers[rd], conditions, flags, immediate);
 		} else if (JSet.count(opcode) == 1) {
 			int rs;
@@ -51,8 +50,7 @@ namespace WVM::Operations {
 			int flags;
 			HWord address;
 			decodeJType(instruction, rs, link, conditions, flags, address);
-			info() << "J: Opcode[" << opcode << "], $" << Why::registerName(rs) << ", " << (link? "link" : "don't link")
-			       << ", " << address << "\n";
+			info() << Unparser::stringifyJType(opcode, rs, link, conditions, address) << "\n";
 			executeJType(opcode, vm, vm.registers[rs], link, conditions, flags, address);
 		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 	}

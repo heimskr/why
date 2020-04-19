@@ -1,6 +1,7 @@
 #ifndef WVM_UTIL_H_
 #define WVM_UTIL_H_
 
+#include <iostream>
 #include <string>
 #include <vector>
 
