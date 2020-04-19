@@ -20,7 +20,7 @@ INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
 LDFLAGS			:= $(LD_ICU)
 
-.PHONY: all clean test
+.PHONY: all clean count countbf test
 
 all: $(OUT)
 
@@ -40,6 +40,12 @@ build/%.o: src/%.cpp
 
 clean:
 	rm -f $(OBJECTS) $(OUT)
+
+count:
+	cloc src include $(CLOC_OPTIONS)
+
+countbf:
+	cloc --by-file src include $(CLOC_OPTIONS)
 
 DEPFILE  = .dep
 DEPTOKEN = "\# MAKEDEPENDS"
