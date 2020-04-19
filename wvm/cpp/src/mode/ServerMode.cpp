@@ -31,7 +31,7 @@ namespace WVM::Mode {
 		if (verb == "Stop") {
 			stop();
 		} else if (verb == "GetWord") {
-			if (size != 2) {
+			if (size != 2 && size != 3) {
 				invalid();
 				return;
 			}
@@ -42,7 +42,18 @@ namespace WVM::Mode {
 				return;
 			}
 
-			server.send(client, ":MemoryWord " + std::to_string(address) + " " + std::to_string(vm.getWord(address)));
+			Endianness endianness = Endianness::Little;
+			if (size == 3) {
+				if (split[2] == "B") {
+					endianness = Endianness::Big;
+				} else if (split[2] != "L") {
+					invalid();
+					return;
+				}
+			}
+
+			server.send(client, ":MemoryWord " + std::to_string(address) + " " +
+				std::to_string(vm.getWord(address, endianness)) + " " + static_cast<char>(endianness));
 		} else if (verb == "SetWord") {
 			if (size != 3 && size != 4) {
 				invalid();
@@ -66,7 +77,8 @@ namespace WVM::Mode {
 			}
 
 			vm.setWord(address, value, endianness);
-			server.send(client, ":MemoryWord " + std::to_string(address) + " " + std::to_string(vm.getWord(address)));
+			server.send(client, ":MemoryWord " + std::to_string(address) + " " +
+				std::to_string(vm.getWord(address, endianness)) + " " + static_cast<char>(endianness));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
