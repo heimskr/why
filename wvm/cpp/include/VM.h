@@ -46,6 +46,7 @@ namespace WVM {
 			void increment();
 			bool changeRing(Ring);
 			void updateFlags(Word);
+			bool checkConditions(Conditions);
 			void intProtec();
 
 			void load(const std::string &);

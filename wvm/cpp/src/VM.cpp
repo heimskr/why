@@ -118,6 +118,10 @@ namespace WVM {
 			setN(true);
 	}
 
+	bool VM::checkConditions(Conditions conditions) {
+		return true;
+	}
+
 	void VM::intProtec() {}
 
 	void VM::load(const std::string &path) {
