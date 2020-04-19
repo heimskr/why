@@ -136,6 +136,15 @@ namespace WVM {
 		return true;
 	}
 
+	bool VM::checkRing(Ring check) {
+		if (static_cast<int>(check) != -1 && static_cast<int>(check) < static_cast<int>(ring)) {
+			intProtec();
+			return false;
+		}
+
+		return true;
+	}
+
 	void VM::intProtec() {}
 
 	void VM::load(const std::string &path) {

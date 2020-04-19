@@ -458,6 +458,10 @@ namespace WVM {
 	}
 
 	void ritOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		if (vm.checkRing(Ring::Zero)) {
+			vm.interruptTableAddress = immediate;
+			vm.increment();
+		}
 	}
 
 	void timeOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {

@@ -29,6 +29,7 @@ namespace WVM {
 
 		public:
 			Word programCounter = 0;
+			Word interruptTableAddress = 0;
 			Word registers[Why::totalRegisters];
 
 			VM(size_t memory_size);
@@ -48,6 +49,7 @@ namespace WVM {
 			void updateFlags(Word);
 			bool checkConditions(Conditions);
 			bool interrupt(int);
+			bool checkRing(Ring);
 			void intProtec();
 
 			void load(const std::string &);
