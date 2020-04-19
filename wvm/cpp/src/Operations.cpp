@@ -108,12 +108,17 @@ namespace WVM::Operations {
 				break;
 			case OP_REXT:
 				switch (funct) {
-
+					case FN_PR:       prOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_HALT:   haltOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_EVAL:   evalOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_PRC:     prcOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_PRD:     prdOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_PRX:     prxOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SLEEP: sleepOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
-			case OP_TIME: return;
-			case OP_RING: return;
-
+			case OP_TIME: timeOp(vm, rs, rt, rd, conditions, flags); return;
+			case OP_RING: ringOp(vm, rs, rt, rd, conditions, flags); return;
 		}
 
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
