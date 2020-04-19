@@ -40,8 +40,7 @@ namespace WVM::Unparser {
 					case FN_ADD:   oper = "+"; break;
 					case FN_SUB:   oper = "-"; break;
 					case FN_MULT:  return color(rs) + " \e[1m*\e[22m " + color(rd);
-					case FN_MULTU: return color(rs) + " \e[1m*\e[22m " + color(rd)
-						+ " /u";
+					case FN_MULTU: return color(rs) + " \e[1m*\e[22m " + color(rd) + " /u";
 					case FN_SLL:   oper = "<<"; break;
 					case FN_SRL:   oper = ">>>"; break;
 					case FN_SRA:   oper = ">>"; break;
@@ -91,14 +90,15 @@ namespace WVM::Unparser {
 				if (funct == FN_SLU || funct == FN_SLEU) out += " /u";
 				return out;
 			}
-			case OP_RJUMP:
+			case OP_RJUMP: {
 				switch (funct) {
-					case FN_JR:   return "\e[2m:\e[22m " + color(rd);
+					case FN_JR:   return "\e[2m" + jumpConditions(conditions) + ":\e[22m " + color(rd);
 					case FN_JRC:  return "\e[2m:\e[22m" + color(rd) + " \e[31mif\e[39m " + color(rs);
-					case FN_JRL:  return "\e[2m::\e[22m" + color(rd);
+					case FN_JRL:  return "\e[2m" + jumpConditions(conditions) + "::\e[22m" + color(rd);
 					case FN_JRLC: return "\e[2m::\e[22m" + color(rd) + " \e[31mif\e[39m " + color(rs);
 				}
 				break;
+			}
 			case OP_RMEM:
 				switch (funct) {
 					case FN_C:     return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "]";
@@ -116,13 +116,13 @@ namespace WVM::Unparser {
 				break;
 			case OP_REXT:
 				switch (funct) {
-					case FN_PR:    break;
-					case FN_HALT:  break;
-					case FN_EVAL:  break;
-					case FN_PRC:   break;
-					case FN_PRD:   break;
-					case FN_PRX:   break;
-					case FN_SLEEP: break;
+					case FN_PR:    return "<\e[36mprint\e[39m " + color(rs) + ">";
+					case FN_HALT:  return "<\e[36mhalt\e[39m>";
+					case FN_EVAL:  return "<\e[36meval\e[39m "  + color(rs) + ">";
+					case FN_PRC:   return "<\e[36mprc\e[39m "   + color(rs) + ">";
+					case FN_PRD:   return "<\e[36mprd\e[39m "   + color(rs) + ">";
+					case FN_PRX:   return "<\e[36mprx\e[39m "   + color(rs) + ">";
+					case FN_SLEEP: return "<\e[36msleep\e[39m " + color(rs) + ">";
 				}
 				break;
 			case OP_TIME: return "\e[36mtime\e[39m " + color(rs);
@@ -162,5 +162,16 @@ namespace WVM::Unparser {
 
 		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m" + Why::coloredRegister(rt) + " \e[2m->\e[22m "
 			+ Why::coloredRegister(rd);
+	}
+
+	std::string jumpConditions(Conditions conditions) {
+		switch (conditions) {
+			case Conditions::Positive: return "+";
+			case Conditions::Negative: return "-";
+			case Conditions::Zero: return "0";
+			case Conditions::Nonzero: return "*";
+			case Conditions::Disabled: return "";
+		}
+		throw std::runtime_error("Invalid conditions: " + std::to_string(static_cast<int>(conditions)));
 	}
 }

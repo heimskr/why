@@ -13,6 +13,8 @@ namespace WVM::Unparser {
 	std::string stringifyJType(int opcode, int rs, bool link, Conditions, HWord address);
 
 	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix = "");
+
+	std::string jumpConditions(Conditions);
 }
 
 #endif
