@@ -29,18 +29,29 @@ namespace WVM::Operations {
 		int opcode = (instruction >> 52) & 0xfff;
 		if (RSet.count(opcode) == 1) {
 			Word *rs, *rt, *rd;
-			Conditions conds;
+			Conditions conditions;
 			int flags, funct;
-			decodeRType(vm, instruction, rs, rt, rd, conds, flags, funct);
-			executeR(opcode, vm, *rs, *rt, *rd, conds, flags, funct);
+			decodeRType(vm, instruction, rs, rt, rd, conditions, flags, funct);
+			executeRType(opcode, vm, *rs, *rt, *rd, conditions, flags, funct);
 		} else if (ISet.count(opcode) == 1) {
-			
+			Word *rs, *rd;
+			Conditions conditions;
+			int flags;
+			HWord immediate;
+			decodeIType(vm, instruction, rs, rd, conditions, flags, immediate);
+			executeIType(opcode, vm, *rs, *rd, conditions, flags, immediate);
 		} else if (JSet.count(opcode) == 1) {
-			
-		}
+			Word *rs;
+			bool link;
+			Conditions conditions;
+			int flags;
+			HWord address;
+			decodeJType(vm, instruction, rs, link, conditions, flags, address);
+			executeJType(opcode, vm, *rs, link, conditions, flags, address);
+		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 	}
 
-	void executeR(int opcode, VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags, int funct) {
+	void executeRType(int opcode, VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags, int funct) {
 		switch (opcode) {
 			case OP_RMATH:
 				switch (funct) {
@@ -124,7 +135,7 @@ namespace WVM::Operations {
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
 	}
 
-	void executeI(int opcode, VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void executeIType(int opcode, VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
 		switch (opcode) {
 			case OP_ADDI:     addiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_SUBI:     subiOp(vm, rs, rd, conditions, flags, immediate); return;
@@ -166,6 +177,15 @@ namespace WVM::Operations {
 		}
 
 		throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
+	}
+
+	void executeJType(int opcode, VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
+		switch (opcode) {
+			case OP_J:   jOp(vm, rs, link, conditions, flags, address); return;
+			case OP_JC: jcOp(vm, rs, link, conditions, flags, address); return;
+		}
+
+		throw std::runtime_error("Unknown J-type: " + std::to_string(opcode));
 	}
 
 	void decodeRType(VM &vm, UWord instr, Word *&rs, Word *&rt, Word *&rd, Conditions &conds, int &flags, int &funct) {
