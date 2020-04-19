@@ -34,6 +34,7 @@ namespace WVM {
 
 		static bool isSpecialPurpose(int);
 		static std::string registerName(int);
+		static int registerID(std::string);
 	};
 }
 
