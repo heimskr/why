@@ -193,7 +193,10 @@ namespace WVM {
 	}
 
 	void VM::init() {
-		programCounter = getWord(8);
+		symbolsOffset = getWord(0);
+		codeOffset = programCounter = getWord(8);
+		dataOffset = getWord(16);
+		endOffset = getWord(24);
 		sp() = memorySize - 8;
 	}
 

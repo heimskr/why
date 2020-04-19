@@ -30,9 +30,13 @@ namespace WVM {
 			void setO(bool);
 
 		public:
-			Word programCounter = 0;
+			Word programCounter = -1;
 			Word interruptTableAddress = 0;
 			Word registers[Why::totalRegisters];
+			Word symbolsOffset = -1;
+			Word codeOffset = -1;
+			Word dataOffset = -1;
+			Word  endOffset = -1;
 
 			VM(size_t memory_size);
 
