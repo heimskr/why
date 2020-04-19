@@ -22,6 +22,7 @@ namespace WVM {
 	class VM {
 		private:
 			std::vector<UByte> memory;
+			size_t memorySize;
 
 		public:
 			Word programCounter = 0;
@@ -35,6 +36,7 @@ namespace WVM {
 			Word getWord(Word address, Endianness = Endianness::Little);
 			HWord getHalfword(Word address, Endianness = Endianness::Little);
 			Byte getByte(Word address);
+			std::string getString(Word address);
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);

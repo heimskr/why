@@ -4,7 +4,7 @@
 #include "VM.h"
 
 namespace WVM {
-	VM::VM(size_t memory_size) {
+	VM::VM(size_t memory_size): memorySize(memory_size) {
 		memory.reserve(memory_size);
 	}
 
@@ -62,6 +62,18 @@ namespace WVM {
 
 	Byte VM::getByte(Word address) {
 		return memory[address];
+	}
+
+	std::string VM::getString(Word address) {
+		std::string out;
+		out.reserve(32);
+		for (UWord i = address; i < memorySize; ++i) {
+			Byte byte = memory[i];
+			if (byte == '\0')
+				break;
+			out.push_back(byte);
+		}
+		return out;
 	}
 
 	void VM::load(const std::string &path) {
