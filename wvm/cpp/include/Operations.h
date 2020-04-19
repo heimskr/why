@@ -298,6 +298,7 @@ namespace WVM::Operations {
 #define OP_DIVUI 53
 #define OP_DIVII 54
 #define OP_DIVUII 55
+#define OP_SEL 56
 }
 
 #endif

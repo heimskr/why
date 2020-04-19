@@ -5,7 +5,9 @@
 namespace WVM::Unparser {
 	std::string stringify(UWord instruction) {
 		int opcode = (instruction >> 52) & 0xfff;
-		if (Operations::RSet.count(opcode) == 1) {
+		if (opcode == 0) {
+			return "<>";
+		} else if (Operations::RSet.count(opcode) == 1) {
 			int rs, rt, rd;
 			Conditions conditions;
 			int flags, funct;
@@ -124,6 +126,16 @@ namespace WVM::Unparser {
 				break;
 			case OP_TIME: break;
 			case OP_RING: break;
+			case OP_SEL: {
+				std::string oper;
+				if (conditions == Conditions::Zero) oper = "=";
+				else if (conditions == Conditions::Positive) oper = ">";
+				else if (conditions == Conditions::Negative) oper = "<";
+				else if (conditions == Conditions::Nonzero) oper = "!=";
+				else oper = "?";
+				return "\e[2m[\e[22m" + Why::coloredRegister(rs) + " \e[2m" + oper + "\e[22m "
+					+ Why::coloredRegister(rt) + "\e[2m] -> \e[22m" + Why::coloredRegister(rd);
+			}
 		}
 
 		return "R: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + " "
