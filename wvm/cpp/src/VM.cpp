@@ -28,6 +28,10 @@ namespace WVM {
 		}
 	}
 
+	void VM::setByte(Word address, Byte value) {
+		memory[address] = value;
+	}
+
 	Word VM::getWord(Word address, Endianness endianness) {
 		Word out = 0;
 
@@ -54,6 +58,10 @@ namespace WVM {
 		}
 
 		return out;
+	}
+
+	Byte VM::getByte(Word address) {
+		return memory[address];
 	}
 
 	void VM::load(const std::string &path) {

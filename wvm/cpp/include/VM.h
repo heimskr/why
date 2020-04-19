@@ -31,8 +31,10 @@ namespace WVM {
 
 			void setWord(Word address, Word value, Endianness = Endianness::Little);
 			void setHalfword(Word address, HWord value, Endianness = Endianness::Little);
+			void setByte(Word address, Byte value);
 			Word getWord(Word address, Endianness = Endianness::Little);
 			HWord getHalfword(Word address, Endianness = Endianness::Little);
+			Byte getByte(Word address);
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);
