@@ -36,8 +36,9 @@ namespace WVM::Unparser {
 				switch (funct) {
 					case FN_ADD:   oper = "+"; break;
 					case FN_SUB:   oper = "-"; break;
-					case FN_MULT:  
-					case FN_MULTU:
+					case FN_MULT:  return Why::coloredRegister(rs) + " \e[1m*\e[22m " + Why::coloredRegister(rd);
+					case FN_MULTU: return Why::coloredRegister(rs) + " \e[1m*\e[22m " + Why::coloredRegister(rd)
+						+ " /u";
 					case FN_SLL:   oper = "<<"; break;
 					case FN_SRL:   oper = ">>>"; break;
 					case FN_SRA:   oper = ">>"; break;
