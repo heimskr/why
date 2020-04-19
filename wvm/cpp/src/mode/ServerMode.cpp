@@ -10,14 +10,22 @@ namespace WVM::Mode {
 	}
 
 	void ServerMode::stop() {
+		std::cerr << "Stopping.\n";
 		server.stop();
 	}
 
 	void ServerMode::handleMessage(int client, const std::string &message) {
 		const size_t space = message.find(' ');
-		if (message.empty() || message.front() != ':' || space == std::string::npos) {
-			server.send(client, ":error Invalid message\n");
+		if (message.empty() || message.front() != ':') {
+			server.send(client, ":Error Invalid message\n");
 			return;
+		}
+
+		const std::string verb = message.substr(1, space - 1);
+		if (verb == "Stop") {
+			stop();
+		} else {
+			server.send(client, ":UnknownVerb " + verb + "\n");
 		}
 	}
 }

@@ -8,17 +8,22 @@
 
 namespace WVM::Net {
 	class NetError: public std::runtime_error {
+		private:
+			std::string message;
+
 		public:
 			int statusCode;
 
 			NetError(int status_code):
-				std::runtime_error("Network operation failed"), statusCode(status_code) {}
+				NetError("Network operation", status_code) {}
 
 			NetError(const std::string &type, int status_code):
-				std::runtime_error(type + " failed"), statusCode(status_code) {}
+				std::runtime_error(type + " failed: " + strerror(status_code)),
+				message(type + " failed: " + strerror(status_code)),
+				statusCode(status_code) {}
 
 			const char * what() const throw() override {
-				return strerror(statusCode);
+				return message.c_str();
 			}
 	};
 }

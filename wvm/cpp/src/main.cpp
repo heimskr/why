@@ -4,6 +4,7 @@
 
 #include "lib/ansi.h"
 #include "mode/ServerMode.h"
+#include "net/NetError.h"
 #include "net/Server.h"
 
 std::optional<WVM::Mode::ServerMode> server;
@@ -22,8 +23,12 @@ int main(int argc, char **argv) {
 
 	if (arg == "server") {
 		server.emplace(44902);
-		server->run();
 		signal(SIGINT, +[](int) { server->stop(); });
+		try {
+			server->run();
+		} catch (const WVM::Net::NetError &err) {
+			std::cerr << err.what() << "\n";
+		}
 	} else if (arg == "registers") {
 		
 	} else if (arg == "memory") {

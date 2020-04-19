@@ -15,7 +15,11 @@ namespace WVM::Net {
 			char *buffer;
 			int lastClient = -1;
 			int sock = -1;
-			fd_set activeSet, readSet;
+			fd_set activeSet;
+			int controlRead = -1, controlWrite = -1;
+			bool connected = false;
+
+			enum class ControlMessage: char {Close='C'};
 
 			/** Maps client IDs to descriptors. */
 			std::map<int, int> descriptors;

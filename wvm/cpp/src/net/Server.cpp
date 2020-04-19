@@ -85,23 +85,39 @@ namespace WVM::Net {
 		struct sockaddr_in clientname;
 		size_t size;
 
+		int control_pipe[2];
+		if (pipe(control_pipe) < 0) {
+			throw NetError("pipe()", errno);
+		}
+
+		controlRead  = control_pipe[0];
+		controlWrite = control_pipe[1];
+
 		sock = makeSocket();
 		if (::listen(sock, 1) < 0)
 			throw NetError("Listening", errno);
 
-		// Initialize the set of active sockets.
 		FD_ZERO(&activeSet);
 		FD_SET(sock, &activeSet);
+		FD_SET(controlRead, &activeSet);
+		connected = true;
 
+		fd_set read_set;
 		for (;;) {
 			// Block until input arrives on one or more active sockets.
-			readSet = activeSet;
-			if (::select(FD_SETSIZE, &readSet, NULL, NULL, NULL) < 0)
+			read_set = activeSet;
+			if (::select(FD_SETSIZE, &read_set, NULL, NULL, NULL) < 0)
 				throw NetError("select()", errno);
+
+			if (FD_ISSET(controlRead, &read_set)) {
+				std::cerr << "Closed server socket.\n";
+				::close(sock);
+				break;
+			}
 
 			// Service all the sockets with input pending.
 			for (int i = 0; i < FD_SETSIZE; ++i) {
-				if (FD_ISSET(i, &readSet)) {
+				if (FD_ISSET(i, &read_set)) {
 					if (i == sock) {
 						// Connection request on original socket.
 						int new_fd;
@@ -116,7 +132,7 @@ namespace WVM::Net {
 						descriptors.emplace(new_client, new_fd);
 						clients.erase(new_fd);
 						clients.emplace(new_fd, new_client);
-					} else {
+					} else if (i != controlRead) {
 						// Data arriving on an already-connected socket.
 						readFromClient(i);
 					}
@@ -126,9 +142,10 @@ namespace WVM::Net {
 	}
 
 	void Server::stop() {
-		if (sock != -1) {
-			::close(sock);
-			std::cerr << "Closed server socket.\n";
+		if (connected) {
+			ControlMessage message = ControlMessage::Close;
+			::write(controlWrite, &message, 1);
+			connected = false;
 		}
 	}
 

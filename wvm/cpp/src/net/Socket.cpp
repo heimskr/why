@@ -57,7 +57,7 @@ namespace WVM::Net {
 	void Socket::close() {
 		if (connected) {
 			ControlMessage message = ControlMessage::Close;
-			::write(controlWrite, &message, 1);
+			::write(controlWrite, &message, sizeof(ControlMessage));
 			connected = false;
 		}
 	}
@@ -103,9 +103,5 @@ namespace WVM::Net {
 		}
 
 		return -1;
-	}
-
-	int Socket::accept() {
-
 	}
 }
