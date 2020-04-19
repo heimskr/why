@@ -38,8 +38,8 @@ namespace WVM::Unparser {
 				switch (funct) {
 					case FN_ADD:   oper = "+"; break;
 					case FN_SUB:   oper = "-"; break;
-					case FN_MULT:  return color(rs) + " \e[1m*\e[22m " + color(rd);
-					case FN_MULTU: return color(rs) + " \e[1m*\e[22m " + color(rd) + " /u";
+					case FN_MULT:  return color(rs) + " " + colorOper("*") + " " + color(rd);
+					case FN_MULTU: return color(rs) + " " + colorOper("*") + " " + color(rd) + " /u";
 					case FN_SLL:   oper = "<<"; break;
 					case FN_SRL:   oper = ">>>"; break;
 					case FN_SRA:   oper = ">>"; break;
@@ -69,8 +69,8 @@ namespace WVM::Unparser {
 					case FN_LNOR:  oper = "~||"; break;
 					case FN_LNOT:
 						if (rs == rd)
-							return "\e[1m!\e[22m" + color(rs) + "\e[1m.\e[22m";
-						return "\e[1m!\e[22m" + color(rs) + into + color(rd);
+							return colorOper("!") + color(rs) + colorOper(".");
+						return colorOper("!") + color(rs) + into + color(rd);
 					case FN_LOR:   oper = "||";  break;
 					case FN_LXNOR: oper = "~xx"; break;
 					case FN_LXOR:  oper = "xx";  break;
@@ -79,7 +79,7 @@ namespace WVM::Unparser {
 			}
 			case OP_RCOMP: {
 				if (funct == FN_CMP)
-					return color(rs) + " \e[1m~\e[22m " + color(rt);
+					return color(rs) + " " + colorOper("~") + " " + color(rt);
 				std::string out = color(rs) + " \e[1m";
 				if (funct == FN_SL  || funct == FN_SLU) out += "<";
 				else if (funct == FN_SLE || funct == FN_SLEU) out += "<=";
@@ -100,17 +100,17 @@ namespace WVM::Unparser {
 			}
 			case OP_RMEM:
 				switch (funct) {
-					case FN_C:     return "[" + color(rs) + "]" + into + "[" + color(rd) + "]";
-					case FN_L:     return "[" + color(rs) + "]" + into + color(rd);
-					case FN_S:     return color(rs) + into + "[" + color(rd) + "]";
-					case FN_CB:    return "[" + color(rs) + "]" + into + "[" + color(rd) + "] /b";
-					case FN_LB:    return "[" + color(rs) + "]" + into + color(rd) + " /b";
-					case FN_SB:    return color(rs) + " \e[2m->\e[22m [" + color(rd) + "] /b";
+					case FN_C:     return left + color(rs) + right + into + left + color(rd) + right;
+					case FN_L:     return left + color(rs) + right + into + color(rd);
+					case FN_S:     return color(rs) + into + left + color(rd) + right;
+					case FN_CB:    return left + color(rs) + right + into + left + color(rd) + right + " /b";
+					case FN_LB:    return left + color(rs) + right + into + color(rd) + " /b";
+					case FN_SB:    return color(rs) + into + left + color(rd) + right + " /b";
 					case FN_SPUSH: return "\e[2m[\e[22m " + color(rs);
 					case FN_SPOP:  return "\e[2m]\e[22m " + color(rd);
-					case FN_CH:    return "[" + color(rs) + "]" + into + "[" + color(rd) + "] /h";
-					case FN_LH:    return "[" + color(rs) + "]" + into + color(rd) + " /h";
-					case FN_SH:    return color(rs) + into + "[" + color(rd) + "] /h";
+					case FN_CH:    return left + color(rs) + right + into + left + color(rd) + "] /h";
+					case FN_LH:    return left + color(rs) + right + into + color(rd) + " /h";
+					case FN_SH:    return color(rs) + into + left + color(rd) + right + " /h";
 				}
 				break;
 			case OP_REXT:
@@ -159,29 +159,38 @@ namespace WVM::Unparser {
 			case OP_SRLI:   return iAltOp(rs, rd, immediate, ">>>");
 			case OP_SRAI:   return iAltOp(rs, rd, immediate, ">>");
 			case OP_LUI:    return "\e[2lui:\e[22m " + colorNum(immediate) + into + color(rd);
-			case OP_LI:     return "[" + colorNum(immediate) + "]" + into + color(rd);
-			case OP_LBI:    return "[" + colorNum(immediate) + "]" + into + color(rd) + " /b";
-			case OP_LNI:    return "[" + colorNum(immediate) + "]" + into + "[" + color(rd) + "]";
-			case OP_LBNI:   return "[" + colorNum(immediate) + "]" + into + "[" + color(rd) + "] /b";
+			case OP_LI:     return left + colorNum(immediate) + right + into + color(rd);
+			case OP_LBI:    return left + colorNum(immediate) + right + into + color(rd) + " /b";
+			case OP_LNI:    return left + colorNum(immediate) + right + into + left + color(rd) + right;
+			case OP_LBNI:   return left + colorNum(immediate) + right + into + left + color(rd) + right + " /b";
+			case OP_SI:     return color(rs) + into + left + colorNum(immediate) + right;
+			case OP_SBI:    return color(rs) + into + left + colorNum(immediate) + right + " /b";
+			case OP_SET:    return colorNum(immediate) + into + color(rd);
+			case OP_SLI:    return iComp(rs, rd, immediate, "<");
+			case OP_SLUI:   return iComp(rs, rd, immediate, "<") + " /u";
+			case OP_SLEI:   return iComp(rs, rd, immediate, "<=");
+			case OP_SLEUI:  return iComp(rs, rd, immediate, "<=") + " /u";
+			case OP_SGI:    return iComp(rs, rd, immediate, ">");
+			case OP_SGEI:   return iComp(rs, rd, immediate, ">=");
+			case OP_SEQI:   return iComp(rs, rd, immediate, "==");
 		}
-		return "I: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + " "
-			+ std::to_string(immediate) + " -> " + Why::coloredRegister(rd);
+		return "I: Opcode[" + std::to_string(opcode) + "], " + color(rs) + " "
+			+ std::to_string(immediate) + " -> " + color(rd);
 	}
 
 	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, HWord address) {
-		return "J: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + ", " + (link? "" : "don't ")
+		return "J: Opcode[" + std::to_string(opcode) + "], " + color(rs) + ", " + (link? "" : "don't ")
 			+ "link, " + std::to_string(address);
 	}
 
 	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix) {
 		if (rs == rd || rt == rd) {
-			const std::string source      = Why::coloredRegister(rs == rd? rs : rt);
-			const std::string destination = Why::coloredRegister(rs == rd? rt : rs);
-			return source + " \e[2m" + oper + "=\e[22m " + destination + suffix;
+			const std::string source      = color(rs == rd? rs : rt);
+			const std::string destination = color(rs == rd? rt : rs);
+			return source + " " + colorOper(oper + "=") + " " + destination + suffix;
 		}
 
-		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m" + Why::coloredRegister(rt) + into
-			+ Why::coloredRegister(rd);
+		return color(rs) + " " + colorOper(oper) + " " + color(rt) + into + color(rd);
 	}
 
 	std::string iAltOp(int rs, int rd, HWord immediate, const std::string &oper) {
@@ -190,14 +199,17 @@ namespace WVM::Unparser {
 		return rs == rd? out : out + into + color(rd);
 	}
 
-	std::string iMath(int rs, int rd, HWord imm, const std::string &oper) {
+	std::string iMath(int rs, int rd, HWord immediate, const std::string &oper) {
 		if (rs == rd) {
-			if (imm == 1)
-				return Why::coloredRegister(rs) + "\e[1m" + oper + oper + "\e[22m";
-			return Why::coloredRegister(rs) + " \e[1m" + oper + "=\e[22m " + immColor + std::to_string(imm) + "\e[39m";
+			if (immediate == 1)
+				return color(rs) + colorOper(oper + oper);
+			return color(rs) + " " + colorOper(oper + "=") + " " + colorNum(immediate);
 		}
-		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m " + immColor + std::to_string(imm) + "\e[39;2m -> "
-			+ "\e[22m" + Why::coloredRegister(rd);
+		return color(rs) + " " + colorOper(oper) + " " + colorNum(immediate) + into + color(rd);
+	}
+
+	std::string iComp(int rs, int rd, HWord immediate, const std::string &oper) {
+		return color(rs) + " " + colorOper(oper) + " " + colorNum(immediate) + into + color(rd);
 	}
 
 	std::string jumpConditions(Conditions conditions) {
@@ -217,5 +229,9 @@ namespace WVM::Unparser {
 
 	std::string colorNum(HWord immediate) {
 		return immColor + std::to_string(immediate) + "\e[39m";
+	}
+
+	std::string colorOper(const std::string &oper) {
+		return "\e[1m" + oper + "\e[22m";
 	}
 }
