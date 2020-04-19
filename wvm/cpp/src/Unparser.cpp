@@ -58,7 +58,7 @@ namespace WVM::Unparser {
 						return "\e[1m~\2[22m" + Why::coloredRegister(rs) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
 					case FN_OR:
 						if (rs == Why::zeroOffset)
-							return Why::coloredRegister(rt) + " \e[2->\e[22m " + Why::coloredRegister(rd);
+							return Why::coloredRegister(rt) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
 						oper = "|";
 						break;
 					case FN_XNOR:  oper = "~x";  break;
@@ -144,7 +144,7 @@ namespace WVM::Unparser {
 		if (rs == rd || rt == rd) {
 			const std::string source      = Why::coloredRegister(rs == rd? rs : rt);
 			const std::string destination = Why::coloredRegister(rs == rd? rt : rs);
-			return source + " \e[1m" + oper + "=\e[22m " + destination + suffix;
+			return source + " \e[2m" + oper + "=\e[22m " + destination + suffix;
 		}
 
 		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m" + Why::coloredRegister(rt) + " \e[2m->\e[22m "
