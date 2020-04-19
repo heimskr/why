@@ -74,16 +74,20 @@ namespace WVM {
 		return memory[address];
 	}
 
-	std::string VM::getString(Word address) {
+	std::string VM::getString(Word address, int max) {
 		std::string out;
 		out.reserve(32);
+		int j = 0;
 		for (UWord i = address; i < memorySize; ++i) {
-			Byte byte = memory[i];
-			if (byte == '\0')
+			if (j++ == max || memory[i] == '\0')
 				break;
-			out.push_back(byte);
+			out.push_back(memory[i]);
 		}
 		return out;
+	}
+
+	Word VM::getInstruction(Word address) {
+		return getWord(address, Endianness::Big);
 	}
 
 	void VM::jump(Word address, bool should_link) {
@@ -186,18 +190,30 @@ namespace WVM {
 			UWord word = strtoul(line.c_str(), &endptr, 16);
 			if (line.size() != 16 || endptr - line.c_str() != 16)
 				throw std::runtime_error("Invalid line (" + std::to_string(lineno) + ")");
-			setWord(8 * (lineno - 1), word, Endianness::Little);
+			setWord(8 * (lineno - 1), word, Endianness::Big);
 		}
 
 		init();
 	}
 
 	void VM::init() {
-		symbolsOffset = getWord(0);
-		codeOffset = programCounter = getWord(8);
-		dataOffset = getWord(16);
-		endOffset = getWord(24);
+		symbolsOffset = getWord(0, Endianness::Big);
+		codeOffset = programCounter = getWord(8, Endianness::Big);
+		dataOffset = getWord(16, Endianness::Big);
+		endOffset = getWord(24, Endianness::Big);
 		sp() = memorySize - 8;
+		loadSymbols();
+	}
+
+	void VM::loadSymbols() {
+		for (Word i = symbolsOffset; i < codeOffset;) {
+			const HWord hash = getHalfword(i, Endianness::Big);
+			const HWord length = getHalfword(i + 4, Endianness::Big);
+			const Word location = getWord(i + 8);
+			const std::string name = getString(i + 16, length * 8);
+			symbolTable.emplace(name, Symbol(hash, location));
+			i += 16 + length * 8;
+		}
 	}
 
 	Word & VM::hi() {

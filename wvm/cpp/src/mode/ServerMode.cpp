@@ -60,7 +60,8 @@ namespace WVM::Mode {
 			server.send(client, ":Reg " + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "PrintOps") {
 			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
-				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m " << Unparser::stringify(vm.getWord(i)) << "\n";
+				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m " << Unparser::stringify(vm.getInstruction(i))
+				          << "\n";
 		} else if (verb == "GetWord") {
 			if (size != 2 && size != 3) {
 				invalid();

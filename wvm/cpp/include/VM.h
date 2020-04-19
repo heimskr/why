@@ -3,9 +3,11 @@
 
 #include <filesystem>
 #include <istream>
+#include <map>
 #include <vector>
 
 #include "Defs.h"
+#include "Symbol.h"
 #include "Why.h"
 
 namespace WVM {
@@ -33,6 +35,7 @@ namespace WVM {
 			Word programCounter = -1;
 			Word interruptTableAddress = 0;
 			Word registers[Why::totalRegisters];
+			std::map<std::string, Symbol> symbolTable;
 			Word symbolsOffset = -1;
 			Word codeOffset = -1;
 			Word dataOffset = -1;
@@ -46,7 +49,8 @@ namespace WVM {
 			Word getWord(Word address, Endianness = Endianness::Little);
 			HWord getHalfword(Word address, Endianness = Endianness::Little);
 			Byte getByte(Word address);
-			std::string getString(Word address);
+			std::string getString(Word address, int max = -1);
+			Word getInstruction(Word address);
 
 			void jump(Word, bool should_link = false);
 			void link();
@@ -65,6 +69,7 @@ namespace WVM {
 			void load(const std::filesystem::path &);
 			void load(std::istream &);
 			void init();
+			void loadSymbols();
 
 			Word & hi();
 			Word & lo();
