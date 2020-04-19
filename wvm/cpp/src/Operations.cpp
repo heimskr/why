@@ -452,7 +452,9 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void intOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void intOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
+		if (vm.interrupt(immediate))
+			vm.increment();
 	}
 
 	void ritOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {

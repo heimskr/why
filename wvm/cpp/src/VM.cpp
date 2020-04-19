@@ -132,6 +132,10 @@ namespace WVM {
 		throw std::runtime_error("Invalid conditions flag: " + std::to_string(static_cast<int>(conditions)));
 	}
 
+	bool VM::interrupt(int type) {
+		return true;
+	}
+
 	void VM::intProtec() {}
 
 	void VM::load(const std::string &path) {
