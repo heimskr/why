@@ -173,6 +173,21 @@ namespace WVM::Unparser {
 			case OP_SGI:    return iComp(rs, rd, immediate, ">");
 			case OP_SGEI:   return iComp(rs, rd, immediate, ">=");
 			case OP_SEQI:   return iComp(rs, rd, immediate, "==");
+			case OP_RIT:    return "\e[36mrit\e[39m " + colorNum(immediate);
+			case OP_TIMEI:  return "\e[36mtime\e[39m " + colorNum(immediate);
+			case OP_RINGI:  return "\e[36mring\e[39m " + colorNum(immediate);
+			case OP_CMPI:   return color(rs) + " " + colorOper("~") + " " + colorNum(immediate);
+			case OP_INT: {
+				const std::string base = "\e[36mint\e[39m ";
+				switch (immediate) {
+					case INT_NULL:   return base + "null";
+					case INT_SYSTEM: return base + "system";
+					case INT_TIMER:  return base + "timer";
+					case INT_PROTEC: return base + "protec";
+					default: return base + colorNum(immediate);
+				}
+			}
+
 		}
 		return "I: Opcode[" + std::to_string(opcode) + "], " + color(rs) + " "
 			+ std::to_string(immediate) + " -> " + color(rd);
