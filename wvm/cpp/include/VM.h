@@ -19,10 +19,13 @@ namespace WVM {
 	using   Byte =  int8_t;
 	using  UByte = uint8_t;
 
+	enum class Ring: int {Zero, One, Two, Three};
+
 	class VM {
 		private:
 			std::vector<UByte> memory;
 			size_t memorySize;
+			Ring ring = Ring::Zero;
 
 		public:
 			Word programCounter = 0;
@@ -37,6 +40,12 @@ namespace WVM {
 			HWord getHalfword(Word address, Endianness = Endianness::Little);
 			Byte getByte(Word address);
 			std::string getString(Word address);
+
+			void jump(Word);
+			void link();
+			void increment();
+			bool changeRing(Ring);
+			void intProtec();
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);

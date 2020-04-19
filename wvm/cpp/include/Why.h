@@ -29,6 +29,8 @@ namespace WVM {
 		                       hiOffset = 6,
 		                   statusOffset = 101;
 
+		constexpr static int ringMin = 0, ringMax = 3;
+
 		constexpr static int halfFloatWidth = 4, floatWidth = 8, doubleWidth = 8, pointerWidth = 8; // in bytes
 		constexpr static int generalPurposeRegisters = temporaryCount + savedCount;
 

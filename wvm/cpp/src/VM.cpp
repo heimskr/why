@@ -76,6 +76,33 @@ namespace WVM {
 		return out;
 	}
 
+	void VM::jump(Word address) {
+		programCounter = address;
+	}
+
+	void VM::link() {
+		registers[Why::returnAddressOffset] = programCounter + 8;
+	}
+
+	void VM::increment() {
+		programCounter += 8;
+	}
+
+	bool VM::changeRing(Ring new_ring) {
+		if (static_cast<int>(new_ring) < Why::ringMin || Why::ringMax < static_cast<int>(new_ring)) {
+			intProtec();
+			return false;
+		} else if (new_ring < ring) {
+			intProtec();
+			return false;
+		}
+
+		ring = new_ring;
+		return true;
+	}
+
+	void VM::intProtec() {}
+
 	void VM::load(const std::string &path) {
 		load(std::filesystem::path(path));
 	}
