@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Operations.h"
 #include "VM.h"
 
 namespace WVM {
@@ -132,7 +133,7 @@ namespace WVM {
 		throw std::runtime_error("Invalid conditions flag: " + std::to_string(static_cast<int>(conditions)));
 	}
 
-	bool VM::interrupt(int type) {
+	bool VM::interrupt(int) {
 		return true;
 	}
 
@@ -153,6 +154,14 @@ namespace WVM {
 
 	void VM::stop() {
 		active = false;	
+	}
+
+	bool VM::tick() {
+		UWord instruction = getWord(programCounter);
+		Operations::execute(*this, instruction);
+
+		++cycles;
+		return active;
 	}
 
 	void VM::load(const std::string &path) {
@@ -185,6 +194,7 @@ namespace WVM {
 
 	void VM::init() {
 		programCounter = getWord(8);
+		sp() = memorySize - 8;
 	}
 
 	Word & VM::hi() {

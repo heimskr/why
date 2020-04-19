@@ -18,6 +18,7 @@ namespace WVM {
 			size_t memorySize;
 			Ring ring = Ring::Zero;
 			bool active = false;
+			size_t cycles = 0;
 
 			bool getZ();
 			bool getN();
@@ -54,6 +55,7 @@ namespace WVM {
 			void intProtec();
 			void start();
 			void stop();
+			bool tick();
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);

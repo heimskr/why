@@ -25,13 +25,16 @@ namespace WVM::Operations {
 
 	std::set<int> JSet {OP_J, OP_JC};
 
-	void execute(VM &vm, Word instruction) {
+	void execute(VM &vm, UWord instruction) {
 		int opcode = (instruction >> 52) & 0xfff;
 		if (RSet.count(opcode) == 1) {
 			Word *rs, *rt, *rd;
 			Conditions conditions;
 			int flags, funct;
 			decodeRType(vm, instruction, rs, rt, rd, conditions, flags, funct);
+			info() << "R: Opcode[" << opcode << "], $" << Why::registerName(rs - vm.registers) << " $"
+			       << Why::registerName(rt - vm.registers) << " -> $" << Why::registerName(rd - vm.registers) << ", "
+			       << "Funct[" << funct << "]\n";
 			executeRType(opcode, vm, *rs, *rt, *rd, conditions, flags, funct);
 		} else if (ISet.count(opcode) == 1) {
 			Word *rs, *rd;
@@ -39,6 +42,8 @@ namespace WVM::Operations {
 			int flags;
 			HWord immediate;
 			decodeIType(vm, instruction, rs, rd, conditions, flags, immediate);
+			info() << "I: Opcode[" << opcode << "], $" << Why::registerName(rs - vm.registers) << " " << immediate
+			       << " -> $" << Why::registerName(rd - vm.registers) << "\n";
 			executeIType(opcode, vm, *rs, *rd, conditions, flags, immediate);
 		} else if (JSet.count(opcode) == 1) {
 			Word *rs;
@@ -47,6 +52,8 @@ namespace WVM::Operations {
 			int flags;
 			HWord address;
 			decodeJType(vm, instruction, rs, link, conditions, flags, address);
+			info() << "J: Opcode[" << opcode << "], $" << Why::registerName(rs - vm.registers) << ", " << (link? "link"
+			          : "don't link") << ", " << address << "\n";
 			executeJType(opcode, vm, *rs, link, conditions, flags, address);
 		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 	}

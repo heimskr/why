@@ -11,7 +11,7 @@ namespace WVM::Operations {
 	extern std::set<int> ISet;
 	extern std::set<int> JSet;
 
-	void execute(VM &, UWord &);
+	void execute(VM &, UWord);
 	void executeRType(int opcode, VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags, int funct);
 	void executeIType(int opcode, VM &, Word &rs, Word &rd,  Conditions, int flags, HWord immediate);
 	void executeJType(int opcode, VM &, Word &rs, bool link, Conditions, int flags, HWord address);

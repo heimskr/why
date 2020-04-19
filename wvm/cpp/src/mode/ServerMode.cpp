@@ -30,6 +30,33 @@ namespace WVM::Mode {
 
 		if (verb == "Stop") {
 			stop();
+		} else if (verb == "Init") {
+			vm.init();
+		} else if (verb == "Tick") {
+			vm.tick();
+		} else if (verb == "Reg") {
+			if (size != 2 && size != 3) {
+				invalid();
+				return;
+			}
+
+			int reg = Why::registerID(split[1]);
+			if (reg == -1) {
+				server.send(client, ":Error Invalid register");
+				return;
+			}
+
+			if (size == 3) {
+				unsigned long new_value;
+				if (!Util::parseUL(split[2], new_value)) {
+					invalid();
+					return;
+				}
+
+				vm.registers[reg] = new_value;
+			}
+
+			server.send(client, ":Reg " + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "GetWord") {
 			if (size != 2 && size != 3) {
 				invalid();
