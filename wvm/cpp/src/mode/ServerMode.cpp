@@ -26,21 +26,47 @@ namespace WVM::Mode {
 		const size_t size = split.size();
 		const std::string verb = split[0].substr(1);
 
+		auto invalid = [&]() { server.send(client, ":InvalidMessage " + message); };
+
 		if (verb == "Stop") {
 			stop();
 		} else if (verb == "GetWord") {
 			if (size != 2) {
-				server.send(client, ":InvalidMessage " + message);
+				invalid();
 				return;
 			}
 
 			unsigned long int address;
 			if (!Util::parseUL(split[1], address)) {
-				server.send(client, ":InvalidMessage " + message);
+				invalid();
 				return;
 			}
 
-			server.send(client, ":MemoryWord " + std::to_string(address) + " " + std::to_string(vm.getWord(address, Endianness::Little)));
+			server.send(client, ":MemoryWord " + std::to_string(address) + " " + std::to_string(vm.getWord(address)));
+		} else if (verb == "SetWord") {
+			if (size != 3 && size != 4) {
+				invalid();
+				return;
+			}
+
+			unsigned long int address, value;
+			if (!Util::parseUL(split[1], address) || !Util::parseUL(split[2], value)) {
+				invalid();
+				return;
+			}
+
+			Endianness endianness = Endianness::Little;
+			if (size == 4) {
+				if (split[3] == "B") {
+					endianness = Endianness::Big;
+				} else if (split[3] != "L") {
+					invalid();
+					return;
+				}
+			}
+
+			vm.setWord(address, value, endianness);
+			server.send(client, ":MemoryWord " + std::to_string(address) + " " + std::to_string(vm.getWord(address)));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
