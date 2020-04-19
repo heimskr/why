@@ -144,6 +144,10 @@ namespace WVM::Unparser {
 	}
 
 	std::string stringifyIType(int opcode, int rs, int rd, Conditions conditions, HWord immediate) {
+		switch (opcode) {
+			case OP_ADDI: return iMath(rs, rd, immediate, "+");
+			case OP_SUBI: return iMath(rs, rd, immediate, "+");
+		}
 		return "I: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + " "
 			+ std::to_string(immediate) + " -> " + Why::coloredRegister(rd);
 	}
@@ -162,6 +166,16 @@ namespace WVM::Unparser {
 
 		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m" + Why::coloredRegister(rt) + " \e[2m->\e[22m "
 			+ Why::coloredRegister(rd);
+	}
+
+	std::string iMath(int rs, int rd, HWord imm, const std::string &oper) {
+		if (rs == rd) {
+			if (imm == 1)
+				return Why::coloredRegister(rs) + "\e[2m" + oper + oper + "\e[22m";
+			return Why::coloredRegister(rs) + " \e[2m" + oper + "=\e[22m " + immColor + std::to_string(imm) + "\e[39m";
+		}
+		return Why::coloredRegister(rs) + " \e[2m" + oper + "\e[22m " + immColor + std::to_string(imm) + "\e[39;2m -> "
+			+ "\e[22m" + Why::coloredRegister(rd);
 	}
 
 	std::string jumpConditions(Conditions conditions) {

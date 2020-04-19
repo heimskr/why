@@ -13,8 +13,11 @@ namespace WVM::Unparser {
 	std::string stringifyJType(int opcode, int rs, bool link, Conditions, HWord address);
 
 	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix = "");
+	std::string iMath(int rs, int rd, HWord immediate, const std::string &oper);
 
 	std::string jumpConditions(Conditions);
+
+	constexpr const char *immColor = "\e[38;5;164m";
 }
 
 #endif
