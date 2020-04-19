@@ -417,25 +417,39 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void liOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void liOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		rd = vm.getWord(immediate);
+		vm.increment();
 	}
 
-	void siOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void siOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		vm.setWord(immediate, rs);
+		vm.increment();
 	}
 
-	void setOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void setOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		rd = immediate;
+		vm.increment();
 	}
 
-	void lbiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void lbiOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		rd = vm.getByte(immediate);
+		vm.increment();
 	}
 
-	void sbiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void sbiOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		vm.setByte(immediate, rs);
+		vm.increment();
 	}
 
-	void lniOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void lniOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		vm.setWord(rd, vm.getWord(immediate));
+		vm.increment();
 	}
 
-	void lbniOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void lbniOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		vm.setByte(rd, vm.getByte(immediate));
+		vm.increment();
 	}
 
 	void intOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
