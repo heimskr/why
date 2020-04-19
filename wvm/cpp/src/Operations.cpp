@@ -48,17 +48,17 @@ namespace WVM {
 		address = instr & 0xffffffff;
 	}
 
-	void addOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-		rd = rs + rt;
+	void addOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs + rt);
 		vm.increment();
 	}
 
-	void subOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-		rd = rs - rt;
+	void subOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs - rt);
 		vm.increment();
 	}
 
-	void multOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void multOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		CAT_MUL128(vm.registers[Why::hiOffset], vm.registers[Why::loOffset], rs, rt);
 		vm.increment();
 	}
@@ -68,84 +68,104 @@ namespace WVM {
 		multOp(vm, rs, rt, rd, conditions, flags);
 	}
 
-	void sllOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-		
+	void sllOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs << rt);
+		vm.increment();
 	}
 
-	void srlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void srlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = static_cast<UWord>(rs) >> static_cast<UWord>(rt));
+		vm.increment();
 	}
 
-	void sraOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void sraOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs >> rt);
+		vm.increment();
 	}
 
-	void modOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void modOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs % rt);
+		vm.increment();
 	}
 
-	void divOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void divOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs / rt);
+		vm.increment();
 	}
 
-	void divuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void divuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = static_cast<UWord>(rs) / static_cast<UWord>(rt));
+		vm.increment();
 	}
 
-	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs & rt);
+		vm.increment();
 	}
 
-	void nandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void nandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = ~(rs & rt));
+		vm.increment();
 	}
 
-	void norOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void norOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = ~(rs | rt));
+		vm.increment();
 	}
 
-	void notOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void notOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = ~rs);
+		vm.increment();
 	}
 
-	void orOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void orOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs | rt);
+		vm.increment();
 	}
 
-	void xnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void xnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = ~(rs ^ rt));
+		vm.increment();
 	}
 
-	void xorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void xorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs ^ rt);
+		vm.increment();
 	}
 
-	void landOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void landOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs && rt);
+		vm.increment();
 	}
 
-	void lnandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void lnandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = !(rs && rt));
+		vm.increment();
 	}
 
-	void lnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void lnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = !(rs || rt));
+		vm.increment();
 	}
 
-	void lnotOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void lnotOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = !rs);
+		vm.increment();
 	}
 
-	void lorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void lorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = rs || rt);
+		vm.increment();
 	}
 
-	void lxnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void lxnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = !(rs ^ rt));
+		vm.increment();
 	}
 
-	void lxorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
-
+	void lxorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		vm.updateFlags(rd = !!(rs ^ rt));
+		vm.increment();
 	}
 
 	void addiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
