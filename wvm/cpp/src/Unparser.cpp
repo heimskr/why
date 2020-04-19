@@ -56,7 +56,6 @@ namespace WVM::Unparser {
 					case FN_NOR:   oper = "~|";  break;
 					case FN_NOT:
 						return "\e[1m~\2[22m" + Why::coloredRegister(rs) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
-						break;
 					case FN_OR:
 						if (rs == Why::zeroOffset)
 							return Why::coloredRegister(rt) + " \e[2->\e[22m " + Why::coloredRegister(rd);
@@ -82,6 +81,7 @@ namespace WVM::Unparser {
 				if (funct == FN_SL  || funct == FN_SLU) out += "<";
 				else if (funct == FN_SLE || funct == FN_SLEU) out += "<=";
 				else if (funct == FN_SEQ) out += "==";
+				else out += "?";
 				out += "\e[22m " + Why::coloredRegister(rt) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
 				if (funct == FN_SLU || funct == FN_SLEU) out += " /u";
 				return out;
