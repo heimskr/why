@@ -194,8 +194,13 @@ namespace WVM::Unparser {
 	}
 
 	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, HWord address) {
-		return "J: Opcode[" + std::to_string(opcode) + "], " + color(rs) + ", " + (link? "" : "don't ")
-			+ "link, " + std::to_string(address);
+		if (opcode != OP_J && opcode != OP_JC) {
+			return "J: Opcode[" + std::to_string(opcode) + "], " + color(rs) + ", " + (link? "" : "don't ")
+				+ "link, " + std::to_string(address);
+		}
+		const std::string base = jumpConditions(conditions) + "\e[2m" + (link? ":: " : ": ") + "\e[22m" +
+			colorNum(address);
+		return opcode == OP_JC? base + " \e[38;5;90mif\e[39m " + color(rs) : base;
 	}
 
 	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix) {
