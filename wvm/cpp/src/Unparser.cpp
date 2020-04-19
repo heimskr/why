@@ -77,6 +77,8 @@ namespace WVM::Unparser {
 				return rAltOp(rs, rt, rd, oper);
 			}
 			case OP_RCOMP: {
+				if (funct == FN_CMP)
+					return Why::coloredRegister(rs) + " \e[1m~\e[22m " + Why::coloredRegister(rt);
 				std::string out = Why::coloredRegister(rs) + " \e[1m";
 				if (funct == FN_SL  || funct == FN_SLU) out += "<";
 				else if (funct == FN_SLE || funct == FN_SLEU) out += "<=";

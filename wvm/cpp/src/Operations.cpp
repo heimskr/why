@@ -12,16 +12,17 @@
 namespace WVM::Operations {
 	std::set<int> RSet {
 		OP_ADD, OP_SUB, OP_MULT, OP_MULTU, OP_SLL, OP_SRL, OP_SRA, OP_MOD, OP_DIV, OP_DIVU, OP_AND, OP_NAND, OP_NOR,
-		OP_NOT, OP_OR, OP_XNOR, OP_XOR, OP_LAND, OP_LNAND, OP_LNOR, OP_LNOT, OP_LOR, OP_LXNOR, OP_LXOR, OP_SL, OP_SLE,
-		OP_SEQ, OP_SLU, OP_SLEU, OP_JR, OP_JRC, OP_JRL, OP_JRLC, OP_C, OP_L, OP_S, OP_CB, OP_LB, OP_SB, OP_SPUSH,
-		OP_SPOP, OP_CH, OP_LH, OP_SH, OP_TIME, OP_RING, OP_PR, OP_HALT, OP_EVAL, OP_PRC, OP_PRD, OP_PRX, OP_SLEEP,
+		OP_NOT, OP_OR, OP_XNOR, OP_XOR, OP_LAND, OP_LNAND, OP_LNOR, OP_LNOT, OP_LOR, OP_LXNOR, OP_LXOR, OP_CMP, OP_SL,
+		OP_SLE, OP_SEQ, OP_SLU, OP_SLEU, OP_JR, OP_JRC, OP_JRL, OP_JRLC, OP_C, OP_L, OP_S, OP_CB, OP_LB, OP_SB,
+		OP_SPUSH, OP_SPOP, OP_CH, OP_LH, OP_SH, OP_TIME, OP_RING, OP_PR, OP_HALT, OP_EVAL, OP_PRC, OP_PRD, OP_PRX,
+		OP_SLEEP,
 	};
 
 	std::set<int> ISet {
 		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII,
-		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_SEQI, OP_SLUI,
-		OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT, OP_TIMEI,
-		OP_RINGI,
+		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI,
+		OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT,
+		OP_TIMEI, OP_RINGI,
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
@@ -458,6 +459,11 @@ namespace WVM::Operations {
 		vm.increment();
 	}
 
+	void cmpOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		// TODO
+		vm.increment();
+	}
+
 	void sliOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs < immediate;
 		vm.increment();
@@ -490,6 +496,11 @@ namespace WVM::Operations {
 
 	void sgeiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs >= immediate;
+		vm.increment();
+	}
+
+	void cmpiOp(VM &vm, Word &, Word &, Conditions, int, HWord) {
+		// TODO
 		vm.increment();
 	}
 

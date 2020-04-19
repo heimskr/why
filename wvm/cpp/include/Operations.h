@@ -76,6 +76,7 @@ namespace WVM::Operations {
 	void seqOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 14  R 2
 	void sluOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 14  R 3
 	void sleuOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 14  R 4
+	void cmpOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 14  R 5
 
 	void sliOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 25  I
 	void sleiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 26  I
@@ -84,6 +85,7 @@ namespace WVM::Operations {
 	void sleuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 29  I
 	void sgiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 41  I
 	void sgeiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 42  I
+	void cmpiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 43  I
 
 	void jOp(VM &, Word &rs, bool link, Conditions, int flags, HWord address);       // 15  J
 	void jcOp(VM &, Word &rs, bool link, Conditions, int flags, HWord address);      // 16  J
@@ -112,6 +114,8 @@ namespace WVM::Operations {
 	void sbiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 38  I
 	void lniOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 39  I
 	void lbniOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 40  I
+
+
 
 	void intOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 32  I
 	void ritOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 33  I
@@ -209,6 +213,8 @@ namespace WVM::Operations {
 #define FN_SLU 3
 #define OP_SLEU 14
 #define FN_SLEU 4
+#define OP_CMP 14
+#define FN_CMP 5
 
 #define OP_J 15
 #define OP_JC 16
@@ -283,6 +289,7 @@ namespace WVM::Operations {
 #define OP_LBNI 40
 #define OP_SGI 41
 #define OP_SGEI 42
+#define OP_CMPI 43
 #define OP_TIME 48
 #define OP_TIMEI 49
 #define OP_RING 50
