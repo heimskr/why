@@ -12,10 +12,13 @@ namespace WVM::Operations {
 	extern std::set<int> JSet;
 
 	void execute(VM &, UWord &);
+	void executeR(int opcode, VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags, int funct);
+	void executeI(int opcode, VM &, Word &rs, Word &rd,  Conditions, int flags, HWord immediate);
+	void executeJ(int opcode, VM &, Word &rs, bool link, Conditions, int flags, HWord address);
 
-	void decodeRType(Word *&rs, Word *&rt, Word *&rd, Conditions &, int &flags, int &funct);
-	void decodeIType(Word *&rs, Word *&rd,  Conditions &, int &flags, HWord &immediate);
-	void decodeJType(Word *&rs, bool &link, Conditions &, int &flags, HWord &address);
+	void decodeRType(VM &, UWord instruction, Word *&rs, Word *&rt, Word *&rd, Conditions &, int &flags, int &funct);
+	void decodeIType(VM &, UWord instruction, Word *&rs, Word *&rd,  Conditions &, int &flags, HWord &immediate);
+	void decodeJType(VM &, UWord instruction, Word *&rs, bool &link, Conditions &, int &flags, HWord &address);
 
 	void addOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 0
 	void subOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 1
@@ -126,6 +129,12 @@ namespace WVM::Operations {
 	void sleepOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 31 ?R 7
 
 #define OP_NOP 0
+#define OP_RMATH 1
+#define OP_RLOGIC 2
+#define OP_RCOMP 14
+#define OP_RJUMP 17
+#define OP_RMEM 18
+#define OP_REXT 31
 
 #define OP_ADD 1
 #define FN_ADD 0
@@ -142,7 +151,7 @@ namespace WVM::Operations {
 #define OP_SRA 1
 #define FN_SRA 8
 #define OP_MOD 1
-#define FN_OP 9
+#define FN_MOD 9
 #define OP_DIV 1
 #define FN_DIV 10
 #define OP_DIVU 1

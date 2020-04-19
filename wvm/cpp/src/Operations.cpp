@@ -8,7 +8,7 @@
 #include "Util.h"
 #include "VM.h"
 
-namespace WVM {
+namespace WVM::Operations {
 	std::set<int> RSet {
 		OP_ADD, OP_SUB, OP_MULT, OP_MULTU, OP_SLL, OP_SRL, OP_SRA, OP_MOD, OP_DIV, OP_DIVU, OP_AND, OP_NAND, OP_NOR,
 		OP_NOT, OP_OR, OP_XNOR, OP_XOR, OP_LAND, OP_LNAND, OP_LNOR, OP_LNOT, OP_LOR, OP_LXNOR, OP_LXOR, OP_SL, OP_SLE,
@@ -27,6 +27,66 @@ namespace WVM {
 
 	void execute(VM &vm, Word instruction) {
 		int opcode = (instruction >> 52) & 0xfff;
+		if (RSet.count(opcode) == 1) {
+			Word *rs, *rt, *rd;
+			Conditions conds;
+			int flags, funct;
+			decodeRType(vm, instruction, rs, rt, rd, conds, flags, funct);
+			executeR(opcode, vm, *rs, *rt, *rd, conds, flags, funct);
+		} else if (ISet.count(opcode) == 1) {
+			
+		} else if (JSet.count(opcode) == 1) {
+			
+		}
+	}
+
+	void executeR(int opcode, VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags, int funct) {
+		switch (opcode) {
+			case OP_RMATH:
+				switch (funct) {
+					case FN_ADD:     addOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SUB:     subOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MULT:   multOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MULTU: multuOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SLL:     sllOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SRL:     srlOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SRA:     sraOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MOD:     modOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_DIV:     divOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_DIVU:   divuOp(vm, rs, rt, rd, conditions, flags); return;
+				}
+				break;
+			case OP_RLOGIC:
+				switch (funct) {
+
+				}
+				break;
+			case OP_RCOMP:
+				switch (funct) {
+
+				}
+				break;
+			case OP_RJUMP:
+				switch (funct) {
+
+				}
+				break;
+			case OP_RMEM:
+				switch (funct) {
+
+				}
+				break;
+			case OP_REXT:
+				switch (funct) {
+
+				}
+				break;
+			case OP_TIME: return;
+			case OP_RING: return;
+
+		}
+
+		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
 	}
 
 	void decodeRType(VM &vm, UWord instr, Word *&rs, Word *&rt, Word *&rd, Conditions &conds, int &flags, int &funct) {
