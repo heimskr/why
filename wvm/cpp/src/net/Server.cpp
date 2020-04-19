@@ -8,7 +8,6 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -52,7 +51,6 @@ namespace WVM::Net {
 			ssize_t index;
 			size_t delimiter_size;
 			std::tie(index, delimiter_size) = isMessageComplete(str, old_size);
-			std::cerr << "Inserting from " << descriptor << ": \"" << std::string(buffer, byte_count) << "\"\n";
 			if (index != -1) {
 				handleMessage(clients.at(descriptor), str.substr(0, index));
 				str.erase(0, index + delimiter_size);
@@ -61,16 +59,26 @@ namespace WVM::Net {
 	}
 
 	void Server::handleMessage(int client, const std::string &message) {
-		std::cerr << "Server: got message from client " << client << ": \"" << message << "\"\n";
+		if (messageHandler) {
+			messageHandler(client, message);
+		} else {
+			std::cerr << "Server: got message from client " << client << ": \"" << message << "\"\n";
+		}
 	}
 
 	void Server::end(int descriptor) {
-		std::cerr << "Closing descriptor " << descriptor << "\n";
 		::close(descriptor);
-		descriptors.erase(clients.at(descriptor));
+		const int client = clients.at(descriptor);
+		descriptors.erase(client);
 		buffers.erase(descriptor);
 		clients.erase(descriptor);
 		FD_CLR(descriptor, &activeSet);
+		if (onEnd)
+			onEnd(client, descriptor);
+	}
+
+	void Server::send(int client, const std::string &message) {
+		::write(descriptors.at(client), message.c_str(), message.size());
 	}
 
 	void Server::run() {

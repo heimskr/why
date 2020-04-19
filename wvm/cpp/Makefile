@@ -28,7 +28,7 @@ $(OUT): $(OBJECTS)
 	$(COMPILER) $(LDFLAGS) $(INCLUDE) $^ -o $@
 
 test: $(OUT)
-	./$(OUT) ../../wasm/compiled/mal.why
+	./$(OUT) server ../../wasm/compiled/mal.why
 
 haunted/build/%.o: haunted/src/%.cpp
 	@ mkdir -p "$(shell dirname "$@")"

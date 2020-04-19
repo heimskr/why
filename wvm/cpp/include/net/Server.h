@@ -1,7 +1,10 @@
 #ifndef WVM_NET_SERVER_H_
 #define WVM_NET_SERVER_H_
 
+#include <functional>
 #include <map>
+
+#include <sys/types.h>
 
 namespace WVM::Net {
 	class Server {
@@ -24,6 +27,9 @@ namespace WVM::Net {
 			std::map<int, std::string> buffers;
 
 		public:
+			std::function<void(int, const std::string &)> messageHandler; // (int client, const std::string &message)
+			std::function<void(int, int)> onEnd; // (int client, int descriptor)
+
 			Server(uint16_t port_, size_t chunk_size = 512);
 			~Server();
 
@@ -31,6 +37,7 @@ namespace WVM::Net {
 			void readFromClient(int descriptor);
 			virtual void handleMessage(int client, const std::string &message);
 			virtual void end(int descriptor);
+			void send(int client, const std::string &message);
 			void run();
 			void stop();
 

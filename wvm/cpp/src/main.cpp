@@ -1,39 +1,37 @@
+#include <optional>
 #include <stdlib.h>
 #include <signal.h>
 
-#include "main.h"
 #include "lib/ansi.h"
+#include "mode/ServerMode.h"
 #include "net/Server.h"
 
-WVM::Net::Server serv(44902);
+std::optional<WVM::Mode::ServerMode> server;
 
-void cleanup() {
-	serv.stop();
+void usage() {
+	std::cerr << "Usage:\n- wvm server <executable>\n- wvm registers\n- wvm memory\n- wvm console\n";
 }
 
-void sigint_handler(int) {
-	cleanup();
-}
-
-int main() {
-	// WVM::Main main;
-	// main.start();
-	serv.run();
-	atexit(cleanup);
-	signal(SIGINT, sigint_handler);
-}
-
-namespace WVM {
-	void Main::start() {
-		DBG("Hello, World!");
-		terminal.watch_size();
-		terminal.start_input();
+int main(int argc, char **argv) {
+	if (argc < 2) {
+		usage();
+		return 1;
 	}
 
-	void Main::initExpando() {
-		expando = new haunted::ui::boxes::expandobox(&terminal, terminal.get_position(),
-			haunted::ui::boxes::box_orientation::horizontal);
-		expando->set_name("expando");
-		terminal.set_root(expando);
+	std::string arg = argv[1];
+
+	if (arg == "server") {
+		server.emplace(44902);
+		server->run();
+		signal(SIGINT, +[](int) { server->stop(); });
+	} else if (arg == "registers") {
+		
+	} else if (arg == "memory") {
+
+	} else if (arg == "console") {
+
+	} else {
+		usage();
+		return 1;
 	}
 }
