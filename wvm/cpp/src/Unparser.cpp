@@ -48,33 +48,44 @@ namespace WVM::Unparser {
 				}
 				return rAltOp(rs, rt, rd, oper, suffix);
 			}
-			case OP_RLOGIC:
+			case OP_RLOGIC: {
+				std::string oper;
 				switch (funct) {
-					case FN_AND:   break;
-					case FN_NAND:  break;
-					case FN_NOR:   break;
-					case FN_NOT:   break;
-					case FN_OR:    break;
-					case FN_XNOR:  break;
-					case FN_XOR:   break;
-					case FN_LAND:  break;
-					case FN_LNAND: break;
-					case FN_LNOR:  break;
-					case FN_LNOT:  break;
-					case FN_LOR:   break;
-					case FN_LXNOR: break;
-					case FN_LXOR:  break;
+					case FN_AND:   oper = "&";   break;
+					case FN_NAND:  oper = "~&";  break;
+					case FN_NOR:   oper = "~|";  break;
+					case FN_NOT:
+						return "\e[1m~\2[22m" + Why::coloredRegister(rs) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
+						break;
+					case FN_OR:
+						if (rs == Why::zeroOffset)
+							return Why::coloredRegister(rt) + " \e[2->\e[22m " + Why::coloredRegister(rd);
+						oper = "|";
+						break;
+					case FN_XNOR:  oper = "~x";  break;
+					case FN_XOR:   oper = "x";   break;
+					case FN_LAND:  oper = "&&";  break;
+					case FN_LNAND: oper = "~&&"; break;
+					case FN_LNOR:  oper = "~||"; break;
+					case FN_LNOT:
+						if (rs == rd)
+							return "\e[1m!\e[22m" + Why::coloredRegister(rs) + "\e[1m.\e[22m";
+						return "\e[1m!\e[22m" + Why::coloredRegister(rs) + " \e[1m->\e[22m " + Why::coloredRegister(rd);
+					case FN_LOR:   oper = "||";  break;
+					case FN_LXNOR: oper = "~xx"; break;
+					case FN_LXOR:  oper = "xx";  break;
 				}
-				break;
-			case OP_RCOMP:
-				switch (funct) {
-					case FN_SL:   break;
-					case FN_SLE:  break;
-					case FN_SEQ:  break;
-					case FN_SLU:  break;
-					case FN_SLEU: break;
-				}
-				break;
+				return rAltOp(rs, rt, rd, oper);
+			}
+			case OP_RCOMP: {
+				std::string out = Why::coloredRegister(rs) + " \e[1m";
+				if (funct == FN_SL  || funct == FN_SLU) out += "<";
+				else if (funct == FN_SLE || funct == FN_SLEU) out += "<=";
+				else if (funct == FN_SEQ) out += "==";
+				out += "\e[22m " + Why::coloredRegister(rt) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
+				if (funct == FN_SLU || funct == FN_SLEU) out += " /u";
+				return out;
+			}
 			case OP_RJUMP:
 				switch (funct) {
 					case FN_JR:   break;
