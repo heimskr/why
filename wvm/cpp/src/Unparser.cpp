@@ -5,7 +5,7 @@
 namespace WVM::Unparser {
 	std::string stringify(UWord instruction) {
 		int opcode = (instruction >> 52) & 0xfff;
-		if (opcode == 0) {
+		if (opcode == OP_NOP) {
 			return "<>";
 		} else if (Operations::RSet.count(opcode) == 1) {
 			int rs, rt, rd;
@@ -32,14 +32,15 @@ namespace WVM::Unparser {
 	}
 
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions conditions, int funct) {
+		auto color = [&](int reg) -> std::string { return Why::coloredRegister(reg); };
 		switch (opcode) {
 			case OP_RMATH: {
 				std::string oper, suffix;
 				switch (funct) {
 					case FN_ADD:   oper = "+"; break;
 					case FN_SUB:   oper = "-"; break;
-					case FN_MULT:  return Why::coloredRegister(rs) + " \e[1m*\e[22m " + Why::coloredRegister(rd);
-					case FN_MULTU: return Why::coloredRegister(rs) + " \e[1m*\e[22m " + Why::coloredRegister(rd)
+					case FN_MULT:  return color(rs) + " \e[1m*\e[22m " + color(rd);
+					case FN_MULTU: return color(rs) + " \e[1m*\e[22m " + color(rd)
 						+ " /u";
 					case FN_SLL:   oper = "<<"; break;
 					case FN_SRL:   oper = ">>>"; break;
@@ -57,10 +58,10 @@ namespace WVM::Unparser {
 					case FN_NAND:  oper = "~&";  break;
 					case FN_NOR:   oper = "~|";  break;
 					case FN_NOT:
-						return "\e[1m~\2[22m" + Why::coloredRegister(rs) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
+						return "\e[1m~\2[22m" + color(rs) + " \e[2m->\e[22m " + color(rd);
 					case FN_OR:
 						if (rs == Why::zeroOffset)
-							return Why::coloredRegister(rt) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
+							return color(rt) + " \e[2m->\e[22m " + color(rd);
 						oper = "|";
 						break;
 					case FN_XNOR:  oper = "~x";  break;
@@ -70,8 +71,8 @@ namespace WVM::Unparser {
 					case FN_LNOR:  oper = "~||"; break;
 					case FN_LNOT:
 						if (rs == rd)
-							return "\e[1m!\e[22m" + Why::coloredRegister(rs) + "\e[1m.\e[22m";
-						return "\e[1m!\e[22m" + Why::coloredRegister(rs) + " \e[1m->\e[22m " + Why::coloredRegister(rd);
+							return "\e[1m!\e[22m" + color(rs) + "\e[1m.\e[22m";
+						return "\e[1m!\e[22m" + color(rs) + " \e[1m->\e[22m " + color(rd);
 					case FN_LOR:   oper = "||";  break;
 					case FN_LXNOR: oper = "~xx"; break;
 					case FN_LXOR:  oper = "xx";  break;
@@ -80,13 +81,13 @@ namespace WVM::Unparser {
 			}
 			case OP_RCOMP: {
 				if (funct == FN_CMP)
-					return Why::coloredRegister(rs) + " \e[1m~\e[22m " + Why::coloredRegister(rt);
-				std::string out = Why::coloredRegister(rs) + " \e[1m";
+					return color(rs) + " \e[1m~\e[22m " + color(rt);
+				std::string out = color(rs) + " \e[1m";
 				if (funct == FN_SL  || funct == FN_SLU) out += "<";
 				else if (funct == FN_SLE || funct == FN_SLEU) out += "<=";
 				else if (funct == FN_SEQ) out += "==";
 				else out += "?";
-				out += "\e[22m " + Why::coloredRegister(rt) + " \e[2m->\e[22m " + Why::coloredRegister(rd);
+				out += "\e[22m " + color(rt) + " \e[2m->\e[22m " + color(rd);
 				if (funct == FN_SLU || funct == FN_SLEU) out += " /u";
 				return out;
 			}
@@ -100,17 +101,17 @@ namespace WVM::Unparser {
 				break;
 			case OP_RMEM:
 				switch (funct) {
-					case FN_C:     break;
-					case FN_L:     break;
-					case FN_S:     break;
-					case FN_CB:    break;
-					case FN_LB:    break;
-					case FN_SB:    break;
-					case FN_SPUSH: break;
-					case FN_SPOP:  break;
-					case FN_CH:    break;
-					case FN_LH:    break;
-					case FN_SH:    break;
+					case FN_C:     return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "]";
+					case FN_L:     return "[" + color(rs) + "] \e[2m->\e[22m " + color(rd);
+					case FN_S:     return color(rs) + " \e[2m->\e[22m [" + color(rd) + "]";
+					case FN_CB:    return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "] /b";
+					case FN_LB:    return "[" + color(rs) + "] \e[2m->\e[22m " + color(rd) + " /b";
+					case FN_SB:    return color(rs) + " \e[2m->\e[22m [" + color(rd) + "] /b";
+					case FN_SPUSH: return "\e[2m[\e[22m " + color(rs);
+					case FN_SPOP:  return "\e[2m]\e[22m " + color(rd);
+					case FN_CH:    return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "] /h";
+					case FN_LH:    return "[" + color(rs) + "] \e[2m->\e[22m " + color(rd) + " /h";
+					case FN_SH:    return color(rs) + " \e[2m->\e[22m [" + color(rd) + "] /h";
 				}
 				break;
 			case OP_REXT:

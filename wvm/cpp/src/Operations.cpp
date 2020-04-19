@@ -29,7 +29,7 @@ namespace WVM::Operations {
 
 	void execute(VM &vm, UWord instruction) {
 		int opcode = (instruction >> 52) & 0xfff;
-		if (opcode == 0) {
+		if (opcode == OP_NOP) {
 			info() << Unparser::stringify(opcode) << "\n";
 			vm.increment();
 		} else if (RSet.count(opcode) == 1) {
