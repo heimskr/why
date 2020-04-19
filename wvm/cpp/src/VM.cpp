@@ -119,7 +119,15 @@ namespace WVM {
 	}
 
 	bool VM::checkConditions(Conditions conditions) {
-		return true;
+		switch (conditions) {
+			case Conditions::Positive: return !getN() && !getZ();
+			case Conditions::Negative: return getN();
+			case Conditions::Zero:     return getZ();
+			case Conditions::Nonzero:  return !getZ();
+			case Conditions::Disabled: return true;
+		}
+
+		throw std::runtime_error("Invalid conditions flag: " + std::to_string(static_cast<int>(conditions)));
 	}
 
 	void VM::intProtec() {}
