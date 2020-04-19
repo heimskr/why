@@ -58,7 +58,20 @@ namespace WVM::Operations {
 				break;
 			case OP_RLOGIC:
 				switch (funct) {
-
+					case FN_AND:     andOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_NAND:   nandOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_NOR:     norOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_NOT:     notOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_OR:       orOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_XNOR:   xnorOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_XOR:     xorOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LAND:   landOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LNAND: lnandOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LNOR:   lnorOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LNOT:   lnotOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LOR:     lorOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LXNOR: lxnorOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LXOR:   lxorOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RCOMP:
