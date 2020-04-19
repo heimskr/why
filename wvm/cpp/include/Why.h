@@ -3,9 +3,11 @@
 
 #include <string>
 
-namespace LL2W {
+namespace WVM {
 	/** Contains constants pertaining to the Why.js architecture. */
-	struct WhyInfo {
+	enum class Endianness: char {Big='B', Little='L'};
+
+	struct Why {
 		constexpr static int wordSize = 8; // in bytes
 		constexpr static int totalRegisters = 128;
 

@@ -4,12 +4,12 @@
 
 #include "Why.h"
 
-namespace LL2W {
-	bool WhyInfo::isSpecialPurpose(int reg) {
+namespace WVM {
+	bool Why::isSpecialPurpose(int reg) {
 		return 0 <= reg && reg < 128 && (reg < temporaryOffset || savedOffset + savedCount <= reg);
 	}
 
-	std::string WhyInfo::registerName(int reg) {
+	std::string Why::registerName(int reg) {
 		switch (reg) {
 			case              zeroOffset: return "0";
 			case globalAreaPointerOffset: return "g";

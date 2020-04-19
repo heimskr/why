@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include "Why.h"
+
 namespace WVM {
 	using   Word =  int64_t;
 	using  UWord = uint64_t;
@@ -17,10 +19,15 @@ namespace WVM {
 
 	class VM {
 		private:
-			std::vector<int> memory;
+			std::vector<UByte> memory;
 
 		public:
+			Word registers[Why::totalRegisters];
+
 			VM(size_t memory_size);
+
+			void setWord(Word address, Word value, Endianness = Endianness::Little);
+			Word getWord(Word address, Endianness = Endianness::Little);
 	};
 }
 
