@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include "VM.h"
 
 namespace WVM {
@@ -27,5 +29,20 @@ namespace WVM {
 		}
 
 		return out;
+	}
+
+	void VM::load(const std::string &path) {
+		load(std::filesystem::path(path));
+	}
+
+	void VM::load(const std::filesystem::path &path) {
+		std::ifstream stream;
+		stream.open(path);
+		load(stream);
+		stream.close();
+	}
+
+	void VM::load(std::istream &stream) {
+		
 	}
 }

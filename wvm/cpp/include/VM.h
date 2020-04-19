@@ -1,6 +1,8 @@
 #ifndef WVM_VM_H_
 #define WVM_VM_H_
 
+#include <filesystem>
+#include <istream>
 #include <vector>
 
 #include <stdint.h>
@@ -20,6 +22,7 @@ namespace WVM {
 	class VM {
 		private:
 			std::vector<UByte> memory;
+			Word programCounter = 0;
 
 		public:
 			Word registers[Why::totalRegisters];
@@ -28,6 +31,10 @@ namespace WVM {
 
 			void setWord(Word address, Word value, Endianness = Endianness::Little);
 			Word getWord(Word address, Endianness = Endianness::Little);
+
+			void load(const std::string &);
+			void load(const std::filesystem::path &);
+			void load(std::istream &);
 	};
 }
 
