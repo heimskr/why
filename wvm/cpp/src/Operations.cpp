@@ -1,5 +1,11 @@
+#include <iomanip>
+#include <iostream>
+
+#include <unistd.h>
+
 #include "mult.h"
 #include "Operations.h"
+#include "Util.h"
 #include "VM.h"
 
 namespace WVM {
@@ -457,43 +463,64 @@ namespace WVM {
 			vm.increment();
 	}
 
-	void ritOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void ritOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.interruptTableAddress = immediate;
 			vm.increment();
 		}
 	}
 
-	void timeOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void timeOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		// TODO
+		vm.increment();
 	}
 
-	void timeiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void timeiOp(VM &vm, Word &, Word &, Conditions, int, HWord) {
+		// TODO
+		vm.increment();
 	}
 
-	void ringOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void ringOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		if (vm.changeRing(static_cast<Ring>(rs)))
+			vm.increment();
 	}
 
-	void ringiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void ringiOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
+		if (vm.changeRing(static_cast<Ring>(immediate)))
+			vm.increment();
 	}
 
-	void prOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		std::cout << "$" << Why::registerName(&rs - vm.registers) << ": 0x" << std::hex << rs << " / " << rs << "\n";
+		vm.increment();
 	}
 
-	void haltOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void haltOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		vm.stop();
 	}
 
-	void evalOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void evalOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		warn() << "<eval> not implemented\n";
+		vm.increment();
 	}
 
-	void prcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void prcOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		std::cout << static_cast<char>(rs);
+		vm.increment();
 	}
 
-	void prdOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void prdOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		std::cout << static_cast<int>(rs);
+		vm.increment();
 	}
 
-	void prxOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void prxOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		std::cout << std::hex << static_cast<int>(rs);
+		vm.increment();
 	}
 
-	void sleepOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void sleepOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		usleep(rs * 1000);
+		vm.increment();
 	}
 }

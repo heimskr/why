@@ -147,6 +147,14 @@ namespace WVM {
 
 	void VM::intProtec() {}
 
+	void VM::start() {
+		active = true;
+	}
+
+	void VM::stop() {
+		active = false;	
+	}
+
 	void VM::load(const std::string &path) {
 		load(std::filesystem::path(path));
 	}

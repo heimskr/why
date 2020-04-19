@@ -17,6 +17,7 @@ namespace WVM {
 			std::vector<UByte> memory;
 			size_t memorySize;
 			Ring ring = Ring::Zero;
+			bool active = false;
 
 			bool getZ();
 			bool getN();
@@ -51,6 +52,8 @@ namespace WVM {
 			bool interrupt(int);
 			bool checkRing(Ring);
 			void intProtec();
+			void start();
+			void stop();
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);
