@@ -85,7 +85,10 @@ namespace WVM::Operations {
 				break;
 			case OP_RJUMP:
 				switch (funct) {
-
+					case FN_JR:     jrOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_JRC:   jrcOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_JRL:   jrlOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_JRLC: jrlcOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RMEM:
