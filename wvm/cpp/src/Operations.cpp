@@ -124,6 +124,50 @@ namespace WVM::Operations {
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
 	}
 
+	void executeI(int opcode, VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+		switch (opcode) {
+			case OP_ADDI:     addiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SUBI:     subiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_MULTI:   multiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_MULTUI: multuiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SLLI:     slliOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SRLI:     srliOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SRAI:     sraiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_MODI:     modiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_DIVI:     diviOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_DIVUI:   divuiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_DIVII:   diviiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_DIVUII: divuiiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_ANDI:     andiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_NANDI:   nandiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_NORI:     noriOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_ORI:       oriOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_XNORI:   xnoriOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_XORI:     xoriOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_LUI:       luiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SLI:       sliOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SLEI:     sleiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SEQI:     seqiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SLUI:     sluiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SLEUI:   sleuiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SGI:       sgiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SGEI:     sgeiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_LI:         liOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SI:         siOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SET:       setOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_LBI:       lbiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SBI:       sbiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_LNI:       lniOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_LBNI:     lbniOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_INT:       intOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_RIT:       ritOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_TIMEI:   timeiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_RINGI:   ringiOp(vm, rs, rd, conditions, flags, immediate); return;
+		}
+
+		throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
+	}
+
 	void decodeRType(VM &vm, UWord instr, Word *&rs, Word *&rt, Word *&rd, Conditions &conds, int &flags, int &funct) {
 		rd = &vm.registers[(instr >> 31) & 0b1111111];
 		rs = &vm.registers[(instr >> 38) & 0b1111111];
