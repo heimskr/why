@@ -93,7 +93,17 @@ namespace WVM::Operations {
 				break;
 			case OP_RMEM:
 				switch (funct) {
-
+					case FN_C:         cOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_L:         lOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_S:         sOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_CB:       cbOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LB:       lbOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SB:       sbOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SPUSH: spushOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SPOP:   spopOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_CH:       chOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LH:       lhOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SH:       shOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_REXT:
