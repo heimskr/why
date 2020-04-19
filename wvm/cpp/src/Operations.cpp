@@ -168,192 +168,196 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void addiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void addiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs + immediate);
 		vm.increment();
 	}
 
-	void subiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void subiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs - immediate);
 		vm.increment();
 	}
 
-	void multiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void multiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		CAT_MUL128(vm.hi(), vm.lo(), rs, immediate);
 		vm.increment();
 	}
 
-	void multuiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void multuiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		CAT_MUL128(vm.registers[Why::hiOffset], vm.registers[Why::loOffset], rs, static_cast<UWord>(immediate));
 		vm.increment();
 	}
 
-	void slliOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void slliOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs << immediate);
 		vm.increment();
 	}
 
-	void srliOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void srliOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = static_cast<UWord>(rs) >> static_cast<UWord>(immediate));
 		vm.increment();
 
 	}
 
-	void sraiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sraiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs >> immediate);
 		vm.increment();
 	}
 
-	void modiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void modiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs & immediate);
 		vm.increment();
 	}
 
-	void diviOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void diviOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs / immediate);
 		vm.increment();
 	}
 
-	void divuiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void divuiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = static_cast<UWord>(rs) / static_cast<UWord>(immediate));
 		vm.increment();
 	}
 
-	void diviiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void diviiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = immediate / rs);
 		vm.increment();
 	}
 
-	void divuiiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void divuiiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = static_cast<UWord>(immediate) / static_cast<UWord>(rs));
 		vm.increment();
 	}
 
-	void andiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void andiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs & immediate);
 		vm.increment();
 	}
 
-	void nandiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void nandiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = ~(rs & immediate));
 		vm.increment();
 	}
 
-	void noriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void noriOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = ~(rs | immediate));
 		vm.increment();
 	}
 
-	void oriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void oriOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs | immediate);
 		vm.increment();
 	}
 
-	void xnoriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void xnoriOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = ~(rs ^ immediate));
 		vm.increment();
 	}
 
-	void xoriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void xoriOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = rs ^ immediate);
 		vm.increment();
 	}
 
-	void luiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void luiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = (rd & 0xffffffff) | (static_cast<UWord>(immediate) << 32));
 		vm.increment();
 	}
 
-	void slOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void slOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		rd = rs < rt;
 		vm.increment();
 	}
 
-	void sleOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void sleOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		rd = rs <= rt;
 		vm.increment();
 	}
 
-	void seqOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void seqOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		rd = rs == rt;
 		vm.increment();
 	}
 
-	void sluOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void sluOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		rd = static_cast<UWord>(rs) < static_cast<UWord>(rt);
 		vm.increment();
 	}
 
-	void sleuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void sleuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		rd = static_cast<UWord>(rs) <= static_cast<UWord>(rt);
 		vm.increment();
 	}
 
-	void sliOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sliOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs < immediate;
 		vm.increment();
 	}
 
-	void sleiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sleiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs <= immediate;
 		vm.increment();
 	}
 
-	void seqiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void seqiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs == immediate;
 		vm.increment();
 	}
 
-	void sluiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sluiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = static_cast<UWord>(rs) < static_cast<UWord>(immediate);
 		vm.increment();
 	}
 
-	void sleuiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sleuiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = static_cast<UWord>(rs) <= static_cast<UWord>(immediate);
 		vm.increment();
 	}
 
-	void sgiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sgiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs > immediate;
 		vm.increment();
 	}
 
-	void sgeiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sgeiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		rd = rs >= immediate;
 		vm.increment();
 	}
 
-	void jOp(VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
+	void jOp(VM &vm, Word &rs, bool link, Conditions conditions, int, HWord address) {
 		if (vm.checkConditions(conditions)) {
-			if (link)
-				vm.link();
-			vm.jump(address);
-		} else {
-			vm.increment();
-		}
+			vm.jump(address, link);
+		} else vm.increment();
 	}
 
-	void jcOp(VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
+	void jcOp(VM &vm, Word &rs, bool link, Conditions, int, HWord address) {
 		if (rs != 0) {
-			if (link)
-				vm.link();
-			vm.jump(address);
-		} else {
-			vm.increment();
-		}
+			vm.jump(address, link);
+		} else vm.increment();
 	}
 
-	void jrOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void jrOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
+		if (vm.checkConditions(conditions)) {
+			vm.jump(rd, false);
+		} else vm.increment();
 	}
 
-	void jrcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void jrcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		if (rs) {
+			vm.jump(rd, false);
+		} else vm.increment();
 	}
 
-	void jrlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void jrlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
+		if (vm.checkConditions(conditions)) {
+			vm.jump(rd, true);
+		} else vm.increment();
 	}
 
-	void jrlcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void jrlcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		if (rs) {
+			vm.jump(rd, true);
+		} else vm.increment();
 	}
 
 	void cOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {

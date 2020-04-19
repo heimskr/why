@@ -41,7 +41,7 @@ namespace WVM {
 			Byte getByte(Word address);
 			std::string getString(Word address);
 
-			void jump(Word);
+			void jump(Word, bool should_link = false);
 			void link();
 			void increment();
 			bool changeRing(Ring);

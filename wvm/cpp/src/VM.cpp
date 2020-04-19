@@ -85,7 +85,9 @@ namespace WVM {
 		return out;
 	}
 
-	void VM::jump(Word address) {
+	void VM::jump(Word address, bool should_link) {
+		if (should_link)
+			link();
 		programCounter = address;
 	}
 
