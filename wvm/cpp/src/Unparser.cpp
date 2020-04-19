@@ -93,10 +93,10 @@ namespace WVM::Unparser {
 			}
 			case OP_RJUMP:
 				switch (funct) {
-					case FN_JR:   break;
-					case FN_JRC:  break;
-					case FN_JRL:  break;
-					case FN_JRLC: break;
+					case FN_JR:   return "\e[2m:\e[22m " + color(rd);
+					case FN_JRC:  return "\e[2m:\e[22m" + color(rd) + " \e[31mif\e[39m " + color(rs);
+					case FN_JRL:  return "\e[2m::\e[22m" + color(rd);
+					case FN_JRLC: return "\e[2m::\e[22m" + color(rd) + " \e[31mif\e[39m " + color(rs);
 				}
 				break;
 			case OP_RMEM:
@@ -125,8 +125,8 @@ namespace WVM::Unparser {
 					case FN_SLEEP: break;
 				}
 				break;
-			case OP_TIME: break;
-			case OP_RING: break;
+			case OP_TIME: return "\e[36mtime\e[39m " + color(rs);
+			case OP_RING: return "\e[36mring\e[39m " + color(rs);
 			case OP_SEL: {
 				std::string oper;
 				if (conditions == Conditions::Zero) oper = "=";
