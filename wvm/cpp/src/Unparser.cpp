@@ -32,7 +32,6 @@ namespace WVM::Unparser {
 	}
 
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions conditions, int funct) {
-		auto color = [&](int reg) -> std::string { return Why::coloredRegister(reg); };
 		switch (opcode) {
 			case OP_RMATH: {
 				std::string oper, suffix;
@@ -57,10 +56,10 @@ namespace WVM::Unparser {
 					case FN_NAND:  oper = "~&";  break;
 					case FN_NOR:   oper = "~|";  break;
 					case FN_NOT:
-						return "\e[1m~\2[22m" + color(rs) + " \e[2m->\e[22m " + color(rd);
+						return "\e[1m~\2[22m" + color(rs) + into + color(rd);
 					case FN_OR:
 						if (rs == Why::zeroOffset)
-							return color(rt) + " \e[2m->\e[22m " + color(rd);
+							return color(rt) + into + color(rd);
 						oper = "|";
 						break;
 					case FN_XNOR:  oper = "~x";  break;
@@ -71,7 +70,7 @@ namespace WVM::Unparser {
 					case FN_LNOT:
 						if (rs == rd)
 							return "\e[1m!\e[22m" + color(rs) + "\e[1m.\e[22m";
-						return "\e[1m!\e[22m" + color(rs) + " \e[1m->\e[22m " + color(rd);
+						return "\e[1m!\e[22m" + color(rs) + into + color(rd);
 					case FN_LOR:   oper = "||";  break;
 					case FN_LXNOR: oper = "~xx"; break;
 					case FN_LXOR:  oper = "xx";  break;
@@ -86,7 +85,7 @@ namespace WVM::Unparser {
 				else if (funct == FN_SLE || funct == FN_SLEU) out += "<=";
 				else if (funct == FN_SEQ) out += "==";
 				else out += "?";
-				out += "\e[22m " + color(rt) + " \e[2m->\e[22m " + color(rd);
+				out += "\e[22m " + color(rt) + into + color(rd);
 				if (funct == FN_SLU || funct == FN_SLEU) out += " /u";
 				return out;
 			}
@@ -101,17 +100,17 @@ namespace WVM::Unparser {
 			}
 			case OP_RMEM:
 				switch (funct) {
-					case FN_C:     return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "]";
-					case FN_L:     return "[" + color(rs) + "] \e[2m->\e[22m " + color(rd);
-					case FN_S:     return color(rs) + " \e[2m->\e[22m [" + color(rd) + "]";
-					case FN_CB:    return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "] /b";
-					case FN_LB:    return "[" + color(rs) + "] \e[2m->\e[22m " + color(rd) + " /b";
+					case FN_C:     return "[" + color(rs) + "]" + into + "[" + color(rd) + "]";
+					case FN_L:     return "[" + color(rs) + "]" + into + color(rd);
+					case FN_S:     return color(rs) + into + "[" + color(rd) + "]";
+					case FN_CB:    return "[" + color(rs) + "]" + into + "[" + color(rd) + "] /b";
+					case FN_LB:    return "[" + color(rs) + "]" + into + color(rd) + " /b";
 					case FN_SB:    return color(rs) + " \e[2m->\e[22m [" + color(rd) + "] /b";
 					case FN_SPUSH: return "\e[2m[\e[22m " + color(rs);
 					case FN_SPOP:  return "\e[2m]\e[22m " + color(rd);
-					case FN_CH:    return "[" + color(rs) + "] \e[2m->\e[22m [" + color(rd) + "] /h";
-					case FN_LH:    return "[" + color(rs) + "] \e[2m->\e[22m " + color(rd) + " /h";
-					case FN_SH:    return color(rs) + " \e[2m->\e[22m [" + color(rd) + "] /h";
+					case FN_CH:    return "[" + color(rs) + "]" + into + "[" + color(rd) + "] /h";
+					case FN_LH:    return "[" + color(rs) + "]" + into + color(rd) + " /h";
+					case FN_SH:    return color(rs) + into + "[" + color(rd) + "] /h";
 				}
 				break;
 			case OP_REXT:
@@ -145,8 +144,25 @@ namespace WVM::Unparser {
 
 	std::string stringifyIType(int opcode, int rs, int rd, Conditions conditions, HWord immediate) {
 		switch (opcode) {
-			case OP_ADDI: return iMath(rs, rd, immediate, "+");
-			case OP_SUBI: return iMath(rs, rd, immediate, "+");
+			case OP_ADDI:   return iMath(rs, rd, immediate, "+");
+			case OP_SUBI:   return iMath(rs, rd, immediate, "-");
+			case OP_MULTI:  return color(rs) + " \e[1m*\e[22m " + colorNum(immediate);
+			case OP_MULTUI: return color(rs) + " \e[1m*\e[22m " + colorNum(immediate) + " /u";
+			case OP_MODI:   return iAltOp(rs, rd, immediate, "%");
+			case OP_ANDI:   return iAltOp(rs, rd, immediate, "&");
+			case OP_NANDI:  return iAltOp(rs, rd, immediate, "~&");
+			case OP_NORI:   return iAltOp(rs, rd, immediate, "~|");
+			case OP_ORI:    return iAltOp(rs, rd, immediate, "|");
+			case OP_XNORI:  return iAltOp(rs, rd, immediate, "~x");
+			case OP_XORI:   return iAltOp(rs, rd, immediate, "x");
+			case OP_SLLI:   return iAltOp(rs, rd, immediate, "<<");
+			case OP_SRLI:   return iAltOp(rs, rd, immediate, ">>>");
+			case OP_SRAI:   return iAltOp(rs, rd, immediate, ">>");
+			case OP_LUI:    return "\e[2lui:\e[22m " + colorNum(immediate) + into + color(rd);
+			case OP_LI:     return "[" + colorNum(immediate) + "]" + into + color(rd);
+			case OP_LBI:    return "[" + colorNum(immediate) + "]" + into + color(rd) + " /b";
+			case OP_LNI:    return "[" + colorNum(immediate) + "]" + into + "[" + color(rd) + "]";
+			case OP_LBNI:   return "[" + colorNum(immediate) + "]" + into + "[" + color(rd) + "] /b";
 		}
 		return "I: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + " "
 			+ std::to_string(immediate) + " -> " + Why::coloredRegister(rd);
@@ -164,17 +180,23 @@ namespace WVM::Unparser {
 			return source + " \e[2m" + oper + "=\e[22m " + destination + suffix;
 		}
 
-		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m" + Why::coloredRegister(rt) + " \e[2m->\e[22m "
+		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m" + Why::coloredRegister(rt) + into
 			+ Why::coloredRegister(rd);
+	}
+
+	std::string iAltOp(int rs, int rd, HWord immediate, const std::string &oper) {
+		std::string out = color(rs) + " \e[1m" + oper + (rs == rd? "=" : "") + "\e[22m " + immColor +
+			std::to_string(immediate) + "\e[39m";
+		return rs == rd? out : out + into + color(rd);
 	}
 
 	std::string iMath(int rs, int rd, HWord imm, const std::string &oper) {
 		if (rs == rd) {
 			if (imm == 1)
-				return Why::coloredRegister(rs) + "\e[2m" + oper + oper + "\e[22m";
-			return Why::coloredRegister(rs) + " \e[2m" + oper + "=\e[22m " + immColor + std::to_string(imm) + "\e[39m";
+				return Why::coloredRegister(rs) + "\e[1m" + oper + oper + "\e[22m";
+			return Why::coloredRegister(rs) + " \e[1m" + oper + "=\e[22m " + immColor + std::to_string(imm) + "\e[39m";
 		}
-		return Why::coloredRegister(rs) + " \e[2m" + oper + "\e[22m " + immColor + std::to_string(imm) + "\e[39;2m -> "
+		return Why::coloredRegister(rs) + " \e[1m" + oper + "\e[22m " + immColor + std::to_string(imm) + "\e[39;2m -> "
 			+ "\e[22m" + Why::coloredRegister(rd);
 	}
 
@@ -187,5 +209,13 @@ namespace WVM::Unparser {
 			case Conditions::Disabled: return "";
 		}
 		throw std::runtime_error("Invalid conditions: " + std::to_string(static_cast<int>(conditions)));
+	}
+
+	std::string color(int reg) {
+		return Why::coloredRegister(reg);
+	}
+
+	std::string colorNum(HWord immediate) {
+		return immColor + std::to_string(immediate) + "\e[39m";
 	}
 }
