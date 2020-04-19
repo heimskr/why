@@ -28,33 +28,32 @@ namespace WVM::Operations {
 	void execute(VM &vm, UWord instruction) {
 		int opcode = (instruction >> 52) & 0xfff;
 		if (RSet.count(opcode) == 1) {
-			Word *rs, *rt, *rd;
+			int rs, rt, rd;
 			Conditions conditions;
 			int flags, funct;
-			decodeRType(vm, instruction, rs, rt, rd, conditions, flags, funct);
-			info() << "R: Opcode[" << opcode << "], $" << Why::registerName(rs - vm.registers) << " $"
-			       << Why::registerName(rt - vm.registers) << " -> $" << Why::registerName(rd - vm.registers) << ", "
-			       << "Funct[" << funct << "]\n";
-			executeRType(opcode, vm, *rs, *rt, *rd, conditions, flags, funct);
+			decodeRType(instruction, rs, rt, rd, conditions, flags, funct);
+			info() << "R: Opcode[" << opcode << "], $" << Why::registerName(rs) << " $" << Why::registerName(rt)
+			       << " -> $" << Why::registerName(rd) << ", " << "Funct[" << funct << "]\n";
+			executeRType(opcode, vm, vm.registers[rs], vm.registers[rt], vm.registers[rd], conditions, flags, funct);
 		} else if (ISet.count(opcode) == 1) {
-			Word *rs, *rd;
+			int rs, rd;
 			Conditions conditions;
 			int flags;
 			HWord immediate;
-			decodeIType(vm, instruction, rs, rd, conditions, flags, immediate);
-			info() << "I: Opcode[" << opcode << "], $" << Why::registerName(rs - vm.registers) << " " << immediate
-			       << " -> $" << Why::registerName(rd - vm.registers) << "\n";
-			executeIType(opcode, vm, *rs, *rd, conditions, flags, immediate);
+			decodeIType(instruction, rs, rd, conditions, flags, immediate);
+			info() << "I: Opcode[" << opcode << "], $" << Why::registerName(rs) << " " << immediate << " -> $"
+			       << Why::registerName(rd) << "\n";
+			executeIType(opcode, vm, vm.registers[rs], vm.registers[rd], conditions, flags, immediate);
 		} else if (JSet.count(opcode) == 1) {
-			Word *rs;
+			int rs;
 			bool link;
 			Conditions conditions;
 			int flags;
 			HWord address;
-			decodeJType(vm, instruction, rs, link, conditions, flags, address);
-			info() << "J: Opcode[" << opcode << "], $" << Why::registerName(rs - vm.registers) << ", " << (link? "link"
-			          : "don't link") << ", " << address << "\n";
-			executeJType(opcode, vm, *rs, link, conditions, flags, address);
+			decodeJType(instruction, rs, link, conditions, flags, address);
+			info() << "J: Opcode[" << opcode << "], $" << Why::registerName(rs) << ", " << (link? "link" : "don't link")
+			       << ", " << address << "\n";
+			executeJType(opcode, vm, vm.registers[rs], link, conditions, flags, address);
 		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 	}
 
@@ -195,25 +194,25 @@ namespace WVM::Operations {
 		throw std::runtime_error("Unknown J-type: " + std::to_string(opcode));
 	}
 
-	void decodeRType(VM &vm, UWord instr, Word *&rs, Word *&rt, Word *&rd, Conditions &conds, int &flags, int &funct) {
-		rd = &vm.registers[(instr >> 31) & 0b1111111];
-		rs = &vm.registers[(instr >> 38) & 0b1111111];
-		rt = &vm.registers[(instr >> 45) & 0b1111111];
+	void decodeRType(UWord instr, int &rs, int &rt, int &rd, Conditions &conds, int &flags, int &funct) {
+		rd = (instr >> 31) & 0b1111111;
+		rs = (instr >> 38) & 0b1111111;
+		rt = (instr >> 45) & 0b1111111;
 		conds = static_cast<Conditions>((instr >> 14) & 0b1111);
 		flags = (instr >> 12) & 0b11;
 		funct = instr & 0xfff;
 	}
 
-	void decodeIType(VM &vm, UWord instr, Word *&rs, Word *&rd,  Conditions &conds, int &flags, HWord &immediate) {
-		rs = &vm.registers[(instr >> 39) & 0b1111111];
-		rd = &vm.registers[(instr >> 32) & 0b1111111];
+	void decodeIType(UWord instr, int &rs, int &rd,  Conditions &conds, int &flags, HWord &immediate) {
+		rs = (instr >> 39) & 0b1111111;
+		rd = (instr >> 32) & 0b1111111;
 		conds = static_cast<Conditions>((instr >> 48) & 0b1111);
 		flags = (instr >> 46) & 0b11;
 		immediate = instr & 0xffffffff;
 	}
 
-	void decodeJType(VM &vm, UWord instr, Word *&rs, bool &link, Conditions &conds, int &flags, HWord &address) {
-		rs = &vm.registers[(instr >> 45) & 0b1111111];
+	void decodeJType(UWord instr, int &rs, bool &link, Conditions &conds, int &flags, HWord &address) {
+		rs = (instr >> 45) & 0b1111111;
 		link = (instr >> 44) & 1;
 		conds = static_cast<Conditions>((instr >> 34) & 0b1111);
 		flags = (instr >> 32) & 0b11;

@@ -16,9 +16,9 @@ namespace WVM::Operations {
 	void executeIType(int opcode, VM &, Word &rs, Word &rd,  Conditions, int flags, HWord immediate);
 	void executeJType(int opcode, VM &, Word &rs, bool link, Conditions, int flags, HWord address);
 
-	void decodeRType(VM &, UWord instruction, Word *&rs, Word *&rt, Word *&rd, Conditions &, int &flags, int &funct);
-	void decodeIType(VM &, UWord instruction, Word *&rs, Word *&rd,  Conditions &, int &flags, HWord &immediate);
-	void decodeJType(VM &, UWord instruction, Word *&rs, bool &link, Conditions &, int &flags, HWord &address);
+	void decodeRType(UWord instruction, int &rs, int &rt, int &rd, Conditions &, int &flags, int &funct);
+	void decodeIType(UWord instruction, int &rs, int &rd,  Conditions &, int &flags, HWord &immediate);
+	void decodeJType(UWord instruction, int &rs, bool &link, Conditions &, int &flags, HWord &address);
 
 	void addOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 0
 	void subOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 1
