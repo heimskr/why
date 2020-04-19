@@ -1,4 +1,5 @@
 #include "Operations.h"
+#include "VM.h"
 
 namespace WVM {
 	std::set<int> RSet {
@@ -16,4 +17,33 @@ namespace WVM {
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
+
+	void execute(VM &vm, Word instruction) {
+		int opcode = (instruction >> 52) & 0xfff;
+	}
+
+	void decodeRType(VM &vm, UWord instr, Word *&rs, Word *&rt, Word *&rd, Conditions &conds, int &flags, int &funct) {
+		rd = &vm.registers[(instr >> 31) & 0b1111111];
+		rs = &vm.registers[(instr >> 38) & 0b1111111];
+		rt = &vm.registers[(instr >> 45) & 0b1111111];
+		conds = static_cast<Conditions>((instr >> 14) & 0b1111);
+		flags = (instr >> 12) & 0b11;
+		funct = instr & 0xfff;
+	}
+
+	void decodeIType(VM &vm, UWord instr, Word *&rs, Word *&rd,  Conditions &conds, int &flags, HWord &immediate) {
+		rs = &vm.registers[(instr >> 39) & 0b1111111];
+		rd = &vm.registers[(instr >> 32) & 0b1111111];
+		conds = static_cast<Conditions>((instr >> 48) & 0b1111);
+		flags = (instr >> 46) & 0b11;
+		immediate = instr & 0xffffffff;
+	}
+
+	void decodeJType(VM &vm, UWord instr, Word *&rs, bool &link, Conditions &conds, int &flags, HWord &address) {
+		rs = &vm.registers[(instr >> 45) & 0b1111111];
+		link = (instr >> 44) & 1;
+		conds = static_cast<Conditions>((instr >> 34) & 0b1111);
+		flags = (instr >> 32) & 0b11;
+		address = instr & 0xffffffff;
+	}
 }

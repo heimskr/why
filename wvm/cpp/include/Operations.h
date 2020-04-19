@@ -7,125 +7,123 @@
 
 namespace WVM::Operations {
 
-	void execute(VM &, UWord &);
-
-	void decodeRType(int &opcode, Word *&rs, Word *&rt, Word *&rd, Conditions &, int &flags, int &funct);
-	void decodeIType(int &opcode, Word *&rs, Word *&rd,  Conditions &, int &flags, HWord &immediate);
-	void decodeJType(int &opcode, Word *&rs, bool &link, Conditions &, int &flags, HWord &address);
-
 	extern std::set<int> RSet;
 	extern std::set<int> ISet;
 	extern std::set<int> JSet;
 
-	void nopOp(VM &, UWord instruction);    // 0   X
+	void execute(VM &, UWord &);
 
-	void addOp(VM &, UWord instruction);    // 1   R 0
-	void subOp(VM &, UWord instruction);    // 1   R 1
-	void multOp(VM &, UWord instruction);   // 1   R 2
+	void decodeRType(Word *&rs, Word *&rt, Word *&rd, Conditions &, int &flags, int &funct);
+	void decodeIType(Word *&rs, Word *&rd,  Conditions &, int &flags, HWord &immediate);
+	void decodeJType(Word *&rs, bool &link, Conditions &, int &flags, HWord &address);
+
+	void addOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 0
+	void subOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 1
+	void multOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 1   R 2
 	// 1.3
 	// 1.4
-	void multuOp(VM &, UWord instruction);  // 1   R 5
-	void sllOp(VM &, UWord instruction);    // 1   R 6
-	void srlOp(VM &, UWord instruction);    // 1   R 7
-	void sraOp(VM &, UWord instruction);    // 1   R 8
-	void modOp(VM &, UWord instruction);    // 1   R 9
-	void divOp(VM &, UWord instruction);    // 1   R 10
-	void divuOp(VM &, UWord instruction);   // 1   R 11
+	void multuOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 1   R 5
+	void sllOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 6
+	void srlOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 7
+	void sraOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 8
+	void modOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 9
+	void divOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 10
+	void divuOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 1   R 11
 
-	void andOp(VM &, UWord instruction);    // 2   R 0
-	void nandOp(VM &, UWord instruction);   // 2   R 1
-	void norOp(VM &, UWord instruction);    // 2   R 2
-	void notOp(VM &, UWord instruction);    // 2   R 3
-	void orOp(VM &, UWord instruction);     // 2   R 4
-	void xnorOp(VM &, UWord instruction);   // 2   R 5
-	void xorOp(VM &, UWord instruction);    // 2   R 6
-	void landOp(VM &, UWord instruction);   // 2   R 8
-	void lnandOp(VM &, UWord instruction);  // 2   R 9
-	void lnorOp(VM &, UWord instruction);   // 2   R 10
-	void lnotOp(VM &, UWord instruction);   // 2   R 11
-	void lorOp(VM &, UWord instruction);    // 2   R 12
-	void lxnorOp(VM &, UWord instruction);  // 2   R 13
-	void lxorOp(VM &, UWord instruction);   // 2   R 14
+	void andOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 0
+	void nandOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 1
+	void norOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 2
+	void notOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 3
+	void orOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 2   R 4
+	void xnorOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 5
+	void xorOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 6
+	void landOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 8
+	void lnandOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 2   R 9
+	void lnorOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 10
+	void lnotOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 11
+	void lorOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 12
+	void lxnorOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 2   R 13
+	void lxorOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 14
 
-	void addiOp(VM &, UWord instruction);   // 3   I
-	void subiOp(VM &, UWord instruction);   // 4   I
-	void multiOp(VM &, UWord instruction);  // 5   I
+	void addiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 3   I
+	void subiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 4   I
+	void multiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 5   I
 	// 22
 	// 23
-	void multuiOp(VM &, UWord instruction); // 24  I
-	void slliOp(VM &, UWord instruction);   // 34  I
-	void srliOp(VM &, UWord instruction);   // 35  I
-	void sraiOp(VM &, UWord instruction);   // 36  I
-	void modiOp(VM &, UWord instruction);   // 30  I
-	void diviOp(VM &, UWord instruction);   // 52  I
-	void divuiOp(VM &, UWord instruction);  // 53  I
-	void diviiOp(VM &, UWord instruction);  // 54  I
-	void divuiiOp(VM &, UWord instruction); // 55  I
+	void multuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate); // 24  I
+	void slliOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 34  I
+	void srliOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 35  I
+	void sraiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 36  I
+	void modiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 30  I
+	void diviOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 52  I
+	void divuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 53  I
+	void diviiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 54  I
+	void divuiiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate); // 55  I
 
-	void andiOp(VM &, UWord instruction);   // 6   I
-	void nandiOp(VM &, UWord instruction);  // 7   I
-	void noriOp(VM &, UWord instruction);   // 8   I
-	void oriOp(VM &, UWord instruction);    // 9   I
-	void xnoriOp(VM &, UWord instruction);  // 10  I
-	void xoriOp(VM &, UWord instruction);   // 11  I
+	void andiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 6   I
+	void nandiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 7   I
+	void noriOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 8   I
+	void oriOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 9   I
+	void xnoriOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 10  I
+	void xoriOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 11  I
 
-	void luiOp(VM &, UWord instruction);    // 13  I
-	void slOp(VM &, UWord instruction);     // 14  R 0
-	void sleOp(VM &, UWord instruction);    // 14  R 1
-	void seqOp(VM &, UWord instruction);    // 14  R 2
-	void sluOp(VM &, UWord instruction);    // 14  R 3
-	void sleuOp(VM &, UWord instruction);   // 14  R 4
+	void luiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 13  I
+	void slOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 14  R 0
+	void sleOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 14  R 1
+	void seqOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 14  R 2
+	void sluOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 14  R 3
+	void sleuOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 14  R 4
 
-	void sliOp(VM &, UWord instruction);    // 25  I
-	void sleiOp(VM &, UWord instruction);   // 26  I
-	void seqiOp(VM &, UWord instruction);   // 27  I
-	void sluiOp(VM &, UWord instruction);   // 28  I
-	void sleuiOp(VM &, UWord instruction);  // 29  I
-	void sgiOp(VM &, UWord instruction);    // 41  I
-	void sgeiOp(VM &, UWord instruction);   // 42  I
+	void sliOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 25  I
+	void sleiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 26  I
+	void seqiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 27  I
+	void sluiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 28  I
+	void sleuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 29  I
+	void sgiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 41  I
+	void sgeiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 42  I
 
-	void jOp(VM &, UWord instruction);      // 15  J
-	void jcOp(VM &, UWord instruction);     // 16  J
+	void jOp(VM &, Word &rs, bool link, Conditions, int flags, HWord address);       // 15  J
+	void jcOp(VM &, Word &rs, bool link, Conditions, int flags, HWord address);      // 16  J
 
-	void jrOp(VM &, UWord instruction);     // 17  R 0
-	void jrcOp(VM &, UWord instruction);    // 17  R 1
-	void jrlOp(VM &, UWord instruction);    // 17  R 2
-	void jrlcOp(VM &, UWord instruction);   // 17  R 3
+	void jrOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 17  R 0
+	void jrcOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 17  R 1
+	void jrlOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 17  R 2
+	void jrlcOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 17  R 3
 
-	void cOp(VM &, UWord instruction);      // 18  R 0
-	void lOp(VM &, UWord instruction);      // 18  R 1
-	void sOp(VM &, UWord instruction);      // 18  R 2
-	void cbOp(VM &, UWord instruction);     // 18  R 3
-	void lbOp(VM &, UWord instruction);     // 18  R 4
-	void sbOp(VM &, UWord instruction);     // 18  R 5
-	void spushOp(VM &, UWord instruction);  // 18  R 6
-	void spopOp(VM &, UWord instruction);   // 18  R 7
-	void chOp(VM &, UWord instruction);     // 18  R 8
-	void lhOp(VM &, UWord instruction);     // 18  R 9
-	void shOp(VM &, UWord instruction);     // 18  R 10
+	void cOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);             // 18  R 0
+	void lOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);             // 18  R 1
+	void sOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);             // 18  R 2
+	void cbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 3
+	void lbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 4
+	void sbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 5
+	void spushOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 18  R 6
+	void spopOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 18  R 7
+	void chOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 8
+	void lhOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 9
+	void shOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 10
 
-	void liOp(VM &, UWord instruction);     // 19  I
-	void siOp(VM &, UWord instruction);     // 20  I
-	void setOp(VM &, UWord instruction);    // 21  I
-	void lbiOp(VM &, UWord instruction);    // 37  I
-	void sbiOp(VM &, UWord instruction);    // 38  I
-	void lniOp(VM &, UWord instruction);    // 39  I
-	void lbniOp(VM &, UWord instruction);   // 40  I
+	void liOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 19  I
+	void siOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 20  I
+	void setOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 21  I
+	void lbiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 37  I
+	void sbiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 38  I
+	void lniOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 39  I
+	void lbniOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 40  I
 
-	void intOp(VM &, UWord instruction);    // 32  I
-	void ritOp(VM &, UWord instruction);    // 33  I
-	void timeOp(VM &, UWord instruction);   // 48  R
-	void timeiOp(VM &, UWord instruction);  // 49  I
-	void ringOp(VM &, UWord instruction);   // 50  R
-	void ringiOp(VM &, UWord instruction);  // 51  I
+	void intOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 32  I
+	void ritOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 33  I
+	void timeOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 48  R
+	void timeiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 49  I
+	void ringOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 50  R
+	void ringiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 51  I
 
-	void prOp(VM &, UWord instruction);     // 31 ?R 1
-	void haltOp(VM &, UWord instruction);   // 31 ?R 2
-	void evalOp(VM &, UWord instruction);   // 31 ?R 3
-	void prcOp(VM &, UWord instruction);    // 31 ?R 4
-	void prdOp(VM &, UWord instruction);    // 31 ?R 5
-	void prxOp(VM &, UWord instruction);    // 31 ?R 6
-	void sleepOp(VM &, UWord instruction);  // 31 ?R 7
+	void prOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 31 ?R 1
+	void haltOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 31 ?R 2
+	void evalOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 31 ?R 3
+	void prcOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 4
+	void prdOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 5
+	void prxOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 6
+	void sleepOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 31 ?R 7
 
 #define OP_NOP 0
 
