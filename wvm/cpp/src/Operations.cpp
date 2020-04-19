@@ -76,7 +76,11 @@ namespace WVM::Operations {
 				break;
 			case OP_RCOMP:
 				switch (funct) {
-
+					case FN_SL:     slOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SLE:   sleOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SEQ:   seqOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SLU:   sluOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SLEU: sleuOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RJUMP:
