@@ -22,10 +22,16 @@ int main(int argc, char **argv) {
 	std::string arg = argv[1];
 
 	if (arg == "server") {
-		server.emplace(44902);
+		if (argc < 3) {
+			usage();
+			return 1;
+		}
+
+		srand(time(NULL));
+		server.emplace(rand() % 65535);
 		signal(SIGINT, +[](int) { server->stop(); });
 		try {
-			server->run();
+			server->run(argv[2]);
 		} catch (const WVM::Net::NetError &err) {
 			std::cerr << err.what() << "\n";
 		}

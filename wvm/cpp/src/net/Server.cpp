@@ -77,8 +77,10 @@ namespace WVM::Net {
 			onEnd(client, descriptor);
 	}
 
-	void Server::send(int client, const std::string &message) {
+	void Server::send(int client, const std::string &message, bool suppress_newline) {
 		::write(descriptors.at(client), message.c_str(), message.size());
+		if (!suppress_newline)
+			::write(descriptors.at(client), "\n", 1);
 	}
 
 	void Server::run() {
