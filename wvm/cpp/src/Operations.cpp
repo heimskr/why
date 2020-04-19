@@ -1,3 +1,4 @@
+#include "mult.h"
 #include "Operations.h"
 #include "VM.h"
 
@@ -45,5 +46,377 @@ namespace WVM {
 		conds = static_cast<Conditions>((instr >> 34) & 0b1111);
 		flags = (instr >> 32) & 0b11;
 		address = instr & 0xffffffff;
+	}
+
+	void addOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+		rd = rs + rt;
+		vm.increment();
+	}
+
+	void subOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+		rd = rs - rt;
+		vm.increment();
+	}
+
+	void multOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+		CAT_MUL128(vm.registers[Why::hiOffset], vm.registers[Why::loOffset], rs, rt);
+		vm.increment();
+	}
+
+	void multuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+		// TODO: mult and multu shouldn't be the same.
+		multOp(vm, rs, rt, rd, conditions, flags);
+	}
+
+	void sllOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+		
+	}
+
+	void srlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sraOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void modOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void divOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void divuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void nandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void norOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void notOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void orOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void xnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void xorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void landOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lnandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lnotOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lxnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lxorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void addiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void subiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void multiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void multuiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void slliOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void srliOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sraiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void modiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void diviOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void divuiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void diviiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void divuiiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void andiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void nandiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void noriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void oriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void xnoriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void xoriOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void luiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void slOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sleOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void seqOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sluOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sleuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sliOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sleiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void seqiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sluiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sleuiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sgiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sgeiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void jOp(VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
+
+	}
+
+	void jcOp(VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
+
+	}
+
+	void jrOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void jrcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void jrlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void jrlcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void cOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void cbOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lbOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sbOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void spushOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void spopOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void chOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void lhOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void shOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void liOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void siOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void setOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void lbiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void sbiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void lniOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void lbniOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void intOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void ritOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void timeOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void timeiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void ringOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void ringiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+
+	}
+
+	void prOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void haltOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void evalOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void prcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void prdOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void prxOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
+	}
+
+	void sleepOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+
 	}
 }

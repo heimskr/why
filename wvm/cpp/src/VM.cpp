@@ -8,6 +8,15 @@ namespace WVM {
 		memory.reserve(memory_size);
 	}
 
+	bool VM::getZ() { return (st() & 0b0001) != 0; }
+	bool VM::getN() { return (st() & 0b0010) != 0; }
+	bool VM::getC() { return (st() & 0b0100) != 0; }
+	bool VM::getO() { return (st() & 0b1000) != 0; }
+	void VM::setZ(bool on) { st() = (st() & ~0b0001) |  on;       }
+	void VM::setN(bool on) { st() = (st() & ~0b0010) | (on << 1); }
+	void VM::setC(bool on) { st() = (st() & ~0b0100) | (on << 2); }
+	void VM::setO(bool on) { st() = (st() & ~0b1000) | (on << 3); }
+
 	void VM::setWord(Word address, Word value, Endianness endianness) {
 		if (endianness == Endianness::Little) {
 			for (char i = 0; i < 8; i++)
@@ -101,6 +110,14 @@ namespace WVM {
 		return true;
 	}
 
+	void VM::updateFlags(Word result) {
+		st() = 0;
+		if (result == 0)
+			setZ(true);
+		else if (result < 0)
+			setN(true);
+	}
+
 	void VM::intProtec() {}
 
 	void VM::load(const std::string &path) {
@@ -133,5 +150,17 @@ namespace WVM {
 
 	void VM::init() {
 		programCounter = getWord(8);
+	}
+
+	Word & VM::hi() {
+		return registers[Why::hiOffset];
+	}
+
+	Word & VM::lo() {
+		return registers[Why::loOffset];
+	}
+
+	Word & VM::st() {
+		return registers[Why::statusOffset];
 	}
 }

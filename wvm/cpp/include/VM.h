@@ -18,6 +18,15 @@ namespace WVM {
 			size_t memorySize;
 			Ring ring = Ring::Zero;
 
+			bool getZ();
+			bool getN();
+			bool getC();
+			bool getO();
+			void setZ(bool);
+			void setN(bool);
+			void setC(bool);
+			void setO(bool);
+
 		public:
 			Word programCounter = 0;
 			Word registers[Why::totalRegisters];
@@ -36,12 +45,17 @@ namespace WVM {
 			void link();
 			void increment();
 			bool changeRing(Ring);
+			void updateFlags(Word);
 			void intProtec();
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);
 			void load(std::istream &);
 			void init();
+
+			Word & hi();
+			Word & lo();
+			Word & st();
 	};
 }
 
