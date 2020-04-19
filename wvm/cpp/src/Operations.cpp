@@ -58,7 +58,7 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void multOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void multOp(VM &vm, Word &rs, Word &rt, Word &, Conditions, int) {
 		CAT_MUL128(vm.hi(), vm.lo(), rs, rt);
 		vm.increment();
 	}
@@ -113,7 +113,7 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void notOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void notOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		vm.updateFlags(rd = ~rs);
 		vm.increment();
 	}
@@ -148,7 +148,7 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void lnotOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void lnotOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		vm.updateFlags(rd = !rs);
 		vm.increment();
 	}
@@ -178,12 +178,12 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void multiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void multiOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
 		CAT_MUL128(vm.hi(), vm.lo(), rs, immediate);
 		vm.increment();
 	}
 
-	void multuiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void multuiOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
 		CAT_MUL128(vm.registers[Why::hiOffset], vm.registers[Why::loOffset], rs, static_cast<UWord>(immediate));
 		vm.increment();
 	}
@@ -259,7 +259,7 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void luiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+	void luiOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
 		vm.updateFlags(rd = (rd & 0xffffffff) | (static_cast<UWord>(immediate) << 32));
 		vm.increment();
 	}
@@ -324,7 +324,7 @@ namespace WVM {
 		vm.increment();
 	}
 
-	void jOp(VM &vm, Word &rs, bool link, Conditions conditions, int, HWord address) {
+	void jOp(VM &vm, Word &, bool link, Conditions conditions, int, HWord address) {
 		if (vm.checkConditions(conditions)) {
 			vm.jump(address, link);
 		} else vm.increment();
@@ -336,25 +336,25 @@ namespace WVM {
 		} else vm.increment();
 	}
 
-	void jrOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
+	void jrOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
 		if (vm.checkConditions(conditions)) {
 			vm.jump(rd, false);
 		} else vm.increment();
 	}
 
-	void jrcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void jrcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		if (rs) {
 			vm.jump(rd, false);
 		} else vm.increment();
 	}
 
-	void jrlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
+	void jrlOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
 		if (vm.checkConditions(conditions)) {
 			vm.jump(rd, true);
 		} else vm.increment();
 	}
 
-	void jrlcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+	void jrlcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		if (rs) {
 			vm.jump(rd, true);
 		} else vm.increment();
