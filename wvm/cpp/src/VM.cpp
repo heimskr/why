@@ -42,7 +42,7 @@ namespace WVM {
 		memory[address] = value;
 	}
 
-	Word VM::getWord(Word address, Endianness endianness) {
+	Word VM::getWord(Word address, Endianness endianness) const {
 		Word out = 0;
 
 		if (endianness == Endianness::Little) {
@@ -56,7 +56,7 @@ namespace WVM {
 		return out;
 	}
 
-	HWord VM::getHalfword(Word address, Endianness endianness) {
+	HWord VM::getHalfword(Word address, Endianness endianness) const {
 		HWord out = 0;
 
 		if (endianness == Endianness::Little) {
@@ -70,11 +70,11 @@ namespace WVM {
 		return out;
 	}
 
-	Byte VM::getByte(Word address) {
+	Byte VM::getByte(Word address) const {
 		return memory[address];
 	}
 
-	std::string VM::getString(Word address, int max) {
+	std::string VM::getString(Word address, int max) const {
 		std::string out;
 		out.reserve(32);
 		int j = 0;
@@ -86,7 +86,7 @@ namespace WVM {
 		return out;
 	}
 
-	Word VM::getInstruction(Word address) {
+	Word VM::getInstruction(Word address) const {
 		return getWord(address, Endianness::Big);
 	}
 
@@ -157,7 +157,7 @@ namespace WVM {
 	}
 
 	void VM::stop() {
-		active = false;	
+		active = false;
 	}
 
 	bool VM::tick() {
