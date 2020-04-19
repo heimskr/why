@@ -57,6 +57,8 @@ namespace WVM {
 			Word & hi();
 			Word & lo();
 			Word & st();
+			Word & sp();
+			Word & fp();
 	};
 }
 

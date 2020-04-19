@@ -177,4 +177,12 @@ namespace WVM {
 	Word & VM::st() {
 		return registers[Why::statusOffset];
 	}
+
+	Word & VM::sp() {
+		return registers[Why::stackPointerOffset];
+	}
+
+	Word & VM::fp() {
+		return registers[Why::framePointerOffset];
+	}
 }

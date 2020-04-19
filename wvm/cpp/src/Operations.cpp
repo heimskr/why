@@ -360,96 +360,120 @@ namespace WVM {
 		} else vm.increment();
 	}
 
-	void cOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void cOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		vm.setWord(rd, vm.getWord(rs));
+		vm.increment();
 	}
 
-	void lOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void lOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		rd = vm.getWord(rs);
+		vm.increment();
 	}
 
-	void sOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void sOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		vm.setWord(rd, rs);
+		vm.increment();
 	}
 
-	void cbOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void cbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		vm.setByte(rd, vm.getByte(rs));
+		vm.increment();
 	}
 
-	void lbOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void lbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		rd = vm.getByte(rs);
+		vm.increment();
 	}
 
-	void sbOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void sbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		vm.setByte(rd, rs);
+		vm.increment();
 	}
 
-	void spushOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void spushOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		vm.setWord(vm.sp(), rs);
+		vm.sp() -= 8;
+		vm.increment();
 	}
 
-	void spopOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void spopOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
+		vm.sp() += 8;
+		rd = vm.getWord(vm.sp());
+		vm.increment();
 	}
 
-	void chOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void chOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		vm.setHalfword(rd, vm.getHalfword(rs));
+		vm.increment();
 	}
 
-	void lhOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void lhOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		rd = vm.getHalfword(rs);
+		vm.increment();
 	}
 
-	void shOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void shOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		vm.setHalfword(rd, rs);
+		vm.increment();
 	}
 
-	void liOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void liOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void siOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void siOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void setOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void setOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void lbiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void lbiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void sbiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void sbiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void lniOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void lniOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void lbniOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void lbniOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void intOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void intOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void ritOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void ritOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void timeOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void timeOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void timeiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void timeiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void ringOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void ringOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void ringiOp(VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void ringiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 	}
 
-	void prOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void prOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void haltOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void haltOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void evalOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void evalOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void prcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void prcOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void prdOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void prdOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void prxOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void prxOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 
-	void sleepOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags) {
+	void sleepOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 	}
 }
