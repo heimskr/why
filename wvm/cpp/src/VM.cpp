@@ -209,7 +209,7 @@ namespace WVM {
 		for (Word i = symbolsOffset; i < codeOffset;) {
 			const HWord hash = getHalfword(i, Endianness::Big);
 			const HWord length = getHalfword(i + 4, Endianness::Big);
-			const Word location = getWord(i + 8);
+			const Word location = getWord(i + 8, Endianness::Big);
 			const std::string name = getString(i + 16, length * 8);
 			symbolTable.emplace(name, Symbol(hash, location));
 			i += 16 + length * 8;

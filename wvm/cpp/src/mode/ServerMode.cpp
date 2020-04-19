@@ -62,6 +62,11 @@ namespace WVM::Mode {
 			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
 				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m " << Unparser::stringify(vm.getInstruction(i))
 				          << "\n";
+		} else if (verb == "Symbols") {
+			for (const std::pair<std::string, Symbol> pair: vm.symbolTable) {
+				std::cout << "\e[1m" << pair.first << "\e[22m: " << pair.second.location << " \e[22;2m[" << std::hex
+				          << pair.second.hash << std::dec << "]\e[22m\n";
+			}
 		} else if (verb == "GetWord") {
 			if (size != 2 && size != 3) {
 				invalid();
