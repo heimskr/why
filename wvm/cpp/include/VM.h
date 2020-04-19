@@ -22,19 +22,22 @@ namespace WVM {
 	class VM {
 		private:
 			std::vector<UByte> memory;
-			Word programCounter = 0;
 
 		public:
+			Word programCounter = 0;
 			Word registers[Why::totalRegisters];
 
 			VM(size_t memory_size);
 
 			void setWord(Word address, Word value, Endianness = Endianness::Little);
+			void setHalfword(Word address, HWord value, Endianness = Endianness::Little);
 			Word getWord(Word address, Endianness = Endianness::Little);
+			HWord getHalfword(Word address, Endianness = Endianness::Little);
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);
 			void load(std::istream &);
+			void init();
 	};
 }
 

@@ -79,6 +79,13 @@ namespace WVM::Mode {
 			vm.setWord(address, value, endianness);
 			server.send(client, ":MemoryWord " + std::to_string(address) + " " +
 				std::to_string(vm.getWord(address, endianness)) + " " + static_cast<char>(endianness));
+		} else if (verb == "GetPC") {
+			if (size != 1) {
+				invalid();
+				return;
+			}
+
+			server.send(client, ":PC " + std::to_string(vm.programCounter));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
