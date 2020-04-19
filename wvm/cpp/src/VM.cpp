@@ -18,6 +18,16 @@ namespace WVM {
 		}
 	}
 
+	void VM::setHalfword(Word address, HWord value, Endianness endianness) {
+		if (endianness == Endianness::Little) {
+			for (char i = 0; i < 4; i++)
+				memory[address + i] = (value >> (8*i)) & 0xff;
+		} else {
+			for (char i = 0; i < 4; i++)
+				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
+		}
+	}
+
 	Word VM::getWord(Word address, Endianness endianness) {
 		Word out = 0;
 
@@ -27,6 +37,20 @@ namespace WVM {
 		} else {
 			for (char i = 0; i < 8; i++)
 				out |= static_cast<Word>(memory[address + i]) << ((7 - i) * 8);
+		}
+
+		return out;
+	}
+
+	HWord VM::getHalfword(Word address, Endianness endianness) {
+		HWord out = 0;
+
+		if (endianness == Endianness::Little) {
+			for (char i = 0; i < 4; i++)
+				out |= static_cast<HWord>(memory[address + i]) << (8*i);
+		} else {
+			for (char i = 0; i < 4; i++)
+				out |= static_cast<HWord>(memory[address + 3 - i]) << (8*i);
 		}
 
 		return out;
@@ -56,5 +80,11 @@ namespace WVM {
 				throw std::runtime_error("Invalid line (" + std::to_string(lineno) + ")");
 			setWord(8 * (lineno - 1), word, Endianness::Little);
 		}
+
+		init();
+	}
+
+	void VM::init() {
+		programCounter = getWord(8);
 	}
 }
