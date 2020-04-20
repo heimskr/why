@@ -13,7 +13,7 @@ SOURCES_HN		:= $(shell find haunted/src -name '*.cpp' | sed -nE '/(tests?|test_.
 	haunted/src/lib/formicine/ansi.cpp haunted/src/lib/formicine/futil.cpp haunted/src/lib/formicine/performance.cpp
 INCLUDE_HN		= -Ihaunted/include $(INCLUDE_ICU)
 OBJECTS_HN		:= $(patsubst haunted/src/%.cpp,haunted/build/%.o,$(SOURCES_HN))
-CFLAGS_HN		:= -DDISABLE_PERFORMANCE -DU_DISABLE_RENAMING=1
+CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
 INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
