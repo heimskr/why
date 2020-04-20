@@ -24,7 +24,9 @@ all: $(OUT)
 $(OUT): $(OBJECTS)
 	$(COMPILER) $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
-test: $(OUT)
+test: consoletest
+
+servertest: $(OUT)
 	./$(OUT) server ../../wasm/compiled/mal.why
 
 consoletest: $(OUT)
