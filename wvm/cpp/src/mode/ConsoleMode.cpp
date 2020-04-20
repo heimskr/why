@@ -30,6 +30,7 @@ namespace WVM::Mode {
 		input.focus();
 		input.set_prefix("\e[2m>>\e[22m ");
 		textbox.set_background(ansi::color::verydark);
+		textbox.set_autoscroll(true);
 		textbox.draw();
 		terminal.watch_size();
 		terminal.join();
