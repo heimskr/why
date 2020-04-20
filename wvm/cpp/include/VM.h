@@ -2,6 +2,7 @@
 #define WVM_VM_H_
 
 #include <filesystem>
+#include <functional>
 #include <istream>
 #include <map>
 #include <vector>
