@@ -26,7 +26,9 @@ namespace WVM {
 			for (char i = 0; i < 8; i++)
 				memory[address + 7 - i] = (value >> (8*i)) & 0xff;
 		}
-		onUpdateMemory(address);
+		onUpdateMemory(address % 8);
+		if (address % 8 != 0)
+			onUpdateMemory(address % 8 + 8);
 	}
 
 	void VM::setHalfword(Word address, HWord value, Endianness endianness) {
@@ -37,12 +39,14 @@ namespace WVM {
 			for (char i = 0; i < 4; i++)
 				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
 		}
-		onUpdateMemory(address);
+		onUpdateMemory(address % 8);
+		if (4 < address % 8)
+			onUpdateMemory(address % 8 + 8);
 	}
 
 	void VM::setByte(Word address, Byte value) {
 		memory[address] = value;
-		onUpdateMemory(address);
+		onUpdateMemory(address % 8);
 	}
 
 	Word VM::getWord(Word address, Endianness endianness) const {
