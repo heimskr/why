@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "Operations.h"
+#include "Util.h"
 #include "VM.h"
 
 namespace WVM {
@@ -196,11 +197,15 @@ namespace WVM {
 
 	void VM::load(const std::filesystem::path &path) {
 		std::ifstream stream;
-		stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		stream.open(path);
-		stream.exceptions(std::ifstream::goodbit);
-		load(stream);
-		stream.close();
+		try {
+			stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+			stream.open(path);
+			stream.exceptions(std::ifstream::goodbit);
+			load(stream);
+			stream.close();
+		} catch (std::exception &err) {
+			error() << "Couldn't open " << path << ": " << err.what() << "\n";
+		}
 	}
 
 	void VM::load(std::istream &stream) {
