@@ -15,6 +15,8 @@ namespace WVM::Mode {
 	}
 
 	void ClientMode::stop() {
+		if (socket)
+			*socket << ":Close\n";
 		if (buffer)
 			buffer->close();
 		if (socket)
