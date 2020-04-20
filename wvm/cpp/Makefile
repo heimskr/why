@@ -3,22 +3,19 @@ OPTIMIZATION	?= -O0 -g
 CFLAGS			:= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 
-INCLUDE_ICU		:= $(shell pkg-config --cflags icu-uc)
-LD_ICU			:= $(shell pkg-config --libs icu-uc)
-
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(tests?|test_.+)\.cpp$$/!p')
 OBJECTS_WVM		:= $(patsubst src/%.cpp,build/%.o, $(SOURCES_WVM))
 
 SOURCES_HN		:= $(shell find haunted/src -name '*.cpp' | sed -nE '/(tests?|test_.+)\.cpp$$/!p') \
 	haunted/src/lib/formicine/ansi.cpp haunted/src/lib/formicine/futil.cpp haunted/src/lib/formicine/performance.cpp
-INCLUDE_HN		= -Ihaunted/include $(INCLUDE_ICU)
+INCLUDE_HN		= -Ihaunted/include
 OBJECTS_HN		:= $(patsubst haunted/src/%.cpp,haunted/build/%.o,$(SOURCES_HN))
 CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
 INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
-LDFLAGS			:= $(LD_ICU) -pthread
+LDFLAGS			:= -pthread
 
 .PHONY: all clean count countbf memtest test
 
