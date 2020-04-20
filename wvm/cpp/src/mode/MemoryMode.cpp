@@ -17,9 +17,24 @@ namespace WVM::Mode {
 			return true;
 		};
 
-		terminal.watch_size();
-		terminal.set_root(&textbox);
+		textbox.key_fn = [&](const haunted::key &key) {
+			if (key == haunted::kmod::ctrl) {
+				if (key == 't') {
+					*buffer << ":Tick\n";
+				} else if (key == 'm') {
+					*buffer << ":Subscribe memory\n";
+				} else if (key == 'r') {
+					*buffer << ":Subscribe registers\n";
+				} else if (key == 'l') {
+					terminal.redraw();
+				} else return false;
+			} else return false;
+			return true;
+		};
+
 		terminal.start_input();
+		terminal.set_root(&textbox);
+		terminal.watch_size();
 		terminal.join();
 		networkThread.join();
 	}
