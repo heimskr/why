@@ -33,8 +33,9 @@ namespace WVM::Net {
 		public:
 			std::function<void(int, const std::string &)> messageHandler; // (int client, const std::string &message)
 			std::function<void(int, int)> onEnd; // (int client, int descriptor)
+			bool lineMode = false;
 
-			Server(uint16_t port_, size_t chunk_size = 512);
+			Server(uint16_t port_, bool line_mode = true, size_t chunk_size = 512);
 			~Server();
 
 			int getPort() const { return port; }
@@ -46,11 +47,11 @@ namespace WVM::Net {
 			void run();
 			void stop();
 
-			/** Given a buffer and the old size of the buffer before the last insertion, this function returns {-1, *}
-			 *  if the message is still incomplete or the {i, l} if the buffer contains a complete message, where i is
-			 *  the index at which the message ends and l is the size of the delimiter that ended the message.
-			 *  By default, a message is considered complete after the first newline. */
-			virtual std::pair<ssize_t, size_t> isMessageComplete(const std::string &, size_t);
+			/** Given a buffer, this function returns {-1, *} if the message is still incomplete or the {i, l} if the
+			 *  buffer contains a complete message, where i is the index at which the message ends and l is the size of
+			 *  the delimiter that ended the message. By default, a message is considered complete after the first
+			 *  newline. */
+			virtual std::pair<ssize_t, size_t> isMessageComplete(const std::string &);
 	};
 }
 

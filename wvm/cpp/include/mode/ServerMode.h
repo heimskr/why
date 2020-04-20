@@ -16,7 +16,7 @@ namespace WVM::Mode {
 			std::set<int> registerSubscribers;
 
 		public:
-			ServerMode(int port): server(port), vm(1'000'000) {}
+			ServerMode(int port): server(port, true), vm(1'000'000) {}
 
 			void run(const std::string &path);
 			void initVM();

@@ -15,8 +15,8 @@
 #include "net/Server.h"
 
 namespace WVM::Net {
-	Server::Server(uint16_t port_, size_t chunk_size):
-		port(port_), chunkSize(chunk_size), buffer(new char[chunk_size]) {}
+	Server::Server(uint16_t port_, bool line_mode, size_t chunk_size):
+		port(port_), chunkSize(chunk_size), buffer(new char[chunk_size]), lineMode(line_mode) {}
 
 	Server::~Server() {
 		delete[] buffer;
@@ -45,17 +45,24 @@ namespace WVM::Net {
 			throw NetError("Reading", errno);
 		} else if (byte_count == 0) {
 			end(descriptor);
+		} else if (!lineMode) {
+			handleMessage(clients.at(descriptor), str);
+			buffers[descriptor].clear();
 		} else {
-			const size_t old_size = str.size();
-			str.insert(old_size, buffer, byte_count);
+			str.insert(str.size(), buffer, byte_count);
 			ssize_t index;
 			size_t delimiter_size;
-			std::tie(index, delimiter_size) = isMessageComplete(str, old_size);
-			if (index != -1) {
-				handleMessage(clients.at(descriptor), str.substr(0, index));
-				if (clients.count(descriptor) == 1)
-					str.erase(0, index + delimiter_size);
-			}
+			bool done = false;
+			std::tie(index, delimiter_size) = isMessageComplete(str);
+			do {
+				if (index != -1) {
+					handleMessage(clients.at(descriptor), str.substr(0, index));
+					if (clients.count(descriptor) == 1) {
+						str.erase(0, index + delimiter_size);
+						std::tie(index, delimiter_size) = isMessageComplete(str);
+					} else done = true;
+				} else done = true;
+			} while (!done);
 		}
 	}
 
@@ -156,8 +163,8 @@ namespace WVM::Net {
 		}
 	}
 
-	std::pair<ssize_t, size_t> Server::isMessageComplete(const std::string &buf, size_t old_size) {
-		const size_t found = buf.find("\n", old_size);
+	std::pair<ssize_t, size_t> Server::isMessageComplete(const std::string &buf) {
+		const size_t found = buf.find("\n");
 		return found == std::string::npos? std::pair<ssize_t, size_t>(-1, 0) : std::pair<ssize_t, size_t>(found, 1);
 	}
 }
