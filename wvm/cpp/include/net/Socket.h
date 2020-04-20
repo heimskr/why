@@ -43,6 +43,21 @@ namespace WVM::Net {
 			ssize_t recv(void *, size_t);
 
 			int accept();
+
+			template <typename T, std::enable_if_t<std::is_integral<T>::value, int> = 0,
+			                      std::enable_if_t<!std::is_same<T, bool>::value, int> = 0>
+			Socket & operator<<(T num) {
+				return *this << std::to_string(num);
+			}
+
+			Socket & operator<<(const std::string_view &view) {
+				send(view.data(), view.size());
+				return *this;
+			}
+
+			Socket & operator<<(const char *str) {
+				return *this << std::string(str);
+			}
 	};
 }
 

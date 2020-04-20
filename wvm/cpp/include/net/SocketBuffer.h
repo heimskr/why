@@ -24,6 +24,12 @@ namespace WVM::Net {
 
 			/** Closes the underlying socket connection. */
 			void close();
+
+			template <typename T>
+			SocketBuffer & operator<<(const T &t) {
+				*source << t;
+				return *this;
+			}
 	};
 }
 
