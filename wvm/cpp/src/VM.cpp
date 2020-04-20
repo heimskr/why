@@ -217,7 +217,10 @@ namespace WVM {
 		codeOffset = programCounter = getWord(8, Endianness::Big);
 		dataOffset = getWord(16, Endianness::Big);
 		endOffset = getWord(24, Endianness::Big);
+		registers[Why::globalAreaPointerOffset] = endOffset;
 		sp() = memorySize - 8;
+		onRegisterChange(Why::globalAreaPointerOffset);
+		onRegisterChange(Why::stackPointerOffset);
 		loadSymbols();
 	}
 
