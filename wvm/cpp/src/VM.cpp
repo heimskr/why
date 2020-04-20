@@ -111,6 +111,7 @@ namespace WVM {
 
 	void VM::increment() {
 		programCounter += 8;
+		onJump(programCounter - 8, programCounter);
 	}
 
 	bool VM::changeRing(Ring new_ring) {
