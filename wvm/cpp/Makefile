@@ -15,14 +15,14 @@ CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
 INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
-LDFLAGS			:= -pthread
+LDFLAGS			:= $(strip -pthread $(LDFLAGS_EXTRA))
 
 .PHONY: all clean count countbf memtest test
 
 all: $(OUT)
 
 $(OUT): $(OBJECTS)
-	$(COMPILER) $(LDFLAGS) $(INCLUDE) $^ -o $@
+	$(COMPILER) $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
 test: $(OUT)
 	./$(OUT) server ../../wasm/compiled/mal.why
