@@ -18,7 +18,7 @@ CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
 INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
-LDFLAGS			:= $(LD_ICU)
+LDFLAGS			:= $(LD_ICU) -pthread
 
 .PHONY: all clean count countbf memtest test
 
@@ -35,7 +35,7 @@ memtest: $(OUT)
 
 haunted/build/%.o: haunted/src/%.cpp
 	@ mkdir -p "$(shell dirname "$@")"
-	$(COMPILER) $(CFLAGS) $(INCLUDE_HN) $(CFLAGS_HN) -c $< -o $@
+	$(COMPILER) $(strip $(CFLAGS) $(INCLUDE_HN) $(CFLAGS_HN)) -c $< -o $@
 
 build/%.o: src/%.cpp
 	@ mkdir -p "$(shell dirname "$@")"

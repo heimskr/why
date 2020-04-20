@@ -142,7 +142,7 @@ namespace WVM::Unparser {
 			+ Why::coloredRegister(rt) + " -> " + Why::coloredRegister(rd) + ", Funct[" + std::to_string(funct) + "]";
 	}
 
-	std::string stringifyIType(int opcode, int rs, int rd, Conditions conditions, HWord immediate) {
+	std::string stringifyIType(int opcode, int rs, int rd, Conditions, HWord immediate) {
 		switch (opcode) {
 			case OP_ADDI:   return iMath(rs, rd, immediate, "+");
 			case OP_SUBI:   return iMath(rs, rd, immediate, "-");
