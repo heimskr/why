@@ -181,7 +181,8 @@ namespace WVM {
 	}
 
 	bool VM::tick() {
-		UWord instruction = getWord(programCounter);
+		UWord instruction = getWord(programCounter, Endianness::Big);
+		std::cout << "Instruction[" << std::hex << std::setw(16) << std::setfill('0') << instruction << std::dec << "]\n";
 		Operations::execute(*this, instruction);
 
 		++cycles;

@@ -22,15 +22,16 @@ namespace WVM::Mode {
 
 	void ServerMode::initVM() {
 		vm.onUpdateMemory = [&](Word address) {
-			for (int client: memorySubscribers) {
-				server.send(client, ":MemoryWord " + std::to_string(address) + " " +
-					std::to_string(vm.getWord(address)));
-			}
+			const std::string message = ":MemoryWord " + std::to_string(address) + " " +
+				std::to_string(vm.getWord(address));
+			for (int client: memorySubscribers)
+				server.send(client, message);
 		};
 
 		vm.onRegisterChange = [&](unsigned char id) {
+			const std::string message = ":Register " + std::to_string(id) + " " + std::to_string(vm.registers[id]);
 			for (int client: registerSubscribers)
-				server.send(client, ":Register " + std::to_string(id) + " " + std::to_string(vm.registers[id]));
+				server.send(client, message);
 		};
 	}
 
@@ -74,6 +75,7 @@ namespace WVM::Mode {
 				registerSubscribers.insert(client);
 			} else {
 				invalid();
+				return;
 			}
 
 			server.send(client, ":Subscribed " + to);
