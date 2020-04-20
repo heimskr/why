@@ -20,7 +20,7 @@ INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
 LDFLAGS			:= $(LD_ICU)
 
-.PHONY: all clean count countbf test
+.PHONY: all clean count countbf memtest test
 
 all: $(OUT)
 
@@ -29,6 +29,9 @@ $(OUT): $(OBJECTS)
 
 test: $(OUT)
 	./$(OUT) server ../../wasm/compiled/mal.why
+
+memtest: $(OUT)
+	./$(OUT) memory 127.0.0.1 `cat .port`
 
 haunted/build/%.o: haunted/src/%.cpp
 	@ mkdir -p "$(shell dirname "$@")"

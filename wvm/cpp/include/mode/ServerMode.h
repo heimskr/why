@@ -6,7 +6,7 @@
 #include "VM.h"
 
 namespace WVM::Mode {
-	class ServerMode: Mode {
+	class ServerMode: public Mode {
 		private:
 			Net::Server server;
 			VM vm;

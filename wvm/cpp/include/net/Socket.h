@@ -18,7 +18,7 @@ namespace WVM::Net {
 			enum class ControlMessage: char {Close='C'};
 
 		public:
-			const std::string hostname;
+			std::string hostname;
 			int port;
 
 			Socket(const std::string &hostname_, int port_);
@@ -26,6 +26,7 @@ namespace WVM::Net {
 			Socket() = delete;
 			Socket(const Socket &) = delete;
 			Socket & operator=(const Socket &) = delete;
+			Socket & operator=(Socket &&);
 
 			~Socket();
 

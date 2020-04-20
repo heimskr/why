@@ -3,14 +3,17 @@
 #include <signal.h>
 
 #include "lib/ansi.h"
+#include "mode/MemoryMode.h"
 #include "mode/ServerMode.h"
 #include "net/NetError.h"
 #include "net/Server.h"
+#include "Util.h"
 
 std::optional<WVM::Mode::ServerMode> server;
 
 void usage() {
-	std::cerr << "Usage:\n- wvm server <executable>\n- wvm registers\n- wvm memory\n- wvm console\n";
+	std::cerr << "Usage:\n- wvm server <executable>\n- wvm registers <hostname> <port>\n- wvm memory <hostname> <port>"
+	         << "\n- wvm console <hostname> <port>\n";
 }
 
 int main(int argc, char **argv) {
@@ -35,10 +38,29 @@ int main(int argc, char **argv) {
 		} catch (const WVM::Net::NetError &err) {
 			std::cerr << err.what() << "\n";
 		}
-	} else if (arg == "registers") {
+
+		return 0;
+	}
+
+	std::string hostname;
+	unsigned long port;
+
+	if (argc != 4) {
+		usage();
+		return 1;
+	}
+
+	hostname = argv[2];
+	if (!WVM::Util::parseUL(argv[3], port)) {
+		std::cerr << "Invalid port: " << argv[3] << "\n";
+		return 1;
+	}
+
+	if (arg == "registers") {
 		
 	} else if (arg == "memory") {
-
+		WVM::Mode::MemoryMode memory;
+		memory.run(hostname, port);
 	} else if (arg == "console") {
 
 	} else {

@@ -24,12 +24,37 @@ namespace WVM::Net {
 		if (status != 0)
 			throw ResolutionError(errno);
 	}
+
+	Socket & Socket::operator=(Socket &&other) {
+		if (this == &other)
+			return *this;
+		close();
+		if (info)
+			freeaddrinfo(info);
+		socketCount = other.socketCount;
+		info = other.info;
+		other.info = nullptr;
+		netFD = other.netFD;
+		other.netFD = -1;
+		controlRead = other.controlRead;
+		other.controlRead = -1;
+		controlWrite = other.controlWrite;
+		other.controlWrite = -1;
+		connected = other.connected;
+		other.connected = false;
+		fds = other.fds;
+		hostname = other.hostname;
+		return *this;
+	}
 	
 	Socket::~Socket() {
-		freeaddrinfo(info);
+		close();
+		if (info)
+			freeaddrinfo(info);
 	}
 
 	void Socket::connect() {
+		std::cerr << "Connecting to " << hostname << " on port " << port << "\n";
 		netFD = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
 		int status = ::connect(netFD, info->ai_addr, info->ai_addrlen);
 		if (status != 0) {

@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 
 #include "mode/ServerMode.h"
@@ -8,6 +9,10 @@ namespace WVM::Mode {
 	void ServerMode::run(const std::string &path) {
 		server.messageHandler = [&](int client, const std::string &message) { handleMessage(client, message); };
 		std::cerr << "ServerMode running on port " << server.getPort() << "\n";
+		std::ofstream port_stream;
+		port_stream.open(".port");
+		port_stream << server.getPort();
+		port_stream.close();
 		vm.load(path);
 		server.run();
 	}
