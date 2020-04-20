@@ -124,7 +124,8 @@ namespace WVM {
 		}
 
 		ring = new_ring;
-		onRingChange(old_ring, new_ring);
+		if (old_ring != new_ring)
+			onRingChange(old_ring, new_ring);
 		return true;
 	}
 
