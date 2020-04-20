@@ -1,6 +1,8 @@
 #ifndef WVM_MODE_SERVERMODE_H_
 #define WVM_MODE_SERVERMODE_H_
 
+#include <set>
+
 #include "mode/Mode.h"
 #include "net/Server.h"
 #include "VM.h"
@@ -10,11 +12,15 @@ namespace WVM::Mode {
 		private:
 			Net::Server server;
 			VM vm;
+			std::set<int> memorySubscribers;
+			std::set<int> registerSubscribers;
 
 		public:
 			ServerMode(int port): server(port), vm(1'000'000) {}
 
 			void run(const std::string &path);
+			void initVM();
+			void cleanupClient(int);
 			void stop();
 			void handleMessage(int, const std::string &);
 	};

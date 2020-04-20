@@ -15,7 +15,22 @@ namespace WVM::Mode {
 		port_stream << server.getPort();
 		port_stream.close();
 		vm.load(path);
+		initVM();
 		server.run();
+	}
+
+	void ServerMode::initVM() {
+		vm.onUpdateMemory = [&](Word address) {
+			for (int client: memorySubscribers) {
+				server.send(client, ":MemoryUpdate " + std::to_string(address) + " " +
+					std::to_string(vm.getWord(address)));
+			}
+		};
+	}
+
+	void ServerMode::cleanupClient(int client) {
+		memorySubscribers.erase(client);
+		registerSubscribers.erase(client);
 	}
 
 	void ServerMode::stop() {
@@ -38,7 +53,24 @@ namespace WVM::Mode {
 		if (verb == "Stop") {
 			stop();
 		} else if (verb == "Close") {
+			cleanupClient(client);
 			server.removeClient(client);
+		} else if (verb == "Subscribe") {
+			if (size != 2) {
+				invalid();
+				return;
+			}
+
+			const std::string &to = split[1];
+			if (to == "memory") {
+				memorySubscribers.insert(client);
+			} else if (to == "registers") {
+				registerSubscribers.insert(client);
+			} else {
+				invalid();
+			}
+
+			server.send(client, ":Subscribed " + to);
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {
