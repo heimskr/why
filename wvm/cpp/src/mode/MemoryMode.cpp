@@ -85,14 +85,18 @@ namespace WVM::Mode {
 	}
 
 	std::string MemoryMode::stringify(Word address) const {
-		const std::string addr_str = std::to_string(address);
-		std::string start = "\e[2m[";
-		for (int i = 0; i < padding - static_cast<int>(addr_str.size()); ++i)
-			start += ' ';
-		start += addr_str + "]\e[22m  ";
-		if (vmCopy.codeOffset <= address && address < vmCopy.dataOffset)
-			return start + Unparser::stringify(vmCopy.getWord(address, Endianness::Big), &vmCopy);
-		return start;
+		std::stringstream ss;
+		UWord word = vmCopy.getWord(address, Endianness::Big);
+		ss << "\e[2m[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
+		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
+
+		if (address < 32) {
+			ss << "\e[38;5;26m" << word << "\e[39m";
+		} else if (vmCopy.codeOffset <= address && address < vmCopy.dataOffset) {
+			ss << Unparser::stringify(word, &vmCopy);
+		}
+
+		return ss.str();
 	}
 
 	void MemoryMode::updateLine(Word address) {
