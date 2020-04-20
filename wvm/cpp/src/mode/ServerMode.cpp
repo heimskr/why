@@ -17,6 +17,7 @@ namespace WVM::Mode {
 		port_stream.close();
 		vm.load(path);
 		initVM();
+		server.onEnd = [&](int client, int) { cleanupClient(client); };
 		server.run();
 	}
 
