@@ -109,7 +109,7 @@ namespace WVM::Mode {
 				vm.registers[reg] = new_value;
 			}
 
-			server.send(client, ":Register " + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
+			server.send(client, ":Register $" + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "PrintOps") {
 			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
 				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m " << Unparser::stringify(vm.getInstruction(i))
@@ -176,8 +176,13 @@ namespace WVM::Mode {
 
 			server.send(client, ":PC " + std::to_string(vm.programCounter));
 		} else if (verb == "Registers") {
-			for (int i = 0; i < Why::totalRegisters; ++i)
-				server.send(client, ":Reg " + Why::registerName(i) + " " + std::to_string(vm.registers[i]));
+			if (size == 2 && split[1] == "raw") {
+				for (int i = 0; i < Why::totalRegisters; ++i)
+					server.send(client, ":Register " + std::to_string(i) + " " + std::to_string(vm.registers[i]));
+			} else {
+				for (int i = 0; i < Why::totalRegisters; ++i)
+					server.send(client, ":Register $" + Why::registerName(i) + " " + std::to_string(vm.registers[i]));
+			}
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
