@@ -18,6 +18,8 @@ namespace WVM::Mode {
 			haunted::ui::textbox textbox;
 			haunted::ui::textinput input;
 
+			void badInput(const std::string & = "Invalid");
+
 		public:
 			ConsoleMode(): ClientMode() {}
 			~ConsoleMode();

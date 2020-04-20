@@ -80,24 +80,38 @@ namespace WVM::Mode {
 		const std::vector<std::string> split = Util::split(rest, " ", false);
 		const size_t size = split.size();
 
-		if (first == "tick") {
+		if (first == "t" || first == "tick") {
 			if (size == 0) {
 				*socket << ":Tick\n";
 			} else if (size == 1) {
 				long ticks;
 				if (!Util::parseLong(split[0], ticks)) {
-					textbox += std::string(errorPrefix) + "Invalid input.";
+					badInput();
 				} else {
 					for (long i = 0; i < ticks; ++i)
 						*socket << ":Tick\n";
 				}
 			} else {
-				textbox += std::string(errorPrefix) + "Invalid input.";
+				badInput();
+			}
+		} else if (first == "s" || first == "sub" || first == "subscribe") {
+			if (size != 1) {
+				badInput();
+			} else if (split[0] == "r" || split[0] == "reg" || split[0] == "registers") {
+				*socket << ":Subscribe registers\n";
+			} else if (split[0] == "m" || split[0] == "mem" || split[0] == "memory") {
+				*socket << ":Subscribe memory\n";
+			} else {
+				badInput();
 			}
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
-			textbox += std::string(errorPrefix) + "Unrecognized input.";
+			badInput("Unrecognized");
 		}
+	}
+
+	void ConsoleMode::badInput(const std::string &type) {
+		textbox += errorPrefix + type + " input.";
 	}
 }
