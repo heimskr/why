@@ -204,7 +204,8 @@ namespace WVM {
 			load(stream);
 			stream.close();
 		} catch (std::exception &err) {
-			error() << "Couldn't open " << path << ": " << err.what() << "\n";
+			error() << "Couldn't open \e[1m" << path << "\e[22m: " << err.what() << "\n";
+			throw;
 		}
 	}
 
