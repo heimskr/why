@@ -5,23 +5,26 @@
 #include <string>
 #include <vector>
 
-
 namespace WVM {
 	namespace Util {
 		std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 		bool parseUL(const std::string &str, unsigned long int &out, int base = 10);
 	}
 
+	constexpr const char *errorPrefix = "\e[2m[\e[22;31m!\e[39;2m]\e[22m ";
+	constexpr const char *warnPrefix  = "\e[2m[\e[22;33m~\e[39;2m]\e[22m ";
+	constexpr const char *infoPrefix  = "\e[2m[\e[22;36mi\e[39;2m]\e[22m ";
+
 	inline std::ostream & warn() {
-		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
+		return std::cerr << warnPrefix  << "\e[33mWarning: \e[39m";
 	}
 
 	inline std::ostream & error() {
-		return std::cerr << "\e[2m[\e[22;31m!\e[39;2m]\e[22;31m Error: \e[39m";
+		return std::cerr << errorPrefix << "\e[31mError: \e[39m";
 	}
 
 	inline std::ostream & info() {
-		return std::cerr << "\e[2m[\e[22;36mi\e[39;2m]\e[22m ";
+		return std::cerr << infoPrefix;
 	}
 }
 

@@ -1,6 +1,6 @@
-
 #include "lib/ansi.h"
 #include "mode/ConsoleMode.h"
+#include "Util.h"
 
 namespace WVM::Mode {
 	ConsoleMode::~ConsoleMode() {
@@ -42,7 +42,21 @@ namespace WVM::Mode {
 	}
 
 	void ConsoleMode::handleMessage(const std::string &message) {
-		textbox += message;
+		if (message.front() != ':') {
+			DBG("Not sure how to handle [" << message << "]");
+			return;
+		}
+
+		const size_t space = message.find(' ');
+		const std::string verb = message.substr(1, space - 1);
+		const std::string rest = space == std::string::npos? "" : message.substr(space + 1);
+		if (verb == "Error") {
+			textbox += errorPrefix + rest;
+		} else if (verb == "Subscribed") {
+			textbox += infoPrefix + std::string("Subscribed to ") + rest;
+		} else {
+			textbox += message;
+		}
 	}
 
 	void ConsoleMode::handleInput(const std::string &text) {
