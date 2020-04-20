@@ -3,6 +3,7 @@
 #include <signal.h>
 
 #include "lib/ansi.h"
+#include "mode/ConsoleMode.h"
 #include "mode/MemoryMode.h"
 #include "mode/ServerMode.h"
 #include "net/NetError.h"
@@ -62,7 +63,8 @@ int main(int argc, char **argv) {
 		WVM::Mode::MemoryMode memory;
 		memory.run(hostname, port);
 	} else if (arg == "console") {
-
+		WVM::Mode::ConsoleMode console;
+		console.run(hostname, port);
 	} else {
 		usage();
 		return 1;

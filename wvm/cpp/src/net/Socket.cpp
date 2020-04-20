@@ -54,7 +54,6 @@ namespace WVM::Net {
 	}
 
 	void Socket::connect() {
-		std::cerr << "Connecting to " << hostname << " on port " << port << "\n";
 		netFD = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
 		int status = ::connect(netFD, info->ai_addr, info->ai_addrlen);
 		if (status != 0) {

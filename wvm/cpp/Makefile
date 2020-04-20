@@ -27,6 +27,9 @@ $(OUT): $(OBJECTS)
 test: $(OUT)
 	./$(OUT) server ../../wasm/compiled/mal.why
 
+consoletest: $(OUT)
+	./$(OUT) console 127.0.0.1 `cat .port`
+
 memtest: $(OUT)
 	./$(OUT) memory 127.0.0.1 `cat .port`
 
