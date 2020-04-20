@@ -115,8 +115,8 @@ namespace WVM::Mode {
 			server.send(client, ":Register $" + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "PrintOps") {
 			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
-				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m " << Unparser::stringify(vm.getInstruction(i))
-				          << "\n";
+				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m "
+				          << Unparser::stringify(vm.getInstruction(i), &vm) << "\n";
 		} else if (verb == "Symbols") {
 			for (const std::pair<std::string, Symbol> pair: vm.symbolTable) {
 				std::cout << "\e[1m" << pair.first << "\e[22m: " << pair.second.location << " \e[22;2m[" << std::hex

@@ -45,7 +45,7 @@ namespace WVM::Operations {
 			int flags;
 			HWord immediate;
 			decodeIType(instruction, rs, rd, conditions, flags, immediate);
-			info() << Unparser::stringifyIType(opcode, rs, rd, conditions, immediate) << "\n";
+			info() << Unparser::stringifyIType(opcode, rs, rd, conditions, flags, immediate, &vm) << "\n";
 			executeIType(opcode, vm, vm.registers[rs], vm.registers[rd], conditions, flags, immediate);
 		} else if (JSet.count(opcode) == 1) {
 			int rs;
@@ -54,7 +54,7 @@ namespace WVM::Operations {
 			int flags;
 			HWord address;
 			decodeJType(instruction, rs, link, conditions, flags, address);
-			info() << Unparser::stringifyJType(opcode, rs, link, conditions, address) << "\n";
+			info() << Unparser::stringifyJType(opcode, rs, link, conditions, flags, address, &vm) << "\n";
 			executeJType(opcode, vm, vm.registers[rs], link, conditions, flags, address);
 		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 	}

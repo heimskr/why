@@ -1,9 +1,10 @@
 #include "Operations.h"
 #include "Unparser.h"
+#include "VM.h"
 #include "Why.h"
 
 namespace WVM::Unparser {
-	std::string stringify(UWord instruction) {
+	std::string stringify(UWord instruction, VM *vm) {
 		int opcode = (instruction >> 52) & 0xfff;
 		if (opcode == OP_NOP) {
 			return "<>";
@@ -19,7 +20,7 @@ namespace WVM::Unparser {
 			int flags;
 			HWord immediate;
 			Operations::decodeIType(instruction, rs, rd, conditions, flags, immediate);
-			return stringifyIType(opcode, rs, rd, conditions, immediate);
+			return stringifyIType(opcode, rs, rd, conditions, flags, immediate, vm);
 		} else if (Operations::JSet.count(opcode) == 1) {
 			int rs;
 			bool link;
@@ -27,7 +28,7 @@ namespace WVM::Unparser {
 			int flags;
 			HWord address;
 			Operations::decodeJType(instruction, rs, link, conditions, flags, address);
-			return stringifyJType(opcode, rs, link, conditions, address);
+			return stringifyJType(opcode, rs, link, conditions, flags, address, vm);
 		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 	}
 
@@ -142,41 +143,52 @@ namespace WVM::Unparser {
 			+ Why::coloredRegister(rt) + " -> " + Why::coloredRegister(rd) + ", Funct[" + std::to_string(funct) + "]";
 	}
 
-	std::string stringifyIType(int opcode, int rs, int rd, Conditions, HWord immediate) {
+	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, VM *vm) {
+		std::string coloredImm;
+		if (vm && flags == FLAG_KNOWN_SYMBOL) {
+			for (const std::pair<std::string, Symbol> pair: vm->symbolTable) {
+				if (pair.second.location == immediate) {
+					coloredImm = immColor + pair.first + "\e[39m";
+					break;
+				}
+			}
+		}
+		if (coloredImm.empty())
+			coloredImm = colorNum(immediate);
 		switch (opcode) {
-			case OP_ADDI:   return iMath(rs, rd, immediate, "+");
-			case OP_SUBI:   return iMath(rs, rd, immediate, "-");
-			case OP_MULTI:  return color(rs) + " \e[1m*\e[22m " + colorNum(immediate);
-			case OP_MULTUI: return color(rs) + " \e[1m*\e[22m " + colorNum(immediate) + " /u";
-			case OP_MODI:   return iAltOp(rs, rd, immediate, "%");
-			case OP_ANDI:   return iAltOp(rs, rd, immediate, "&");
-			case OP_NANDI:  return iAltOp(rs, rd, immediate, "~&");
-			case OP_NORI:   return iAltOp(rs, rd, immediate, "~|");
-			case OP_ORI:    return iAltOp(rs, rd, immediate, "|");
-			case OP_XNORI:  return iAltOp(rs, rd, immediate, "~x");
-			case OP_XORI:   return iAltOp(rs, rd, immediate, "x");
-			case OP_SLLI:   return iAltOp(rs, rd, immediate, "<<");
-			case OP_SRLI:   return iAltOp(rs, rd, immediate, ">>>");
-			case OP_SRAI:   return iAltOp(rs, rd, immediate, ">>");
-			case OP_LUI:    return "\e[2lui:\e[22m " + colorNum(immediate) + into + color(rd);
-			case OP_LI:     return left + colorNum(immediate) + right + into + color(rd);
-			case OP_LBI:    return left + colorNum(immediate) + right + into + color(rd) + " /b";
-			case OP_LNI:    return left + colorNum(immediate) + right + into + left + color(rd) + right;
-			case OP_LBNI:   return left + colorNum(immediate) + right + into + left + color(rd) + right + " /b";
-			case OP_SI:     return color(rs) + into + left + colorNum(immediate) + right;
-			case OP_SBI:    return color(rs) + into + left + colorNum(immediate) + right + " /b";
-			case OP_SET:    return colorNum(immediate) + into + color(rd);
-			case OP_SLI:    return iComp(rs, rd, immediate, "<");
-			case OP_SLUI:   return iComp(rs, rd, immediate, "<") + " /u";
-			case OP_SLEI:   return iComp(rs, rd, immediate, "<=");
-			case OP_SLEUI:  return iComp(rs, rd, immediate, "<=") + " /u";
-			case OP_SGI:    return iComp(rs, rd, immediate, ">");
-			case OP_SGEI:   return iComp(rs, rd, immediate, ">=");
-			case OP_SEQI:   return iComp(rs, rd, immediate, "==");
-			case OP_RIT:    return "\e[36mrit\e[39m " + colorNum(immediate);
-			case OP_TIMEI:  return "\e[36mtime\e[39m " + colorNum(immediate);
-			case OP_RINGI:  return "\e[36mring\e[39m " + colorNum(immediate);
-			case OP_CMPI:   return color(rs) + " " + colorOper("~") + " " + colorNum(immediate);
+			case OP_ADDI:   return iMath(rs, rd, coloredImm, "+");
+			case OP_SUBI:   return iMath(rs, rd, coloredImm, "-");
+			case OP_MULTI:  return color(rs) + " \e[1m*\e[22m " + coloredImm;
+			case OP_MULTUI: return color(rs) + " \e[1m*\e[22m " + coloredImm + " /u";
+			case OP_MODI:   return iAltOp(rs, rd, coloredImm, "%");
+			case OP_ANDI:   return iAltOp(rs, rd, coloredImm, "&");
+			case OP_NANDI:  return iAltOp(rs, rd, coloredImm, "~&");
+			case OP_NORI:   return iAltOp(rs, rd, coloredImm, "~|");
+			case OP_ORI:    return iAltOp(rs, rd, coloredImm, "|");
+			case OP_XNORI:  return iAltOp(rs, rd, coloredImm, "~x");
+			case OP_XORI:   return iAltOp(rs, rd, coloredImm, "x");
+			case OP_SLLI:   return iAltOp(rs, rd, coloredImm, "<<");
+			case OP_SRLI:   return iAltOp(rs, rd, coloredImm, ">>>");
+			case OP_SRAI:   return iAltOp(rs, rd, coloredImm, ">>");
+			case OP_LUI:    return "\e[2lui:\e[22m " + coloredImm + into + color(rd);
+			case OP_LI:     return left + coloredImm + right + into + color(rd);
+			case OP_LBI:    return left + coloredImm + right + into + color(rd) + " /b";
+			case OP_LNI:    return left + coloredImm + right + into + left + color(rd) + right;
+			case OP_LBNI:   return left + coloredImm + right + into + left + color(rd) + right + " /b";
+			case OP_SI:     return color(rs) + into + left + coloredImm + right;
+			case OP_SBI:    return color(rs) + into + left + coloredImm + right + " /b";
+			case OP_SET:    return coloredImm + into + color(rd);
+			case OP_SLI:    return iComp(rs, rd, coloredImm, "<");
+			case OP_SLUI:   return iComp(rs, rd, coloredImm, "<") + " /u";
+			case OP_SLEI:   return iComp(rs, rd, coloredImm, "<=");
+			case OP_SLEUI:  return iComp(rs, rd, coloredImm, "<=") + " /u";
+			case OP_SGI:    return iComp(rs, rd, coloredImm, ">");
+			case OP_SGEI:   return iComp(rs, rd, coloredImm, ">=");
+			case OP_SEQI:   return iComp(rs, rd, coloredImm, "==");
+			case OP_RIT:    return "\e[36mrit\e[39m " + coloredImm;
+			case OP_TIMEI:  return "\e[36mtime\e[39m " + coloredImm;
+			case OP_RINGI:  return "\e[36mring\e[39m " + coloredImm;
+			case OP_CMPI:   return color(rs) + " " + colorOper("~") + " " + coloredImm;
 			case OP_INT: {
 				const std::string base = "\e[36mint\e[39m ";
 				switch (immediate) {
@@ -184,22 +196,31 @@ namespace WVM::Unparser {
 					case INT_SYSTEM: return base + "system";
 					case INT_TIMER:  return base + "timer";
 					case INT_PROTEC: return base + "protec";
-					default: return base + colorNum(immediate);
+					default: return base + coloredImm;
 				}
 			}
 
 		}
-		return "I: Opcode[" + std::to_string(opcode) + "], " + color(rs) + " "
-			+ std::to_string(immediate) + " -> " + color(rd);
+		return "I: Opcode[" + std::to_string(opcode) + "], " + color(rs) + " " + coloredImm + " -> " + color(rd);
 	}
 
-	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, HWord address) {
+	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, int flags, HWord address, VM *vm) {
+		std::string coloredAddress;
+		if (vm && flags == FLAG_KNOWN_SYMBOL) {
+			for (const std::pair<std::string, Symbol> &pair: vm->symbolTable) {
+				if (pair.second.location == address) {
+					coloredAddress = immColor + pair.first + "\e[39m";
+					break;
+				}
+			}
+		}
+		if (coloredAddress.empty())
+			coloredAddress = colorNum(address);
 		if (opcode != OP_J && opcode != OP_JC) {
 			return "J: Opcode[" + std::to_string(opcode) + "], " + color(rs) + ", " + (link? "" : "don't ")
-				+ "link, " + std::to_string(address);
+				+ "link, " + coloredAddress;
 		}
-		const std::string base = jumpConditions(conditions) + "\e[2m" + (link? ":: " : ": ") + "\e[22m" +
-			colorNum(address);
+		const std::string base = jumpConditions(conditions) + "\e[2m" + (link? "::" : ":") + "\e[22m " + coloredAddress;
 		return opcode == OP_JC? base + " \e[38;5;90mif\e[39m " + color(rs) : base;
 	}
 
@@ -213,23 +234,22 @@ namespace WVM::Unparser {
 		return color(rs) + " " + colorOper(oper) + " " + color(rt) + into + color(rd);
 	}
 
-	std::string iAltOp(int rs, int rd, HWord immediate, const std::string &oper) {
-		std::string out = color(rs) + " \e[1m" + oper + (rs == rd? "=" : "") + "\e[22m " + immColor +
-			std::to_string(immediate) + "\e[39m";
+	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper) {
+		std::string out = color(rs) + " \e[1m" + oper + (rs == rd? "=" : "") + "\e[22m " + immediate;
 		return rs == rd? out : out + into + color(rd);
 	}
 
-	std::string iMath(int rs, int rd, HWord immediate, const std::string &oper) {
+	std::string iMath(int rs, int rd, const std::string &immediate, const std::string &oper) {
 		if (rs == rd) {
-			if (immediate == 1)
+			if (immediate == colorNum(1))
 				return color(rs) + colorOper(oper + oper);
-			return color(rs) + " " + colorOper(oper + "=") + " " + colorNum(immediate);
+			return color(rs) + " " + colorOper(oper + "=") + " " + immediate;
 		}
-		return color(rs) + " " + colorOper(oper) + " " + colorNum(immediate) + into + color(rd);
+		return color(rs) + " " + colorOper(oper) + " " + immediate + into + color(rd);
 	}
 
-	std::string iComp(int rs, int rd, HWord immediate, const std::string &oper) {
-		return color(rs) + " " + colorOper(oper) + " " + colorNum(immediate) + into + color(rd);
+	std::string iComp(int rs, int rd, const std::string &immediate, const std::string &oper) {
+		return color(rs) + " " + colorOper(oper) + " " + immediate + into + color(rd);
 	}
 
 	std::string jumpConditions(Conditions conditions) {
