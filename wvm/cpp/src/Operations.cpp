@@ -138,6 +138,7 @@ namespace WVM::Operations {
 				break;
 			case OP_TIME: timeOp(vm, rs, rt, rd, conditions, flags); return;
 			case OP_RING: ringOp(vm, rs, rt, rd, conditions, flags); return;
+			case OP_SEL:   selOp(vm, rs, rt, rd, conditions, flags); return;
 		}
 
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
@@ -668,7 +669,7 @@ namespace WVM::Operations {
 	}
 
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		std::cout << "$" << Why::registerName(&rs - vm.registers) << ": 0x" << std::hex << rs << " / " << rs << "\n";
+		std::cout << Why::coloredRegister(&rs - vm.registers) << ": 0x" << std::hex << rs << " / " << rs << "\n";
 		vm.increment();
 	}
 
@@ -698,6 +699,11 @@ namespace WVM::Operations {
 
 	void sleepOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		usleep(rs * 1000);
+		vm.increment();
+	}
+
+	void selOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
+		rd = vm.checkConditions(conditions)? rs : rt;
 		vm.increment();
 	}
 }

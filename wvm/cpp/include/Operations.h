@@ -115,8 +115,6 @@ namespace WVM::Operations {
 	void lniOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 39  I
 	void lbniOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 40  I
 
-
-
 	void intOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 32  I
 	void ritOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 33  I
 	void timeOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 48  R
@@ -131,6 +129,8 @@ namespace WVM::Operations {
 	void prdOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 5
 	void prxOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 6
 	void sleepOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 31 ?R 7
+
+	void selOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 56  R
 
 #define OP_NOP 0
 #define OP_RMATH 1
