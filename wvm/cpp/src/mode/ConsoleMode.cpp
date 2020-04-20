@@ -1,6 +1,7 @@
 #include "lib/ansi.h"
 #include "mode/ConsoleMode.h"
 #include "Util.h"
+#include "Why.h"
 
 namespace WVM::Mode {
 	ConsoleMode::~ConsoleMode() {
@@ -50,10 +51,20 @@ namespace WVM::Mode {
 		const size_t space = message.find(' ');
 		const std::string verb = message.substr(1, space - 1);
 		const std::string rest = space == std::string::npos? "" : message.substr(space + 1);
+		const std::vector<std::string> split = Util::split(rest, " ", false);
+
 		if (verb == "Error") {
 			textbox += errorPrefix + rest;
 		} else if (verb == "Subscribed") {
-			textbox += infoPrefix + std::string("Subscribed to ") + rest;
+			textbox += std::string(infoPrefix) + "Subscribed to " + rest;
+		} else if (verb == "Register") {
+			long registerID, newValue;
+			if (split.size() != 2 || !Util::parseLong(split[0], registerID) || !Util::parseLong(split[1], newValue)) {
+				textbox += std::string(errorPrefix) + "Invalid response from server.";
+				DBG("Bad Register response [" << rest << "]");
+			} else {
+				textbox += infoPrefix + Why::coloredRegister(registerID) + " \e[2m<-\e[22m " + std::to_string(newValue);
+			}
 		} else {
 			textbox += message;
 		}

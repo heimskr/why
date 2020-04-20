@@ -9,6 +9,7 @@ namespace WVM {
 	namespace Util {
 		std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 		bool parseUL(const std::string &str, unsigned long int &out, int base = 10);
+		bool parseLong(const std::string &str, long &out, int base = 10);
 	}
 
 	constexpr const char *errorPrefix = "\e[2m[\e[22;31m!\e[39;2m]\e[22m ";
