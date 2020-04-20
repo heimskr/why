@@ -78,7 +78,6 @@ namespace WVM::Mode {
 					textbox += str + "\e[22m";
 				}
 				textbox += stringify(address);
-				DBG("emplacing " << address);
 				lines.emplace(address, textbox.get_lines().back());
 				if (i == height) {
 					textbox.suppress_draw = false;
@@ -91,7 +90,6 @@ namespace WVM::Mode {
 		loop.join();
 		textbox.suppress_draw = false;
 		terminal.redraw();
-		DBG(textbox.get_lines().size());
 	}
 
 	std::string MemoryMode::stringify(Word address) const {
@@ -104,13 +102,23 @@ namespace WVM::Mode {
 
 		if (address < 32) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
-		} else if (address < vm.symbolsOffset) {
+		} else if (address < vm.symbolsOffset || vm.dataOffset <= address) {
 			for (int i = 0; i < 8; ++i) {
 				char ch = static_cast<char>(vm.getByte(address + i));
 				if (ch < 32)
 					ss << "\e[2m.\e[22m";
 				else
 					ss << ch;
+			}
+		} else if (address < vm.codeOffset) {
+			if (symbolTableEdges.count(address) == 1) {
+				const UHWord hash = word >> 32;
+				ss << std::hex << "\e[2m" << hash << "\e[22m" << std::dec;
+			} else if (symbolTableEdges.count(address - 8) == 1) {
+				ss << word;
+			} else if (symbolTableEdges.count(address - 16) == 1) {
+				const UHWord length = vm.getHalfword(address - 12, Endianness::Big);
+				ss << "\e[35m" << vm.getString(address, length * 8) << "\e[39m";
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
 			ss << Unparser::stringify(word, &vm);
@@ -129,6 +137,16 @@ namespace WVM::Mode {
 		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(line.get())) {
 			simple->text = stringify(address);
 		} else throw std::runtime_error("Unable to cast line to haunted::ui::simpleline");
+	}
+
+	void MemoryMode::makeSymbolTableEdges() {
+		symbolTableEdges.clear();
+		symbolTableEdges.insert(vm.symbolsOffset);
+		for (Word i = vm.symbolsOffset; i < vm.codeOffset;) {
+			i += 16 + 8 * vm.getHalfword(i + 4, Endianness::Big);
+			if (i < vm.codeOffset)
+				symbolTableEdges.insert(i);
+		}
 	}
 
 	void MemoryMode::stop() {
@@ -174,6 +192,7 @@ namespace WVM::Mode {
 
 			vm.init();
 			vm.loadSymbols();
+			makeSymbolTableEdges();
 		} else if (verb == "PC") {
 			Word to;
 			if (size != 1 || !Util::parseLong(split[0], to)) {

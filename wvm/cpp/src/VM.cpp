@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "lib/ansi.h"
 #include "Operations.h"
 #include "Util.h"
 #include "VM.h"
@@ -105,6 +106,8 @@ namespace WVM {
 
 	void VM::reserve(size_t to_reserve) {
 		memory.reserve(to_reserve);
+		if (memorySize < to_reserve)
+			memorySize = to_reserve;
 	}
 
 	void VM::jump(Word address, bool should_link) {
