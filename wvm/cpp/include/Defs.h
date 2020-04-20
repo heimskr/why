@@ -21,6 +21,13 @@ namespace WVM {
 		Nonzero  = 0b1011,
 	};
 
+	enum class Flags: char {
+		Ignore        = 0,
+		KnownSymbol   = 1,
+		UnknownSymbol = 2,
+		SymbolID      = 3,
+	};
+
 	class VM;
 }
 

@@ -25,12 +25,6 @@ namespace WVM::Unparser {
 	constexpr const char *immColor = "\e[38;5;164m";
 	constexpr const char *into = " \e[2m->\e[22m ";
 	constexpr const char *left = "[", *right = "]";
-
-#define FLAG_IGNORE 0
-#define FLAG_KNOWN_SYMBOL 1
-#define FLAG_UNKNOWN_SYMBOL 2
-#define FLAG_SYMBOL_ID 3
-
 }
 
 #endif
