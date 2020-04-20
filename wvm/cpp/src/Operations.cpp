@@ -515,7 +515,7 @@ namespace WVM::Operations {
 	}
 
 	void cmpOp(VM &vm, Word &rs, Word &rt, Word &, Conditions, int) {
-		vm.updateFlags(rs - rt):
+		vm.updateFlags(rs - rt);
 		vm.increment();
 	}
 
