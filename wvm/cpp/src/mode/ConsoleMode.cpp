@@ -28,6 +28,7 @@ namespace WVM::Mode {
 		terminal.start_input();
 		terminal.set_root(&*expando);
 		input.focus();
+		input.set_prefix("\e[2m>>\e[22m ");
 		textbox.set_background(ansi::color::verydark);
 		textbox.draw();
 		terminal.watch_size();
