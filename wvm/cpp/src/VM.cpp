@@ -103,6 +103,10 @@ namespace WVM {
 		return &word - registers;
 	}
 
+	void VM::reserve(size_t to_reserve) {
+		memory.reserve(to_reserve);
+	}
+
 	void VM::jump(Word address, bool should_link) {
 		if (should_link)
 			link();

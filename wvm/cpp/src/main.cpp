@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 	}
 
 	std::string hostname;
-	unsigned long port;
+	WVM::UWord port;
 
 	if (argc != 4) {
 		usage();

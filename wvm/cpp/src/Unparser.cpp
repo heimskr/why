@@ -1,10 +1,11 @@
+#include "lib/ansi.h"
 #include "Operations.h"
 #include "Unparser.h"
 #include "VM.h"
 #include "Why.h"
 
 namespace WVM::Unparser {
-	std::string stringify(UWord instruction, VM *vm) {
+	std::string stringify(UWord instruction, const VM *vm) {
 		int opcode = (instruction >> 52) & 0xfff;
 		if (opcode == OP_NOP) {
 			return "<>";
@@ -143,7 +144,7 @@ namespace WVM::Unparser {
 			+ Why::coloredRegister(rt) + " -> " + Why::coloredRegister(rd) + ", Funct[" + std::to_string(funct) + "]";
 	}
 
-	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, VM *vm) {
+	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, const VM *vm) {
 		std::string coloredImm;
 		if (vm && flags == static_cast<int>(Flags::KnownSymbol)) {
 			for (const std::pair<std::string, Symbol> pair: vm->symbolTable) {
@@ -204,7 +205,8 @@ namespace WVM::Unparser {
 		return "I: Opcode[" + std::to_string(opcode) + "], " + color(rs) + " " + coloredImm + " -> " + color(rd);
 	}
 
-	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, int flags, HWord address, VM *vm) {
+	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, int flags, HWord address,
+	const VM *vm) {
 		std::string coloredAddress;
 		if (vm && flags == static_cast<int>(Flags::KnownSymbol)) {
 			for (const std::pair<std::string, Symbol> &pair: vm->symbolTable) {

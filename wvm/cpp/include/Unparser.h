@@ -6,11 +6,13 @@
 #include "Defs.h"
 
 namespace WVM::Unparser {
-	std::string stringify(UWord instruction, VM *vm = nullptr);
+	std::string stringify(UWord instruction, const VM *vm = nullptr);
 
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions, int funct);
-	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, VM * = nullptr);
-	std::string stringifyJType(int opcode, int rs, bool link, Conditions, int flags, HWord address, VM * = nullptr);
+	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate,
+		const VM * = nullptr);
+	std::string stringifyJType(int opcode, int rs, bool link, Conditions, int flags, HWord address,
+		const VM * = nullptr);
 
 	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix = "");
 	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper);

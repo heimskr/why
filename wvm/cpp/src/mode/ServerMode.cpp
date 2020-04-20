@@ -84,7 +84,7 @@ namespace WVM::Mode {
 			std::stringstream to_send;
 			to_send << ":MemoryWords 0 " << (vm.endOffset / 8) << std::hex;
 			for (Word i = 0; i < vm.endOffset; i += 8)
-				to_send << " " << vm.getWord(i);
+				to_send << " " << vm.getWord(i, Endianness::Little);
 			server.send(client, to_send.str());
 		} else if (verb == "Init") {
 			vm.init();
@@ -103,7 +103,7 @@ namespace WVM::Mode {
 			}
 
 			if (size == 3) {
-				unsigned long new_value;
+				UWord new_value;
 				if (!Util::parseUL(split[2], new_value)) {
 					invalid();
 					return;
@@ -128,7 +128,7 @@ namespace WVM::Mode {
 				return;
 			}
 
-			unsigned long int address;
+			UWord address;
 			if (!Util::parseUL(split[1], address)) {
 				invalid();
 				return;
@@ -152,7 +152,7 @@ namespace WVM::Mode {
 				return;
 			}
 
-			unsigned long int address, value;
+			UWord address, value;
 			if (!Util::parseUL(split[1], address) || !Util::parseUL(split[2], value)) {
 				invalid();
 				return;

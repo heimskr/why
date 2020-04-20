@@ -28,15 +28,15 @@ namespace WVM::Util {
 		return out;
 	}
 
-	bool parseUL(const std::string &str, unsigned long int &out, int base) {
+	bool parseUL(const std::string &str, unsigned long long &out, int base) {
 		char *endptr;
-		out = strtoul(str.c_str(), &endptr, base);
+		out = strtoull(str.c_str(), &endptr, base);
 		return static_cast<unsigned long>(endptr - str.c_str()) == str.size();
 	}
 
-	bool parseLong(const std::string &str, long &out, int base) {
+	bool parseLong(const std::string &str, long long &out, int base) {
 		char *endptr;
-		out = strtol(str.c_str(), &endptr, base);
+		out = strtoll(str.c_str(), &endptr, base);
 		return static_cast<unsigned long>(endptr - str.c_str()) == str.size();
 	}
 }

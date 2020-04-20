@@ -1,3 +1,4 @@
+#include "Defs.h"
 #include "lib/ansi.h"
 #include "mode/ConsoleMode.h"
 #include "Util.h"
@@ -60,7 +61,7 @@ namespace WVM::Mode {
 		} else if (verb == "Subscribed") {
 			textbox += std::string(infoPrefix) + "Subscribed to " + rest;
 		} else if (verb == "Register") {
-			long registerID, newValue;
+			Word registerID, newValue;
 			if (split.size() != 2 || !Util::parseLong(split[0], registerID) || !Util::parseLong(split[1], newValue)) {
 				textbox += std::string(errorPrefix) + "Invalid response from server.";
 				DBG("Bad Register response [" << rest << "]");
@@ -88,11 +89,11 @@ namespace WVM::Mode {
 			if (size == 0) {
 				*socket << ":Tick\n";
 			} else if (size == 1) {
-				long ticks;
+				Word ticks;
 				if (!Util::parseLong(split[0], ticks)) {
 					badInput();
 				} else {
-					for (long i = 0; i < ticks; ++i)
+					for (Word i = 0; i < ticks; ++i)
 						*socket << ":Tick\n";
 				}
 			} else {
