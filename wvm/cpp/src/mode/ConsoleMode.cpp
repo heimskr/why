@@ -15,6 +15,7 @@ namespace WVM::Mode {
 
 		terminal.on_interrupt = [this]() {
 			stop();
+			terminal.mouse(haunted::mouse_mode::none);
 			return true;
 		};
 
@@ -32,6 +33,7 @@ namespace WVM::Mode {
 		input.set_prefix("\e[2m>>\e[22m ");
 		textbox.set_background(ansi::color::verydark);
 		textbox.set_autoscroll(true);
+		terminal.mouse(haunted::mouse_mode::motion);
 		textbox.draw();
 		terminal.watch_size();
 		terminal.join();
