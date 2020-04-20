@@ -23,9 +23,14 @@ namespace WVM::Mode {
 	void ServerMode::initVM() {
 		vm.onUpdateMemory = [&](Word address) {
 			for (int client: memorySubscribers) {
-				server.send(client, ":MemoryUpdate " + std::to_string(address) + " " +
+				server.send(client, ":MemoryWord " + std::to_string(address) + " " +
 					std::to_string(vm.getWord(address)));
 			}
+		};
+
+		vm.onRegisterChange = [&](unsigned char id) {
+			for (int client: registerSubscribers)
+				server.send(client, ":Register " + std::to_string(id) + " " + std::to_string(vm.registers[id]));
 		};
 	}
 
@@ -104,7 +109,7 @@ namespace WVM::Mode {
 				vm.registers[reg] = new_value;
 			}
 
-			server.send(client, ":Reg " + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
+			server.send(client, ":Register " + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "PrintOps") {
 			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
 				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m " << Unparser::stringify(vm.getInstruction(i))
