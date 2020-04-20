@@ -28,7 +28,7 @@ namespace WVM::Mode {
 		terminal.start_input();
 		terminal.set_root(&*expando);
 		input.focus();
-		textbox.set_background(ansi::color::gray);
+		textbox.set_background(ansi::color::verydark);
 		textbox.draw();
 		terminal.watch_size();
 		terminal.join();
