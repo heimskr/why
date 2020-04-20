@@ -123,6 +123,9 @@ namespace WVM::Mode {
 			}
 
 			server.send(client, ":PC " + std::to_string(vm.programCounter));
+		} else if (verb == "Registers") {
+			for (int i = 0; i < Why::totalRegisters; ++i)
+				server.send(client, ":Reg " + Why::registerName(i) + " " + std::to_string(vm.registers[i]));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
