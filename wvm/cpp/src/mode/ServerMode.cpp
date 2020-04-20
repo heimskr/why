@@ -34,11 +34,18 @@ namespace WVM::Mode {
 			for (int client: registerSubscribers)
 				server.send(client, message);
 		};
+
+		vm.onJump = [&](Word, Word to) {
+			const std::string message = ":PC " + std::to_string(to);
+			for (int client: pcSubscribers)
+				server.send(client, message);
+		};
 	}
 
 	void ServerMode::cleanupClient(int client) {
 		memorySubscribers.erase(client);
 		registerSubscribers.erase(client);
+		pcSubscribers.erase(client);
 	}
 
 	void ServerMode::stop() {
@@ -74,6 +81,9 @@ namespace WVM::Mode {
 				memorySubscribers.insert(client);
 			} else if (to == "registers") {
 				registerSubscribers.insert(client);
+			} else if (to == "pc") {
+				pcSubscribers.insert(client);
+				server.send(client, ":PC " + std::to_string(vm.programCounter));
 			} else {
 				invalid();
 				return;

@@ -5,6 +5,9 @@ namespace WVM::Mode {
 		socket.emplace(hostname, port);
 		socket->connect();
 		buffer.emplace(&*socket);
+	}
+
+	void ClientMode::loop() {
 		std::iostream stream(&*buffer);
 		std::string line;
 		while (std::getline(stream, line)) {

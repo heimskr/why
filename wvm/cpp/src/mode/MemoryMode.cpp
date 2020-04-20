@@ -11,8 +11,10 @@ namespace WVM::Mode {
 	}
 
 	void MemoryMode::run(const std::string &hostname, int port) {
+		ClientMode::run(hostname, port);
+
 		networkThread = std::thread([&]() {
-			ClientMode::run(hostname, port);
+			loop();
 		});
 
 		terminal.on_interrupt = [this]() {
@@ -28,10 +30,6 @@ namespace WVM::Mode {
 			if (key == haunted::kmod::ctrl) {
 				if (key == 't') {
 					*buffer << ":Tick\n";
-				} else if (key == 'm') {
-					*buffer << ":Subscribe memory\n";
-				} else if (key == 'r') {
-					*buffer << ":Subscribe registers\n";
 				} else if (key == 'g') {
 					*buffer << ":GetMain \n";
 				} else if (key == 'b') {
@@ -50,6 +48,9 @@ namespace WVM::Mode {
 		textbox.focus();
 		expando->draw();
 		terminal.watch_size();
+		*buffer << ":GetMain\n";
+		*buffer << ":Subscribe memory\n";
+		*buffer << ":Subscribe pc\n";
 		terminal.join();
 		networkThread.join();
 	}
@@ -71,13 +72,14 @@ namespace WVM::Mode {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
 					std::string str = "\e[2m";
-					str.reserve(2 * (40 + padding));
-					for (int i = 0; i < 40 + padding; ++i)
-						str += "─";
+					str.reserve(50 + padding);
+					for (int i = 0; i < 50 + padding; ++i)
+						str += "-";
 					textbox += str + "\e[22m";
 				}
 				textbox += stringify(address);
-				lines.emplace(i, textbox.get_lines().back());
+				DBG("emplacing " << address);
+				lines.emplace(address, textbox.get_lines().back());
 				if (i == height) {
 					textbox.suppress_draw = false;
 					textbox.draw();
@@ -95,6 +97,8 @@ namespace WVM::Mode {
 	std::string MemoryMode::stringify(Word address) const {
 		std::stringstream ss;
 		UWord word = vm.getWord(address, Endianness::Big);
+		if (vm.programCounter == address)
+			ss << "\e[48;5;22m\e[2K";
 		ss << "\e[2m[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
 
@@ -112,6 +116,7 @@ namespace WVM::Mode {
 			ss << Unparser::stringify(word, &vm);
 		}
 
+		ss << "\e[49m";
 		return ss.str();
 	}
 
@@ -169,6 +174,22 @@ namespace WVM::Mode {
 
 			vm.init();
 			vm.loadSymbols();
+		} else if (verb == "PC") {
+			Word to;
+			if (size != 1 || !Util::parseLong(split[0], to)) {
+				DBG("Bad message (" << verb << "): [" << rest << "]");
+				return;
+			}
+
+			Word old_pc = vm.programCounter;
+			vm.jump(to);
+			if (lines.count(old_pc) == 1)
+				updateLine(old_pc);
+			DBG("Jump: " << to);
+			if (lines.count(to) == 1)
+				updateLine(to);
+		} else {
+			DBG("[" << message << "]");
 		}
 	}
 }

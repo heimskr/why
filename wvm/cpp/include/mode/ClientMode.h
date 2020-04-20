@@ -16,6 +16,7 @@ namespace WVM::Mode {
 
 		public:
 			virtual void run(const std::string &hostname, int port);
+			virtual void loop();
 			virtual void stop();
 			virtual void handleMessage(const std::string &) = 0;
 	};
