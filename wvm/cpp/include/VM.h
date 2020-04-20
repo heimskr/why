@@ -41,6 +41,12 @@ namespace WVM {
 			Word dataOffset = -1;
 			Word  endOffset = -1;
 
+			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
+			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
+			std::function<void()> onInterruptTableChange = []() {};
+			std::function<void(Word)> onUpdateMemory = [](Word) {};
+			std::function<void(Word, Word)> onJump = [](Word, Word) {};
+
 			VM(size_t memory_size);
 
 			void setWord(Word address, Word value, Endianness = Endianness::Little);
@@ -51,6 +57,7 @@ namespace WVM {
 			Byte getByte(Word address) const;
 			std::string getString(Word address, int max = -1) const;
 			Word getInstruction(Word address) const;
+			unsigned char registerID(Word &) const;
 
 			void jump(Word, bool should_link = false);
 			void link();

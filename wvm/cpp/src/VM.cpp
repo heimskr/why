@@ -26,6 +26,7 @@ namespace WVM {
 			for (char i = 0; i < 8; i++)
 				memory[address + 7 - i] = (value >> (8*i)) & 0xff;
 		}
+		onUpdateMemory(address);
 	}
 
 	void VM::setHalfword(Word address, HWord value, Endianness endianness) {
@@ -36,10 +37,12 @@ namespace WVM {
 			for (char i = 0; i < 4; i++)
 				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
 		}
+		onUpdateMemory(address);
 	}
 
 	void VM::setByte(Word address, Byte value) {
 		memory[address] = value;
+		onUpdateMemory(address);
 	}
 
 	Word VM::getWord(Word address, Endianness endianness) const {
@@ -90,10 +93,16 @@ namespace WVM {
 		return getWord(address, Endianness::Big);
 	}
 
+	unsigned char VM::registerID(Word &word) const {
+		return &word - registers;
+	}
+
 	void VM::jump(Word address, bool should_link) {
 		if (should_link)
 			link();
+		Word old_address = programCounter;
 		programCounter = address;
+		onJump(old_address, address);
 	}
 
 	void VM::link() {
@@ -105,6 +114,7 @@ namespace WVM {
 	}
 
 	bool VM::changeRing(Ring new_ring) {
+		Ring old_ring = ring;
 		if (static_cast<int>(new_ring) < Why::ringMin || Why::ringMax < static_cast<int>(new_ring)) {
 			intProtec();
 			return false;
@@ -114,15 +124,19 @@ namespace WVM {
 		}
 
 		ring = new_ring;
+		onRingChange(old_ring, new_ring);
 		return true;
 	}
 
 	void VM::updateFlags(Word result) {
+		Word old_value = st();
 		st() = 0;
 		if (result == 0)
 			setZ(true);
 		else if (result < 0)
 			setN(true);
+		if (old_value != st())
+			onRegisterChange(Why::statusOffset);
 	}
 
 	bool VM::checkConditions(Conditions conditions) {
