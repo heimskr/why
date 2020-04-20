@@ -71,6 +71,33 @@ namespace WVM::Mode {
 	}
 
 	void ConsoleMode::handleInput(const std::string &text) {
-		*socket << text << "\n";
+		if (text.empty())
+			return;
+
+		const size_t space = text.find(' ');
+		const std::string first = text.substr(0, space);
+		const std::string rest = space == std::string::npos? "" : text.substr(space + 1);
+		const std::vector<std::string> split = Util::split(rest, " ", false);
+		const size_t size = split.size();
+
+		if (first == "tick") {
+			if (size == 0) {
+				*socket << ":Tick\n";
+			} else if (size == 1) {
+				long ticks;
+				if (!Util::parseLong(split[0], ticks)) {
+					textbox += std::string(errorPrefix) + "Invalid input.";
+				} else {
+					for (long i = 0; i < ticks; ++i)
+						*socket << ":Tick\n";
+				}
+			} else {
+				textbox += std::string(errorPrefix) + "Invalid input.";
+			}
+		} else if (text.front() == ':') {
+			*socket << text << "\n";
+		} else {
+			textbox += std::string(errorPrefix) + "Unrecognized input.";
+		}
 	}
 }
