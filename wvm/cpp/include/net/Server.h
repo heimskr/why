@@ -42,6 +42,7 @@ namespace WVM::Net {
 			virtual void handleMessage(int client, const std::string &message);
 			virtual void end(int descriptor);
 			void send(int client, const std::string &message, bool suppress_newline = false);
+			void removeClient(int);
 			void run();
 			void stop();
 

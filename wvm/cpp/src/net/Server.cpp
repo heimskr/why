@@ -53,7 +53,8 @@ namespace WVM::Net {
 			std::tie(index, delimiter_size) = isMessageComplete(str, old_size);
 			if (index != -1) {
 				handleMessage(clients.at(descriptor), str.substr(0, index));
-				str.erase(0, index + delimiter_size);
+				if (clients.count(descriptor) == 1)
+					str.erase(0, index + delimiter_size);
 			}
 		}
 	}
@@ -81,6 +82,10 @@ namespace WVM::Net {
 		::write(descriptors.at(client), message.c_str(), message.size());
 		if (!suppress_newline)
 			::write(descriptors.at(client), "\n", 1);
+	}
+
+	void Server::removeClient(int client) {
+		end(descriptors.at(client));
 	}
 
 	void Server::run() {

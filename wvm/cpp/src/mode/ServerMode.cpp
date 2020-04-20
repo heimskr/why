@@ -37,6 +37,8 @@ namespace WVM::Mode {
 
 		if (verb == "Stop") {
 			stop();
+		} else if (verb == "Close") {
+			server.removeClient(client);
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {
