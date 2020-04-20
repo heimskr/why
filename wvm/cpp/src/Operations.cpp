@@ -183,6 +183,7 @@ namespace WVM::Operations {
 			case OP_RIT:       ritOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_TIMEI:   timeiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_RINGI:   ringiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_CMPI:     cmpiOp(vm, rs, rd, conditions, flags, immediate); return;
 		}
 
 		throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
@@ -513,8 +514,8 @@ namespace WVM::Operations {
 		vm.increment();
 	}
 
-	void cmpOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
-		// TODO
+	void cmpOp(VM &vm, Word &rs, Word &rt, Word &, Conditions, int) {
+		vm.updateFlags(rs - rt):
 		vm.increment();
 	}
 
@@ -560,8 +561,8 @@ namespace WVM::Operations {
 		vm.increment();
 	}
 
-	void cmpiOp(VM &vm, Word &, Word &, Conditions, int, HWord) {
-		// TODO
+	void cmpiOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		vm.updateFlags(rs - immediate);
 		vm.increment();
 	}
 
