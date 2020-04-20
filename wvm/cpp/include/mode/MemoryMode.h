@@ -17,14 +17,14 @@ namespace WVM::Mode {
 			std::thread networkThread;
 			std::optional<haunted::ui::boxes::expandobox> expando;
 			haunted::ui::textbox textbox;
-			VM vmCopy;
+			VM vm;
 			std::map<int, std::shared_ptr<haunted::ui::textline>> lines;
 
 		public:
 			Word min = 0, max = 0;
 			int padding = 5;
 
-			MemoryMode(): ClientMode(), vmCopy(0) {}
+			MemoryMode(): ClientMode(), vm(0) {}
 			~MemoryMode();
 
 			void run(const std::string &hostname, int port) override;

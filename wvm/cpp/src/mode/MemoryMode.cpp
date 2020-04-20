@@ -68,6 +68,14 @@ namespace WVM::Mode {
 
 		std::thread loop = std::thread([&]() {
 			for (Word address = min, i = 0; address < max; address += 8, ++i) {
+				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
+				    || address == vm.endOffset) {
+					std::string str = "\e[2m";
+					str.reserve(2 * (40 + padding));
+					for (int i = 0; i < 40 + padding; ++i)
+						str += "─";
+					textbox += str + "\e[22m";
+				}
 				textbox += stringify(address);
 				lines.emplace(i, textbox.get_lines().back());
 				if (i == height) {
@@ -86,14 +94,22 @@ namespace WVM::Mode {
 
 	std::string MemoryMode::stringify(Word address) const {
 		std::stringstream ss;
-		UWord word = vmCopy.getWord(address, Endianness::Big);
+		UWord word = vm.getWord(address, Endianness::Big);
 		ss << "\e[2m[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
 
 		if (address < 32) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
-		} else if (vmCopy.codeOffset <= address && address < vmCopy.dataOffset) {
-			ss << Unparser::stringify(word, &vmCopy);
+		} else if (address < vm.symbolsOffset) {
+			for (int i = 0; i < 8; ++i) {
+				char ch = static_cast<char>(vm.getByte(address + i));
+				if (ch < 32)
+					ss << "\e[2m.\e[22m";
+				else
+					ss << ch;
+			}
+		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
+			ss << Unparser::stringify(word, &vm);
 		}
 
 		return ss.str();
@@ -141,18 +157,18 @@ namespace WVM::Mode {
 			if (max < start + count * 8)
 				max = start + count * 8;
 
-			vmCopy.reserve(start + count * 8);
+			vm.reserve(start + count * 8);
 			for (Word address = start, i = 0; i < count; address += 8, ++i) {
 				if (!Util::parseUL(split[i + 2], uword, 16))
 					DBG("Invalid word at index " << i << ": " << split[i + 2]);
 				else
-					vmCopy.setWord(address, uword, Endianness::Little);
+					vm.setWord(address, uword, Endianness::Little);
 			}
 
 			padding = std::to_string(max).size();
 
-			vmCopy.init();
-			vmCopy.loadSymbols();
+			vm.init();
+			vm.loadSymbols();
 		}
 	}
 }

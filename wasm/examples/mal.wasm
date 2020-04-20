@@ -1,5 +1,6 @@
 #meta
 name: "combined.c"
+author: "Kai Tamkun"
 
 #data
 .str.49: "]\x0A\x00"
