@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include "mode/ServerMode.h"
 #include "Unparser.h"
@@ -71,6 +72,12 @@ namespace WVM::Mode {
 			}
 
 			server.send(client, ":Subscribed " + to);
+		} else if (verb == "GetMain") {
+			std::stringstream to_send;
+			to_send << ":MemoryWords 0 " << (vm.endOffset / 8) << std::hex;
+			for (Word i = 0; i < vm.endOffset; i += 8)
+				to_send << " " << vm.getWord(i);
+			server.send(client, to_send.str());
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {
