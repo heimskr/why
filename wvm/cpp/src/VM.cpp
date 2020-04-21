@@ -6,6 +6,7 @@
 #include "Operations.h"
 #include "Util.h"
 #include "VM.h"
+#include "VMError.h"
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
@@ -20,6 +21,11 @@ namespace WVM {
 	void VM::setO(bool on) { st() = (st() & ~0b1000) | (on << 3); }
 
 	void VM::setWord(Word address, Word value, Endianness endianness) {
+		if (static_cast<Word>(memorySize) <= address - 7) {
+			throw VMError("Out-of-bounds memory access in VM::setWord (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address - 7) + ")");
+		}
+
 		if (endianness == Endianness::Little) {
 			for (char i = 0; i < 8; i++)
 				memory[address + i] = (value >> (8*i)) & 0xff;
@@ -33,6 +39,11 @@ namespace WVM {
 	}
 
 	void VM::setHalfword(Word address, HWord value, Endianness endianness) {
+		if (static_cast<Word>(memorySize) <= address - 3) {
+			throw VMError("Out-of-bounds memory access in VM::setHalfword (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address - 3) + ")");
+		}
+
 		if (endianness == Endianness::Little) {
 			for (char i = 0; i < 4; i++)
 				memory[address + i] = (value >> (8*i)) & 0xff;
@@ -46,11 +57,19 @@ namespace WVM {
 	}
 
 	void VM::setByte(Word address, Byte value) {
+		if (static_cast<Word>(memorySize) <= address) {
+			throw VMError("Out-of-bounds memory access in VM::setByte (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address) + ")");
+		}
 		memory[address] = value;
 		onUpdateMemory(address - (address % 8));
 	}
 
 	Word VM::getWord(Word address, Endianness endianness) const {
+		if (static_cast<Word>(memorySize) <= address - 7) {
+			throw VMError("Out-of-bounds memory access in VM::getWord (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address - 7) + ")");
+		}
 		Word out = 0;
 
 		if (endianness == Endianness::Little) {
@@ -65,6 +84,10 @@ namespace WVM {
 	}
 
 	HWord VM::getHalfword(Word address, Endianness endianness) const {
+		if (static_cast<Word>(memorySize) <= address - 3) {
+			throw VMError("Out-of-bounds memory access in VM::getHalfword (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address - 3) + ")");
+		}
 		HWord out = 0;
 
 		if (endianness == Endianness::Little) {
@@ -79,6 +102,10 @@ namespace WVM {
 	}
 
 	Byte VM::getByte(Word address) const {
+		if (static_cast<Word>(memorySize) <= address) {
+			throw VMError("Out-of-bounds memory access in VM::getByte (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address) + ")");
+		}
 		return memory[address];
 	}
 
