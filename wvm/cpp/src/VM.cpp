@@ -8,9 +8,7 @@
 #include "VM.h"
 
 namespace WVM {
-	VM::VM(size_t memory_size): memorySize(memory_size) {
-		memory.reserve(memory_size);
-	}
+	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
 
 	bool VM::getZ() { return (st() & 0b0001) != 0; }
 	bool VM::getN() { return (st() & 0b0010) != 0; }
@@ -202,6 +200,7 @@ namespace WVM {
 	}
 
 	void VM::load(const std::filesystem::path &path) {
+		loadedFrom = path;
 		std::ifstream stream;
 		try {
 			stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -218,6 +217,8 @@ namespace WVM {
 	void VM::load(std::istream &stream) {
 		std::string line;
 		int lineno = 0;
+		memory.clear();
+		memory.reserve(memorySize);
 		while (std::getline(stream, line)) {
 			++lineno;
 			char *endptr;
@@ -226,6 +227,9 @@ namespace WVM {
 				throw std::runtime_error("Invalid line (" + std::to_string(lineno) + ")");
 			setWord(8 * (lineno - 1), word, Endianness::Big);
 		}
+
+		if (keepInitial)
+			initial = memory;
 
 		init();
 	}
@@ -242,7 +246,18 @@ namespace WVM {
 		loadSymbols();
 	}
 
+	void VM::reset() {
+		if (keepInitial)
+			memory = initial;
+		else if (!loadedFrom.empty())
+			load(loadedFrom);
+		else
+			throw std::runtime_error("Unable to reset VM: no initial memory or path was stored");
+		init();
+	}
+
 	void VM::loadSymbols() {
+		symbolTable.clear();
 		for (Word i = symbolsOffset; i < codeOffset;) {
 			const HWord hash = getHalfword(i, Endianness::Big);
 			const HWord length = getHalfword(i + 4, Endianness::Big);

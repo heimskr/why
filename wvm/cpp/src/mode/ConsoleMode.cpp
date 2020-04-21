@@ -109,6 +109,8 @@ namespace WVM::Mode {
 			} else {
 				badInput();
 			}
+		} else if (first == "r" || first == "res" || first == "reset") {
+			*socket << ":Reset\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

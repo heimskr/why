@@ -31,9 +31,11 @@ namespace WVM::Mode {
 				if (key == 't') {
 					*buffer << ":Tick\n";
 				} else if (key == 'g') {
-					*buffer << ":GetMain \n";
+					*buffer << ":GetMain\n";
 				} else if (key == 'b') {
 					remakeList();
+				} else if (key == 'r') {
+					*buffer << ":Reset\n:GetMain\n";
 				} else if (key == 'l') {
 					terminal.redraw();
 				} else return false;

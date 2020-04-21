@@ -196,6 +196,10 @@ namespace WVM::Mode {
 				for (int i = 0; i < Why::totalRegisters; ++i)
 					server.send(client, ":Register $" + Why::registerName(i) + " " + std::to_string(vm.registers[i]));
 			}
+		} else if (verb == "Reset") {
+			vm.reset();
+			server.send(client, ":PC " + std::to_string(vm.programCounter));
+			server.send(client, ":ResetComplete");
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}

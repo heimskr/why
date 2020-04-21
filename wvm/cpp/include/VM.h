@@ -17,8 +17,10 @@ namespace WVM {
 
 	class VM {
 		private:
-			std::vector<UByte> memory;
+			std::vector<UByte> memory, initial;
+			std::filesystem::path loadedFrom;
 			size_t memorySize;
+			bool keepInitial;
 			Ring ring = Ring::Zero;
 			bool active = false;
 			size_t cycles = 0;
@@ -48,7 +50,7 @@ namespace WVM {
 			std::function<void(Word)> onUpdateMemory = [](Word) {};
 			std::function<void(Word, Word)> onJump = [](Word, Word) {};
 
-			VM(size_t memory_size);
+			VM(size_t memory_size, bool keep_initial = true);
 
 			void setWord(Word address, Word value, Endianness = Endianness::Little);
 			void setHalfword(Word address, HWord value, Endianness = Endianness::Little);
@@ -78,6 +80,7 @@ namespace WVM {
 			void load(const std::filesystem::path &);
 			void load(std::istream &);
 			void init();
+			void reset();
 			void loadSymbols();
 
 			Word & hi();
