@@ -8,10 +8,6 @@
 #include "Util.h"
 
 namespace WVM::Mode {
-	RegistersMode::~RegistersMode() {
-		terminal.join();
-	}
-
 	void RegistersMode::run(const std::string &hostname, int port) {
 		ClientMode::run(hostname, port);
 

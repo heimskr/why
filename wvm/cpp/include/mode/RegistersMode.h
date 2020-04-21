@@ -30,7 +30,6 @@ namespace WVM::Mode {
 
 		public:
 			RegistersMode(): ClientMode() {}
-			~RegistersMode();
 
 			void run(const std::string &hostname, int port) override;
 			void remakeList();

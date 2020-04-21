@@ -7,10 +7,6 @@
 #include "Util.h"
 
 namespace WVM::Mode {
-	MemoryMode::~MemoryMode() {
-		terminal.join();
-	}
-
 	void MemoryMode::run(const std::string &hostname, int port) {
 		ClientMode::run(hostname, port);
 

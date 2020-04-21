@@ -32,7 +32,6 @@ namespace WVM::Mode {
 			int padding = 5;
 
 			MemoryMode(): ClientMode(), vm(0) {}
-			~MemoryMode();
 
 			void run(const std::string &hostname, int port) override;
 			void remakeList();
