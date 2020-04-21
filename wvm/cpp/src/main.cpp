@@ -6,6 +6,7 @@
 #include "mode/ConsoleMode.h"
 #include "mode/MemoryMode.h"
 #include "mode/OutputMode.h"
+#include "mode/RegistersMode.h"
 #include "mode/ServerMode.h"
 #include "net/NetError.h"
 #include "net/Server.h"
@@ -59,7 +60,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (arg == "registers") {
-		
+		WVM::Mode::RegistersMode registers;
+		registers.run(hostname, port);
 	} else if (arg == "memory") {
 		WVM::Mode::MemoryMode memory;
 		memory.run(hostname, port);

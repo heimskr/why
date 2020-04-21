@@ -46,6 +46,8 @@ namespace WVM::Mode {
 				} else if (key == 'l') {
 					terminal.redraw();
 				} else return false;
+			} else if (key == '.') {
+				*buffer << ":Tick\n";
 			} else return false;
 			return true;
 		};
