@@ -11,7 +11,6 @@
 #include "Util.h"
 
 void sigint_handler(int) {
-	std::cout << "Oh no!\n";
 	if (WVM::Mode::ServerMode::instance)
 		WVM::Mode::ServerMode::instance->stop();
 }
