@@ -116,6 +116,7 @@ namespace WVM::Mode {
 			if (to == "memory") {
 				memorySubscribers.insert(client);
 				ffSubscribers.insert(client);
+				server.send(client, ":MemorySize " + std::to_string(vm.getMemorySize()));
 			} else if (to == "registers") {
 				registerSubscribers.insert(client);
 				ffSubscribers.insert(client);

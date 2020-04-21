@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <sstream>
 
+#include <unistd.h>
+
 #include "lib/ansi.h"
 #include "mode/MemoryMode.h"
 #include "Unparser.h"
@@ -12,6 +14,26 @@ namespace WVM::Mode {
 
 		networkThread = std::thread([&]() {
 			loop();
+		});
+
+		autotickThread = std::thread([&]() {
+			while (true) {
+				if (autotick == -1) {
+					std::unique_lock<std::mutex> lock(autotickMutex);
+					autotickVariable.wait(lock, [this] { return autotickReady; });
+				}
+
+				// Strictly speaking I should use a mutex to check autotick, but because I want to avoid the overhead of
+				// locking a mutex repeatedly and I don't mind a few accidental extra ticks, I'm deciding not to. To
+				// avoid having to repeatedly lock the network mutex, I'm locking it here just once, which has the side
+				// effect of making it impossible to send anything else while autotick is enabled, but that's the
+				// behavior I want anyway.
+				std::unique_lock lock(networkMutex);
+				while (autotick != -1) {
+					*buffer << ":Tick\n";
+					usleep(autotick);
+				}
+			}
 		});
 
 		terminal.on_interrupt = [this]() {
@@ -26,13 +48,13 @@ namespace WVM::Mode {
 		textbox.key_fn = [&](const haunted::key &key) {
 			if (key == haunted::kmod::ctrl) {
 				if (key == 't') {
-					*buffer << ":Tick\n";
+					send(":Tick");
 				} else if (key == 'g') {
-					*buffer << ":GetMain\n";
+					send(":GetMain");
 				} else if (key == 'b') {
 					remakeList();
 				} else if (key == 'r') {
-					*buffer << ":Reset\n:GetMain\n";
+					send(":Reset\n" ":GetMain");
 				} else if (key == 'f') {
 					follow = !follow;
 					if (follow)
@@ -42,8 +64,19 @@ namespace WVM::Mode {
 				} else if (key == 'l') {
 					terminal.redraw();
 				} else return false;
-			} else if (key == '.') {
-				*buffer << ":Tick\n";
+			} else if (key == '.' && autotick == -1) {
+				send(":Tick");
+			} else if (key == ' ') {
+				if (autotick == -1)
+					startAutotick();
+				else
+					autotick = -1;
+			} else if (key == '<') {
+				if (autotick != -1)
+					DBG("autotick = " << (autotick *= 1.1));
+			} else if (key == '>') {
+				if (autotick != -1)
+					DBG("autotick = " << (autotick /= 1.1));
 			} else return false;
 			return true;
 		};
@@ -55,9 +88,7 @@ namespace WVM::Mode {
 		textbox.focus();
 		expando->draw();
 		terminal.watch_size();
-		*buffer << ":GetMain\n";
-		*buffer << ":Subscribe memory\n";
-		*buffer << ":Subscribe pc\n";
+		send(":GetMain\n" ":Subscribe memory\n" ":Subscribe pc");
 		terminal.join();
 		networkThread.join();
 	}
@@ -74,7 +105,7 @@ namespace WVM::Mode {
 
 		const int height = textbox.get_position().height;
 
-		std::thread loop = std::thread([&]() {
+		std::thread loops = std::thread([&]() {
 			for (Word address = min, i = 0; address < max; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
@@ -88,9 +119,16 @@ namespace WVM::Mode {
 					textbox.suppress_draw = true;
 				}
 			}
+
+			Word size = static_cast<Word>(vm.getMemorySize());
+			for (Word address = size - 100 * 8; address < size; address += 8) {
+				DBG("address[" << address << "], size[" << size << "]");
+				textbox += stringify(address);
+				lines.emplace(address, textbox.get_lines().back());
+			}
 		});
 
-		loop.join();
+		loops.join();
 		textbox.suppress_draw = false;
 		terminal.redraw();
 	}
@@ -196,6 +234,26 @@ namespace WVM::Mode {
 			vm.init();
 			vm.loadSymbols();
 			makeSymbolTableEdges();
+		} else if (verb == "MemoryWord") {
+			Word address, value;
+			if (size < 2 || !Util::parseLong(split[0], address) || !Util::parseLong(split[1], value)) {
+				DBG("Bad message (" << verb << "): [" << rest << "]");
+				return;
+			}
+
+			vm.setWord(address, value);
+			try {
+				updateLine(address);
+			} catch (const std::out_of_range &) {}
+			DBG("address[" << address << "], value[" << value << "]");
+		} else if (verb == "MemorySize") {
+			Word to_reserve;
+			if (size != 1 || !Util::parseLong(split[0], to_reserve)) {
+				DBG("Bad message (" << verb << "): [" << rest << "]");
+				return;
+			}
+
+			vm.reserve(to_reserve);
 		} else if (verb == "PC") {
 			Word to;
 			if (size != 1 || !Util::parseLong(split[0], to)) {
@@ -234,6 +292,20 @@ namespace WVM::Mode {
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
+		}
+	}
+
+	void MemoryMode::startAutotick() {
+		autotick = 50'000;
+		std::unique_lock<std::mutex> lock(autotickMutex);
+		autotickReady = true;
+		autotickVariable.notify_one();
+	}
+
+	void MemoryMode::send(const std::string &to_send) {
+		if (networkMutex.try_lock()) {
+			*buffer << to_send << "\n";
+			networkMutex.unlock();
 		}
 	}
 

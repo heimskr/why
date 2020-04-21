@@ -1,7 +1,9 @@
 #ifndef WVM_MODE_MEMORYMODE_H_
 #define WVM_MODE_MEMORYMODE_H_
 
+#include <condition_variable>
 #include <map>
+#include <mutex>
 #include <optional>
 #include <thread>
 #include <unordered_set>
@@ -16,7 +18,6 @@ namespace WVM::Mode {
 	class MemoryMode: public ClientMode {
 		private:
 			haunted::terminal terminal;
-			std::thread networkThread;
 			std::optional<haunted::ui::boxes::expandobox> expando;
 			haunted::ui::textbox textbox;
 			VM vm;
@@ -24,12 +25,23 @@ namespace WVM::Mode {
 			std::unordered_set<Word> symbolTableEdges;
 			bool follow = true, fastForward = false;
 
+			int autotick = -1;
+			std::thread autotickThread;
+			bool autotickReady = false;
+			std::mutex autotickMutex;
+			std::condition_variable autotickVariable;
+
+			std::thread networkThread;
+			std::mutex networkMutex;
+
+			void startAutotick();
+			void send(const std::string &);
 			void jumpToPC();
 			haunted::ui::simpleline & getLine(Word address);
 
 		public:
 			Word min = 0, max = 0;
-			int padding = 5;
+			int padding = 6;
 
 			MemoryMode(): ClientMode(), vm(0) {}
 

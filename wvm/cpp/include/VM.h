@@ -84,6 +84,8 @@ namespace WVM {
 			void reset();
 			void loadSymbols();
 
+			size_t getMemorySize() { return memorySize; }
+
 			Word & hi();
 			Word & lo();
 			Word & st();
