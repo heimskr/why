@@ -122,7 +122,6 @@ namespace WVM::Mode {
 
 			Word size = static_cast<Word>(vm.getMemorySize());
 			for (Word address = size - 100 * 8; address < size; address += 8) {
-				DBG("address[" << address << "], size[" << size << "]");
 				textbox += stringify(address);
 				lines.emplace(address, textbox.get_lines().back());
 			}
