@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <sstream>
 
 #include "lib/ansi.h"
@@ -36,6 +37,12 @@ namespace WVM::Mode {
 					remakeList();
 				} else if (key == 'r') {
 					*buffer << ":Reset\n:GetMain\n";
+				} else if (key == 'f') {
+					follow = !follow;
+					if (follow)
+						jumpToPC();
+				} else if (key == 'p') {
+					jumpToPC();
 				} else if (key == 'l') {
 					terminal.redraw();
 				} else return false;
@@ -130,15 +137,9 @@ namespace WVM::Mode {
 	}
 
 	void MemoryMode::updateLine(Word address) {
-		if (lines.count(address) == 0)
-			throw std::out_of_range("Line " + std::to_string(address) + " is missing");
-
-		std::shared_ptr<haunted::ui::textline> &line = lines.at(address);
-
-		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(line.get())) {
-			simple->text = stringify(address);
-			textbox.redraw_line(*simple);
-		} else throw std::runtime_error("Unable to cast line to haunted::ui::simpleline");
+		haunted::ui::simpleline &simple = getLine(address);
+		simple.text = stringify(address);
+		textbox.redraw_line(simple);
 	}
 
 	void MemoryMode::makeSymbolTableEdges() {
@@ -208,8 +209,38 @@ namespace WVM::Mode {
 				updateLine(old_pc);
 			if (lines.count(to) == 1)
 				updateLine(to);
+			if (follow)
+				jumpToPC();
 		} else {
 			DBG("[" << message << "]");
 		}
+	}
+
+	void MemoryMode::jumpToPC() {
+		try {
+			haunted::ui::simpleline &simple = getLine(vm.programCounter);
+			int rows = 0;
+			for (haunted::ui::textbox::line_ptr &line: textbox.get_lines()) {
+				if (line.get() == &simple)
+					break;
+				rows += textbox.line_rows(*line);
+			}
+
+			textbox.vscroll(rows - textbox.get_position().height / 2 - textbox.get_voffset());
+		} catch (const std::out_of_range &) {
+			DBG("Can't jump to program counter.");
+			return;
+		}
+	}
+
+	haunted::ui::simpleline & MemoryMode::getLine(Word address) {
+		if (lines.count(address) == 0)
+			throw std::out_of_range("Line " + std::to_string(address) + " is missing");
+
+		std::shared_ptr<haunted::ui::textline> &line = lines.at(address);
+
+		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(line.get())) {
+			return *simple;
+		} else throw std::runtime_error("Unable to cast line to haunted::ui::simpleline");
 	}
 }

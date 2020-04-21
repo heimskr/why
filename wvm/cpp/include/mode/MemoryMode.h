@@ -22,6 +22,10 @@ namespace WVM::Mode {
 			VM vm;
 			std::map<int, std::shared_ptr<haunted::ui::textline>> lines;
 			std::unordered_set<Word> symbolTableEdges;
+			bool follow = true;
+
+			void jumpToPC();
+			haunted::ui::simpleline & getLine(Word address);
 
 		public:
 			Word min = 0, max = 0;
