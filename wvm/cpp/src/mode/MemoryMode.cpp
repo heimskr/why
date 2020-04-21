@@ -218,10 +218,13 @@ namespace WVM::Mode {
 			if (start < min)
 				min = start - (start % 8);
 
-			if (max < start + count * 8)
-				max = start + count * 8;
+			Word end = start + count * 8;
+			if (max < end)
+				max = end;
 
-			vm.reserve(start + count * 8);
+			if (vm.getMemorySize() < static_cast<size_t>(end))
+				vm.resize(end);
+
 			for (Word address = start, i = 0; i < count; address += 8, ++i) {
 				if (!Util::parseUL(split[i + 2], uword, 16))
 					DBG("Invalid word at index " << i << ": " << split[i + 2]);
@@ -245,15 +248,14 @@ namespace WVM::Mode {
 			try {
 				updateLine(address);
 			} catch (const std::out_of_range &) {}
-			DBG("address[" << address << "], value[" << value << "]");
 		} else if (verb == "MemorySize") {
-			Word to_reserve;
-			if (size != 1 || !Util::parseLong(split[0], to_reserve)) {
+			Word resize_amount;
+			if (size != 1 || !Util::parseLong(split[0], resize_amount)) {
 				DBG("Bad message (" << verb << "): [" << rest << "]");
 				return;
 			}
 
-			vm.reserve(to_reserve);
+			vm.resize(resize_amount);
 		} else if (verb == "PC") {
 			Word to;
 			if (size != 1 || !Util::parseLong(split[0], to)) {

@@ -129,7 +129,7 @@ namespace WVM {
 		return &word - registers;
 	}
 
-	void VM::reserve(size_t new_size) {
+	void VM::resize(size_t new_size) {
 		memory.resize(new_size);
 		memorySize = new_size;
 	}
@@ -244,7 +244,7 @@ namespace WVM {
 		std::string line;
 		int lineno = 0;
 		memory.clear();
-		memory.reserve(memorySize);
+		memory.resize(memorySize);
 		while (std::getline(stream, line)) {
 			++lineno;
 			char *endptr;

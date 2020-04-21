@@ -62,7 +62,7 @@ namespace WVM {
 			std::string getString(Word address, int max = -1) const;
 			Word getInstruction(Word address) const;
 			unsigned char registerID(Word &) const;
-			void reserve(size_t);
+			void resize(size_t);
 
 			void jump(Word, bool should_link = false);
 			void link();
