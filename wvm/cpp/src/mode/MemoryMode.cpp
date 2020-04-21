@@ -96,7 +96,7 @@ namespace WVM::Mode {
 		std::stringstream ss;
 		UWord word = vm.getWord(address, Endianness::Big);
 		if (vm.programCounter == address)
-			ss << "\e[48;5;22m\e[2K";
+			ss << "\e[48;5;22m";
 		ss << "\e[2m[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
 
@@ -117,8 +117,7 @@ namespace WVM::Mode {
 			} else if (symbolTableEdges.count(address - 8) == 1) {
 				ss << word;
 			} else if (symbolTableEdges.count(address - 16) == 1) {
-				const UHWord length = vm.getHalfword(address - 12, Endianness::Big);
-				ss << "\e[35m" << vm.getString(address, length * 8) << "\e[39m";
+				ss << "\e[35m" << vm.getString(address, 8 * vm.getHalfword(address - 12, Endianness::Big)) << "\e[39m";
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
 			ss << Unparser::stringify(word, &vm);
@@ -136,6 +135,7 @@ namespace WVM::Mode {
 
 		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(line.get())) {
 			simple->text = stringify(address);
+			textbox.redraw_line(*simple);
 		} else throw std::runtime_error("Unable to cast line to haunted::ui::simpleline");
 	}
 
@@ -201,10 +201,9 @@ namespace WVM::Mode {
 			}
 
 			Word old_pc = vm.programCounter;
-			vm.jump(to);
+			vm.programCounter = to;
 			if (lines.count(old_pc) == 1)
 				updateLine(old_pc);
-			DBG("Jump: " << to);
 			if (lines.count(to) == 1)
 				updateLine(to);
 		} else {
