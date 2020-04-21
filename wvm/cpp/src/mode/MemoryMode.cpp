@@ -152,6 +152,8 @@ namespace WVM::Mode {
 
 	void MemoryMode::setFastForward(bool to) {
 		terminal.suppress_output = fastForward = to;
+		if (!to)
+			remakeList();
 	}
 
 	void MemoryMode::handleMessage(const std::string &message) {
@@ -225,8 +227,10 @@ namespace WVM::Mode {
 				DBG("Invalid: FastForward[" << rest << "]");
 			}
 		} else if (verb == "Done") {
-			if (size == 1 && split[0] == "GetMain")
+			if (size == 1 && split[0] == "GetMain") {
 				remakeList();
+				jumpToPC();
+			}
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
