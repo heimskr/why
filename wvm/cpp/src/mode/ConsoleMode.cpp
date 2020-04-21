@@ -93,7 +93,7 @@ namespace WVM::Mode {
 				if (!Util::parseLong(split[0], ticks))
 					badInput();
 				else
-					*socket << ":Tick " << std::to_string(ticks)
+					*socket << ":Tick " << std::to_string(ticks) << "\n";
 			} else {
 				badInput();
 			}
