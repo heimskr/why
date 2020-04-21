@@ -22,7 +22,6 @@ namespace WVM::Mode {
 
 		public:
 			ConsoleMode(): ClientMode() {}
-			~ConsoleMode();
 
 			void run(const std::string &hostname, int port) override;
 			void stop() override;

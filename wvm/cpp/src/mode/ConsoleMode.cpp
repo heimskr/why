@@ -5,10 +5,6 @@
 #include "Why.h"
 
 namespace WVM::Mode {
-	ConsoleMode::~ConsoleMode() {
-		terminal.join();
-	}
-
 	void ConsoleMode::run(const std::string &hostname, int port) {
 		networkThread = std::thread([&]() {
 			ClientMode::run(hostname, port);
