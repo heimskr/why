@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "lib/ansi.h"
 #include "mode/ServerMode.h"
 #include "Unparser.h"
 #include "Util.h"
@@ -125,20 +126,19 @@ namespace WVM::Mode {
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {
-			if (size == 0) {
+			if (size == 1) {
 				vm.tick();
-			} else if (size == 1) {
+			} else if (size == 2) {
 				Word ticks;
-				if (!Util::parseLong(split[0], ticks)) {
+				if (!Util::parseLong(split[1], ticks)) {
 					invalid();
 					return;
 				}
-				for (int subscriber: ffSubscribers)
-					server.send(subscriber, ":FastForward on");
+
+				setFastForward(true);
 				for (Word i = 0; i < ticks; ++i)
 					vm.tick();
-				for (int subscriber: ffSubscribers)
-					server.send(subscriber, ":FastForward off");
+				setFastForward(false);
 			} else {
 				invalid();
 			}
@@ -244,6 +244,18 @@ namespace WVM::Mode {
 			server.send(client, ":ResetComplete");
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
+		}
+	}
+
+	void ServerMode::setFastForward(bool to) {
+		if (to) {
+			for (int subscriber: ffSubscribers)
+				server.send(subscriber, ":FastForward on");
+		} else {
+			for (int subscriber: ffSubscribers) {
+				server.send(subscriber, ":FastForward off");
+				server.send(subscriber, ":PC " + std::to_string(vm.programCounter));
+			}
 		}
 	}
 }

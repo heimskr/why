@@ -14,6 +14,8 @@ namespace WVM::Mode {
 			VM vm;
 			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers, outputSubscribers, ffSubscribers;
 
+			void setFastForward(bool);
+
 		public:
 			ServerMode(int port): server(port, true), vm(1'000'000) {}
 

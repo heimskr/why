@@ -156,6 +156,10 @@ namespace WVM::Mode {
 		ClientMode::stop();
 	}
 
+	void MemoryMode::setFastForward(bool to) {
+		terminal.suppress_output = fastForward = to;
+	}
+
 	void MemoryMode::handleMessage(const std::string &message) {
 		if (message.front() != ':') {
 			DBG("Not sure how to handle [" << message << "]");
@@ -205,12 +209,29 @@ namespace WVM::Mode {
 
 			Word old_pc = vm.programCounter;
 			vm.programCounter = to;
-			if (lines.count(old_pc) == 1)
-				updateLine(old_pc);
-			if (lines.count(to) == 1)
-				updateLine(to);
-			if (follow)
-				jumpToPC();
+			if (!fastForward) {
+				if (lines.count(old_pc) == 1)
+					updateLine(old_pc);
+				if (lines.count(to) == 1)
+					updateLine(to);
+				if (follow)
+					jumpToPC();
+			}
+		} else if (verb == "FastForward") {
+			if (size != 1) {
+				DBG("Invalid: FastForward[" << rest << "]");
+				return;
+			}
+
+			if (split[0] == "on") {
+				setFastForward(true);
+				DBG("FastForward enabled.");
+			} else if (split[0] == "off") {
+				setFastForward(false);
+				DBG("FastForward disabled.");
+			} else {
+				DBG("Invalid: FastForward[" << rest << "]");
+			}
 		} else {
 			DBG("[" << message << "]");
 		}

@@ -22,7 +22,7 @@ namespace WVM::Mode {
 			VM vm;
 			std::map<int, std::shared_ptr<haunted::ui::textline>> lines;
 			std::unordered_set<Word> symbolTableEdges;
-			bool follow = true;
+			bool follow = true, fastForward = false;
 
 			void jumpToPC();
 			haunted::ui::simpleline & getLine(Word address);
@@ -40,6 +40,7 @@ namespace WVM::Mode {
 			void updateLine(Word address);
 			void makeSymbolTableEdges();
 			void stop() override;
+			void setFastForward(bool);
 			void handleMessage(const std::string &) override;
 	};
 }
