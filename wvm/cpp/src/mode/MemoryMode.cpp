@@ -232,8 +232,6 @@ namespace WVM::Mode {
 			} else {
 				DBG("Invalid: FastForward[" << rest << "]");
 			}
-		} else {
-			DBG("[" << message << "]");
 		}
 	}
 

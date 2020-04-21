@@ -34,6 +34,7 @@ namespace WVM::Mode {
 			}
 
 			std::cout << static_cast<char>(to_print);
+			std::cout.flush();
 			return;
 		}
 
