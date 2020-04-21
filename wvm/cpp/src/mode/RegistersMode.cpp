@@ -123,6 +123,8 @@ namespace WVM::Mode {
 
 	void RegistersMode::setFastForward(bool to) {
 		terminal.suppress_output = fastForward = to;
+		if (!to)
+			remakeList();
 	}
 
 	void RegistersMode::handleMessage(const std::string &message) {
@@ -146,7 +148,6 @@ namespace WVM::Mode {
 			}
 			
 			registers[reg] = value;
-			DBG("registers[" << reg << "] = " << value);
 
 			if (!ready && reg == 127) {
 				ready = true;
@@ -160,17 +161,12 @@ namespace WVM::Mode {
 				return;
 			}
 
-			if (split[0] == "on") {
+			if (split[0] == "on")
 				setFastForward(true);
-				DBG("FastForward enabled.");
-			} else if (split[0] == "off") {
+			else if (split[0] == "off")
 				setFastForward(false);
-				DBG("FastForward disabled.");
-			} else {
+			else
 				DBG("Invalid: FastForward[" << rest << "]");
-			}
-		} else {
-			DBG("*[" << message << "]");
 		}
 	}
 
