@@ -63,9 +63,7 @@ global_base: (8)
 
 #code
 
-<>
-<>
-<>
+<>;<>;<>
 :: main
 <halt>
 
@@ -97,12 +95,10 @@ sub allocate() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
@@ -261,7 +257,6 @@ sub check_free() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
@@ -377,7 +372,6 @@ sub fr() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
@@ -525,22 +519,18 @@ sub memsplit() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t4
 	$sp - 4 -> $sp
@@ -875,17 +865,14 @@ sub mal() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
 	$sp - 8 -> $sp
@@ -1424,12 +1411,10 @@ sub request_space() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
@@ -1546,12 +1531,10 @@ sub find_free_block() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
@@ -1748,12 +1731,10 @@ sub dbg_blocks() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 4 -> $sp
@@ -1986,37 +1967,30 @@ sub main() {
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t4
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t5
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t6
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t7
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t8
 	$sp - 8 -> $sp
