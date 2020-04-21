@@ -163,6 +163,9 @@ namespace WVM::Mode {
 				setFastForward(false);
 			else
 				DBG("Invalid: FastForward[" << rest << "]");
+		} else if (verb == "Quit") {
+			stop();
+			std::terminate();
 		}
 	}
 

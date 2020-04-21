@@ -66,6 +66,9 @@ namespace WVM::Mode {
 			}
 		} else if (verb == "MemoryWord") {
 			textbox += std::string(infoPrefix) + "\e[2m[" + split[0] + "] = \e[22m" + split[1];
+		} else if (verb == "Quit") {
+			stop();
+			std::terminate();
 		} else {
 			textbox += message;
 		}

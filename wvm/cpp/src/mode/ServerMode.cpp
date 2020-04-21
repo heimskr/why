@@ -3,13 +3,23 @@
 #include <iostream>
 #include <sstream>
 
+#include <signal.h>
+
 #include "lib/ansi.h"
 #include "mode/ServerMode.h"
 #include "Unparser.h"
 #include "Util.h"
 
+void sigint_handler(int) {
+	std::cout << "Oh no!\n";
+	if (WVM::Mode::ServerMode::instance)
+		WVM::Mode::ServerMode::instance->stop();
+}
+
 namespace WVM::Mode {
+	ServerMode * ServerMode::instance = nullptr;
 	void ServerMode::run(const std::string &path) {
+		instance = this;
 		server.messageHandler = [&](int client, const std::string &message) { handleMessage(client, message); };
 		std::cerr << "ServerMode running on port " << server.getPort() << "\n";
 		std::ofstream port_stream;
@@ -18,6 +28,7 @@ namespace WVM::Mode {
 		port_stream.close();
 		vm.load(path);
 		initVM();
+		signal(SIGINT, sigint_handler);
 		server.onEnd = [&](int client, int) { cleanupClient(client); };
 		server.run();
 	}
@@ -71,7 +82,11 @@ namespace WVM::Mode {
 	}
 
 	void ServerMode::stop() {
-		std::cerr << "Stopping.\n";
+		for (int client: server.getClients()) {
+			cleanupClient(client);
+			server.send(client, ":Quit");
+		}
+
 		server.stop();
 	}
 

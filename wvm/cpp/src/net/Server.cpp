@@ -80,6 +80,7 @@ namespace WVM::Net {
 		descriptors.erase(client);
 		buffers.erase(descriptor);
 		clients.erase(descriptor);
+		allClients.erase(client);
 		FD_CLR(descriptor, &activeSet);
 		if (onEnd)
 			onEnd(client, descriptor);
@@ -146,6 +147,7 @@ namespace WVM::Net {
 						descriptors.emplace(new_client, new_fd);
 						clients.erase(new_fd);
 						clients.emplace(new_fd, new_client);
+						allClients.insert(new_client);
 					} else if (i != controlRead) {
 						// Data arriving on an already-connected socket.
 						readFromClient(i);

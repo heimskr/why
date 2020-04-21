@@ -40,7 +40,10 @@ namespace WVM::Mode {
 
 		const size_t space = message.find(' ');
 		const std::string verb = message.substr(1, space - 1);
-		const std::string rest = space == std::string::npos? "" : message.substr(space + 1);
-		const std::vector<std::string> split = Util::split(rest, " ", false);
+
+		if (verb == "Quit") {
+			stop();
+			std::terminate();
+		}
 	}
 }

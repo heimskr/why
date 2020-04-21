@@ -17,6 +17,7 @@ namespace WVM::Mode {
 			void setFastForward(bool);
 
 		public:
+			static ServerMode *instance;
 			ServerMode(int port): server(port, true), vm(1'000'000) {}
 
 			void run(const std::string &path);

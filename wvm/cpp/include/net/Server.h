@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <map>
+#include <set>
 
 #include <sys/types.h>
 
@@ -30,6 +31,8 @@ namespace WVM::Net {
 			/** Maps descriptors to buffers. */
 			std::map<int, std::string> buffers;
 
+			std::set<int> allClients;
+
 		public:
 			std::function<void(int, const std::string &)> messageHandler; // (int client, const std::string &message)
 			std::function<void(int, int)> onEnd; // (int client, int descriptor)
@@ -46,6 +49,7 @@ namespace WVM::Net {
 			void removeClient(int);
 			void run();
 			void stop();
+			const std::set<int> & getClients() const { return allClients; }
 
 			/** Given a buffer, this function returns {-1, *} if the message is still incomplete or the {i, l} if the
 			 *  buffer contains a complete message, where i is the index at which the message ends and l is the size of
