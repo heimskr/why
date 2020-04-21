@@ -1,6 +1,7 @@
+CHECK			:= asan
 COMPILER		?= clang++
 OPTIMIZATION	?= -O0 -g
-CFLAGS			:= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
+CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(tests?|test_.+)\.cpp$$/!p')
@@ -15,7 +16,15 @@ CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
 INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
-LDFLAGS			:= $(strip -pthread $(LDFLAGS_EXTRA))
+LDFLAGS			+= $(strip -pthread $(LDFLAGS_EXTRA))
+
+ifeq ($(CHECK), asan)
+	CFLAGS  += -fsanitize=address -fno-omit-frame-pointer
+	LDFLAGS += -fsanitize=address
+else ifeq ($(CHECK), msan)
+	CFLAGS  += -fsanitize=memory -fno-omit-frame-pointer
+	LDFLAGS += -fsanitize=memory
+endif
 
 .PHONY: all clean count countbf memtest outtest regtest test
 
