@@ -137,6 +137,7 @@ namespace WVM::Mode {
 			for (Word i = 0; i < vm.endOffset; i += 8)
 				to_send << " " << vm.getWord(i, Endianness::Little);
 			server.send(client, to_send.str());
+			server.send(client, ":Done GetMain");
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {

@@ -78,11 +78,7 @@ namespace WVM::Mode {
 			for (Word address = min, i = 0; address < max; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
-					std::string str = "\e[2m";
-					str.reserve(50 + padding);
-					for (int i = 0; i < 50 + padding; ++i)
-						str += "-";
-					textbox += str + "\e[22m";
+					textbox += "\e[2m" + std::string(55 + padding, '-') + "\e[22m";
 				}
 				textbox += stringify(address);
 				lines.emplace(address, textbox.get_lines().back());
@@ -228,6 +224,9 @@ namespace WVM::Mode {
 			} else {
 				DBG("Invalid: FastForward[" << rest << "]");
 			}
+		} else if (verb == "Done") {
+			if (size == 1 && split[0] == "GetMain")
+				remakeList();
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
