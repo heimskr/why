@@ -49,6 +49,7 @@ namespace WVM {
 			std::function<void()> onInterruptTableChange = []() {};
 			std::function<void(Word)> onUpdateMemory = [](Word) {};
 			std::function<void(Word, Word)> onJump = [](Word, Word) {};
+			std::function<void(const std::string &)> onPrint = [](const std::string &) {};
 
 			VM(size_t memory_size, bool keep_initial = true);
 

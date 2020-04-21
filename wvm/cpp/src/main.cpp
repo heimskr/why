@@ -5,6 +5,7 @@
 #include "lib/ansi.h"
 #include "mode/ConsoleMode.h"
 #include "mode/MemoryMode.h"
+#include "mode/OutputMode.h"
 #include "mode/ServerMode.h"
 #include "net/NetError.h"
 #include "net/Server.h"
@@ -65,6 +66,9 @@ int main(int argc, char **argv) {
 	} else if (arg == "console") {
 		WVM::Mode::ConsoleMode console;
 		console.run(hostname, port);
+	} else if (arg == "output") {
+		WVM::Mode::OutputMode output;
+		output.run(hostname, port);
 	} else {
 		usage();
 		return 1;

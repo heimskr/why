@@ -90,12 +90,10 @@ namespace WVM::Mode {
 				*socket << ":Tick\n";
 			} else if (size == 1) {
 				Word ticks;
-				if (!Util::parseLong(split[0], ticks)) {
+				if (!Util::parseLong(split[0], ticks))
 					badInput();
-				} else {
-					for (Word i = 0; i < ticks; ++i)
-						*socket << ":Tick\n";
-				}
+				else
+					*socket << ":Tick " << std::to_string(ticks)
 			} else {
 				badInput();
 			}

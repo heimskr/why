@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <unistd.h>
 
@@ -737,7 +738,9 @@ namespace WVM::Operations {
 	}
 
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		std::cout << Why::coloredRegister(&rs - vm.registers) << ": 0x" << std::hex << rs << " / " << rs << "\n";
+		std::stringstream ss;
+		ss << Why::coloredRegister(&rs - vm.registers) << ": 0x" << std::hex << rs << " / " << rs << "\n";
+		vm.onPrint(ss.str());
 		vm.increment();
 	}
 
@@ -751,17 +754,19 @@ namespace WVM::Operations {
 	}
 
 	void prcOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		std::cout << static_cast<char>(rs);
+		vm.onPrint(std::string(1,  static_cast<char>(rs)));
 		vm.increment();
 	}
 
 	void prdOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		std::cout << static_cast<int>(rs);
+		vm.onPrint(std::to_string(rs));
 		vm.increment();
 	}
 
 	void prxOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		std::cout << std::hex << static_cast<int>(rs);
+		std::stringstream ss;
+		ss << std::hex << rs;
+		vm.onPrint(ss.str());
 		vm.increment();
 	}
 

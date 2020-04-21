@@ -17,7 +17,7 @@ INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
 LDFLAGS			:= $(strip -pthread $(LDFLAGS_EXTRA))
 
-.PHONY: all clean count countbf memtest test
+.PHONY: all clean count countbf memtest outtest test
 
 all: $(OUT)
 
@@ -34,6 +34,9 @@ consoletest: $(OUT)
 
 memtest: $(OUT)
 	./$(OUT) memory 127.0.0.1 `cat .port`
+
+outtest: $(OUT)
+	./$(OUT) output 127.0.0.1 `cat .port`
 
 haunted/build/%.o: haunted/src/%.cpp
 	@ mkdir -p "$(shell dirname "$@")"

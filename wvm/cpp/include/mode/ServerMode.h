@@ -12,7 +12,7 @@ namespace WVM::Mode {
 		private:
 			Net::Server server;
 			VM vm;
-			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers;
+			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers, outputSubscribers, ffSubscribers;
 
 		public:
 			ServerMode(int port): server(port, true), vm(1'000'000) {}

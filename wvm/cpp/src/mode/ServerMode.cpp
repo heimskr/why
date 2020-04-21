@@ -40,12 +40,33 @@ namespace WVM::Mode {
 			for (int client: pcSubscribers)
 				server.send(client, message);
 		};
+
+		vm.onPrint = [&](const std::string &str) {
+			std::vector<std::string> hex;
+			hex.reserve(str.size());
+			std::stringstream ss;
+			ss << std::hex;
+			for (const char ch: str) {
+				if (ch < 16)
+					ss << '0';
+				ss << static_cast<int>(ch);
+				hex.push_back(ss.str());
+				ss.clear();
+				ss.str("");
+			}
+
+			for (int client: outputSubscribers) {
+				for (const std::string &ch: hex)
+					server.send(client, ch);
+			}
+		};
 	}
 
 	void ServerMode::cleanupClient(int client) {
 		memorySubscribers.erase(client);
 		registerSubscribers.erase(client);
 		pcSubscribers.erase(client);
+		ffSubscribers.erase(client);
 	}
 
 	void ServerMode::stop() {
@@ -79,11 +100,16 @@ namespace WVM::Mode {
 			const std::string &to = split[1];
 			if (to == "memory") {
 				memorySubscribers.insert(client);
+				ffSubscribers.insert(client);
 			} else if (to == "registers") {
 				registerSubscribers.insert(client);
+				ffSubscribers.insert(client);
 			} else if (to == "pc") {
 				pcSubscribers.insert(client);
 				server.send(client, ":PC " + std::to_string(vm.programCounter));
+				ffSubscribers.insert(client);
+			} else if (to == "output") {
+				outputSubscribers.insert(client);
 			} else {
 				invalid();
 				return;
@@ -99,7 +125,23 @@ namespace WVM::Mode {
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {
-			vm.tick();
+			if (size == 0) {
+				vm.tick();
+			} else if (size == 1) {
+				Word ticks;
+				if (!Util::parseLong(split[0], ticks)) {
+					invalid();
+					return;
+				}
+				for (int subscriber: ffSubscribers)
+					server.send(subscriber, ":FastForward on");
+				for (Word i = 0; i < ticks; ++i)
+					vm.tick();
+				for (int subscriber: ffSubscribers)
+					server.send(subscriber, ":FastForward off");
+			} else {
+				invalid();
+			}
 		} else if (verb == "Reg") {
 			if (size != 2 && size != 3) {
 				invalid();
