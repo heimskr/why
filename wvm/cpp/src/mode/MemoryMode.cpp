@@ -223,10 +223,8 @@ namespace WVM::Mode {
 
 			if (split[0] == "on") {
 				setFastForward(true);
-				DBG("FastForward enabled.");
 			} else if (split[0] == "off") {
 				setFastForward(false);
-				DBG("FastForward disabled.");
 			} else {
 				DBG("Invalid: FastForward[" << rest << "]");
 			}
@@ -245,7 +243,6 @@ namespace WVM::Mode {
 
 			textbox.vscroll(rows - textbox.get_position().height / 2 - textbox.get_voffset());
 		} catch (const std::out_of_range &) {
-			DBG("Can't jump to program counter.");
 			return;
 		}
 	}
