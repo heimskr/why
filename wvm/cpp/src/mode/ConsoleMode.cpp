@@ -92,10 +92,8 @@ namespace WVM::Mode {
 				if (!Util::parseLong(split[0], ticks))
 					badInput();
 				else
-					*socket << ":Tick " << std::to_string(ticks) << "\n";
-			} else {
-				badInput();
-			}
+					*socket << ":Tick " << ticks << "\n";
+			} else badInput();
 		} else if (first == "s" || first == "sub" || first == "subscribe") {
 			if (size != 1) {
 				badInput();
@@ -103,11 +101,31 @@ namespace WVM::Mode {
 				*socket << ":Subscribe registers\n";
 			} else if (split[0] == "m" || split[0] == "mem" || split[0] == "memory") {
 				*socket << ":Subscribe memory\n";
-			} else {
-				badInput();
-			}
+			} else badInput();
 		} else if (first == "r" || first == "res" || first == "reset") {
 			*socket << ":Reset\n";
+		} else if (first == "b" || first == "ab" || first == "break" || first == "breakpoint" || first == "+breakpoint"
+		           || first == "+b" || first == "+bp" || first == "+break") {
+			if (size == 1) {
+				Word address;
+				if (!Util::parseLong(split[0], address)) {
+					badInput();
+				} else {
+					*socket << ":AddBP " << address << "\n";
+					textbox += std::string(infoPrefix) + "Added breakpoint at " + split[0] + ".";
+				}
+			} else badInput();
+		} else if (first == "rb" || first == "ub" || first == "unbreak" || first == "-breakpoint" || first == "-bp"
+		           || first == "-b" || first == "-break") {
+			if (size == 1) {
+				Word address;
+				if (!Util::parseLong(split[0], address)) {
+					badInput();
+				} else {
+					*socket << ":RemoveBP " << address << "\n";
+					textbox += std::string(infoPrefix) + "Removed breakpoint at " + split[0] + ".";
+				}
+			} else badInput();
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
