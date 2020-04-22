@@ -2,43 +2,44 @@
 name: "combined.9.c"
 
 #data
-.str.68: ", \x00"
-.str.67: " at position [\x00"
-.str.60: " bytes: \x00"
-.str.59: " byte: \x00"
-.str.57: "Base: \x00"
-.str.56: "Base: null\x0A\x00"
-.str.69: "]\x0A\x00"
-.str.53: " set to \x00"
-.str.52: "\x1B[0m byte\x00"
-.str.49: "Ptr9\x00"
-.str.47: "\x0AFreeing 600 and 1000 pointers.\x0A\x00"
-.str.46: "Ptr7\x00"
-.str.45: "Ptr6\x00"
-.str.44: "\x0AFreeing 100 and 800 pointers.\x0A\x00"
-.str.43: "\x0AFreeing 200 and 10 pointers.\x0A\x00"
-.str.39: "Ptr2\x00"
-.str.37: "Start (absolute): \x00"
-.str.29: "} = current->next->next {\x00"
-.str.36: "sizeof(block_meta) = \x00"
-.str.35: "Initializing memory.\x0A\x00"
-.str.38: "Ptr1\x00"
-.str.34: "s.\x0A\x00"
-.str.54: "null.\x0A\x00"
-.str.50: "Ptr10\x00"
-.str.30: "}\x0A\x00"
-.str.33: "\x1B[0m block\x00"
-.str.28: "    current->next {\x00"
-.str.27: " + \x00"
-.str.26: "} += \x00"
-.str.71: "Found \x1B[1m\x00"
-.str.66: "\x1B[0m block of size \x00"
-.str.61: "null\x0A\x00"
-.str.55: "\x0A End: \x00"
-.str.25: "    current->size {\x00"
-.str.24: "    current->free && current->next->free\x0A\x00"
+.str.68: "\x1B[0m block of size \x00"
+.str.67: "n \x1B[31mallocated\x00"
+.str.60: "Free block >= \x00"
+.str.59: "Base: \x00"
+.str.57: "\x0A End: \x00"
+.str.56: "null.\x0A\x00"
+.str.69: " at position [\x00"
+.str.53: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
+.str.52: "Ptr10\x00"
+.str.49: "\x0AFreeing 600 and 1000 pointers.\x0A\x00"
+.str.47: "Ptr6\x00"
+.str.46: "\x0AFreeing 100 and 800 pointers.\x0A\x00"
+.str.45: "\x0AFreeing 200 and 10 pointers.\x0A\x00"
+.str.44: "Ptr5\x00"
+.str.43: "Ptr4\x00"
+.str.39: "Start (absolute): \x00"
+.str.37: "Initializing memory.\x0A\x00"
+.str.29: " + \x00"
+.str.36: "s.\x0A\x00"
+.str.35: "\x1B[0m block\x00"
+.str.38: "sizeof(block_meta) = \x00"
+.str.34: "\x0A\x1B[36mMerged\x1B[0m \x1B[1m\x00"
+.str.54: "\x1B[0m byte\x00"
+.str.50: "Ptr8\x00"
+.str.30: "    current->next {\x00"
+.str.72: "Loop took too long!\x0A\x00"
+.str.33: "    !current->free || !current->next->free\x0A\x00"
+.str.28: "} += \x00"
+.str.27: "    current->size {\x00"
+.str.26: "    current->free && current->next->free\x0A\x00"
+.str.71: "]\x0A\x00"
+.str.66: " \x1B[32mfree\x00"
+.str.61: " byte: \x00"
+.str.55: " set to \x00"
+.str.25: " = \x00"
+.str.24: " - \x00"
 .str.22: "block_ptr->free == 0\x00"
-.str.41: "Ptr4\x00"
+.str.41: "Ptr2\x00"
 .str.21: "combined.9.c\x00"
 .str.19: "    block_ptr->free == \x00"
 __func__.fr: "fr\x00"
@@ -51,9 +52,9 @@ __func__.fr: "fr\x00"
 .str.14: "block->size: \x00"
 end: (8)
 .str.16: "\x0AMemsplitting block.\x0A\x00"
-.str.63: "    Found a\x00"
+.str.63: "null\x0A\x00"
 .str.13: "no\x0A\x00"
-.str.51: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
+.str.51: "Ptr9\x00"
 .str.11: "\x0Ablock->next: \x00"
 last_block: (8)
 .str.10: "block: \x00"
@@ -62,22 +63,23 @@ last_block: (8)
 .str.15: "\x0A       size: \x00"
 .str.7: "~ \x00"
 .str.4: "\x0A\x00"
-.str.65: "n \x1B[31mallocated\x00"
-.str.58: "Free block >= \x00"
-.str.42: "Ptr5\x00"
-.str.48: "Ptr8\x00"
-.str.40: "Ptr3\x00"
-.str.62: "\x0A\x1B[34mChecking blocks\x1B[0m.\x0A\x00"
+.str.65: "    Found a\x00"
+.str.58: "Base: null\x0A\x00"
+.str.42: "Ptr3\x00"
+.str.48: "Ptr7\x00"
+.str.40: "Ptr1\x00"
+.str.62: " bytes: \x00"
 .str.9: "still null.\x0A\x00"
 memory: (8)
-.str.32: "\x0A\x1B[36mMerged\x1B[0m \x1B[1m\x00"
-.str.64: " \x1B[32mfree\x00"
+.str.32: "}\x0A\x00"
+.str.64: "\x0A\x1B[34mChecking blocks\x1B[0m.\x0A\x00"
 .str.5: "\x1B[38;5;226mSetting global_base\x1B[0m to \x00"
 .str.3: " to \x00"
-.str.31: "    !current->free || !current->next->free\x0A\x00"
+.str.31: "} = current->next->next {\x00"
 .str: "%d\x00"
+.str.73: "Found \x1B[1m\x00"
 global_base: (8)
-.str.70: "Loop took too long!\x0A\x00"
+.str.70: ", \x00"
 .str.2: "Realigning \x00"
 
 #code
@@ -126,7 +128,7 @@ sub allocate() {
 	$a1 -> [$t1]
 	[ $a0
 	[ $a1
-	&.str.51 -> $a0
+	&.str.53 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -142,7 +144,7 @@ sub allocate() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.52 -> $a0
+	&.str.54 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -151,7 +153,7 @@ sub allocate() {
 	$t5 == 1 -> $t6
 	$t6 -> $t7
 	&.str.6 -> $tf
-	&.str.34 -> $t10
+	&.str.36 -> $t10
 	$t6 ~ 0
 	[$tf != $t10] -> $t8
 	[ $a0
@@ -183,7 +185,7 @@ sub allocate() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.53 -> $a0
+	&.str.55 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -195,7 +197,7 @@ sub allocate() {
 	@__allocate_label18
 	[ $a0
 	[ $a1
-	&.str.54 -> $a0
+	&.str.56 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -293,7 +295,7 @@ sub check_free() {
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t1]
 	[ $a0
-	&.str.58 -> $a0
+	&.str.60 -> $a0
 	:: strprint
 	] $a0
 	// LowerMemory: [%local] -> %var
@@ -308,8 +310,8 @@ sub check_free() {
 	[$t0] -> $t7
 	$t7 == 1 -> $t8
 	$t8 -> $t9
-	&.str.59 -> $td
-	&.str.60 -> $te
+	&.str.61 -> $td
+	&.str.62 -> $te
 	$t8 ~ 0
 	[$td != $te] -> $ta
 	[ $a0
@@ -342,7 +344,7 @@ sub check_free() {
 	: __check_free_label22
 	@__check_free_label21
 	[ $a0
-	&.str.61 -> $a0
+	&.str.63 -> $a0
 	:: strprint
 	] $a0
 	@__check_free_label22
@@ -1272,7 +1274,7 @@ sub dbg() {
 	[ $t6
 	[ $t7
 	$sp -> $fp
-	&.str.55 -> $a0
+	&.str.57 -> $a0
 	:: strprint
 	// LowerMemory: [global] -> %var
 	[end] -> $t0
@@ -1293,11 +1295,11 @@ sub dbg() {
 	: __dbg_label9 if $t7
 	: __dbg_label10
 	@__dbg_label9
-	&.str.56 -> $a0
+	&.str.58 -> $a0
 	:: strprint
 	: __dbg_label19
 	@__dbg_label10
-	&.str.57 -> $a0
+	&.str.59 -> $a0
 	:: strprint
 	// LowerMemory: [global] -> %var
 	[global_base] -> $t0
@@ -1416,20 +1418,42 @@ sub merge_blocks() {
 	// LowerStack: $fp - offset -> $m0
 	$fp - 8 -> $m0
 	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t9
-	[$t9] -> $t3
+	[$m0] -> $tf
+	[$tf] -> $t3
 	$t3 -> $t4
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
+	$t5 -> $a0
+	:: prd
+	&.str.24 -> $a0
+	:: strprint
 	// LowerMemory: [global] -> %var
-	[memory] -> $t5
-	$t5 -> $t6
-	$t4 - $t6 -> $t7
+	[memory] -> $t6
+	$t6 -> $t7
 	// LowerTrunc: 64 to 32, apply mask
 	$t7 & -1 -> $t8
 	$t8 -> $a0
 	:: prd
+	&.str.25 -> $a0
+	:: strprint
+	// LowerMemory: [%local] -> %var
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t10
+	[$t10] -> $t9
+	$t9 -> $ta
+	// LowerMemory: [global] -> %var
+	[memory] -> $tb
+	$tb -> $tc
+	$ta - $tc -> $td
+	// LowerTrunc: 64 to 32, apply mask
+	$td & -1 -> $te
+	$te -> $a0
+	:: prd
 	&.str.4 -> $a0
 	:: strprint
-	@__merge_blocks_label10
+	@__merge_blocks_label16
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
 	$fp - 8 -> $m0
@@ -1439,9 +1463,9 @@ sub merge_blocks() {
 	$t2 == 0 -> $t3
 	!$t3.
 	0 -> $t4
-	: __merge_blocks_label13 if $t3
-	: __merge_blocks_label18
-	@__merge_blocks_label13
+	: __merge_blocks_label19 if $t3
+	: __merge_blocks_label24
+	@__merge_blocks_label19
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
 	$fp - 8 -> $m0
@@ -1453,10 +1477,10 @@ sub merge_blocks() {
 	[$t3] -> $t5
 	$t5 == 0 -> $t4
 	!$t4.
-	@__merge_blocks_label18
-	: __merge_blocks_label20 if $t4
-	: __merge_blocks_label85
-	@__merge_blocks_label20
+	@__merge_blocks_label24
+	: __merge_blocks_label26 if $t4
+	: __merge_blocks_label91
+	@__merge_blocks_label26
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
 	$fp - 8 -> $m0
@@ -1468,9 +1492,9 @@ sub merge_blocks() {
 	[$t3] -> $t4 /h
 	$t4 == 0 -> $t5
 	!$t5.
-	: __merge_blocks_label25 if $t5
-	: __merge_blocks_label80
-	@__merge_blocks_label25
+	: __merge_blocks_label31 if $t5
+	: __merge_blocks_label86
+	@__merge_blocks_label31
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
 	$fp - 8 -> $m0
@@ -1485,12 +1509,12 @@ sub merge_blocks() {
 	[$t5] -> $t6 /h
 	$t6 == 0 -> $t7
 	!$t7.
-	: __merge_blocks_label32 if $t7
-	: __merge_blocks_label80
-	@__merge_blocks_label32
-	&.str.24 -> $a0
+	: __merge_blocks_label38 if $t7
+	: __merge_blocks_label86
+	@__merge_blocks_label38
+	&.str.26 -> $a0
 	:: strprint
-	&.str.25 -> $a0
+	&.str.27 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
@@ -1505,11 +1529,11 @@ sub merge_blocks() {
 	$t4 & -1 -> $t5
 	$t5 -> $a0
 	:: prd
-	&.str.26 -> $a0
+	&.str.28 -> $a0
 	:: strprint
 	24 -> $a0
 	:: prd
-	&.str.27 -> $a0
+	&.str.29 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
@@ -1554,7 +1578,7 @@ sub merge_blocks() {
 	$t14 + $t11 -> $t15
 	// LowerMemory: %src -> [%dest]
 	$t15 -> [$t13]
-	&.str.28 -> $a0
+	&.str.30 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
@@ -1574,7 +1598,7 @@ sub merge_blocks() {
 	$s5 & -1 -> $s6
 	$s6 -> $a0
 	:: prd
-	&.str.29 -> $a0
+	&.str.31 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
@@ -1597,7 +1621,7 @@ sub merge_blocks() {
 	$sf & -1 -> $s10
 	$s10 -> $a0
 	:: prd
-	&.str.30 -> $a0
+	&.str.32 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
@@ -1615,23 +1639,23 @@ sub merge_blocks() {
 	// LowerStack: $fp - offset -> $m0
 	$fp - 8 -> $m0
 	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t9
-	[$t9] -> $t7
-	$t7 + 8 -> $t8
+	[$m0] -> $t8
+	[$t8] -> $t7
+	$t7 + 8 -> $t1
 	// LowerMemory: %src -> [%dest]
-	$t6 -> [$t8]
+	$t6 -> [$t1]
 	// LowerMemory: [%local] -> %var
 	// LowerStack: [$fp] -> %var
-	[$fp] -> $t2
-	[$t2] -> $t1 /h
-	$t1 + 1 -> $t2
+	[$fp] -> $t3
+	[$t3] -> $t2 /h
+	$t2 + 1 -> $t1
 	// LowerMemory: %src -> [%dest]
-	$t2 -> [$t0] /h
+	$t1 -> [$t0] /h
 	// LowerStack: %var -> [$fp]
 	$t0 -> [$fp]
-	: __merge_blocks_label84
-	@__merge_blocks_label80
-	&.str.31 -> $a0
+	: __merge_blocks_label90
+	@__merge_blocks_label86
+	&.str.33 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: $fp - offset -> $m0
@@ -1648,18 +1672,18 @@ sub merge_blocks() {
 	$fp - 8 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t1 -> [$m0]
-	@__merge_blocks_label84
-	: __merge_blocks_label10
-	@__merge_blocks_label85
+	@__merge_blocks_label90
+	: __merge_blocks_label16
+	@__merge_blocks_label91
 	// LowerMemory: [%local] -> %var
 	// LowerStack: [$fp] -> %var
 	[$fp] -> $t2
 	[$t2] -> $t0 /h
 	$t0 > 0 -> $t1
-	: __merge_blocks_label88 if $t1
-	: __merge_blocks_label94
-	@__merge_blocks_label88
-	&.str.32 -> $a0
+	: __merge_blocks_label94 if $t1
+	: __merge_blocks_label100
+	@__merge_blocks_label94
+	&.str.34 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: [$fp] -> %var
@@ -1667,7 +1691,7 @@ sub merge_blocks() {
 	[$t7] -> $t0 /h
 	$t0 -> $a0
 	:: prd
-	&.str.33 -> $a0
+	&.str.35 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	// LowerStack: [$fp] -> %var
@@ -1676,12 +1700,12 @@ sub merge_blocks() {
 	$t1 == 1 -> $t2
 	$t2 -> $t3
 	&.str.6 -> $t5
-	&.str.34 -> $t6
+	&.str.36 -> $t6
 	$t2 ~ 0
 	[$t5 != $t6] -> $t4
 	$t4 -> $a0
 	:: strprint
-	@__merge_blocks_label94
+	@__merge_blocks_label100
 	// LowerMemory: [%local] -> %var
 	// LowerStack: [$fp] -> %var
 	[$fp] -> $t1
@@ -2153,7 +2177,7 @@ sub dbg_blocks() {
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t1] /h
-	&.str.62 -> $a0
+	&.str.64 -> $a0
 	:: strprint
 	// LowerMemory: imm -> $m0
 	0 -> $m0
@@ -2172,7 +2196,7 @@ sub dbg_blocks() {
 	$t3 + 1 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t1] /h
-	&.str.63 -> $a0
+	&.str.65 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t5
@@ -2182,13 +2206,13 @@ sub dbg_blocks() {
 	$t7 == 0 -> $t8
 	!$t8.
 	$t8 -> $t9
-	&.str.64 -> $sc
-	&.str.65 -> $sd
+	&.str.66 -> $sc
+	&.str.67 -> $sd
 	$t8 ~ 0
 	[$sc != $sd] -> $ta
 	$ta -> $a0
 	:: strprint
-	&.str.66 -> $a0
+	&.str.68 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $tb
@@ -2199,7 +2223,7 @@ sub dbg_blocks() {
 	$td & -1 -> $te
 	$te -> $a0
 	:: prd
-	&.str.67 -> $a0
+	&.str.69 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $tf
@@ -2212,7 +2236,7 @@ sub dbg_blocks() {
 	$t13 & -1 -> $t14
 	$t14 -> $a0
 	:: prd
-	&.str.68 -> $a0
+	&.str.70 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t15
@@ -2232,7 +2256,7 @@ sub dbg_blocks() {
 	$s7 & -1 -> $s8
 	$s8 -> $a0
 	:: prd
-	&.str.69 -> $a0
+	&.str.71 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $s9 /h
@@ -2243,7 +2267,7 @@ sub dbg_blocks() {
 	: __dbg_blocks_label41 if $sb
 	: __dbg_blocks_label42
 	@__dbg_blocks_label41
-	&.str.70 -> $a0
+	&.str.72 -> $a0
 	:: strprint
 	1 -> $a0
 	:: exit
@@ -2257,20 +2281,20 @@ sub dbg_blocks() {
 	$t4 -> [$t0]
 	: __dbg_blocks_label5
 	@__dbg_blocks_label46
-	&.str.71 -> $a0
+	&.str.73 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t0 /h
 	$t0 -> $a0
 	:: prd
-	&.str.33 -> $a0
+	&.str.35 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t2 /h
 	$t2 == 1 -> $t3
 	$t3 -> $t4
 	&.str.6 -> $t6
-	&.str.34 -> $t7
+	&.str.36 -> $t7
 	$t3 ~ 0
 	[$t6 != $t7] -> $t5
 	$t5 -> $a0
@@ -2407,13 +2431,13 @@ sub main() {
 	$a1 -> [$t1]
 	[ $a0
 	[ $a1
-	&.str.35 -> $a0
+	&.str.37 -> $a0
 	:: strprint
 	] $a1
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.36 -> $a0
+	&.str.38 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2439,7 +2463,7 @@ sub main() {
 	$r0 -> $t9
 	[ $a0
 	[ $a1
-	&.str.37 -> $a0
+	&.str.39 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2474,7 +2498,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	800 -> $a0
-	&.str.38 -> $a1
+	&.str.40 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2501,7 +2525,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	150 -> $a0
-	&.str.39 -> $a1
+	&.str.41 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2512,7 +2536,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	10 -> $a0
-	&.str.40 -> $a1
+	&.str.42 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2577,7 +2601,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	200 -> $a0
-	&.str.41 -> $a1
+	&.str.43 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2598,7 +2622,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	100 -> $a0
-	&.str.42 -> $a1
+	&.str.44 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2613,7 +2637,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.43 -> $a0
+	&.str.45 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2654,7 +2678,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.44 -> $a0
+	&.str.46 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2696,7 +2720,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	600 -> $a0
-	&.str.45 -> $a1
+	&.str.47 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2712,7 +2736,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	1000 -> $a0
-	&.str.46 -> $a1
+	&.str.48 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2727,7 +2751,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.47 -> $a0
+	&.str.49 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2757,7 +2781,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	300 -> $a0
-	&.str.48 -> $a1
+	&.str.50 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2771,7 +2795,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	233 -> $a0
-	&.str.49 -> $a1
+	&.str.51 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2797,7 +2821,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	600 -> $a0
-	&.str.50 -> $a1
+	&.str.52 -> $a1
 	:: allocate
 	] $a1
 	] $a0
