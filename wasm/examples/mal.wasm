@@ -1,69 +1,87 @@
 #meta
-name: "combined.c"
-author: "Kai Tamkun"
+name: "combined.9.c"
 
 #data
-.str.49: "]\x0A\x00"
-.str.47: " at position [\x00"
-.str.46: "\x1B[0m block of size \x00"
-.str.45: "n \x1B[31mallocated\x00"
-.str.44: " \x1B[32mfree\x00"
-.str.43: "    Found a\x00"
-.str.42: "\x0A\x1B[34mChecking blocks\x1B[0m.\x0A\x00"
-.str.39: "Free block >= \x00"
-.str.37: "Base: null\x0A\x00"
-.str.29: "Ptr8\x00"
-.str.36: "\x0A End: \x00"
-.str.35: "null\x0A\x00"
-.str.38: "Base: \x00"
-.str.34: ": \x00"
-.str.50: "Loop took too long!\x0A\x00"
-.str.30: "Ptr9\x00"
-.str.33: "\x1B[0m byte\x00"
-.str.28: "\x0AFreeing 600 and 1000 pointers.\x0A\x00"
-.str.27: "Ptr7\x00"
-.str.26: "Ptr6\x00"
-.str.25: "\x0AFreeing 100 and 800 pointers.\x0A\x00"
-.str.24: "\x0AFreeing 200 and 10 pointers.\x0A\x00"
-.str.22: "Ptr4\x00"
-.str.10: "combined.c\x00"
-last_block: (8)
-.str.41: " bytes: \x00"
-.str.21: "Ptr3\x00"
-.str.20: "Ptr2\x00"
+.str.68: ", \x00"
+.str.67: " at position [\x00"
+.str.60: " bytes: \x00"
+.str.59: " byte: \x00"
+.str.57: "Base: \x00"
+.str.56: "Base: null\x0A\x00"
+.str.69: "]\x0A\x00"
+.str.53: " set to \x00"
+.str.52: "\x1B[0m byte\x00"
+.str.49: "Ptr9\x00"
+.str.47: "\x0AFreeing 600 and 1000 pointers.\x0A\x00"
+.str.46: "Ptr7\x00"
+.str.45: "Ptr6\x00"
+.str.44: "\x0AFreeing 100 and 800 pointers.\x0A\x00"
+.str.43: "\x0AFreeing 200 and 10 pointers.\x0A\x00"
+.str.39: "Ptr2\x00"
+.str.37: "Start (absolute): \x00"
+.str.29: "} = current->next->next {\x00"
+.str.36: "sizeof(block_meta) = \x00"
+.str.35: "Initializing memory.\x0A\x00"
+.str.38: "Ptr1\x00"
+.str.34: "s.\x0A\x00"
+.str.54: "null.\x0A\x00"
+.str.50: "Ptr10\x00"
+.str.30: "}\x0A\x00"
+.str.33: "\x1B[0m block\x00"
+.str.28: "    current->next {\x00"
+.str.27: " + \x00"
+.str.26: "} += \x00"
+.str.71: "Found \x1B[1m\x00"
+.str.66: "\x1B[0m block of size \x00"
+.str.61: "null\x0A\x00"
+.str.55: "\x0A End: \x00"
+.str.25: "    current->size {\x00"
+.str.24: "    current->free && current->next->free\x0A\x00"
+.str.22: "block_ptr->free == 0\x00"
+.str.41: "Ptr4\x00"
+.str.21: "combined.9.c\x00"
+.str.19: "    block_ptr->free == \x00"
 __func__.fr: "fr\x00"
-.str.19: "Ptr1\x00"
-.str.6: "yes\x0A\x00"
-.str.12: "\x0A\x1B[36mMerged\x1B[0m \x1B[1m\x00"
-.str.18: "Start (absolute): \x00"
-.str.23: "Ptr5\x00"
-.str.17: "sizeof(block_meta) = \x00"
-.str.14: ".\x0A\x00"
+.str.20: "\x0A\x0A\x00"
+.str.6: ".\x0A\x00"
+.str.12: "yes\x0A\x00"
+.str.18: "\x1B[2m)\x1B[22m\x0A\x00"
+.str.23: "\x0A\x1B[38;5;202mmerge_blocks\x1B[39m: current = \x00"
+.str.17: "\x1B[32mfree\x1B[39;2m(\x1B[22m\x00"
+.str.14: "block->size: \x00"
 end: (8)
-.str.16: "Initializing memory.\x0A\x00"
-.str.13: "\x1B[0m block\x00"
-.str.51: "Found \x1B[1m\x00"
-.str.11: "block_ptr->free == 0\x00"
+.str.16: "\x0AMemsplitting block.\x0A\x00"
+.str.63: "    Found a\x00"
+.str.13: "no\x0A\x00"
+.str.51: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
+.str.11: "\x0Ablock->next: \x00"
+last_block: (8)
+.str.10: "block: \x00"
 .str.1: "%s\x00"
-.str.8: "block->size: \x00"
-.str.15: "s.\x0A\x00"
-.str.7: "no\x0A\x00"
+.str.8: "block was null; now it's \x00"
+.str.15: "\x0A       size: \x00"
+.str.7: "~ \x00"
 .str.4: "\x0A\x00"
-.str.48: ", \x00"
-.str.40: " byte: \x00"
-.str.9: "\x0A       size: \x00"
+.str.65: "n \x1B[31mallocated\x00"
+.str.58: "Free block >= \x00"
+.str.42: "Ptr5\x00"
+.str.48: "Ptr8\x00"
+.str.40: "Ptr3\x00"
+.str.62: "\x0A\x1B[34mChecking blocks\x1B[0m.\x0A\x00"
+.str.9: "still null.\x0A\x00"
 memory: (8)
-.str.32: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
-.str.5: "block->next: \x00"
-.str.3: "~ \x00"
-.str.31: "Ptr10\x00"
+.str.32: "\x0A\x1B[36mMerged\x1B[0m \x1B[1m\x00"
+.str.64: " \x1B[32mfree\x00"
+.str.5: "\x1B[38;5;226mSetting global_base\x1B[0m to \x00"
+.str.3: " to \x00"
+.str.31: "    !current->free || !current->next->free\x0A\x00"
 .str: "%d\x00"
 global_base: (8)
-.str.2: "\x1B[38;5;226mSetting global_base\x1B[0m.\x0A\x00"
+.str.70: "Loop took too long!\x0A\x00"
+.str.2: "Realigning \x00"
 
 #code
 
-<>;<>;<>
 :: main
 <halt>
 
@@ -108,7 +126,7 @@ sub allocate() {
 	$a1 -> [$t1]
 	[ $a0
 	[ $a1
-	&.str.32 -> $a0
+	&.str.51 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -124,7 +142,7 @@ sub allocate() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.33 -> $a0
+	&.str.52 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -132,8 +150,8 @@ sub allocate() {
 	[$t0] -> $t5
 	$t5 == 1 -> $t6
 	$t6 -> $t7
-	&.str.14 -> $tf
-	&.str.15 -> $t10
+	&.str.6 -> $tf
+	&.str.34 -> $t10
 	$t6 ~ 0
 	[$tf != $t10] -> $t8
 	[ $a0
@@ -165,7 +183,7 @@ sub allocate() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.34 -> $a0
+	&.str.53 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -177,7 +195,7 @@ sub allocate() {
 	@__allocate_label18
 	[ $a0
 	[ $a1
-	&.str.35 -> $a0
+	&.str.54 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -200,7 +218,7 @@ sub allocate() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.4 -> $a0
+	&.str.6 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -275,7 +293,7 @@ sub check_free() {
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t1]
 	[ $a0
-	&.str.39 -> $a0
+	&.str.58 -> $a0
 	:: strprint
 	] $a0
 	// LowerMemory: [%local] -> %var
@@ -290,8 +308,8 @@ sub check_free() {
 	[$t0] -> $t7
 	$t7 == 1 -> $t8
 	$t8 -> $t9
-	&.str.40 -> $td
-	&.str.41 -> $te
+	&.str.59 -> $td
+	&.str.60 -> $te
 	$t8 ~ 0
 	[$td != $te] -> $ta
 	[ $a0
@@ -324,7 +342,7 @@ sub check_free() {
 	: __check_free_label22
 	@__check_free_label21
 	[ $a0
-	&.str.35 -> $a0
+	&.str.61 -> $a0
 	:: strprint
 	] $a0
 	@__check_free_label22
@@ -365,6 +383,15 @@ sub fr() {
 	[ $t9
 	[ $ta
 	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -384,46 +411,81 @@ sub fr() {
 	: __fr_label7 if $t3
 	: __fr_label6
 	@__fr_label6
-	: __fr_label25
+	: __fr_label34
 	@__fr_label7
+	[ $a0
+	&.str.17 -> $a0
+	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t2
+	$t2 -> $t3
+	// LowerMemory: [global] -> %var
+	[memory] -> $t4
+	$t4 -> $t5
+	$t3 - $t5 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t6 & -1 -> $t7
 	[ $a0
-	$t2 -> $a0
+	$t7 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.18 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t0] -> $t8
+	[ $a0
+	$t8 -> $a0
 	:: get_block_ptr
 	] $a0
 	// SetupCalls: move result from $r0
-	$r0 -> $t3
+	$r0 -> $t9
 	// LowerMemory: %src -> [%dest]
-	$t3 -> [$t1]
+	$t9 -> [$t1]
+	[ $a0
+	&.str.19 -> $a0
+	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t4
-	$t4 + 16 -> $t5
+	[$t1] -> $ta
+	$ta + 16 -> $tb
 	// LowerMemory: [%local] -> %var
-	[$t5] -> $t6 /h
-	$t6 == 0 -> $t7
-	$t7 x 1 -> $t8
-	$t8 -> $t9
+	[$tb] -> $tc /h
+	[ $a0
+	$tc -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.20 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t1] -> $td
+	$td + 16 -> $te
+	// LowerMemory: [%local] -> %var
+	[$te] -> $tf /h
+	$tf == 0 -> $t10
+	$t10 x 1 -> $t11
+	$t11 -> $t12
 	1 -> $m0
 	$m0 << 31 -> $m0
-	$t9 x $m0 -> $ta
-	$ta - $m0 -> $ta
-	$ta == 0 -> $tb
-	!$tb.
-	: __fr_label18 if $tb
-	: __fr_label20
-	@__fr_label18
+	$t12 x $m0 -> $t13
+	$t13 - $m0 -> $t13
+	$t13 == 0 -> $t14
+	!$t14.
+	: __fr_label27 if $t14
+	: __fr_label29
+	@__fr_label27
 	[ $a0
 	&__func__.fr -> $a0
-	&.str.10 -> $a1
-	134 -> $a2
-	&.str.11 -> $a3
+	&.str.21 -> $a1
+	147 -> $a2
+	&.str.22 -> $a3
 	:: __assert_rtn
 	] $a0
-	: __fr_label21
-	@__fr_label20
-	<>
-	@__fr_label21
+	@__fr_label29
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t0
 	$t0 + 16 -> $t2
@@ -436,8 +498,17 @@ sub fr() {
 	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $t3
-	@__fr_label25
+	@__fr_label34
 	$fp -> $sp
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
 	] $tb
 	] $ta
 	] $t9
@@ -858,6 +929,11 @@ sub mal() {
 	[ $t13
 	[ $t14
 	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -888,13 +964,13 @@ sub mal() {
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t0]
-	: __mal_label69
+	: __mal_label84
 	@__mal_label9
 	// LowerMemory: [global] -> %var
 	[global_base] -> $t4
 	$t4 == 0 -> $t5
 	!$t5.
-	: __mal_label20 if $t5
+	: __mal_label23 if $t5
 	: __mal_label12
 	@__mal_label12
 	// LowerMemory: [%local] -> %var
@@ -919,18 +995,31 @@ sub mal() {
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t0]
-	: __mal_label69
+	: __mal_label84
 	@__mal_label18
 	[ $a0
-	&.str.2 -> $a0
+	&.str.5 -> $a0
 	:: strprint
 	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t4
+	$t4 -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
+	[ $a0
+	$t6 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.6 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t2] -> $t7
 	// LowerMemory: %src -> [global]
-	$t4 -> [global_base]
-	: __mal_label65
-	@__mal_label20
+	$t7 -> [global_base]
+	: __mal_label80
+	@__mal_label23
 	// LowerMemory: [global] -> %var
 	[global_base] -> $t4
 	// LowerMemory: %src -> [%dest]
@@ -950,11 +1039,11 @@ sub mal() {
 	[$t2] -> $t7
 	$t7 == 0 -> $t8
 	!$t8.
-	: __mal_label47 if $t8
-	: __mal_label26
-	@__mal_label26
+	: __mal_label56 if $t8
+	: __mal_label29
+	@__mal_label29
 	[ $a0
-	&.str.3 -> $a0
+	&.str.7 -> $a0
 	:: strprint
 	] $a0
 	// LowerMemory: [%local] -> %var
@@ -1000,102 +1089,149 @@ sub mal() {
 	$r0 -> $t13
 	// LowerMemory: %src -> [%dest]
 	$t13 -> [$t2]
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t14
-	$t14 == 0 -> $t15
-	!$t15.
-	: __mal_label46 if $t15
-	: __mal_label45
-	@__mal_label45
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t0]
-	: __mal_label69
-	@__mal_label46
-	: __mal_label64
-	@__mal_label47
-	[ $a0
-	&.str.5 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t3
-	$t3 + 8 -> $t4
-	// LowerMemory: [%local] -> %var
-	[$t4] -> $t5
-	$t5 == 0 -> $t6
-	!$t6.
-	$t6 -> $t7
-	&.str.6 -> $t13
-	&.str.7 -> $t14
-	$t6 ~ 0
-	[$t13 != $t14] -> $t8
-	[ $a0
-	$t8 -> $a0
-	:: strprint
-	] $a0
 	[ $a0
 	&.str.8 -> $a0
 	:: strprint
 	] $a0
 	// LowerMemory: [%local] -> %var
-	[$t2] -> $t9
-	$t9 + 0 -> $ta
-	// LowerMemory: [%local] -> %var
-	[$ta] -> $tb
-	// LowerTrunc: 64 to 32, apply mask
-	$tb & -1 -> $tc
-	[ $a0
-	$tc -> $a0
-	:: prd
-	] $a0
+	[$t2] -> $t14
+	$t14 == 0 -> $t15
+	!$t15.
+	: __mal_label49 if $t15
+	: __mal_label48
+	@__mal_label48
 	[ $a0
 	&.str.9 -> $a0
 	:: strprint
 	] $a0
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%var]
+	$m0 -> [$t0]
+	: __mal_label84
+	@__mal_label49
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $td
+	[$t2] -> $t3
+	$t3 -> $t4
+	// LowerMemory: [global] -> %var
+	[memory] -> $t5
+	$t5 -> $t6
+	$t4 - $t6 -> $t7
 	// LowerTrunc: 64 to 32, apply mask
-	$td & -1 -> $te
+	$t7 & -1 -> $t8
 	[ $a0
-	$te -> $a0
+	$t8 -> $a0
 	:: prd
 	] $a0
 	[ $a0
 	&.str.4 -> $a0
 	:: strprint
 	] $a0
+	: __mal_label79
+	@__mal_label56
+	[ $a0
+	&.str.10 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t2] -> $t3
+	$t3 -> $t4
+	// LowerMemory: [global] -> %var
+	[memory] -> $t5
+	$t5 -> $t6
+	$t4 - $t6 -> $t7
+	// LowerTrunc: 64 to 32, apply mask
+	$t7 & -1 -> $t8
+	[ $a0
+	$t8 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.11 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t2] -> $t9
+	$t9 + 8 -> $ta
+	// LowerMemory: [%local] -> %var
+	[$ta] -> $tb
+	$tb == 0 -> $tc
+	!$tc.
+	$tc -> $td
+	&.str.12 -> $s2
+	&.str.13 -> $s3
+	$tc ~ 0
+	[$s2 != $s3] -> $te
+	[ $a0
+	$te -> $a0
+	:: strprint
+	] $a0
+	[ $a0
+	&.str.14 -> $a0
+	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $tf
+	$tf + 0 -> $t10
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t10
+	[$t10] -> $t11
+	// LowerTrunc: 64 to 32, apply mask
+	$t11 & -1 -> $t12
 	[ $a0
-	$tf -> $a0
-	$t10 -> $a1
+	$t12 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.15 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t1] -> $t13
+	// LowerTrunc: 64 to 32, apply mask
+	$t13 & -1 -> $t14
+	[ $a0
+	$t14 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.16 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t2] -> $t15
+	// LowerMemory: [%local] -> %var
+	[$t1] -> $t16
+	[ $a0
+	$t15 -> $a0
+	$t16 -> $a1
 	:: memsplit
 	] $a0
 	// LowerMemory: [%local] -> %var
-	[$t2] -> $t11
-	$t11 + 16 -> $t12
+	[$t2] -> $s0
+	$s0 + 16 -> $s1
 	// LowerMemory: imm -> $m0
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t12] /h
-	@__mal_label64
+	$m0 -> [$s1] /h
+	@__mal_label79
 	<>
-	@__mal_label65
+	@__mal_label80
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $t1
 	$t1 + 20 -> $t3
 	$t3 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t0]
-	@__mal_label69
+	@__mal_label84
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1
 	$fp -> $sp
 	$t1 -> $r0
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
 	] $t15
 	] $t14
 	] $t13
@@ -1136,7 +1272,7 @@ sub dbg() {
 	[ $t6
 	[ $t7
 	$sp -> $fp
-	&.str.36 -> $a0
+	&.str.55 -> $a0
 	:: strprint
 	// LowerMemory: [global] -> %var
 	[end] -> $t0
@@ -1157,11 +1293,11 @@ sub dbg() {
 	: __dbg_label9 if $t7
 	: __dbg_label10
 	@__dbg_label9
-	&.str.37 -> $a0
+	&.str.56 -> $a0
 	:: strprint
 	: __dbg_label19
 	@__dbg_label10
-	&.str.38 -> $a0
+	&.str.57 -> $a0
 	:: strprint
 	// LowerMemory: [global] -> %var
 	[global_base] -> $t0
@@ -1218,57 +1354,129 @@ sub merge_blocks() {
 	[ $t12
 	[ $t13
 	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	[ $s4
+	[ $s5
+	[ $s6
+	[ $s7
+	[ $s8
+	[ $s9
+	[ $sa
+	[ $sb
+	[ $sc
+	[ $sd
+	[ $se
+	[ $sf
+	[ $s10
+	[ $s11
+	[ $s12
+	[ $s13
+	[ $s14
+	[ $s15
+	[ $s16
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerStack: %var -> [$fp]
+	$t0 -> [$fp]
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t1 -> [$m0]
 	$sp - 8 -> $sp
 	// LowerMemory: imm -> $m0
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t0] /h
+	// LowerStack: %var -> [$fp]
+	$t0 -> [$fp]
 	// LowerMemory: [global] -> %var
 	[global_base] -> $t2
 	// LowerMemory: %src -> [%dest]
 	$t2 -> [$t1]
-	@__merge_blocks_label4
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t1 -> [$m0]
+	&.str.23 -> $a0
+	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t9
+	[$t9] -> $t3
+	$t3 -> $t4
+	// LowerMemory: [global] -> %var
+	[memory] -> $t5
+	$t5 -> $t6
+	$t4 - $t6 -> $t7
+	// LowerTrunc: 64 to 32, apply mask
+	$t7 & -1 -> $t8
+	$t8 -> $a0
+	:: prd
+	&.str.4 -> $a0
+	:: strprint
+	@__merge_blocks_label10
+	// LowerMemory: [%local] -> %var
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t5
+	[$t5] -> $t2
 	$t2 == 0 -> $t3
 	!$t3.
 	0 -> $t4
-	: __merge_blocks_label7 if $t3
-	: __merge_blocks_label12
-	@__merge_blocks_label7
+	: __merge_blocks_label13 if $t3
+	: __merge_blocks_label18
+	@__merge_blocks_label13
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t6
+	[$t6] -> $t2
 	$t2 + 8 -> $t3
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t5
 	$t5 == 0 -> $t4
 	!$t4.
-	@__merge_blocks_label12
-	: __merge_blocks_label14 if $t4
-	: __merge_blocks_label51
-	@__merge_blocks_label14
+	@__merge_blocks_label18
+	: __merge_blocks_label20 if $t4
+	: __merge_blocks_label85
+	@__merge_blocks_label20
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t6
+	[$t6] -> $t2
 	$t2 + 16 -> $t3
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t4 /h
 	$t4 == 0 -> $t5
 	!$t5.
-	: __merge_blocks_label19 if $t5
-	: __merge_blocks_label46
-	@__merge_blocks_label19
+	: __merge_blocks_label25 if $t5
+	: __merge_blocks_label80
+	@__merge_blocks_label25
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t8
+	[$t8] -> $t2
 	$t2 + 8 -> $t3
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t4
@@ -1277,85 +1485,234 @@ sub merge_blocks() {
 	[$t5] -> $t6 /h
 	$t6 == 0 -> $t7
 	!$t7.
-	: __merge_blocks_label26 if $t7
-	: __merge_blocks_label46
-	@__merge_blocks_label26
+	: __merge_blocks_label32 if $t7
+	: __merge_blocks_label80
+	@__merge_blocks_label32
+	&.str.24 -> $a0
+	:: strprint
+	&.str.25 -> $a0
+	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2
-	$t2 + 8 -> $t3
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s11
+	[$s11] -> $t2
+	$t2 + 0 -> $t3
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t4
-	$t4 + 0 -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
+	$t5 -> $a0
+	:: prd
+	&.str.26 -> $a0
+	:: strprint
+	24 -> $a0
+	:: prd
+	&.str.27 -> $a0
+	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t5] -> $t6
-	$t6 + 24 -> $t7
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s12
+	[$s12] -> $t6
+	$t6 + 8 -> $t7
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t8
+	[$t7] -> $t8
 	$t8 + 0 -> $t9
 	// LowerMemory: [%local] -> %var
 	[$t9] -> $ta
-	$ta + $t7 -> $tb
-	// LowerMemory: %src -> [%dest]
-	$tb -> [$t9]
+	// LowerTrunc: 64 to 32, apply mask
+	$ta & -1 -> $tb
+	$tb -> $a0
+	:: prd
+	&.str.4 -> $a0
+	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $tc
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s13
+	[$s13] -> $tc
 	$tc + 8 -> $td
 	// LowerMemory: [%local] -> %var
 	[$td] -> $te
-	$te + 8 -> $tf
+	$te + 0 -> $tf
 	// LowerMemory: [%local] -> %var
 	[$tf] -> $t10
+	$t10 + 24 -> $t11
 	// LowerMemory: [%local] -> %var
-	[$t1] -> $t11
-	$t11 + 8 -> $t12
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s14
+	[$s14] -> $t12
+	$t12 + 0 -> $t13
+	// LowerMemory: [%local] -> %var
+	[$t13] -> $t14
+	$t14 + $t11 -> $t15
 	// LowerMemory: %src -> [%dest]
-	$t10 -> [$t12]
+	$t15 -> [$t13]
+	&.str.28 -> $a0
+	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t0] -> $t13 /h
-	$t13 + 1 -> $t14
-	// LowerMemory: %src -> [%dest]
-	$t14 -> [$t0] /h
-	: __merge_blocks_label50
-	@__merge_blocks_label46
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s15
+	[$s15] -> $t16
+	$t16 + 8 -> $s0
 	// LowerMemory: [%local] -> %var
+	[$s0] -> $s1
+	$s1 -> $s2
+	// LowerMemory: [global] -> %var
+	[memory] -> $s3
+	$s3 -> $s4
+	$s2 - $s4 -> $s5
+	// LowerTrunc: 64 to 32, apply mask
+	$s5 & -1 -> $s6
+	$s6 -> $a0
+	:: prd
+	&.str.29 -> $a0
+	:: strprint
+	// LowerMemory: [%local] -> %var
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s16
+	[$s16] -> $s7
+	$s7 + 8 -> $s8
+	// LowerMemory: [%local] -> %var
+	[$s8] -> $s9
+	$s9 + 8 -> $sa
+	// LowerMemory: [%local] -> %var
+	[$sa] -> $sb
+	$sb -> $sc
+	// LowerMemory: [global] -> %var
+	[memory] -> $sd
+	$sd -> $se
+	$sc - $se -> $sf
+	// LowerTrunc: 64 to 32, apply mask
+	$sf & -1 -> $s10
+	$s10 -> $a0
+	:: prd
+	&.str.30 -> $a0
+	:: strprint
+	// LowerMemory: [%local] -> %var
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t1
 	[$t1] -> $t2
 	$t2 + 8 -> $t3
 	// LowerMemory: [%local] -> %var
 	[$t3] -> $t4
+	$t4 + 8 -> $t5
+	// LowerMemory: [%local] -> %var
+	[$t5] -> $t6
+	// LowerMemory: [%local] -> %var
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t9
+	[$t9] -> $t7
+	$t7 + 8 -> $t8
 	// LowerMemory: %src -> [%dest]
-	$t4 -> [$t1]
-	@__merge_blocks_label50
-	: __merge_blocks_label4
-	@__merge_blocks_label51
+	$t6 -> [$t8]
 	// LowerMemory: [%local] -> %var
-	[$t0] -> $t1 /h
-	$t1 > 0 -> $t2
-	: __merge_blocks_label54 if $t2
-	: __merge_blocks_label60
-	@__merge_blocks_label54
-	&.str.12 -> $a0
+	// LowerStack: [$fp] -> %var
+	[$fp] -> $t2
+	[$t2] -> $t1 /h
+	$t1 + 1 -> $t2
+	// LowerMemory: %src -> [%dest]
+	$t2 -> [$t0] /h
+	// LowerStack: %var -> [$fp]
+	$t0 -> [$fp]
+	: __merge_blocks_label84
+	@__merge_blocks_label80
+	&.str.31 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t0] -> $t1 /h
-	$t1 -> $a0
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t3
+	[$t3] -> $t0
+	$t0 + 8 -> $t1
+	// LowerMemory: [%local] -> %var
+	[$t1] -> $t2
+	// LowerMemory: %src -> [%dest]
+	$t2 -> [$t1]
+	// LowerStack: $fp - offset -> $m0
+	$fp - 8 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t1 -> [$m0]
+	@__merge_blocks_label84
+	: __merge_blocks_label10
+	@__merge_blocks_label85
+	// LowerMemory: [%local] -> %var
+	// LowerStack: [$fp] -> %var
+	[$fp] -> $t2
+	[$t2] -> $t0 /h
+	$t0 > 0 -> $t1
+	: __merge_blocks_label88 if $t1
+	: __merge_blocks_label94
+	@__merge_blocks_label88
+	&.str.32 -> $a0
+	:: strprint
+	// LowerMemory: [%local] -> %var
+	// LowerStack: [$fp] -> %var
+	[$fp] -> $t7
+	[$t7] -> $t0 /h
+	$t0 -> $a0
 	:: prd
-	&.str.13 -> $a0
+	&.str.33 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
-	[$t0] -> $t2 /h
-	$t2 == 1 -> $t3
-	$t3 -> $t4
-	&.str.14 -> $t6
-	&.str.15 -> $t7
-	$t3 ~ 0
-	[$t6 != $t7] -> $t5
-	$t5 -> $a0
+	// LowerStack: [$fp] -> %var
+	[$fp] -> $t8
+	[$t8] -> $t1 /h
+	$t1 == 1 -> $t2
+	$t2 -> $t3
+	&.str.6 -> $t5
+	&.str.34 -> $t6
+	$t2 ~ 0
+	[$t5 != $t6] -> $t4
+	$t4 -> $a0
 	:: strprint
-	@__merge_blocks_label60
+	@__merge_blocks_label94
 	// LowerMemory: [%local] -> %var
-	[$t0] -> $t1 /h
+	// LowerStack: [$fp] -> %var
+	[$fp] -> $t1
+	[$t1] -> $t0 /h
 	$fp -> $sp
-	$t1 -> $r0
+	$t0 -> $r0
+	] $s16
+	] $s15
+	] $s14
+	] $s13
+	] $s12
+	] $s11
+	] $s10
+	] $sf
+	] $se
+	] $sd
+	] $sc
+	] $sb
+	] $sa
+	] $s9
+	] $s8
+	] $s7
+	] $s6
+	] $s5
+	] $s4
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
 	] $t14
 	] $t13
 	] $t12
@@ -1626,6 +1983,10 @@ sub realign() {
 	[ $t6
 	[ $t7
 	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -1634,17 +1995,36 @@ sub realign() {
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
+	[ $a0
+	&.str.2 -> $a0
+	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t2
 	$t2 -> $t3
-	$t3 % 32 -> $t4
-	$t4 == 0 -> $t5
-	!$t5.
-	: __realign_label8 if $t5
-	: __realign_label17
-	@__realign_label8
+	// LowerMemory: [global] -> %var
+	[memory] -> $t4
+	$t4 -> $t5
+	$t3 - $t5 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t6 & -1 -> $t7
+	[ $a0
+	$t7 -> $a0
+	:: prd
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t0] -> $t8
+	// LowerMemory: [%local] -> %var
+	[$t8] -> $t9
+	$t9 -> $ta
+	$ta % 32 -> $tb
+	$tb == 0 -> $tc
+	!$tc.
+	: __realign_label15 if $tc
+	: __realign_label24
+	@__realign_label15
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1
 	// LowerMemory: [%local] -> %var
@@ -1662,13 +2042,40 @@ sub realign() {
 	$t8 + $t7 -> $t8
 	// LowerMemory: %src -> [%dest]
 	$t8 -> [$t6]
-	@__realign_label17
+	@__realign_label24
+	[ $a0
+	&.str.3 -> $a0
+	:: strprint
+	] $a0
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t1
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t2
+	$t2 -> $t3
+	// LowerMemory: [global] -> %var
+	[memory] -> $t4
+	$t4 -> $t5
+	$t3 - $t5 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t6 & -1 -> $t7
+	[ $a0
+	$t7 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.4 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: [%local] -> %var
+	[$t0] -> $t8
+	// LowerMemory: [%local] -> %var
+	[$t8] -> $t9
 	$fp -> $sp
-	$t2 -> $r0
+	$t9 -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
 	] $t8
 	] $t7
 	] $t6
@@ -1746,7 +2153,7 @@ sub dbg_blocks() {
 	0 -> $m0
 	// LowerMemory: $m0 -> [%var]
 	$m0 -> [$t1] /h
-	&.str.42 -> $a0
+	&.str.62 -> $a0
 	:: strprint
 	// LowerMemory: imm -> $m0
 	0 -> $m0
@@ -1765,7 +2172,7 @@ sub dbg_blocks() {
 	$t3 + 1 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t1] /h
-	&.str.43 -> $a0
+	&.str.63 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t5
@@ -1775,13 +2182,13 @@ sub dbg_blocks() {
 	$t7 == 0 -> $t8
 	!$t8.
 	$t8 -> $t9
-	&.str.44 -> $sc
-	&.str.45 -> $sd
+	&.str.64 -> $sc
+	&.str.65 -> $sd
 	$t8 ~ 0
 	[$sc != $sd] -> $ta
 	$ta -> $a0
 	:: strprint
-	&.str.46 -> $a0
+	&.str.66 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $tb
@@ -1792,7 +2199,7 @@ sub dbg_blocks() {
 	$td & -1 -> $te
 	$te -> $a0
 	:: prd
-	&.str.47 -> $a0
+	&.str.67 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $tf
@@ -1805,7 +2212,7 @@ sub dbg_blocks() {
 	$t13 & -1 -> $t14
 	$t14 -> $a0
 	:: prd
-	&.str.48 -> $a0
+	&.str.68 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t0] -> $t15
@@ -1825,7 +2232,7 @@ sub dbg_blocks() {
 	$s7 & -1 -> $s8
 	$s8 -> $a0
 	:: prd
-	&.str.49 -> $a0
+	&.str.69 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t2] -> $s9 /h
@@ -1836,7 +2243,7 @@ sub dbg_blocks() {
 	: __dbg_blocks_label41 if $sb
 	: __dbg_blocks_label42
 	@__dbg_blocks_label41
-	&.str.50 -> $a0
+	&.str.70 -> $a0
 	:: strprint
 	1 -> $a0
 	:: exit
@@ -1850,20 +2257,20 @@ sub dbg_blocks() {
 	$t4 -> [$t0]
 	: __dbg_blocks_label5
 	@__dbg_blocks_label46
-	&.str.51 -> $a0
+	&.str.71 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t0 /h
 	$t0 -> $a0
 	:: prd
-	&.str.13 -> $a0
+	&.str.33 -> $a0
 	:: strprint
 	// LowerMemory: [%local] -> %var
 	[$t1] -> $t2 /h
 	$t2 == 1 -> $t3
 	$t3 -> $t4
-	&.str.14 -> $t6
-	&.str.15 -> $t7
+	&.str.6 -> $t6
+	&.str.34 -> $t7
 	$t3 ~ 0
 	[$t6 != $t7] -> $t5
 	$t5 -> $a0
@@ -2000,13 +2407,13 @@ sub main() {
 	$a1 -> [$t1]
 	[ $a0
 	[ $a1
-	&.str.16 -> $a0
+	&.str.35 -> $a0
 	:: strprint
 	] $a1
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.17 -> $a0
+	&.str.36 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2032,7 +2439,7 @@ sub main() {
 	$r0 -> $t9
 	[ $a0
 	[ $a1
-	&.str.18 -> $a0
+	&.str.37 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2067,7 +2474,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	800 -> $a0
-	&.str.19 -> $a1
+	&.str.38 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2094,7 +2501,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	150 -> $a0
-	&.str.20 -> $a1
+	&.str.39 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2105,7 +2512,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	10 -> $a0
-	&.str.21 -> $a1
+	&.str.40 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2170,7 +2577,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	200 -> $a0
-	&.str.22 -> $a1
+	&.str.41 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2191,7 +2598,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	100 -> $a0
-	&.str.23 -> $a1
+	&.str.42 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2206,7 +2613,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.24 -> $a0
+	&.str.43 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2247,7 +2654,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.25 -> $a0
+	&.str.44 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2289,7 +2696,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	600 -> $a0
-	&.str.26 -> $a1
+	&.str.45 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2305,7 +2712,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	1000 -> $a0
-	&.str.27 -> $a1
+	&.str.46 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2320,7 +2727,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.28 -> $a0
+	&.str.47 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2350,7 +2757,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	300 -> $a0
-	&.str.29 -> $a1
+	&.str.48 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2364,7 +2771,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	233 -> $a0
-	&.str.30 -> $a1
+	&.str.49 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2390,7 +2797,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	600 -> $a0
-	&.str.31 -> $a1
+	&.str.50 -> $a1
 	:: allocate
 	] $a1
 	] $a0
