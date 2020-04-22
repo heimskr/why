@@ -71,6 +71,16 @@ namespace WVM::Mode {
 					server.send(client, ch);
 			}
 		};
+
+		vm.onAddBreakpoint = [&](Word breakpoint) {
+			for (int client: bpSubscribers)
+				server.send(client, ":AddBP " + std::to_string(breakpoint));
+		};
+
+		vm.onRemoveBreakpoint = [&](Word breakpoint) {
+			for (int client: bpSubscribers)
+				server.send(client, ":RemoveBP " + std::to_string(breakpoint));
+		};
 	}
 
 	void ServerMode::cleanupClient(int client) {
@@ -78,6 +88,7 @@ namespace WVM::Mode {
 		registerSubscribers.erase(client);
 		pcSubscribers.erase(client);
 		ffSubscribers.erase(client);
+		bpSubscribers.erase(client);
 	}
 
 	void ServerMode::stop() {
@@ -126,6 +137,8 @@ namespace WVM::Mode {
 				ffSubscribers.insert(client);
 			} else if (to == "output") {
 				outputSubscribers.insert(client);
+			} else if (to == "bp" || to == "breakpoints") {
+				bpSubscribers.insert(client);
 			} else {
 				invalid();
 				return;

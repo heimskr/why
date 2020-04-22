@@ -13,6 +13,7 @@ namespace WVM::Mode {
 			Net::Server server;
 			VM vm;
 			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers, outputSubscribers, ffSubscribers;
+			std::set<int> bpSubscribers;
 
 			void setFastForward(bool);
 

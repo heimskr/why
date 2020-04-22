@@ -221,6 +221,24 @@ namespace WVM {
 		return active;
 	}
 
+	void VM::addBreakpoint(Word breakpoint) {
+		breakpoints.insert(breakpoint);
+		onAddBreakpoint(breakpoint);
+	}
+
+	void VM::removeBreakpoint(Word breakpoint) {
+		breakpoints.erase(breakpoint);
+		onRemoveBreakpoint(breakpoint);
+	}
+
+	const std::unordered_set<Word> & VM::getBreakpoints() const {
+		return breakpoints;
+	}
+
+	bool VM::hasBreakpoint(Word breakpoint) const {
+		return 0 < breakpoints.count(breakpoint);
+	}
+
 	void VM::load(const std::string &path) {
 		load(std::filesystem::path(path));
 	}

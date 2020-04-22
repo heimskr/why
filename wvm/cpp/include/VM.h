@@ -5,6 +5,7 @@
 #include <functional>
 #include <istream>
 #include <map>
+#include <unordered_set>
 #include <vector>
 
 #include "Defs.h"
@@ -24,6 +25,7 @@ namespace WVM {
 			Ring ring = Ring::Zero;
 			bool active = false;
 			size_t cycles = 0;
+			std::unordered_set<Word> breakpoints;
 
 			bool getZ();
 			bool getN();
@@ -50,6 +52,8 @@ namespace WVM {
 			std::function<void(Word)> onUpdateMemory = [](Word) {};
 			std::function<void(Word, Word)> onJump = [](Word, Word) {};
 			std::function<void(const std::string &)> onPrint = [](const std::string &) {};
+			std::function<void(Word)> onAddBreakpoint = [](Word) {};
+			std::function<void(Word)> onRemoveBreakpoint = [](Word) {};
 
 			VM(size_t memory_size, bool keep_initial = true);
 
@@ -76,6 +80,11 @@ namespace WVM {
 			void start();
 			void stop();
 			bool tick();
+
+			void addBreakpoint(Word);
+			void removeBreakpoint(Word);
+			const std::unordered_set<Word> & getBreakpoints() const;
+			bool hasBreakpoint(Word) const;
 
 			void load(const std::string &);
 			void load(const std::filesystem::path &);

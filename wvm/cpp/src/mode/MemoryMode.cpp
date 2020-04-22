@@ -88,7 +88,7 @@ namespace WVM::Mode {
 		textbox.focus();
 		expando->draw();
 		terminal.watch_size();
-		send(":GetMain\n" ":Subscribe memory\n" ":Subscribe pc");
+		send(":GetMain\n" ":Subscribe memory\n" ":Subscribe pc\n" ":Subscribe breakpoints");
 		terminal.join();
 		networkThread.join();
 	}
@@ -290,6 +290,22 @@ namespace WVM::Mode {
 				remakeList();
 				jumpToPC();
 			}
+		} else if (verb == "AddBP") {
+			Word breakpoint;
+			if (size != 1 || !Util::parseLong(split[0], breakpoint)) {
+				DBG("Invalid: AddBP[" << rest << "]");
+				return;
+			}
+
+			vm.addBreakpoint(breakpoint);
+		} else if (verb == "RemoveBP") {
+			Word breakpoint;
+			if (size != 1 || !Util::parseLong(split[0], breakpoint)) {
+				DBG("Invalid: RemoveBP[" << rest << "]");
+				return;
+			}
+
+			vm.removeBreakpoint(breakpoint);
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
