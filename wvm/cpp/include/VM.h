@@ -100,6 +100,11 @@ namespace WVM {
 			Word & st();
 			Word & sp();
 			Word & fp();
+			const Word & hi() const;
+			const Word & lo() const;
+			const Word & st() const;
+			const Word & sp() const;
+			const Word & fp() const;
 	};
 }
 

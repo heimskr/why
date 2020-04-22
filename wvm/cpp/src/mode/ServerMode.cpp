@@ -182,9 +182,9 @@ namespace WVM::Mode {
 				return;
 			}
 
-			int reg = Why::registerID(split[1]);
-			if (reg == -1) {
-				server.send(client, ":Error Invalid register");
+			Word reg;
+			if (!Util::parseLong(split[1], reg)) {
+				server.send(client, ":Error Invalid register: " + split[1]);
 				return;
 			}
 
@@ -198,7 +198,7 @@ namespace WVM::Mode {
 				vm.registers[reg] = new_value;
 			}
 
-			server.send(client, ":Register $" + Why::registerName(reg) + " " + std::to_string(vm.registers[reg]));
+			server.send(client, ":Register " + std::to_string(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "PrintOps") {
 			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
 				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m "

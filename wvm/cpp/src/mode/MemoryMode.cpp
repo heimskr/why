@@ -68,6 +68,9 @@ namespace WVM::Mode {
 					jumpToPC();
 				} else if (key == 'l') {
 					terminal.redraw();
+				} else if (key == 's') {
+					showSymbols = !showSymbols;
+					remakeList();
 				} else return false;
 			} else if (key == '.' && autotick == -1) {
 				send(":Tick");
@@ -93,7 +96,8 @@ namespace WVM::Mode {
 		textbox.focus();
 		expando->draw();
 		terminal.watch_size();
-		send(":GetMain\n" ":Subscribe memory\n" ":Subscribe pc\n" ":Subscribe breakpoints");
+		send(":GetMain\n" ":Subscribe memory\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
+		send(":Reg " + std::to_string(Why::stackPointerOffset));
 		terminal.join();
 		networkThread.join();
 	}
@@ -111,10 +115,28 @@ namespace WVM::Mode {
 		const int height = textbox.get_position().height;
 
 		std::thread loops = std::thread([&]() {
+			const std::string hyphens(42 + padding, '-');
+			const std::string spaces(24 + padding, ' ');
+
+			// First, make a set of all addresses that have one or more labels associated with them. This is faster than
+			// checking each symbol for each address every time.
+			std::unordered_set<Word> labeled;
+			if (showSymbols) {
+				for (const std::pair<std::string, Symbol> &pair: vm.symbolTable)
+					labeled.insert(pair.second.location);
+			}
+
 			for (Word address = min, i = 0; address < max; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
-					textbox += "\e[2m" + std::string(42 + padding, '-') + "\e[22m";
+					textbox += "\e[2m" + hyphens + "\e[22m";
+				}
+
+				if (showSymbols && 0 < labeled.count(address)) {
+					for (const std::pair<std::string, Symbol> &pair: vm.symbolTable) {
+						if (pair.second.location == address)
+							textbox += spaces + "\e[36m@\e[39;1;4m" + pair.first + "\e[22;24m";
+					}
 				}
 
 				addLine(address);
@@ -139,6 +161,10 @@ namespace WVM::Mode {
 	std::string MemoryMode::stringify(Word address) const {
 		std::stringstream ss;
 		UWord word = vm.getWord(address, Endianness::Big);
+
+		if (vm.sp() - (vm.sp() % 8) == address)
+			ss << "\e[48;5;236m";
+
 		if (vm.hasBreakpoint(address)) {
 			ss << (vm.programCounter == address? "\e[48;5;22;31m" : "\e[38;5;202m");
 		} else if (vm.programCounter == address) {
@@ -147,7 +173,6 @@ namespace WVM::Mode {
 			ss << "\e[2m";
 		}
 
-		// ss << (vm.hasBreakpoint(address)? "\e[38;5;202m" : "\e[2m") << "[";
 		ss << "[";
 		ss << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
@@ -179,10 +204,12 @@ namespace WVM::Mode {
 		return ss.str();
 	}
 
-	void MemoryMode::updateLine(Word address) {
-		haunted::ui::simpleline &simple = getLine(address);
-		simple.text = stringify(address);
-		textbox.redraw_line(simple);
+	void MemoryMode::updateLine(Word address, bool careless) {
+		if (careless || 0 < lines.count(address)) {
+			haunted::ui::simpleline &simple = getLine(address);
+			simple.text = stringify(address);
+			textbox.redraw_line(simple);
+		}
 	}
 
 	void MemoryMode::makeSymbolTableEdges() {
@@ -318,6 +345,22 @@ namespace WVM::Mode {
 			}
 
 			removeBreakpoint(breakpoint);
+		} else if (verb == "Register") {
+			Word reg, value;
+			if (size != 2 || !Util::parseLong(split[0], reg) || !Util::parseLong(split[1], value) || reg < 0
+			    || 128 <= reg) {
+				DBG("Invalid: Registers[" << rest << "]");
+				return;
+			}
+
+			if (reg == Why::stackPointerOffset) {
+				Word old_sp = vm.sp() - (vm.sp() % 8);
+				vm.registers[reg] = value;
+				updateLine(old_sp);
+				updateLine(vm.sp() - (vm.sp() % 8));
+			} else {
+				vm.registers[reg] = value;
+			}
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();

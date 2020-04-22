@@ -335,4 +335,24 @@ namespace WVM {
 	Word & VM::fp() {
 		return registers[Why::framePointerOffset];
 	}
+
+	const Word & VM::hi() const {
+		return registers[Why::hiOffset];
+	}
+
+	const Word & VM::lo() const {
+		return registers[Why::loOffset];
+	}
+
+	const Word & VM::st() const {
+		return registers[Why::statusOffset];
+	}
+
+	const Word & VM::sp() const {
+		return registers[Why::stackPointerOffset];
+	}
+
+	const Word & VM::fp() const {
+		return registers[Why::framePointerOffset];
+	}
 }
