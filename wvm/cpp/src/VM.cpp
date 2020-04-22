@@ -218,6 +218,10 @@ namespace WVM {
 		Operations::execute(*this, instruction);
 
 		++cycles;
+
+		if (hasBreakpoint(programCounter))
+			return false;
+
 		return active;
 	}
 

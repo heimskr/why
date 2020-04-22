@@ -30,8 +30,13 @@ namespace WVM::Mode {
 				// behavior I want anyway.
 				std::unique_lock lock(networkMutex);
 				while (autotick != -1) {
+
 					*buffer << ":Tick\n";
 					usleep(autotick);
+					if (vm.hasBreakpoint(vm.programCounter)) {
+						autotick = -1;
+						break;
+					}
 				}
 			}
 		});
@@ -366,8 +371,13 @@ namespace WVM::Mode {
 		lines.emplace(address, ptr);
 		ptr->mouse_fn = [&, address](const haunted::mouse_report &report) {
 			if (report.action == haunted::mouse_action::up) {
-				if (report.x <= 1 + padding)
+				if (report.x <= 1 + padding) {
+					// Clicked on [.....]
 					send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
+				} else if (padding + 4 <= report.x && report.x <= padding + 21) {
+					// Clicked on 0x................
+					DBG("(" << report.x << ")");
+				}
 			}
 		};
 		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(ptr.get())) {

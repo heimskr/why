@@ -167,8 +167,11 @@ namespace WVM::Mode {
 				}
 
 				setFastForward(true);
-				for (Word i = 0; i < ticks; ++i)
-					vm.tick();
+				for (Word i = 0; i < ticks; ++i) {
+					if (!vm.tick())
+						break;
+				}
+
 				setFastForward(false);
 			} else {
 				invalid();
