@@ -399,7 +399,6 @@ namespace WVM::Operations {
 		vm.updateFlags(rd = static_cast<UWord>(rs) >> static_cast<UWord>(immediate));
 		vm.onRegisterChange(vm.registerID(rd));
 		vm.increment();
-
 	}
 
 	void sraiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
@@ -409,7 +408,7 @@ namespace WVM::Operations {
 	}
 
 	void modiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
-		vm.updateFlags(rd = rs & immediate);
+		vm.updateFlags(rd = rs % immediate);
 		vm.onRegisterChange(vm.registerID(rd));
 		vm.increment();
 	}
