@@ -139,6 +139,8 @@ namespace WVM::Mode {
 				outputSubscribers.insert(client);
 			} else if (to == "bp" || to == "breakpoints") {
 				bpSubscribers.insert(client);
+				for (int breakpoint: vm.getBreakpoints())
+					server.send(client, ":AddBP " + std::to_string(breakpoint));
 			} else {
 				invalid();
 				return;
@@ -271,6 +273,22 @@ namespace WVM::Mode {
 			vm.reset();
 			server.send(client, ":PC " + std::to_string(vm.programCounter));
 			server.send(client, ":ResetComplete");
+		} else if (verb == "AddBP") {
+			Word breakpoint;
+			if (size != 2 || !Util::parseLong(split[1], breakpoint)) {
+				invalid();
+				return;
+			}
+
+			vm.addBreakpoint(breakpoint);
+		} else if (verb == "RemoveBP") {
+			Word breakpoint;
+			if (size != 2 || !Util::parseLong(split[1], breakpoint)) {
+				invalid();
+				return;
+			}
+
+			vm.removeBreakpoint(breakpoint);
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}

@@ -109,10 +109,11 @@ namespace WVM::Mode {
 			for (Word address = min, i = 0; address < max; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
-					textbox += "\e[2m" + std::string(55 + padding, '-') + "\e[22m";
+					textbox += "\e[2m" + std::string(42 + padding, '-') + "\e[22m";
 				}
-				textbox += stringify(address);
-				lines.emplace(address, textbox.get_lines().back());
+
+				addLine(address);
+
 				if (i == height) {
 					textbox.suppress_draw = false;
 					textbox.draw();
@@ -121,10 +122,8 @@ namespace WVM::Mode {
 			}
 
 			Word size = static_cast<Word>(vm.getMemorySize());
-			for (Word address = size - 100 * 8; address < size; address += 8) {
-				textbox += stringify(address);
-				lines.emplace(address, textbox.get_lines().back());
-			}
+			for (Word address = size - 100 * 8; address < size; address += 8)
+				addLine(address);
 		});
 
 		loops.join();
@@ -135,9 +134,17 @@ namespace WVM::Mode {
 	std::string MemoryMode::stringify(Word address) const {
 		std::stringstream ss;
 		UWord word = vm.getWord(address, Endianness::Big);
-		if (vm.programCounter == address)
-			ss << "\e[48;5;22m";
-		ss << "\e[2m[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
+		if (vm.hasBreakpoint(address)) {
+			ss << (vm.programCounter == address? "\e[48;5;22;31m" : "\e[38;5;202m");
+		} else if (vm.programCounter == address) {
+			ss << "\e[48;5;22;2m";
+		} else {
+			ss << "\e[2m";
+		}
+
+		// ss << (vm.hasBreakpoint(address)? "\e[38;5;202m" : "\e[2m") << "[";
+		ss << "[";
+		ss << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
 
 		if (address < 32) {
@@ -297,7 +304,7 @@ namespace WVM::Mode {
 				return;
 			}
 
-			vm.addBreakpoint(breakpoint);
+			addBreakpoint(breakpoint);
 		} else if (verb == "RemoveBP") {
 			Word breakpoint;
 			if (size != 1 || !Util::parseLong(split[0], breakpoint)) {
@@ -305,7 +312,7 @@ namespace WVM::Mode {
 				return;
 			}
 
-			vm.removeBreakpoint(breakpoint);
+			removeBreakpoint(breakpoint);
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
@@ -351,5 +358,34 @@ namespace WVM::Mode {
 		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(line.get())) {
 			return *simple;
 		} else throw std::runtime_error("Unable to cast line to haunted::ui::simpleline");
+	}
+
+	haunted::ui::simpleline & MemoryMode::addLine(Word address) {
+		textbox += stringify(address);
+		haunted::ui::textbox::line_ptr ptr = textbox.get_lines().back();
+		lines.emplace(address, ptr);
+		ptr->mouse_fn = [&, address](const haunted::mouse_report &report) {
+			if (report.action == haunted::mouse_action::up) {
+				if (report.x <= 1 + padding)
+					send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
+			}
+		};
+		if (haunted::ui::simpleline *simple = dynamic_cast<haunted::ui::simpleline *>(ptr.get())) {
+			return *simple;
+		} else throw std::runtime_error("Couldn't cast new textline to simpleline");
+	}
+
+	void MemoryMode::addBreakpoint(Word breakpoint) {
+		if (vm.hasBreakpoint(breakpoint))
+			return;
+		vm.addBreakpoint(breakpoint);
+		updateLine(breakpoint);
+	}
+
+	void MemoryMode::removeBreakpoint(Word breakpoint) {
+		if (!vm.hasBreakpoint(breakpoint))
+			return;
+		vm.removeBreakpoint(breakpoint);
+		updateLine(breakpoint);
 	}
 }

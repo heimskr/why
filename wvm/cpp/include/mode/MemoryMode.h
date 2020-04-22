@@ -38,6 +38,9 @@ namespace WVM::Mode {
 			void send(const std::string &);
 			void jumpToPC();
 			haunted::ui::simpleline & getLine(Word address);
+			haunted::ui::simpleline & addLine(Word address);
+			void addBreakpoint(Word);
+			void removeBreakpoint(Word);
 
 		public:
 			Word min = 0, max = 0;
