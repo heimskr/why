@@ -383,7 +383,7 @@ namespace WVM::Operations {
 	}
 
 	void multuiOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
-		CAT_MUL128(vm.registers[Why::hiOffset], vm.registers[Why::loOffset], rs, static_cast<UWord>(immediate));
+		CAT_MUL128(vm.hi(), vm.lo(), rs, static_cast<UWord>(immediate));
 		vm.onRegisterChange(Why::hiOffset);
 		vm.onRegisterChange(Why::loOffset);
 		vm.increment();

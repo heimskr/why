@@ -14,8 +14,11 @@ namespace WVM::Mode {
 			VM vm;
 			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers, outputSubscribers, ffSubscribers;
 			std::set<int> bpSubscribers;
+			std::set<Word> writtenAddresses;
 
 			void setFastForward(bool);
+			void broadcast(const std::string &);
+			void sendMemory(int);
 
 		public:
 			static ServerMode *instance;

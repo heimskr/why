@@ -45,6 +45,7 @@ namespace WVM {
 			Word codeOffset = -1;
 			Word dataOffset = -1;
 			Word  endOffset = -1;
+			bool paused = false;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
@@ -90,7 +91,7 @@ namespace WVM {
 			void load(const std::filesystem::path &);
 			void load(std::istream &);
 			void init();
-			void reset();
+			void reset(bool reload = false);
 			void loadSymbols();
 
 			size_t getMemorySize() { return memorySize; }

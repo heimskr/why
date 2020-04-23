@@ -23,7 +23,7 @@ namespace WVM::Mode {
 			VM vm;
 			std::map<int, std::shared_ptr<haunted::ui::textline>> lines;
 			std::unordered_set<Word> symbolTableEdges;
-			bool follow = true, fastForward = false, showSymbols = true;
+			bool follow = true, fastForward = false, showSymbols = false;
 
 			int autotick = -1;
 			std::thread autotickThread;

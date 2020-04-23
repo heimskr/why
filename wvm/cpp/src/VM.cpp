@@ -219,8 +219,10 @@ namespace WVM {
 
 		++cycles;
 
-		if (hasBreakpoint(programCounter))
+		if (hasBreakpoint(programCounter)) {
+			paused = true;
 			return false;
+		}
 
 		return active;
 	}
@@ -294,13 +296,20 @@ namespace WVM {
 		loadSymbols();
 	}
 
-	void VM::reset() {
-		if (keepInitial)
-			memory = initial;
-		else if (!loadedFrom.empty())
-			load(loadedFrom);
-		else
-			throw std::runtime_error("Unable to reset VM: no initial memory or path was stored");
+	void VM::reset(bool reload) {
+		if (reload) {
+			if (!loadedFrom.empty())
+				load(loadedFrom);
+			else
+				throw std::runtime_error("Unable to reset VM: path was stored");
+		} else {
+			if (keepInitial)
+				memory = initial;
+			else if (!loadedFrom.empty())
+				load(loadedFrom);
+			else
+				throw std::runtime_error("Unable to reset VM: no initial memory or path was stored");
+		}
 		init();
 	}
 

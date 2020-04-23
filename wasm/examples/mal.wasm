@@ -2,531 +2,91 @@
 name: "combined.9.c"
 
 #data
-.str.68: "\x1B[0m block of size \x00"
-.str.67: "n \x1B[31mallocated\x00"
-.str.60: "Free block >= \x00"
-.str.59: "Base: \x00"
-.str.57: "\x0A End: \x00"
-.str.56: "null.\x0A\x00"
-.str.69: " at position [\x00"
-.str.53: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
-.str.52: "Ptr10\x00"
-.str.49: "\x0AFreeing 600 and 1000 pointers.\x0A\x00"
-.str.47: "Ptr6\x00"
-.str.46: "\x0AFreeing 100 and 800 pointers.\x0A\x00"
-.str.45: "\x0AFreeing 200 and 10 pointers.\x0A\x00"
-.str.44: "Ptr5\x00"
-.str.43: "Ptr4\x00"
-.str.39: "Start (absolute): \x00"
-.str.37: "Initializing memory.\x0A\x00"
-.str.29: " + \x00"
-.str.36: "s.\x0A\x00"
-.str.35: "\x1B[0m block\x00"
-.str.38: "sizeof(block_meta) = \x00"
-.str.34: "\x0A\x1B[36mMerged\x1B[0m \x1B[1m\x00"
-.str.54: "\x1B[0m byte\x00"
-.str.50: "Ptr8\x00"
-.str.30: "    current->next {\x00"
-.str.72: "Loop took too long!\x0A\x00"
-.str.33: "    !current->free || !current->next->free\x0A\x00"
-.str.28: "} += \x00"
-.str.27: "    current->size {\x00"
-.str.26: "    current->free && current->next->free\x0A\x00"
-.str.71: "]\x0A\x00"
-.str.66: " \x1B[32mfree\x00"
-.str.61: " byte: \x00"
-.str.55: " set to \x00"
-.str.25: " = \x00"
-.str.24: " - \x00"
-.str.22: "block_ptr->free == 0\x00"
-.str.41: "Ptr2\x00"
-.str.21: "combined.9.c\x00"
-.str.19: "    block_ptr->free == \x00"
-__func__.fr: "fr\x00"
-.str.20: "\x0A\x0A\x00"
-.str.6: ".\x0A\x00"
-.str.12: "yes\x0A\x00"
-.str.18: "\x1B[2m)\x1B[22m\x0A\x00"
-.str.23: "\x0A\x1B[38;5;202mmerge_blocks\x1B[39m: current = \x00"
-.str.17: "\x1B[32mfree\x1B[39;2m(\x1B[22m\x00"
-.str.14: "block->size: \x00"
+.str.68: "} += \x00"
+.str.67: "    current->size {\x00"
+.str.60: "\x0A\x0A\x00"
+.str.59: "    block_ptr->free == \x00"
+.str.57: "\x1B[32mfree\x1B[39;2m(\x1B[22m\x00"
+.str.56: "\x0AMemsplitting block.\x0A\x00"
+.str.69: " + \x00"
+.str.53: "no\x0A\x00"
+.str.52: "yes\x0A\x00"
+.str.49: "still null.\x0A\x00"
+.str.47: "~ \x00"
+.str.46: "\x1B[38;5;226mSetting global_base\x1B[0m to \x00"
+.str.45: " to \x00"
+.str.44: "Realigning \x00"
+.str.43: "%s\x00"
+.str.39: "Found \x1B[1m\x00"
+.str.37: "]\x0A\x00"
+.str.29: "null\x0A\x00"
+.str.36: ", \x00"
+.str.35: " at position [\x00"
+.str.38: "Loop took too long!\x0A\x00"
+.str.34: "\x1B[0m block of size \x00"
+.str.54: "block->size: \x00"
+.str.50: "block: \x00"
+.str.30: "\x0A\x1B[34mChecking blocks\x1B[0m.\x0A\x00"
+.str.72: "}\x0A\x00"
+.str.33: "n \x1B[31mallocated\x00"
+.str.28: " bytes: \x00"
+.str.27: " byte: \x00"
+.str.26: "Free block >= \x00"
+.str.71: "} = current->next->next {\x00"
+.str.66: "    current->free && current->next->free\x0A\x00"
+.str.61: "combined.9.c\x00"
+.str.55: "\x0A       size: \x00"
+.str.25: "Base: \x00"
+.str.24: "Base: null\x0A\x00"
+.str.65: " = \x00"
+.str.58: "\x1B[2m)\x1B[22m\x0A\x00"
+.str.42: "%c\x00"
+.str.48: "block was null; now it's \x00"
+.str.40: "\x1B[0m block\x00"
+.str.16: "Ptr10\x00"
 end: (8)
-.str.16: "\x0AMemsplitting block.\x0A\x00"
-.str.63: "null\x0A\x00"
-.str.13: "no\x0A\x00"
-.str.51: "Ptr9\x00"
-.str.11: "\x0Ablock->next: \x00"
+.str.22: "null.\x0A\x00"
+.str.10: "\x0AFreeing 100 and 800 pointers.\x0A\x00"
 last_block: (8)
-.str.10: "block: \x00"
-.str.1: "%s\x00"
-.str.8: "block was null; now it's \x00"
-.str.15: "\x0A       size: \x00"
-.str.7: "~ \x00"
-.str.4: "\x0A\x00"
-.str.65: "    Found a\x00"
-.str.58: "Base: null\x0A\x00"
-.str.42: "Ptr3\x00"
-.str.48: "Ptr7\x00"
-.str.40: "Ptr1\x00"
-.str.62: " bytes: \x00"
-.str.9: "still null.\x0A\x00"
+.str.41: "%d\x00"
+.str.21: " set to \x00"
+__func__.fr: "fr\x00"
+.str.19: ".\x0A\x00"
+.str.6: "Ptr3\x00"
+.str.12: "Ptr7\x00"
+.str.18: "\x1B[0m byte\x00"
+.str.23: "\x0A End: \x00"
+.str.17: "\x0A\x1B[35mAllocating\x1B[0m \x1B[1m\x00"
+.str.14: "Ptr8\x00"
+.str.63: "\x0A\x1B[38;5;202mmerge_blocks\x1B[39m: current = \x00"
+.str.13: "\x0AFreeing 600 and 1000 pointers.\x0A\x00"
+.str.51: "\x0Ablock->next: \x00"
+.str.11: "Ptr6\x00"
+.str.1: "sizeof(block_meta) = \x00"
+.str.8: "Ptr5\x00"
+.str.15: "Ptr9\x00"
+.str.7: "Ptr4\x00"
+.str.70: "    current->next {\x00"
+.str.2: "\x0A\x00"
+.str.3: "Start (absolute): \x00"
+.str.4: "Ptr1\x00"
+.str.20: "s.\x0A\x00"
+.str.74: "\x0A\x1B[36mMerged\x1B[0m \x1B[1m\x00"
+.str.32: " \x1B[32mfree\x00"
+.str.64: " - \x00"
+.str.5: "Ptr2\x00"
 memory: (8)
-.str.32: "}\x0A\x00"
-.str.64: "\x0A\x1B[34mChecking blocks\x1B[0m.\x0A\x00"
-.str.5: "\x1B[38;5;226mSetting global_base\x1B[0m to \x00"
-.str.3: " to \x00"
-.str.31: "} = current->next->next {\x00"
-.str: "%d\x00"
-.str.73: "Found \x1B[1m\x00"
+.str.62: "block_ptr->free == 0\x00"
+.str.9: "\x0AFreeing 200 and 10 pointers.\x0A\x00"
+.str.31: "    Found a\x00"
+.str.73: "    !current->free || !current->next->free\x0A\x00"
 global_base: (8)
-.str.70: ", \x00"
-.str.2: "Realigning \x00"
+.str: "Initializing memory.\x0A\x00"
 
 #code
 
 :: main
 <halt>
-
-sub allocate() {
-	@__allocate_label2
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	[ $td
-	[ $te
-	[ $tf
-	[ $t10
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t2
-	$sp - 8 -> $sp
-	// LowerMemory: %src -> [%dest]
-	$a0 -> [$t0]
-	// LowerMemory: %src -> [%dest]
-	$a1 -> [$t1]
-	[ $a0
-	[ $a1
-	&.str.53 -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t3
-	// LowerTrunc: 64 to 32, apply mask
-	$t3 & -1 -> $t4
-	[ $a0
-	[ $a1
-	$t4 -> $a0
-	:: prd
-	] $a1
-	] $a0
-	[ $a0
-	[ $a1
-	&.str.54 -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t5
-	$t5 == 1 -> $t6
-	$t6 -> $t7
-	&.str.6 -> $tf
-	&.str.36 -> $t10
-	$t6 ~ 0
-	[$tf != $t10] -> $t8
-	[ $a0
-	[ $a1
-	$t8 -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t9
-	[ $a0
-	[ $a1
-	$t9 -> $a0
-	:: mal
-	] $a1
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $ta
-	$ta -> $tb
-	// LowerMemory: %src -> [%dest]
-	$tb -> [$t2]
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $tc
-	[ $a0
-	[ $a1
-	$tc -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	[ $a0
-	[ $a1
-	&.str.55 -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $td
-	$td == 0 -> $te
-	: __allocate_label18 if $te
-	: __allocate_label19
-	@__allocate_label18
-	[ $a0
-	[ $a1
-	&.str.56 -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	: __allocate_label26
-	@__allocate_label19
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t0
-	$t0 -> $t1
-	// LowerMemory: [global] -> %var
-	[memory] -> $t3
-	$t3 -> $t4
-	$t1 - $t4 -> $t5
-	// LowerTrunc: 64 to 32, apply mask
-	$t5 & -1 -> $t6
-	[ $a0
-	[ $a1
-	$t6 -> $a0
-	:: prd
-	] $a1
-	] $a0
-	[ $a0
-	[ $a1
-	&.str.6 -> $a0
-	:: strprint
-	] $a1
-	] $a0
-	@__allocate_label26
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t0
-	$fp -> $sp
-	$t0 -> $r0
-	] $t10
-	] $tf
-	] $te
-	] $td
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub check_free() {
-	@__check_free_label1
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	[ $td
-	[ $te
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	$sp - 8 -> $sp
-	// LowerMemory: %src -> [%dest]
-	$a0 -> [$t0]
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t2
-	[ $a0
-	&last_block -> $a0
-	$t2 -> $a1
-	:: find_free_block
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t3
-	$t3 -> $t4
-	// LowerMemory: %src -> [%dest]
-	$t4 -> [$t1]
-	[ $a0
-	&.str.60 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t5
-	// LowerTrunc: 64 to 32, apply mask
-	$t5 & -1 -> $t6
-	[ $a0
-	$t6 -> $a0
-	:: prd
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t7
-	$t7 == 1 -> $t8
-	$t8 -> $t9
-	&.str.61 -> $td
-	&.str.62 -> $te
-	$t8 ~ 0
-	[$td != $te] -> $ta
-	[ $a0
-	$ta -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $tb
-	$tb == 0 -> $tc
-	!$tc.
-	: __check_free_label15 if $tc
-	: __check_free_label21
-	@__check_free_label15
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t0
-	// LowerMemory: [global] -> %var
-	[memory] -> $t2
-	$t2 -> $t3
-	$t0 - $t3 -> $t4
-	// LowerTrunc: 64 to 32, apply mask
-	$t4 & -1 -> $t5
-	[ $a0
-	$t5 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.4 -> $a0
-	:: strprint
-	] $a0
-	: __check_free_label22
-	@__check_free_label21
-	[ $a0
-	&.str.63 -> $a0
-	:: strprint
-	] $a0
-	@__check_free_label22
-	$fp -> $sp
-	] $te
-	] $td
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub fr() {
-	@__fr_label1
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	[ $td
-	[ $te
-	[ $tf
-	[ $t10
-	[ $t11
-	[ $t12
-	[ $t13
-	[ $t14
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	$sp - 8 -> $sp
-	// LowerMemory: %src -> [%dest]
-	$a0 -> [$t0]
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t2
-	$t2 == 0 -> $t3
-	!$t3.
-	: __fr_label7 if $t3
-	: __fr_label6
-	@__fr_label6
-	: __fr_label34
-	@__fr_label7
-	[ $a0
-	&.str.17 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t2
-	$t2 -> $t3
-	// LowerMemory: [global] -> %var
-	[memory] -> $t4
-	$t4 -> $t5
-	$t3 - $t5 -> $t6
-	// LowerTrunc: 64 to 32, apply mask
-	$t6 & -1 -> $t7
-	[ $a0
-	$t7 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.18 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t8
-	[ $a0
-	$t8 -> $a0
-	:: get_block_ptr
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t9
-	// LowerMemory: %src -> [%dest]
-	$t9 -> [$t1]
-	[ $a0
-	&.str.19 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $ta
-	$ta + 16 -> $tb
-	// LowerMemory: [%local] -> %var
-	[$tb] -> $tc /h
-	[ $a0
-	$tc -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.20 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $td
-	$td + 16 -> $te
-	// LowerMemory: [%local] -> %var
-	[$te] -> $tf /h
-	$tf == 0 -> $t10
-	$t10 x 1 -> $t11
-	$t11 -> $t12
-	1 -> $m0
-	$m0 << 31 -> $m0
-	$t12 x $m0 -> $t13
-	$t13 - $m0 -> $t13
-	$t13 == 0 -> $t14
-	!$t14.
-	: __fr_label27 if $t14
-	: __fr_label29
-	@__fr_label27
-	[ $a0
-	&__func__.fr -> $a0
-	&.str.21 -> $a1
-	147 -> $a2
-	&.str.22 -> $a3
-	:: __assert_rtn
-	] $a0
-	@__fr_label29
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t0
-	$t0 + 16 -> $t2
-	// LowerMemory: imm -> $m0
-	1 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t2] /h
-	[ $a0
-	:: merge_blocks
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t3
-	@__fr_label34
-	$fp -> $sp
-	] $t14
-	] $t13
-	] $t12
-	] $t11
-	] $t10
-	] $tf
-	] $te
-	] $td
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
 
 sub get_block_ptr() {
 	@__get_block_ptr_label1
@@ -544,10 +104,11 @@ sub get_block_ptr() {
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %3
 	[$t0] -> $t1
 	$t1 -> $t2
-	$t2 + -20 -> $t3
+	// LowerGetelementptr: struct-type
+	$t2 + -24 -> $t3
 	$fp -> $sp
 	$t3 -> $r0
 	] $t3
@@ -592,18 +153,22 @@ sub memsplit() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t4
 	$sp - 4 -> $sp
@@ -611,27 +176,30 @@ sub memsplit() {
 	$a0 -> [$t0]
 	// LowerMemory: %src -> [%dest]
 	$a1 -> [$t1]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %8
 	[$t0] -> $t5
+	// LowerGetelementptr: struct-type
 	$t5 + 0 -> $t6
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%9] -> %10
 	[$t6] -> $t7
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%4] -> %11
 	[$t1] -> $t8
 	$t8 + 24 -> $t9
 	$t7 > $t9 -> $ta /u
 	: __memsplit_label14 if $ta
 	: __memsplit_label93
 	@__memsplit_label14
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %15
 	[$t0] -> $t5
 	$t5 -> $t6
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%4] -> %17
 	[$t1] -> $t7
 	$t7 * 1
 	$lo -> $t8
 	$t8 + $t6 -> $t8
+	// LowerGetelementptr: struct-type
 	$t8 + 24 -> $t9
+	// LowerGetelementptr: struct-type
 	$t9 + 1 -> $ta
 	$ta -> $tb
 	// LowerMemory: %src -> [%dest]
@@ -645,23 +213,25 @@ sub memsplit() {
 	] $a0
 	// SetupCalls: move result from $r0
 	$r0 -> $td
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %24
 	[$t0] -> $te
+	// LowerGetelementptr: struct-type
 	$te + 8 -> $tf
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%25] -> %26
 	[$tf] -> $t10
 	$t10 == 0 -> $t11
 	!$t11.
 	: __memsplit_label28 if $t11
 	: __memsplit_label61
 	@__memsplit_label28
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %29
 	[$t0] -> $t5
+	// LowerGetelementptr: struct-type
 	$t5 + 8 -> $t6
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%30] -> %31
 	[$t6] -> $t7
 	$t7 -> $t8
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %33
 	[$t2] -> $t9
 	$t9 -> $ta
 	$t8 -> $tb
@@ -672,69 +242,76 @@ sub memsplit() {
 	$te & -1 -> $tf
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t3] /h
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%6] -> %40
 	[$t3] -> $t10 /h
 	$t10 > 0 -> $t11
 	: __memsplit_label42 if $t11
 	: __memsplit_label60
 	@__memsplit_label42
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%6] -> %43
 	[$t3] -> $t5 /h
 	1 -> $m0
 	$m0 << 31 -> $m0
 	$t5 x $m0 -> $t6
 	$t6 - $m0 -> $t6
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %45
 	[$t2] -> $t7
+	// LowerGetelementptr: struct-type
 	$t7 + 0 -> $t8
 	// LowerMemory: %src -> [%dest]
 	$t6 -> [$t8]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %47
 	[$t0] -> $t9
+	// LowerGetelementptr: struct-type
 	$t9 + 8 -> $ta
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%48] -> %49
 	[$ta] -> $tb
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %50
 	[$t2] -> $tc
+	// LowerGetelementptr: struct-type
 	$tc + 8 -> $td
 	// LowerMemory: %src -> [%dest]
 	$tb -> [$td]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %52
 	[$t2] -> $te
+	// LowerGetelementptr: struct-type
 	$te + 16 -> $tf
 	// LowerMemory: imm -> $m0
 	1 -> $m0
-	// LowerMemory: $m0 -> [%var]
+	// LowerMemory: $m0 -> [%53]
 	$m0 -> [$tf] /h
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %54
 	[$t2] -> $t10
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %55
 	[$t0] -> $t11
+	// LowerGetelementptr: struct-type
 	$t11 + 8 -> $t12
 	// LowerMemory: %src -> [%dest]
 	$t10 -> [$t12]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%4] -> %57
 	[$t1] -> $t13
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %58
 	[$t0] -> $t14
+	// LowerGetelementptr: struct-type
 	$t14 + 0 -> $t15
 	// LowerMemory: %src -> [%dest]
 	$t13 -> [$t15]
 	@__memsplit_label60
 	: __memsplit_label92
 	@__memsplit_label61
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %62
 	[$t0] -> $t3
 	$t3 -> $t5
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %64
 	[$t0] -> $t6
+	// LowerGetelementptr: struct-type
 	$t6 + 0 -> $t7
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%65] -> %66
 	[$t7] -> $t8
 	$t8 * 1
 	$lo -> $t9
 	$t9 + $t5 -> $t9
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %68
 	[$t2] -> $ta
 	$ta -> $tb
 	$t9 -> $tc
@@ -744,48 +321,53 @@ sub memsplit() {
 	$te & -1 -> $tf
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t4] /h
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%7] -> %74
 	[$t4] -> $t10 /h
 	$t10 > 0 -> $t11
 	: __memsplit_label76 if $t11
 	: __memsplit_label91
 	@__memsplit_label76
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%7] -> %77
 	[$t4] -> $t3 /h
 	1 -> $m0
 	$m0 << 31 -> $m0
 	$t3 x $m0 -> $t5
 	$t5 - $m0 -> $t5
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %79
 	[$t2] -> $t6
+	// LowerGetelementptr: struct-type
 	$t6 + 0 -> $t7
 	// LowerMemory: %src -> [%dest]
 	$t5 -> [$t7]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %81
 	[$t2] -> $t8
+	// LowerGetelementptr: struct-type
 	$t8 + 16 -> $t9
 	// LowerMemory: imm -> $m0
 	1 -> $m0
-	// LowerMemory: $m0 -> [%var]
+	// LowerMemory: $m0 -> [%82]
 	$m0 -> [$t9] /h
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %83
 	[$t2] -> $ta
+	// LowerGetelementptr: struct-type
 	$ta + 8 -> $tb
 	// LowerMemory: imm -> $m0
 	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
+	// LowerMemory: $m0 -> [%84]
 	$m0 -> [$tb]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%4] -> %85
 	[$t1] -> $tc
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %86
 	[$t0] -> $td
+	// LowerGetelementptr: struct-type
 	$td + 0 -> $te
 	// LowerMemory: %src -> [%dest]
 	$tc -> [$te]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %88
 	[$t2] -> $tf
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %89
 	[$t0] -> $t10
+	// LowerGetelementptr: struct-type
 	$t10 + 8 -> $t11
 	// LowerMemory: %src -> [%dest]
 	$tf -> [$t11]
@@ -795,947 +377,6 @@ sub memsplit() {
 	<>
 	@__memsplit_label93
 	$fp -> $sp
-	] $t15
-	] $t14
-	] $t13
-	] $t12
-	] $t11
-	] $t10
-	] $tf
-	] $te
-	] $td
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub mem_init() {
-	@__mem_init_label1
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	$sp - 4 -> $sp
-	// LowerMemory: %src -> [%dest]
-	$a0 -> [$t0] /h
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t1 /h
-	1 -> $m0
-	$m0 << 31 -> $m0
-	$t1 x $m0 -> $t2
-	$t2 - $m0 -> $t2
-	[ $a0
-	$t2 -> $a0
-	4 -> $a1
-	:: calloc
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t3
-	$t3 -> $t4
-	// LowerMemory: %src -> [global]
-	$t4 -> [memory]
-	[ $a0
-	&memory -> $a0
-	:: realign
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t5
-	// LowerMemory: [global] -> %var
-	[memory] -> $t6
-	$t6 -> $t7
-	// LowerMemory: %src -> [global]
-	$t7 -> [end]
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [global]
-	$m0 -> [global_base]
-	// LowerMemory: [global] -> %var
-	[memory] -> $t8
-	$t8 == 0 -> $t9
-	!$t9.
-	$t9 x 1 -> $ta
-	$ta x 1 -> $tb
-	$tb -> $tc
-	$fp -> $sp
-	$tc -> $r0
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub mal() {
-	@__mal_label1
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	[ $td
-	[ $te
-	[ $tf
-	[ $t10
-	[ $t11
-	[ $t12
-	[ $t13
-	[ $t14
-	[ $t15
-	[ $t16
-	[ $s0
-	[ $s1
-	[ $s2
-	[ $s3
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t2
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t3
-	$sp - 8 -> $sp
-	// LowerMemory: %src -> [%dest]
-	$a0 -> [$t1]
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t4
-	$t4 <= 0 -> $t5 /u
-	: __mal_label8 if $t5
-	: __mal_label9
-	@__mal_label8
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t0]
-	: __mal_label84
-	@__mal_label9
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t4
-	$t4 == 0 -> $t5
-	!$t5.
-	: __mal_label23 if $t5
-	: __mal_label12
-	@__mal_label12
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t4
-	[ $a0
-	0 -> $a0
-	$t4 -> $a1
-	:: request_space
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t5
-	// LowerMemory: %src -> [%dest]
-	$t5 -> [$t2]
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t6
-	$t6 == 0 -> $t7
-	!$t7.
-	: __mal_label18 if $t7
-	: __mal_label17
-	@__mal_label17
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t0]
-	: __mal_label84
-	@__mal_label18
-	[ $a0
-	&.str.5 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t4
-	$t4 -> $t5
-	// LowerTrunc: 64 to 32, apply mask
-	$t5 & -1 -> $t6
-	[ $a0
-	$t6 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.6 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t7
-	// LowerMemory: %src -> [global]
-	$t7 -> [global_base]
-	: __mal_label80
-	@__mal_label23
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t4
-	// LowerMemory: %src -> [%dest]
-	$t4 -> [$t3]
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t5
-	[ $a0
-	$t3 -> $a0
-	$t5 -> $a1
-	:: find_free_block
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t6
-	// LowerMemory: %src -> [%dest]
-	$t6 -> [$t2]
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t7
-	$t7 == 0 -> $t8
-	!$t8.
-	: __mal_label56 if $t8
-	: __mal_label29
-	@__mal_label29
-	[ $a0
-	&.str.7 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t4
-	$t4 -> $t5
-	$t5 + 24 -> $t6
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t7
-	$t7 + 0 -> $t8
-	// LowerMemory: [%local] -> %var
-	[$t8] -> $t9
-	$t9 * 1
-	$lo -> $ta
-	$ta + $t6 -> $ta
-	// LowerMemory: [global] -> %var
-	[memory] -> $tb
-	$tb -> $tc
-	$0 - $tc -> $td
-	$td * 1
-	$lo -> $te
-	$te + $ta -> $te
-	$te -> $tf
-	// LowerTrunc: 64 to 32, apply mask
-	$tf & -1 -> $t10
-	[ $a0
-	$t10 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.4 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t11
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t12
-	[ $a0
-	$t11 -> $a0
-	$t12 -> $a1
-	:: request_space
-	] $a0
-	// SetupCalls: move result from $r0
-	$r0 -> $t13
-	// LowerMemory: %src -> [%dest]
-	$t13 -> [$t2]
-	[ $a0
-	&.str.8 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t14
-	$t14 == 0 -> $t15
-	!$t15.
-	: __mal_label49 if $t15
-	: __mal_label48
-	@__mal_label48
-	[ $a0
-	&.str.9 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t0]
-	: __mal_label84
-	@__mal_label49
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t3
-	$t3 -> $t4
-	// LowerMemory: [global] -> %var
-	[memory] -> $t5
-	$t5 -> $t6
-	$t4 - $t6 -> $t7
-	// LowerTrunc: 64 to 32, apply mask
-	$t7 & -1 -> $t8
-	[ $a0
-	$t8 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.4 -> $a0
-	:: strprint
-	] $a0
-	: __mal_label79
-	@__mal_label56
-	[ $a0
-	&.str.10 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t3
-	$t3 -> $t4
-	// LowerMemory: [global] -> %var
-	[memory] -> $t5
-	$t5 -> $t6
-	$t4 - $t6 -> $t7
-	// LowerTrunc: 64 to 32, apply mask
-	$t7 & -1 -> $t8
-	[ $a0
-	$t8 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.11 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t9
-	$t9 + 8 -> $ta
-	// LowerMemory: [%local] -> %var
-	[$ta] -> $tb
-	$tb == 0 -> $tc
-	!$tc.
-	$tc -> $td
-	&.str.12 -> $s2
-	&.str.13 -> $s3
-	$tc ~ 0
-	[$s2 != $s3] -> $te
-	[ $a0
-	$te -> $a0
-	:: strprint
-	] $a0
-	[ $a0
-	&.str.14 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $tf
-	$tf + 0 -> $t10
-	// LowerMemory: [%local] -> %var
-	[$t10] -> $t11
-	// LowerTrunc: 64 to 32, apply mask
-	$t11 & -1 -> $t12
-	[ $a0
-	$t12 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.15 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t13
-	// LowerTrunc: 64 to 32, apply mask
-	$t13 & -1 -> $t14
-	[ $a0
-	$t14 -> $a0
-	:: prd
-	] $a0
-	[ $a0
-	&.str.16 -> $a0
-	:: strprint
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t15
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t16
-	[ $a0
-	$t15 -> $a0
-	$t16 -> $a1
-	:: memsplit
-	] $a0
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $s0
-	$s0 + 16 -> $s1
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$s1] /h
-	@__mal_label79
-	<>
-	@__mal_label80
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t1
-	$t1 + 20 -> $t3
-	$t3 -> $t4
-	// LowerMemory: %src -> [%dest]
-	$t4 -> [$t0]
-	@__mal_label84
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t1
-	$fp -> $sp
-	$t1 -> $r0
-	] $s3
-	] $s2
-	] $s1
-	] $s0
-	] $t16
-	] $t15
-	] $t14
-	] $t13
-	] $t12
-	] $t11
-	] $t10
-	] $tf
-	] $te
-	] $td
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub dbg() {
-	@__dbg_label0
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	$sp -> $fp
-	&.str.57 -> $a0
-	:: strprint
-	// LowerMemory: [global] -> %var
-	[end] -> $t0
-	$t0 -> $t1
-	// LowerMemory: [global] -> %var
-	[memory] -> $t2
-	$t2 -> $t3
-	$t1 - $t3 -> $t4
-	// LowerTrunc: 64 to 32, apply mask
-	$t4 & -1 -> $t5
-	$t5 -> $a0
-	:: prd
-	&.str.4 -> $a0
-	:: strprint
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t6
-	$t6 == 0 -> $t7
-	: __dbg_label9 if $t7
-	: __dbg_label10
-	@__dbg_label9
-	&.str.58 -> $a0
-	:: strprint
-	: __dbg_label19
-	@__dbg_label10
-	&.str.59 -> $a0
-	:: strprint
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t0
-	$t0 -> $t1
-	// LowerMemory: [global] -> %var
-	[memory] -> $t2
-	$t2 -> $t3
-	$t1 -> $t4
-	$t3 -> $t5
-	$t4 - $t5 -> $t6
-	// LowerTrunc: 64 to 32, apply mask
-	$t6 & -1 -> $t7
-	$t7 -> $a0
-	:: prd
-	&.str.4 -> $a0
-	:: strprint
-	@__dbg_label19
-	$fp -> $sp
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub merge_blocks() {
-	@__merge_blocks_label0
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	[ $td
-	[ $te
-	[ $tf
-	[ $t10
-	[ $t11
-	[ $t12
-	[ $t13
-	[ $t14
-	[ $t15
-	[ $t16
-	[ $s0
-	[ $s1
-	[ $s2
-	[ $s3
-	[ $s4
-	[ $s5
-	[ $s6
-	[ $s7
-	[ $s8
-	[ $s9
-	[ $sa
-	[ $sb
-	[ $sc
-	[ $sd
-	[ $se
-	[ $sf
-	[ $s10
-	[ $s11
-	[ $s12
-	[ $s13
-	[ $s14
-	[ $s15
-	[ $s16
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	// LowerStack: %var -> [$fp]
-	$t0 -> [$fp]
-	$sp - 4 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: %var -> [$m0]
-	$t1 -> [$m0]
-	$sp - 8 -> $sp
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t0] /h
-	// LowerStack: %var -> [$fp]
-	$t0 -> [$fp]
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t2
-	// LowerMemory: %src -> [%dest]
-	$t2 -> [$t1]
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: %var -> [$m0]
-	$t1 -> [$m0]
-	&.str.23 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $tf
-	[$tf] -> $t3
-	$t3 -> $t4
-	// LowerTrunc: 64 to 32, apply mask
-	$t4 & -1 -> $t5
-	$t5 -> $a0
-	:: prd
-	&.str.24 -> $a0
-	:: strprint
-	// LowerMemory: [global] -> %var
-	[memory] -> $t6
-	$t6 -> $t7
-	// LowerTrunc: 64 to 32, apply mask
-	$t7 & -1 -> $t8
-	$t8 -> $a0
-	:: prd
-	&.str.25 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t10
-	[$t10] -> $t9
-	$t9 -> $ta
-	// LowerMemory: [global] -> %var
-	[memory] -> $tb
-	$tb -> $tc
-	$ta - $tc -> $td
-	// LowerTrunc: 64 to 32, apply mask
-	$td & -1 -> $te
-	$te -> $a0
-	:: prd
-	&.str.4 -> $a0
-	:: strprint
-	@__merge_blocks_label16
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t5
-	[$t5] -> $t2
-	$t2 == 0 -> $t3
-	!$t3.
-	0 -> $t4
-	: __merge_blocks_label19 if $t3
-	: __merge_blocks_label24
-	@__merge_blocks_label19
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t6
-	[$t6] -> $t2
-	$t2 + 8 -> $t3
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t5
-	$t5 == 0 -> $t4
-	!$t4.
-	@__merge_blocks_label24
-	: __merge_blocks_label26 if $t4
-	: __merge_blocks_label91
-	@__merge_blocks_label26
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t6
-	[$t6] -> $t2
-	$t2 + 16 -> $t3
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t4 /h
-	$t4 == 0 -> $t5
-	!$t5.
-	: __merge_blocks_label31 if $t5
-	: __merge_blocks_label86
-	@__merge_blocks_label31
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t8
-	[$t8] -> $t2
-	$t2 + 8 -> $t3
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t4
-	$t4 + 16 -> $t5
-	// LowerMemory: [%local] -> %var
-	[$t5] -> $t6 /h
-	$t6 == 0 -> $t7
-	!$t7.
-	: __merge_blocks_label38 if $t7
-	: __merge_blocks_label86
-	@__merge_blocks_label38
-	&.str.26 -> $a0
-	:: strprint
-	&.str.27 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $s11
-	[$s11] -> $t2
-	$t2 + 0 -> $t3
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t4
-	// LowerTrunc: 64 to 32, apply mask
-	$t4 & -1 -> $t5
-	$t5 -> $a0
-	:: prd
-	&.str.28 -> $a0
-	:: strprint
-	24 -> $a0
-	:: prd
-	&.str.29 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $s12
-	[$s12] -> $t6
-	$t6 + 8 -> $t7
-	// LowerMemory: [%local] -> %var
-	[$t7] -> $t8
-	$t8 + 0 -> $t9
-	// LowerMemory: [%local] -> %var
-	[$t9] -> $ta
-	// LowerTrunc: 64 to 32, apply mask
-	$ta & -1 -> $tb
-	$tb -> $a0
-	:: prd
-	&.str.4 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $s13
-	[$s13] -> $tc
-	$tc + 8 -> $td
-	// LowerMemory: [%local] -> %var
-	[$td] -> $te
-	$te + 0 -> $tf
-	// LowerMemory: [%local] -> %var
-	[$tf] -> $t10
-	$t10 + 24 -> $t11
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $s14
-	[$s14] -> $t12
-	$t12 + 0 -> $t13
-	// LowerMemory: [%local] -> %var
-	[$t13] -> $t14
-	$t14 + $t11 -> $t15
-	// LowerMemory: %src -> [%dest]
-	$t15 -> [$t13]
-	&.str.30 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $s15
-	[$s15] -> $t16
-	$t16 + 8 -> $s0
-	// LowerMemory: [%local] -> %var
-	[$s0] -> $s1
-	$s1 -> $s2
-	// LowerMemory: [global] -> %var
-	[memory] -> $s3
-	$s3 -> $s4
-	$s2 - $s4 -> $s5
-	// LowerTrunc: 64 to 32, apply mask
-	$s5 & -1 -> $s6
-	$s6 -> $a0
-	:: prd
-	&.str.31 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $s16
-	[$s16] -> $s7
-	$s7 + 8 -> $s8
-	// LowerMemory: [%local] -> %var
-	[$s8] -> $s9
-	$s9 + 8 -> $sa
-	// LowerMemory: [%local] -> %var
-	[$sa] -> $sb
-	$sb -> $sc
-	// LowerMemory: [global] -> %var
-	[memory] -> $sd
-	$sd -> $se
-	$sc - $se -> $sf
-	// LowerTrunc: 64 to 32, apply mask
-	$sf & -1 -> $s10
-	$s10 -> $a0
-	:: prd
-	&.str.32 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t1
-	[$t1] -> $t2
-	$t2 + 8 -> $t3
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t4
-	$t4 + 8 -> $t5
-	// LowerMemory: [%local] -> %var
-	[$t5] -> $t6
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t8
-	[$t8] -> $t7
-	$t7 + 8 -> $t1
-	// LowerMemory: %src -> [%dest]
-	$t6 -> [$t1]
-	// LowerMemory: [%local] -> %var
-	// LowerStack: [$fp] -> %var
-	[$fp] -> $t3
-	[$t3] -> $t2 /h
-	$t2 + 1 -> $t1
-	// LowerMemory: %src -> [%dest]
-	$t1 -> [$t0] /h
-	// LowerStack: %var -> [$fp]
-	$t0 -> [$fp]
-	: __merge_blocks_label90
-	@__merge_blocks_label86
-	&.str.33 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: [$m0 -> %var]
-	[$m0] -> $t3
-	[$t3] -> $t0
-	$t0 + 8 -> $t1
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2
-	// LowerMemory: %src -> [%dest]
-	$t2 -> [$t1]
-	// LowerStack: $fp - offset -> $m0
-	$fp - 8 -> $m0
-	// LowerStack: %var -> [$m0]
-	$t1 -> [$m0]
-	@__merge_blocks_label90
-	: __merge_blocks_label16
-	@__merge_blocks_label91
-	// LowerMemory: [%local] -> %var
-	// LowerStack: [$fp] -> %var
-	[$fp] -> $t2
-	[$t2] -> $t0 /h
-	$t0 > 0 -> $t1
-	: __merge_blocks_label94 if $t1
-	: __merge_blocks_label100
-	@__merge_blocks_label94
-	&.str.34 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: [$fp] -> %var
-	[$fp] -> $t7
-	[$t7] -> $t0 /h
-	$t0 -> $a0
-	:: prd
-	&.str.35 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	// LowerStack: [$fp] -> %var
-	[$fp] -> $t8
-	[$t8] -> $t1 /h
-	$t1 == 1 -> $t2
-	$t2 -> $t3
-	&.str.6 -> $t5
-	&.str.36 -> $t6
-	$t2 ~ 0
-	[$t5 != $t6] -> $t4
-	$t4 -> $a0
-	:: strprint
-	@__merge_blocks_label100
-	// LowerMemory: [%local] -> %var
-	// LowerStack: [$fp] -> %var
-	[$fp] -> $t1
-	[$t1] -> $t0 /h
-	$fp -> $sp
-	$t0 -> $r0
-	] $s16
-	] $s15
-	] $s14
-	] $s13
-	] $s12
-	] $s11
-	] $s10
-	] $sf
-	] $se
-	] $sd
-	] $sc
-	] $sb
-	] $sa
-	] $s9
-	] $s8
-	] $s7
-	] $s6
-	] $s5
-	] $s4
-	] $s3
-	] $s2
-	] $s1
-	] $s0
-	] $t16
 	] $t15
 	] $t14
 	] $t13
@@ -1792,10 +433,12 @@ sub request_space() {
 	$sp -> $t0
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
@@ -1814,58 +457,65 @@ sub request_space() {
 	$t3 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t4 -> [$t2]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %8
 	[$t0] -> $t5
 	$t5 == 0 -> $t6
 	!$t6.
 	: __request_space_label10 if $t6
 	: __request_space_label14
 	@__request_space_label10
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %11
 	[$t2] -> $t3
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %12
 	[$t0] -> $t4
+	// LowerGetelementptr: struct-type
 	$t4 + 8 -> $t5
 	// LowerMemory: %src -> [%dest]
 	$t3 -> [$t5]
 	@__request_space_label14
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%4] -> %15
 	[$t1] -> $t0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %16
 	[$t2] -> $t3
+	// LowerGetelementptr: struct-type
 	$t3 + 0 -> $t4
 	// LowerMemory: %src -> [%dest]
 	$t0 -> [$t4]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %18
 	[$t2] -> $t5
+	// LowerGetelementptr: struct-type
 	$t5 + 8 -> $t6
 	// LowerMemory: imm -> $m0
 	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
+	// LowerMemory: $m0 -> [%19]
 	$m0 -> [$t6]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %20
 	[$t2] -> $t7
+	// LowerGetelementptr: struct-type
 	$t7 + 16 -> $t8
 	// LowerMemory: imm -> $m0
 	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
+	// LowerMemory: $m0 -> [%21]
 	$m0 -> [$t8] /h
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %22
 	[$t2] -> $t9
 	$t9 -> $ta
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %24
 	[$t2] -> $tb
+	// LowerGetelementptr: struct-type
 	$tb + 0 -> $tc
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%25] -> %26
 	[$tc] -> $td
 	$td * 1
 	$lo -> $te
 	$te + $ta -> $te
+	// LowerGetelementptr: struct-type
 	$te + 24 -> $tf
+	// LowerGetelementptr: struct-type
 	$tf + 1 -> $t10
 	// LowerMemory: %src -> [global]
 	$t10 -> [end]
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %30
 	[$t2] -> $t11
 	$fp -> $sp
 	$t11 -> $r0
@@ -1878,108 +528,6 @@ sub request_space() {
 	] $tb
 	] $ta
 	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
-	] $t4
-	] $t3
-	] $t2
-	] $t1
-	] $t0
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub find_free_block() {
-	@__find_free_block_label2
-	[ $rt
-	[ $fp
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t2
-	$sp - 8 -> $sp
-	// LowerMemory: %src -> [%dest]
-	$a0 -> [$t0]
-	// LowerMemory: %src -> [%dest]
-	$a1 -> [$t1]
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t3
-	// LowerMemory: %src -> [%dest]
-	$t3 -> [$t2]
-	@__find_free_block_label7
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t3
-	$t3 == 0 -> $t4
-	!$t4.
-	0 -> $t5
-	: __find_free_block_label10 if $t4
-	: __find_free_block_label24
-	@__find_free_block_label10
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t3
-	$t3 + 16 -> $t4
-	// LowerMemory: [%local] -> %var
-	[$t4] -> $t6 /h
-	$t6 == 0 -> $t7
-	!$t7.
-	0 -> $t8
-	: __find_free_block_label15 if $t7
-	: __find_free_block_label21
-	@__find_free_block_label15
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t3
-	$t3 + 0 -> $t4
-	// LowerMemory: [%local] -> %var
-	[$t4] -> $t6
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t7
-	$t6 >= $t7 -> $t8 /u
-	@__find_free_block_label21
-	$t8 x 1 -> $t5
-	@__find_free_block_label24
-	: __find_free_block_label26 if $t5
-	: __find_free_block_label32
-	@__find_free_block_label26
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t1
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t3
-	// LowerMemory: %src -> [%dest]
-	$t1 -> [$t3]
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t4
-	$t4 + 8 -> $t5
-	// LowerMemory: [%local] -> %var
-	[$t5] -> $t6
-	// LowerMemory: %src -> [%dest]
-	$t6 -> [$t2]
-	: __find_free_block_label7
-	@__find_free_block_label32
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $t0
-	$fp -> $sp
-	$t0 -> $r0
 	] $t8
 	] $t7
 	] $t6
@@ -2020,15 +568,15 @@ sub realign() {
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
 	[ $a0
-	&.str.2 -> $a0
+	&.str.44 -> $a0
 	:: strprint
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %3
 	[$t0] -> $t1
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%3] -> %4
 	[$t1] -> $t2
 	$t2 -> $t3
-	// LowerMemory: [global] -> %var
+	// LowerMemory(load): [global] -> %var
 	[memory] -> $t4
 	$t4 -> $t5
 	$t3 - $t5 -> $t6
@@ -2038,9 +586,9 @@ sub realign() {
 	$t7 -> $a0
 	:: prd
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %10
 	[$t0] -> $t8
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%10] -> %11
 	[$t8] -> $t9
 	$t9 -> $ta
 	$ta % 32 -> $tb
@@ -2049,17 +597,17 @@ sub realign() {
 	: __realign_label15 if $tc
 	: __realign_label24
 	@__realign_label15
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %16
 	[$t0] -> $t1
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%16] -> %17
 	[$t1] -> $t2
 	$t2 -> $t3
 	$t3 % 32 -> $t4
 	$t4 - 32 -> $m0
 	$0 - $m0 -> $t5
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %21
 	[$t0] -> $t6
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%21] -> %22
 	[$t6] -> $t7
 	$t5 * 1
 	$lo -> $t8
@@ -2068,15 +616,15 @@ sub realign() {
 	$t8 -> [$t6]
 	@__realign_label24
 	[ $a0
-	&.str.3 -> $a0
+	&.str.45 -> $a0
 	:: strprint
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %25
 	[$t0] -> $t1
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%25] -> %26
 	[$t1] -> $t2
 	$t2 -> $t3
-	// LowerMemory: [global] -> %var
+	// LowerMemory(load): [global] -> %var
 	[memory] -> $t4
 	$t4 -> $t5
 	$t3 - $t5 -> $t6
@@ -2087,12 +635,12 @@ sub realign() {
 	:: prd
 	] $a0
 	[ $a0
-	&.str.4 -> $a0
+	&.str.2 -> $a0
 	:: strprint
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%2] -> %32
 	[$t0] -> $t8
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%32] -> %33
 	[$t8] -> $t9
 	$fp -> $sp
 	$t9 -> $r0
@@ -2114,8 +662,8 @@ sub realign() {
 	: $rt
 }
 
-sub dbg_blocks() {
-	@__dbg_blocks_label0
+sub prc() {
+	@__prc_label1
 	[ $rt
 	[ $fp
 	[ $t0
@@ -2123,215 +671,29 @@ sub dbg_blocks() {
 	[ $t2
 	[ $t3
 	[ $t4
-	[ $t5
-	[ $t6
-	[ $t7
-	[ $t8
-	[ $t9
-	[ $ta
-	[ $tb
-	[ $tc
-	[ $td
-	[ $te
-	[ $tf
-	[ $t10
-	[ $t11
-	[ $t12
-	[ $t13
-	[ $t14
-	[ $t15
-	[ $t16
-	[ $s0
-	[ $s1
-	[ $s2
-	[ $s3
-	[ $s4
-	[ $s5
-	[ $s6
-	[ $s7
-	[ $s8
-	[ $s9
-	[ $sa
-	[ $sb
-	[ $sc
-	[ $sd
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
+	$sp % 1 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	$sp - 4 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp - $m0 -> $sp
-	$sp -> $t2
-	$sp - 4 -> $sp
-	// LowerMemory: [global] -> %var
-	[global_base] -> $t3
+	$sp - 1 -> $sp
 	// LowerMemory: %src -> [%dest]
-	$t3 -> [$t0]
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t1] /h
-	&.str.64 -> $a0
-	:: strprint
-	// LowerMemory: imm -> $m0
-	0 -> $m0
-	// LowerMemory: $m0 -> [%var]
-	$m0 -> [$t2] /h
-	@__dbg_blocks_label5
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t3
-	$t3 == 0 -> $t4
-	!$t4.
-	: __dbg_blocks_label8 if $t4
-	: __dbg_blocks_label46
-	@__dbg_blocks_label8
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t3 /h
-	$t3 + 1 -> $t4
-	// LowerMemory: %src -> [%dest]
-	$t4 -> [$t1] /h
-	&.str.65 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t5
-	$t5 + 16 -> $t6
-	// LowerMemory: [%local] -> %var
-	[$t6] -> $t7 /h
-	$t7 == 0 -> $t8
-	!$t8.
-	$t8 -> $t9
-	&.str.66 -> $sc
-	&.str.67 -> $sd
-	$t8 ~ 0
-	[$sc != $sd] -> $ta
-	$ta -> $a0
-	:: strprint
-	&.str.68 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $tb
-	$tb + 0 -> $tc
-	// LowerMemory: [%local] -> %var
-	[$tc] -> $td
-	// LowerTrunc: 64 to 32, apply mask
-	$td & -1 -> $te
-	$te -> $a0
-	:: prd
-	&.str.69 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $tf
-	$tf -> $t10
-	// LowerMemory: [global] -> %var
-	[memory] -> $t11
-	$t11 -> $t12
-	$t10 - $t12 -> $t13
-	// LowerTrunc: 64 to 32, apply mask
-	$t13 & -1 -> $t14
-	$t14 -> $a0
-	:: prd
-	&.str.70 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t15
-	$t15 -> $t16
-	// LowerMemory: [global] -> %var
-	[memory] -> $s0
-	$s0 -> $s1
-	$t16 - $s1 -> $s2
-	$s2 + 24 -> $s3
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $s4
-	$s4 + 0 -> $s5
-	// LowerMemory: [%local] -> %var
-	[$s5] -> $s6
-	$s3 + $s6 -> $s7
-	// LowerTrunc: 64 to 32, apply mask
-	$s7 & -1 -> $s8
-	$s8 -> $a0
-	:: prd
-	&.str.71 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t2] -> $s9 /h
-	$s9 + 1 -> $sa
-	// LowerMemory: %src -> [%dest]
-	$sa -> [$t2] /h
-	$s9 == 20 -> $sb
-	: __dbg_blocks_label41 if $sb
-	: __dbg_blocks_label42
-	@__dbg_blocks_label41
-	&.str.72 -> $a0
-	:: strprint
-	1 -> $a0
-	:: exit
-	@__dbg_blocks_label42
-	// LowerMemory: [%local] -> %var
-	[$t0] -> $t2
-	$t2 + 8 -> $t3
-	// LowerMemory: [%local] -> %var
-	[$t3] -> $t4
-	// LowerMemory: %src -> [%dest]
-	$t4 -> [$t0]
-	: __dbg_blocks_label5
-	@__dbg_blocks_label46
-	&.str.73 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t0 /h
-	$t0 -> $a0
-	:: prd
-	&.str.35 -> $a0
-	:: strprint
-	// LowerMemory: [%local] -> %var
-	[$t1] -> $t2 /h
-	$t2 == 1 -> $t3
-	$t3 -> $t4
-	&.str.6 -> $t6
-	&.str.36 -> $t7
-	$t3 ~ 0
-	[$t6 != $t7] -> $t5
-	$t5 -> $a0
-	:: strprint
+	$a0 -> [$t0] /b
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1 /b
+	1 -> $m0
+	$m0 << 7 -> $m0
+	$t1 x $m0 -> $t2
+	$t2 - $m0 -> $t2
+	// LowerSext: to == 32
+	$t2 & -1 -> $t2
+	&.str.42 -> $t4
+	[ $t4
+	:: printf
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t3
 	$fp -> $sp
-	] $sd
-	] $sc
-	] $sb
-	] $sa
-	] $s9
-	] $s8
-	] $s7
-	] $s6
-	] $s5
-	] $s4
-	] $s3
-	] $s2
-	] $s1
-	] $s0
-	] $t16
-	] $t15
-	] $t14
-	] $t13
-	] $t12
-	] $t11
-	] $t10
-	] $tf
-	] $te
-	] $td
-	] $tc
-	] $tb
-	] $ta
-	] $t9
-	] $t8
-	] $t7
-	] $t6
-	] $t5
 	] $t4
 	] $t3
 	] $t2
@@ -2398,30 +760,37 @@ sub main() {
 	$sp -> $t1
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t4
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t5
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t6
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t7
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t8
 	$sp - 8 -> $sp
@@ -2431,13 +800,13 @@ sub main() {
 	$a1 -> [$t1]
 	[ $a0
 	[ $a1
-	&.str.37 -> $a0
+	&.str -> $a0
 	:: strprint
 	] $a1
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.38 -> $a0
+	&.str.1 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2449,7 +818,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.4 -> $a0
+	&.str.2 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2463,11 +832,11 @@ sub main() {
 	$r0 -> $t9
 	[ $a0
 	[ $a1
-	&.str.39 -> $a0
+	&.str.3 -> $a0
 	:: strprint
 	] $a1
 	] $a0
-	// LowerMemory: [global] -> %var
+	// LowerMemory(load): [global] -> %var
 	[memory] -> $ta
 	$ta -> $tb
 	// LowerTrunc: 64 to 32, apply mask
@@ -2480,7 +849,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.4 -> $a0
+	&.str.2 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2498,7 +867,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	800 -> $a0
-	&.str.40 -> $a1
+	&.str.4 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2525,7 +894,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	150 -> $a0
-	&.str.41 -> $a1
+	&.str.5 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2536,7 +905,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	10 -> $a0
-	&.str.42 -> $a1
+	&.str.6 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2549,7 +918,7 @@ sub main() {
 	:: dbg_blocks
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%6] -> %19
 	[$t3] -> $t10
 	$t10 -> $t11
 	[ $a0
@@ -2565,7 +934,7 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.4 -> $a0
+	&.str.2 -> $a0
 	:: strprint
 	] $a1
 	] $a0
@@ -2601,7 +970,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	200 -> $a0
-	&.str.43 -> $a1
+	&.str.7 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2622,7 +991,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	100 -> $a0
-	&.str.44 -> $a1
+	&.str.8 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2637,11 +1006,11 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.45 -> $a0
+	&.str.9 -> $a0
 	:: strprint
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%8] -> %23
 	[$t5] -> $t14
 	$t14 -> $t15
 	[ $a0
@@ -2650,7 +1019,7 @@ sub main() {
 	:: fr
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%7] -> %25
 	[$t4] -> $t16
 	$t16 -> $s0
 	[ $a0
@@ -2678,11 +1047,11 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.46 -> $a0
+	&.str.10 -> $a0
 	:: strprint
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%9] -> %28
 	[$t6] -> $s2
 	$s2 -> $s3
 	[ $a0
@@ -2691,7 +1060,7 @@ sub main() {
 	:: fr
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%5] -> %30
 	[$t2] -> $s4
 	$s4 -> $s5
 	[ $a0
@@ -2720,7 +1089,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	600 -> $a0
-	&.str.47 -> $a1
+	&.str.11 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2736,7 +1105,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	1000 -> $a0
-	&.str.48 -> $a1
+	&.str.12 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2751,11 +1120,11 @@ sub main() {
 	] $a0
 	[ $a0
 	[ $a1
-	&.str.49 -> $a0
+	&.str.13 -> $a0
 	:: strprint
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%10] -> %35
 	[$t7] -> $s9
 	$s9 -> $sa
 	[ $a0
@@ -2764,7 +1133,7 @@ sub main() {
 	:: fr
 	] $a1
 	] $a0
-	// LowerMemory: [%local] -> %var
+	// LowerMemory(load): [%11] -> %37
 	[$t8] -> $sb
 	$sb -> $sc
 	[ $a0
@@ -2781,7 +1150,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	300 -> $a0
-	&.str.50 -> $a1
+	&.str.14 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2795,7 +1164,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	233 -> $a0
-	&.str.51 -> $a1
+	&.str.15 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2821,7 +1190,7 @@ sub main() {
 	[ $a0
 	[ $a1
 	600 -> $a0
-	&.str.52 -> $a1
+	&.str.16 -> $a1
 	:: allocate
 	] $a1
 	] $a0
@@ -2880,7 +1249,2013 @@ sub main() {
 }
 
 sub prd() {
+	@__prd_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 4 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0] /h
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1 /h
+	&.str.41 -> $t3
+	[ $t3
+	:: printf
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t2
+	$fp -> $sp
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub dbg_blocks() {
+	@__dbg_blocks_label0
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	[ $s4
+	[ $s5
+	[ $s6
+	[ $s7
+	[ $s8
+	[ $s9
+	[ $sa
+	[ $sb
+	[ $sc
+	[ $sd
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 4 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t2
+	$sp - 4 -> $sp
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t3
+	// LowerMemory: %src -> [%dest]
+	$t3 -> [$t0]
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%2]
+	$m0 -> [$t1] /h
+	&.str.30 -> $a0
+	:: strprint
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%3]
+	$m0 -> [$t2] /h
+	@__dbg_blocks_label5
+	// LowerMemory(load): [%1] -> %6
+	[$t0] -> $t3
+	$t3 == 0 -> $t4
+	!$t4.
+	: __dbg_blocks_label8 if $t4
+	: __dbg_blocks_label46
+	@__dbg_blocks_label8
+	// LowerMemory(load): [%2] -> %9
+	[$t1] -> $t3 /h
+	$t3 + 1 -> $t4
+	// LowerMemory: %src -> [%dest]
+	$t4 -> [$t1] /h
+	&.str.31 -> $a0
+	:: strprint
+	// LowerMemory(load): [%1] -> %11
+	[$t0] -> $t5
+	// LowerGetelementptr: struct-type
+	$t5 + 16 -> $t6
+	// LowerMemory(load): [%12] -> %13
+	[$t6] -> $t7 /h
+	$t7 == 0 -> $t8
+	!$t8.
+	$t8 -> $t9
+	&.str.32 -> $sc
+	&.str.33 -> $sd
+	$t8 ~ 0
+	[$sc != $sd] -> $ta
+	$ta -> $a0
+	:: strprint
+	&.str.34 -> $a0
+	:: strprint
+	// LowerMemory(load): [%1] -> %17
+	[$t0] -> $tb
+	// LowerGetelementptr: struct-type
+	$tb + 0 -> $tc
+	// LowerMemory(load): [%18] -> %19
+	[$tc] -> $td
+	// LowerTrunc: 64 to 32, apply mask
+	$td & -1 -> $te
+	$te -> $a0
+	:: prd
+	&.str.35 -> $a0
+	:: strprint
+	// LowerMemory(load): [%1] -> %21
+	[$t0] -> $tf
+	$tf -> $t10
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t11
+	$t11 -> $t12
+	$t10 - $t12 -> $t13
+	// LowerTrunc: 64 to 32, apply mask
+	$t13 & -1 -> $t14
+	$t14 -> $a0
+	:: prd
+	&.str.36 -> $a0
+	:: strprint
+	// LowerMemory(load): [%1] -> %27
+	[$t0] -> $t15
+	$t15 -> $t16
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $s0
+	$s0 -> $s1
+	$t16 - $s1 -> $s2
+	$s2 + 24 -> $s3
+	// LowerMemory(load): [%1] -> %33
+	[$t0] -> $s4
+	// LowerGetelementptr: struct-type
+	$s4 + 0 -> $s5
+	// LowerMemory(load): [%34] -> %35
+	[$s5] -> $s6
+	$s3 + $s6 -> $s7
+	// LowerTrunc: 64 to 32, apply mask
+	$s7 & -1 -> $s8
+	$s8 -> $a0
+	:: prd
+	&.str.37 -> $a0
+	:: strprint
+	// LowerMemory(load): [%3] -> %38
+	[$t2] -> $s9 /h
+	$s9 + 1 -> $sa
+	// LowerMemory: %src -> [%dest]
+	$sa -> [$t2] /h
+	$s9 == 20 -> $sb
+	: __dbg_blocks_label41 if $sb
+	: __dbg_blocks_label42
+	@__dbg_blocks_label41
+	&.str.38 -> $a0
+	:: strprint
+	1 -> $a0
+	:: exit
+	@__dbg_blocks_label42
+	// LowerMemory(load): [%1] -> %43
+	[$t0] -> $t2
+	// LowerGetelementptr: struct-type
+	$t2 + 8 -> $t3
+	// LowerMemory(load): [%44] -> %45
+	[$t3] -> $t4
+	// LowerMemory: %src -> [%dest]
+	$t4 -> [$t0]
+	: __dbg_blocks_label5
+	@__dbg_blocks_label46
+	&.str.39 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %47
+	[$t1] -> $t0 /h
+	$t0 -> $a0
+	:: prd
+	&.str.40 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %48
+	[$t1] -> $t2 /h
+	$t2 == 1 -> $t3
+	$t3 -> $t4
+	&.str.19 -> $t6
+	&.str.20 -> $t7
+	$t3 ~ 0
+	[$t6 != $t7] -> $t5
+	$t5 -> $a0
+	:: strprint
+	$fp -> $sp
+	] $sd
+	] $sc
+	] $sb
+	] $sa
+	] $s9
+	] $s8
+	] $s7
+	] $s6
+	] $s5
+	] $s4
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub find_free_block() {
+	@__find_free_block_label2
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t2
+	$sp - 8 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0]
+	// LowerMemory: %src -> [%dest]
+	$a1 -> [$t1]
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t3
+	// LowerMemory: %src -> [%dest]
+	$t3 -> [$t2]
+	@__find_free_block_label7
+	// LowerMemory(load): [%5] -> %8
+	[$t2] -> $t3
+	$t3 == 0 -> $t4
+	!$t4.
+	0 -> $t5
+	: __find_free_block_label10 if $t4
+	: __find_free_block_label24
+	@__find_free_block_label10
+	// LowerMemory(load): [%5] -> %11
+	[$t2] -> $t3
+	// LowerGetelementptr: struct-type
+	$t3 + 16 -> $t4
+	// LowerMemory(load): [%12] -> %13
+	[$t4] -> $t6 /h
+	$t6 == 0 -> $t7
+	!$t7.
+	0 -> $t8
+	: __find_free_block_label15 if $t7
+	: __find_free_block_label21
+	@__find_free_block_label15
+	// LowerMemory(load): [%5] -> %16
+	[$t2] -> $t3
+	// LowerGetelementptr: struct-type
+	$t3 + 0 -> $t4
+	// LowerMemory(load): [%17] -> %18
+	[$t4] -> $t6
+	// LowerMemory(load): [%4] -> %19
+	[$t1] -> $t7
+	$t6 >= $t7 -> $t8 /u
+	@__find_free_block_label21
+	$t8 x 1 -> $t5
+	@__find_free_block_label24
+	: __find_free_block_label26 if $t5
+	: __find_free_block_label32
+	@__find_free_block_label26
+	// LowerMemory(load): [%5] -> %27
+	[$t2] -> $t1
+	// LowerMemory(load): [%3] -> %28
+	[$t0] -> $t3
+	// LowerMemory: %src -> [%dest]
+	$t1 -> [$t3]
+	// LowerMemory(load): [%5] -> %29
+	[$t2] -> $t4
+	// LowerGetelementptr: struct-type
+	$t4 + 8 -> $t5
+	// LowerMemory(load): [%30] -> %31
+	[$t5] -> $t6
+	// LowerMemory: %src -> [%dest]
+	$t6 -> [$t2]
+	: __find_free_block_label7
+	@__find_free_block_label32
+	// LowerMemory(load): [%5] -> %33
+	[$t2] -> $t0
+	$fp -> $sp
+	$t0 -> $r0
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub fr() {
+	@__fr_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 8 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %4
+	[$t0] -> $t2
+	$t2 == 0 -> $t3
+	!$t3.
+	: __fr_label7 if $t3
+	: __fr_label6
+	@__fr_label6
+	: __fr_label34
+	@__fr_label7
+	[ $a0
+	&.str.57 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%2] -> %8
+	[$t0] -> $t2
+	$t2 -> $t3
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t4
+	$t4 -> $t5
+	$t3 - $t5 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t6 & -1 -> $t7
+	[ $a0
+	$t7 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.58 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%2] -> %14
+	[$t0] -> $t8
+	[ $a0
+	$t8 -> $a0
+	:: get_block_ptr
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t9
+	// LowerMemory: %src -> [%dest]
+	$t9 -> [$t1]
+	[ $a0
+	&.str.59 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%3] -> %16
+	[$t1] -> $ta
+	// LowerGetelementptr: struct-type
+	$ta + 16 -> $tb
+	// LowerMemory(load): [%17] -> %18
+	[$tb] -> $tc /h
+	[ $a0
+	$tc -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.60 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%3] -> %19
+	[$t1] -> $td
+	// LowerGetelementptr: struct-type
+	$td + 16 -> $te
+	// LowerMemory(load): [%20] -> %21
+	[$te] -> $tf /h
+	$tf == 0 -> $t10
+	$t10 x 1 -> $t11
+	$t11 -> $t12
+	1 -> $m0
+	$m0 << 31 -> $m0
+	$t12 x $m0 -> $t13
+	$t13 - $m0 -> $t13
+	$t13 == 0 -> $t14
+	!$t14.
+	: __fr_label27 if $t14
+	: __fr_label29
+	@__fr_label27
+	[ $a0
+	&__func__.fr -> $a0
+	&.str.61 -> $a1
+	293 -> $a2
+	&.str.62 -> $a3
+	:: __assert_rtn
+	] $a0
+	@__fr_label29
+	// LowerMemory(load): [%3] -> %31
+	[$t1] -> $t0
+	// LowerGetelementptr: struct-type
+	$t0 + 16 -> $t2
+	// LowerMemory: imm -> $m0
+	1 -> $m0
+	// LowerMemory: $m0 -> [%32]
+	$m0 -> [$t2] /h
+	[ $a0
+	:: merge_blocks
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t3
+	@__fr_label34
+	$fp -> $sp
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub mal() {
+	@__mal_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t2
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t3
+	$sp - 8 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t1]
+	// LowerMemory(load): [%3] -> %6
+	[$t1] -> $t4
+	$t4 <= 0 -> $t5 /u
+	: __mal_label8 if $t5
+	: __mal_label9
+	@__mal_label8
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%2]
+	$m0 -> [$t0]
+	: __mal_label84
+	@__mal_label9
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t4
+	$t4 == 0 -> $t5
+	!$t5.
+	: __mal_label23 if $t5
+	: __mal_label12
+	@__mal_label12
+	// LowerMemory(load): [%3] -> %13
+	[$t1] -> $t4
+	[ $a0
+	0 -> $a0
+	$t4 -> $a1
+	:: request_space
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t5
+	// LowerMemory: %src -> [%dest]
+	$t5 -> [$t2]
+	// LowerMemory(load): [%4] -> %15
+	[$t2] -> $t6
+	$t6 == 0 -> $t7
+	!$t7.
+	: __mal_label18 if $t7
+	: __mal_label17
+	@__mal_label17
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%2]
+	$m0 -> [$t0]
+	: __mal_label84
+	@__mal_label18
+	[ $a0
+	&.str.46 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %19
+	[$t2] -> $t4
+	$t4 -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
+	[ $a0
+	$t6 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.19 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %22
+	[$t2] -> $t7
+	// LowerMemory: %src -> [global]
+	$t7 -> [global_base]
+	: __mal_label80
+	@__mal_label23
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t4
+	// LowerMemory: %src -> [%dest]
+	$t4 -> [$t3]
+	// LowerMemory(load): [%3] -> %25
+	[$t1] -> $t5
+	[ $a0
+	$t3 -> $a0
+	$t5 -> $a1
+	:: find_free_block
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t6
+	// LowerMemory: %src -> [%dest]
+	$t6 -> [$t2]
+	// LowerMemory(load): [%4] -> %27
+	[$t2] -> $t7
+	$t7 == 0 -> $t8
+	!$t8.
+	: __mal_label56 if $t8
+	: __mal_label29
+	@__mal_label29
+	[ $a0
+	&.str.47 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%5] -> %30
+	[$t3] -> $t4
+	$t4 -> $t5
+	// LowerGetelementptr: struct-type
+	$t5 + 24 -> $t6
+	// LowerMemory(load): [%5] -> %33
+	[$t3] -> $t7
+	// LowerGetelementptr: struct-type
+	$t7 + 0 -> $t8
+	// LowerMemory(load): [%34] -> %35
+	[$t8] -> $t9
+	$t9 * 1
+	$lo -> $ta
+	$ta + $t6 -> $ta
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $tb
+	$tb -> $tc
+	$0 - $tc -> $td
+	$td * 1
+	$lo -> $te
+	$te + $ta -> $te
+	$te -> $tf
+	// LowerTrunc: 64 to 32, apply mask
+	$tf & -1 -> $t10
+	[ $a0
+	$t10 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.2 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%5] -> %43
+	[$t3] -> $t11
+	// LowerMemory(load): [%3] -> %44
+	[$t1] -> $t12
+	[ $a0
+	$t11 -> $a0
+	$t12 -> $a1
+	:: request_space
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t13
+	// LowerMemory: %src -> [%dest]
+	$t13 -> [$t2]
+	[ $a0
+	&.str.48 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %46
+	[$t2] -> $t14
+	$t14 == 0 -> $t15
+	!$t15.
+	: __mal_label49 if $t15
+	: __mal_label48
+	@__mal_label48
+	[ $a0
+	&.str.49 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%2]
+	$m0 -> [$t0]
+	: __mal_label84
+	@__mal_label49
+	// LowerMemory(load): [%4] -> %50
+	[$t2] -> $t3
+	$t3 -> $t4
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t5
+	$t5 -> $t6
+	$t4 - $t6 -> $t7
+	// LowerTrunc: 64 to 32, apply mask
+	$t7 & -1 -> $t8
+	[ $a0
+	$t8 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.2 -> $a0
+	:: strprint
+	] $a0
+	: __mal_label79
+	@__mal_label56
+	[ $a0
+	&.str.50 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %57
+	[$t2] -> $t3
+	$t3 -> $t4
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t5
+	$t5 -> $t6
+	$t4 - $t6 -> $t7
+	// LowerTrunc: 64 to 32, apply mask
+	$t7 & -1 -> $t8
+	[ $a0
+	$t8 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.51 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %63
+	[$t2] -> $t9
+	// LowerGetelementptr: struct-type
+	$t9 + 8 -> $ta
+	// LowerMemory(load): [%64] -> %65
+	[$ta] -> $tb
+	$tb == 0 -> $tc
+	!$tc.
+	$tc -> $td
+	&.str.52 -> $s2
+	&.str.53 -> $s3
+	$tc ~ 0
+	[$s2 != $s3] -> $te
+	[ $a0
+	$te -> $a0
+	:: strprint
+	] $a0
+	[ $a0
+	&.str.54 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %69
+	[$t2] -> $tf
+	// LowerGetelementptr: struct-type
+	$tf + 0 -> $t10
+	// LowerMemory(load): [%70] -> %71
+	[$t10] -> $t11
+	// LowerTrunc: 64 to 32, apply mask
+	$t11 & -1 -> $t12
+	[ $a0
+	$t12 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.55 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%3] -> %73
+	[$t1] -> $t13
+	// LowerTrunc: 64 to 32, apply mask
+	$t13 & -1 -> $t14
+	[ $a0
+	$t14 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.56 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%4] -> %75
+	[$t2] -> $t15
+	// LowerMemory(load): [%3] -> %76
+	[$t1] -> $t16
+	[ $a0
+	$t15 -> $a0
+	$t16 -> $a1
+	:: memsplit
+	] $a0
+	// LowerMemory(load): [%4] -> %77
+	[$t2] -> $s0
+	// LowerGetelementptr: struct-type
+	$s0 + 16 -> $s1
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%78]
+	$m0 -> [$s1] /h
+	@__mal_label79
+	<>
+	@__mal_label80
+	// LowerMemory(load): [%4] -> %81
+	[$t2] -> $t1
+	// LowerGetelementptr: struct-type
+	$t1 + 24 -> $t3
+	$t3 -> $t4
+	// LowerMemory: %src -> [%dest]
+	$t4 -> [$t0]
+	@__mal_label84
+	// LowerMemory(load): [%2] -> %85
+	[$t0] -> $t1
+	$fp -> $sp
+	$t1 -> $r0
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub mem_init() {
+	@__mem_init_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 4 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0] /h
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1 /h
+	1 -> $m0
+	$m0 << 31 -> $m0
+	$t1 x $m0 -> $t2
+	$t2 - $m0 -> $t2
+	[ $a0
+	$t2 -> $a0
+	4 -> $a1
+	:: calloc
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t3
+	$t3 -> $t4
+	// LowerMemory: %src -> [global]
+	$t4 -> [memory]
+	[ $a0
+	&memory -> $a0
+	:: realign
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t5
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t6
+	$t6 -> $t7
+	// LowerMemory: %src -> [global]
+	$t7 -> [end]
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [global]
+	$m0 -> [global_base]
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t8
+	$t8 == 0 -> $t9
+	!$t9.
+	$t9 x 1 -> $ta
+	$ta x 1 -> $tb
+	$tb -> $tc
+	$fp -> $sp
+	$tc -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub check_free() {
+	@__check_free_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 8 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %4
+	[$t0] -> $t2
+	[ $a0
+	&last_block -> $a0
+	$t2 -> $a1
+	:: find_free_block
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t3
+	$t3 -> $t4
+	// LowerMemory: %src -> [%dest]
+	$t4 -> [$t1]
+	[ $a0
+	&.str.26 -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%2] -> %7
+	[$t0] -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
+	[ $a0
+	$t6 -> $a0
+	:: prd
+	] $a0
+	// LowerMemory(load): [%2] -> %9
+	[$t0] -> $t7
+	$t7 == 1 -> $t8
+	$t8 -> $t9
+	&.str.27 -> $td
+	&.str.28 -> $te
+	$t8 ~ 0
+	[$td != $te] -> $ta
+	[ $a0
+	$ta -> $a0
+	:: strprint
+	] $a0
+	// LowerMemory(load): [%3] -> %13
+	[$t1] -> $tb
+	$tb == 0 -> $tc
+	!$tc.
+	: __check_free_label15 if $tc
+	: __check_free_label21
+	@__check_free_label15
+	// LowerMemory(load): [%3] -> %16
+	[$t1] -> $t0
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t2
+	$t2 -> $t3
+	$t0 - $t3 -> $t4
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
+	[ $a0
+	$t5 -> $a0
+	:: prd
+	] $a0
+	[ $a0
+	&.str.2 -> $a0
+	:: strprint
+	] $a0
+	: __check_free_label22
+	@__check_free_label21
+	[ $a0
+	&.str.29 -> $a0
+	:: strprint
+	] $a0
+	@__check_free_label22
+	$fp -> $sp
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub strprint() {
+	@__strprint_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	&.str.43 -> $t3
+	[ $t3
+	:: printf
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t2
+	$fp -> $sp
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub merge_blocks() {
+	@__merge_blocks_label0
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	[ $s4
+	[ $s5
+	[ $s6
+	[ $s7
+	[ $s8
+	[ $s9
+	[ $sa
+	[ $sb
+	[ $sc
+	[ $sd
+	[ $se
+	[ $sf
+	[ $s10
+	[ $s11
+	[ $s12
+	[ $s13
+	[ $s14
+	[ $s15
+	[ $s16
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 4 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t0 -> [$m0]
+	$sp - 4 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t1 -> [$m0]
+	$sp - 8 -> $sp
+	// LowerMemory: imm -> $m0
+	0 -> $m0
+	// LowerMemory: $m0 -> [%1]
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t15
+	$m0 -> [$t15] /h
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t2
+	// LowerMemory: %src -> [%dest]
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t16
+	$t2 -> [$t16]
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t3
+	$t3 -> $t4
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
+	$t5 -> $a0
+	:: prd
+	10 -> $a0
+	:: prc
+	// LowerMemory(load): [%2] -> %7
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s0
+	[$s0] -> $t6
+	$t6 -> $t7
+	// LowerTrunc: 64 to 32, apply mask
+	$t7 & -1 -> $t8
+	$t8 -> $a0
+	:: prd
+	&.str.63 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %10
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s1
+	[$s1] -> $t9
+	$t9 -> $ta
+	// LowerTrunc: 64 to 32, apply mask
+	$ta & -1 -> $tb
+	$tb -> $a0
+	:: prd
+	&.str.64 -> $a0
+	:: strprint
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $tc
+	$tc -> $td
+	// LowerTrunc: 64 to 32, apply mask
+	$td & -1 -> $te
+	$te -> $a0
+	:: prd
+	&.str.65 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %16
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s2
+	[$s2] -> $tf
+	$tf -> $t10
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t11
+	$t11 -> $t12
+	$t10 - $t12 -> $t13
+	// LowerTrunc: 64 to 32, apply mask
+	$t13 & -1 -> $t14
+	$t14 -> $a0
+	:: prd
+	&.str.2 -> $a0
+	:: strprint
+	@__merge_blocks_label22
+	// LowerMemory(load): [%2] -> %23
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t3
+	[$t3] -> $t0
+	$t0 == 0 -> $t1
+	!$t1.
+	0 -> $t2
+	: __merge_blocks_label25 if $t1
+	: __merge_blocks_label30
+	@__merge_blocks_label25
+	// LowerMemory(load): [%2] -> %26
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t4
+	[$t4] -> $t0
+	// LowerGetelementptr: struct-type
+	$t0 + 8 -> $t1
+	// LowerMemory(load): [%27] -> %28
+	[$t1] -> $t3
+	$t3 == 0 -> $t2
+	!$t2.
+	@__merge_blocks_label30
+	: __merge_blocks_label32 if $t2
+	: __merge_blocks_label97
+	@__merge_blocks_label32
+	// LowerMemory(load): [%2] -> %33
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t4
+	[$t4] -> $t0
+	// LowerGetelementptr: struct-type
+	$t0 + 16 -> $t1
+	// LowerMemory(load): [%34] -> %35
+	[$t1] -> $t2 /h
+	$t2 == 0 -> $t3
+	!$t3.
+	: __merge_blocks_label37 if $t3
+	: __merge_blocks_label92
+	@__merge_blocks_label37
+	// LowerMemory(load): [%2] -> %38
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t6
+	[$t6] -> $t0
+	// LowerGetelementptr: struct-type
+	$t0 + 8 -> $t1
+	// LowerMemory(load): [%39] -> %40
+	[$t1] -> $t2
+	// LowerGetelementptr: struct-type
+	$t2 + 16 -> $t3
+	// LowerMemory(load): [%41] -> %42
+	[$t3] -> $t4 /h
+	$t4 == 0 -> $t5
+	!$t5.
+	: __merge_blocks_label44 if $t5
+	: __merge_blocks_label92
+	@__merge_blocks_label44
+	&.str.66 -> $a0
+	:: strprint
+	&.str.67 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %45
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $sf
+	[$sf] -> $t0
+	// LowerGetelementptr: struct-type
+	$t0 + 0 -> $t1
+	// LowerMemory(load): [%46] -> %47
+	[$t1] -> $t2
+	// LowerTrunc: 64 to 32, apply mask
+	$t2 & -1 -> $t3
+	$t3 -> $a0
+	:: prd
+	&.str.68 -> $a0
+	:: strprint
+	24 -> $a0
+	:: prd
+	&.str.69 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %49
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s10
+	[$s10] -> $t4
+	// LowerGetelementptr: struct-type
+	$t4 + 8 -> $t5
+	// LowerMemory(load): [%50] -> %51
+	[$t5] -> $t6
+	// LowerGetelementptr: struct-type
+	$t6 + 0 -> $t7
+	// LowerMemory(load): [%52] -> %53
+	[$t7] -> $t8
+	// LowerTrunc: 64 to 32, apply mask
+	$t8 & -1 -> $t9
+	$t9 -> $a0
+	:: prd
+	&.str.2 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %55
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s11
+	[$s11] -> $ta
+	// LowerGetelementptr: struct-type
+	$ta + 8 -> $tb
+	// LowerMemory(load): [%56] -> %57
+	[$tb] -> $tc
+	// LowerGetelementptr: struct-type
+	$tc + 0 -> $td
+	// LowerMemory(load): [%58] -> %59
+	[$td] -> $te
+	$te + 24 -> $tf
+	// LowerMemory(load): [%2] -> %61
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s12
+	[$s12] -> $t10
+	// LowerGetelementptr: struct-type
+	$t10 + 0 -> $t11
+	// LowerMemory(load): [%62] -> %63
+	[$t11] -> $t12
+	$t12 + $tf -> $t13
+	// LowerMemory: %src -> [%dest]
+	$t13 -> [$t11]
+	&.str.70 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %65
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s13
+	[$s13] -> $t14
+	// LowerGetelementptr: struct-type
+	$t14 + 8 -> $t15
+	// LowerMemory(load): [%66] -> %67
+	[$t15] -> $t16
+	$t16 -> $s0
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $s1
+	$s1 -> $s2
+	$s0 - $s2 -> $s3
+	// LowerTrunc: 64 to 32, apply mask
+	$s3 & -1 -> $s4
+	$s4 -> $a0
+	:: prd
+	&.str.71 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %73
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s14
+	[$s14] -> $s5
+	// LowerGetelementptr: struct-type
+	$s5 + 8 -> $s6
+	// LowerMemory(load): [%74] -> %75
+	[$s6] -> $s7
+	// LowerGetelementptr: struct-type
+	$s7 + 8 -> $s8
+	// LowerMemory(load): [%76] -> %77
+	[$s8] -> $s9
+	$s9 -> $sa
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $sb
+	$sb -> $sc
+	$sa - $sc -> $sd
+	// LowerTrunc: 64 to 32, apply mask
+	$sd & -1 -> $se
+	// LowerStack: $fp - offset -> $m0 for $se:82
+	$fp - 140 -> $m0
+	// LowerStack: %var -> [$m0]
+	$se -> [$m0]
+	// Spill: stack load: location=140
+	// LowerStack: $fp - offset -> $m0 for $se:82
+	$fp - 140 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s16
+	$s16 -> $a0
+	:: prd
+	&.str.72 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %83
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $s15
+	[$s15] -> $t0
+	// LowerStack: $fp - offset -> $m0 for $t0:83
+	$fp - 132 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t0 -> [$m0]
+	// LowerGetelementptr: struct-type
+	// Spill: stack load: location=132
+	// LowerStack: $fp - offset -> $m0 for $t0:83
+	$fp - 132 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t1
+	$t1 + 8 -> $t0
+	// LowerStack: $fp - offset -> $m0 for $t0:84
+	$fp - 108 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t0 -> [$m0]
+	// LowerMemory(load): [%84] -> %85
+	// Spill: stack load: location=108
+	// LowerStack: $fp - offset -> $m0 for $t0:84
+	$fp - 108 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $tf
+	[$tf] -> $t2
+	// LowerStack: $fp - offset -> $m0 for $t2:85
+	$fp - 100 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t2 -> [$m0]
+	// LowerGetelementptr: struct-type
+	// Spill: stack load: location=100
+	// LowerStack: $fp - offset -> $m0 for $t2:85
+	$fp - 100 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $te
+	$te + 8 -> $t3
+	// LowerStack: $fp - offset -> $m0 for $t3:86
+	$fp - 76 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t3 -> [$m0]
+	// LowerMemory(load): [%86] -> %87
+	// Spill: stack load: location=76
+	// LowerStack: $fp - offset -> $m0 for $t3:86
+	$fp - 76 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $td
+	[$td] -> $t4
+	// LowerStack: $fp - offset -> $m0 for $t4:87
+	$fp - 68 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t4 -> [$m0]
+	// LowerMemory(load): [%2] -> %88
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t9
+	[$t9] -> $t5
+	// LowerStack: $fp - offset -> $m0 for $t5:88
+	$fp - 60 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t5 -> [$m0]
+	// LowerGetelementptr: struct-type
+	// Spill: stack load: location=60
+	// LowerStack: $fp - offset -> $m0 for $t5:88
+	$fp - 60 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $tb
+	$tb + 8 -> $t6
+	// LowerStack: $fp - offset -> $m0 for $t6:89
+	$fp - 36 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t6 -> [$m0]
+	// LowerMemory: %src -> [%dest]
+	// Spill: stack load: location=36
+	// LowerStack: $fp - offset -> $m0 for $t6:89
+	$fp - 36 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $ta
+	// Spill: stack load: location=68
+	// LowerStack: $fp - offset -> $m0 for $t4:87
+	$fp - 68 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $tc
+	$tc -> [$ta]
+	// LowerMemory(load): [%1] -> %90
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t8
+	[$t8] -> $t7 /h
+	// LowerStack: $fp - offset -> $m0 for $t7:90
+	$fp - 32 -> $m0
+	// LowerStack: %var -> [$m0]
+	$t7 -> [$m0]
+	// Spill: stack load: location=32
+	// LowerStack: $fp - offset -> $m0 for $t7:90
+	$fp - 32 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t2
+	$t2 + 1 -> $t0
+	// LowerMemory: %src -> [%dest]
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t1
+	$t0 -> [$t1] /h
+	: __merge_blocks_label96
+	@__merge_blocks_label92
+	&.str.73 -> $a0
+	:: strprint
+	// LowerMemory(load): [%2] -> %93
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t3
+	[$t3] -> $t0
+	// LowerGetelementptr: struct-type
+	$t0 + 8 -> $t1
+	// LowerMemory(load): [%94] -> %95
+	[$t1] -> $t2
+	// LowerMemory: %src -> [%dest]
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t4
+	$t2 -> [$t4]
+	@__merge_blocks_label96
+	: __merge_blocks_label22
+	@__merge_blocks_label97
+	// LowerMemory(load): [%2] -> %98
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t8
+	[$t8] -> $t0
+	$t0 -> $t1
+	// LowerTrunc: 64 to 32, apply mask
+	$t1 & -1 -> $t2
+	$t2 -> $a0
+	:: prd
+	10 -> $a0
+	:: prc
+	// Spill: stack load: location=24
+	// LowerStack: $fp - offset -> $m0 for $t1:2
+	$fp - 24 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t9
+	$t9 -> $t3
+	// LowerTrunc: 64 to 32, apply mask
+	$t3 & -1 -> $t4
+	$t4 -> $a0
+	:: prd
+	// LowerMemory(load): [%1] -> %103
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t7
+	[$t7] -> $t5 /h
+	$t5 > 0 -> $t6
+	: __merge_blocks_label105 if $t6
+	: __merge_blocks_label113
+	@__merge_blocks_label105
+	&.str.74 -> $a0
+	:: strprint
+	// LowerMemory(load): [%1] -> %106
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t9
+	[$t9] -> $t0 /h
+	$t0 -> $a0
+	:: prd
+	&.str.40 -> $a0
+	:: strprint
+	// LowerMemory(load): [%1] -> %107
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $ta
+	[$ta] -> $t1 /h
+	$t1 == 1 -> $t2
+	$t2 -> $t3
+	&.str.19 -> $t7
+	&.str.20 -> $t8
+	$t2 ~ 0
+	[$t7 != $t8] -> $t4
+	$t4 -> $a0
+	:: strprint
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $tb
+	$tb -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
+	$t6 -> $a0
+	:: prd
+	@__merge_blocks_label113
+	// LowerMemory(load): [%1] -> %114
+	// Spill: stack load: location=16
+	// LowerStack: $fp - offset -> $m0 for $t0:1
+	$fp - 16 -> $m0
+	// LowerStack: [$m0 -> %var]
+	[$m0] -> $t1
+	[$t1] -> $t0 /h
+	$fp -> $sp
+	$t0 -> $r0
+	] $s16
+	] $s15
+	] $s14
+	] $s13
+	] $s12
+	] $s11
+	] $s10
+	] $sf
+	] $se
+	] $sd
+	] $sc
+	] $sb
+	] $sa
+	] $s9
+	] $s8
+	] $s7
+	] $s6
+	] $s5
+	] $s4
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub dbg() {
+	@__dbg_label0
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	$sp -> $fp
+	&.str.23 -> $a0
+	:: strprint
+	// LowerMemory(load): [global] -> %var
+	[end] -> $t0
+	$t0 -> $t1
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t2
+	$t2 -> $t3
+	$t1 - $t3 -> $t4
+	// LowerTrunc: 64 to 32, apply mask
+	$t4 & -1 -> $t5
+	$t5 -> $a0
+	:: prd
+	&.str.2 -> $a0
+	:: strprint
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t6
+	$t6 == 0 -> $t7
+	: __dbg_label9 if $t7
+	: __dbg_label10
+	@__dbg_label9
+	&.str.24 -> $a0
+	:: strprint
+	: __dbg_label19
+	@__dbg_label10
+	&.str.25 -> $a0
+	:: strprint
+	// LowerMemory(load): [global] -> %var
+	[global_base] -> $t0
+	$t0 -> $t1
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t2
+	$t2 -> $t3
+	$t1 -> $t4
+	$t3 -> $t5
+	$t4 - $t5 -> $t6
+	// LowerTrunc: 64 to 32, apply mask
+	$t6 & -1 -> $t7
+	$t7 -> $a0
+	:: prd
+	&.str.2 -> $a0
+	:: strprint
+	@__dbg_label19
+	$fp -> $sp
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub allocate() {
+	@__allocate_label2
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t1
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t2
+	$sp - 8 -> $sp
+	// LowerMemory: %src -> [%dest]
+	$a0 -> [$t0]
+	// LowerMemory: %src -> [%dest]
+	$a1 -> [$t1]
+	[ $a0
+	[ $a1
+	&.str.17 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	// LowerMemory(load): [%3] -> %6
+	[$t0] -> $t3
+	// LowerTrunc: 64 to 32, apply mask
+	$t3 & -1 -> $t4
+	[ $a0
+	[ $a1
+	$t4 -> $a0
+	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.18 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	// LowerMemory(load): [%3] -> %8
+	[$t0] -> $t5
+	$t5 == 1 -> $t6
+	$t6 -> $t7
+	&.str.19 -> $tf
+	&.str.20 -> $t10
+	$t6 ~ 0
+	[$tf != $t10] -> $t8
+	[ $a0
+	[ $a1
+	$t8 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	// LowerMemory(load): [%3] -> %12
+	[$t0] -> $t9
+	[ $a0
+	[ $a1
+	$t9 -> $a0
+	:: mal
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $ta
+	$ta -> $tb
+	// LowerMemory: %src -> [%dest]
+	$tb -> [$t2]
+	// LowerMemory(load): [%4] -> %15
+	[$t1] -> $tc
+	[ $a0
+	[ $a1
+	$tc -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.21 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	// LowerMemory(load): [%5] -> %16
+	[$t2] -> $td
+	$td == 0 -> $te
+	: __allocate_label18 if $te
+	: __allocate_label19
+	@__allocate_label18
+	[ $a0
+	[ $a1
+	&.str.22 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	: __allocate_label26
+	@__allocate_label19
+	// LowerMemory(load): [%5] -> %20
+	[$t2] -> $t0
+	$t0 -> $t1
+	// LowerMemory(load): [global] -> %var
+	[memory] -> $t3
+	$t3 -> $t4
+	$t1 - $t4 -> $t5
+	// LowerTrunc: 64 to 32, apply mask
+	$t5 & -1 -> $t6
+	[ $a0
+	[ $a1
+	$t6 -> $a0
+	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.19 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	@__allocate_label26
+	// LowerMemory(load): [%5] -> %27
+	[$t2] -> $t0
+	$fp -> $sp
+	$t0 -> $r0
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+
+
+sub prd() {
 	<prd $a0>
+}
+
+sub prc() {
+	<prc $a0>
 }
 
 sub exit() {
@@ -2893,16 +3268,16 @@ sub calloc() {
 
 sub __assert_rtn() {}
 
-sub strprint($s0) {
+sub strprint() {
 	// $a0: pointer to string to print
-	// $s0: character to print
+	// $ma: character to print (temporary hack to protect the stack)
 
 	@_strprint_loop
-		[$a0] -> $s0 /b
-		: _strprint_print if $s0
+		[$a0] -> $ma /b
+		: _strprint_print if $ma
 		!done
 		@_strprint_print
-		<prc $s0>
+		<prc $ma>
 		$a0++
 		: _strprint_loop
 }

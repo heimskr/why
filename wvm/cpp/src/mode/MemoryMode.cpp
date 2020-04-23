@@ -73,6 +73,8 @@ namespace WVM::Mode {
 					remakeList();
 				} else return false;
 			} else if (key == '.' && autotick == -1) {
+				if (vm.paused)
+					send(":Unpause");
 				send(":Tick");
 			} else if (key == ' ') {
 				if (autotick == -1)
@@ -96,7 +98,7 @@ namespace WVM::Mode {
 		textbox.focus();
 		expando->draw();
 		terminal.watch_size();
-		send(":GetMain\n" ":Subscribe memory\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
+		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
 		send(":Reg " + std::to_string(Why::stackPointerOffset));
 		terminal.join();
 		networkThread.join();
@@ -149,7 +151,7 @@ namespace WVM::Mode {
 			}
 
 			Word size = static_cast<Word>(vm.getMemorySize());
-			for (Word address = size - 100 * 8; address < size; address += 8)
+			for (Word address = size - 256 * 8; address < size; address += 8)
 				addLine(address);
 		});
 
@@ -162,7 +164,8 @@ namespace WVM::Mode {
 		std::stringstream ss;
 		UWord word = vm.getWord(address, Endianness::Big);
 
-		if (vm.sp() - (vm.sp() % 8) == address)
+		bool at_sp = vm.sp() - (vm.sp() % 8) == address;
+		if (at_sp)
 			ss << "\e[48;5;236m";
 
 		if (vm.hasBreakpoint(address)) {
@@ -173,9 +176,17 @@ namespace WVM::Mode {
 			ss << "\e[2m";
 		}
 
-		ss << "[";
-		ss << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
-		ss << std::setw(16) << std::setfill('0') << std::hex << word << "  " << std::dec;
+		ss << "[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
+		
+		std::stringstream hex_ss;
+		hex_ss << std::setw(16) << std::setfill('0') << std::hex << word;
+		std::string hex = hex_ss.str();
+		if (at_sp) {
+			int offset = vm.sp() % 8;
+			hex.replace(offset * 2, 2, "\e[48;5;240;1m" + hex.substr(offset * 2, 2) + "\e[48;5;236;22m");
+		}
+
+		ss << hex << "  ";
 
 		if (address < 32) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
@@ -361,6 +372,11 @@ namespace WVM::Mode {
 			} else {
 				vm.registers[reg] = value;
 			}
+		} else if (verb == "Unpaused") {
+			vm.paused = false;
+		} else if (verb == "Paused") {
+			vm.paused = true;
+			autotick = -1;
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
@@ -368,6 +384,7 @@ namespace WVM::Mode {
 	}
 
 	void MemoryMode::startAutotick() {
+		send(":Unpause");
 		autotick = 50'000;
 		std::unique_lock<std::mutex> lock(autotickMutex);
 		autotickReady = true;
@@ -419,7 +436,13 @@ namespace WVM::Mode {
 					send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
 				} else if (padding + 4 <= report.x && report.x <= padding + 21) {
 					// Clicked on 0x................
-					DBG("(" << report.x << ")");
+					if (report.button == haunted::mouse_button::left) {
+						send(":SetPC " + std::to_string(address));
+					} else {
+						send(":Reg " + std::to_string(Why::stackPointerOffset) + " " + std::to_string(address));
+					}
+				} else if (padding + 24 <= report.x && report.x <= padding + 31) {
+					send(":AskAbout " + std::to_string(address));
 				}
 			}
 		};

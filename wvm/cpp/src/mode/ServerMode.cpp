@@ -34,6 +34,7 @@ namespace WVM::Mode {
 
 	void ServerMode::initVM() {
 		vm.onUpdateMemory = [&](Word address) {
+			writtenAddresses.insert(address);
 			const std::string message = ":MemoryWord " + std::to_string(address) + " " +
 				std::to_string(vm.getWord(address));
 			for (int client: memorySubscribers)
@@ -148,17 +149,16 @@ namespace WVM::Mode {
 
 			server.send(client, ":Subscribed " + to);
 		} else if (verb == "GetMain") {
-			std::stringstream to_send;
-			to_send << ":MemoryWords 0 " << (vm.endOffset / 8) << std::hex;
-			for (Word i = 0; i < vm.endOffset; i += 8)
-				to_send << " " << vm.getWord(i, Endianness::Little);
-			server.send(client, to_send.str());
-			server.send(client, ":Done GetMain");
+			sendMemory(client);
 		} else if (verb == "Init") {
 			vm.init();
 		} else if (verb == "Tick") {
-			if (size == 1) {
+			if (vm.paused) {
+				broadcast(":Paused");
+			} else if (size == 1) {
 				vm.tick();
+				if (vm.paused)
+					broadcast(":Paused");
 			} else if (size == 2) {
 				Word ticks;
 				if (!Util::parseLong(split[1], ticks)) {
@@ -167,15 +167,25 @@ namespace WVM::Mode {
 				}
 
 				setFastForward(true);
-				for (Word i = 0; i < ticks; ++i) {
+				Word i;
+				vm.start();
+				for (i = 0; i < ticks; ++i) {
 					if (!vm.tick())
 						break;
 				}
+
+				if (vm.paused)
+					broadcast(":Paused");
+
+				DBG("Server ticked " << i << " time" << (i == 1? "" : "s") << ".");
 
 				setFastForward(false);
 			} else {
 				invalid();
 			}
+		} else if (verb == "Unpause") {
+			vm.paused = false;
+			broadcast(":Unpaused");
 		} else if (verb == "Reg") {
 			if (size != 2 && size != 3) {
 				invalid();
@@ -264,6 +274,14 @@ namespace WVM::Mode {
 			}
 
 			server.send(client, ":PC " + std::to_string(vm.programCounter));
+		} else if (verb == "SetPC") {
+			Word address;
+			if (size != 2 || !Util::parseLong(split[1], address)) {
+				invalid();
+				return;
+			}
+
+			vm.jump(address);
 		} else if (verb == "Registers") {
 			if (size == 2 && split[1] == "raw") {
 				for (int i = 0; i < Why::totalRegisters; ++i)
@@ -273,7 +291,8 @@ namespace WVM::Mode {
 					server.send(client, ":Register $" + Why::registerName(i) + " " + std::to_string(vm.registers[i]));
 			}
 		} else if (verb == "Reset") {
-			vm.reset();
+			vm.reset(false);
+			sendMemory(client);
 			server.send(client, ":PC " + std::to_string(vm.programCounter));
 			server.send(client, ":ResetComplete");
 		} else if (verb == "AddBP") {
@@ -292,6 +311,18 @@ namespace WVM::Mode {
 			}
 
 			vm.removeBreakpoint(breakpoint);
+		} else if (verb == "AskAbout") {
+			Word address;
+			if (size != 2 || !Util::parseLong(split[1], address)) {
+				invalid();
+				return;
+			}
+
+			broadcast(":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) + ", " +
+				std::to_string(vm.getHalfword(address + 4)) + ", " + std::to_string(vm.getWord(address)));
+			// broadcast(":Log " + std::to_string(address) + "+4: " + std::to_string(vm.getHalfword(address)));
+			// broadcast(":Log " + std::to_string(address + 4) + "+4: " + std::to_string(vm.getHalfword(address + 4)));
+			// broadcast(":Log " + std::to_string(address) + "+8: " + std::to_string(vm.getWord(address)));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
@@ -306,6 +337,24 @@ namespace WVM::Mode {
 				server.send(subscriber, ":FastForward off");
 				server.send(subscriber, ":PC " + std::to_string(vm.programCounter));
 			}
+		}
+	}
+
+	void ServerMode::broadcast(const std::string &message) {
+		for (int client: server.getClients())
+			server.send(client, message);
+	}
+
+	void ServerMode::sendMemory(int client) {
+		std::stringstream to_send;
+		to_send << ":MemoryWords 0 " << (vm.endOffset / 8) << std::hex;
+		for (Word i = 0; i < vm.endOffset; i += 8)
+			to_send << " " << vm.getWord(i, Endianness::Little);
+		server.send(client, to_send.str());
+		server.send(client, ":Done GetMain");
+		for (Word address: writtenAddresses) {
+			server.send(client, ":MemoryWord " + std::to_string(address) + " " +
+				std::to_string(vm.getWord(address, Endianness::Little)));
 		}
 	}
 }
