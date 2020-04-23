@@ -54,8 +54,6 @@ namespace WVM::Mode {
 		const std::string rest = space == std::string::npos? "" : message.substr(space + 1);
 		const std::vector<std::string> split = Util::split(rest, " ", false);
 
-		DBG("[[" << message << "]]");
-
 		if (verb == "Error") {
 			textbox += errorPrefix + rest;
 		} else if (verb == "Subscribed") {
@@ -74,7 +72,6 @@ namespace WVM::Mode {
 			stop();
 			std::terminate();
 		} else if (verb == "Log") {
-			DBG("What");
 			textbox += infoPrefix + rest;
 		} else {
 			textbox += message;
