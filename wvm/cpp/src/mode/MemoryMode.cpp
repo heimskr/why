@@ -87,6 +87,10 @@ namespace WVM::Mode {
 			} else if (key == '>') {
 				if (autotick != -1)
 					DBG("autotick = " << (autotick /= 1.1));
+			} else if (key == haunted::ktype::page_down) {
+				textbox.vscroll(textbox.get_position().height);
+			} else if (key == haunted::ktype::page_up) {
+				textbox.vscroll(-textbox.get_position().height);
 			} else return false;
 			return true;
 		};
