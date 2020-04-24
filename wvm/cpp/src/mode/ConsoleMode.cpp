@@ -73,8 +73,6 @@ namespace WVM::Mode {
 			std::terminate();
 		} else if (verb == "Log") {
 			textbox += infoPrefix + rest;
-		} else {
-			textbox += message;
 		}
 	}
 
