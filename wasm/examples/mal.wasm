@@ -101,6 +101,7 @@ sub get_block_ptr() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -151,26 +152,31 @@ sub memsplit() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t4
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -431,16 +437,19 @@ sub request_space() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -564,6 +573,7 @@ sub realign() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -673,9 +683,10 @@ sub prc() {
 	[ $t4
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
-	$sp % 1 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 1 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0] /b
@@ -750,49 +761,58 @@ sub main() {
 	[ $s10
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t4
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t5
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t6
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t7
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t8
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0] /h
@@ -1258,9 +1278,10 @@ sub prd() {
 	[ $t3
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0] /h
@@ -1328,16 +1349,19 @@ sub dbg_blocks() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerMemory(load): [global] -> %var
 	[global_base] -> $t3
@@ -1534,16 +1558,19 @@ sub find_free_block() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -1653,11 +1680,13 @@ sub fr() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -1822,21 +1851,25 @@ sub mal() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t1]
@@ -2170,9 +2203,10 @@ sub mem_init() {
 	[ $tc
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0] /h
@@ -2258,11 +2292,13 @@ sub check_free() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -2366,6 +2402,7 @@ sub strprint() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -2439,13 +2476,14 @@ sub merge_blocks() {
 	[ $s16
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
-	$sp % 4 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t0 -> [$m0]
+	// LowerAlloca: $sp -= to_sub
 	$sp - 4 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -2455,6 +2493,7 @@ sub merge_blocks() {
 	$fp - 24 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t1 -> [$m0]
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: imm -> $m0
 	0 -> $m0
@@ -2462,7 +2501,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t15:157
 	[$m0] -> $t15
 	$m0 -> [$t15] /h
 	// LowerMemory(load): [global] -> %var
@@ -2471,7 +2510,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t16:165
 	[$m0] -> $t16
 	$t2 -> [$t16]
 	// LowerMemory(load): [global] -> %var
@@ -2487,7 +2526,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s0:166
 	[$m0] -> $s0
 	[$s0] -> $t6
 	$t6 -> $t7
@@ -2501,7 +2540,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s1:167
 	[$m0] -> $s1
 	[$s1] -> $t9
 	$t9 -> $ta
@@ -2524,7 +2563,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s2:168
 	[$m0] -> $s2
 	[$s2] -> $tf
 	$tf -> $t10
@@ -2543,7 +2582,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t3:169
 	[$m0] -> $t3
 	[$t3] -> $t0
 	$t0 == 0 -> $t1
@@ -2556,7 +2595,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t4:170
 	[$m0] -> $t4
 	[$t4] -> $t0
 	// LowerGetelementptr: struct-type
@@ -2573,7 +2612,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t4:171
 	[$m0] -> $t4
 	[$t4] -> $t0
 	// LowerGetelementptr: struct-type
@@ -2589,7 +2628,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t6:172
 	[$m0] -> $t6
 	[$t6] -> $t0
 	// LowerGetelementptr: struct-type
@@ -2613,7 +2652,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $sf:173
 	[$m0] -> $sf
 	[$sf] -> $t0
 	// LowerGetelementptr: struct-type
@@ -2634,7 +2673,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s10:174
 	[$m0] -> $s10
 	[$s10] -> $t4
 	// LowerGetelementptr: struct-type
@@ -2655,7 +2694,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s11:175
 	[$m0] -> $s11
 	[$s11] -> $ta
 	// LowerGetelementptr: struct-type
@@ -2671,7 +2710,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s12:176
 	[$m0] -> $s12
 	[$s12] -> $t10
 	// LowerGetelementptr: struct-type
@@ -2687,7 +2726,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s13:177
 	[$m0] -> $s13
 	[$s13] -> $t14
 	// LowerGetelementptr: struct-type
@@ -2709,7 +2748,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s14:178
 	[$m0] -> $s14
 	[$s14] -> $s5
 	// LowerGetelementptr: struct-type
@@ -2728,13 +2767,13 @@ sub merge_blocks() {
 	// LowerTrunc: 64 to 32, apply mask
 	$sd & -1 -> $se
 	// LowerStack: $fp - offset -> $m0 for $se:82
-	$fp - 140 -> $m0
+	$fp - 144 -> $m0
 	// LowerStack: %var -> [$m0]
 	$se -> [$m0]
-	// Spill: stack load: location=140
+	// Spill: stack load: location=144
 	// LowerStack: $fp - offset -> $m0 for $se:82
-	$fp - 140 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 144 -> $m0
+	// LowerStack: [$m0] -> $s16:193
 	[$m0] -> $s16
 	$s16 -> $a0
 	:: prd
@@ -2744,96 +2783,96 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $s15:179
 	[$m0] -> $s15
 	[$s15] -> $t0
 	// LowerStack: $fp - offset -> $m0 for $t0:83
-	$fp - 132 -> $m0
+	$fp - 136 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t0 -> [$m0]
 	// LowerGetelementptr: struct-type
-	// Spill: stack load: location=132
+	// Spill: stack load: location=136
 	// LowerStack: $fp - offset -> $m0 for $t0:83
-	$fp - 132 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 136 -> $m0
+	// LowerStack: [$m0] -> $t1:192
 	[$m0] -> $t1
 	$t1 + 8 -> $t0
 	// LowerStack: $fp - offset -> $m0 for $t0:84
-	$fp - 108 -> $m0
+	$fp - 112 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t0 -> [$m0]
 	// LowerMemory(load): [%84] -> %85
-	// Spill: stack load: location=108
+	// Spill: stack load: location=112
 	// LowerStack: $fp - offset -> $m0 for $t0:84
-	$fp - 108 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 112 -> $m0
+	// LowerStack: [$m0] -> $tf:191
 	[$m0] -> $tf
 	[$tf] -> $t2
 	// LowerStack: $fp - offset -> $m0 for $t2:85
-	$fp - 100 -> $m0
+	$fp - 104 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t2 -> [$m0]
 	// LowerGetelementptr: struct-type
-	// Spill: stack load: location=100
+	// Spill: stack load: location=104
 	// LowerStack: $fp - offset -> $m0 for $t2:85
-	$fp - 100 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 104 -> $m0
+	// LowerStack: [$m0] -> $te:190
 	[$m0] -> $te
 	$te + 8 -> $t3
 	// LowerStack: $fp - offset -> $m0 for $t3:86
-	$fp - 76 -> $m0
+	$fp - 80 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t3 -> [$m0]
 	// LowerMemory(load): [%86] -> %87
-	// Spill: stack load: location=76
+	// Spill: stack load: location=80
 	// LowerStack: $fp - offset -> $m0 for $t3:86
-	$fp - 76 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 80 -> $m0
+	// LowerStack: [$m0] -> $td:189
 	[$m0] -> $td
 	[$td] -> $t4
 	// LowerStack: $fp - offset -> $m0 for $t4:87
-	$fp - 68 -> $m0
+	$fp - 72 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t4 -> [$m0]
 	// LowerMemory(load): [%2] -> %88
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t9:180
 	[$m0] -> $t9
 	[$t9] -> $t5
 	// LowerStack: $fp - offset -> $m0 for $t5:88
-	$fp - 60 -> $m0
+	$fp - 64 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t5 -> [$m0]
 	// LowerGetelementptr: struct-type
-	// Spill: stack load: location=60
+	// Spill: stack load: location=64
 	// LowerStack: $fp - offset -> $m0 for $t5:88
-	$fp - 60 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 64 -> $m0
+	// LowerStack: [$m0] -> $tb:187
 	[$m0] -> $tb
 	$tb + 8 -> $t6
 	// LowerStack: $fp - offset -> $m0 for $t6:89
-	$fp - 36 -> $m0
+	$fp - 40 -> $m0
 	// LowerStack: %var -> [$m0]
 	$t6 -> [$m0]
 	// LowerMemory: %src -> [%dest]
-	// Spill: stack load: location=36
+	// Spill: stack load: location=40
 	// LowerStack: $fp - offset -> $m0 for $t6:89
-	$fp - 36 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 40 -> $m0
+	// LowerStack: [$m0] -> $ta:186
 	[$m0] -> $ta
-	// Spill: stack load: location=68
+	// Spill: stack load: location=72
 	// LowerStack: $fp - offset -> $m0 for $t4:87
-	$fp - 68 -> $m0
-	// LowerStack: [$m0 -> %var]
+	$fp - 72 -> $m0
+	// LowerStack: [$m0] -> $tc:188
 	[$m0] -> $tc
 	$tc -> [$ta]
 	// LowerMemory(load): [%1] -> %90
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t8:158
 	[$m0] -> $t8
 	[$t8] -> $t7 /h
 	// LowerStack: $fp - offset -> $m0 for $t7:90
@@ -2843,14 +2882,14 @@ sub merge_blocks() {
 	// Spill: stack load: location=32
 	// LowerStack: $fp - offset -> $m0 for $t7:90
 	$fp - 32 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t2:185
 	[$m0] -> $t2
 	$t2 + 1 -> $t0
 	// LowerMemory: %src -> [%dest]
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t1:159
 	[$m0] -> $t1
 	$t0 -> [$t1] /h
 	: __merge_blocks_label96
@@ -2861,7 +2900,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t3:181
 	[$m0] -> $t3
 	[$t3] -> $t0
 	// LowerGetelementptr: struct-type
@@ -2872,7 +2911,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t4:182
 	[$m0] -> $t4
 	$t2 -> [$t4]
 	@__merge_blocks_label96
@@ -2882,7 +2921,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t8:183
 	[$m0] -> $t8
 	[$t8] -> $t0
 	$t0 -> $t1
@@ -2895,7 +2934,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=24
 	// LowerStack: $fp - offset -> $m0 for $t1:2
 	$fp - 24 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t9:184
 	[$m0] -> $t9
 	$t9 -> $t3
 	// LowerTrunc: 64 to 32, apply mask
@@ -2906,7 +2945,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t7:160
 	[$m0] -> $t7
 	[$t7] -> $t5 /h
 	$t5 > 0 -> $t6
@@ -2919,7 +2958,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t9:161
 	[$m0] -> $t9
 	[$t9] -> $t0 /h
 	$t0 -> $a0
@@ -2930,7 +2969,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $ta:162
 	[$m0] -> $ta
 	[$ta] -> $t1 /h
 	$t1 == 1 -> $t2
@@ -2944,7 +2983,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $tb:163
 	[$m0] -> $tb
 	$tb -> $t5
 	// LowerTrunc: 64 to 32, apply mask
@@ -2956,7 +2995,7 @@ sub merge_blocks() {
 	// Spill: stack load: location=16
 	// LowerStack: $fp - offset -> $m0 for $t0:1
 	$fp - 16 -> $m0
-	// LowerStack: [$m0 -> %var]
+	// LowerStack: [$m0] -> $t1:164
 	[$m0] -> $t1
 	[$t1] -> $t0 /h
 	$fp -> $sp
@@ -3108,16 +3147,19 @@ sub allocate() {
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerMemory: %src -> [%dest]
 	$a0 -> [$t0]
@@ -3247,8 +3289,6 @@ sub allocate() {
 	] $rt
 	: $rt
 }
-
-
 
 sub prd() {
 	<prd $a0>

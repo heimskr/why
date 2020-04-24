@@ -128,6 +128,16 @@ namespace WVM::Mode {
 					textbox += std::string(infoPrefix) + "Removed breakpoint at " + split[0] + ".";
 				}
 			} else badInput();
+		} else if (first == "a" || first == "ask") {
+			if (size == 1) {
+				Word address;
+				if (!Util::parseLong(split[0], address)) {
+					badInput();
+					return;
+				}
+
+				*socket << ":AskAbout " << address << "\n";
+			} else badInput();
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
