@@ -18,10 +18,9 @@ namespace WVM::Mode {
 
 		autotickThread = std::thread([&]() {
 			while (true) {
-				if (autotick < 0) {
-					std::unique_lock<std::mutex> lock(autotickMutex);
-					autotickVariable.wait(lock, [this] { return autotickReady; });
-				}
+				std::unique_lock<std::mutex> lock(autotickMutex);
+				autotickVariable.wait(lock, [this] { return autotickReady; });
+				autotickReady = false;
 
 				// Strictly speaking I should use a mutex to check autotick, but because I want to avoid the overhead of
 				// locking a mutex repeatedly and I don't mind a few accidental extra ticks, I'm deciding not to.
