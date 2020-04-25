@@ -344,8 +344,8 @@ namespace WVM::Mode {
 
 	void ServerMode::sendMemory(int client) {
 		std::stringstream to_send;
-		to_send << ":MemoryWords 0 " << (vm.endOffset / 8) << std::hex;
-		for (Word i = 0; i < vm.endOffset; i += 8)
+		to_send << ":MemoryWords 0 " << (vm.endOffset / 8 + 128) << std::hex;
+		for (Word i = 0; i < vm.endOffset + 128 * 8; i += 8)
 			to_send << " " << vm.getWord(i, Endianness::Little);
 		server.send(client, to_send.str());
 		server.send(client, ":Done GetMain");

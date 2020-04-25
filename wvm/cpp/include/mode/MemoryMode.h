@@ -25,7 +25,7 @@ namespace WVM::Mode {
 			std::unordered_set<Word> symbolTableEdges;
 			bool follow = true, fastForward = false, showSymbols = false;
 
-			int autotick = -1;
+			int autotick = -50'000;
 			std::thread autotickThread;
 			bool autotickReady = false;
 			std::mutex autotickMutex;

@@ -18,23 +18,18 @@ namespace WVM::Mode {
 
 		autotickThread = std::thread([&]() {
 			while (true) {
-				if (autotick == -1) {
+				if (autotick < 0) {
 					std::unique_lock<std::mutex> lock(autotickMutex);
 					autotickVariable.wait(lock, [this] { return autotickReady; });
 				}
 
 				// Strictly speaking I should use a mutex to check autotick, but because I want to avoid the overhead of
-				// locking a mutex repeatedly and I don't mind a few accidental extra ticks, I'm deciding not to. To
-				// avoid having to repeatedly lock the network mutex, I'm locking it here just once, which has the side
-				// effect of making it impossible to send anything else while autotick is enabled, but that's the
-				// behavior I want anyway.
-				std::unique_lock lock(networkMutex);
-				while (autotick != -1) {
-
+				// locking a mutex repeatedly and I don't mind a few accidental extra ticks, I'm deciding not to.
+				while (0 <= autotick) {
 					*buffer << ":Tick\n";
 					usleep(autotick);
 					if (vm.hasBreakpoint(vm.programCounter)) {
-						autotick = -1;
+						autotick = autotick < 0? autotick : -autotick;
 						break;
 					}
 				}
@@ -72,21 +67,19 @@ namespace WVM::Mode {
 					showSymbols = !showSymbols;
 					remakeList();
 				} else return false;
-			} else if (key == '.' && autotick == -1) {
+			} else if (key == '.' && autotick < 0) {
 				if (vm.paused)
 					send(":Unpause");
 				send(":Tick");
 			} else if (key == ' ') {
-				if (autotick == -1)
+				if (autotick < 0)
 					startAutotick();
 				else
-					autotick = -1;
+					autotick = -autotick;
 			} else if (key == '<') {
-				if (autotick != -1)
-					DBG("autotick = " << (autotick *= 1.1));
+				DBG("autotick = " << (autotick *= 1.1));
 			} else if (key == '>') {
-				if (autotick != -1)
-					DBG("autotick = " << (autotick /= 1.1));
+				DBG("autotick = " << (autotick /= 1.1));
 			} else if (key == haunted::ktype::page_down) {
 				textbox.vscroll(textbox.get_position().height);
 			} else if (key == haunted::ktype::page_up) {
@@ -132,7 +125,7 @@ namespace WVM::Mode {
 					labeled.insert(pair.second.location);
 			}
 
-			for (Word address = min, i = 0; address < max; address += 8, ++i) {
+			for (Word address = min, i = 0; address < max + 128 * 8; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
 					textbox += "\e[2m" + hyphens + "\e[22m";
@@ -380,7 +373,7 @@ namespace WVM::Mode {
 			vm.paused = false;
 		} else if (verb == "Paused") {
 			vm.paused = true;
-			autotick = -1;
+			autotick = autotick < 0? autotick : -autotick;
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
@@ -389,7 +382,7 @@ namespace WVM::Mode {
 
 	void MemoryMode::startAutotick() {
 		send(":Unpause");
-		autotick = 50'000;
+		autotick = autotick < 0? -autotick : autotick;
 		std::unique_lock<std::mutex> lock(autotickMutex);
 		autotickReady = true;
 		autotickVariable.notify_one();
@@ -399,6 +392,8 @@ namespace WVM::Mode {
 		if (networkMutex.try_lock()) {
 			*buffer << to_send << "\n";
 			networkMutex.unlock();
+		} else {
+			DBG("Failed to send " << to_send);
 		}
 	}
 
