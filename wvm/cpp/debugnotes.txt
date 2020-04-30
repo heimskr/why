@@ -1,0 +1,14 @@
+mal.wasm version: 2f7b7c705c57da5baaf25901bdb984bbf9737185
+
+mal ($fp = 999'416):
+	$t0, 999'144: stores return value?
+	$t1, 999'136: stores $a0.
+	$t2, 999'128: struct block_meta *block. Stores result of request_space.
+	$t3, 999'120: 
+
+
+dbg_blocks ($fp = 999'232):
+	$t0: 999'256: stores pointer to global_base?
+	$t2: 999'240: 
+
+29696: start of 800 block
