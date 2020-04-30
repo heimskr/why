@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 
+#include "lib/ansi.h"
 #include "mult.h"
 #include "Operations.h"
 #include "Util.h"
@@ -733,8 +734,10 @@ namespace WVM::Operations {
 
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		std::stringstream ss;
-		ss << Why::coloredRegister(&rs - vm.registers) << ": 0x" << std::hex << rs << " / " << rs << "\n";
-		vm.onPrint(ss.str());
+		ss << Why::coloredRegister(&rs - vm.registers) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
+		   << rs;
+		// vm.onPrint(ss.str());
+		DBG(ss.str());
 		vm.increment();
 	}
 

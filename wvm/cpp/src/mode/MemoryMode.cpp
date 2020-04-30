@@ -222,7 +222,7 @@ namespace WVM::Mode {
 	void MemoryMode::makeSymbolTableEdges() {
 		symbolTableEdges.clear();
 		symbolTableEdges.insert(vm.symbolsOffset);
-		for (Word i = vm.symbolsOffset; i < vm.codeOffset;) {
+		for (Word i = vm.symbolsOffset; i < vm.codeOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
 			i += 16 + 8 * vm.getHalfword(i + 4, Endianness::Big);
 			if (i < vm.codeOffset)
 				symbolTableEdges.insert(i);
@@ -373,6 +373,18 @@ namespace WVM::Mode {
 		} else if (verb == "Paused") {
 			vm.paused = true;
 			autotick = autotick < 0? autotick : -autotick;
+		} else if (verb == "Offsets") {
+			Word symbols, code, data, end;
+			if (size != 4 || !Util::parseLong(split[0], symbols) || !Util::parseLong(split[1], code)
+				|| !Util::parseLong(split[2], data) || !Util::parseLong(split[3], end)) {
+				DBG("Invalid: Offsets[" << rest << "]");
+				return;
+			}
+
+			vm.symbolsOffset = symbols;
+			vm.codeOffset = code;
+			vm.dataOffset = data;
+			vm.endOffset = end;
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();

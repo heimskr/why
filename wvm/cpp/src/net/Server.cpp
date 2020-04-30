@@ -150,7 +150,12 @@ namespace WVM::Net {
 						allClients.insert(new_client);
 					} else if (i != controlRead) {
 						// Data arriving on an already-connected socket.
-						readFromClient(i);
+						try {
+							readFromClient(i);
+						} catch (const NetError &err) {
+							std::cerr << err.what() << "\n";
+							removeClient(clients.at(i));
+						}
 					}
 				}
 			}

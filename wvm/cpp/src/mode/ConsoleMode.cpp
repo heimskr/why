@@ -138,6 +138,8 @@ namespace WVM::Mode {
 
 				*socket << ":AskAbout " << address << "\n";
 			} else badInput();
+		} else if (first == "str" || first == "string") {
+			*socket << ":GetString " << split[0] << "\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

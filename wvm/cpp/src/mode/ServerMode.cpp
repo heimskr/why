@@ -282,6 +282,24 @@ namespace WVM::Mode {
 			}
 
 			vm.jump(address);
+		} else if (verb == "GetString") {
+			if (size != 2) {
+				invalid();
+				return;
+			}
+
+			Word address;
+			if (!Util::parseLong(split[1], address)) {
+				// Look up from the symbol table.
+				if (vm.symbolTable.count(split[1]) == 0) {
+					server.send(client, ":Error GetString: unknown symbol: " + split[1]);
+					return;
+				}
+
+				address = vm.symbolTable.at(split[1]).location;
+			}
+
+			// std::replace
 		} else if (verb == "Registers") {
 			if (size == 2 && split[1] == "raw") {
 				for (int i = 0; i < Why::totalRegisters; ++i)
@@ -344,6 +362,8 @@ namespace WVM::Mode {
 
 	void ServerMode::sendMemory(int client) {
 		std::stringstream to_send;
+		server.send(client, ":Offsets " + std::to_string(vm.symbolsOffset) + " " + std::to_string(vm.codeOffset) + " "
+			+ std::to_string(vm.dataOffset) + " " + std::to_string(vm.endOffset));
 		to_send << ":MemoryWords 0 " << (vm.endOffset / 8 + 128) << std::hex;
 		for (Word i = 0; i < vm.endOffset + 128 * 8; i += 8)
 			to_send << " " << vm.getWord(i, Endianness::Little);

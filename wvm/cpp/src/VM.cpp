@@ -285,10 +285,16 @@ namespace WVM {
 	}
 
 	void VM::init() {
-		symbolsOffset = getWord(0, Endianness::Big);
-		codeOffset = programCounter = getWord(8, Endianness::Big);
-		dataOffset = getWord(16, Endianness::Big);
-		endOffset = getWord(24, Endianness::Big);
+		if (symbolsOffset == -1)
+			symbolsOffset = getWord(0, Endianness::Big);
+		if (codeOffset == -1) {
+			codeOffset = programCounter = getWord(8, Endianness::Big);
+			DBG("codeOffset <- " << codeOffset);
+		} else DBG("codeOffset == " << codeOffset);
+		if (dataOffset == -1)
+			dataOffset = getWord(16, Endianness::Big);
+		if (endOffset == -1)
+			endOffset = getWord(24, Endianness::Big);
 		registers[Why::globalAreaPointerOffset] = endOffset;
 		sp() = memorySize - 8;
 		onRegisterChange(Why::globalAreaPointerOffset);
@@ -315,10 +321,13 @@ namespace WVM {
 
 	void VM::loadSymbols() {
 		symbolTable.clear();
-		for (Word i = symbolsOffset; i < codeOffset;) {
+		for (Word i = symbolsOffset; i < codeOffset && static_cast<size_t>(i + 16) < memorySize;) {
+			DBG("i==" << i << "; codeOffset==" << codeOffset << "; memorySize==" << memorySize);
 			const HWord hash = getHalfword(i, Endianness::Big);
 			const HWord length = getHalfword(i + 4, Endianness::Big);
 			const Word location = getWord(i + 8, Endianness::Big);
+			if (memorySize <= static_cast<size_t>(i + 16 + length * 8))
+				break;
 			const std::string name = getString(i + 16, length * 8);
 			symbolTable.emplace(name, Symbol(hash, location));
 			i += 16 + length * 8;
