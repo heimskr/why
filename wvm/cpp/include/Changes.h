@@ -20,6 +20,15 @@ namespace WVM {
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
 	};
+
+	struct RegisterChange: public Change {
+		UByte reg;
+		Word from, to;
+		RegisterChange(UByte reg_, Word from_, Word to_): reg(reg_), from(from_), to(to_) {}
+
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
 }
 
 #endif
