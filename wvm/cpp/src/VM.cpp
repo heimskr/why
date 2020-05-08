@@ -51,8 +51,28 @@ namespace WVM {
 			for (char i = 0; i < 4; i++)
 				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
 		}
+
 		onUpdateMemory(address - (address % 8));
 		if (4 < address % 8)
+			onUpdateMemory(address - (address % 8) + 8);
+	}
+
+	void VM::setQuarterword(Word address, QWord value, Endianness endianness) {
+		if (static_cast<Word>(memorySize) <= address - 1) {
+			throw VMError("Out-of-bounds memory access in VM::setQuarterword (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address - 1) + ")");
+		}
+
+		if (endianness == Endianness::Little) {
+			memory[address] = value & 0xff;
+			memory[address + 1] = value >> 8;
+		} else {
+			memory[address] = value >> 8;
+			memory[address + 1] = value & 0xff;
+		}
+
+		onUpdateMemory(address - (address % 8));
+		if (6 < address % 8)
 			onUpdateMemory(address - (address % 8) + 8);
 	}
 
@@ -88,8 +108,8 @@ namespace WVM {
 			throw VMError("Out-of-bounds memory access in VM::getHalfword (" + std::to_string(memorySize) + " <= " +
 				std::to_string(address - 3) + ")");
 		}
-		HWord out = 0;
 
+		HWord out = 0;
 		if (endianness == Endianness::Little) {
 			for (char i = 0; i < 4; i++)
 				out |= static_cast<HWord>(memory[address + i]) << (8*i);
@@ -101,12 +121,43 @@ namespace WVM {
 		return out;
 	}
 
+	QWord VM::getQuarterword(Word address, Endianness endianness) const {
+		if (static_cast<Word>(memorySize) <= address - 1) {
+			throw VMError("Out-of-bounds memory access in VM::getQuarterword (" + std::to_string(memorySize) + " <= " +
+				std::to_string(address - 1) + ")");
+		}
+
+		if (endianness == Endianness::Little)
+			return static_cast<HWord>(memory[address] | (memory[address + 1] << 8));
+		return static_cast<HWord>(memory[address + 1] | (memory[address] << 8));
+	}
+
 	Byte VM::getByte(Word address) const {
 		if (static_cast<Word>(memorySize) <= address) {
 			throw VMError("Out-of-bounds memory access in VM::getByte (" + std::to_string(memorySize) + " <= " +
 				std::to_string(address) + ")");
 		}
 		return memory[address];
+	}
+
+	Word VM::get(Word address, Size size, Endianness endianness) const {
+		switch (size) {
+			case Size::Byte:  return getByte(address);
+			case Size::QWord: return getQuarterword(address, endianness);
+			case Size::HWord: return getHalfword(address, endianness);
+			case Size::Word:  return getWord(address, endianness);
+			default: throw std::runtime_error("Invalid size for VM::get");
+		}
+	}
+
+	void VM::set(Word address, Word value, Size size, Endianness endianness) {
+		switch (size) {
+			case Size::Byte:  return setByte(address, value);
+			case Size::QWord: return setQuarterword(address, value, endianness);
+			case Size::HWord: return setHalfword(address, value, endianness);
+			case Size::Word:  return setWord(address, value, endianness);
+			default: throw std::runtime_error("Invalid size for VM::set");
+		}
 	}
 
 	std::string VM::getString(Word address, int max) const {
@@ -287,10 +338,8 @@ namespace WVM {
 	void VM::init() {
 		if (symbolsOffset == -1)
 			symbolsOffset = getWord(0, Endianness::Big);
-		if (codeOffset == -1) {
+		if (codeOffset == -1)
 			codeOffset = programCounter = getWord(8, Endianness::Big);
-			DBG("codeOffset <- " << codeOffset);
-		} else DBG("codeOffset == " << codeOffset);
 		if (dataOffset == -1)
 			dataOffset = getWord(16, Endianness::Big);
 		if (endOffset == -1)
@@ -322,7 +371,6 @@ namespace WVM {
 	void VM::loadSymbols() {
 		symbolTable.clear();
 		for (Word i = symbolsOffset; i < codeOffset && static_cast<size_t>(i + 16) < memorySize;) {
-			DBG("i==" << i << "; codeOffset==" << codeOffset << "; memorySize==" << memorySize);
 			const HWord hash = getHalfword(i, Endianness::Big);
 			const HWord length = getHalfword(i + 4, Endianness::Big);
 			const Word location = getWord(i + 8, Endianness::Big);

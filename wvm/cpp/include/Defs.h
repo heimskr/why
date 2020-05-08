@@ -28,6 +28,13 @@ namespace WVM {
 		SymbolID      = 3,
 	};
 
+	enum class Size: char {
+		Byte  = 8,
+		QWord = 16,
+		HWord = 32,
+		Word  = 64,
+	};
+
 	class VM;
 }
 
