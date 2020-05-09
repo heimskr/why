@@ -140,6 +140,10 @@ namespace WVM::Mode {
 			} else badInput();
 		} else if (first == "str" || first == "string") {
 			*socket << ":GetString " << split[0] << "\n";
+		} else if (first == "u" || first == "un" || first == "undo") {
+			*socket << ":Undo\n";
+		} else if (first == "re" || first == "redo") {
+			*socket << ":Redo\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

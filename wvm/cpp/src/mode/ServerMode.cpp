@@ -338,6 +338,10 @@ namespace WVM::Mode {
 
 			broadcast(":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) + ", " +
 				std::to_string(vm.getHalfword(address + 4)) + ", " + std::to_string(vm.getWord(address)));
+		} else if (verb == "Undo") {
+			DBG("Undo: " << vm.undo());
+		} else if (verb == "Redo") {
+			DBG("Redo: " << vm.redo());
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}

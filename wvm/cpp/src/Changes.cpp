@@ -1,3 +1,4 @@
+#include "lib/ansi.h"
 #include "Changes.h"
 #include "VM.h"
 #include "VMError.h"
@@ -42,21 +43,26 @@ namespace WVM {
 		if (strict) {
 			if (vm.programCounter != from)
 				throw VMError("Unable to apply JumpChange: program counter isn't the expected from-value");
-			if (link && vm.programCounter != returnFrom) {
-				throw VMError("Unable to apply JumpChange: program counter isn't the expected return address from-"
-					"value");
+			if (link && vm.rt() != returnFrom) {
+				throw VMError("Unable to apply JumpChange: return address isn't the expected from-value");
 			}
 		}
 
+		DBG("Apply: jumping from " << from << " to " << to);
 		vm.jump(to, link);
 	}
 
 	void JumpChange::undo(VM &vm, bool strict) {
 		if (strict) {
-			if (vm.programCounter != to)
-				throw VMError("Unable to undo JumpChange: program counter isn't the expected to-value");
-			if (link && vm.rt() != returnTo)
-				throw VMError("Unable to undo JumpChange: return address isn't the expected to-value");
+			if (vm.programCounter != to) {
+				throw VMError("Unable to undo JumpChange: program counter (" + std::to_string(vm.programCounter) +
+					") isn't the expected to-value (" + std::to_string(to) + ")");
+			}
+
+			if (link && vm.rt() != returnTo) {
+				throw VMError("Unable to undo JumpChange: return address (" + std::to_string(vm.rt()) + ") isn't the "
+					"expected to-value (" + std::to_string(returnTo) + ")");
+			}
 		}
 
 		vm.programCounter = from;
