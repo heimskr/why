@@ -48,6 +48,16 @@ namespace WVM {
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
 	};
+
+	struct InterruptTableChange: public Change {
+		Word from, to;
+
+		InterruptTableChange(Word from_, Word to_): from(from_), to(to_) {}
+		InterruptTableChange(const VM &, Word to_);
+
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
 }
 
 #endif

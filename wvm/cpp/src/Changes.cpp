@@ -66,4 +66,23 @@ namespace WVM {
 			vm.onRegisterChange(Why::returnAddressOffset);
 		}
 	}
+
+	InterruptTableChange::InterruptTableChange(const VM &vm, Word to_): from(vm.interruptTableAddress), to(to_) {}
+
+	void InterruptTableChange::apply(VM &vm, bool strict) {
+		if (strict && vm.interruptTableAddress != from) {
+			throw VMError("Unable to apply InterruptTableChange: interrupt table address isn't the expected "
+				"from-value");
+		}
+
+		vm.interruptTableAddress = to;
+		vm.onInterruptTableChange();
+	}
+
+	void InterruptTableChange::undo(VM &vm, bool strict) {
+		if (strict && vm.interruptTableAddress != to)
+			throw VMError("Unable to undo InterruptTableChange: interrupt table address isn't the expected to-value");
+		vm.interruptTableAddress = from;
+		vm.onInterruptTableChange();
+	}
 }
