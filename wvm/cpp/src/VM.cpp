@@ -187,17 +187,21 @@ namespace WVM {
 
 	void VM::jump(Word address, bool should_link) {
 		if (should_link)
-			link();
+			link(false);
+		recordChange<JumpChange>(*this, address, should_link);
 		Word old_address = programCounter;
 		programCounter = address;
 		onJump(old_address, address);
 	}
 
-	void VM::link() {
+	void VM::link(bool record) {
+		if (record)
+			recordChange<RegisterChange>(*this, Why::returnAddressOffset, programCounter + 8);
 		registers[Why::returnAddressOffset] = programCounter + 8;
 	}
 
 	void VM::increment() {
+		recordChange<JumpChange>(*this, programCounter + 8, false);
 		programCounter += 8;
 		onJump(programCounter - 8, programCounter);
 	}
@@ -380,6 +384,16 @@ namespace WVM {
 			symbolTable.emplace(name, Symbol(hash, location));
 			i += 16 + length * 8;
 		}
+	}
+
+	void VM::finishChange() {
+		if (changeBuffer.empty())
+			return;
+
+		if (static_cast<size_t>(++undoPointer) < undoStack.size())
+			undoStack.erase(std::next(undoStack.begin(), undoPointer), undoStack.end());
+		undoStack.emplace_back(std::move(changeBuffer));
+		changeBuffer.clear();
 	}
 
 	Word & VM::hi() {

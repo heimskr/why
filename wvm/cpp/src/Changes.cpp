@@ -3,6 +3,9 @@
 #include "VMError.h"
 
 namespace WVM {
+	MemoryChange::MemoryChange(const VM &vm, Word address_, Word to_, Size size_):
+		address(address_), from(vm.get(address_, size_)), to(to_), size(size_) {}
+
 	void MemoryChange::apply(VM &vm, bool strict) {
 		if (strict && vm.get(address, size) != from)
 			throw VMError("Unable to apply MemoryChange: memory at address isn't the expected from-value");
@@ -14,6 +17,9 @@ namespace WVM {
 			throw VMError("Unable to undo MemoryChange: memory at address isn't the expected to-value");
 		vm.set(address, from, size);
 	}
+
+	RegisterChange::RegisterChange(const VM &vm, UByte reg_, Word to_):
+		reg(reg_), from(vm.registers[reg_]), to(to_) {}
 
 	void RegisterChange::apply(VM &vm, bool strict) {
 		if (strict && vm.registers[reg] != from)
@@ -28,6 +34,9 @@ namespace WVM {
 		vm.registers[reg] = from;
 		vm.onRegisterChange(reg);
 	}
+
+	JumpChange::JumpChange(const VM &vm, Word to_, bool link_):
+		from(vm.programCounter), to(to_), returnFrom(vm.rt()), returnTo(vm.programCounter + 8), link(link_) {}
 
 	void JumpChange::apply(VM &vm, bool strict) {
 		if (strict) {

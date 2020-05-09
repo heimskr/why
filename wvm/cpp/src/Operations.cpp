@@ -220,22 +220,29 @@ namespace WVM::Operations {
 		address = instr & 0xffffffff;
 	}
 
-	void addOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs + rt);
+	void setReg(VM &vm, Word &rd, Word value) {
+		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), value);
+		vm.updateFlags(rd = value);
 		vm.onRegisterChange(vm.registerID(rd));
+	}
+
+	void addOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		setReg(vm, rd, rs + rt);
 		vm.increment();
 	}
 
 	void subOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs - rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs - rt);
 		vm.increment();
 	}
 
 	void multOp(VM &vm, Word &rs, Word &rt, Word &, Conditions, int) {
+		Word old_hi = vm.hi(), old_lo = vm.lo();
 		CAT_MUL128(vm.hi(), vm.lo(), rs, rt);
 		vm.onRegisterChange(Why::loOffset);
 		vm.onRegisterChange(Why::hiOffset);
+		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi());
+		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo());
 		vm.increment();
 	}
 
@@ -245,134 +252,112 @@ namespace WVM::Operations {
 	}
 
 	void sllOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs << rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs << rt);
 		vm.increment();
 	}
 
 	void srlOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = static_cast<UWord>(rs) >> static_cast<UWord>(rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, static_cast<UWord>(rs) >> static_cast<UWord>(rt));
 		vm.increment();
 	}
 
 	void sraOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs >> rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs >> rt);
 		vm.increment();
 	}
 
 	void modOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs % rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs % rt);
 		vm.increment();
 	}
 
 	void divOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs / rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs / rt);
 		vm.increment();
 	}
 
 	void divuOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = static_cast<UWord>(rs) / static_cast<UWord>(rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, static_cast<UWord>(rs) / static_cast<UWord>(rt));
 		vm.increment();
 	}
 
 	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs & rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs & rt);
 		vm.increment();
 	}
 
 	void nandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = ~(rs & rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, ~(rs & rt));
 		vm.increment();
 	}
 
 	void norOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = ~(rs | rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, ~(rs | rt));
 		vm.increment();
 	}
 
 	void notOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = ~rs);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, ~rs);
 		vm.increment();
 	}
 
 	void orOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs | rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs | rt);
 		vm.increment();
 	}
 
 	void xnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = ~(rs ^ rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, ~(rs ^ rt));
 		vm.increment();
 	}
 
 	void xorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs ^ rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs ^ rt);
 		vm.increment();
 	}
 
 	void landOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs && rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs && rt);
 		vm.increment();
 	}
 
 	void lnandOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = !(rs && rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, !(rs && rt));
 		vm.increment();
 	}
 
 	void lnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = !(rs || rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, !(rs || rt));
 		vm.increment();
 	}
 
 	void lnotOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = !rs);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, !rs);
 		vm.increment();
 	}
 
 	void lorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = rs || rt);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs || rt);
 		vm.increment();
 	}
 
 	void lxnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = !(rs ^ rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, !(rs ^ rt));
 		vm.increment();
 	}
 
 	void lxorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		vm.updateFlags(rd = !!(rs ^ rt));
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, !!(rs ^ rt));
 		vm.increment();
 	}
 
 	void addiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
-		vm.updateFlags(rd = rs + immediate);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs + immediate);
 		vm.increment();
 	}
 
 	void subiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
-		vm.updateFlags(rd = rs - immediate);
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, rs - immediate);
 		vm.increment();
 	}
 

@@ -9,13 +9,16 @@ namespace WVM {
 	struct Change {
 		virtual void apply(VM &, bool strict = false) = 0;
 		virtual void undo(VM &, bool strict = false)  = 0;
+		virtual ~Change() {}
 	};
 
 	struct MemoryChange: public Change {
 		Word address, from, to;
 		Size size;
+
 		MemoryChange(Word address_, Word from_, Word to_, Size size_):
 			address(address_), from(from_), to(to_), size(size_) {}
+		MemoryChange(const VM &, Word address_, Word to_, Size size_);
 
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
@@ -24,7 +27,9 @@ namespace WVM {
 	struct RegisterChange: public Change {
 		UByte reg;
 		Word from, to;
+
 		RegisterChange(UByte reg_, Word from_, Word to_): reg(reg_), from(from_), to(to_) {}
+		RegisterChange(const VM &, UByte reg_, Word to_);
 
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
@@ -34,9 +39,11 @@ namespace WVM {
 		Word from, to;
 		Word returnFrom = -1, returnTo = -1;
 		bool link;
+
 		JumpChange(Word from_, Word to_): from(from_), to(to_), link(false) {}
 		JumpChange(Word from_, Word to_, Word return_from, Word return_to):
 			from(from_), to(to_), returnFrom(return_from), returnTo(return_to), link(true) {}
+		JumpChange(const VM &, Word to_, bool link_);
 
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;

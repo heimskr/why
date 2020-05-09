@@ -5,9 +5,11 @@
 #include <functional>
 #include <istream>
 #include <map>
+#include <memory>
 #include <unordered_set>
 #include <vector>
 
+#include "Changes.h"
 #include "Defs.h"
 #include "Symbol.h"
 #include "Why.h"
@@ -26,6 +28,9 @@ namespace WVM {
 			bool active = false;
 			size_t cycles = 0;
 			std::unordered_set<Word> breakpoints;
+			std::vector<std::vector<std::unique_ptr<Change>>> undoStack;
+			std::vector<std::unique_ptr<Change>> changeBuffer;
+			int undoPointer = -1;
 
 			bool getZ();
 			bool getN();
@@ -74,7 +79,7 @@ namespace WVM {
 			void resize(size_t);
 
 			void jump(Word, bool should_link = false);
-			void link();
+			void link(bool record = false);
 			void increment();
 			bool changeRing(Ring);
 			void updateFlags(Word);
@@ -99,6 +104,19 @@ namespace WVM {
 			void loadSymbols();
 
 			size_t getMemorySize() { return memorySize; }
+
+			void finishChange();
+
+			template <typename T, typename... Args>
+			void recordChange(Args && ...args) {
+				changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+				finishChange();
+			}
+
+			template <typename T, typename... Args>
+			void bufferChange(Args && ...args) {
+				changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+			}
 
 			Word & hi();
 			Word & lo();
