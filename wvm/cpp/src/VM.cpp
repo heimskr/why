@@ -266,6 +266,28 @@ namespace WVM {
 		active = false;
 	}
 
+	bool VM::undo() {
+		if (undoPointer == 0)
+			return false;
+
+		const std::vector<std::unique_ptr<Change>> &changes = undoStack.at(--undoPointer);
+		for (auto iter = changes.rbegin(), rend = changes.rend(); iter != rend; ++iter)
+			(*iter)->undo(*this, true);
+
+		return true;
+	}
+
+	bool VM::redo() {
+		if (undoPointer == undoStack.size())
+			return false;
+
+		const std::vector<std::unique_ptr<Change>> &changes = undoStack.at(undoPointer++);
+		for (auto iter = changes.rbegin(), rend = changes.rend(); iter != rend; ++iter)
+			(*iter)->undo(*this, true);
+
+		return true;
+	}
+
 	bool VM::tick() {
 		UWord instruction = getWord(programCounter, Endianness::Big);
 		Operations::execute(*this, instruction);
@@ -391,6 +413,7 @@ namespace WVM {
 		if (static_cast<size_t>(++undoPointer) < undoStack.size())
 			undoStack.erase(std::next(undoStack.begin(), undoPointer), undoStack.end());
 		undoStack.emplace_back(std::move(changeBuffer));
+		++undoPointer;
 		changeBuffer.clear();
 	}
 

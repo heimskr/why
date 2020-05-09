@@ -26,7 +26,7 @@ namespace WVM {
 			std::unordered_set<Word> breakpoints;
 			std::vector<std::vector<std::unique_ptr<Change>>> undoStack;
 			std::vector<std::unique_ptr<Change>> changeBuffer;
-			int undoPointer = -1;
+			size_t undoPointer = 0;
 
 			bool getZ();
 			bool getN();
@@ -86,6 +86,8 @@ namespace WVM {
 			void intProtec();
 			void start();
 			void stop();
+			bool undo();
+			bool redo();
 			bool getActive() const { return active; }
 			bool tick();
 
