@@ -402,6 +402,10 @@ namespace WVM {
 		return registers[Why::framePointerOffset];
 	}
 
+	Word & VM::rt() {
+		return registers[Why::returnAddressOffset];
+	}
+
 	const Word & VM::hi() const {
 		return registers[Why::hiOffset];
 	}
@@ -420,5 +424,9 @@ namespace WVM {
 
 	const Word & VM::fp() const {
 		return registers[Why::framePointerOffset];
+	}
+
+	const Word & VM::rt() const {
+		return registers[Why::returnAddressOffset];
 	}
 }

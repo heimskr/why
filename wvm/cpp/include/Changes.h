@@ -29,6 +29,18 @@ namespace WVM {
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
 	};
+
+	struct JumpChange: public Change {
+		Word from, to;
+		Word returnFrom = -1, returnTo = -1;
+		bool link;
+		JumpChange(Word from_, Word to_): from(from_), to(to_), link(false) {}
+		JumpChange(Word from_, Word to_, Word return_from, Word return_to):
+			from(from_), to(to_), returnFrom(return_from), returnTo(return_to), link(true) {}
+
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
 }
 
 #endif
