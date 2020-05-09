@@ -15,16 +15,12 @@
 #include "Why.h"
 
 namespace WVM {
-
-	enum class Ring: int {Zero, One, Two, Three};
-
 	class VM {
 		private:
 			std::vector<UByte> memory, initial;
 			std::filesystem::path loadedFrom;
 			size_t memorySize;
 			bool keepInitial;
-			Ring ring = Ring::Zero;
 			bool active = false;
 			size_t cycles = 0;
 			std::unordered_set<Word> breakpoints;
@@ -42,6 +38,7 @@ namespace WVM {
 			void setO(bool);
 
 		public:
+			Ring ring = Ring::Zero;
 			Word programCounter = -1;
 			Word interruptTableAddress = 0;
 			Word registers[Why::totalRegisters];
@@ -89,6 +86,7 @@ namespace WVM {
 			void intProtec();
 			void start();
 			void stop();
+			bool getActive() const { return active; }
 			bool tick();
 
 			void addBreakpoint(Word);

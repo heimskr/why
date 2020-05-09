@@ -684,6 +684,7 @@ namespace WVM::Operations {
 
 	void ritOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
 		if (vm.checkRing(Ring::Zero)) {
+			vm.bufferChange<InterruptTableChange>(vm, immediate);
 			vm.interruptTableAddress = immediate;
 			vm.onInterruptTableChange();
 			vm.increment();
@@ -720,6 +721,7 @@ namespace WVM::Operations {
 	}
 
 	void haltOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		vm.recordChange<HaltChange>();
 		vm.stop();
 	}
 
@@ -751,8 +753,7 @@ namespace WVM::Operations {
 	}
 
 	void selOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
-		rd = vm.checkConditions(conditions)? rs : rt;
-		vm.onRegisterChange(vm.registerID(rd));
+		setReg(vm, rd, vm.checkConditions(conditions)? rs : rt, false);
 		vm.increment();
 	}
 }

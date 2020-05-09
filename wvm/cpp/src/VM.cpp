@@ -207,15 +207,13 @@ namespace WVM {
 	}
 
 	bool VM::changeRing(Ring new_ring) {
-		Ring old_ring = ring;
-		if (static_cast<int>(new_ring) < Why::ringMin || Why::ringMax < static_cast<int>(new_ring)) {
-			intProtec();
-			return false;
-		} else if (new_ring < ring) {
+		const Ring old_ring = ring;
+		if (static_cast<int>(new_ring) < Why::ringMin || Why::ringMax < static_cast<int>(new_ring) || new_ring < ring) {
 			intProtec();
 			return false;
 		}
 
+		bufferChange<RingChange>(old_ring, new_ring);
 		ring = new_ring;
 		if (old_ring != new_ring)
 			onRingChange(old_ring, new_ring);

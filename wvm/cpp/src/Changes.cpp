@@ -85,4 +85,32 @@ namespace WVM {
 		vm.interruptTableAddress = from;
 		vm.onInterruptTableChange();
 	}
+
+	RingChange::RingChange(const VM &vm, Ring to_): from(vm.ring), to(to_) {}
+
+	void RingChange::apply(VM &vm, bool strict) {
+		if (strict && vm.ring != from)
+			throw VMError("Unable to apply RingChange: current ring isn't the expected from-value");
+		vm.ring = to;
+		vm.onRingChange(from, to);
+	}
+
+	void RingChange::undo(VM &vm, bool strict) {
+		if (strict && vm.ring != to)
+			throw VMError("Unable to undo RingChange: current ring isn't the expected to-value");
+		vm.ring = from;
+		vm.onRingChange(to, from);
+	}
+
+	void HaltChange::apply(VM &vm, bool strict) {
+		if (strict && !vm.getActive())
+			throw VMError("Unable to apply HaltChange: VM is already halted");
+		vm.stop();
+	}
+
+	void HaltChange::undo(VM &vm, bool strict) {
+		if (strict && vm.getActive())
+			throw VMError("Unable to undo HaltChange: VM isn't halted");
+		vm.start();
+	}
 }

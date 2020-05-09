@@ -58,6 +58,21 @@ namespace WVM {
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
 	};
+
+	struct RingChange: public Change {
+		Ring from, to;
+
+		RingChange(Ring from_, Ring to_): from(from_), to(to_) {}
+		RingChange(const VM &, Ring to_);
+
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
+
+	struct HaltChange: public Change {
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
 }
 
 #endif

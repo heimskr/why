@@ -28,6 +28,8 @@ namespace WVM {
 		SymbolID      = 3,
 	};
 
+	enum class Ring: int {Zero, One, Two, Three};
+
 	enum class Size: char {
 		Byte  = 8,
 		QWord = 16,
