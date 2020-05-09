@@ -41,15 +41,24 @@ namespace WVM {
 
 	void JumpChange::apply(VM &vm, bool strict) {
 		if (strict) {
-			if (vm.programCounter != from)
-				throw VMError("Unable to apply JumpChange: program counter isn't the expected from-value");
+			if (vm.programCounter != from) {
+				throw VMError("Unable to apply JumpChange: program counter (" + std::to_string(vm.programCounter) + ")"
+					" isn't the expected from-value (" + std::to_string(from) + ")");
+			}
+
 			if (link && vm.rt() != returnFrom) {
-				throw VMError("Unable to apply JumpChange: return address isn't the expected from-value");
+				throw VMError("Unable to apply JumpChange: return address (" + std::to_string(vm.rt()) + ") isn't the"
+					" expected from-value (" + std::to_string(returnFrom) + ")");
 			}
 		}
 
 		DBG("Apply: jumping from " << from << " to " << to);
-		vm.jump(to, link);
+		vm.programCounter = to;
+		vm.onJump(from, to);
+		if (link) {
+			vm.rt() = returnTo;
+			vm.onRegisterChange(Why::returnAddressOffset);
+		}
 	}
 
 	void JumpChange::undo(VM &vm, bool strict) {

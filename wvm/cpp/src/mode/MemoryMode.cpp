@@ -83,6 +83,10 @@ namespace WVM::Mode {
 				textbox.vscroll(textbox.get_position().height);
 			} else if (key == haunted::ktype::page_up) {
 				textbox.vscroll(-textbox.get_position().height);
+			} else if (key == '[') {
+				send(":Undo");
+			} else if (key == ']') {
+				send(":Redo");
 			} else return false;
 			return true;
 		};

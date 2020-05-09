@@ -283,9 +283,8 @@ namespace WVM {
 			return false;
 
 		DBG("size == " << undoStack.size() << ", pointer == " << undoPointer << " (access index: " << undoPointer << ")");
-		const std::vector<std::unique_ptr<Change>> &changes = undoStack.at(undoPointer++);
-		for (auto iter = changes.rbegin(), rend = changes.rend(); iter != rend; ++iter)
-			(*iter)->apply(*this, true);
+		for (std::unique_ptr<Change> &change: undoStack.at(undoPointer++))
+			change->apply(*this, true);
 
 		return true;
 	}
