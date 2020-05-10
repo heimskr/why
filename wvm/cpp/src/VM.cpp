@@ -411,8 +411,9 @@ namespace WVM {
 		if (changeBuffer.empty())
 			return;
 
-		if (static_cast<size_t>(++undoPointer) < undoStack.size())
+		if (static_cast<size_t>(undoPointer) < undoStack.size())
 			undoStack.erase(std::next(undoStack.begin(), undoPointer), undoStack.end());
+		++undoPointer;
 		undoStack.emplace_back(std::move(changeBuffer));
 		changeBuffer.clear();
 	}
