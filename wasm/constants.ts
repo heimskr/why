@@ -28,7 +28,7 @@ export type JCond = "jp" | "jn" | "jz" | "jnz";
 export type JBasic = "j" | "jc";
 export type JType = JBasic | JCond;
 
-export type ExtName = "printr" | "halt" | "eval" | "prc" | "prd" | "prx" | "sleep"
+export type ExtName = "printr" | "halt" | "eval" | "prc" | "prd" | "prx" | "sleep" | "prb"
                     | "xn_init" | "xn_connect" | "xn_send" | "xn_recv";
 export type PseudoType = "mv" | "ret" | "push" | "pop" | "jeq" | "sge" | "sg" | "sgeu" | "sgu" | "sgeui" | "sgui";
 
@@ -284,9 +284,10 @@ export const EXTS: {[key in ExtName]: number} = {
 	halt:   0b000000000010, // tells the vm to stop
 	eval:   0b000000000011, // executes the string starting at a given address as JS
 	prc:    0b000000000100, // prints the character stored in an address to the console 
-	prd:    0b000000000101, // prints contents of register whose ID is stored in $rs as a decimal.
-	prx:    0b000000000110, // prints contents of register whose ID is stored in $rs as a hexadecimal.
+	prd:    0b000000000101, // prints the contents of register whose ID is stored in $rs as a decimal number.
+	prx:    0b000000000110, // prints the contents of register whose ID is stored in $rs as a hexadecimal number.
 	sleep:  0b000000000111, // pauses execution for a given number of milliseconds.
+	prb:    0b000000001000, // prints the contents of register whose ID is stored in $rs as a binary number.
 
 	xn_init:    0b000010000000, // sets up the program for socket communication.
 	xn_connect: 0b000010000001, // connects the socket.

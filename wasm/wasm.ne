@@ -146,7 +146,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei | op_ring
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
-				 | ext_sleep | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
+				 | ext_sleep | ext_prb | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
 
 into			-> _ "->" _									{% d => null %}
 
@@ -347,17 +347,18 @@ op_jeq			-> ":" _ reg  __ "if" __ rv _ "==" _ rv		{% d => ["jeq", d[10], d[6], d
 op_nop			-> "<>"										{% d => ["nop"] %}
 
 # Externals																	  rt    rs             rd    funct
-ext_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["ext",    0,  d[4],            0,     1] %}
-ext_halt		-> "<" _ "halt" _ ">"						{% d => ["ext",    0,    0,             0,     2] %}
-ext_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     3] %}
-ext_prc			-> "<" _ "prc" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     4] %}
-				 | "<" _ "prc" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0,     4] %}
-ext_prd			-> "<" _ "prd" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     5] %}
-ext_prx			-> "<" _ "prx" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     6] %}
-ext_prs			-> "<" _ "prs" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0,     4] %}
-ext_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,     5] %}
-				 | "<" _ "p" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0,     4] %}
-				 | "<" _ "p" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0,     4] %}
+ext_printr		-> "<" _ "print" _ reg _ ">"				{% d => ["ext",    0,  d[4],            0, EXTS.printr] %}
+ext_halt		-> "<" _ "halt" _ ">"						{% d => ["ext",    0,    0,             0, EXTS.halt] %}
+ext_eval		-> "<" _ "eval" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0, EXTS.eval] %}
+ext_prc			-> "<" _ "prc" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0, EXTS.prc] %}
+				 | "<" _ "prc" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0, EXTS.prc] %}
+ext_prd			-> "<" _ "prd" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0, EXTS.prd] %}
+ext_prx			-> "<" _ "prx" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0, EXTS.prx] %}
+ext_prb			-> "<" _ "prb" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0, EXTS.prb] %}
+ext_prs			-> "<" _ "prs" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0, EXTS.prc] %}
+ext_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0, EXTS.prd] %}
+				 | "<" _ "p" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0, EXTS.prc] %}
+				 | "<" _ "p" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0, EXTS.prc] %}
 ext_sleep		-> "<" _ ("sleep" | "wait") _ reg _ ">"		{% d => ["ext",    0,  d[4],            0, EXTS.sleep] %}
 ext_n			-> "<" _ int _ ">"							{% d => ["ext",    0,    0,             0, parseInt(d[2])] %}
 

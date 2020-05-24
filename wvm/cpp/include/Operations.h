@@ -129,6 +129,7 @@ namespace WVM::Operations {
 	void prdOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 5
 	void prxOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 6
 	void sleepOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 31 ?R 7
+	void prbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 8
 
 	void selOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 56  R
 
@@ -277,6 +278,8 @@ namespace WVM::Operations {
 #define FN_PRX 6
 #define OP_SLEEP 31
 #define FN_SLEEP 7
+#define OP_PRB 31
+#define FN_PRB 8
 
 #define OP_INT 32
 #define OP_RIT 33

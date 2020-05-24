@@ -1,0 +1,228 @@
+#meta
+name: "Comparisons"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#code
+
+ 10 -> $s0
+ 10 -> $s1
+ 20 -> $s2
+-30 -> $s3
+
+<prd $s0>; <prc '\n'>; <prb $s0>; <prc '\n'>
+<prd $s1>; <prc '\n'>; <prb $s1>; <prc '\n'>
+<prd $s2>; <prc '\n'>; <prb $s2>; <prc '\n'>
+<prd $s3>; <prc '\n'>; <prb $s3>; <prc '\n'>
+
+<prs "\n<:\n">
+$s0 < $s1 -> $t0 // 10 < 10
+<prd $t0>; <prc '\n'>
+
+$s0 < $s2 -> $t0 // 10 < 20
+<prd $t0>; <prc '\n'>
+
+$s2 < $s0 -> $t0 // 20 < 10
+<prd $t0>; <prc '\n'>
+
+$s3 < $s2 -> $t0 // -30 < 20
+<prd $t0>; <prc '\n'>
+
+$s2 < $s3 -> $t0 // 20 < -30
+<prd $t0>; <prs "\n\n">
+
+<prs "<=:\n">
+$s0 <= $s1 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s0 <= $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 <= $s0 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s3 <= $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 <= $s3 -> $t0
+<prd $t0>; <prs "\n\n">
+
+<prs "==:\n">
+$s0 == $s1 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s0 == $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 == $s0 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s3 == $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 == $s3 -> $t0
+<prd $t0>; <prs "\n\n">
+
+<prs ">:\n">
+$s0 > $s1 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s0 > $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 > $s0 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s3 > $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 > $s3 -> $t0
+<prd $t0>; <prs "\n\n">
+
+<prs ">=:\n">
+$s0 >= $s1 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s0 >= $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 >= $s0 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s3 >= $s2 -> $t0
+<prd $t0>; <prc '\n'>
+
+$s2 >= $s3 -> $t0
+<prd $t0>; <prs "\n\n">
+
+<prs "< /u:\n">
+$s0 < $s1 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s0 < $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 < $s0 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s3 < $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 < $s3 -> $t0 /u
+<prd $t0>; <prs "\n\n">
+
+<prs "<= /u:\n">
+$s0 <= $s1 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s0 <= $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 <= $s0 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s3 <= $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 <= $s3 -> $t0 /u
+<prd $t0>; <prs "\n\n">
+
+<prs "> /u:\n">
+$s0 > $s1 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s0 > $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 > $s0 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s3 > $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 > $s3 -> $t0 /u
+<prd $t0>; <prs "\n\n">
+
+<prs ">= /u:\n">
+$s0 >= $s1 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s0 >= $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 >= $s0 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s3 >= $s2 -> $t0 /u
+<prd $t0>; <prc '\n'>
+
+$s2 >= $s3 -> $t0 /u
+<prd $t0>; <prs "\n\n">
+
+<halt>
+
+/* Expected output:
+ *     <:
+ *     0
+ *     1
+ *     0
+ *     1
+ *     0
+ *     
+ *     <=:
+ *     1
+ *     1
+ *     0
+ *     1
+ *     0
+ *     
+ *     ==:
+ *     1
+ *     0
+ *     0
+ *     0
+ *     0
+ *     
+ *     >:
+ *     0
+ *     0
+ *     1
+ *     0
+ *     1
+ *     
+ *     >=:
+ *     1
+ *     0
+ *     1
+ *     0
+ *     1
+ *     
+ *     < /u:
+ *     0
+ *     1
+ *     0
+ *     0
+ *     1
+ *     
+ *     <= /u:
+ *     1
+ *     1
+ *     0
+ *     0
+ *     1
+ *     
+ *     > /u:
+ *     0
+ *     0
+ *     1
+ *     1
+ *     0
+ *     
+ *     >= /u:
+ *     1
+ *     0
+ *     1
+ *     1
+ *     0
+ */

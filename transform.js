@@ -26,4 +26,4 @@ for (let i = 0; i < text.length; i += 2) {
 	bytes.push(text.substr(i, 2));
 }
 
-console.log(bytes.join(" "));
+console.log(bytes.join("\n"));

@@ -986,6 +986,8 @@ export default class WVM {
 			this.prcBuffer += this.registers[rs].toString();
 		} else if (funct == EXTS.prx) {
 			this.prcBuffer += "0x" + this.registers[rs].toUnsigned().toString(16);
+		} else if (funct == EXTS.prb) {
+			this.prcBuffer += "0b" + this.registers[rs].toUnsigned().toString(2).padStart(64, "0");
 		} else {
 			console.log("Unknown external:", {rt, rs, rd, funct});
 		}

@@ -1,0 +1,15 @@
+#meta
+name: "EduCPU Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#code
+3 -> $t0
+5 -> $t1
+$t0 | $t1 -> $t2
+<print $t2>
+$t2 + $t1 -> $t0
+<print $t0>
+<prs "Bye!\n">
+<halt>

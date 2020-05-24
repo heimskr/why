@@ -189,6 +189,7 @@
 				<li><a href="#ext-prc">Print Character</a> (<code>prc</code>)</li>
 				<li><a href="#ext-prd">Print Decimal</a> (<code>prd</code>)</li>
 				<li><a href="#ext-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
+				<li><a href="#ext-prb">Print Binary</a> (<code>prb</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -1044,10 +1045,16 @@ Prints the character stored in `rs` to the console.
 Syntax: `<prd $rs>`  
 Function value: `000000000101`
 
-Prints the number stored in `rs` to the console as a decimal.
+Prints the number stored in `rs` to the console as a decimal number.
 
 ### <a name="ext-prx"></a>Print Hexadecimal
 Syntax: `<prx $rs>`  
 Function value: `000000000110`
 
-Prints the number stored in `rs` to the console as a hexadecimal.
+Prints the number stored in `rs` to the console as a hexadecimal number.
+
+### <a name="ext-prb"></a>Print Binary
+Syntax: `<prb $rs>`  
+Function value: `000000000111`
+
+Prints the number stored in `rs` to the console as a binary number.

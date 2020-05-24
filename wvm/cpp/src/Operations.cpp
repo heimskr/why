@@ -1,3 +1,4 @@
+#include <bitset>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -16,7 +17,7 @@ namespace WVM::Operations {
 		OP_NOT, OP_OR, OP_XNOR, OP_XOR, OP_LAND, OP_LNAND, OP_LNOR, OP_LNOT, OP_LOR, OP_LXNOR, OP_LXOR, OP_CMP, OP_SL,
 		OP_SLE, OP_SEQ, OP_SLU, OP_SLEU, OP_JR, OP_JRC, OP_JRL, OP_JRLC, OP_C, OP_L, OP_S, OP_CB, OP_LB, OP_SB,
 		OP_SPUSH, OP_SPOP, OP_CH, OP_LH, OP_SH, OP_TIME, OP_RING, OP_PR, OP_HALT, OP_EVAL, OP_PRC, OP_PRD, OP_PRX,
-		OP_SLEEP, OP_SEL,
+		OP_SLEEP, OP_PRB, OP_SEL,
 	};
 
 	std::set<int> ISet {
@@ -131,6 +132,7 @@ namespace WVM::Operations {
 					case FN_PRD:     prdOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_PRX:     prxOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SLEEP: sleepOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_PRB:     prbOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_TIME: timeOp(vm, rs, rt, rd, conditions, flags); return;
@@ -749,6 +751,13 @@ namespace WVM::Operations {
 
 	void sleepOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		usleep(rs * 1000);
+		vm.increment();
+	}
+
+	void prbOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		std::stringstream ss;
+		ss << std::bitset<64>(rs);
+		vm.onPrint(ss.str());
 		vm.increment();
 	}
 

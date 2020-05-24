@@ -1,0 +1,29 @@
+#meta
+name: "EduCPU Memory"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+X0: 0
+X1: 0
+X2: 0
+X3: 5
+
+#code
+4 -> $t0
+&X0 -> $t1
+$t0 -> $t2
+$t2 -> [$t1]
+<prd $t2>
+<prs " -> [">
+<prd $t1>
+<prs "]\n">
+[$t1] -> $t0
+<print $t0>
+&X1 -> $t0
+[$t1] -> [$t0]
+[$t0] -> $t1
+<print $t1>
+<prs "Bye.\n">
+<halt>
