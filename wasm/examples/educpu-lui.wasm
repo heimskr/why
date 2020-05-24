@@ -1,0 +1,22 @@
+#meta
+name: "LUI Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#code
+
+-42 -> $s0
+// At this point, $s0 contains 0000000000000000000000000000000011111111111111111111111111010110,
+// which isn't negative. We can manually sign extend it by loading -1 (1111...1111) into its upper bits.
+
+<print $s0>
+<prd $s0>
+<prc '\n'>
+
+lui: -1 -> $s0
+
+<print $s0>
+<prd $s0>
+<prc '\n'>
+<halt>

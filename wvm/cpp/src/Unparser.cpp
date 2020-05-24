@@ -171,7 +171,7 @@ namespace WVM::Unparser {
 			case OP_SLLI:   return iAltOp(rs, rd, coloredImm, "<<");
 			case OP_SRLI:   return iAltOp(rs, rd, coloredImm, ">>>");
 			case OP_SRAI:   return iAltOp(rs, rd, coloredImm, ">>");
-			case OP_LUI:    return "\e[2lui:\e[22m " + coloredImm + into + color(rd);
+			case OP_LUI:    return "\e[2mlui:\e[22m " + coloredImm + into + color(rd);
 			case OP_LI:     return left + coloredImm + right + into + color(rd);
 			case OP_LBI:    return left + coloredImm + right + into + color(rd) + " /b";
 			case OP_LNI:    return left + coloredImm + right + into + left + color(rd) + right;
