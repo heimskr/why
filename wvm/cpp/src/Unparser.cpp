@@ -30,7 +30,11 @@ namespace WVM::Unparser {
 			HWord address;
 			Operations::decodeJType(instruction, rs, link, conditions, flags, address);
 			return stringifyJType(opcode, rs, link, conditions, flags, address, vm);
-		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
+		} else {
+			DBG(std::hex << instruction << std::dec);
+			return "???";
+			throw std::runtime_error("[U] Unknown opcode: " + std::to_string(opcode));
+		}
 	}
 
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions conditions, int funct) {

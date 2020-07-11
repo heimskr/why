@@ -1,12 +1,12 @@
 #meta
-name: "FizzBuzz (LL2W)"
-author: "Kai Tamkun"
-orcid: "0000-0001-7405-6654"
-version: "1"
-
-#includes
+name: "fizzbuzz.c"
 
 #data
+.str.4: ": Buzz\x0A\x00"
+.str.2: ": FizzBuzz\x0A\x00"
+.str.1: "%s\x00"
+.str.3: ": Fizz\x0A\x00"
+.str: "%d\x0A\x00"
 
 #code
 
@@ -17,107 +17,155 @@ sub main() {
 	@__main_label2
 	[ $rt
 	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
 	$sp -> $fp
-	$sp % 4 -> $m0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t0
-	$sp - 4 -> $sp
-	$sp % 4 -> $m0
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t1
-	$sp - 4 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
+	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
-	$sp % 4 -> $m0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t3
-	$sp - 4 -> $sp
-	$sp % 4 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t4
-	$sp - 4 -> $sp
-	$sp % 4 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t5
-	$sp - 4 -> $sp
-	$sp % 4 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t6
-	$sp - 4 -> $sp
-	0 -> $m0
-	$m0 -> [$t0] /h
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%3]
+	$m1 -> [$t0] /h
+	// LowerMemory: %0 -> [%4]
 	$a0 -> [$t1] /h
+	// LowerMemory: %1 -> [%5]
 	$a1 -> [$t2]
-	0 -> $m0
-	$m0 -> [$t3] /h
-	0 -> $m0
-	$m0 -> [$t4] /h
-	0 -> $m0
-	$m0 -> [$t5] /h
-	0 -> $m0
-	$m0 -> [$t6] /h
-	@__main_label10
-	[$t6] -> $t0 /h
-	$t0 <= 100 -> $t1
-	: __main_label13 if $t1
-	: __main_label38
-	@__main_label13
-	[$t6] -> $t0 /h
-	$t0 % 3 -> $t1
-	$t1 == 0 -> $t2
-	: __main_label17 if $t2
-	: __main_label20
-	@__main_label17
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%6]
+	$m1 -> [$t3] /h
+	@__main_label7
+	// LowerMemory(load): [%6] -> %8
 	[$t3] -> $t0 /h
-	$t0 + 1 -> $t1
-	$t1 -> [$t3] /h
-	@__main_label20
-	[$t6] -> $t0 /h
-	$t0 % 5 -> $t1
-	$t1 == 0 -> $t2
-	: __main_label24 if $t2
-	: __main_label27
-	@__main_label24
-	[$t4] -> $t0 /h
-	$t0 + 1 -> $t1
-	$t1 -> [$t4] /h
-	@__main_label27
-	[$t6] -> $t0 /h
+	$t0 <= 100 -> $t1
+	: __main_label10 if $t1
+	: __main_label33
+	@__main_label10
+	// LowerMemory(load): [%6] -> %11
+	[$t3] -> $t0 /h
 	$t0 % 15 -> $t1
 	$t1 == 0 -> $t2
-	: __main_label31 if $t2
-	: __main_label34
-	@__main_label31
-	[$t5] -> $t0 /h
-	$t0 + 1 -> $t1
-	$t1 -> [$t5] /h
-	@__main_label34
-	[$t6] -> $t0 /h
-	$t0 + 1 -> $t1
-	$t1 -> [$t6] /h
-	: __main_label10
-	@__main_label38
+	: __main_label14 if $t2
+	: __main_label16
+	@__main_label14
+	// LowerMemory(load): [%6] -> %15
 	[$t3] -> $t0 /h
+	[ $a0
+	[ $a1
 	$t0 -> $a0
 	:: prd
-	[$t4] -> $t1 /h
-	$t1 -> $a0
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.2 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	: __main_label29
+	@__main_label16
+	// LowerMemory(load): [%6] -> %17
+	[$t3] -> $t0 /h
+	$t0 % 3 -> $t1
+	$t1 == 0 -> $t2
+	: __main_label20 if $t2
+	: __main_label22
+	@__main_label20
+	// LowerMemory(load): [%6] -> %21
+	[$t3] -> $t0 /h
+	[ $a0
+	[ $a1
+	$t0 -> $a0
 	:: prd
-	[$t5] -> $t2 /h
-	$t2 -> $a0
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.3 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	@__main_label22
+	// LowerMemory(load): [%6] -> %23
+	[$t3] -> $t0 /h
+	$t0 % 5 -> $t1
+	$t1 == 0 -> $t2
+	: __main_label26 if $t2
+	: __main_label28
+	@__main_label26
+	// LowerMemory(load): [%6] -> %27
+	[$t3] -> $t0 /h
+	[ $a0
+	[ $a1
+	$t0 -> $a0
 	:: prd
-	[$t5] -> $t6 /h
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.4 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	@__main_label28
+	<>
+	@__main_label29
+	// LowerMemory(load): [%6] -> %31
+	[$t3] -> $t0 /h
+	$t0 + 1 -> $t1
+	// LowerMemory: %32 -> [%6]
+	$t1 -> [$t3] /h
+	: __main_label7
+	@__main_label33
 	$fp -> $sp
+	0 -> $r0
+	] $t3
+	] $t2
+	] $t1
+	] $t0
 	] $fp
 	] $rt
-	$t6 -> $r0
 	: $rt
 }
 
 sub prd() {
 	<prd $a0>
-	<prc '\n'>
-	: $rt
+}
+
+sub strprint() {
+	// $a0: pointer to string to print
+	// $ma: character to print (temporary hack to protect the stack)
+
+	@_strprint_loop
+		[$a0] -> $ma /b
+		: _strprint_print if $ma
+		!done
+		@_strprint_print
+		<prc $ma>
+		$a0++
+		: _strprint_loop
 }

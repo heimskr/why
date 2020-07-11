@@ -36,7 +36,7 @@ $(OUT): $(OBJECTS)
 test: memtest
 
 servertest: $(OUT)
-	./$(OUT) server ../../wasm/compiled/educpu-lui.why
+	./$(OUT) server ../../wasm/compiled/mal.why
 
 consoletest: $(OUT)
 	./$(OUT) console 127.0.0.1 `cat .port`

@@ -253,6 +253,7 @@ op_subi			-> reg _ "-"   _ int into reg				{% d => ["subi",   d[0], d[6], d[4]] 
 op_modi			-> reg _ "%"   _ int into reg				{% d => ["modi",   d[0], d[6], d[4]] %}
 				 | reg _ "%="  _ int						{% d => ["modi",   d[0], d[0], d[4]] %}
 op_multi		-> reg _ "*"   _ int						{% d => ["multi",  d[0],   0,  d[4]] %}
+				 | reg _ "*"   _ int into reg				{% d => ["multi",  d[0], d[6], d[4]] %}
 op_divi			-> reg _ "/"   _ int into reg				{% d => ["divi" ,  d[0], d[6], d[4]] %}
 				 | reg _ "/="  _ int						{% d => ["divi",   d[0], d[0], d[4]] %}
 op_divii		-> int _ "/"   _ reg into reg				{% d => ["divii",  d[4], d[6], d[0]] %}
