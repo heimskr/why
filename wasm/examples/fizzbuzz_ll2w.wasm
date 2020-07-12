@@ -5,8 +5,9 @@ name: "fizzbuzz.c"
 .str.4: ": Buzz\x0A\x00"
 .str.2: ": FizzBuzz\x0A\x00"
 .str.1: "%s\x00"
+.str.5: "\x0A\x00"
 .str.3: ": Fizz\x0A\x00"
-.str: "%d\x0A\x00"
+.str: "%d\x00"
 
 #code
 
@@ -21,19 +22,9 @@ sub main() {
 	[ $t1
 	[ $t2
 	[ $t3
+	[ $t4
+	[ $t5
 	$sp -> $fp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t0
-	// LowerAlloca: $sp -= to_sub
-	$sp - 8 -> $sp
-	// LowerAlloca: align stack pointer
-	$sp % 8 -> $m0
-	$sp - $m0 -> $sp
-	$sp -> $t1
-	// LowerAlloca: $sp -= to_sub
-	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
@@ -46,34 +37,46 @@ sub main() {
 	$sp -> $t3
 	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t4
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t5
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
 	// LowerMemory: imm -> $m1
 	0 -> $m1
 	// LowerMemory: $m1 -> [%3]
-	$m1 -> [$t0] /h
+	$m1 -> [$t2] /h
 	// LowerMemory: %0 -> [%4]
-	$a0 -> [$t1] /h
+	$t0 -> [$t3] /h
 	// LowerMemory: %1 -> [%5]
-	$a1 -> [$t2]
+	$t1 -> [$t4]
 	// LowerMemory: imm -> $m1
 	0 -> $m1
 	// LowerMemory: $m1 -> [%6]
-	$m1 -> [$t3] /h
+	$m1 -> [$t5] /h
 	@__main_label7
 	// LowerMemory(load): [%6] -> %8
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	$t0 <= 100 -> $t1
 	: __main_label10 if $t1
-	: __main_label33
+	: __main_label36
 	@__main_label10
 	// LowerMemory(load): [%6] -> %11
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	$t0 % 15 -> $t1
 	$t1 == 0 -> $t2
 	: __main_label14 if $t2
 	: __main_label16
 	@__main_label14
 	// LowerMemory(load): [%6] -> %15
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	[ $a0
 	[ $a1
 	$t0 -> $a0
@@ -86,17 +89,17 @@ sub main() {
 	:: strprint
 	] $a1
 	] $a0
-	: __main_label29
+	: __main_label32
 	@__main_label16
 	// LowerMemory(load): [%6] -> %17
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	$t0 % 3 -> $t1
 	$t1 == 0 -> $t2
 	: __main_label20 if $t2
 	: __main_label22
 	@__main_label20
 	// LowerMemory(load): [%6] -> %21
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	[ $a0
 	[ $a1
 	$t0 -> $a0
@@ -109,16 +112,17 @@ sub main() {
 	:: strprint
 	] $a1
 	] $a0
+	: __main_label31
 	@__main_label22
 	// LowerMemory(load): [%6] -> %23
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	$t0 % 5 -> $t1
 	$t1 == 0 -> $t2
 	: __main_label26 if $t2
 	: __main_label28
 	@__main_label26
 	// LowerMemory(load): [%6] -> %27
-	[$t3] -> $t0 /h
+	[$t5] -> $t0 /h
 	[ $a0
 	[ $a1
 	$t0 -> $a0
@@ -131,18 +135,40 @@ sub main() {
 	:: strprint
 	] $a1
 	] $a0
+	: __main_label30
 	@__main_label28
+	// LowerMemory(load): [%6] -> %29
+	[$t5] -> $t0 /h
+	[ $a0
+	[ $a1
+	$t0 -> $a0
+	:: prd
+	] $a1
+	] $a0
+	[ $a0
+	[ $a1
+	&.str.5 -> $a0
+	:: strprint
+	] $a1
+	] $a0
+	@__main_label30
 	<>
-	@__main_label29
-	// LowerMemory(load): [%6] -> %31
-	[$t3] -> $t0 /h
-	$t0 + 1 -> $t1
-	// LowerMemory: %32 -> [%6]
-	$t1 -> [$t3] /h
-	: __main_label7
+	@__main_label31
+	<>
+	@__main_label32
+	<>
 	@__main_label33
+	// LowerMemory(load): [%6] -> %34
+	[$t5] -> $t0 /h
+	$t0 + 1 -> $t1
+	// LowerMemory: %35 -> [%6]
+	$t1 -> [$t5] /h
+	: __main_label7
+	@__main_label36
 	$fp -> $sp
 	0 -> $r0
+	] $t5
+	] $t4
 	] $t3
 	] $t2
 	] $t1
