@@ -156,7 +156,7 @@ namespace WVM::Mode {
 			if (vm.paused) {
 				broadcast(":Paused");
 			} else if (size == 1) {
-				vm.tick();
+				tick();
 				if (vm.paused)
 					broadcast(":Paused");
 			} else if (size == 2) {
@@ -170,7 +170,7 @@ namespace WVM::Mode {
 				Word i;
 				vm.start();
 				for (i = 0; i < ticks; ++i) {
-					if (!vm.tick())
+					if (!tick())
 						break;
 				}
 
@@ -376,6 +376,17 @@ namespace WVM::Mode {
 		for (Word address: writtenAddresses) {
 			server.send(client, ":MemoryWord " + std::to_string(address) + " " +
 				std::to_string(vm.getWord(address, Endianness::Little)));
+		}
+	}
+
+	bool ServerMode::tick() {
+		int pc = vm.programCounter;
+		try {
+			return vm.tick();
+		} catch (std::exception &err) {
+			std::cerr << "Execution failed: " << err.what() << "\n";
+			std::cerr << "Offending address: " << pc << "\n";
+			throw;
 		}
 	}
 }

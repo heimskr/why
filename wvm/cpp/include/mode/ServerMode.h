@@ -19,6 +19,7 @@ namespace WVM::Mode {
 			void setFastForward(bool);
 			void broadcast(const std::string &);
 			void sendMemory(int);
+			bool tick();
 
 		public:
 			static ServerMode *instance;
