@@ -194,10 +194,10 @@ op_div			-> riap["/"] into reg						{% d => ["div",      ...d[0], d[2]] %}
 				 | rv _ "/=" _ rv							{% d => ["div",   d[4], d[0], d[0]] %}
 op_not			-> "~" _ rv into rv							{% d => ["not",     0,  d[2], d[4]] %}
 				 | "~" _ rv _ "."							{% d => ["not",     0,  d[2], d[2]] %}
-op_slu			-> rv _ "<"  _ rv into rv _ "/u"			{% d => ["slu",   d[0], d[4], d[6]] %}
-op_sleu			-> rv _ "<=" _ rv into rv _ "/u"			{% d => ["sleu",  d[0], d[4], d[6]] %}
-op_sgeu			-> rv _ ">"  _ rv into rv _ "/u"			{% d => ["sleu",  d[4], d[0], d[6]] %}
-op_sgu			-> rv _ ">=" _ rv into rv _ "/u"			{% d => ["slu",   d[4], d[0], d[6]] %}
+op_slu			-> rv _ "<"  _ rv into rv _ "/u"			{% d => ["slu",   d[4], d[0], d[6]] %}
+op_sleu			-> rv _ "<=" _ rv into rv _ "/u"			{% d => ["sleu",  d[4], d[0], d[6]] %}
+op_sgu			-> rv _ ">"  _ rv into rv _ "/u"			{% d => ["slu",   d[0], d[4], d[6]] %}
+op_sgeu			-> rv _ ">=" _ rv into rv _ "/u"			{% d => ["sleu",  d[0], d[4], d[6]] %}
 op_sl			-> rv _ "<"  _ rv into rv					{% d => ["sl",    d[4], d[0], d[6]] %}
 op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[4], d[0], d[6]] %}
 op_seq			-> rv _ "==" _ rv into rv					{% d => ["seq",   d[0], d[4], d[6]] %}
