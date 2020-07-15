@@ -1,0 +1,22 @@
+#meta
+name: "Sized Stack"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#code
+
+123 -> $t0
+-1 -> $t1
+lui: -1 -> $t1
+<print $t0>
+<print $t1>
+
+[:32 $t0
+[:64 $t1
+0 -> $t1
+]:64 $t1
+]:32 $t0
+
+<print $t0>
+<print $t1>

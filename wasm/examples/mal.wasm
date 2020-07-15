@@ -1847,10 +1847,7 @@ sub find_free_block() {
 	[$t4] -> $t5
 	// LowerMemory(load): [%4] -> %19
 	[$t1] -> $t6
-	<print $t5>
-	<print $t6>
 	$t5 >= $t6 -> $t7 /u
-	<print $t7>
 	@__find_free_block_label21
 	$t7 x 1 -> $t5
 	@__find_free_block_label24
@@ -2103,8 +2100,6 @@ sub fr() {
 	:: __assert_rtn
 	] $a0
 	@__fr_label29
-	<>
-	@__fr_label30
 	// LowerMemory(load): [%3] -> %31
 	[$t1] -> $t0
 	// LowerGetelementptr: struct-type
@@ -3344,12 +3339,6 @@ sub allocate() {
 	] $rt
 	: $rt
 }
-
-
-
-
-
-
 
 
 
