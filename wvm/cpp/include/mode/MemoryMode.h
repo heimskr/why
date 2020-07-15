@@ -11,6 +11,7 @@
 #include "haunted/core/terminal.h"
 #include "haunted/ui/boxes/expandobox.h"
 #include "haunted/ui/textbox.h"
+#include "haunted/ui/textinput.h"
 #include "mode/ClientMode.h"
 #include "VM.h"
 
@@ -18,12 +19,13 @@ namespace WVM::Mode {
 	class MemoryMode: public ClientMode {
 		private:
 			haunted::terminal terminal;
-			std::optional<haunted::ui::boxes::expandobox> expando;
-			haunted::ui::textbox textbox;
+			haunted::ui::boxes::expandobox *expando;
+			haunted::ui::textbox *textbox;
+			haunted::ui::textinput *textinput;
 			VM vm;
 			std::map<int, std::shared_ptr<haunted::ui::textline>> lines;
 			std::unordered_set<Word> symbolTableEdges;
-			bool follow = true, fastForward = false, showSymbols = false;
+			bool follow = true, fastForward = false, showSymbols = false, searching = false;
 
 			int autotick = -50'000;
 			std::thread autotickThread;
@@ -47,6 +49,7 @@ namespace WVM::Mode {
 			int padding = 6;
 
 			MemoryMode(): ClientMode(), vm(0) {}
+			~MemoryMode();
 
 			void run(const std::string &hostname, int port) override;
 			void remakeList();
@@ -56,6 +59,7 @@ namespace WVM::Mode {
 			void stop() override;
 			void setFastForward(bool);
 			void handleMessage(const std::string &) override;
+			void toggleSearchbox();
 	};
 }
 

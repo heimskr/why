@@ -9,6 +9,11 @@
 #include "Util.h"
 
 namespace WVM::Mode {
+	MemoryMode::~MemoryMode() {
+		if (!searching)
+			delete textinput;
+	}
+
 	void MemoryMode::run(const std::string &hostname, int port) {
 		ClientMode::run(hostname, port);
 
@@ -41,10 +46,13 @@ namespace WVM::Mode {
 			return true;
 		};
 
-		expando.emplace(&terminal, haunted::ui::boxes::box_orientation::vertical,
-			std::initializer_list<haunted::ui::boxes::expandobox::child_pair> {{&textbox, -1}});
+		textbox = new haunted::ui::textbox();
+		textinput = new haunted::ui::textinput();
 
-		textbox.key_fn = [&](const haunted::key &key) {
+		expando = new haunted::ui::boxes::expandobox(&terminal, haunted::ui::boxes::box_orientation::vertical,
+			std::initializer_list<haunted::ui::boxes::expandobox::child_pair> {{textbox, -1}});
+
+		textbox->key_fn = [&](const haunted::key &key) {
 			if (key == haunted::kmod::ctrl) {
 				if (key == 't') {
 					send(":Tick");
@@ -80,22 +88,24 @@ namespace WVM::Mode {
 			} else if (key == '>') {
 				DBG("autotick = " << (autotick /= 1.1));
 			} else if (key == haunted::ktype::page_down) {
-				textbox.vscroll(textbox.get_position().height);
+				textbox->vscroll(textbox->get_position().height);
 			} else if (key == haunted::ktype::page_up) {
-				textbox.vscroll(-textbox.get_position().height);
+				textbox->vscroll(-textbox->get_position().height);
 			} else if (key == '[') {
 				send(":Undo");
 			} else if (key == ']') {
 				send(":Redo");
+			} else if (key == '/') {
+				toggleSearchbox();
 			} else return false;
 			return true;
 		};
 
 		terminal.start_input();
-		terminal.set_root(&*expando);
-		textbox.set_autoscroll(false);
+		terminal.set_root(expando);
+		textbox->set_autoscroll(false);
 		terminal.mouse(haunted::mouse_mode::motion);
-		textbox.focus();
+		textbox->focus();
 		expando->draw();
 		terminal.watch_size();
 		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
@@ -104,17 +114,33 @@ namespace WVM::Mode {
 		networkThread.join();
 	}
 
+	void MemoryMode::toggleSearchbox() {
+		if (searching) {
+			expando->remove_child(textinput);
+			expando->resize();
+			textbox->focus();
+		} else {
+			expando->add_child(textinput);
+			expando->request_resize(textinput, 1, 1);
+			expando->resize();
+			textinput->focus();
+		}
+
+		searching = !searching;
+		DBG("searching is now " << (searching? "on" : "off"));
+	}
+
 	void MemoryMode::remakeList() {
-		textbox.clear_lines();
+		textbox->clear_lines();
 		lines.clear();
 		std::stringstream stream;
 		if (min % 8 || max % 8)
 			throw std::runtime_error("MemoryMode min/max are misaligned");
 
-		textbox.draw();
-		textbox.suppress_draw = true;
+		textbox->draw();
+		textbox->suppress_draw = true;
 
-		const int height = textbox.get_position().height;
+		const int height = textbox->get_position().height;
 
 		std::thread loops = std::thread([&]() {
 			const std::string hyphens(42 + padding, '-');
@@ -123,30 +149,27 @@ namespace WVM::Mode {
 			// First, make a set of all addresses that have one or more labels associated with them. This is faster than
 			// checking each symbol for each address every time.
 			std::unordered_set<Word> labeled;
-			if (showSymbols) {
-				for (const std::pair<std::string, Symbol> &pair: vm.symbolTable)
+			if (showSymbols)
+				for (const std::pair<const std::string, Symbol> &pair: vm.symbolTable)
 					labeled.insert(pair.second.location);
-			}
 
 			for (Word address = min, i = 0; address < max + 128 * 8; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
 				    || address == vm.endOffset) {
-					textbox += "\e[2m" + hyphens + "\e[22m";
+					*textbox += "\e[2m" + hyphens + "\e[22m";
 				}
 
-				if (showSymbols && 0 < labeled.count(address)) {
-					for (const std::pair<std::string, Symbol> &pair: vm.symbolTable) {
+				if (showSymbols && 0 < labeled.count(address))
+					for (const std::pair<const std::string, Symbol> &pair: vm.symbolTable)
 						if (pair.second.location == address)
-							textbox += spaces + "\e[36m@\e[39;1;4m" + pair.first + "\e[22;24m";
-					}
-				}
+							*textbox += spaces + "\e[36m@\e[39;1;4m" + pair.first + "\e[22;24m";
 
 				addLine(address);
 
 				if (i == height) {
-					textbox.suppress_draw = false;
-					textbox.draw();
-					textbox.suppress_draw = true;
+					textbox->suppress_draw = false;
+					textbox->draw();
+					textbox->suppress_draw = true;
 				}
 			}
 
@@ -156,7 +179,7 @@ namespace WVM::Mode {
 		});
 
 		loops.join();
-		textbox.suppress_draw = false;
+		textbox->suppress_draw = false;
 		terminal.redraw();
 	}
 
@@ -168,13 +191,12 @@ namespace WVM::Mode {
 		if (at_sp)
 			ss << "\e[48;5;236m";
 
-		if (vm.hasBreakpoint(address)) {
+		if (vm.hasBreakpoint(address))
 			ss << (vm.programCounter == address? "\e[48;5;22;31m" : "\e[38;5;202m");
-		} else if (vm.programCounter == address) {
+		else if (vm.programCounter == address)
 			ss << "\e[48;5;22;2m";
-		} else {
+		else
 			ss << "\e[2m";
-		}
 
 		ss << "[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		
@@ -219,7 +241,7 @@ namespace WVM::Mode {
 		if (careless || 0 < lines.count(address)) {
 			haunted::ui::simpleline &simple = getLine(address);
 			simple.text = stringify(address);
-			textbox.redraw_line(simple);
+			textbox->redraw_line(simple);
 		}
 	}
 
@@ -416,13 +438,13 @@ namespace WVM::Mode {
 		try {
 			haunted::ui::simpleline &simple = getLine(vm.programCounter);
 			int rows = 0;
-			for (haunted::ui::textbox::line_ptr &line: textbox.get_lines()) {
+			for (haunted::ui::textbox::line_ptr &line: textbox->get_lines()) {
 				if (line.get() == &simple)
 					break;
-				rows += textbox.line_rows(*line);
+				rows += textbox->line_rows(*line);
 			}
 
-			textbox.vscroll(rows - textbox.get_position().height / 2 - textbox.get_voffset());
+			textbox->vscroll(rows - textbox->get_position().height / 2 - textbox->get_voffset());
 		} catch (const std::out_of_range &) {
 			return;
 		}
@@ -440,8 +462,8 @@ namespace WVM::Mode {
 	}
 
 	haunted::ui::simpleline & MemoryMode::addLine(Word address) {
-		textbox += stringify(address);
-		haunted::ui::textbox::line_ptr ptr = textbox.get_lines().back();
+		*textbox += stringify(address);
+		haunted::ui::textbox::line_ptr ptr = textbox->get_lines().back();
 		lines.emplace(address, ptr);
 		ptr->mouse_fn = [&, address](const haunted::mouse_report &report) {
 			if (report.action == haunted::mouse_action::up) {
