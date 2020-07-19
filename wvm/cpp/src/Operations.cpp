@@ -606,23 +606,21 @@ namespace WVM::Operations {
 	}
 
 	void spushOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		setReg(vm, vm.sp(), vm.sp() - 8, false);
 		vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Word);
 		vm.setWord(vm.sp(), rs);
-		vm.bufferChange<RegisterChange>(vm, Why::stackPointerOffset, vm.sp() - 8);
-		vm.sp() -= 8;
-		vm.onRegisterChange(Why::stackPointerOffset);
 		vm.increment();
 	}
 
 	void spopOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
-		vm.bufferChange<RegisterChange>(vm, Why::stackPointerOffset, vm.sp() + 8);
-		vm.sp() += 8;
-		vm.onRegisterChange(Why::stackPointerOffset);
 		setReg(vm, rd, vm.getWord(vm.sp()), false);
+		setReg(vm, vm.sp(), vm.sp() + 8, false);
 		vm.increment();
 	}
 
 	void sspushOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		setReg(vm, vm.sp(), vm.sp() - immediate, false);
+
 		if (immediate == 1) {
 			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Byte);
 			vm.setByte(vm.sp(), rs);
@@ -637,17 +635,10 @@ namespace WVM::Operations {
 			vm.setWord(vm.sp(), rs);
 		} else throw std::runtime_error("Invalid push size: " + std::to_string(immediate));
 
-		vm.bufferChange<RegisterChange>(vm, Why::stackPointerOffset, vm.sp() - immediate);
-		vm.sp() -= immediate;
-		vm.onRegisterChange(Why::stackPointerOffset);
 		vm.increment();
 	}
 
 	void sspopOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
-		vm.bufferChange<RegisterChange>(vm, Why::stackPointerOffset, vm.sp() + immediate);
-		vm.sp() += immediate;
-		vm.onRegisterChange(Why::stackPointerOffset);
-
 		if (immediate == 1) {
 			setReg(vm, rd, vm.getByte(vm.sp()), false);
 		} else if (immediate == 2) {
@@ -658,6 +649,7 @@ namespace WVM::Operations {
 			setReg(vm, rd, vm.getWord(vm.sp()), false);
 		} else throw std::runtime_error("Invalid pop size: " + std::to_string(immediate));
 
+		setReg(vm, vm.sp(), vm.sp() + immediate, false);
 		vm.increment();
 	}
 
