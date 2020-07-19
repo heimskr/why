@@ -362,7 +362,7 @@ namespace WVM {
 		if (endOffset == -1)
 			endOffset = getWord(24, Endianness::Big);
 		registers[Why::globalAreaPointerOffset] = endOffset;
-		sp() = memorySize - 8;
+		sp() = memorySize;
 		onRegisterChange(Why::globalAreaPointerOffset);
 		onRegisterChange(Why::stackPointerOffset);
 		loadSymbols();
