@@ -69,10 +69,10 @@ sub main() {
 
 sub foo() {
 	@__foo_label1
+	$sp -> $m2
 	// LowerAlloca: align stack pointer
 	[ $rt
 	[ $fp
-	[ $t0
 	[ $t1
 	[ $t2
 	[ $t3
@@ -89,6 +89,18 @@ sub foo() {
 	[ $te
 	[ $tf
 	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	[ $s1
+	[ $s2
+	[ $s3
+	[ $s4
+	[ $s5
 	$sp -> $fp
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
@@ -96,11 +108,11 @@ sub foo() {
 	// LowerAlloca: $sp -= to_sub
 	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
-	$sp % 16 -> $m0
+	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
 	$sp -> $t2
 	// LowerAlloca: $sp -= to_sub
-	$sp - 24 -> $sp
+	$sp - 8 -> $sp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
 	$sp - $m0 -> $sp
@@ -127,216 +139,125 @@ sub foo() {
 	$sp - 8 -> $sp
 	// LowerMemory: %0 -> [%2]
 	$t0 -> [$t1] /h
+	$t2 -> $t7
+	// llvm.va_start removed.
+	$m2 -> $t7
+	// LowerMemory(load): [%3] -> %9
+	[$t2] -> $t8
 	// LowerGetelementptr: struct-type
-	$t2 + 0 -> $t7
-	$t7 -> $t8
-	[ $a0
-	$t8 -> $a0
-	:: llvm.va_start
-	] $a0
-	// LowerGetelementptr: struct-type
-	$t2 + 0 -> $t9
-	// LowerGetelementptr: struct-type
-	$t9 + 0 -> $ta
+	$t8 + 4 -> $t9
+	// LowerMemory: %10 -> [%3]
+	$t9 -> [$t2]
+	$t8 -> $ta
 	// LowerMemory(load): [%11] -> %12
-	[$ta] -> $tb /h
-	$tb <= 40 -> $tc /u
-	: __foo_label14 if $tc
-	: __foo_label20
-	@__foo_label14
+	[$ta] -> $tb
+	// LowerMemory: %12 -> [%4]
+	$tb -> [$t3]
+	// LowerMemory(load): [%3] -> %13
+	[$t2] -> $tc
 	// LowerGetelementptr: struct-type
-	$t9 + 16 -> $t0
+	$tc + 4 -> $td
+	// LowerMemory: %14 -> [%3]
+	$td -> [$t2]
+	$tc -> $te
 	// LowerMemory(load): [%15] -> %16
-	[$t0] -> $t1
-	$tb * 1
-	$lo -> $t7
-	$t7 + $t1 -> $t7
-	$t7 -> $td
-	$tb + 8 -> $t8
-	// LowerMemory: %19 -> [%11]
-	$t8 -> [$ta] /h
-	: __foo_label25
-	@__foo_label20
+	[$te] -> $tf /h
+	// LowerMemory: %16 -> [%5]
+	$tf -> [$t4] /h
+	// LowerMemory(load): [%3] -> %17
+	[$t2] -> $t10
 	// LowerGetelementptr: struct-type
-	$t9 + 8 -> $t0
-	// LowerMemory(load): [%21] -> %22
-	[$t0] -> $t1
-	$t1 -> $td
+	$t10 + 4 -> $t11
+	// LowerMemory: %18 -> [%3]
+	$t11 -> [$t2]
+	$t10 -> $t12
+	// LowerMemory(load): [%19] -> %20
+	[$t12] -> $t13 /h
+	// LowerMemory: %20 -> [%6]
+	$t13 -> [$t5] /h
+	// LowerMemory(load): [%3] -> %21
+	[$t2] -> $t14
 	// LowerGetelementptr: struct-type
-	$t1 + 8 -> $t7
-	// LowerMemory: %24 -> [%21]
-	$t7 -> [$t0]
-	@__foo_label25
-	// LowerMemory(load): [%26] -> %27
-	[$td] -> $t0
-	// LowerMemory: %27 -> [%4]
-	$t0 -> [$t3]
-	// LowerGetelementptr: struct-type
-	$t2 + 0 -> $t1
-	// LowerGetelementptr: struct-type
-	$t1 + 0 -> $t7
-	// LowerMemory(load): [%29] -> %30
-	[$t7] -> $t8 /h
-	$t8 <= 40 -> $t9 /u
-	: __foo_label32 if $t9
-	: __foo_label38
-	@__foo_label32
-	// LowerGetelementptr: struct-type
-	$t1 + 16 -> $t0
-	// LowerMemory(load): [%33] -> %34
-	[$t0] -> $t9
-	$t8 * 1
-	$lo -> $ta
-	$ta + $t9 -> $ta
-	$ta -> $te
-	$t8 + 8 -> $tb
-	// LowerMemory: %37 -> [%29]
-	$tb -> [$t7] /h
-	: __foo_label43
-	@__foo_label38
-	// LowerGetelementptr: struct-type
-	$t1 + 8 -> $t0
-	// LowerMemory(load): [%39] -> %40
-	[$t0] -> $t7
-	$t7 -> $te
-	// LowerGetelementptr: struct-type
-	$t7 + 8 -> $t8
-	// LowerMemory: %42 -> [%39]
-	$t8 -> [$t0]
-	@__foo_label43
-	// LowerMemory(load): [%44] -> %45
-	[$te] -> $t0 /h
-	// LowerMemory: %45 -> [%5]
-	$t0 -> [$t4] /h
-	// LowerGetelementptr: struct-type
-	$t2 + 0 -> $t1
-	// LowerGetelementptr: struct-type
-	$t1 + 0 -> $t7
-	// LowerMemory(load): [%47] -> %48
-	[$t7] -> $t8 /h
-	$t8 <= 40 -> $t9 /u
-	: __foo_label50 if $t9
-	: __foo_label56
-	@__foo_label50
-	// LowerGetelementptr: struct-type
-	$t1 + 16 -> $t0
-	// LowerMemory(load): [%51] -> %52
-	[$t0] -> $t9
-	$t8 * 1
-	$lo -> $ta
-	$ta + $t9 -> $ta
-	$ta -> $tf
-	$t8 + 8 -> $tb
-	// LowerMemory: %55 -> [%47]
-	$tb -> [$t7] /h
-	: __foo_label61
-	@__foo_label56
-	// LowerGetelementptr: struct-type
-	$t1 + 8 -> $t0
-	// LowerMemory(load): [%57] -> %58
-	[$t0] -> $t7
-	$t7 -> $tf
-	// LowerGetelementptr: struct-type
-	$t7 + 8 -> $t8
-	// LowerMemory: %60 -> [%57]
-	$t8 -> [$t0]
-	@__foo_label61
-	// LowerMemory(load): [%62] -> %63
-	[$tf] -> $t0
-	// LowerMemory: %63 -> [%6]
-	$t0 -> [$t5]
-	// LowerGetelementptr: struct-type
-	$t2 + 0 -> $t1
-	// LowerGetelementptr: struct-type
-	$t1 + 0 -> $t7
-	// LowerMemory(load): [%65] -> %66
-	[$t7] -> $t8 /h
-	$t8 <= 40 -> $t9 /u
-	: __foo_label68 if $t9
-	: __foo_label74
-	@__foo_label68
-	// LowerGetelementptr: struct-type
-	$t1 + 16 -> $t0
-	// LowerMemory(load): [%69] -> %70
-	[$t0] -> $t9
-	$t8 * 1
-	$lo -> $ta
-	$ta + $t9 -> $ta
-	$ta -> $t10
-	$t8 + 8 -> $tb
-	// LowerMemory: %73 -> [%65]
-	$tb -> [$t7] /h
-	: __foo_label79
-	@__foo_label74
-	// LowerGetelementptr: struct-type
-	$t1 + 8 -> $t0
-	// LowerMemory(load): [%75] -> %76
-	[$t0] -> $t7
-	$t7 -> $t10
-	// LowerGetelementptr: struct-type
-	$t7 + 8 -> $t8
-	// LowerMemory: %78 -> [%75]
-	$t8 -> [$t0]
-	@__foo_label79
-	// LowerMemory(load): [%80] -> %81
-	[$t10] -> $t0
-	// LowerTrunc: 64 to 32, apply mask
-	$t0 & -1 -> $t1
-	// LowerMemory: %82 -> [%7]
-	$t1 -> [$t6] /h
-	// LowerGetelementptr: struct-type
-	$t2 + 0 -> $t7
-	$t7 -> $t8
+	$t14 + 4 -> $t15
+	// LowerMemory: %22 -> [%3]
+	$t15 -> [$t2]
+	$t14 -> $t16
+	// LowerMemory(load): [%23] -> %24
+	[$t16] -> $s0 /h
+	// LowerMemory: %24 -> [%7]
+	$s0 -> [$t6] /h
+	$t2 -> $s1
+	// LowerMemory(load): [%4] -> %26
+	[$t3] -> $s2
+	<print $t2>
+	<print $t3>
 	[ $a0
-	$t8 -> $a0
-	:: llvm.va_end
-	] $a0
-	// LowerMemory(load): [%4] -> %85
-	[$t3] -> $t9
-	[ $a0
-	$t9 -> $a0
+	$s2 -> $a0
+	[ $m2
 	:: strprint
+	] $m2
 	] $a0
 	[ $a0
 	10 -> $a0
+	[ $m2
 	:: prc
+	] $m2
 	] $a0
-	// LowerMemory(load): [%5] -> %86
-	[$t4] -> $ta /h
-	1 -> $m0
-	$m0 << 31 -> $m0
-	$ta x $m0 -> $tb
-	$tb - $m0 -> $tb
+	// LowerMemory(load): [%5] -> %27
+	[$t4] -> $s3 /h
 	[ $a0
-	$tb -> $a0
+	$s3 -> $a0
+	[ $m2
 	:: prd
+	] $m2
 	] $a0
 	[ $a0
 	10 -> $a0
+	[ $m2
 	:: prc
+	] $m2
 	] $a0
-	// LowerMemory(load): [%6] -> %88
-	[$t5] -> $tc
+	// LowerMemory(load): [%6] -> %28
+	[$t5] -> $s4 /h
 	[ $a0
-	$tc -> $a0
+	$s4 -> $a0
+	[ $m2
 	:: prd
+	] $m2
 	] $a0
 	[ $a0
 	10 -> $a0
+	[ $m2
 	:: prc
+	] $m2
 	] $a0
-	// LowerMemory(load): [%7] -> %89
-	[$t6] -> $td /h
-	$td -> $te
+	// LowerMemory(load): [%7] -> %29
+	[$t6] -> $s5 /h
 	[ $a0
-	$te -> $a0
+	$s5 -> $a0
+	[ $m2
 	:: prd
+	] $m2
 	] $a0
 	[ $a0
 	10 -> $a0
+	[ $m2
 	:: prc
+	] $m2
 	] $a0
 	$fp -> $sp
+	] $s5
+	] $s4
+	] $s3
+	] $s2
+	] $s1
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
 	] $t10
 	] $tf
 	] $te
@@ -353,7 +274,6 @@ sub foo() {
 	] $t3
 	] $t2
 	] $t1
-	] $t0
 	] $fp
 	] $rt
 	: $rt
