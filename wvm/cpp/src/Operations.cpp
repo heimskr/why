@@ -24,7 +24,7 @@ namespace WVM::Operations {
 		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII,
 		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI,
 		OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT,
-		OP_TIMEI, OP_RINGI,
+		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP,
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
@@ -183,6 +183,8 @@ namespace WVM::Operations {
 			case OP_TIMEI:   timeiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_RINGI:   ringiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_CMPI:     cmpiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SSPUSH: sspushOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SSPOP:   sspopOp(vm, rs, rd, conditions, flags, immediate); return;
 		}
 
 		throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
@@ -617,6 +619,45 @@ namespace WVM::Operations {
 		vm.sp() += 8;
 		vm.onRegisterChange(Why::stackPointerOffset);
 		setReg(vm, rd, vm.getWord(vm.sp()), false);
+		vm.increment();
+	}
+
+	void sspushOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		if (immediate == 1) {
+			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Byte);
+			vm.setByte(vm.sp(), rs);
+		} else if (immediate == 2) {
+			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::QWord);
+			vm.setQuarterword(vm.sp(), rs);
+		} else if (immediate == 4) {
+			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::HWord);
+			vm.setHalfword(vm.sp(), rs);
+		} else if (immediate == 8) {
+			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Word);
+			vm.setWord(vm.sp(), rs);
+		} else throw std::runtime_error("Invalid push size: " + std::to_string(immediate));
+
+		vm.bufferChange<RegisterChange>(vm, Why::stackPointerOffset, vm.sp() - immediate);
+		vm.sp() -= immediate;
+		vm.onRegisterChange(Why::stackPointerOffset);
+		vm.increment();
+	}
+
+	void sspopOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		vm.bufferChange<RegisterChange>(vm, Why::stackPointerOffset, vm.sp() + immediate);
+		vm.sp() += immediate;
+		vm.onRegisterChange(Why::stackPointerOffset);
+
+		if (immediate == 1) {
+			setReg(vm, rd, vm.getByte(vm.sp()), false);
+		} else if (immediate == 2) {
+			setReg(vm, rd, vm.getQuarterword(vm.sp()), false);
+		} else if (immediate == 4) {
+			setReg(vm, rd, vm.getHalfword(vm.sp()), false);
+		} else if (immediate == 8) {
+			setReg(vm, rd, vm.getWord(vm.sp()), false);
+		} else throw std::runtime_error("Invalid pop size: " + std::to_string(immediate));
+
 		vm.increment();
 	}
 

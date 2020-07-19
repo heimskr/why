@@ -194,6 +194,8 @@ namespace WVM::Unparser {
 			case OP_TIMEI:  return "\e[36mtime\e[39m " + coloredImm;
 			case OP_RINGI:  return "\e[36mring\e[39m " + coloredImm;
 			case OP_CMPI:   return color(rs) + " " + colorOper("~") + " " + coloredImm;
+			case OP_SSPUSH: return "[:" + coloredImm + " " + color(rs);
+			case OP_SSPOP:  return "]:" + coloredImm + " " + color(rd);
 			case OP_INT: {
 				const std::string base = "\e[36mint\e[39m ";
 				switch (immediate) {
@@ -213,7 +215,7 @@ namespace WVM::Unparser {
 	const VM *vm) {
 		std::string coloredAddress;
 		if (vm && flags == static_cast<int>(Flags::KnownSymbol)) {
-			for (const std::pair<std::string, Symbol> &pair: vm->symbolTable) {
+			for (const std::pair<const std::string, Symbol> &pair: vm->symbolTable) {
 				if (pair.second.location == address) {
 					coloredAddress = immColor + pair.first + "\e[39m";
 					break;

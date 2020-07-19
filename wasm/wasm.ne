@@ -144,7 +144,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_lni | op_lbni | op_ch | op_lh | op_sh | op_cmp | op_cmpi | op_sel
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei | op_ring
-				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai
+				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai | op_sspush | op_sspop
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_prb | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
 
@@ -309,6 +309,8 @@ op_rit			-> "rit" __ int								{% d => ["rit",      0,    0,  d[2]] %}
 				 | "rit" __ var								{% d => ["rit",      0,    0,  ["label", d[2]]] %}
 op_timei		-> "time" __ int							{% d => ["timei",    0,    0,  d[2]] %}
 op_ringi		-> "ring" __ int							{% d => ["ringi",    0,    0,  d[2]] %}
+op_sspush		-> "[" _ ":" _ int __ rv					{% d => ["sspush", d[6],   0,  d[4]] %}
+op_sspop		-> "]" _ ":" _ int __ rv					{% d => ["sspop",    0,  d[6], d[4]] %}
 
 # J-Type instructions										               rs     addr             link   condition
 op_jc			-> ":" _ int   __ "if" __ reg				{% d => ["jc", d[6],  d[2],            false, null] %}

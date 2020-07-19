@@ -103,6 +103,8 @@ namespace WVM::Operations {
 	void sbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 5
 	void spushOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 18  R 6
 	void spopOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 18  R 7
+	void sspushOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate); // 57  I
+	void sspopOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 58  I
 	void chOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 8
 	void lhOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 9
 	void shOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 10
@@ -302,6 +304,8 @@ namespace WVM::Operations {
 #define OP_DIVII 54
 #define OP_DIVUII 55
 #define OP_SEL 56
+#define OP_SSPUSH 57
+#define OP_SSPOP 58
 
 #define INTERRUPT_MAX	3
 

@@ -20,7 +20,7 @@ export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
 export type ILogic = "andi" | "nandi" | "nori" | "ori" | "xnori" | "xori";
 export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui";
-export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui";
+export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui" | "sspush" | "sspop";
 export type ISpecial = "timei" | "ringi" | "int" | "rit";
 export type IType = IMath | ILogic | IComp | IMem | ISpecial;
 
@@ -80,7 +80,7 @@ export const I_TYPES: number[] = [
 	0b000000011011, // Set on Equal Immediate
 	0b000000011100, // Set on Less Than Immediate Unsigned
 	0b000000011101, // Set on Less Than or Equal Immediate Unsigned
-	0b000000011110, // Modulo Unsigned
+	0b000000011110, // Modulo Unsigned Immediate
 	0b000000100000, // Interrupt
 	0b000000100001, // Register Interrupt Table
 	0b000000100010, // Shift Left Logical Immediate
@@ -99,6 +99,8 @@ export const I_TYPES: number[] = [
 	0b000000110101, // Divide Unsigned Immediate
 	0b000000110110, // Divide Inverse Immediate
 	0b000000110111, // Divide Unsigned Inverse Immediate
+	0b000000111001, // Sized Stack Push
+	0b000000111010, // Sized Stack Pop
 ];
 
 export const J_TYPES: number[] = [
@@ -204,6 +206,8 @@ export const OPCODES: {[key in OpName]: number} = {
 	divii:  0b000000110110,
 	divuii: 0b000000110111,
 	sel:    0b000000111000,
+	sspush: 0b000000111001,
+	sspop:  0b000000111010,
 };
 
 export const FUNCTS: {[key in RType]: number} = {
