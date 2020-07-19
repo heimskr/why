@@ -60,15 +60,15 @@ namespace WVM {
 
 			VM(size_t memory_size, bool keep_initial = true);
 
-			void setWord(Word address, Word value, Endianness = Endianness::Little);
-			void setHalfword(Word address, HWord value, Endianness = Endianness::Little);
-			void setQuarterword(Word address, QWord value, Endianness = Endianness::Little);
-			void setByte(Word address, Byte value);
-			Word getWord(Word address, Endianness = Endianness::Little) const;
-			HWord getHalfword(Word address, Endianness = Endianness::Little) const;
-			QWord getQuarterword(Word address, Endianness = Endianness::Little) const;
-			Byte getByte(Word address) const;
-			Word get(Word address, Size, Endianness = Endianness::Little) const;
+			void setWord(Word address, UWord value, Endianness = Endianness::Little);
+			void setHalfword(Word address, UHWord value, Endianness = Endianness::Little);
+			void setQuarterword(Word address, UQWord value, Endianness = Endianness::Little);
+			void setByte(Word address, UByte value);
+			UWord getWord(Word address, Endianness = Endianness::Little) const;
+			UHWord getHalfword(Word address, Endianness = Endianness::Little) const;
+			UQWord getQuarterword(Word address, Endianness = Endianness::Little) const;
+			UByte getByte(Word address) const;
+			UWord get(Word address, Size, Endianness = Endianness::Little) const;
 			void set(Word address, Word value, Size, Endianness = Endianness::Little);
 			std::string getString(Word address, int max = -1) const;
 			Word getInstruction(Word address) const;

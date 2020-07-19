@@ -13,7 +13,7 @@ namespace WVM {
 	};
 
 	struct MemoryChange: public Change {
-		Word address, from, to;
+		UWord address, from, to;
 		Size size;
 
 		MemoryChange(Word address_, Word from_, Word to_, Size size_):
