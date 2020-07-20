@@ -71,6 +71,8 @@ namespace WVM::Mode {
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
+		} else if (verb == "Strict") {
+			textbox += "Strict mode \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "Log") {
 			textbox += infoPrefix + rest;
 		}
@@ -144,6 +146,11 @@ namespace WVM::Mode {
 			*socket << ":Undo\n";
 		} else if (first == "re" || first == "redo" || first == "]") {
 			*socket << ":Redo\n";
+		} else if (first == "st" || first == "strict") {
+			if (size == 0)
+				*socket << ":Strict\n";
+			else
+				*socket << ":Strict " << split[1] << "\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

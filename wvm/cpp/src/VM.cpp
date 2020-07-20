@@ -32,9 +32,9 @@ namespace WVM {
 			for (char i = 0; i < 8; i++)
 				memory[address + 7 - i] = (value >> (8*i)) & 0xff;
 		}
-		onUpdateMemory(address - (address % 8));
+		onUpdateMemory(address - (address % 8), address, Size::Word);
 		if (address % 8 != 0)
-			onUpdateMemory(address - (address % 8) + 8);
+			onUpdateMemory(address - (address % 8) + 8, address, Size::Word);
 	}
 
 	void VM::setHalfword(Word address, UHWord value, Endianness endianness) {
@@ -50,9 +50,9 @@ namespace WVM {
 				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
 		}
 
-		onUpdateMemory(address - (address % 8));
+		onUpdateMemory(address - (address % 8), address, Size::HWord);
 		if (4 < address % 8)
-			onUpdateMemory(address - (address % 8) + 8);
+			onUpdateMemory(address - (address % 8) + 8, address, Size::HWord);
 	}
 
 	void VM::setQuarterword(Word address, UQWord value, Endianness endianness) {
@@ -68,9 +68,9 @@ namespace WVM {
 			memory[address + 1] = value & 0xff;
 		}
 
-		onUpdateMemory(address - (address % 8));
+		onUpdateMemory(address - (address % 8), address, Size::QWord);
 		if (6 < address % 8)
-			onUpdateMemory(address - (address % 8) + 8);
+			onUpdateMemory(address - (address % 8) + 8, address, Size::QWord);
 	}
 
 	void VM::setByte(Word address, UByte value) {
@@ -78,7 +78,7 @@ namespace WVM {
 			throw VMError("Out-of-bounds memory access in VM::setByte (" + std::to_string(address) + ")");
 
 		memory[address] = value;
-		onUpdateMemory(address - (address % 8));
+		onUpdateMemory(address - (address % 8), address, Size::Byte);
 	}
 
 	UWord VM::getWord(Word address, Endianness endianness) const {
@@ -261,7 +261,7 @@ namespace WVM {
 		DBG("size == " << undoStack.size() << ", pointer == " << undoPointer << " (access index: " << (undoPointer - 1) << ")");
 		const std::vector<std::unique_ptr<Change>> &changes = undoStack.at(--undoPointer);
 		for (auto iter = changes.rbegin(), rend = changes.rend(); iter != rend; ++iter)
-			(*iter)->undo(*this, true);
+			(*iter)->undo(*this, strict);
 
 		return true;
 	}
@@ -272,7 +272,7 @@ namespace WVM {
 
 		DBG("size == " << undoStack.size() << ", pointer == " << undoPointer << " (access index: " << undoPointer << ")");
 		for (std::unique_ptr<Change> &change: undoStack.at(undoPointer++))
-			change->apply(*this, true);
+			change->apply(*this, strict);
 
 		return true;
 	}

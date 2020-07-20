@@ -15,6 +15,7 @@ namespace WVM::Mode {
 			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers, outputSubscribers, ffSubscribers;
 			std::set<int> bpSubscribers;
 			std::set<Word> writtenAddresses;
+			bool logMemoryWrites = false, logRegisters = false;
 
 			void setFastForward(bool);
 			void broadcast(const std::string &);

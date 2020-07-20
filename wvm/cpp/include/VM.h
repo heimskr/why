@@ -48,11 +48,12 @@ namespace WVM {
 			Word dataOffset = -1;
 			Word  endOffset = -1;
 			bool paused = false;
+			bool strict = true;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
 			std::function<void()> onInterruptTableChange = []() {};
-			std::function<void(Word)> onUpdateMemory = [](Word) {};
+			std::function<void(Word, Word, Size)> onUpdateMemory = [](Word, Word, Size) {};
 			std::function<void(Word, Word)> onJump = [](Word, Word) {};
 			std::function<void(const std::string &)> onPrint = [](const std::string &) {};
 			std::function<void(Word)> onAddBreakpoint = [](Word) {};

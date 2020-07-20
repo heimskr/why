@@ -33,7 +33,9 @@ namespace WVM::Mode {
 	}
 
 	void ServerMode::initVM() {
-		vm.onUpdateMemory = [&](Word address) {
+		vm.onUpdateMemory = [&](Word address, Word unadjusted, Size size) {
+			if (logMemoryWrites)
+				DBG("[" << unadjusted << "] <- " << vm.get(unadjusted, size));
 			writtenAddresses.insert(address);
 			const std::string message = ":MemoryWord " + std::to_string(address) + " " +
 				std::to_string(vm.getWord(address));
@@ -42,6 +44,8 @@ namespace WVM::Mode {
 		};
 
 		vm.onRegisterChange = [&](unsigned char id) {
+			if (logRegisters)
+				DBG(Why::coloredRegister(id) << " <- " << vm.registers[id]);
 			const std::string message = ":Register " + std::to_string(id) + " " + std::to_string(vm.registers[id]);
 			for (int client: registerSubscribers)
 				server.send(client, message);
@@ -193,7 +197,7 @@ namespace WVM::Mode {
 			}
 
 			Word reg;
-			if (!Util::parseLong(split[1], reg)) {
+			if (!Util::parseLong(split[1], reg) && (reg = Why::registerID(split[1])) == -1) {
 				server.send(client, ":Error Invalid register: " + split[1]);
 				return;
 			}
@@ -342,6 +346,30 @@ namespace WVM::Mode {
 			vm.undo();
 		} else if (verb == "Redo") {
 			vm.redo();
+		} else if (verb == "LogMemoryWrites") {
+			logMemoryWrites = !logMemoryWrites;
+			server.send(client, ":LogMemoryWrites " + std::string(logMemoryWrites? "on" : "off"));
+		} else if (verb == "LogRegisters") {
+			logRegisters = !logRegisters;
+			server.send(client, ":LogRegisters " + std::string(logRegisters? "on" : "off"));
+		} else if (verb == "Strict") { // useful if you want to mess with registers.
+			if (size == 1) {
+				vm.strict = !vm.strict;
+			} else if (size == 2) {
+				if (split[1] == "off" || split[1] == "0" || split[1] == "false" || split[1] == "no") {
+					vm.strict = false;
+				} else if (split[1] == "on" || split[1] == "1" || split[1] == "true" || split[1] == "yes") {
+					vm.strict = true;
+				} else {
+					invalid();
+					return;
+				}
+			} else {
+				invalid();
+				return;
+			}
+
+			server.send(client, ":Strict " + std::string(vm.strict? "on" : "off"));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
