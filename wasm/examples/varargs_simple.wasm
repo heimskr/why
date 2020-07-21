@@ -305,3 +305,29 @@ sub strprint() {
 		$a0++
 		: _strprint_loop
 }
+//     foo(4, "bar", 3, -1, 10)
+// 999908: |  |      |  |   ^
+// 999904: |  |      |  ^
+// 999900: |  |      ^
+// 999892: |  ^ =2576
+// 999888: ^
+
+// [999888] (4)         stored into [999640]
+// Stack pointer        stored into [999632]
+// [999632] (999888)    loaded into $t8
+// $t8 + 4  (999892)    stored into [999632]
+// [$t8 (999888)] (big) loaded into $tb
+// $tb (big)            stored into [999624]
+// [999632] (999892)    loaded into $tc
+// $tc + 4 (999896)     stored into [999632]
+// [999892]/h (2576)    loaded into $tf
+// 2576                 stored into [999616]/h
+// [999632] (999896)    loaded into $t10
+// $t10 + 4 (999900)    stored into [999632]
+// [999896]/h (0)       loaded into $t13
+// $t13 (0)             stored into [999608]/h
+// [999632] (999900)    loaded into $t14
+// $t14 + 4 (999904)    stored into [999632]
+// [999900]/h (3)       loaded into $s0
+// $s0 (3)              stored into [999600]/h
+// [999624] (big)       loaded into $s2 -> $a0
