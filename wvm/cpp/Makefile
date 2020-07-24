@@ -3,6 +3,7 @@ COMPILER		?= clang++
 OPTIMIZATION	?= -O0 -g
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
+TESTFILE		?= ../../wasm/compiled/varargs_simple.why
 
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(tests?|test_.+)\.cpp$$/!p')
 OBJECTS_WVM		:= $(patsubst src/%.cpp,build/%.o, $(SOURCES_WVM))
@@ -36,7 +37,7 @@ $(OUT): $(OBJECTS)
 test: memtest
 
 servertest: $(OUT)
-	./$(OUT) server ../../wasm/compiled/varargs_simple.why
+	./$(OUT) server $(TESTFILE)
 
 consoletest: $(OUT)
 	./$(OUT) console 127.0.0.1 `cat .port`
