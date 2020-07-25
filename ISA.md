@@ -114,8 +114,8 @@
 						<li><a href="#op-sgi">Set on Greater Than Immediate</a> (<code>sgi</code>)</li>
 						<li><a href="#op-slui">Set on Less Than Unsigned Immediate</a> (<code>slui</code>)</li>
 						<li><a href="#op-sleui">Set on Less Than or Equal Unsigned Immediate</a> (<code>sleui</code>)</li>
-						<li><s><a href="#op-sgeui">Set on Greater Than or Equal Unsigned Immediate</a> (<code>sgeui</code>)</s></li>
-						<li><s><a href="#op-sgui">Set on Greater Than Unsigned Immediate</a> (<code>sgui</code>)</s></li>
+						<li><a href="#op-sgeui">Set on Greater Than or Equal Unsigned Immediate</a> (<code>sgeui</code>)</li>
+						<li><a href="#op-sgui">Set on Greater Than Unsigned Immediate</a> (<code>sgui</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-jump-j">Jumps (J-Types)</a>
