@@ -9,6 +9,7 @@
 #include "mode/ServerMode.h"
 #include "Unparser.h"
 #include "Util.h"
+#include "VMError.h"
 
 void sigint_handler(int) {
 	if (WVM::Mode::ServerMode::instance)
@@ -173,9 +174,17 @@ namespace WVM::Mode {
 				setFastForward(true);
 				Word i;
 				vm.start();
-				for (i = 0; i < ticks; ++i) {
-					if (!tick())
-						break;
+				try {
+					for (i = 0; i < ticks; ++i) {
+						if (!tick())
+							break;
+					}
+				} catch (VMError &err) {
+					const bool old_strict = vm.strict;
+					vm.strict = false;
+					vm.undo();
+					vm.strict = old_strict;
+					vm.paused = true;
 				}
 
 				if (vm.paused)
