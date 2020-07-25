@@ -85,6 +85,8 @@ namespace WVM::Operations {
 	void sleuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 29  I
 	void sgiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 41  I
 	void sgeiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 42  I
+	void sgeuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 59  I
+	void sguiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 60  I
 	void cmpiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 43  I
 
 	void jOp(VM &, Word &rs, bool link, Conditions, int flags, HWord address);       // 15  J
@@ -306,6 +308,8 @@ namespace WVM::Operations {
 #define OP_SEL 56
 #define OP_SSPUSH 57
 #define OP_SSPOP 58
+#define OP_SGEUI 59
+#define OP_SGUI 60
 
 #define INTERRUPT_MAX	3
 

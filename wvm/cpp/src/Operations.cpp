@@ -24,7 +24,7 @@ namespace WVM::Operations {
 		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII,
 		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI,
 		OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT,
-		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP,
+		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI,
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
@@ -171,6 +171,8 @@ namespace WVM::Operations {
 			case OP_SLEUI:   sleuiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_SGI:       sgiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_SGEI:     sgeiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SGEUI:   sgeuiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_SGUI:     sguiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_LI:         liOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_SI:         siOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_SET:       setOp(vm, rs, rd, conditions, flags, immediate); return;
@@ -525,6 +527,16 @@ namespace WVM::Operations {
 
 	void sgeiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		setReg(vm, rd, rs >= immediate, false);
+		vm.increment();
+	}
+
+	void sgeuiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		setReg(vm, rd, static_cast<UWord>(rs) >= static_cast<UWord>(immediate), false);
+		vm.increment();
+	}
+
+	void sguiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		setReg(vm, rd, static_cast<UWord>(rs) > static_cast<UWord>(immediate), false);
 		vm.increment();
 	}
 
