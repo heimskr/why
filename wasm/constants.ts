@@ -19,7 +19,7 @@ export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
 export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
 export type ILogic = "andi" | "nandi" | "nori" | "ori" | "xnori" | "xori";
-export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui";
+export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui" | "sgeui" | "sgui";
 export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui" | "sspush" | "sspop";
 export type ISpecial = "timei" | "ringi" | "int" | "rit";
 export type IType = IMath | ILogic | IComp | IMem | ISpecial;
@@ -101,6 +101,8 @@ export const I_TYPES: number[] = [
 	0b000000110111, // Divide Unsigned Inverse Immediate
 	0b000000111001, // Sized Stack Push
 	0b000000111010, // Sized Stack Pop
+	0b000000111011, // Set on Greater Than or Equal Unsigned Immediate
+	0b000000111100, // Set on Greater Than Unsigned Immediate
 ];
 
 export const J_TYPES: number[] = [
@@ -208,6 +210,8 @@ export const OPCODES: {[key in OpName]: number} = {
 	sel:    0b000000111000,
 	sspush: 0b000000111001,
 	sspop:  0b000000111010,
+	sgeui:  0b000000111011,
+	sgui:   0b000000111100,
 };
 
 export const FUNCTS: {[key in RType]: number} = {

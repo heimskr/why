@@ -694,9 +694,17 @@ If the value in `rs` is less than `imm` (treating both as unsigned values), `rd`
 
 If the value in `rs` is less than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
-### <a href="#op-sgeui">Set on Greater Than or Equal Unsigned Immediate</a> (`sgeui`)
+### <a name="op-sgeui"></a>Set on Greater Than or Equal Unsigned Immediate (`sgeui`)
+> `$rs >= imm -> $rd /u`  
+> `000000111011` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-### <a href="#op-sgui">Set on Greater Than Unsigned Immediate</a> (`sgui`)
+If the value in `rs` is greater than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+
+### <a name="op-sgui"></a>Set on Greater Than Unsigned Immediate (`sgui`)
+> `$rs > imm -> $rd /u`  
+> `000000111100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+If the value in `rs` is greater than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 ## <a name="ops-jump-j"></a>Jumps (J-Types)
 
@@ -990,7 +998,7 @@ Translation:
 ### <a name="op-sge"></a>Set on Greater Than or Equal (`sge`)
 > `$rs >= $rt -> $rd`
 
-If the value in `rs` is greather than or equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than or equal to the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 Translation:  
 <code>$rt [<=](#op-sle) $rs -> $rd</code>
@@ -998,7 +1006,7 @@ Translation:
 ### <a name="op-sg"></a>Set on Greater Than (`sg`)
 > `$rs > $rt -> $rd`
 
-If the value in `rs` is greather than the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than the value in `rt`, `rd` is set to 1; otherwise, `rd` is set to 0.
 
 Translation:  
 <code>$rt [<](#op-sl) $rs -> $rd</code>
@@ -1006,7 +1014,7 @@ Translation:
 ### <a name="op-sgeu"></a>Set on Greater Than or Equal Unsigned (`sgeu`)
 > `$rs >= $rt -> $rd /u`
 
-If the value in `rs` is greather than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 Translation:  
 <code>$rt [<=](#op-sleu) $rs -> $rd</code>
@@ -1014,20 +1022,10 @@ Translation:
 ### <a name="op-sgu"></a>Set on Greater Than Unsigned (`sgu`)
 > `$rs > $rt -> $rd /u`
 
-If the value in `rs` is greather than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
 
 Translation:  
 <code>$rt [<](#op-slu) $rs -> $rd /u</code>
-
-### <a name="op-sgeui"></a><s>Set on Greater Than or Equal Unsigned Immediate</s> (`sgeui`)
-> `$rs >= imm -> $rd /u`
-
-If the value in `rs` is greather than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0. Currently unimplemented.
-
-### <a name="op-sgui"></a><s>Set on Greater Than Unsigned Immediate</s> (`sgui`)
-> `$rs > imm -> $rd /u`
-
-If the value in `rs` is greather than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0. Currently unimplemented.
 
 # <a name="ext"></a>Externals
 
