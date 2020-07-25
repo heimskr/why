@@ -240,7 +240,7 @@ op_sel			-> "[" _ reg _ "=" _ reg _ "]" _ "->" _ reg	{% d => ["sel",   d[6], d[2
 # I-Type instructions										                   rs    rd    imm
 op_multui		-> reg _ "*"   _ int _ "/u"					{% d => ["multui", d[0],   0,  d[4]] %}
 op_cmpi			-> reg _ "~"   _ int						{% d => ["cmpi",   d[0],   0,  d[4]] %}
-op_divui		-> reg _ "/"   _ int into reg "/u"			{% d => ["divui",  d[0], d[6], d[4]] %}
+op_divui		-> reg _ "/"   _ int into reg _ "/u"		{% d => ["divui",  d[0], d[6], d[4]] %}
 				 | reg _ "/="  _ int "/u"					{% d => ["divui",  d[0], d[0], d[4]] %}
 op_addi			-> reg _ "+"   _ int into reg				{% d => ["addi",   d[0], d[6], d[4]] %}
 				 | reg _ "++"								{% d => ["addi",   d[0], d[0],   1 ] %}
