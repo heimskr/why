@@ -140,7 +140,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_multu | op_multui | op_divu | op_divui | op_div | op_divi | op_divii | op_divuii | op_mod | op_modi
 				 | op_sl | op_sle | op_seq | op_sge | op_sg | op_sli | op_slei | op_seqi | op_sgei | op_sgi
 				 | op_slu | op_sleu | op_sgeu | op_sgu | op_slui | op_sleui | op_sgeui | op_sgui
-				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set
+				 | op_lui | op_cb | op_lb | op_sb | op_c | op_l | op_s | op_lbi | op_sbi | op_li | op_si | op_set | op_ms
 				 | op_lni | op_lbni | op_ch | op_lh | op_sh | op_cmp | op_cmpi | op_sel
 				 | op_j | op_jc | op_jr | op_jrc | op_jrl | op_jrlc
 				 | op_mv | op_ret | op_push | op_pop | op_jeq | op_nop | op_int | op_rit | op_time | op_timei | op_ring
@@ -194,6 +194,7 @@ op_div			-> riap["/"] into reg						{% d => ["div",      ...d[0], d[2]] %}
 				 | rv _ "/=" _ rv							{% d => ["div",   d[4], d[0], d[0]] %}
 op_not			-> "~" _ rv into rv							{% d => ["not",     0,  d[2], d[4]] %}
 				 | "~" _ rv _ "."							{% d => ["not",     0,  d[2], d[2]] %}
+
 op_slu			-> rv _ "<"  _ rv into rv _ "/u"			{% d => ["slu",   d[4], d[0], d[6]] %}
 op_sleu			-> rv _ "<=" _ rv into rv _ "/u"			{% d => ["sleu",  d[4], d[0], d[6]] %}
 op_sgu			-> rv _ ">"  _ rv into rv _ "/u"			{% d => ["slu",   d[0], d[4], d[6]] %}
@@ -203,6 +204,7 @@ op_sle			-> rv _ "<=" _ rv into rv					{% d => ["sle",   d[4], d[0], d[6]] %}
 op_seq			-> rv _ "==" _ rv into rv					{% d => ["seq",   d[0], d[4], d[6]] %}
 op_sge			-> rv _ ">=" _ rv into rv					{% d => ["sle",   d[0], d[4], d[6]] %}
 op_sg			-> rv _ ">"  _ rv into rv					{% d => ["sl",    d[0], d[4], d[6]] %}
+
 op_jr			-> ":"  _ reg								{% d => ["jr",      0,    0,  d[2], null] %}
 				 | "+:" _ reg								{% d => ["jr",      0,    0,  d[2],  "p"] %}
 				 | "-:" _ reg								{% d => ["jr",      0,    0,  d[2],  "n"] %}
@@ -215,6 +217,7 @@ op_jrl			-> "::"  _ reg								{% d => ["jrl",     0,    0,  d[2], null] %}
 				 | "*::" _ reg								{% d => ["jrl",     0,    0,  d[2], "nz"] %}
 op_jrc			-> ":" _ reg __ "if" __ reg					{% d => ["jrc",     0,  d[6], d[2]] %}
 op_jrlc			-> "::" _ reg __ "if" __ reg				{% d => ["jrlc",    0,  d[6], d[2]] %}
+
 op_cb			-> "[" _ rv _ "]" into "[" _ rv _ "]" _ "/b"{% d => ["cb",      0,  d[2], d[8]] %}
 op_lb			-> "[" _ reg _ "]" into rv _ "/b"			{% d => ["lb",      0,  d[2], d[6]] %}
 op_sb			-> rv into "[" _ rv _ "]" _ "/b"			{% d => ["sb",      0,  d[0], d[4]] %}
@@ -224,14 +227,18 @@ op_sh			-> rv into "[" _ rv _ "]" _ "/h"			{% d => ["sh",      0,  d[0], d[4]] %
 op_c			-> "[" _ rv _ "]" into "[" _ rv _ "]"		{% d => ["c",       0,  d[2], d[8]] %}
 op_l			-> "[" _ reg _ "]" into rv					{% d => ["l",       0,  d[2], d[6]] %}
 op_s			-> rv into "[" _ rv _ "]"					{% d => ["s",       0,  d[0], d[4]] %}
+op_ms			-> "memset" __ rv __ "x" __ rv into rv		{% d => ["ms",    d[6], d[2], d[8]] %}
+
 op_sll			-> riap["<<"]  into rv						{% d => ["sll",      ...d[0], d[2]] %}
 				 | rv _ "<<="  _ rv							{% d => ["sll",   d[4], d[0], d[0]] %}
 op_srl			-> riap[">>>"] into rv						{% d => ["srl",      ...d[0], d[2]] %}
 				 | rv _ ">>>=" _ rv							{% d => ["srl",   d[4], d[0], d[0]] %}
 op_sra			-> riap[">>"]  into rv						{% d => ["sra",      ...d[0], d[2]] %}
 				 | rv _ ">>="  _ rv							{% d => ["sra",   d[4], d[0], d[0]] %}
+
 op_time			-> "time" __ rv								{% d => ["time",    0,  d[2],   0 ] %}
 op_ring			-> "ring" __ rv								{% d => ["ring",    0,  d[2],   0 ] %}
+
 op_sel			-> "[" _ reg _ "=" _ reg _ "]" _ "->" _ reg	{% d => ["sel",   d[6], d[2], d[12], "z"] %}
 				 | "[" _ reg _ ">" _ reg _ "]" _ "->" _ reg	{% d => ["sel",   d[6], d[2], d[12], "p"] %}
 				 | "[" _ reg _ "<" _ reg _ "]" _ "->" _ reg	{% d => ["sel",   d[6], d[2], d[12], "n"] %}

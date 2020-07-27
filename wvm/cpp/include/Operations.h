@@ -110,6 +110,7 @@ namespace WVM::Operations {
 	void chOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 8
 	void lhOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 9
 	void shOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 10
+	void msOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 11
 
 	void liOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 19  I
 	void siOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 20  I
@@ -145,54 +146,54 @@ namespace WVM::Operations {
 #define OP_RMEM 18
 #define OP_REXT 31
 
-#define OP_ADD 1
+#define OP_ADD OP_RMATH
 #define FN_ADD 0
-#define OP_SUB 1
+#define OP_SUB OP_RMATH
 #define FN_SUB 1
-#define OP_MULT 1
+#define OP_MULT OP_RMATH
 #define FN_MULT 2
-#define OP_MULTU 1
+#define OP_MULTU OP_RMATH
 #define FN_MULTU 5
-#define OP_SLL 1
+#define OP_SLL OP_RMATH
 #define FN_SLL 6
-#define OP_SRL 1
+#define OP_SRL OP_RMATH
 #define FN_SRL 7
-#define OP_SRA 1
+#define OP_SRA OP_RMATH
 #define FN_SRA 8
-#define OP_MOD 1
+#define OP_MOD OP_RMATH
 #define FN_MOD 9
-#define OP_DIV 1
+#define OP_DIV OP_RMATH
 #define FN_DIV 10
-#define OP_DIVU 1
+#define OP_DIVU OP_RMATH
 #define FN_DIVU 11
 
-#define OP_AND 2
+#define OP_AND OP_RLOGIC
 #define FN_AND 0
-#define OP_NAND 2
+#define OP_NAND OP_RLOGIC
 #define FN_NAND 1
-#define OP_NOR 2
+#define OP_NOR OP_RLOGIC
 #define FN_NOR 2
-#define OP_NOT 2
+#define OP_NOT OP_RLOGIC
 #define FN_NOT 3
-#define OP_OR 2
+#define OP_OR OP_RLOGIC
 #define FN_OR 4
-#define OP_XNOR 2
+#define OP_XNOR OP_RLOGIC
 #define FN_XNOR 5
-#define OP_XOR 2
+#define OP_XOR OP_RLOGIC
 #define FN_XOR 6
-#define OP_LAND 2
+#define OP_LAND OP_RLOGIC
 #define FN_LAND 8
-#define OP_LNAND 2
+#define OP_LNAND OP_RLOGIC
 #define FN_LNAND 9
-#define OP_LNOR 2
+#define OP_LNOR OP_RLOGIC
 #define FN_LNOR 10
-#define OP_LNOT 2
+#define OP_LNOT OP_RLOGIC
 #define FN_LNOT 11
-#define OP_LOR 2
+#define OP_LOR OP_RLOGIC
 #define FN_LOR 12
-#define OP_LXNOR 2
+#define OP_LXNOR OP_RLOGIC
 #define FN_LXNOR 13
-#define OP_LXOR 2
+#define OP_LXOR OP_RLOGIC
 #define FN_LXOR 14
 
 #define OP_ADDI 3
@@ -208,53 +209,55 @@ namespace WVM::Operations {
 
 #define OP_LUI 13
 
-#define OP_SL 14
+#define OP_SL OP_RCOMP
 #define FN_SL 0
-#define OP_SLE 14
+#define OP_SLE OP_RCOMP
 #define FN_SLE 1
-#define OP_SEQ 14
+#define OP_SEQ OP_RCOMP
 #define FN_SEQ 2
-#define OP_SLU 14
+#define OP_SLU OP_RCOMP
 #define FN_SLU 3
-#define OP_SLEU 14
+#define OP_SLEU OP_RCOMP
 #define FN_SLEU 4
-#define OP_CMP 14
+#define OP_CMP OP_RCOMP
 #define FN_CMP 5
 
 #define OP_J 15
 #define OP_JC 16
 
-#define OP_JR 17
+#define OP_JR OP_RJUMP
 #define FN_JR 0
-#define OP_JRC 17
+#define OP_JRC OP_RJUMP
 #define FN_JRC 1
-#define OP_JRL 17
+#define OP_JRL OP_RJUMP
 #define FN_JRL 2
-#define OP_JRLC 17
+#define OP_JRLC OP_RJUMP
 #define FN_JRLC 3
 
-#define OP_C 18
+#define OP_C OP_RMEM
 #define FN_C 0
-#define OP_L 18
+#define OP_L OP_RMEM
 #define FN_L 1
-#define OP_S 18
+#define OP_S OP_RMEM
 #define FN_S 2
-#define OP_CB 18
+#define OP_CB OP_RMEM
 #define FN_CB 3
-#define OP_LB 18
+#define OP_LB OP_RMEM
 #define FN_LB 4
-#define OP_SB 18
+#define OP_SB OP_RMEM
 #define FN_SB 5
-#define OP_SPUSH 18
+#define OP_SPUSH OP_RMEM
 #define FN_SPUSH 6
-#define OP_SPOP 18
+#define OP_SPOP OP_RMEM
 #define FN_SPOP 7
-#define OP_CH 18
+#define OP_CH OP_RMEM
 #define FN_CH 8
-#define OP_LH 18
+#define OP_LH OP_RMEM
 #define FN_LH 9
-#define OP_SH 18
+#define OP_SH OP_RMEM
 #define FN_SH 10
+#define OP_MS OP_RMEM
+#define FN_MS 11
 
 #define OP_LI 19
 #define OP_SI 20
@@ -268,21 +271,21 @@ namespace WVM::Operations {
 #define OP_SLEUI 29
 #define OP_MODI 30
 
-#define OP_PR 31
+#define OP_PR OP_REXT
 #define FN_PR 1
-#define OP_HALT 31
+#define OP_HALT OP_REXT
 #define FN_HALT 2
-#define OP_EVAL 31
+#define OP_EVAL OP_REXT
 #define FN_EVAL 3
-#define OP_PRC 31
+#define OP_PRC OP_REXT
 #define FN_PRC 4
-#define OP_PRD 31
+#define OP_PRD OP_REXT
 #define FN_PRD 5
-#define OP_PRX 31
+#define OP_PRX OP_REXT
 #define FN_PRX 6
-#define OP_SLEEP 31
+#define OP_SLEEP OP_REXT
 #define FN_SLEEP 7
-#define OP_PRB 31
+#define OP_PRB OP_REXT
 #define FN_PRB 8
 
 #define OP_INT 32

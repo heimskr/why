@@ -32,10 +32,13 @@
 		{"match": "\\b(name|author|orcid|version|library)\\b",
 		 "name": "support.type.property-name.wasm"},
 
-		{"match": "\\b(print|halt|pr[cdx]?|sleep|timei?|ringi?|int|rit)\\b",
-		 "name": "support.constant.special.wasm"},
+		{"match": "\\b(print|halt|pr[cdx]?|sleep|time|ring|int|rit|memset)\\b",
+		 "name": "keyword.other.wasm"},
 
 		{"include": "#operator_token"},
+
+		{"match": "&[a-zA-Z_][a-zA-Z0-9_]*",
+		 "name": "constant.other.wasm"},
 
 		{"match": "/[bu]\\b",
 		 "name": "constant.language.modifier.wasm"}

@@ -145,6 +145,7 @@
 						<li><a href="#op-sh">Store Halfword</a>    (<code>sh</code>)</li>
 						<li><a href="#op-spush">Stack Push</a> (<code>spush</code>)</li>
 						<li><a href="#op-spop">Stack Pop</a>   (<code>spop</code>)</li>
+						<li><a href="#op-ms">Memset</a> (<code>ms</code>)M/li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
@@ -825,6 +826,12 @@ See also: <a href="#op-push">push pseudoinstruction</a>
 
 Adjusts the stack pointer and copies the word at the stack pointer into `rd`.  
 See also: <a href="#op-pop">pop pseudoinstruction</a>
+
+### <a name="op-ms"></a>Memset (`ms`)
+> `memset $rs x $rt -> $rd`  
+> `000000010010` `ttttttt` `ddddddd` `sssssss` `0000000000000` `......` `000000001000`
+
+Sets `rs` bytes to `rt` starting at address `rd`. The value in `rt` will be truncated to 8 bits.
 
 ## <a name="ops-mem-i"></a>Memory (I-Types)
 
