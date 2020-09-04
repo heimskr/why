@@ -39,7 +39,7 @@
 		"jquery": "^3.2.1",
 		"jquery.splitter": "^0.28.3",
 		"jsdoc": "^3.5.5",
-		"node-sass": "^4.11.0",
+		"node-sass": "^4.13.1",
 		"vinyl-buffer": "^1.0.1",
 		"vinyl-source-stream": "^2.0.0"
 	},
