@@ -147,6 +147,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai | op_sspush | op_sspop
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_prb | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
+				 | op_page
 
 into			-> _ "->" _									{% d => null %}
 
@@ -376,6 +377,9 @@ ext_xn_init		-> "<" _ "xn" __ "init" _ ">"				{% d => ["ext",   0,    0,    0,  
 ext_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["ext", d[8], d[6],   0,  EXTS.xn_connect] %}
 ext_xn_send		-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["ext",   0,  d[6],   0,  EXTS.xn_send   ] %}
 ext_xn_recv		-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["ext",   0,  d[8], d[6], EXTS.xn_recv   ] %}
+
+op_page			-> "page" __ "on"							{% d => ["pgon",  0, 0, 0] %}
+				 | "page" __ "off"							{% d => ["pgoff", 0, 0, 0] %}
 
 gap				-> brc[int]									{% d => ["gap",  d[0]] %}
 

@@ -171,6 +171,8 @@
 						<li><a href="#op-time">Set Timer</a> (<code>time</code>)</li>
 						<li><a href="#op-timei">Set Timer Immediate</a> (<code>timei</code>)</li>
 						<li><a href="#op-ring">Change Ring</a> (<code>ring</code>)</li>
+						<li><a href="#op-pgoff">Disable Paging</a> (<code>pgoff</code>)</li>
+						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -947,6 +949,18 @@ Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a 
 > `000000110011` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
+
+### <a name="op-pgoff"></a>Disable Paging (`pgoff`)
+> `page off`
+> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+
+Disables virtual memory.
+
+### <a name="op-pgon"></a>Enable Paging (`pgon`)
+> `page on`
+> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
+
+Enables virtual memory.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
