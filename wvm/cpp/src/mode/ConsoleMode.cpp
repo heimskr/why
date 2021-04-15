@@ -75,6 +75,8 @@ namespace WVM::Mode {
 			textbox += "Strict mode \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "Log") {
 			textbox += infoPrefix + rest;
+		} else if (verb == "Paging") {
+			textbox += "Paging \e[1m" + split[0] + "\e[22m.";
 		}
 	}
 
@@ -105,6 +107,8 @@ namespace WVM::Mode {
 				*socket << ":Subscribe registers\n";
 			} else if (split[0] == "m" || split[0] == "mem" || split[0] == "memory") {
 				*socket << ":Subscribe memory\n";
+			} else if (split[0] == "p" || split[0] == "page" || split[0] == "paging") {
+				*socket << ":Subscribe paging\n";
 			} else badInput();
 		} else if (first == "r" || first == "res" || first == "reset") {
 			*socket << ":Reset\n";

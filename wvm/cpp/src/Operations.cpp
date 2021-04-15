@@ -830,10 +830,14 @@ namespace WVM::Operations {
 	void pgoffOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
 		vm.recordChange<PagingChange>(vm.pagingOn, false);
 		vm.pagingOn = false;
+		vm.onPagingChange(false);
+		vm.increment();
 	}
 
 	void pgonOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
 		vm.recordChange<PagingChange>(vm.pagingOn, true);
 		vm.pagingOn = true;
+		vm.onPagingChange(true);
+		vm.increment();
 	}
 }

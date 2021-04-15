@@ -87,6 +87,11 @@ namespace WVM::Mode {
 			for (int client: bpSubscribers)
 				server.send(client, ":RemoveBP " + std::to_string(breakpoint));
 		};
+
+		vm.onPagingChange = [&](bool enabled) {
+			for (int client: pagingSubscribers)
+				server.send(client, ":Paging " + std::string(enabled? "enabled" : "disabled"));
+		};
 	}
 
 	void ServerMode::cleanupClient(int client) {
@@ -95,6 +100,7 @@ namespace WVM::Mode {
 		pcSubscribers.erase(client);
 		ffSubscribers.erase(client);
 		bpSubscribers.erase(client);
+		pagingSubscribers.erase(client);
 	}
 
 	void ServerMode::stop() {
@@ -147,6 +153,9 @@ namespace WVM::Mode {
 				bpSubscribers.insert(client);
 				for (int breakpoint: vm.getBreakpoints())
 					server.send(client, ":AddBP " + std::to_string(breakpoint));
+			} else if (to == "paging") {
+				pagingSubscribers.insert(client);
+				server.send(client, ":Paging " + std::string(vm.pagingOn? "enabled" : "disabled"));
 			} else {
 				invalid();
 				return;

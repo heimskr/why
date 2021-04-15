@@ -143,6 +143,7 @@ namespace WVM::Unparser {
 				return "\e[2m[\e[22m" + Why::coloredRegister(rs) + " \e[2m" + oper + "\e[22m "
 					+ Why::coloredRegister(rt) + "\e[2m] -> \e[22m" + Why::coloredRegister(rd);
 			}
+			case OP_PAGE: return "\e[36mpage\e[39m " + std::string(funct == FN_PGON? "on" : (funct == FN_PGOFF? "off" : "???"));
 		}
 
 		return "R: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + " "
