@@ -512,6 +512,8 @@ export default class Parser {
 			const cond = {z: "=", p: ">", n: "<", nz: "!="}[conditions] || "?";
 			return `[${yellow(rs)} ${cond} ${yellow(rt)}] ${dim("->")} ${yellow(rd)}`;
 		}
+		if (op == "pgoff") return `${cyan("page")} off`;
+		if (op == "pgon")  return `${cyan("page")} on`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 
