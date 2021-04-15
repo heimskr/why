@@ -145,7 +145,7 @@
 						<li><a href="#op-sh">Store Halfword</a>    (<code>sh</code>)</li>
 						<li><a href="#op-spush">Stack Push</a> (<code>spush</code>)</li>
 						<li><a href="#op-spop">Stack Pop</a>   (<code>spop</code>)</li>
-						<li><a href="#op-ms">Memset</a> (<code>ms</code>)M/li>
+						<li><a href="#op-ms">Memset</a> (<code>ms</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
