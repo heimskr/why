@@ -13,11 +13,10 @@ namespace WVM {
 				vm.recordChange<HaltChange>();
 				vm.stop();
 			} else {
-				const Word next = vm.nextInstructionAddress();
 				const Word ring = static_cast<Word>(vm.ring);
-				vm.recordChange<RegisterChange>(vm, REG_E + 0, next);
+				vm.recordChange<RegisterChange>(vm, REG_E + 0, vm.programCounter);
 				vm.recordChange<RegisterChange>(vm, REG_E + 1, ring);
-				vm.registers[REG_E + 0] = next;
+				vm.registers[REG_E + 0] = vm.programCounter;
 				vm.registers[REG_E + 1] = ring;
 				vm.onRegisterChange(REG_E + 0);
 				vm.onRegisterChange(REG_E + 1);

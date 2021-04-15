@@ -4,8 +4,20 @@ author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
 version: "1"
 
+#data
+inttab_start: 0
+inttab_system: 0
+inttab_timer: 0
+inttab_protec: &protec
+
 #code
 
+rit inttab_start
+ring 1
 page off
 page on
+<halt>
+
+@protec
+<prs "Uh oh\n">
 <halt>
