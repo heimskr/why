@@ -49,6 +49,7 @@ namespace WVM {
 			Word  endOffset = -1;
 			bool paused = false;
 			bool strict = true;
+			bool pagingOn = false;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
@@ -58,6 +59,7 @@ namespace WVM {
 			std::function<void(const std::string &)> onPrint = [](const std::string &) {};
 			std::function<void(Word)> onAddBreakpoint = [](Word) {};
 			std::function<void(Word)> onRemoveBreakpoint = [](Word) {};
+			std::function<void(bool)> onPagingChange = [](bool) {};
 
 			VM(size_t memory_size, bool keep_initial = true);
 

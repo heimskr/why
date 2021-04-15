@@ -137,6 +137,8 @@ namespace WVM::Operations {
 	void prbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 8
 
 	void selOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 56  R
+	void pgoffOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 0
+	void pgonOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 1
 
 #define OP_NOP 0
 #define OP_RMATH 1
@@ -313,6 +315,10 @@ namespace WVM::Operations {
 #define OP_SSPOP 58
 #define OP_SGEUI 59
 #define OP_SGUI 60
+
+#define OP_PAGE  61
+#define FN_PGOFF 0
+#define FN_PGON  1
 
 #define INTERRUPT_MAX	3
 

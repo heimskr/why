@@ -128,4 +128,20 @@ namespace WVM {
 			throw VMError("Unable to undo HaltChange: VM isn't halted");
 		vm.start();
 	}
+
+	PagingChange::PagingChange(const VM &vm, bool to_): from(vm.pagingOn), to(to_) {}
+
+	void PagingChange::apply(VM &vm, bool strict) {
+		if (strict && vm.pagingOn != from)
+			throw VMError("Unable to apply PagingChange: current paging isn't the expected from-value");
+		vm.pagingOn = to;
+		vm.onPagingChange(to);
+	}
+
+	void PagingChange::undo(VM &vm, bool strict) {
+		if (strict && vm.pagingOn != to)
+			throw VMError("Unable to undo PagingChange: current paging isn't the expected to-value");
+		vm.pagingOn = from;
+		vm.onPagingChange(from);
+	}
 }

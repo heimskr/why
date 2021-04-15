@@ -73,6 +73,16 @@ namespace WVM {
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
 	};
+
+	struct PagingChange: public Change {
+		bool from, to;
+
+		PagingChange(bool from_, bool to_): from(from_), to(to_) {}
+		PagingChange(const VM &, bool to_);
+
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
 }
 
 #endif
