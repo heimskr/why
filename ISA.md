@@ -951,13 +951,13 @@ Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a 
 Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
 ### <a name="op-pgoff"></a>Disable Paging (`pgoff`)
-> `page off`
+> `page off`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
 
 Disables virtual memory.
 
 ### <a name="op-pgon"></a>Enable Paging (`pgon`)
-> `page on`
+> `page on`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
 Enables virtual memory.
