@@ -4,6 +4,8 @@
 
 namespace WVM {
 	void Interrupt::operator()(VM &vm) {
+		// TODO: taking newRing and maxPermitted into account.
+
 		if (vm.interruptTableAddress == 0) {
 			vm.recordChange<HaltChange>();
 			vm.stop();

@@ -291,7 +291,7 @@ some_number: 42
 WhySA has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
 
 # <a name="interrupts"></a>Interrupts
-Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, `$e0` is set to the address of the instruction that caused the interrupt and `$e1` is set to the current <a href="#rings">ring</a> at the time the interrupt occurred. Interrupt handlers are expected to deal with properly resuming normal program execution after finishing up. The VM stores an address to a table containing pointers to interrupt handlers. The table is 32 words long.
+Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, `$e0` is set to the program counter right before the interrupt was raised and `$e1` is set to the current <a href="#rings">ring</a> at the time the interrupt occurred. Interrupt handlers are expected to deal with properly resuming normal program execution after finishing up. The VM stores an address to a table containing pointers to interrupt handlers. The table is 32 words long.
 
 ## <a name="int-system"></a>1: `SYSTEM`
 The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
