@@ -8,22 +8,25 @@
 #include <thread>
 #include <unordered_set>
 
-#include "haunted/core/terminal.h"
-#include "haunted/ui/boxes/expandobox.h"
-#include "haunted/ui/textbox.h"
-#include "haunted/ui/textinput.h"
+#include "haunted/core/Terminal.h"
+#include "haunted/ui/boxes/ExpandoBox.h"
+#include "haunted/ui/Textbox.h"
+#include "haunted/ui/TextInput.h"
 #include "mode/ClientMode.h"
 #include "VM.h"
 
 namespace WVM::Mode {
 	class MemoryMode: public ClientMode {
+		template <typename T>
+		using Container = std::vector<T>;
+
 		private:
-			haunted::terminal terminal;
-			haunted::ui::boxes::expandobox *expando;
-			haunted::ui::textbox *textbox;
-			haunted::ui::textinput *textinput;
+			Haunted::Terminal terminal;
+			Haunted::UI::Boxes::ExpandoBox *expando;
+			Haunted::UI::Textbox<Container> *textbox;
+			Haunted::UI::TextInput *textinput;
 			VM vm;
-			std::map<int, std::shared_ptr<haunted::ui::textline>> lines;
+			std::map<int, std::shared_ptr<Haunted::UI::TextLine<Container>>> lines;
 			std::unordered_set<Word> symbolTableEdges;
 			bool follow = true, fastForward = false, showSymbols = false, searching = false;
 
@@ -39,8 +42,8 @@ namespace WVM::Mode {
 			void startAutotick();
 			void send(const std::string &);
 			void jumpToPC();
-			haunted::ui::simpleline & getLine(Word address);
-			haunted::ui::simpleline & addLine(Word address);
+			Haunted::UI::SimpleLine<Container> & getLine(Word address);
+			Haunted::UI::SimpleLine<Container> & addLine(Word address);
 			void addBreakpoint(Word);
 			void removeBreakpoint(Word);
 

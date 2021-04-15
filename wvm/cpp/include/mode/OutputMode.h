@@ -3,10 +3,10 @@
 
 #include <thread>
 
-#include "haunted/core/terminal.h"
-#include "haunted/ui/boxes/expandobox.h"
-#include "haunted/ui/textbox.h"
-#include "haunted/ui/textinput.h"
+#include "haunted/core/Terminal.h"
+#include "haunted/ui/boxes/ExpandoBox.h"
+#include "haunted/ui/Textbox.h"
+#include "haunted/ui/TextInput.h"
 #include "mode/ClientMode.h"
 
 namespace WVM::Mode {

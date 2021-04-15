@@ -5,10 +5,10 @@ CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 TESTFILE		?= ../../wasm/compiled/mal.why
 
-SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(tests?|test_.+)\.cpp$$/!p')
+SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(Tests?|Test_.+)\.cpp$$/!p')
 OBJECTS_WVM		:= $(patsubst src/%.cpp,build/%.o, $(SOURCES_WVM))
 
-SOURCES_HN		:= $(shell find haunted/src -name '*.cpp' | sed -nE '/(tests?|test_.+)\.cpp$$/!p') \
+SOURCES_HN		:= $(shell find haunted/src -name '*.cpp' | sed -nE '/(Tests?|Test_.+)\.cpp$$/!p') \
 	haunted/src/lib/formicine/ansi.cpp haunted/src/lib/formicine/futil.cpp haunted/src/lib/formicine/performance.cpp
 INCLUDE_HN		= -Ihaunted/include
 OBJECTS_HN		:= $(patsubst haunted/src/%.cpp,haunted/build/%.o,$(SOURCES_HN))

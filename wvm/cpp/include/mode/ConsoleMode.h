@@ -3,20 +3,20 @@
 
 #include <thread>
 
-#include "haunted/core/terminal.h"
-#include "haunted/ui/boxes/expandobox.h"
-#include "haunted/ui/textbox.h"
-#include "haunted/ui/textinput.h"
+#include "haunted/core/Terminal.h"
+#include "haunted/ui/boxes/ExpandoBox.h"
+#include "haunted/ui/Textbox.h"
+#include "haunted/ui/TextInput.h"
 #include "mode/ClientMode.h"
 
 namespace WVM::Mode {
 	class ConsoleMode: public ClientMode {
 		private:
-			haunted::terminal terminal;
+			Haunted::Terminal terminal;
 			std::thread networkThread;
-			std::optional<haunted::ui::boxes::expandobox> expando;
-			haunted::ui::textbox textbox;
-			haunted::ui::textinput input;
+			std::optional<Haunted::UI::Boxes::ExpandoBox> expando;
+			Haunted::UI::VectorBox textbox;
+			Haunted::UI::TextInput input;
 
 			void badInput(const std::string & = "Invalid");
 

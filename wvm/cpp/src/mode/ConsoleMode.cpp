@@ -12,29 +12,29 @@ namespace WVM::Mode {
 			loop();
 		});
 
-		terminal.on_interrupt = [this]() {
+		terminal.onInterrupt = [this]() {
 			stop();
-			terminal.mouse(haunted::mouse_mode::none);
+			terminal.mouse(Haunted::MouseMode::None);
 			return true;
 		};
 
-		input.listen(haunted::ui::textinput::event::submit, [&](const haunted::ustring &str, int) -> void {
+		input.listen(Haunted::UI::TextInput::Event::Submit, [&](const Haunted::ustring &str, int) -> void {
 			handleInput(str);
 			input.clear();
 		});
 
-		expando.emplace(&terminal, haunted::ui::boxes::box_orientation::vertical,
-			std::initializer_list<haunted::ui::boxes::expandobox::child_pair> {{&textbox, -1}, {&input, 1}});
+		expando.emplace(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
+			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{&textbox, -1}, {&input, 1}});
 
-		terminal.start_input();
-		terminal.set_root(&*expando);
+		terminal.startInput();
+		terminal.setRoot(&*expando);
 		input.focus();
-		input.set_prefix("\e[2m>>\e[22m ");
-		textbox.set_background(ansi::color::verydark);
-		textbox.set_autoscroll(true);
-		terminal.mouse(haunted::mouse_mode::motion);
+		input.setPrefix("\e[2m>>\e[22m ");
+		textbox.setBackground(ansi::color::verydark);
+		textbox.setAutoscroll(true);
+		terminal.mouse(Haunted::MouseMode::Motion);
 		textbox.draw();
-		terminal.watch_size();
+		terminal.watchSize();
 		terminal.join();
 		networkThread.join();
 	}

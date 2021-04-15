@@ -3,4 +3,4 @@ build
 .dep
 .log
 .port
-
+.vscode

@@ -6,9 +6,9 @@
 #include <sstream>
 #include <thread>
 
-#include "haunted/core/terminal.h"
-#include "haunted/ui/boxes/expandobox.h"
-#include "haunted/ui/textbox.h"
+#include "haunted/core/Terminal.h"
+#include "haunted/ui/boxes/ExpandoBox.h"
+#include "haunted/ui/Textbox.h"
 #include "mode/ClientMode.h"
 #include "VM.h"
 #include "Why.h"
@@ -19,14 +19,14 @@ namespace WVM::Mode {
 			enum class Base: char {Binary='b', Octal='o', Decimal='d', Hex='h'};
 
 			Base base = Base::Decimal;
-			haunted::terminal terminal;
+			Haunted::Terminal terminal;
 			std::thread networkThread;
-			std::optional<haunted::ui::boxes::expandobox> expando;
-			haunted::ui::textbox textbox;
+			std::optional<Haunted::UI::Boxes::ExpandoBox> expando;
+			Haunted::UI::VectorBox textbox;
 			std::array<Word, Why::totalRegisters> registers;
 			bool fastForward = false, ready = false;
 
-			haunted::ui::simpleline & getLine(int reg);
+			Haunted::UI::SimpleLine<std::vector> & getLine(int reg);
 
 		public:
 			RegistersMode(): ClientMode() {}
