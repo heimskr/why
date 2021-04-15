@@ -28,7 +28,7 @@ namespace WVM {
 		SymbolID      = 3,
 	};
 
-	enum class Ring: int {Zero, One, Two, Three};
+	enum class Ring: int {Invalid = -1, Zero, One, Two, Three};
 
 	enum class Size: char {
 		Byte  = 8,

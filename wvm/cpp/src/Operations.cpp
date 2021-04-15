@@ -751,7 +751,8 @@ namespace WVM::Operations {
 			vm.interruptTableAddress = immediate;
 			vm.onInterruptTableChange();
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void timeOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
@@ -833,7 +834,8 @@ namespace WVM::Operations {
 			vm.pagingOn = false;
 			vm.onPagingChange(false);
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void pgonOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
@@ -842,6 +844,7 @@ namespace WVM::Operations {
 			vm.pagingOn = true;
 			vm.onPagingChange(true);
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 }

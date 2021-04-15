@@ -231,8 +231,15 @@ namespace WVM {
 		throw std::runtime_error("Invalid conditions flag: " + std::to_string(static_cast<int>(conditions)));
 	}
 
-	bool VM::interrupt(int) {
-		return true;
+	bool VM::interrupt(int type) {
+		return interrupt(static_cast<InterruptType>(type));
+	}
+
+	bool VM::interrupt(InterruptType type) {
+		if (interrupts.count(type) == 0)
+			throw std::runtime_error("Invalid interrupt: " + std::to_string(static_cast<int>(type)));
+		interrupts.at(type)(*this);
+		return true; // Can't remember what the return value is supposed to represent...
 	}
 
 	bool VM::checkRing(Ring check) {
@@ -244,7 +251,9 @@ namespace WVM {
 		return true;
 	}
 
-	void VM::intProtec() {}
+	bool VM::intProtec() {
+		return interrupt(InterruptType::Protec);
+	}
 
 	void VM::start() {
 		active = true;
@@ -289,6 +298,10 @@ namespace WVM {
 		}
 
 		return active;
+	}
+
+	Word VM::nextInstructionAddress() const {
+		return programCounter + 8;
 	}
 
 	void VM::addBreakpoint(Word breakpoint) {

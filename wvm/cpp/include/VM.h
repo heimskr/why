@@ -11,6 +11,7 @@
 
 #include "Changes.h"
 #include "Defs.h"
+#include "Interrupts.h"
 #include "Symbol.h"
 #include "Why.h"
 
@@ -85,14 +86,16 @@ namespace WVM {
 			void updateFlags(Word);
 			bool checkConditions(Conditions);
 			bool interrupt(int);
+			bool interrupt(InterruptType);
 			bool checkRing(Ring);
-			void intProtec();
+			bool intProtec();
 			void start();
 			void stop();
 			bool undo();
 			bool redo();
 			bool getActive() const { return active; }
 			bool tick();
+			Word nextInstructionAddress() const;
 
 			void addBreakpoint(Word);
 			void removeBreakpoint(Word);
