@@ -255,7 +255,7 @@ export default class WASMC {
 		if (this.options.debug) {
 			console.log({
 				meta: WASMC.longs2strs(this.meta),
-				data: WASMC.longs2strs(this.data),
+				data: WASMC.longs2strs(this.data, true),
 				code: WASMC.longs2strs(this.code),
 				offsets: this.offsets
 			});
@@ -326,6 +326,10 @@ export default class WASMC {
 		});
 	}
 
+	static swapEndian(l: Long): Long {
+		return Long.fromString(_.chunk(l.toString(16).padStart(16, "0"), 2).reverse().map(x => x.join("")).join(""), true, 16);
+	}
+
 	/**
 	 * Replaces variable reference placeholders in the data section with the proper values of the pointers.
 	 */
@@ -333,7 +337,7 @@ export default class WASMC {
 		for (const key in this.dataVariables) {
 			const ref = this.dataVariables[key];
 			const index = this.dataOffsets[key] / 8;
-			this.data[index] = Long.fromInt(this.offsets[ref], true);
+			this.data[index] = WASMC.swapEndian(Long.fromInt(this.offsets[ref], true));
 		}
 	}
 
@@ -920,7 +924,9 @@ export default class WASMC {
 	 * @param  longs An array of Longs to convert to strings.
 	 * @return An array of zero-padded hex strings corresponding to the inputs.
 	 */
-	static longs2strs(longs: Long[]): string[] {
+	static longs2strs(longs: Long[], swap_endian: boolean = false): string[] {
+		if (swap_endian)
+			return longs.map(l => _.chunk(l.toString(16).padStart(16, "0"), 2).reverse().map(x => x.join("")).join(""));
 		return longs.map(l => l.toString(16).padStart(16, "0"));
 	}
 

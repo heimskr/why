@@ -265,7 +265,7 @@ export default class Linker {
 			const [, addr, type] = clone[key];
 			const index = (addr.toNumber() - $data) / 8;
 			if (type == SYMBOL_TYPES.knownPointer) {
-				const curValue = data[index];
+				const curValue = WASMC.swapEndian(data[index]);
 				
 				const matches = _.filter(clone, (v, k) => v[1].eq(curValue));
 				if (!matches.length) {
@@ -289,7 +289,7 @@ export default class Linker {
 				const ptr = Linker.findSymbolFromID(combined[index], symtab);
 				// console.log(key, addr.toString(), combined[index].toString(16), "\n\n\n", symtab);
 				if (symtab[ptr]) {
-					combined[index] = symtab[ptr][1];
+					combined[index] = WASMC.swapEndian(symtab[ptr][1]);
 				} else {
 					console.warn(`Couldn't find pointer for ${key}`);
 				}
