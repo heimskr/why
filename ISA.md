@@ -356,7 +356,7 @@ Why.js supports paging. It's disabled by default and must be enabled with the [`
 
 ## Address Format
 
-| 63–56 (8)   | 55–48 (8)   | 47–40 (8)   | 39–32 (8)   | 31-24 (8)   | 23-16 (8)   | 15–0 (16)      |
+| 63–56 (8)   | 55–48 (8)   | 47–40 (8)   | 39–32 (8)   | 31–24 (8)   | 23–16 (8)   | 15–0 (16)      |
 |:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:--------------:|
 | `P0` offset | `P1` offset | `P2` offset | `P3` offset | `P4` offset | `P5` offset | Offset in page |
 
