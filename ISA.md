@@ -21,8 +21,11 @@
 				<li><a href="#int-system"><code>SYSTEM</code></a>
 				<li><a href="#int-timer"><code>TIMER</code></a>
 				<li><a href="#int-protec"><code>PROTEC</code></a>
+				<li><a href="#int-pfault"><code>PFAULT</code></a>
+				<li><a href="#int-inexec"><code>INEXEC</code></a>
 			</ol>
 		</li>
+		<li><a href="#paging">Paging</a></li>
 		<li><a href="#format">Instruction Format</a>
 			<ol>
 				<li><a href="#format-r">R-Type Instructions</a></li>
@@ -173,6 +176,7 @@
 						<li><a href="#op-ring">Change Ring</a> (<code>ring</code>)</li>
 						<li><a href="#op-pgoff">Disable Paging</a> (<code>pgoff</code>)</li>
 						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
+						<li><a href="#op-setpt">Set Page Table</a> (<code>setpt</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -297,11 +301,16 @@ Interrupts can be triggered by software or by the VM itself. Whenever an interru
 The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
 
 ## <a name="int-timer"></a>2: `TIMER`
-The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. It's exclusive to kernel mode. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own mechanisms to expose timer functionality to lower-privileged code.
+The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. Usable by ring zero only. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own mechanisms to expose timer functionality to lower-privileged code. This interrupt causes a switch to kernel mode.
 
 ## <a name="int-protec"></a>3: `PROTEC`
-The `PROTEC` interrupt is a hardware-triggered interrupt caused when a called instruction attempts to do something not possible within the current <a href="#rings">ring</a>. This switches to kernel mode.
+The `PROTEC` interrupt is a hardware-triggered interrupt caused when a called instruction attempts to do something not possible within the current <a href="#rings">ring</a>. This causes a switch to kernel mode.
 
+## <a name="int-pfault"></a>4: `PFAULT`
+The `PFAULT` interrupt is raised if paging is enabled and an access to a non-present page is attempted. This causes a switch to kernel mode.
+
+## <a name="int-inexec"></a>5: `INEXEC`
+The `INEXEC` interrupt is raised if program control flows to an address whose page is not marked as executable. This causes a switch to kernel mode.
 
 # <a name="format"></a>Instruction Format
 Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
@@ -340,6 +349,32 @@ are required for the operation to occur.
 	<li><code>1010</code>: Zero</li>
 	<li><code>1011</code>: Nonzero</li>
 </ul>
+
+# <a name="paging"></a>Paging
+
+Why.js supports paging. It's disabled by default and must be enabled with the [`pgon` instruction](#op-pgon). It uses a six-level system with a similar philosophy to x86_64's four-level system. The tables are named `P0` through and `P5` and each table contains 256 entries. To translate a virtual address to a physical one, `P0` is inspected at the address set with [`setpt`](#op-setpt). The most significant eight bits in the virtual address are used as an offset into `P0` to find the address of `P1`. If the `P0` entry isn't present, a [`PFAULT` interrupt](#int-pfault) is raised. Otherwise, the `P1` entry is inspected to find the `P2` address, and so on, until the address for the `P5` table is found and the entry specified by bits 23–16 in the virtual address is read. If the present bit isn't set, `PFAULT` is raised as usual. Otherwise, the low 16 bits of the virtual address are added to the page table entry with the low 16 bits set to zero and this result is used as the physical address.
+
+## Address Format
+
+| 63–56 (8)   | 55–48 (8)   | 47–40 (8)   | 39–32 (8)   | 31-24 (8)   | 23-16 (8)   | 15–0 (16)      |
+|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:--------------:|
+| `P0` offset | `P1` offset | `P2` offset | `P3` offset | `P4` offset | `P5` offset | Offset in page |
+
+## Page Table Entry Format
+
+### `P0` through `P4`
+
+| 63–8 (56)             | 7–1 (7) | 0       |
+|:---------------------:|:-------:|:-------:|
+| Address of next table | Unused  | Present |
+
+### `P5`
+
+| 63–16 (48)            | 15–6 (10) | 5        | 4        | 3         | 2          | 1        | 0       |
+|:---------------------:|:---------:|:--------:|:--------:|:---------:|:----------:|:--------:|:-------:|
+| Address of page start | Unused    | Modified | Accessed | User Page | Executable | Writable | Present |
+
+User Page: Whether the page can be accessed in Ring 3. If zero, only rings 2 and lower can access it.
 
 # <a name="operations"></a>Operations
 
@@ -961,6 +996,13 @@ Disables virtual memory.
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
 Enables virtual memory.
+
+### <a name="op-setpt"></a>Set Page Table (`setpt`)
+
+> `setpt $rs`  
+> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
+
+Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
