@@ -13,7 +13,7 @@ namespace WVM::Mode {
 			Net::Server server;
 			VM vm;
 			std::set<int> memorySubscribers, registerSubscribers, pcSubscribers, outputSubscribers, ffSubscribers,
-			              bpSubscribers, pagingSubscribers;
+			              bpSubscribers, pagingSubscribers, p0Subscribers;
 			std::set<Word> writtenAddresses;
 			bool logMemoryWrites = false, logRegisters = false;
 

@@ -92,6 +92,11 @@ namespace WVM::Mode {
 			for (int client: pagingSubscribers)
 				server.send(client, ":Paging " + std::string(enabled? "enabled" : "disabled"));
 		};
+
+		vm.onP0Change = [&](UWord addr) {
+			for (int client: p0Subscribers)
+				server.send(client, ":P0 " + std::to_string(addr));
+		};
 	}
 
 	void ServerMode::cleanupClient(int client) {
@@ -101,6 +106,7 @@ namespace WVM::Mode {
 		ffSubscribers.erase(client);
 		bpSubscribers.erase(client);
 		pagingSubscribers.erase(client);
+		p0Subscribers.erase(client);
 	}
 
 	void ServerMode::stop() {
@@ -156,6 +162,9 @@ namespace WVM::Mode {
 			} else if (to == "paging") {
 				pagingSubscribers.insert(client);
 				server.send(client, ":Paging " + std::string(vm.pagingOn? "enabled" : "disabled"));
+			} else if (to == "p0") {
+				p0Subscribers.insert(client);
+				server.send(client, ":P0 " + std::to_string(vm.p0));
 			} else {
 				invalid();
 				return;

@@ -83,6 +83,16 @@ namespace WVM {
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
 	};
+
+	struct P0Change: public Change {
+		UWord from, to;
+
+		P0Change(UWord from_, UWord to_): from(from_), to(to_) {}
+		P0Change(const VM &, UWord to_);
+
+		void apply(VM &, bool strict = false) override;
+		void undo(VM &, bool strict = false) override;
+	};
 }
 
 #endif

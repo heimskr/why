@@ -144,4 +144,20 @@ namespace WVM {
 		vm.pagingOn = from;
 		vm.onPagingChange(from);
 	}
+
+	P0Change::P0Change(const VM &vm, UWord to_): from(vm.p0), to(to_) {}
+
+	void P0Change::apply(VM &vm, bool strict) {
+		if (strict && vm.p0 != from)
+			throw VMError("Unable to apply P0Change: current p0 isn't the expected from-value");
+		vm.p0 = to;
+		vm.onP0Change(to);
+	}
+
+	void P0Change::undo(VM &vm, bool strict) {
+		if (strict && vm.p0 != to)
+			throw VMError("Unable to undo P0Change: current p0 isn't the expected to-value");
+		vm.p0 = from;
+		vm.onP0Change(from);
+	}
 }

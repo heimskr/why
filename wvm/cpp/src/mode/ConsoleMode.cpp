@@ -77,6 +77,8 @@ namespace WVM::Mode {
 			textbox += infoPrefix + rest;
 		} else if (verb == "Paging") {
 			textbox += "Paging \e[1m" + split[0] + "\e[22m.";
+		} else if (verb == "P0") {
+			textbox += "P0 set to \e[1m" + split[0] + "\e[22m.";
 		}
 	}
 
@@ -109,6 +111,8 @@ namespace WVM::Mode {
 				*socket << ":Subscribe memory\n";
 			} else if (split[0] == "p" || split[0] == "page" || split[0] == "paging") {
 				*socket << ":Subscribe paging\n";
+			} else if (split[0] == "p0") {
+				*socket << ":Subscribe p0\n";
 			} else badInput();
 		} else if (first == "r" || first == "res" || first == "reset") {
 			*socket << ":Reset\n";

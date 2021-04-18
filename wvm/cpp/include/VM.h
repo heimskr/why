@@ -48,6 +48,7 @@ namespace WVM {
 			Word codeOffset = -1;
 			Word dataOffset = -1;
 			Word  endOffset = -1;
+			UWord p0 = 0;
 			bool paused = false;
 			bool strict = true;
 			bool pagingOn = false;
@@ -61,6 +62,7 @@ namespace WVM {
 			std::function<void(Word)> onAddBreakpoint = [](Word) {};
 			std::function<void(Word)> onRemoveBreakpoint = [](Word) {};
 			std::function<void(bool)> onPagingChange = [](bool) {};
+			std::function<void(UWord)> onP0Change = [](UWord) {};
 
 			VM(size_t memory_size, bool keep_initial = true);
 

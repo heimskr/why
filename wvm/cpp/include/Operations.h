@@ -137,8 +137,9 @@ namespace WVM::Operations {
 	void prbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 8
 
 	void selOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 56  R
-	void pgoffOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 0
+	void pgoffOp(VM &, Word &, Word &, Word &, Conditions, int flags);               // 61  R 0
 	void pgonOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 1
+	void setptOp(VM &, Word &rs, Word &, Word &, Conditions, int flags);             // 61  R 2
 
 #define OP_NOP 0
 #define OP_RMATH 1

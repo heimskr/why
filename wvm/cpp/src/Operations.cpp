@@ -143,6 +143,7 @@ namespace WVM::Operations {
 				switch (funct) {
 					case FN_PGOFF: pgoffOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_PGON:   pgonOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SETPT: setptOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 		}
@@ -841,6 +842,16 @@ namespace WVM::Operations {
 			vm.recordChange<PagingChange>(vm.pagingOn, true);
 			vm.pagingOn = true;
 			vm.onPagingChange(true);
+			vm.increment();
+		}
+	}
+
+	void setptOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			UWord addr = static_cast<UWord>(rs);
+			vm.recordChange<P0Change>(vm.p0, addr);
+			vm.p0 = addr;
+			vm.onP0Change(addr);
 			vm.increment();
 		}
 	}
