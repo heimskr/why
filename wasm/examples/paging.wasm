@@ -12,13 +12,15 @@ inttab_protec: &protec
 inttab_pfault: &pfault
 inttab_inexec: &inexec
 p0ptr: 0
+p1ptr: 0
+p2ptr: 0
+p3ptr: 0
+p4ptr: 0
+p5ptr: 0
 
 #code
 
 rit inttab_start
-// ring 1
-page off
-page on
 
 &.end -> $t0 // Address
 2048  -> $t1 // Alignment
@@ -27,10 +29,54 @@ page on
 $t0 % $t1 -> $t2
 $t1 - $t2 -> $t2
 $t2 % $t1 -> $t2
-$t0 + $t2 -> $t0
-$t0 -> [p0ptr]
+$t0 + $t2 -> $s0
+$s0 -> [p0ptr]
 
-setpt $t0
+setpt $s0
+
+$s0 + 2048 -> $s1
+$s1 + 2048 -> $s2
+$s2 + 2048 -> $s3
+$s3 + 2048 -> $s4
+$s4 + 2048 -> $s5
+$s1 -> [p1ptr]
+$s2 -> [p2ptr]
+$s3 -> [p3ptr]
+$s4 -> [p4ptr]
+$s5 -> [p5ptr]
+
+$s1 | 1 -> $t0
+$t0 -> [$s0]
+
+$s2 | 1 -> $t0
+$t0 -> [$s1]
+
+$s3 | 1 -> $t0
+$t0 -> [$s2]
+
+$s4 | 1 -> $t0
+$t0 -> [$s3]
+
+$s5 | 1 -> $t0
+$t0 -> [$s4]
+
+1 -> $t0 // page start
+$t0 <<= 16
+$t0 |= 3 // present and writable
+$t0 -> [$s5]
+
+[0] -> $t0
+<prx $t0>
+<prc '\n'>
+
+page on
+42 -> $t0
+$t0 -> [2] /b
+page off
+
+[65538] -> $t0 /b
+<prx $t0>
+<prc '\n'>
 
 <halt>
 

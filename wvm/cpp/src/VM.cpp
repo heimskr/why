@@ -78,6 +78,7 @@ namespace WVM {
 		if (meta_out)
 			*meta_out = p5_entry;
 
+		info() << "virtmem: " << virtual_address << " -> " << (p5_entry.getStart() + pieces.pageOffset) << "\n";
 		return p5_entry.getStart() + pieces.pageOffset;
 	}
 
