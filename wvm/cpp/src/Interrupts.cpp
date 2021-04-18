@@ -32,5 +32,7 @@ namespace WVM {
 		{InterruptType::System, {InterruptType::System, Ring::Zero,    Ring::Invalid}},
 		{InterruptType::Timer,  {InterruptType::Timer,  Ring::Invalid, Ring::Zero}},
 		{InterruptType::Protec, {InterruptType::Protec, Ring::Zero,    Ring::Two}},
+		{InterruptType::Pfault, {InterruptType::Pfault, Ring::Zero,    Ring::Two}},
+		{InterruptType::Inexec, {InterruptType::Inexec, Ring::Zero,    Ring::Two}},
 	};
 }
