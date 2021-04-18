@@ -441,6 +441,15 @@ namespace WVM::Mode {
 		} catch (std::exception &err) {
 			std::cerr << "Execution failed: " << err.what() << "\n";
 			std::cerr << "Offending address: " << pc << "\n";
+			try {
+				for (int i = 0; i < 16; ++i) {
+					vm.undo();
+					std::cerr << "Previous address: " << vm.programCounter << "\n";
+				}
+			} catch(std::exception &undo_err) {
+				std::cerr << "Couldn't rewind.\n";
+			}
+
 			throw;
 		}
 	}
