@@ -20,6 +20,67 @@ namespace WVM {
 	void VM::setC(bool on) { st() = (st() & ~0b0100) | (on << 2); }
 	void VM::setO(bool on) { st() = (st() & ~0b1000) | (on << 3); }
 
+	Word VM::translateAddress(Word virtual_address, bool *success, PageMeta *meta_out) {
+		if (!pagingOn) {
+			if (success)
+				*success = true;
+			return virtual_address;
+		}
+
+		if (!p0) {
+			if (success)
+				*success = false;
+			return 0;
+		}
+
+		Address pieces = virtual_address;
+
+		P04Entry p0_entry = getWord(p0 + pieces.p0Offset * sizeof(P04Entry));
+		if (!p0_entry.present) {
+			if (success)
+				*success = false;
+			return 0;
+		}
+
+		P04Entry p1_entry = getWord(p0_entry.getNext() + pieces.p1Offset * sizeof(P04Entry));
+		if (!p1_entry.present) {
+			if (success)
+				*success = false;
+			return 0;
+		}
+
+		P04Entry p2_entry = getWord(p1_entry.getNext() + pieces.p2Offset * sizeof(P04Entry));
+		if (!p2_entry.present) {
+			if (success)
+				*success = false;
+			return 0;
+		}
+
+		P04Entry p3_entry = getWord(p2_entry.getNext() + pieces.p3Offset * sizeof(P04Entry));
+		if (!p3_entry.present) {
+			if (success)
+				*success = false;
+			return 0;
+		}
+
+		P04Entry p4_entry = getWord(p3_entry.getNext() + pieces.p4Offset * sizeof(P04Entry));
+		if (!p4_entry.present) {
+			if (success)
+				*success = false;
+			return 0;
+		}
+
+		P5Entry p5_entry = getWord(p4_entry.getNext() + pieces.p5Offset * sizeof(P04Entry));
+
+		if (success)
+			*success = true;
+
+		if (meta_out)
+			*meta_out = p5_entry;
+
+		return p5_entry.getStart() + pieces.pageOffset;
+	}
+
 	void VM::setWord(Word address, UWord value, Endianness endianness) {
 		if (static_cast<Word>(memorySize) <= address - 7 || address < 0) {
 			throw VMError("Out-of-bounds memory access in VM::setWord (" + std::to_string(address - 7) + ")");

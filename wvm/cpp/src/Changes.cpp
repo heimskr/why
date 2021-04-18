@@ -145,7 +145,7 @@ namespace WVM {
 		vm.onPagingChange(from);
 	}
 
-	P0Change::P0Change(const VM &vm, UWord to_): from(vm.p0), to(to_) {}
+	P0Change::P0Change(const VM &vm, Word to_): from(vm.p0), to(to_) {}
 
 	void P0Change::apply(VM &vm, bool strict) {
 		if (strict && vm.p0 != from)

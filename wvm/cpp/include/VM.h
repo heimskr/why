@@ -12,6 +12,7 @@
 #include "Changes.h"
 #include "Defs.h"
 #include "Interrupts.h"
+#include "Paging.h"
 #include "Symbol.h"
 #include "Why.h"
 
@@ -48,7 +49,7 @@ namespace WVM {
 			Word codeOffset = -1;
 			Word dataOffset = -1;
 			Word  endOffset = -1;
-			UWord p0 = 0;
+			Word p0 = 0;
 			bool paused = false;
 			bool strict = true;
 			bool pagingOn = false;
@@ -62,9 +63,11 @@ namespace WVM {
 			std::function<void(Word)> onAddBreakpoint = [](Word) {};
 			std::function<void(Word)> onRemoveBreakpoint = [](Word) {};
 			std::function<void(bool)> onPagingChange = [](bool) {};
-			std::function<void(UWord)> onP0Change = [](UWord) {};
+			std::function<void(Word)> onP0Change = [](Word) {};
 
 			VM(size_t memory_size, bool keep_initial = true);
+
+			Word translateAddress(Word virtual_address, bool *success = nullptr, PageMeta *meta_out = nullptr);
 
 			void setWord(Word address, UWord value, Endianness = Endianness::Little);
 			void setHalfword(Word address, UHWord value, Endianness = Endianness::Little);

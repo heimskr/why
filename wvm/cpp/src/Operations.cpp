@@ -848,10 +848,9 @@ namespace WVM::Operations {
 
 	void setptOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
-			UWord addr = static_cast<UWord>(rs);
-			vm.recordChange<P0Change>(vm.p0, addr);
-			vm.p0 = addr;
-			vm.onP0Change(addr);
+			vm.recordChange<P0Change>(vm.p0, rs);
+			vm.p0 = rs;
+			vm.onP0Change(rs);
 			vm.increment();
 		}
 	}

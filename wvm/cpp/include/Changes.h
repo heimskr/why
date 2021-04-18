@@ -85,10 +85,10 @@ namespace WVM {
 	};
 
 	struct P0Change: public Change {
-		UWord from, to;
+		Word from, to;
 
-		P0Change(UWord from_, UWord to_): from(from_), to(to_) {}
-		P0Change(const VM &, UWord to_);
+		P0Change(Word from_, Word to_): from(from_), to(to_) {}
+		P0Change(const VM &, Word to_);
 
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;

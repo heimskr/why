@@ -93,7 +93,7 @@ namespace WVM::Mode {
 				server.send(client, ":Paging " + std::string(enabled? "enabled" : "disabled"));
 		};
 
-		vm.onP0Change = [&](UWord addr) {
+		vm.onP0Change = [&](Word addr) {
 			for (int client: p0Subscribers)
 				server.send(client, ":P0 " + std::to_string(addr));
 		};
