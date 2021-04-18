@@ -301,9 +301,10 @@ op_lbi			-> "[" _ int  _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2
 				 | "*" var into rv _ "/b"					{% d => ["lbi",      0,  d[3], ["label", d[1]]] %}
 op_sbi			-> rv into "[" _ int _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  d[4]] %}
 				 | rv into "[" _ xvar _ "]" _ "/b"			{% d => ["sbi",    d[0],   0,  ["label", d[4]]] %}
-op_lbni			-> "[" _ int  _ "]" into rv _ "/b"			{% d => ["lbni",     0,  d[6], d[2]] %}
+op_lbni			-> "[" _ int  _ "]" into "[" _ rv _ "]"
+					_ "/b"									{% d => ["lbni",     0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into "[" _ rv _ "]"
-				 	_ "/b"									{% d => ["lbni",     0,  d[8], ["label", d[2]]] %}
+					_ "/b"									{% d => ["lbni",     0,  d[8], ["label", d[2]]] %}
 op_li			-> "[" _ int  _ "]" into rv					{% d => ["li",       0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into rv					{% d => ["li",       0,  d[6], ["label", d[2]]] %}
 				 | "*" _ xvar into rv						{% d => ["li",       0,  d[4], ["label", d[2]]] %}
@@ -373,7 +374,7 @@ ext_pr			-> "<" _ "p" _ reg _ ">"					{% d => ["ext",    0,  d[4],            0,
 				 | "<" _ "p" _ char _ ">"					{% d => ["ext",    0, ["char", d[4]],   0, EXTS.prc] %}
 				 | "<" _ "p" _ dqstring _ ">"				{% d => ["ext",    0, ["string", d[4]], 0, EXTS.prc] %}
 ext_sleep		-> "<" _ ("sleep" | "wait") _ reg _ ">"		{% d => ["ext",    0,  d[4],            0, EXTS.sleep] %}
-ext_n			-> "<" _ int _ ">"							{% d => ["ext",    0,    0,             0, parseInt(d[2])] %}
+ext_n			-> "<" _ int _ ">"							{% d => ["ext",    0,    0,             0, d[2]] %}
 
 ext_xn_init		-> "<" _ "xn" __ "init" _ ">"				{% d => ["ext",   0,    0,    0,  EXTS.xn_init   ] %}
 ext_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["ext", d[8], d[6],   0,  EXTS.xn_connect] %}

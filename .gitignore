@@ -21,6 +21,7 @@
 /.tscache
 /dist
 /tscommand*
+/tree.*.json
 
 # Compiled Typescript
 graph.js

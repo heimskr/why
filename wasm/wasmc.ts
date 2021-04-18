@@ -199,7 +199,11 @@ export default class WASMC {
 		}
 
 		if (trees.length > 1) {
-			trees.forEach(tree => console.log(JSON.stringify(tree, null, 4) + "\n" + chalk.bold("".padStart(64, "-"))));
+			trees.forEach((tree, i) => {
+				const text = JSON.stringify(tree, null, 4) + "\n" + chalk.bold("".padStart(64, "-"));
+				// console.error(text);
+				fs.writeFileSync(`tree.${i}.json`, text, "utf8");
+			});
 			console.error(chalk.red.italic(`\nAmbiguous grammar (${trees.length}).\n`));
 			process.exit(1);
 		} else if (trees.length === 0) {
