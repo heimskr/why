@@ -32,7 +32,7 @@
 		{"match": "\\b(name|author|orcid|version|library)\\b",
 		 "name": "support.type.property-name.wasm"},
 
-		{"match": "\\b(print|halt|pr[cdx]?|sleep|time|ring|int|rit|memset|page)\\b",
+		{"match": "\\b(print|halt|pr[cdx]?|sleep|time|ring|int|rit|memset|page|setpt)\\b",
 		 "name": "keyword.other.wasm"},
 
 		{"include": "#operator_token"},

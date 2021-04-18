@@ -9,6 +9,7 @@ inttab_start: 0
 inttab_system: 0
 inttab_timer: 0
 inttab_protec: &protec
+p0ptr: 0
 
 #code
 
@@ -16,6 +17,19 @@ rit inttab_start
 ring 1
 page off
 page on
+
+&.end -> $t0 // Address
+2048  -> $t1 // Alignment
+
+// upalign: increase $t0 until it's a multiple of $t1 (or don't change it if it's already a multiple).
+$t0 % $t1 -> $t2
+$t1 - $t2 -> $t2
+$t2 % $t1 -> $t2
+$t0 + $t2 -> $t0
+$t0 -> [p0ptr]
+
+setpt $t0
+
 <halt>
 
 @protec

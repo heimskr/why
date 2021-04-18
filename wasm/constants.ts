@@ -14,7 +14,7 @@ export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "l
 export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
 export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "spush" | "spop" | "ms";
-export type RSpecial = "time" | "ring" | "sel" | "pgon" | "pgoff";
+export type RSpecial = "time" | "ring" | "sel" | "pgon" | "pgoff" | "setpt";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
 export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
@@ -216,6 +216,7 @@ export const OPCODES: {[key in OpName]: number} = {
 	sgui:   0b000000111100,
 	pgon:   0b000000111101,
 	pgoff:  0b000000111101,
+	setpt:  0b000000111101,
 };
 
 export const FUNCTS: {[key in RType]: number} = {
@@ -239,6 +240,7 @@ export const FUNCTS: {[key in RType]: number} = {
 	nor:   0b000000000010,
 	s:     0b000000000010,
 	seq:   0b000000000010,
+	setpt: 0b000000000010,
 	cb:    0b000000000011,
 	jrlc:  0b000000000011,
 	not:   0b000000000011,
