@@ -73,7 +73,7 @@ namespace WVM {
 		P5Entry p5_entry = getWord(p4_entry.getNext() + pieces.p5Offset * sizeof(P04Entry));
 
 		if (success)
-			*success = true;
+			*success = p5_entry.present;
 
 		if (meta_out)
 			*meta_out = p5_entry;
@@ -292,14 +292,14 @@ namespace WVM {
 		throw std::runtime_error("Invalid conditions flag: " + std::to_string(static_cast<int>(conditions)));
 	}
 
-	bool VM::interrupt(int type) {
-		return interrupt(static_cast<InterruptType>(type));
+	bool VM::interrupt(int type, bool force) {
+		return interrupt(static_cast<InterruptType>(type), force);
 	}
 
-	bool VM::interrupt(InterruptType type) {
+	bool VM::interrupt(InterruptType type, bool force) {
 		if (interrupts.count(type) == 0)
 			throw std::runtime_error("Invalid interrupt: " + std::to_string(static_cast<int>(type)));
-		interrupts.at(type)(*this);
+		interrupts.at(type)(*this, force);
 		return true; // Can't remember what the return value is supposed to represent...
 	}
 
@@ -313,7 +313,11 @@ namespace WVM {
 	}
 
 	bool VM::intProtec() {
-		return interrupt(InterruptType::Protec);
+		return interrupt(InterruptType::Protec, true);
+	}
+
+	bool VM::intPfault() {
+		return interrupt(InterruptType::Pfault, true);
 	}
 
 	void VM::start() {

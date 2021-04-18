@@ -90,10 +90,11 @@ namespace WVM {
 			bool changeRing(Ring);
 			void updateFlags(Word);
 			bool checkConditions(Conditions);
-			bool interrupt(int);
-			bool interrupt(InterruptType);
+			bool interrupt(int, bool force);
+			bool interrupt(InterruptType, bool force);
 			bool checkRing(Ring);
 			bool intProtec();
+			bool intPfault();
 			void start();
 			void stop();
 			bool undo();

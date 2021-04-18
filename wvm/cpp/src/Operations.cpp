@@ -555,63 +555,127 @@ namespace WVM::Operations {
 
 	void jOp(VM &vm, Word &, bool link, Conditions conditions, int, HWord address) {
 		if (vm.checkConditions(conditions)) {
-			vm.jump(address, link);
+			bool success;
+			const Word translated = vm.translateAddress(address, &success);
+			if (!success)
+				vm.intPfault();
+			else
+				vm.jump(translated, link);
 		} else vm.increment();
 	}
 
 	void jcOp(VM &vm, Word &rs, bool link, Conditions, int, HWord address) {
 		if (rs != 0) {
-			vm.jump(address, link);
+			bool success;
+			const Word translated = vm.translateAddress(address, &success);
+			if (!success)
+				vm.intPfault();
+			else
+				vm.jump(translated, link);
 		} else vm.increment();
 	}
 
 	void jrOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
 		if (vm.checkConditions(conditions)) {
-			vm.jump(rd, false);
+			bool success;
+			const Word translated = vm.translateAddress(rd, &success);
+			if (!success)
+				vm.intPfault();
+			else
+				vm.jump(translated, false);
 		} else vm.increment();
 	}
 
 	void jrcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		if (rs) {
-			vm.jump(rd, false);
+			bool success;
+			const Word translated = vm.translateAddress(rd, &success);
+			if (!success)
+				vm.intPfault();
+			else
+				vm.jump(translated, false);
 		} else vm.increment();
 	}
 
 	void jrlOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
 		if (vm.checkConditions(conditions)) {
-			vm.jump(rd, true);
+			bool success;
+			const Word translated = vm.translateAddress(rd, &success);
+			if (!success)
+				vm.intPfault();
+			else 
+				vm.jump(translated, true);
 		} else vm.increment();
 	}
 
 	void jrlcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		if (rs) {
-			vm.jump(rd, true);
+			bool success;
+			const Word translated = vm.translateAddress(rd, &success);
+			if (!success)
+				vm.intPfault();
+			else
+				vm.jump(translated, true);
 		} else vm.increment();
 	}
 
 	void cOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		const Word value = vm.getWord(rs);
-		vm.bufferChange<MemoryChange>(vm, rd, value, Size::Word);
-		vm.setWord(rd, value);
-		vm.increment();
+		bool success;
+		const Word translated_source = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			const Word value = vm.getWord(translated_source);
+			const Word translated_destination = vm.translateAddress(rd, &success);
+			if (!success) {
+				vm.intPfault();
+			} else {
+				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::Word);
+				vm.setWord(translated_destination, value);
+				vm.increment();
+			}
+		}
 	}
 
 	void lOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		setReg(vm, rd, vm.getWord(rs), false);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getWord(translated), false);
+			vm.increment();
+		}
 	}
 
 	void sOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		vm.bufferChange<MemoryChange>(vm, rd, rs, Size::Word);
-		vm.setWord(rd, rs);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(rd, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
+			vm.setWord(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void cbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		const Byte value = vm.getByte(rs);
-		vm.bufferChange<MemoryChange>(vm, rd, value, Size::Byte);
-		vm.setByte(rd, value);
-		vm.increment();
+		bool success;
+		const Word translated_source = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			const Byte value = vm.getByte(translated_source);
+			const Word translated_destination = vm.translateAddress(rd, &success);
+			if (!success) {
+				vm.intPfault();
+			} else {
+				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::Byte);
+				vm.setByte(translated_destination, value);
+				vm.increment();
+			}
+		}
 	}
 
 	void lbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
@@ -620,95 +684,180 @@ namespace WVM::Operations {
 	}
 
 	void sbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		vm.bufferChange<MemoryChange>(vm, rd, rs, Size::Byte);
-		vm.setByte(rd, rs);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(rd, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
+			vm.setByte(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void spushOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		setReg(vm, vm.sp(), vm.sp() - 8, false);
-		vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Word);
-		vm.setWord(vm.sp(), rs);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(vm.sp(), &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, vm.sp(), vm.sp() - 8, false);
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
+			vm.setWord(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void spopOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
-		setReg(vm, rd, vm.getWord(vm.sp()), false);
-		setReg(vm, vm.sp(), vm.sp() + 8, false);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(vm.sp(), &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getWord(translated), false);
+			setReg(vm, vm.sp(), vm.sp() + 8, false);
+			vm.increment();
+		}
 	}
 
 	void sspushOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
-		setReg(vm, vm.sp(), vm.sp() - immediate, false);
+		bool success;
+		const Word translated = vm.translateAddress(vm.sp(), &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, vm.sp(), vm.sp() - immediate, false);
 
-		if (immediate == 1) {
-			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Byte);
-			vm.setByte(vm.sp(), rs);
-		} else if (immediate == 2) {
-			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::QWord);
-			vm.setQuarterword(vm.sp(), rs);
-		} else if (immediate == 4) {
-			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::HWord);
-			vm.setHalfword(vm.sp(), rs);
-		} else if (immediate == 8) {
-			vm.bufferChange<MemoryChange>(vm, vm.sp(), rs, Size::Word);
-			vm.setWord(vm.sp(), rs);
-		} else throw std::runtime_error("Invalid push size: " + std::to_string(immediate));
+			switch (immediate) {
+				case 1:
+					vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
+					vm.setByte(translated, rs);
+					break;
+				case 2:
+					vm.bufferChange<MemoryChange>(vm, translated, rs, Size::QWord);
+					vm.setQuarterword(translated, rs);
+					break;
+				case 4:
+					vm.bufferChange<MemoryChange>(vm, translated, rs, Size::HWord);
+					vm.setHalfword(translated, rs);
+					break;
+				case 8:
+					vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
+					vm.setWord(translated, rs);
+					break;
+				default:
+					throw std::runtime_error("Invalid push size: " + std::to_string(immediate));
+			}
 
-		vm.increment();
+			vm.increment();
+		}
 	}
 
 	void sspopOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
-		if (immediate == 1) {
-			setReg(vm, rd, vm.getByte(vm.sp()), false);
-		} else if (immediate == 2) {
-			setReg(vm, rd, vm.getQuarterword(vm.sp()), false);
-		} else if (immediate == 4) {
-			setReg(vm, rd, vm.getHalfword(vm.sp()), false);
-		} else if (immediate == 8) {
-			setReg(vm, rd, vm.getWord(vm.sp()), false);
-		} else throw std::runtime_error("Invalid pop size: " + std::to_string(immediate));
+		bool success;
+		const Word translated = vm.translateAddress(vm.sp(), &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			switch (immediate) {
+				case 1:
+					setReg(vm, rd, vm.getByte(translated), false);
+					break;
+				case 2:
+					setReg(vm, rd, vm.getQuarterword(translated), false);
+					break;
+				case 4:
+					setReg(vm, rd, vm.getHalfword(translated), false);
+					break;
+				case 8:
+					setReg(vm, rd, vm.getWord(translated), false);
+					break;
+				default:
+					throw std::runtime_error("Invalid pop size: " + std::to_string(immediate));
+			}
 
-		setReg(vm, vm.sp(), vm.sp() + immediate, false);
-		vm.increment();
+			setReg(vm, vm.sp(), vm.sp() + immediate, false);
+			vm.increment();
+		}
 	}
 
 	void chOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		const HWord value = vm.getHalfword(rs);
-		vm.bufferChange<MemoryChange>(vm, rd, value, Size::HWord);
-		vm.setHalfword(rd, value);
-		vm.increment();
+		bool success;
+		const Word translated_source = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			const HWord value = vm.getHalfword(translated_source);
+			const Word translated_destination = vm.translateAddress(rd, &success);
+			if (!success) {
+				vm.intPfault();
+			} else {
+				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::HWord);
+				vm.setHalfword(translated_destination, value);
+				vm.increment();
+			}
+		}
 	}
 
 	void lhOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		setReg(vm, rd, vm.getHalfword(rs), false);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getHalfword(translated), false);
+			vm.increment();
+		}
 	}
 
 	void shOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		vm.bufferChange<MemoryChange>(vm, rd, rs, Size::HWord);
-		vm.setHalfword(rd, rs);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(rd, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::HWord);
+			vm.setHalfword(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void msOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		for (Word i = 0; i < rs; ++i) {
-			vm.bufferChange<MemoryChange>(vm, rd + i, rt & 0xff, Size::Byte);
-			vm.setByte(rd + i, rt & 0xff);
-		}
+		bool success;
+		const Word translated = vm.translateAddress(rd, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			for (Word i = 0; i < rs; ++i) {
+				vm.bufferChange<MemoryChange>(vm, translated + i, rt & 0xff, Size::Byte);
+				vm.setByte(translated + i, rt & 0xff);
+			}
 
-		vm.increment();
+			vm.increment();
+		}
 	}
 
 	void liOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
-		setReg(vm, rd, vm.getWord(immediate), false);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getWord(translated), false);
+			vm.increment();
+		}
 	}
 
 	void siOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
-		vm.bufferChange<MemoryChange>(vm, immediate, rs, Size::Word);
-		vm.setWord(immediate, rs);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
+			vm.setWord(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void setOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
@@ -717,41 +866,71 @@ namespace WVM::Operations {
 	}
 
 	void lbiOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
-		setReg(vm, rd, vm.getByte(immediate), false);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getByte(translated), false);
+			vm.increment();
+		}
 	}
 
 	void sbiOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
-		vm.bufferChange<MemoryChange>(vm, immediate, rs, Size::Byte);
-		vm.setByte(immediate, rs);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
+			vm.setByte(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void lniOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
-		const Word value = vm.getWord(immediate);
-		vm.bufferChange<MemoryChange>(vm, rd, value, Size::Word);
-		vm.setWord(rd, value);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			const Word value = vm.getWord(translated);
+			vm.bufferChange<MemoryChange>(vm, rd, value, Size::Word);
+			vm.setWord(rd, value);
+			vm.increment();
+		}
 	}
 
 	void lbniOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
-		const Byte value = vm.getByte(immediate);
-		vm.bufferChange<MemoryChange>(vm, rd, value, Size::Byte);
-		vm.setByte(rd, value);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			const Byte value = vm.getByte(translated);
+			vm.bufferChange<MemoryChange>(vm, rd, value, Size::Byte);
+			vm.setByte(rd, value);
+			vm.increment();
+		}
 	}
 
 	void intOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
-		if (vm.interrupt(immediate))
+		if (vm.interrupt(immediate, false))
 			vm.increment();
 	}
 
 	void ritOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
 		if (vm.checkRing(Ring::Zero)) {
-			vm.bufferChange<InterruptTableChange>(vm, immediate);
-			vm.interruptTableAddress = immediate;
-			vm.onInterruptTableChange();
-			vm.increment();
+			bool success;
+			const Word translated = vm.translateAddress(immediate, &success);
+			if (!success) {
+				vm.intPfault();
+			} else {
+				vm.bufferChange<InterruptTableChange>(vm, translated);
+				vm.interruptTableAddress = translated;
+				vm.onInterruptTableChange();
+				vm.increment();
+			}
 		}
 	}
 
