@@ -62,7 +62,7 @@
 		"dominators": "^1.1.2",
 		"get-line-from-pos": "^1.0.0",
 		"jsome": "^2.3.26",
-		"lodash": "^4.17.13",
+		"lodash": "^4.17.19",
 		"long": "^4.0.0",
 		"minimist": "^1.2.0",
 		"moment": "^2.24.0",
