@@ -629,7 +629,7 @@ namespace WVM::Operations {
 			const Word translated_destination = vm.translateAddress(rd, &success);
 			if (!success) {
 				vm.intPfault();
-			} else {
+			} else if (vm.checkWritable()) {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::Word);
 				vm.setWord(translated_destination, value);
 				vm.increment();
@@ -653,7 +653,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(rd, &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
 			vm.increment();
@@ -670,7 +670,7 @@ namespace WVM::Operations {
 			const Word translated_destination = vm.translateAddress(rd, &success);
 			if (!success) {
 				vm.intPfault();
-			} else {
+			} else if (vm.checkWritable()) {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::Byte);
 				vm.setByte(translated_destination, value);
 				vm.increment();
@@ -688,7 +688,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(rd, &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
 			vm.setByte(translated, rs);
 			vm.increment();
@@ -700,7 +700,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(vm.sp(), &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			setReg(vm, vm.sp(), vm.sp() - 8, false);
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
@@ -725,7 +725,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(vm.sp(), &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			setReg(vm, vm.sp(), vm.sp() - immediate, false);
 
 			switch (immediate) {
@@ -791,7 +791,7 @@ namespace WVM::Operations {
 			const Word translated_destination = vm.translateAddress(rd, &success);
 			if (!success) {
 				vm.intPfault();
-			} else {
+			} else if (vm.checkWritable()) {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::HWord);
 				vm.setHalfword(translated_destination, value);
 				vm.increment();
@@ -815,7 +815,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(rd, &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::HWord);
 			vm.setHalfword(translated, rs);
 			vm.increment();
@@ -823,18 +823,21 @@ namespace WVM::Operations {
 	}
 
 	void msOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		// This is awfully slow.
 		bool success;
-		const Word translated = vm.translateAddress(rd, &success);
-		if (!success) {
-			vm.intPfault();
-		} else {
-			for (Word i = 0; i < rs; ++i) {
+		for (Word i = 0; i < rs; ++i) {
+			const Word translated = vm.translateAddress(rd + i, &success);
+			if (!success) {
+				vm.intPfault();
+				return;
+			} else if (vm.checkWritable()) {
 				vm.bufferChange<MemoryChange>(vm, translated + i, rt & 0xff, Size::Byte);
 				vm.setByte(translated + i, rt & 0xff);
-			}
-
-			vm.increment();
+			} else
+				return;
 		}
+
+		vm.increment();
 	}
 
 	void liOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
@@ -853,7 +856,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(immediate, &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
 			vm.increment();
@@ -881,7 +884,7 @@ namespace WVM::Operations {
 		const Word translated = vm.translateAddress(immediate, &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
+		} else if (vm.checkWritable()) {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
 			vm.setByte(translated, rs);
 			vm.increment();

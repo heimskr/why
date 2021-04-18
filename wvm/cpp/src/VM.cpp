@@ -75,8 +75,10 @@ namespace WVM {
 		if (success)
 			*success = p5_entry.present;
 
+		lastMeta = p5_entry;
+
 		if (meta_out)
-			*meta_out = p5_entry;
+			*meta_out = lastMeta;
 
 		info() << "virtmem: " << virtual_address << " -> " << (p5_entry.getStart() + pieces.pageOffset) << "\n";
 		return p5_entry.getStart() + pieces.pageOffset;
@@ -368,6 +370,15 @@ namespace WVM {
 
 	Word VM::nextInstructionAddress() const {
 		return programCounter + 8;
+	}
+
+	bool VM::checkWritable() {
+		if (pagingOn && !lastMeta.writable) {
+			intProtec();
+			return false;
+		}
+
+		return true;
 	}
 
 	void VM::addBreakpoint(Word breakpoint) {

@@ -29,6 +29,7 @@ namespace WVM {
 			std::vector<std::vector<std::unique_ptr<Change>>> undoStack;
 			std::vector<std::unique_ptr<Change>> changeBuffer;
 			size_t undoPointer = 0;
+			PageMeta lastMeta;
 
 			bool getZ();
 			bool getN();
@@ -102,6 +103,7 @@ namespace WVM {
 			bool getActive() const { return active; }
 			bool tick();
 			Word nextInstructionAddress() const;
+			bool checkWritable();
 
 			void addBreakpoint(Word);
 			void removeBreakpoint(Word);

@@ -39,13 +39,14 @@ namespace WVM {
 	};
 
 	struct PageMeta {
-		bool present;
-		bool writable;
-		bool executable;
-		bool user;
-		bool accessed;
-		bool modified;
+		bool present    = false;
+		bool writable   = false;
+		bool executable = false;
+		bool user       = false;
+		bool accessed   = false;
+		bool modified   = false;
 
+		PageMeta() = default;
 		PageMeta(const P5Entry &);
 	};
 }

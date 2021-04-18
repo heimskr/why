@@ -435,7 +435,7 @@ namespace WVM::Mode {
 	}
 
 	bool ServerMode::tick() {
-		int pc = vm.programCounter;
+		Word pc = vm.programCounter;
 		try {
 			return vm.tick();
 		} catch (std::exception &err) {
