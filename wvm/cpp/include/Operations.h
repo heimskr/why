@@ -319,6 +319,7 @@ namespace WVM::Operations {
 #define OP_PAGE  61
 #define FN_PGOFF 0
 #define FN_PGON  1
+#define FN_SETPT 2
 
 #define INTERRUPT_MAX	3
 
