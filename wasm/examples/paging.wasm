@@ -9,6 +9,8 @@ inttab_start: 0
 inttab_system: 0
 inttab_timer: 0
 inttab_protec: &protec
+inttab_pfault: &pfault
+inttab_inexec: &inexec
 p0ptr: 0
 
 #code
@@ -33,5 +35,13 @@ setpt $t0
 <halt>
 
 @protec
-<prs "Uh oh\n">
+<prs "PROTEC\n">
+<halt>
+
+@pfault
+<prs "PFAULT\n">
+<halt>
+
+@inexec
+<prs "INEXEC\n">
 <halt>
