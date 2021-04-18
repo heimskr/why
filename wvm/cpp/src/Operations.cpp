@@ -696,12 +696,12 @@ namespace WVM::Operations {
 	}
 
 	void spushOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		setReg(vm, vm.sp(), vm.sp() - 8, false);
 		bool success;
 		const Word translated = vm.translateAddress(vm.sp(), &success);
 		if (!success) {
 			vm.intPfault();
 		} else if (vm.checkWritable()) {
-			setReg(vm, vm.sp(), vm.sp() - 8, false);
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
 			vm.increment();
