@@ -762,7 +762,7 @@ Jumps to the address of a given label or directly to a given address.
 ### <a name="op-jc"></a>Jump Conditional (`jc`)
 > `: label if $rs` or `: imm if $rs`  
 > `:: label if $rs` or `:: imm if $rs` (linking variant)  
-> `000000010000` `sssssss` `0000000` `cccc` `..` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+> `000000010000` `sssssss` `0000000` `0000` `..` `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 Jumps to the address of a given label or directly to a given address, provided the value in `rs` is nonzero.
 
