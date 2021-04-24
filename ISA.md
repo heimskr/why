@@ -770,7 +770,7 @@ Jumps to the address of a given label or directly to a given address, provided t
 
 ### <a name="op-jr"></a>Jump to Register (`jr`)
 > `: $rd`  
-> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `......` `000000000000`  
+> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `cccc` `..` `000000000000`  
 > Supports conditions
 
 Jumps to the address stored in `rd`.
@@ -783,7 +783,7 @@ Jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
 
 ### <a name="op-jrl"></a>Jump to Register and Link (`jrl`)
 > `:: $rd`  
-> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `......` `000000000010`  
+> `000000010001` `0000000` `0000000` `ddddddd` `0000000000000` `cccc` `..` `000000000010`  
 > Supports conditions
 
 Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`.

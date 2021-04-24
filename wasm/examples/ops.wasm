@@ -313,11 +313,11 @@ $t0 -> $t1
 :: jl if $t0
 :: 600 if $s1
 
-+:   jl
-+::  jl
--:   jl
--::  jl
-0::  jl
-0::  jl
-*:: jl
++:  jl
++:: jl
+-:  jl
+-:: jl
+0:  jl
+0:: jl
+*:  jl
 *:: jl

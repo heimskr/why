@@ -2,6 +2,7 @@
 #include "Changes.h"
 #include "VM.h"
 #include "VMError.h"
+#include "Util.h"
 
 namespace WVM {
 	MemoryChange::MemoryChange(const VM &vm, Word address_, Word to_, Size size_):
@@ -30,8 +31,12 @@ namespace WVM {
 	}
 
 	void RegisterChange::undo(VM &vm, bool strict) {
-		if (strict && vm.registers[reg] != to)
+		if (strict && vm.registers[reg] != to) {
+			error() << "Register: " << Why::registerName(reg) << "\n";
+			error() << "Expected: " << to << "\n";
+			error() << "Actual:   " << vm.registers[reg] << "\n";
 			throw VMError("Unable to undo RegisterChange: data in register isn't the expected to-value");
+		}
 		vm.registers[reg] = from;
 		vm.onRegisterChange(reg);
 	}
