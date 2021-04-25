@@ -1,0 +1,139 @@
+#meta
+name: "paging.c"
+
+#data
+.str: "Hello, world!\x0A\x00"
+.str.1: "\x0A\x00"
+.str.2: "Page fault!\x00"
+table: 0
+table__1: 0
+table__2: 0
+table__3: 0
+table__4: &pagefault
+table__5: 0
+
+#code
+
+:: main
+<halt>
+
+sub pagefault() {
+	@__pagefault_label0
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	&.str.2 -> $a0
+	:: strprint
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	: $e0
+	$fp -> $sp
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub strprint() {
+	@__strprint_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	@_strprint_loop
+	[$t1] -> $ma /b
+	: _strprint_print if $ma
+	: _strprint_done
+	@_strprint_print
+	<prc $ma>
+	$t1 + 1 -> $t1
+	: _strprint_loop
+	@_strprint_done
+	$fp -> $sp
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub main() {
+	@__main_label0
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	$sp -> $fp
+	&.str -> $a0
+	:: strprint
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	rit table
+	// LowerMemory(load): [int 1] -> %var
+	[1] -> $t0
+	$t0 -> $a0
+	:: prd
+	&.str.1 -> $a0
+	:: strprint
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	page on
+	// LowerMemory(load): [int 1] -> %var
+	[1] -> $t1
+	$t1 -> $a0
+	:: prd
+	&.str.1 -> $a0
+	:: strprint
+	$fp -> $sp
+	0 -> $r0
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub prd() {
+	@__prd_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	<prd $t1>
+	$fp -> $sp
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}

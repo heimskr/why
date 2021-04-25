@@ -721,12 +721,12 @@ namespace WVM::Operations {
 	}
 
 	void sspushOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		setReg(vm, vm.sp(), vm.sp() - immediate, false);
 		bool success;
 		const Word translated = vm.translateAddress(vm.sp(), &success);
 		if (!success) {
 			vm.intPfault();
 		} else if (vm.checkWritable()) {
-			setReg(vm, vm.sp(), vm.sp() - immediate, false);
 
 			switch (immediate) {
 				case 1:
