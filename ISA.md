@@ -364,9 +364,9 @@ Why.js supports paging. It's disabled by default and must be enabled with the [`
 
 ### `P0` through `P4`
 
-| 63–8 (56)             | 7–1 (7) | 0       |
-|:---------------------:|:-------:|:-------:|
-| Address of next table | Unused  | Present |
+| 63–11 (53)            | 10–1 (10) | 0       |
+|:---------------------:|:---------:|:-------:|
+| Address of next table | Unused    | Present |
 
 ### `P5`
 
