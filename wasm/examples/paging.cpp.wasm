@@ -1,15 +1,16 @@
 #meta
-name: "paging.c"
+name: "paging.cpp"
 
 #data
 .str: "Hello, world!\x0A\x00"
-.str.1: "\x0A\x00"
-.str.2: "Page fault!\x00"
+.str.1: "No\x0A\x00"
+.str.2: "P5E: \x00"
+.str.3: "Page fault!\x00"
 table: 0
 table__1: 0
 table__2: 0
 table__3: 0
-table__4: &pagefault
+table__4: &_Z9pagefaultv
 table__5: 0
 
 #code
@@ -17,29 +18,16 @@ table__5: 0
 :: main
 <halt>
 
-sub pagefault() {
-	@__pagefault_label0
-	[ $rt
-	[ $fp
-	$sp -> $fp
-	&.str.2 -> $a0
-	:: strprint
-	// LowerInlineAsm
-	// *init start
-	// *init end
-	: $e0
-	$fp -> $sp
-	] $fp
-	] $rt
-	: $rt
-}
-
-sub strprint() {
-	@__strprint_label1
+sub _ZN9P0Wrapper8p0OffsetEPv() {
+	@___ZN9P0Wrapper8p0OffsetEPv_label1
 	[ $rt
 	[ $fp
 	[ $t0
 	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -51,19 +39,613 @@ sub strprint() {
 	$a0 -> [$t0]
 	// LowerMemory(load): [%2] -> %3
 	[$t0] -> $t1
+	$t1 -> $t2
+	$t2 >>> 56 -> $t3
+	$t3 & 255 -> $t4
+	// LowerTrunc: 64 to 8, apply mask
+	$t4 & 255 -> $t5
+	$fp -> $sp
+	$t5 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper8p1OffsetEPv() {
+	@___ZN9P0Wrapper8p1OffsetEPv_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	$t1 -> $t2
+	$t2 >>> 48 -> $t3
+	$t3 & 255 -> $t4
+	// LowerTrunc: 64 to 8, apply mask
+	$t4 & 255 -> $t5
+	$fp -> $sp
+	$t5 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper8p2OffsetEPv() {
+	@___ZN9P0Wrapper8p2OffsetEPv_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	$t1 -> $t2
+	$t2 >>> 40 -> $t3
+	$t3 & 255 -> $t4
+	// LowerTrunc: 64 to 8, apply mask
+	$t4 & 255 -> $t5
+	$fp -> $sp
+	$t5 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper6getP1EEPvRm() {
+	@___ZN9P0Wrapper6getP1EEPvRm_label3
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t2
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t3
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t4
+	// LowerMemory: %0 -> [%5]
+	$a0 -> [$t1]
+	// LowerMemory: %1 -> [%6]
+	$a1 -> [$t2]
+	// LowerMemory: %2 -> [%7]
+	$a2 -> [$t3]
+	// LowerMemory(load): [%5] -> %9
+	[$t1] -> $t5
+	// LowerMemory(load): [%6] -> %10
+	[$t2] -> $t6
+	[ $a0
+	[ $a1
+	[ $a2
+	$t5 -> $a0
+	$t6 -> $a1
+	:: _ZN9P0Wrapper6getP0EEPv
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t7
+	// LowerMemory: %11 -> [%8]
+	$t7 -> [$t4]
+	// LowerMemory(load): [%8] -> %12
+	[$t4] -> $t8
+	[ $a0
+	[ $a1
+	[ $a2
+	$t8 -> $a0
+	:: _ZN9P0Wrapper9isPresentEm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t9
+	: ___ZN9P0Wrapper6getP1EEPvRm_label15 if $t9
+	: ___ZN9P0Wrapper6getP1EEPvRm_label14
+	@___ZN9P0Wrapper6getP1EEPvRm_label14
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP1EEPvRm_label25
+	@___ZN9P0Wrapper6getP1EEPvRm_label15
+	// LowerMemory(load): [%8] -> %16
+	[$t4] -> $t1
+	$t1 & -256 -> $t5
+	$t5 -> $t6
+	// LowerMemory(load): [%6] -> %19
+	[$t2] -> $t7
+	[ $a0
+	[ $a1
+	[ $a2
+	$t7 -> $a0
+	:: _ZN9P0Wrapper8p1OffsetEPv
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t8
+	$t8 -> $t9
+	$t9 * 8
+	$lo -> $ta
+	$ta + $t6 -> $ta
+	// LowerMemory(load): [%22] -> %23
+	[$ta] -> $tb
+	// LowerMemory(load): [%7] -> %24
+	[$t3] -> $tc
+	// LowerMemory: %23 -> [%24]
+	$tb -> [$tc]
+	// LowerMemory: imm -> $m1
+	1 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	@___ZN9P0Wrapper6getP1EEPvRm_label25
+	// LowerMemory(load): [%4] -> %26
+	[$t0] -> $t1 /b
+	$fp -> $sp
+	$t1 -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper6getP0EEPv() {
+	@___ZN9P0Wrapper6getP0EEPv_label2
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerMemory: %0 -> [%3]
+	$a0 -> [$t0]
+	// LowerMemory: %1 -> [%4]
+	$a1 -> [$t1]
+	// LowerMemory(load): [%3] -> %5
+	[$t0] -> $t2
+	// LowerGetelementptr: struct-type
+	$t2 + 0 -> $t3
+	// LowerMemory(load): [%6] -> %7
+	[$t3] -> $t4
+	// LowerMemory(load): [%4] -> %8
+	[$t1] -> $t5
+	[ $a0
+	[ $a1
+	$t5 -> $a0
+	:: _ZN9P0Wrapper8p0OffsetEPv
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t6
+	$t6 -> $t7
+	$t7 * 8
+	$lo -> $t8
+	$t8 + $t4 -> $t8
+	// LowerMemory(load): [%11] -> %12
+	[$t8] -> $t9
+	$fp -> $sp
+	$t9 -> $r0
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper8p4OffsetEPv() {
+	@___ZN9P0Wrapper8p4OffsetEPv_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	$t1 -> $t2
+	$t2 >>> 24 -> $t3
+	$t3 & 255 -> $t4
+	// LowerTrunc: 64 to 8, apply mask
+	$t4 & 255 -> $t5
+	$fp -> $sp
+	$t5 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _Z9pagefaultv() {
+	@___Z9pagefaultv_label0
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	&.str.3 -> $a0
+	:: _Z8strprintPKc
 	// LowerInlineAsm
 	// *init start
 	// *init end
-	@_strprint_loop
-	[$t1] -> $ma /b
-	: _strprint_print if $ma
-	: _strprint_done
-	@_strprint_print
-	<prc $ma>
-	$t1 + 1 -> $t1
-	: _strprint_loop
-	@_strprint_done
+	: $e0
 	$fp -> $sp
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper6getP5EEPvRm() {
+	@___ZN9P0Wrapper6getP5EEPvRm_label3
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t2
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t3
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t4
+	// LowerMemory: %0 -> [%5]
+	$a0 -> [$t1]
+	// LowerMemory: %1 -> [%6]
+	$a1 -> [$t2]
+	// LowerMemory: %2 -> [%7]
+	$a2 -> [$t3]
+	// LowerMemory(load): [%5] -> %9
+	[$t1] -> $t5
+	// LowerMemory(load): [%6] -> %10
+	[$t2] -> $t6
+	[ $a0
+	[ $a1
+	[ $a2
+	$t5 -> $a0
+	$t6 -> $a1
+	$t4 -> $a2
+	:: _ZN9P0Wrapper6getP4EEPvRm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t7
+	: ___ZN9P0Wrapper6getP5EEPvRm_label13 if $t7
+	: ___ZN9P0Wrapper6getP5EEPvRm_label12
+	@___ZN9P0Wrapper6getP5EEPvRm_label12
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP5EEPvRm_label27
+	@___ZN9P0Wrapper6getP5EEPvRm_label13
+	// LowerMemory(load): [%8] -> %14
+	[$t4] -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	$t1 -> $a0
+	:: _ZN9P0Wrapper9isPresentEm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t5
+	: ___ZN9P0Wrapper6getP5EEPvRm_label17 if $t5
+	: ___ZN9P0Wrapper6getP5EEPvRm_label16
+	@___ZN9P0Wrapper6getP5EEPvRm_label16
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP5EEPvRm_label27
+	@___ZN9P0Wrapper6getP5EEPvRm_label17
+	// LowerMemory(load): [%8] -> %18
+	[$t4] -> $t1
+	$t1 & -256 -> $t5
+	$t5 -> $t6
+	// LowerMemory(load): [%6] -> %21
+	[$t2] -> $t7
+	[ $a0
+	[ $a1
+	[ $a2
+	$t7 -> $a0
+	:: _ZN9P0Wrapper8p5OffsetEPv
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t8
+	$t8 -> $t9
+	$t9 * 8
+	$lo -> $ta
+	$ta + $t6 -> $ta
+	// LowerMemory(load): [%24] -> %25
+	[$ta] -> $tb
+	// LowerMemory(load): [%7] -> %26
+	[$t3] -> $tc
+	// LowerMemory: %25 -> [%26]
+	$tb -> [$tc]
+	// LowerMemory: imm -> $m1
+	1 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	@___ZN9P0Wrapper6getP5EEPvRm_label27
+	// LowerMemory(load): [%4] -> %28
+	[$t0] -> $t1 /b
+	$fp -> $sp
+	$t1 -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _Z3prdl() {
+	@___Z3prdl_label1
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	<prd $a0>
+}
+
+sub _ZN9P0WrapperC2EPm() {
+	@___ZN9P0WrapperC2EPm_label2
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerMemory: %0 -> [%3]
+	$a0 -> [$t0]
+	// LowerMemory: %1 -> [%4]
+	$a1 -> [$t1]
+	// LowerMemory(load): [%3] -> %5
+	[$t0] -> $t2
+	// LowerGetelementptr: struct-type
+	$t2 + 0 -> $t3
+	// LowerMemory(load): [%4] -> %7
+	[$t1] -> $t4
+	// LowerMemory: %7 -> [%6]
+	$t4 -> [$t3]
+	$fp -> $sp
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _Z3prcc() {
+	@___Z3prcc_label1
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	<prc $a0>
+}
+
+sub _ZN9P0Wrapper3setEv() {
+	@___ZN9P0Wrapper3setEv_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	// LowerGetelementptr: struct-type
+	$t1 + 0 -> $t2
+	// LowerMemory(load): [%4] -> %5
+	[$t2] -> $t3
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	setpt $t3
+	$fp -> $sp
+	] $t3
+	] $t2
 	] $t1
 	] $t0
 	] $fp
@@ -77,19 +659,85 @@ sub main() {
 	[ $fp
 	[ $t0
 	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
 	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t2
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%1]
+	$m1 -> [$t0] /h
 	&.str -> $a0
-	:: strprint
+	:: _Z8strprintPKc
 	// LowerInlineAsm
 	// *init start
 	// *init end
 	rit table
 	// LowerMemory(load): [int 1] -> %var
-	[1] -> $t0
-	$t0 -> $a0
-	:: prd
+	[1] -> $t3
+	$t3 -> $a0
+	:: _Z3prdl
+	10 -> $a0
+	:: _Z3prcc
+	$t1 -> $a0
+	65536 -> $a1
+	:: _ZN9P0WrapperC2EPm
+	// LowerGetelementptr: struct-type
+	$t1 + 0 -> $t4
+	// LowerMemory(load): [%5] -> %6
+	[$t4] -> $t5
+	$t5 -> $t6
+	$t6 -> $a0
+	:: _Z3prdl
+	10 -> $a0
+	:: _Z3prcc
+	$t1 -> $a0
+	:: _ZN9P0Wrapper3setEv
+	$t1 -> $a0
+	65536 -> $a1
+	$t2 -> $a2
+	:: _ZN9P0Wrapper6getP5EEPvRm
+	// SetupCalls: move result from $r0
+	$r0 -> $t7
+	: __main_label10 if $t7
+	: __main_label9
+	@__main_label9
 	&.str.1 -> $a0
-	:: strprint
+	:: _Z8strprintPKc
+	: __main_label13
+	@__main_label10
+	&.str.2 -> $a0
+	:: _Z8strprintPKc
+	// LowerMemory(load): [%3] -> %11
+	[$t2] -> $t1
+	// LowerTrunc: 64 to 8, apply mask
+	$t1 & 255 -> $t3
+	$t3 -> $a0
+	:: _Z3prxc
+	10 -> $a0
+	:: _Z3prcc
+	@__main_label13
 	// LowerInlineAsm
 	// *init start
 	// *init end
@@ -97,11 +745,19 @@ sub main() {
 	// LowerMemory(load): [int 1] -> %var
 	[1] -> $t1
 	$t1 -> $a0
-	:: prd
-	&.str.1 -> $a0
-	:: strprint
+	:: _Z3prdl
+	10 -> $a0
+	:: _Z3prcc
+	// LowerMemory(load): [%1] -> %15
+	[$t0] -> $t2 /h
 	$fp -> $sp
-	0 -> $r0
+	$t2 -> $r0
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
 	] $t1
 	] $t0
 	] $fp
@@ -109,12 +765,191 @@ sub main() {
 	: $rt
 }
 
-sub prd() {
-	@__prd_label1
+sub _Z3prxc() {
+	@___Z3prxc_label1
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	<prx $a0>
+}
+
+sub _Z8strprintPKc() {
+	@___Z8strprintPKc_label1
+	// LowerInlineAsm
+	// *init start
+	// *init end
+	<>
+	@_strprint_loop
+	[$a0] -> $ma /b
+	: _strprint_print if $ma
+	: _strprint_done
+	@_strprint_print
+	<prc $ma>
+	$a0 + 1 -> $a0
+	: _strprint_loop
+	@_strprint_done
+	<>
+}
+
+sub _ZN9P0Wrapper6getP4EEPvRm() {
+	@___ZN9P0Wrapper6getP4EEPvRm_label3
 	[ $rt
 	[ $fp
 	[ $t0
 	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t2
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t3
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t4
+	// LowerMemory: %0 -> [%5]
+	$a0 -> [$t1]
+	// LowerMemory: %1 -> [%6]
+	$a1 -> [$t2]
+	// LowerMemory: %2 -> [%7]
+	$a2 -> [$t3]
+	// LowerMemory(load): [%5] -> %9
+	[$t1] -> $t5
+	// LowerMemory(load): [%6] -> %10
+	[$t2] -> $t6
+	[ $a0
+	[ $a1
+	[ $a2
+	$t5 -> $a0
+	$t6 -> $a1
+	$t4 -> $a2
+	:: _ZN9P0Wrapper6getP3EEPvRm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t7
+	: ___ZN9P0Wrapper6getP4EEPvRm_label13 if $t7
+	: ___ZN9P0Wrapper6getP4EEPvRm_label12
+	@___ZN9P0Wrapper6getP4EEPvRm_label12
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP4EEPvRm_label27
+	@___ZN9P0Wrapper6getP4EEPvRm_label13
+	// LowerMemory(load): [%8] -> %14
+	[$t4] -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	$t1 -> $a0
+	:: _ZN9P0Wrapper9isPresentEm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t5
+	: ___ZN9P0Wrapper6getP4EEPvRm_label17 if $t5
+	: ___ZN9P0Wrapper6getP4EEPvRm_label16
+	@___ZN9P0Wrapper6getP4EEPvRm_label16
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP4EEPvRm_label27
+	@___ZN9P0Wrapper6getP4EEPvRm_label17
+	// LowerMemory(load): [%8] -> %18
+	[$t4] -> $t1
+	$t1 & -256 -> $t5
+	$t5 -> $t6
+	// LowerMemory(load): [%6] -> %21
+	[$t2] -> $t7
+	[ $a0
+	[ $a1
+	[ $a2
+	$t7 -> $a0
+	:: _ZN9P0Wrapper8p4OffsetEPv
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t8
+	$t8 -> $t9
+	$t9 * 8
+	$lo -> $ta
+	$ta + $t6 -> $ta
+	// LowerMemory(load): [%24] -> %25
+	[$ta] -> $tb
+	// LowerMemory(load): [%7] -> %26
+	[$t3] -> $tc
+	// LowerMemory: %25 -> [%26]
+	$tb -> [$tc]
+	// LowerMemory: imm -> $m1
+	1 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	@___ZN9P0Wrapper6getP4EEPvRm_label27
+	// LowerMemory(load): [%4] -> %28
+	[$t0] -> $t1 /b
+	$fp -> $sp
+	$t1 -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper9isPresentEm() {
+	@___ZN9P0Wrapper9isPresentEm_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
 	$sp -> $fp
 	// LowerAlloca: align stack pointer
 	$sp % 8 -> $m0
@@ -126,11 +961,392 @@ sub prd() {
 	$a0 -> [$t0]
 	// LowerMemory(load): [%2] -> %3
 	[$t0] -> $t1
-	// LowerInlineAsm
-	// *init start
-	// *init end
-	<prd $t1>
+	$t1 & 1 -> $t2
+	$t2 == 1 -> $t3
 	$fp -> $sp
+	$t3 -> $r0
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper8p3OffsetEPv() {
+	@___ZN9P0Wrapper8p3OffsetEPv_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	$t1 -> $t2
+	$t2 >>> 32 -> $t3
+	$t3 & 255 -> $t4
+	// LowerTrunc: 64 to 8, apply mask
+	$t4 & 255 -> $t5
+	$fp -> $sp
+	$t5 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper6getP2EEPvRm() {
+	@___ZN9P0Wrapper6getP2EEPvRm_label3
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t2
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t3
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t4
+	// LowerMemory: %0 -> [%5]
+	$a0 -> [$t1]
+	// LowerMemory: %1 -> [%6]
+	$a1 -> [$t2]
+	// LowerMemory: %2 -> [%7]
+	$a2 -> [$t3]
+	// LowerMemory(load): [%5] -> %9
+	[$t1] -> $t5
+	// LowerMemory(load): [%6] -> %10
+	[$t2] -> $t6
+	[ $a0
+	[ $a1
+	[ $a2
+	$t5 -> $a0
+	$t6 -> $a1
+	$t4 -> $a2
+	:: _ZN9P0Wrapper6getP1EEPvRm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t7
+	: ___ZN9P0Wrapper6getP2EEPvRm_label13 if $t7
+	: ___ZN9P0Wrapper6getP2EEPvRm_label12
+	@___ZN9P0Wrapper6getP2EEPvRm_label12
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP2EEPvRm_label27
+	@___ZN9P0Wrapper6getP2EEPvRm_label13
+	// LowerMemory(load): [%8] -> %14
+	[$t4] -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	$t1 -> $a0
+	:: _ZN9P0Wrapper9isPresentEm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t5
+	: ___ZN9P0Wrapper6getP2EEPvRm_label17 if $t5
+	: ___ZN9P0Wrapper6getP2EEPvRm_label16
+	@___ZN9P0Wrapper6getP2EEPvRm_label16
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP2EEPvRm_label27
+	@___ZN9P0Wrapper6getP2EEPvRm_label17
+	// LowerMemory(load): [%8] -> %18
+	[$t4] -> $t1
+	$t1 & -256 -> $t5
+	$t5 -> $t6
+	// LowerMemory(load): [%6] -> %21
+	[$t2] -> $t7
+	[ $a0
+	[ $a1
+	[ $a2
+	$t7 -> $a0
+	:: _ZN9P0Wrapper8p2OffsetEPv
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t8
+	$t8 -> $t9
+	$t9 * 8
+	$lo -> $ta
+	$ta + $t6 -> $ta
+	// LowerMemory(load): [%24] -> %25
+	[$ta] -> $tb
+	// LowerMemory(load): [%7] -> %26
+	[$t3] -> $tc
+	// LowerMemory: %25 -> [%26]
+	$tb -> [$tc]
+	// LowerMemory: imm -> $m1
+	1 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	@___ZN9P0Wrapper6getP2EEPvRm_label27
+	// LowerMemory(load): [%4] -> %28
+	[$t0] -> $t1 /b
+	$fp -> $sp
+	$t1 -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper8p5OffsetEPv() {
+	@___ZN9P0Wrapper8p5OffsetEPv_label1
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t0
+	// LowerMemory: %0 -> [%2]
+	$a0 -> [$t0]
+	// LowerMemory(load): [%2] -> %3
+	[$t0] -> $t1
+	$t1 -> $t2
+	$t2 >>> 16 -> $t3
+	$t3 & 255 -> $t4
+	// LowerTrunc: 64 to 8, apply mask
+	$t4 & 255 -> $t5
+	$fp -> $sp
+	$t5 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub _ZN9P0Wrapper6getP3EEPvRm() {
+	@___ZN9P0Wrapper6getP3EEPvRm_label3
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	$sp -> $fp
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	$sp -> $t0
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t1
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t2
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t3
+	// LowerAlloca: align stack pointer
+	$sp % 8 -> $m0
+	$sp - $m0 -> $sp
+	// LowerAlloca: $sp -= to_sub
+	$sp - 8 -> $sp
+	$sp -> $t4
+	// LowerMemory: %0 -> [%5]
+	$a0 -> [$t1]
+	// LowerMemory: %1 -> [%6]
+	$a1 -> [$t2]
+	// LowerMemory: %2 -> [%7]
+	$a2 -> [$t3]
+	// LowerMemory(load): [%5] -> %9
+	[$t1] -> $t5
+	// LowerMemory(load): [%6] -> %10
+	[$t2] -> $t6
+	[ $a0
+	[ $a1
+	[ $a2
+	$t5 -> $a0
+	$t6 -> $a1
+	$t4 -> $a2
+	:: _ZN9P0Wrapper6getP2EEPvRm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t7
+	: ___ZN9P0Wrapper6getP3EEPvRm_label13 if $t7
+	: ___ZN9P0Wrapper6getP3EEPvRm_label12
+	@___ZN9P0Wrapper6getP3EEPvRm_label12
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP3EEPvRm_label27
+	@___ZN9P0Wrapper6getP3EEPvRm_label13
+	// LowerMemory(load): [%8] -> %14
+	[$t4] -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	$t1 -> $a0
+	:: _ZN9P0Wrapper9isPresentEm
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t5
+	: ___ZN9P0Wrapper6getP3EEPvRm_label17 if $t5
+	: ___ZN9P0Wrapper6getP3EEPvRm_label16
+	@___ZN9P0Wrapper6getP3EEPvRm_label16
+	// LowerMemory: imm -> $m1
+	0 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	: ___ZN9P0Wrapper6getP3EEPvRm_label27
+	@___ZN9P0Wrapper6getP3EEPvRm_label17
+	// LowerMemory(load): [%8] -> %18
+	[$t4] -> $t1
+	$t1 & -256 -> $t5
+	$t5 -> $t6
+	// LowerMemory(load): [%6] -> %21
+	[$t2] -> $t7
+	[ $a0
+	[ $a1
+	[ $a2
+	$t7 -> $a0
+	:: _ZN9P0Wrapper8p3OffsetEPv
+	] $a2
+	] $a1
+	] $a0
+	// SetupCalls: move result from $r0
+	$r0 -> $t8
+	$t8 -> $t9
+	$t9 * 8
+	$lo -> $ta
+	$ta + $t6 -> $ta
+	// LowerMemory(load): [%24] -> %25
+	[$ta] -> $tb
+	// LowerMemory(load): [%7] -> %26
+	[$t3] -> $tc
+	// LowerMemory: %25 -> [%26]
+	$tb -> [$tc]
+	// LowerMemory: imm -> $m1
+	1 -> $m1
+	// LowerMemory: $m1 -> [%4]
+	$m1 -> [$t0] /b
+	@___ZN9P0Wrapper6getP3EEPvRm_label27
+	// LowerMemory(load): [%4] -> %28
+	[$t0] -> $t1 /b
+	$fp -> $sp
+	$t1 -> $r0
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
 	] $t1
 	] $t0
 	] $fp

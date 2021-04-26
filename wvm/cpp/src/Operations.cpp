@@ -144,6 +144,7 @@ namespace WVM::Operations {
 					case FN_PGOFF: pgoffOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_PGON:   pgonOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SETPT: setptOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SVPG:   svpgOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 		}
@@ -1035,5 +1036,10 @@ namespace WVM::Operations {
 			vm.onP0Change(rs);
 			vm.increment();
 		}
+	}
+
+	void svpgOp(VM &vm, Word &, Word, Word &rd, Conditions, int) {
+		setReg(vm, rd, vm.pagingOn? 1 : 0, false);
+		vm.increment();
 	}
 }

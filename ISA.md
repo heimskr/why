@@ -177,6 +177,7 @@
 						<li><a href="#op-pgoff">Disable Paging</a> (<code>pgoff</code>)</li>
 						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
 						<li><a href="#op-setpt">Set Page Table</a> (<code>setpt</code>)</li>
+						<li><a href="#op-svpg">Save Paging</a> (<code>svpg</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -1003,6 +1004,13 @@ Enables virtual memory.
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
 
 Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
+
+### <a name="op-svpg"></a>Save Paging (`svpg`)
+
+> `page -> $rd`  
+> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000011`
+
+Sets `rd` to 1 if paging is enabled or 0 if paging is disabled.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 

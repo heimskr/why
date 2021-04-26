@@ -1,5 +1,4 @@
-#ifndef WVM_OPERATIONS_H_
-#define WVM_OPERATIONS_H_
+#pragma once
 
 #include <set>
 
@@ -140,6 +139,7 @@ namespace WVM::Operations {
 	void pgoffOp(VM &, Word &, Word &, Word &, Conditions, int flags);               // 61  R 0
 	void pgonOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 1
 	void setptOp(VM &, Word &rs, Word &, Word &, Conditions, int flags);             // 61  R 2
+	void svpgOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);              // 61  R 3
 
 #define OP_NOP 0
 #define OP_RMATH 1
@@ -321,6 +321,7 @@ namespace WVM::Operations {
 #define FN_PGOFF 0
 #define FN_PGON  1
 #define FN_SETPT 2
+#define FN_SVPG  3
 
 #define INTERRUPT_MAX	3
 
@@ -340,5 +341,3 @@ namespace WVM::Operations {
 #define INT_PROTEC_FROM	0
 #define INT_PROTEC_TO	2
 }
-
-#endif

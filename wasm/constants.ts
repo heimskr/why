@@ -14,7 +14,7 @@ export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "l
 export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
 export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "spush" | "spop" | "ms";
-export type RSpecial = "time" | "ring" | "sel" | "pgon" | "pgoff" | "setpt";
+export type RSpecial = "time" | "ring" | "sel" | "pgon" | "pgoff" | "setpt" | "svpg";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
 export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
@@ -56,7 +56,7 @@ export const R_TYPES = [
 	0b000000110000, // Set Timer
 	0b000000110010, // Change Ring
 	0b000000111000, // Select
-	0b000000111101, // Set Paging
+	0b000000111101, // Paging
 ];
 
 export const I_TYPES: number[] = [
@@ -217,6 +217,7 @@ export const OPCODES: {[key in OpName]: number} = {
 	pgon:   0b000000111101,
 	pgoff:  0b000000111101,
 	setpt:  0b000000111101,
+	svpg:   0b000000111101,
 };
 
 export const FUNCTS: {[key in RType]: number} = {
@@ -245,6 +246,7 @@ export const FUNCTS: {[key in RType]: number} = {
 	jrlc:  0b000000000011,
 	not:   0b000000000011,
 	slu:   0b000000000011,
+	svpg:  0b000000000011,
 	lb:    0b000000000100,
 	or:    0b000000000100,
 	sleu:  0b000000000100,
