@@ -1038,7 +1038,7 @@ namespace WVM::Operations {
 		}
 	}
 
-	void svpgOp(VM &vm, Word &, Word, Word &rd, Conditions, int) {
+	void svpgOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
 		setReg(vm, rd, vm.pagingOn? 1 : 0, false);
 		vm.increment();
 	}
