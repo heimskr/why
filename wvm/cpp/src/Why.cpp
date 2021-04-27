@@ -98,7 +98,7 @@ namespace WVM {
 		if (name.size() == 1 || std::string("ratskemf").find(front) == std::string::npos)
 			return -1;
 
-		unsigned long long offset;
+		uint64_t offset;
 		if (!Util::parseUL(name.substr(1), offset, 16))
 			return -1;
 
