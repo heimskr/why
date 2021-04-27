@@ -8,6 +8,8 @@
 #include "VM.h"
 #include "VMError.h"
 
+#define DEBUG_VIRTMEM
+
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
 
@@ -28,6 +30,9 @@ namespace WVM {
 		}
 
 		if (!p0) {
+#ifdef DEBUG_VIRTMEM
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p0\n";
+#endif
 			if (success)
 				*success = false;
 			return 0;
@@ -37,6 +42,9 @@ namespace WVM {
 
 		P04Entry p0_entry = getWord(p0 + pieces.p0Offset * sizeof(P04Entry));
 		if (!p0_entry.present) {
+#ifdef DEBUG_VIRTMEM
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p0.present " << p0_entry << "\n";
+#endif
 			if (success)
 				*success = false;
 			return 0;
@@ -44,6 +52,9 @@ namespace WVM {
 
 		P04Entry p1_entry = getWord(p0_entry.getNext() + pieces.p1Offset * sizeof(P04Entry));
 		if (!p1_entry.present) {
+#ifdef DEBUG_VIRTMEM
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p1.present " << p1_entry << "\n";
+#endif
 			if (success)
 				*success = false;
 			return 0;
@@ -51,6 +62,9 @@ namespace WVM {
 
 		P04Entry p2_entry = getWord(p1_entry.getNext() + pieces.p2Offset * sizeof(P04Entry));
 		if (!p2_entry.present) {
+#ifdef DEBUG_VIRTMEM
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p2.present " << p2_entry << "\n";
+#endif
 			if (success)
 				*success = false;
 			return 0;
@@ -58,6 +72,9 @@ namespace WVM {
 
 		P04Entry p3_entry = getWord(p2_entry.getNext() + pieces.p3Offset * sizeof(P04Entry));
 		if (!p3_entry.present) {
+#ifdef DEBUG_VIRTMEM
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p3.present " << p3_entry << "\n";
+#endif
 			if (success)
 				*success = false;
 			return 0;
@@ -65,6 +82,9 @@ namespace WVM {
 
 		P04Entry p4_entry = getWord(p3_entry.getNext() + pieces.p4Offset * sizeof(P04Entry));
 		if (!p4_entry.present) {
+#ifdef DEBUG_VIRTMEM
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p4.present " << p4_entry << "\n";
+#endif
 			if (success)
 				*success = false;
 			return 0;
@@ -75,12 +95,21 @@ namespace WVM {
 		if (success)
 			*success = p5_entry.present;
 
+#ifdef DEBUG_VIRTMEM
+		if (!p5_entry.present)
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p5.present " << p5_entry << "\n";
+#endif
+
 		lastMeta = p5_entry;
 
 		if (meta_out)
 			*meta_out = lastMeta;
 
-		info() << "virtmem: " << virtual_address << " -> " << (p5_entry.getStart() + pieces.pageOffset) << "\n";
+#ifdef DEBUG_VIRTMEM
+		info() << "virtmem(" << programCounter << "): " << virtual_address << " -> "
+		       << (p5_entry.getStart() + pieces.pageOffset) << "\n";
+#endif
+
 		return p5_entry.getStart() + pieces.pageOffset;
 	}
 

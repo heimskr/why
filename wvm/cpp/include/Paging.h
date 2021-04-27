@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "Defs.h"
 
 namespace WVM {
@@ -22,6 +24,7 @@ namespace WVM {
 
 		P04Entry(Word);
 		Word getNext() const;
+		operator std::string() const;
 	};
 
 	struct P5Entry {
@@ -36,6 +39,7 @@ namespace WVM {
 
 		P5Entry(Word);
 		Word getStart() const;
+		operator std::string() const;
 	};
 
 	struct PageMeta {
@@ -49,4 +53,7 @@ namespace WVM {
 		PageMeta() = default;
 		PageMeta(const P5Entry &);
 	};
+
+	std::ostream & operator<<(std::ostream &, const P04Entry &);
+	std::ostream & operator<<(std::ostream &, const P5Entry &);
 }
