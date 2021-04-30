@@ -361,7 +361,7 @@ export default class WASMC {
 	 */
 	convertDataPieces(type: string, value: number | string, key?: string): Long[] {
 		if (type.match(/^(in|floa)t$/)) {
-			return [Long.fromValue(value)];
+			return [Long.fromValue(value).toUnsigned()];
 		}
 		
 		if (type == "string") {
@@ -373,7 +373,7 @@ export default class WASMC {
 				throw new Error(`Expected numerical value for data type "bytes", received string.`);
 			}
 
-			return [...Array(Math.ceil(value / 8))].map(() => Long.fromInt(0));
+			return [...Array(Math.ceil(value / 8))].map(() => Long.fromInt(0, true));
 		}
 
 		if (type == "var") {
@@ -382,7 +382,7 @@ export default class WASMC {
 				this.dataVariables[key] = value.toString();
 			}
 
-			return [Long.UZERO];
+			return [Long.fromInt(0, true)];
 		}
 
 		throw new Error(`Error: unknown data type "${type}".`);
@@ -752,7 +752,7 @@ export default class WASMC {
 		const lower = imm;
 		const upper = rd | (rs << 7) | (this.ignoreFlags? 0 : flags << 14) |
 		              (CONDITIONS[conditions] << 16) | (opcode << 20);
-		return Long.fromBits(lower, upper);
+		return Long.fromBits(lower, upper, true);
 	}
 
 	/**
@@ -930,8 +930,8 @@ export default class WASMC {
 	 */
 	static longs2strs(longs: Long[], swap_endian: boolean = false): string[] {
 		if (swap_endian)
-			return longs.map(l => _.chunk(l.toString(16).padStart(16, "0"), 2).reverse().map(x => x.join("")).join(""));
-		return longs.map(l => l.toString(16).padStart(16, "0"));
+			return longs.map(l => _.chunk(l.toUnsigned().toString(16).padStart(16, "0"), 2).reverse().map(x => x.join("")).join(""));
+		return longs.map(l => l.toUnsigned().toString(16).padStart(16, "0"));
 	}
 
 	/**
