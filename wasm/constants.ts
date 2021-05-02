@@ -10,14 +10,16 @@ export type RegisterCategory = ("zero" | 0) | "g" | "sp" | "stack" | "fp" | "ret
                              | ("f" | "a" | "st" | "ra" | "t" | "s") | "m" | "e" | "r" | "k" | "lo";
 
 export type RMath = "add" | "sub" | "mult" | "multu" | "sll" | "srl" | "sra" | "mod" | "div" | "divu";
-export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "land" | "lnand" | "lnor" | "lnot" | "lor" | "lxnor" | "lxor";
+export type RLogic = "and" | "nand" | "nor" | "not" | "or" | "xnor" | "xor" | "land" | "lnand" | "lnor" | "lnot" | "lor"
+                   | "lxnor" | "lxor";
 export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
 export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "spush" | "spop" | "ms";
 export type RSpecial = "time" | "ring" | "sel" | "pgon" | "pgoff" | "setpt" | "svpg";
 export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
 
-export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui" | "divii" | "divuii";
+export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui"
+                  | "divii" | "divuii" | "sllii" | "srlii" | "sraii";
 export type ILogic = "andi" | "nandi" | "nori" | "ori" | "xnori" | "xori";
 export type IComp = "cmpi" | "sli" | "slei" | "seqi" | "sgei" | "sgi" | "slui" | "sleui" | "sgeui" | "sgui";
 export type IMem = "li" | "si" | "lni" | "lbi" | "sbi" | "lbni" | "set" | "lui" | "sspush" | "sspop";
@@ -104,6 +106,9 @@ export const I_TYPES: number[] = [
 	0b000000111010, // Sized Stack Pop
 	0b000000111011, // Set on Greater Than or Equal Unsigned Immediate
 	0b000000111100, // Set on Greater Than Unsigned Immediate
+	0b000000111110, // Shift Left Logical Inverse Immediate
+	0b000000111111, // Shift Right Logical Inverse Immediate
+	0b000001000000, // Shift Right Arithmetic Inverse Immediate
 ];
 
 export const J_TYPES: number[] = [
@@ -218,6 +223,9 @@ export const OPCODES: {[key in OpName]: number} = {
 	pgoff:  0b000000111101,
 	setpt:  0b000000111101,
 	svpg:   0b000000111101,
+	sllii:  0b000000111110,
+	srlii:  0b000000111111,
+	sraii:  0b000001000000,
 };
 
 export const FUNCTS: {[key in RType]: number} = {

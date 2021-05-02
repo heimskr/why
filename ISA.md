@@ -76,6 +76,9 @@
 						<li><a href="#op-slli">Shift Left Logical Immediate</a> (<code>slli</code>)</li>
 						<li><a href="#op-srli">Shift Right Logical Immediate</a> (<code>srli</code>)</li>
 						<li><a href="#op-srai">Shift Right Arithmetic Immediate</a> (<code>srai</code>)</li>
+						<li><a href="#op-slli">Shift Left Logical Inverse Immediate</a> (<code>sllii</code>)</li>
+						<li><a href="#op-srli">Shift Right Logical Inverse Immediate</a> (<code>srlii</code>)</li>
+						<li><a href="#op-srai">Shift Right Arithmetic Inverse Immediate</a> (<code>sraii</code>)</li>
 						<li><a href="#op-modi">Modulo Immediate</a> (<code>modi</code>)</li>
 						<li><a href="#op-divi">Divide Immediate</a> (<code>divi</code>)</li>
 						<li><a href="#op-divui">Divide Unsigned Immediate</a> (<code>divui</code>)</li>
@@ -570,6 +573,24 @@ Logically shifts the value in `rs` to the right by a number of bits equal to `im
 > `000000100100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Arithmetically shifts the value in `rs` to the right by a number of bits equal to `imm` and stores the result in `rd`.
+
+### <a name="op-sllii"></a>Shift Left Logical Inverse Immediate (`sllii`)
+> `imm << $rs -> $rd`  
+> `000000111110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Logically shifts `imm` to the left by a number of bits equal to the value in `rs` and stores the result in `rd`.
+
+### <a name="op-srlii"></a>Shift Right Logical Inverse Immediate (`srlii`)
+> `imm >>> $rs -> $rd`  
+> `000000111111` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Logically shifts `imm` to the right by a number of bits equal to the value in `rs` and stores the result in `rd`.
+
+### <a name="op-sraii"></a>Shift Right Arithmetic Inverse Immediate (`sraii`)
+> `imm >> $rs -> $rd`  
+> `000001000000` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Arithmetically shifts `imm` to the right by a number of bits equal to the value in `rs` and stores the result in `rd`.
 
 ### <a name="op-modi"></a>Modulo Immediate (`modi`)
 > `$rs % imm -> $rd` or `$rd %= imm`  

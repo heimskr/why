@@ -149,7 +149,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai | op_sspush | op_sspop
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_prb | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
-				 | op_page | op_setpt | op_svpg
+				 | op_page | op_setpt | op_svpg | op_sllii | op_srlii | op_sraii
 
 into			-> _ "->" _									{% d => null %}
 
@@ -295,6 +295,9 @@ op_srli			-> rv _ ">>>"  _ int into rv				{% d => ["srli",   d[0], d[6], d[4]] %
 				 | rv _ ">>>=" _ int						{% d => ["srli",   d[0], d[0], d[4]] %}
 op_srai			-> rv _ ">>"   _ int into rv				{% d => ["srai",   d[0], d[6], d[4]] %}
 				 | rv _ ">>="  _ int						{% d => ["srai",   d[0], d[0], d[4]] %}
+op_sllii		-> int _ "<<"  _ rv into rv					{% d => ["sllii",  d[4], d[6], d[0]] %}
+op_srlii		-> int _ ">>>" _ rv into rv					{% d => ["srlii",  d[4], d[6], d[0]] %}
+op_sraii		-> int _ ">>"  _ rv into rv					{% d => ["sraii",  d[4], d[6], d[0]] %}
 op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
 op_lbi			-> "[" _ int  _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], ["label", d[2]]] %}
