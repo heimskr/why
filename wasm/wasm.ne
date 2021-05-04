@@ -149,7 +149,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai | op_sspush | op_sspop
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_prb | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
-				 | op_page | op_setpt | op_svpg | op_sllii | op_srlii | op_sraii
+				 | op_page | op_setpt | op_svpg | op_sllii | op_srlii | op_sraii | op_qm
 
 into			-> _ "->" _									{% d => null %}
 
