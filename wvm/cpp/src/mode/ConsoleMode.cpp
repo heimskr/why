@@ -79,6 +79,8 @@ namespace WVM::Mode {
 			textbox += "Paging \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "P0") {
 			textbox += "P0 set to \e[1m" + split[0] + "\e[22m.";
+		} else if (verb == "PC") {
+			textbox += "Program counter: " + split[0];
 		}
 	}
 
@@ -159,6 +161,11 @@ namespace WVM::Mode {
 				*socket << ":Strict\n";
 			else
 				*socket << ":Strict " << split[1] << "\n";
+		} else if (first == "pc") {
+			if (size == 0)
+				*socket << ":GetPC\n";
+			else
+				textbox += errorPrefix + std::string("Setting the program counter is currently unsupported.");
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
