@@ -147,6 +147,11 @@ namespace WVM::Operations {
 					case FN_SVPG:   svpgOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
+			case OP_QUERY:
+				switch (funct) {
+					case FN_QM: qmOp(vm, rs, rt, rd, conditions, flags); return;
+				}
+				break;
 		}
 
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
@@ -1040,6 +1045,11 @@ namespace WVM::Operations {
 
 	void svpgOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
 		setReg(vm, rd, vm.pagingOn? 1 : 0, false);
+		vm.increment();
+	}
+
+	void qmOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
+		setReg(vm, rd, vm.getMemorySize(), false);
 		vm.increment();
 	}
 }
