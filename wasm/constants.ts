@@ -16,7 +16,8 @@ export type RComp = "cmp" | "sl" | "sle" | "seq" | "slu" | "sleu";
 export type RJump = "jr" | "jrc" | "jrl" | "jrlc";
 export type RMem = "c" | "l" | "s" | "cb" | "lb" | "sb" | "ch" | "lh" | "sh" | "spush" | "spop" | "ms";
 export type RSpecial = "time" | "ring" | "sel" | "pgon" | "pgoff" | "setpt" | "svpg";
-export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial;
+export type RQuery = "qm";
+export type RType = RMath | RLogic | RComp | RJump | RMem | RSpecial | RQuery;
 
 export type IMath = "addi" | "subi" | "multi" | "multui" | "slli" | "srli" | "srai" | "modi" | "divi" | "divui"
                   | "divii" | "divuii" | "sllii" | "srlii" | "sraii";
@@ -59,6 +60,7 @@ export const R_TYPES = [
 	0b000000110010, // Change Ring
 	0b000000111000, // Select
 	0b000000111101, // Paging
+	0b000001000001, // Query
 ];
 
 export const I_TYPES: number[] = [
@@ -226,6 +228,7 @@ export const OPCODES: {[key in OpName]: number} = {
 	sllii:  0b000000111110,
 	srlii:  0b000000111111,
 	sraii:  0b000001000000,
+	qm:     0b000001000001,
 };
 
 export const FUNCTS: {[key in RType]: number} = {
@@ -238,6 +241,7 @@ export const FUNCTS: {[key in RType]: number} = {
 	ring:  0b000000000000,
 	sel:   0b000000000000,
 	pgoff: 0b000000000000,
+	qm:    0b000000000000,
 	jrc:   0b000000000001,
 	l:     0b000000000001,
 	nand:  0b000000000001,

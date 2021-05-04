@@ -181,6 +181,7 @@
 						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
 						<li><a href="#op-setpt">Set Page Table</a> (<code>setpt</code>)</li>
 						<li><a href="#op-svpg">Save Paging</a> (<code>svpg</code>)</li>
+						<li><a href="#op-qm">Query Memory</a> (<code>qm</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -1011,27 +1012,31 @@ Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">
 > `page off`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
 
-Disables virtual memory.
+Disables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-pgon"></a>Enable Paging (`pgon`)
 > `page on`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
-Enables virtual memory.
+Enables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-setpt"></a>Set Page Table (`setpt`)
-
 > `setpt $rs`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
 
 Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-svpg"></a>Save Paging (`svpg`)
-
 > `page -> $rd`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000011`
 
 Sets `rd` to 1 if paging is enabled or 0 if paging is disabled.
+
+### <a name="op-qm"></a>Query Memory (`qm`)
+> `? mem -> $rd`  
+> `000001000001` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+
+Sets `rd` to the size of the main memory in bytes.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 

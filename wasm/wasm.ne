@@ -388,6 +388,7 @@ op_page			-> "page" __ "on"							{% d => ["pgon",  0,   0,    0 ] %}
 				 | "page" __ "off"							{% d => ["pgoff", 0,   0,    0 ] %}
 op_setpt		-> "setpt" _ reg							{% d => ["setpt", 0, d[2],   0 ] %}
 op_svpg			-> "page" into reg							{% d => ["svpg",  0,   0,  d[2]] %}
+op_qm			-> "?" _ "mem" into reg						{% d => ["qm",    0,   0,  d[4]] %}
 
 gap				-> brc[int]									{% d => ["gap",  d[0]] %}
 
