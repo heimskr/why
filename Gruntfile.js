@@ -144,8 +144,7 @@ module.exports = function(grunt) {
 	}
 
 	registerNearley("wasm/wasm", "wasm");
-	registerNearley("llvm/llvm", "llvm");
-	
+
 	grunt.event.on("watch", (action, file, name) => {
 		// There's almost certainly a better way to do this.
 		if (name == "wasm") {
@@ -166,5 +165,5 @@ module.exports = function(grunt) {
 	
 	// grunt.registerTask("default", ["browserify:dev", "jsdoc", "nearley", "sass", "watch"]);
 	// grunt.registerTask("default", ["ts", "nearley_wasm", "nearley_llvm", "browserify:dev", "watch"]);
-	grunt.registerTask("default", ["nearley_wasm", "nearley_llvm", "browserify:dev", "sass", "watch"]);
+	grunt.registerTask("default", ["nearley_wasm", "browserify:dev", "sass", "watch"]);
 };
