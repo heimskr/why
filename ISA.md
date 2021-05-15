@@ -292,7 +292,7 @@ An entry with type `1` declares the filename of a source file and can be referen
 
 An entry with type `2` declares a function name. It uses the same format as a type `1` entry, but instead of a filename, a function name is stored instead.
 
-An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next four bytes indicate the column number. The next three bytes indicate the index of the referenced type `2` entry. The final five bytes indicate the address of an instruction.
+An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2` entry. The final eight bytes indicate the address of an instruction.
 
 ### Assembly syntax
 <pre>
