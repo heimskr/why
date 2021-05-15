@@ -74,7 +74,7 @@ int				-> (int_hex | int_bin | int_dec | char)		{% d => d[0][0] %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
 				 | ("-":? ".") [0-9]:+						{% d => parseFloat(filter(d[0]).join("") + d[1].join("")) %}
 
-section			-> (data_section | code_section | meta_section | include_section)
+section			-> (data_section | code_section | meta_section | include_section | debug_section)
 															{% d => d[0][0] %}
 
 meta_section	-> _ meta_header _ sep meta:*				{% d => ["meta", compileObject(d[4])] %}
@@ -99,6 +99,7 @@ datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
 debug_section	-> _ debug_header _ sep debug_line:*		{% d => ["debug", filter(d[4])] %}
 debug_header	-> "#debug" | "#dbg"						{% d => null %}
 debug_line		-> (type1 | type2 | type3) _ sep			{% d => d[0][0] %}
+				 | _ sep									{% d => null %}
 type1			-> "1" _ dqstring							{% d => [1, d[2]] %}
 type2			-> "2" _ dqstring							{% d => [2, d[2]] %}
 type3			-> "3" __ udec __ udec __ udec __ udec		{% d => [3, d[2], d[4], d[6], d[8]] %}
