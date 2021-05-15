@@ -107,7 +107,8 @@ namespace WVM {
 
 #ifdef DEBUG_VIRTMEM
 		info() << "virtmem(" << programCounter << "): " << virtual_address << " -> "
-		       << (p5_entry.getStart() + pieces.pageOffset) << "\n";
+		       << (p5_entry.getStart() + pieces.pageOffset) << " = " << p5_entry.getStart() << " + "
+		       << pieces.pageOffset << "\n";
 #endif
 
 		return p5_entry.getStart() + pieces.pageOffset;

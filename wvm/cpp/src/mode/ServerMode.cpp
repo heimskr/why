@@ -11,6 +11,8 @@
 #include "Util.h"
 #include "VMError.h"
 
+// #define CATCH_TICK
+
 void sigint_handler(int) {
 	if (WVM::Mode::ServerMode::instance)
 		WVM::Mode::ServerMode::instance->stop();
@@ -437,9 +439,12 @@ namespace WVM::Mode {
 	}
 
 	bool ServerMode::tick() {
-		Word pc = vm.programCounter;
+#ifdef CATCH_TICK
+		const Word pc = vm.programCounter;
 		try {
+#endif
 			return vm.tick();
+#ifdef CATCH_TICK
 		} catch (std::exception &err) {
 			std::cerr << "Execution failed: " << err.what() << "\n";
 			std::cerr << "Offending address: " << pc << "\n";
@@ -454,5 +459,6 @@ namespace WVM::Mode {
 
 			throw;
 		}
+#endif
 	}
 }

@@ -966,8 +966,8 @@ namespace WVM::Operations {
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		std::stringstream ss;
 		ss << Why::coloredRegister(&rs - vm.registers) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
-		   << rs;
-		// vm.onPrint(ss.str());
+		   << rs << "\n";
+		vm.onPrint(ss.str());
 		DBG(ss.str());
 		vm.increment();
 	}
@@ -983,6 +983,7 @@ namespace WVM::Operations {
 	}
 
 	void prcOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		info() << "prc: '" << static_cast<char>(rs) << "', " << static_cast<unsigned int>(static_cast<unsigned char>(rs)) << "\n";
 		vm.onPrint(std::string(1,  static_cast<char>(rs)));
 		vm.increment();
 	}
