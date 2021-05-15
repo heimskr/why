@@ -62,7 +62,7 @@ export type SymbolType = "data" | "code" | "other";
 export type DebugData = (Debug1 | Debug2 | Debug3)[];
 export type Debug1 = [1, string];
 export type Debug2 = [2, string];
-export type Debug3 = [3, number, number, number, number] & {count?: number, address?: Long};
+export type Debug3 = [3, number, number, number, number] & {count?: number, address?: Long}; // [3, file, line, col, func]
 
 /**
  * Represents a `wasmc` instance.
@@ -1003,8 +1003,7 @@ export default class WASMC {
 				bytes_copy.push(0);
 		}
 
-		const chunks = _.chunk(bytes_copy, 8);
-		return chunks.map(chunk => Long.fromString(chunk.map(x => x.toString(16).padStart(2, "0")).join(""), true, 16));
+		return _.chunk(bytes_copy, 8).map(chunk => Long.fromBytesBE(chunk));
 	}
 
 	/**

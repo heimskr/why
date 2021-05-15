@@ -139,7 +139,7 @@ export default class Linker {
 			// of Object.assign.
 			if (".end" in subtable) {
 				delete subtable[".end"];
-				subtableLength -= 3; // The .end entry is always 3 words long.
+				subtableLength -= 3; // A .end entry is always 3 words long.
 			}
 
 			Linker.detectSymbolCollisions(this.combinedSymbols, subtable);

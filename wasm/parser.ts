@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as Long from "long";
 import _ from "../util";
 
-import {SymbolTable} from "./wasmc";
+import {SymbolTable, DebugData, Debug1, Debug2, Debug3} from "./wasmc";
 import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS, ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
 
 const minimist = require("minimist");
@@ -79,6 +79,7 @@ export default class Parser {
 	rawMeta: Long[];
 	rawCode: Long[];
 	rawData: Long[];
+	rawDebugData: Long[];
 	meta: ParserMeta;
 	
 	private static _formatStyle: FormatStyle = "wasm";
@@ -125,8 +126,7 @@ export default class Parser {
 	parse(silent: boolean = true) {
 		const longs = this.raw;
 
-		/** The offsets defined in the program's metadata section.
-		 *  @type {Object<string, number>} */
+		/** The offsets defined in the program's metadata section.  */
 		this.offsets = {
 			$symtab: longs[0].toInt(),
 			$code:   longs[1].toInt(),
@@ -135,14 +135,12 @@ export default class Parser {
 			$end:    longs[4].toInt()
 		};
 
-		/** Contains all the unparsed Longs in the metadata section.
-		 *  @type {Long[]} */
+		/** Contains all the unparsed Longs in the metadata section. */
 		this.rawMeta = longs.slice(0, this.offsets.$symtab / 8);
 
 		const [metaName, metaVersion, metaAuthor] = _.longStrings(longs.slice(7, this.offsets.$code));
 		
-		/** The parsed metadata section.
-		 * @type {Object} */
+		/** The parsed metadata section. */
 		this.meta = {
 			orcid: _.chunk(_.longString([longs[5], longs[6]]), 4).map(n => n.join("")).join("-"),
 			name: metaName,
@@ -150,25 +148,23 @@ export default class Parser {
 			author: metaAuthor,
 		};
 
-		/** Contains all the unparsed Longs in the symbol table.
-		 *  @type {Long[]} */
+		/** Contains all the unparsed Longs in the symbol table. */
 		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$code / 8);
 
-		/** Contains the parsed symbol table.
-		 *  @type {SymbolTable} */
+		/** Contains the parsed symbol table. */
 		this.symbols = this.getSymbols();
 
-		/** Contains all the unparsed Longs in the code section.
-		 *  @type {Long[]} */
+		/** Contains all the unparsed Longs in the code section. */
 		this.rawCode = longs.slice(this.offsets.$code / 8, this.offsets.$data / 8);
 
-		/** Contains all the parsed instructions.
-		 *  @type {Object} */
+		/** Contains all the parsed instructions. */
 		this.code = this.rawCode.map(Parser.parseInstruction);
 
-		/** Contains all the unparsed Longs in the data section.
-		 *  @type {Long[]} */
-		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
+		/** Contains all the unparsed Longs in the data section. */
+		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$debug / 8);
+
+		/** Contains all the unparsed Longs in the debug data section. */
+		this.rawData = longs.slice(this.offsets.$debug / 8, this.offsets.$end / 8);
 
 		if (!silent) {
 			console.log(dim("/*"));
@@ -212,6 +208,49 @@ export default class Parser {
 			i += 2 + len;
 		}
 
+		return out;
+	}
+
+	/** Parses the program's debug data section. */
+	getDebugData(): DebugData {
+		const longs = this.raw;
+		const start = longs[3].toInt() / 8;
+		const end = longs[4].toInt() / 8;
+		const out: DebugData = [];
+		for (let i = start; i < end;) {
+			let bytes = longs[i].toBytesBE();
+			const type = bytes[0];
+			if (type == 1 || type == 2) {
+				const nameLength = bytes[1] | (bytes[2] << 8) | (bytes[3] << 16);
+				let name = "";
+				for (let j = 4; j < nameLength + 4; ++j) {
+					const mod = j % 8;
+					if (mod == 0)
+						bytes = longs[++i].toBytesBE();
+					name += String.fromCharCode(bytes[mod]);
+				}
+				// This is stupid, but it's necessary to appease TypeScript.
+				if (type == 1)
+					out.push([1, name]);
+				else
+					out.push([2, name]);
+				i++;
+			} else if (type == 3) {
+				const fileIndex = bytes[1] | (bytes[2] << 8) | (bytes[3] << 16);
+				const line = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
+				bytes = longs[++i].toBytesBE();
+				const column = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16);
+				const count = bytes[3];
+				const funcIndex = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
+				const toAdd: Debug3 = [3, fileIndex, line, column, funcIndex];
+				toAdd.count = count;
+				toAdd.address = longs[++i];
+				out.push(toAdd);
+				++i;
+			} else {
+				throw `Invalid debug data entry type: ${type}`;
+			}
+		}
 		return out;
 	}
 
@@ -299,6 +338,11 @@ export default class Parser {
 				type: "j"
 			};
 		}
+	}
+
+	parseInstructionWithDebug(instruction: Long | string, address: Long): ParserInstruction {
+		let parsed: ParserInstruction = Parser.parseInstruction(instruction);
+		return parsed;
 	}
 
 	/** Styles an operator.
