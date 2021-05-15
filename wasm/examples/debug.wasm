@@ -6,9 +6,9 @@ version: "1"
 
 /*
 int main() {
-	int x = -1;
+	int x = -2;
 	++x;
-	return x;
+	return x + 1;
 }
 */
 
@@ -25,7 +25,8 @@ int main() {
 <halt>
 
 sub main() {
-	-1 -> $t0 !2
+	-2 -> $t0 !2
 	$t0 + 1 -> $t0 !3
-	$t0 -> $r0 !4
+	$t0 + 1 -> $t1 !4
+	$t1 -> $r0 !4
 }
