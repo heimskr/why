@@ -242,18 +242,20 @@ export default class Linker {
 		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
 
 		// Step 11: Update the offset section in the metadata.
+		const encodedDebug = WASMC.encodeDebugData(this.combinedDebug);
 		const meta = this.parser.rawMeta;
 		meta[1] = meta[1].add(codeOffset); // Beginning of code
 		meta[2] = meta[1].add(this.combinedCode.length * 8); // Beginning of data
-		meta[3] = meta[2].add(this.combinedData.length * 8); // Beginning of heap
+		meta[3] = meta[2].add(this.combinedData.length * 8); // Beginning of debug data
+		meta[4] = meta[3].add(encodedDebug.length * 8); // Beginning of heap
 
 		// Step 12: Concatenate all the combined sections and write the result to the output file.
 		const combined = [
-			...this.parser.rawMeta,
+			...meta,
 			...encodedCombinedSymbols,
 			...this.combinedCode,
 			...this.combinedData,
-			...WASMC.encodeDebugData(this.combinedDebug)
+			...encodedDebug
 		];
 
 		// Step 13:
