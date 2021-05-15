@@ -2,7 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 const chalk = require("chalk");
-import minimist = require("minimist");
+const minimist = require("minimist");
 import * as Long from "long";
 import WASMC, {SymbolTable, SymbolType} from "./wasmc";
 import Parser, {ParserInstruction, ParserInstructionI, ParserInstructionJ, SegmentOffsets} from "./parser";
@@ -90,22 +90,16 @@ export default class Linker {
 		const mainSymbols = this.parser.getSymbols();
 		const symtabLength = this.parser.rawSymbols.length;
 		
-		/**
-		 * Contains the combination of all parsed symbol tables.
-		 * @type {SymbolTable}
-		 */
+		/** Contains the combination of all parsed symbol tables.
+		 *  @type {SymbolTable} */
 		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser.rawData, this.parser.offsets);
 		
-		/**
-		 * Contains the combination of all parsed code sections.
-		 * @type {Long[]}
-		 */
+		/** Contains the combination of all parsed code sections.
+		 *  @type {Long[]} */
 		this.combinedCode = _.cloneDeep(this.parser.rawCode);
 
-		/**
-		 * Contains the combination of all parsed data sections.
-		 * @type {Long[]}
-		 */
+		/** Contains the combination of all parsed data sections.
+		 *  @type {Long[]} */
 		this.combinedData = _.cloneDeep(this.parser.rawData);
 
 		// We need to keep track of symbol types separately because it becomes difficult to recompute them

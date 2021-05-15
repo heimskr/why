@@ -54,9 +54,15 @@ export type ASMParsed = {
 	code: ASMParsedInstruction[],
 	meta: {[key: string]: any},
 	data: {[key: string]: DataPair},
+	debug: DebugData,
 	includes?: string[]
 };
 export type SymbolType = "data" | "code" | "other";
+
+export type DebugData = (Debug1 | Debug2 | Debug3)[];
+export type Debug1 = [1, string];
+export type Debug2 = [2, string];
+export type Debug3 = [3, number, number, number, number] & {count?: number, address?: Long};
 
 /**
  * Represents a `wasmc` instance.
@@ -70,6 +76,7 @@ export default class WASMC {
 	data: Long[];
 	code: Long[];
 	symbolTable: Long[];
+	debugData: Long[];
 	unknownSymbols: string[];
 	dataOffsets: {[key: string]: number};
 	dataVariables: {[key: string]: string};
@@ -100,7 +107,7 @@ export default class WASMC {
 		 * @type {Object}
 		 * @name module:wasm~WASMC#parsed
 	 	 */
-		this.parsed = {meta: {}, data: {}, code: []};
+		this.parsed = {meta: {}, data: {}, code: [], debug: []};
 
 		/**
 		 * Contains a list of offsets/labels.
@@ -229,6 +236,10 @@ export default class WASMC {
 		if (typeof this.parsed.code == "undefined") {
 			this.parsed.code = [];
 		}
+
+		if (typeof this.parsed.debug == "undefined") {
+			this.parsed.debug = [];
+		}
 	}
 
 	/**
@@ -245,6 +256,8 @@ export default class WASMC {
 
 		const expanded = this.expandCode();
 		this.metaOffsetData = this.metaOffsetCode.add(expanded.length * 8);
+
+		this.createDebugData(this.parsed.debug, expanded);
 
 		const end = this.metaOffsetData.toInt() + this.dataLength * 8;
 		this.offsets[".end"] = end;
@@ -440,7 +453,7 @@ export default class WASMC {
 
 				const currentValues = _.range(0, vals.length).map(n => _A[n]);
 				if (item.inSubroutine) {
-					currentValues.unshift(_RA);
+					currentValues.unshift(_RT);
 				}
 
 				if (currentValues.length) {
@@ -586,9 +599,7 @@ export default class WASMC {
 		expanded.forEach(item => {
 			// First off, now that we've recorded all the label positions,
 			// we can remove the label tags.
-			console.log("Old:", item);
 			item.shift();
-			console.log("New:", item);
 
 			// Look at everything past the operation name (the arguments).
 			item.slice(2).forEach((arg, i) => {
@@ -855,6 +866,53 @@ export default class WASMC {
 	}
 
 	/**
+	 */
+	createDebugData(arr: DebugData, code: ASMInstruction[]): Long[] {
+		let out: Long[] = [];
+		for (const item of arr) {
+			if (item[0] == 1 || item[0] == 2) {
+				const length = item[1].length;
+				if (0xffffff < length)
+					WASMC.warn("Name too long (" + length + " characters, type = " + item[0] + ")");
+				WASMC.bytes2longs([item[0], length & 0xff, (length >> 8) & 0xff, (length >> 16) & 0xff, ...item[1]])
+					.map(long => out.push(long));
+			} else if (item[0] == 3) {
+				const [type, file, line, col, func] = item;
+				const {count, address} = item;
+				if (0xffffff < file)
+					WASMC.warn("File index too large:", file);
+				if (0xffffffff < line)
+					WASMC.warn("Line number too large:", line);
+				if (0xffffff < col)
+					WASMC.warn("Column number too large:", col);
+				if (0xffffff < func)
+					WASMC.warn("Function index too large:", func);
+				const bytes: number[] = [type];
+				const add = (n, b) => {
+					for (let i = 0; i < b; ++i)
+						bytes.push((n >> (8 * i)) & 0xff);
+				};
+
+				add(file, 3);
+				add(line, 4);
+				add(col,  3);
+				bytes.push(count || 0);
+				add(func, 3);
+
+				if (typeof address == "undefined")
+					add(0, 8);
+				else
+					for (let i = 0; i < 8; ++i)
+						bytes.push(address.shiftRightUnsigned(8 * i).and(0xff).toUnsigned().toInt());
+				WASMC.bytes2longs(bytes).map(long => out.push(long));
+			} else {
+				WASMC.warn("Invalid debug data index:", item[0]);
+			}
+		}
+		return out;
+	}
+
+	/**
 	 * Encodes a parsed symbol table into an array of Longs.
 	 * @param  symbolTable An object mapping a symbol name to a tuple of its ID and its address.
 	 * @return An encoded symbol table.
@@ -868,6 +926,18 @@ export default class WASMC {
 	}
 
 	/**
+	 * Encodes the name of a symbol.
+	 * @param  {string} name A symbol name.
+	 * @return {number} The symbol name encoded as a number.
+	 */
+	static encodeSymbol(name: string): number {
+		const hash = createHash("sha256");
+		hash.update(name);
+		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
+		return Math.abs(parseInt(hash.digest("hex").substr(0, 7), 16));
+	}
+
+	/**
 	 * Returns the length in words of the data section.
 	 */
 	get dataLength(): number {
@@ -875,13 +945,15 @@ export default class WASMC {
 	}
 
 	get metaOffsetSymbols(): Long { return this.meta[0]; }
-	get metaOffsetCode():    Long { return this.meta[1]; }
-	get metaOffsetData():    Long { return this.meta[2]; }
-	get metaOffsetEnd():     Long { return this.meta[3]; }
+	get metaOffsetDebug():   Long { return this.meta[1]; }
+	get metaOffsetCode():    Long { return this.meta[2]; }
+	get metaOffsetData():    Long { return this.meta[3]; }
+	get metaOffsetEnd():     Long { return this.meta[4]; }
 	set metaOffsetSymbols(to: Long) { this.meta[0] = to; }
-	set metaOffsetCode(to: Long)    { this.meta[1] = to; }
-	set metaOffsetData(to: Long)    { this.meta[2] = to; }
-	set metaOffsetEnd(to: Long)     { this.meta[3] = to; }
+	set metaOffsetDebug(to: Long)   { this.meta[1] = to; }
+	set metaOffsetCode(to: Long)    { this.meta[2] = to; }
+	set metaOffsetData(to: Long)    { this.meta[3] = to; }
+	set metaOffsetEnd(to: Long)     { this.meta[4] = to; }
 
 	/**
 	 * Prints a message to stderr and exits the process with return code 1.
@@ -891,6 +963,19 @@ export default class WASMC {
 		console.error(...a);
 		process.exit(1);
 		throw a;
+	}
+
+	/** Converts an array of numbers (under 256) or strings (one character long) to an array of Longs. */
+	static bytes2longs(bytes: (number | string)[]): Long[] {
+		const bytes_copy = bytes.map(x => typeof x == "string"? x.charCodeAt(0) : (x < 0? 127 - x : x));
+		if (bytes_copy.length % 8 != 0) {
+			const to_add = 8 - (bytes_copy.length % 8);
+			for (let i = 0; i < to_add; i++)
+				bytes_copy.push(0);
+		}
+
+		const chunks = _.chunk(bytes_copy, 8);
+		return chunks.map(chunk => Long.fromString(chunk.map(x => x.toString(16).padStart(2, "0")).join(""), true, 16));
 	}
 
 	/**
@@ -947,24 +1032,12 @@ export default class WASMC {
 	static convertRegister(x: Register | number): number {
 		return x instanceof Array? REGISTER_OFFSETS[x[x.length - 2]] + x[x.length - 1] : x;
 	}
-
-	/**
-	 * Encodes the name of a symbol.
-	 * @param  {string} name A symbol name.
-	 * @return {number} The symbol name encoded as a number.
-	 */
-	static encodeSymbol(name: string): number {
-		const hash = createHash("sha256");
-		hash.update(name);
-		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
-		return Math.abs(parseInt(hash.digest("hex").substr(0, 7), 16));
-	}
 }
 
 const _A:  Register[] = _.range(0, 16).map(n => ["register", "a", n]);
-const _RA: Register   = ["register", "return", 0];
+const _RT: Register   = ["register", "return", 0];
 const _M:  Register[] = _.range(0, 16).map(n => ["register", "m", n]);
-const _0:  Register    = ["register", "zero",  0];
+const _0:  Register   = ["register", "zero",  0];
 
 if (require.main === module) {
 	const options = minimist(process.argv.slice(2), {

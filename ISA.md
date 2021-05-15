@@ -284,7 +284,7 @@ version: "4"
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
 ## <a name="prog-debug"></a>Debug Data Section
-The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type.
+The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
 
 An entry with type `0` is invalid.
 

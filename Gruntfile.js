@@ -102,7 +102,7 @@ module.exports = function(grunt) {
 		ts: {
 			options: {
 				compile: true,
-				// target: "es6",
+				target: "es6",
 				// lib: ["es5", "es6", "ESNext"],
 				// module: "commonjs",
 				sourceMap: true,
