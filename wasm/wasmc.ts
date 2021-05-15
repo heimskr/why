@@ -143,7 +143,14 @@ export default class WASMC {
 		 * @name module:wasm~WASMC#symbolTable
 		 */
 		this.symbolTable = [];
-		
+
+		/**
+		 * Contains the encoded debug data.
+		 * @type {Long[]}
+		 * @name module:wasm~WASMC#debugData
+		 */
+		this.debugData = [];
+
 		/**
 		 * An array of unknown symbols while compiling.
 		 * @type {string[]}
@@ -256,19 +263,19 @@ export default class WASMC {
 
 		const expanded = this.expandCode();
 		this.metaOffsetData = this.metaOffsetCode.add(expanded.length * 8);
+		this.metaOffsetDebug = this.metaOffsetData.add(this.dataLength * 8);
 
-		this.createDebugData(this.parsed.debug, expanded);
+		this.debugData = this.createDebugData(this.parsed.debug, expanded);
 
-		const end = this.metaOffsetData.toInt() + this.dataLength * 8;
-		this.offsets[".end"] = end;
-		this.metaOffsetEnd = Long.fromInt(end, true);
+		this.metaOffsetEnd = this.metaOffsetDebug.add(this.debugData.length * 8);
+		this.offsets[".end"] = this.metaOffsetEnd.toInt();
 
 		this.setDataOffsets(this.metaOffsetData.toInt());
 		this.reprocessData();
 		this.processCode(this.expandLabels(expanded));
 		this.symbolTable = this.createSymbolTable(labels, false);
 
-		this.assembled = [...this.meta, ...this.symbolTable, ...this.code, ...this.data];
+		this.assembled = [...this.meta, ...this.symbolTable, ...this.code, ...this.data, ...this.debugData];
 
 		if (this.options.debug) {
 			console.log({
@@ -876,39 +883,61 @@ export default class WASMC {
 					WASMC.warn("Name too long (" + length + " characters, type = " + item[0] + ")");
 				WASMC.bytes2longs([item[0], length & 0xff, (length >> 8) & 0xff, (length >> 16) & 0xff, ...item[1]])
 					.map(long => out.push(long));
-			} else if (item[0] == 3) {
-				const [type, file, line, col, func] = item;
-				const {count, address} = item;
-				if (0xffffff < file)
-					WASMC.warn("File index too large:", file);
-				if (0xffffffff < line)
-					WASMC.warn("Line number too large:", line);
-				if (0xffffff < col)
-					WASMC.warn("Column number too large:", col);
-				if (0xffffff < func)
-					WASMC.warn("Function index too large:", func);
-				const bytes: number[] = [type];
-				const add = (n, b) => {
-					for (let i = 0; i < b; ++i)
-						bytes.push((n >> (8 * i)) & 0xff);
-				};
-
-				add(file, 3);
-				add(line, 4);
-				add(col,  3);
-				bytes.push(count || 0);
-				add(func, 3);
-
-				if (typeof address == "undefined")
-					add(0, 8);
-				else
-					for (let i = 0; i < 8; ++i)
-						bytes.push(address.shiftRightUnsigned(8 * i).and(0xff).toUnsigned().toInt());
-				WASMC.bytes2longs(bytes).map(long => out.push(long));
-			} else {
+			} else if (item[0] != 3) {
 				WASMC.warn("Invalid debug data index:", item[0]);
 			}
 		}
+
+		for (let i = 0; i < code.length; ++i) {
+			const instruction = code[i];
+			if (typeof instruction[1] != "number")
+				continue;
+
+			const debug = instruction[1];
+			const item = arr[debug];
+			const [type, file, line, col, func] = item;
+
+			const address = this.metaOffsetCode.add(8 * i);
+			let count = 1;
+			for (let j = i + 1; j < code.length; ++j) {
+				const other_debug = code[j][1];
+				if (other_debug == debug)
+					++count;
+				else
+					break;
+			}
+
+			if (0xffffff < file)
+				WASMC.warn("File index too large:", file);
+			if (0xffffffff < line)
+				WASMC.warn("Line number too large:", line);
+			if (0xffffff < col)
+				WASMC.warn("Column number too large:", col);
+			if (0xffffff < func)
+				WASMC.warn("Function index too large:", func);
+
+			const bytes: number[] = [type];
+			const add = (n, b) => {
+				for (let j = 0; j < b; ++j)
+					bytes.push((n >> (8 * j)) & 0xff);
+			};
+
+			add(file, 3);
+			add(line, 4);
+			add(col,  3);
+			bytes.push(count || 0);
+			add(func, 3);
+
+			if (typeof address == "undefined")
+				add(0, 8);
+			else
+				for (let j = 0; j < 8; ++j)
+					bytes.push(address.shiftRightUnsigned(8 * j).and(0xff).toUnsigned().toInt());
+
+			WASMC.bytes2longs(bytes).map(long => out.push(long));
+			i += count - 1;
+		}
+
 		return out;
 	}
 
@@ -945,14 +974,14 @@ export default class WASMC {
 	}
 
 	get metaOffsetSymbols(): Long { return this.meta[0]; }
-	get metaOffsetDebug():   Long { return this.meta[1]; }
-	get metaOffsetCode():    Long { return this.meta[2]; }
-	get metaOffsetData():    Long { return this.meta[3]; }
+	get metaOffsetCode():    Long { return this.meta[1]; }
+	get metaOffsetData():    Long { return this.meta[2]; }
+	get metaOffsetDebug():   Long { return this.meta[3]; }
 	get metaOffsetEnd():     Long { return this.meta[4]; }
 	set metaOffsetSymbols(to: Long) { this.meta[0] = to; }
-	set metaOffsetDebug(to: Long)   { this.meta[1] = to; }
-	set metaOffsetCode(to: Long)    { this.meta[2] = to; }
-	set metaOffsetData(to: Long)    { this.meta[3] = to; }
+	set metaOffsetCode(to: Long)    { this.meta[1] = to; }
+	set metaOffsetData(to: Long)    { this.meta[2] = to; }
+	set metaOffsetDebug(to: Long)   { this.meta[3] = to; }
 	set metaOffsetEnd(to: Long)     { this.meta[4] = to; }
 
 	/**

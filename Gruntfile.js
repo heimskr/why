@@ -104,7 +104,7 @@ module.exports = function(grunt) {
 				compile: true,
 				target: "es6",
 				// lib: ["es5", "es6", "ESNext"],
-				// module: "commonjs",
+				module: "commonjs",
 				sourceMap: true,
 				// noImplicitAny: false,
 				fast: "watch",

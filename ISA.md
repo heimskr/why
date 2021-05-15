@@ -11,9 +11,9 @@
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
-				<li><a href="#prog-debug">Debug Data Section</a></li>
-				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
+				<li><a href="#prog-data">Data Section</a></li>
+				<li><a href="#prog-debug">Debug Data Section</a></li>
 			</ol>
 		</li>
 		<li><a href="#rings">Rings</a></li>
@@ -263,9 +263,9 @@ Programs are divided into four sections: metadata, symbol table, code and data. 
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
 
 * `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x01`: Address of the beginning of the [debug data section](#prog-debug).
-* `0x02`: Address of the beginning of the [code section](#prog-code).
-* `0x03`: Address of the beginning of the [data section](#prog-data).
+* `0x01`: Address of the beginning of the [code section](#prog-code).
+* `0x02`: Address of the beginning of the [data section](#prog-data).
+* `0x03`: Address of the beginning of the [debug data section](#prog-debug).
 * `0x04`: Total size of the program.
 * `0x05`–`0x06`: ORCID of the author (represented with ASCII).
 * `0x07`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
@@ -282,6 +282,21 @@ version: "4"
 
 ## <a name="prog-symtab"></a>Symbol Table Section
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+
+## <a name="prog-code"></a>Code Section
+The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
+
+## <a name="prog-data"></a>Data Section
+The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
+
+### Assembly syntax
+Variables and their values are declared with JSON-like markup:
+
+<pre>
+#data
+some_string: "this is an example."
+some_number: 42
+</pre>
 
 ## <a name="prog-debug"></a>Debug Data Section
 The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
@@ -314,21 +329,6 @@ The assembly syntax for type `3` entries defines a template. Multiple type `3` e
 	$t5 - $m0 -> $t5 !3
 	$t5 & -1  -> $t5 !3
 // ...
-</pre>
-
-## <a name="prog-code"></a>Code Section
-The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
-
-## <a name="prog-data"></a>Data Section
-The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
-
-### Assembly syntax
-Variables and their values are declared with JSON-like markup:
-
-<pre>
-#data
-some_string: "this is an example."
-some_number: 42
 </pre>
 
 # <a name="rings"></a>Rings
