@@ -926,7 +926,7 @@ export default class WASMC {
 			add(line, 4);
 			add(col,  3);
 			bytes.push(count || 0);
-			add(func, 3);
+			add(func, 4);
 
 			if (typeof address == "undefined")
 				add(0, 8);

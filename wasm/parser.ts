@@ -4,7 +4,9 @@ import * as Long from "long";
 import _ from "../util";
 
 import {SymbolTable, DebugData, Debug1, Debug2, Debug3} from "./wasmc";
-import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS, ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+import WASMC from "./wasmc";
+import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS,
+        ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
 
 const minimist = require("minimist");
 const chalk_ = require("chalk");
@@ -223,7 +225,7 @@ export default class Parser {
 			if (type == 1 || type == 2) {
 				const nameLength = bytes[1] | (bytes[2] << 8) | (bytes[3] << 16);
 				let name = "";
-				for (let j = 4; j < nameLength + 4; ++j) {
+				for (let j = 4; j < nameLength + 4; j++) {
 					const mod = j % 8;
 					if (mod == 0)
 						bytes = longs[++i].toBytesBE();
@@ -244,9 +246,9 @@ export default class Parser {
 				const funcIndex = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
 				const toAdd: Debug3 = [3, fileIndex, line, column, funcIndex];
 				toAdd.count = count;
-				toAdd.address = longs[++i];
+				toAdd.address = WASMC.swapEndian(longs[++i]);
 				out.push(toAdd);
-				++i;
+				i++;
 			} else {
 				throw `Invalid debug data entry type: ${type}`;
 			}
@@ -736,6 +738,8 @@ if (require.main === module) {
 
 		console.log(Parser.formatInstruction(num.toString(2).padStart(64, "0"), {}));
 	} else {
-		new Parser().open(name, false);
+		const parser = new Parser();
+		parser.open(name, false);
+		console.log("Debug data:", parser.getDebugData());
 	}
 }
