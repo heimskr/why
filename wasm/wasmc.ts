@@ -872,8 +872,7 @@ export default class WASMC {
 		}));
 	}
 
-	/**
-	 */
+	/** Creates and encodes a debug data section given type 1/2 entries + type 3 templates and an array of code. */
 	createDebugData(arr: DebugData, code: ASMInstruction[]): Long[] {
 		let out: Long[] = [];
 		for (const item of arr) {
@@ -882,7 +881,7 @@ export default class WASMC {
 				if (0xffffff < length)
 					WASMC.warn("Name too long (" + length + " characters, type = " + item[0] + ")");
 				WASMC.bytes2longs([item[0], length & 0xff, (length >> 8) & 0xff, (length >> 16) & 0xff, ...item[1]])
-					.map(long => out.push(long));
+					.forEach(long => out.push(long));
 			} else if (item[0] != 3) {
 				WASMC.warn("Invalid debug data index:", item[0]);
 			}
@@ -934,8 +933,58 @@ export default class WASMC {
 				for (let j = 0; j < 8; ++j)
 					bytes.push(address.shiftRightUnsigned(8 * j).and(0xff).toUnsigned().toInt());
 
-			WASMC.bytes2longs(bytes).map(long => out.push(long));
+			WASMC.bytes2longs(bytes).forEach(long => out.push(long));
 			i += count - 1;
+		}
+
+		return out;
+	}
+
+	/** Encodes an array of type 1/2 entries + type 3 instantiations into an array of longs. */
+	static encodeDebugData(arr: DebugData): Long[] {
+		let out: Long[] = [];
+		for (const item of arr) {
+			if (item[0] == 1 || item[0] == 2) {
+				const length = item[1].length;
+				if (0xffffff < length)
+					WASMC.warn("Name too long (" + length + " characters, type = " + item[0] + ")");
+				WASMC.bytes2longs([item[0], length & 0xff, (length >> 8) & 0xff, (length >> 16) & 0xff, ...item[1]])
+					.forEach(long => out.push(long));
+			} else if (item[0] == 3) {
+				const [type, file, line, col, func] = item;
+				const {count, address} = item;
+
+				if (0xffffff < file)
+					WASMC.warn("File index too large:", file);
+				if (0xffffffff < line)
+					WASMC.warn("Line number too large:", line);
+				if (0xffffff < col)
+					WASMC.warn("Column number too large:", col);
+				if (0xffffff < func)
+					WASMC.warn("Function index too large:", func);
+
+				const bytes: number[] = [type];
+				const add = (n, b) => {
+					for (let j = 0; j < b; ++j)
+					bytes.push((n >> (8 * j)) & 0xff);
+				};
+
+				add(file, 3);
+				add(line, 4);
+				add(col,  3);
+				bytes.push(count || 0);
+				add(func, 4);
+
+				if (typeof address == "undefined")
+					add(0, 8);
+				else
+					for (let j = 0; j < 8; ++j)
+						bytes.push(address.shiftRightUnsigned(8 * j).and(0xff).toUnsigned().toInt());
+
+				WASMC.bytes2longs(bytes).forEach(long => out.push(long));
+			} else {
+				WASMC.warn("Invalid debug data index:", item[0]);
+			}
 		}
 
 		return out;

@@ -4,7 +4,7 @@ import * as path from "path";
 const chalk = require("chalk");
 const minimist = require("minimist");
 import * as Long from "long";
-import WASMC, {SymbolTable, SymbolType} from "./wasmc";
+import WASMC, {SymbolTable, SymbolType, DebugData} from "./wasmc";
 import Parser, {ParserInstruction, ParserInstructionI, ParserInstructionJ, SegmentOffsets} from "./parser";
 import _ from "../util";
 
@@ -21,9 +21,7 @@ require("string.prototype.padend").shim();
  * Represents a `wld` instance.
  */
 export default class Linker {
-	/**
-	 * The parser used to parse the main object file.
-	 */
+	/** The parser used to parse the main object file. */
 	parser: Parser;
 
 	options: {[key: string]: any};
@@ -32,6 +30,7 @@ export default class Linker {
 	combinedSymbols: SymbolTable;
 	combinedCode: Long[];
 	combinedData: Long[];
+	combinedDebug: DebugData;
 	static assembler: WASMC = new WASMC();
 
 	constructor(options: {[key: string]: any}, objects: string[], out: string) {
@@ -42,11 +41,9 @@ export default class Linker {
 		this.parser = null;
 	}
 
-	/**
-	 * Opens the main file and handles it depending on whether it's wasm source or wvm bytecode.
-	 * @param  filename The filename of the main file.
-	 * @return A Parser instance that has been fed the main file.
-	 */
+	/** Opens the main file and handles it depending on whether it's wasm source or wvm bytecode.
+	 *  @param  filename The filename of the main file.
+	 *  @return A Parser instance that has been fed the main file. */
 	openMain(filename: string): Parser {
 		const text: string = fs.readFileSync(filename, "utf8");
 		let bytecode: string;
@@ -89,18 +86,17 @@ export default class Linker {
 		const dataLength = this.parser.getDataLength();
 		const mainSymbols = this.parser.getSymbols();
 		const symtabLength = this.parser.rawSymbols.length;
-		
-		/** Contains the combination of all parsed symbol tables.
-		 *  @type {SymbolTable} */
+
+		/** Contains the combination of all parsed symbol tables. */
 		this.combinedSymbols = Linker.depointerize(_.cloneDeep(mainSymbols), this.parser.rawData, this.parser.offsets);
 		
-		/** Contains the combination of all parsed code sections.
-		 *  @type {Long[]} */
+		/** Contains the combination of all parsed code sections. */
 		this.combinedCode = _.cloneDeep(this.parser.rawCode);
 
-		/** Contains the combination of all parsed data sections.
-		 *  @type {Long[]} */
+		/** Contains the combination of all parsed data sections. */
 		this.combinedData = _.cloneDeep(this.parser.rawData);
+
+		this.combinedDebug = this.parser.getDebugData();
 
 		// We need to keep track of symbol types separately because it becomes difficult to recompute them
 		// after the symbol table has been expanded with new symbols from included binaries, as the boundaries
@@ -110,19 +106,20 @@ export default class Linker {
 		// Step 3
 		Linker.desymbolize(this.combinedCode, this.parser.offsets, mainSymbols);
 
-		// Steps 4–6
+		// Steps 4–7
 		let extraSymbolLength = symtabLength * 8;
 		let extraCodeLength = codeLength;
 		let extraDataLength = dataLength;
+		let extraDebugLength = this.combinedDebug.filter(item => item[0] == 1 || item[0] == 2).length;
 
-		// Step 7: Loop over every inclusion.
+		// Step 8: Loop over every inclusion.
 		for (const infile of this.objectFilenames.slice(1)) {
 			if (!fs.existsSync(infile)) {
 				console.error(chalk.red.bold(" !"), `Couldn't find ${chalk.bold(infile)}.`);
 				process.exit(1);
 			}
 
-			// Step 7a: Open the included binary.
+			// Step 8a: Open the included binary.
 			const subparser = new Parser();
 			subparser.open(infile);
 
@@ -132,6 +129,7 @@ export default class Linker {
 			const subcodeLength = subparser.getCodeLength();
 			const subdataLength = subparser.getDataLength();
 			let subtableLength = subparser.rawSymbols.length;
+			let subdebug = subparser.getDebugData();
 
 			// We can't have multiple .end labels! This is the only collision we account for;
 			// other collisions will cause an exception, though it could be possible to issue
@@ -144,23 +142,24 @@ export default class Linker {
 
 			Linker.detectSymbolCollisions(this.combinedSymbols, subtable);
 
-			// Step 7b: Note the difference between the original metadata section's length and the included binary's metadata section's length.
+			// Step 8b: Note the difference between the original metadata section's length and the included binary's
+			// metadata section's length.
 			const metaDifference = metaLength - subparser.getMetaLength(); // in bytes!
 
-			// Step 7c: Replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols.
+			// Step 8c: Replace all immediate/addrs with linker flag KNOWN_SYMBOLIC with their symbols.
 			Linker.desymbolize(subcode, subparser.offsets, subtable);
 
-			// Steps 7d–e
+			// Steps 8d–e
 			for (const symbol in subtable) {
 				const type = Linker.getSymbolType(subparser.offsets, subtable, symbol);
 
 				if (type == "code") {
-					// Step 7d: For each code symbol in the included symbol table,
+					// Step 8d: For each code symbol in the included symbol table,
 					// increase its address by extraSymbolLength + extraCodeLength + metaDifference.
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + metaDifference
 					                                              - 24);
 				} else if (type == "data") {
-					// Step 7e: For each data symbol in the included symbol table, increase
+					// Step 8e: For each data symbol in the included symbol table, increase
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength
 					                                              + metaDifference - 24);
@@ -174,41 +173,61 @@ export default class Linker {
 				symbolTypes[symbol] = type;
 			}
 
-			// Steps 7f–7g
+			// Steps 8f–8g
 			for (const label in this.combinedSymbols) {
 				const symbol = this.combinedSymbols[label];
 				const type = symbolTypes[label];
 				if (type == "code") {
-					// Step 7f: For each code symbol in the global symbol table,
+					// Step 8f: For each code symbol in the global symbol table,
 					// increase its address by the included symbol table's length.
 					symbol[1] = symbol[1].add(subtableLength * 8);
 				} else if (type == "data" || label == ".end") { // TODO: is `label == ".end"` correct?
-					// Step 7g: For each data symbol in the global symbol table, increase its address
+					// Step 8g: For each data symbol in the global symbol table, increase its address
 					// by the included data section's length + the included code section's length.
 					symbol[1] = symbol[1].add(subtableLength * 8 + subcodeLength);
 				}
 			}
 
-			// Step 7h: Add the symbol table's length to extraSymbolLength.
+			// Step 8h
+			for (let item of subdebug)
+				if (item[0] == 3) {
+					if (item.address)
+						item.address = item.address.add(extraSymbolLength + extraCodeLength + metaDifference - 24);
+					item[1] += extraDebugLength;
+					item[4] += extraDebugLength;
+				}
+
+			// Step 8i: Add the symbol table's length to extraSymbolLength.
 			extraSymbolLength += subtableLength * 8;
 
-			// Step 7i: Add code.length to extraCodeLength.
+			// Step 8j: Add code.length to extraCodeLength.
 			extraCodeLength += subcodeLength;
 
-			// Step 7j: Add data.length to extraDataLength.
+			// Step 8k: Add data.length to extraDataLength.
 			extraDataLength += subdataLength;
 
-			// Step 7k: Append the symbol table to the combined symbol table.
+			// Step 8l: Add number of type 1/2 entries to extraDebugLength.
+			const types1and2 = subdebug.filter(item => item[0] == 1 || item[0] == 2);
+			extraDebugLength += types1and2.length;
+
+			// Step 8m: Append the symbol table to the combined symbol table.
 			this.combinedSymbols = Object.assign(subtable, this.combinedSymbols);
 
-			// Step 7l: Append the code to the global code.
+			// Step 8n: Append the code to the global code.
 			this.combinedCode = [...this.combinedCode, ...subcode];
 
-			// Step 7m: Append the data to the global data.
+			// Step 8o: Append the data to the global data.
 			this.combinedData = [...this.combinedData, ...subdata];
+
+			// Step 8p: Insert type 1/2 entries after the type 1/2 entries in the global debug data section.
+			for (let i = 0; i < types1and2.length; i++)
+				this.combinedDebug.splice(extraDebugLength + 1, 0, types1and2[i]);
+
+			// Step 8q: Append type 3 entries to the end of the global debug data section.
+			subdebug.filter(item => item[0] == 3).forEach(item => this.combinedDebug.push(item));
 		}
 
-		// Step 8: Readjust the .end entry in the symbol table.
+		// Step 9: Readjust the .end entry in the symbol table.
 		if (!(".end" in this.combinedSymbols)) {
 			this.combinedSymbols[".end"] = [WASMC.encodeSymbol(".end"), Long.UZERO, SYMBOL_TYPES.unknown];
 		}
@@ -218,25 +237,26 @@ export default class Linker {
 		this.combinedSymbols[".end"][1] = Long.fromInt(end, true);
 		const encodedCombinedSymbols = WASMC.encodeSymbolTable(this.combinedSymbols);
 		const codeOffset = (encodedCombinedSymbols.length - symtabLength) * 8;
-		
-		// Step 9: Replace all symbols in the code with the new addresses.
+
+		// Step 10: Replace all symbols in the code with the new addresses.
 		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
 
-		// Step 10: Update the offset section in the metadata.
+		// Step 11: Update the offset section in the metadata.
 		const meta = this.parser.rawMeta;
 		meta[1] = meta[1].add(codeOffset); // Beginning of code
 		meta[2] = meta[1].add(this.combinedCode.length * 8); // Beginning of data
 		meta[3] = meta[2].add(this.combinedData.length * 8); // Beginning of heap
 
-		// Step 11: Concatenate all the combined sections and write the result to the output file.
+		// Step 12: Concatenate all the combined sections and write the result to the output file.
 		const combined = [
 			...this.parser.rawMeta,
 			...encodedCombinedSymbols,
 			...this.combinedCode,
-			...this.combinedData
+			...this.combinedData,
+			...WASMC.encodeDebugData(this.combinedDebug)
 		];
 
-		// Step 12:
+		// Step 13:
 		Linker.repointerize(this.combinedSymbols, combined);
 
 		this.writeOutput(combined);
