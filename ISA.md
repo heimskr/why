@@ -11,6 +11,7 @@
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
+				<li><a href="#prog-debug">Debug Data Section</a></li>
 				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
 			</ol>
@@ -262,14 +263,15 @@ Programs are divided into four sections: metadata, symbol table, code and data. 
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
 
 * `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x01`: Address of the beginning of the [code section](#prog-code).
-* `0x02`: Address of the beginning of the [data section](#prog-data).
-* `0x03`: Total size of the program.
-* `0x04`–`0x05`: ORCID of the author (represented with ASCII).
-* `0x06`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x01`: Address of the beginning of the [debug data section](#prog-debug).
+* `0x02`: Address of the beginning of the [code section](#prog-code).
+* `0x03`: Address of the beginning of the [data section](#prog-data).
+* `0x04`: Total size of the program.
+* `0x05`–`0x06`: ORCID of the author (represented with ASCII).
+* `0x07`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
-### Assembler syntax
+### Assembly syntax
 <pre>
 #meta
 author: "Kai Tamkun"
@@ -279,7 +281,39 @@ version: "4"
 </pre>
 
 ## <a name="prog-symtab"></a>Symbol Table Section
-The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+
+## <a name="prog-debug"></a>Debug Data Section
+The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type.
+
+An entry with type `0` is invalid.
+
+An entry with type `1` declares the filename of a source file and can be referenced by other entries. After the first byte in a type `1` entry, the next three bytes indicate the length of the filename. The filename then follows, plus padding until the total length of the entry is divisible by eight bytes.
+
+An entry with type `2` declares a function name. It uses the same format as a type `1` entry, but instead of a filename, a function name is stored instead.
+
+An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next four bytes indicate the column number. The next three bytes indicate the index of the referenced type `2` entry. The final five bytes indicate the address of an instruction.
+
+### Assembly syntax
+<pre>
+#debug
+1 "src/printf.cpp" // 0
+2 "_vsnprintf"     // 1
+3 0 541 10 1       // 2 (File 0, line 541, column 10, function 1)
+3 0 551 12 1       // 3 (File 0, line 551, column 12, function 1)
+
+#code
+// ...
+	$t6 -> [$ta] !2
+// ...
+	[$t3] -> $t4 /b  !3
+	1 -> $m0         !3
+	$m0 << 7  -> $m0 !3
+	$t4 x $m0 -> $t5 !3
+	$t5 - $m0 -> $t5 !3
+	$t5 & -1  -> $t5 !3
+// ...
+</pre>
 
 ## <a name="prog-code"></a>Code Section
 The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
@@ -287,8 +321,8 @@ The code section consists of executable code. This is the only section of the co
 ## <a name="prog-data"></a>Data Section
 The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
 
-### Assembler syntax
-Variables and their values are declared (once again) with JSON-like markup:
+### Assembly syntax
+Variables and their values are declared with JSON-like markup:
 
 <pre>
 #data
