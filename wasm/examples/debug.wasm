@@ -1,0 +1,31 @@
+#meta
+name: "Debug test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+/*
+int main() {
+	int x = -1;
+	++x;
+	return x;
+}
+*/
+
+#debug
+1 "foo.cpp"
+2 "main"
+3 0 2 8 2
+3 0 3 1 2
+3 0 4 1 2
+
+#code
+
+:: main
+<halt>
+
+sub main() {
+	-1 -> $t0 !2
+	$t0 + 1 -> $t0 !3
+	$t0 -> $r0 !4
+}
