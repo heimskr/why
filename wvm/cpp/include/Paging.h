@@ -6,13 +6,13 @@
 
 namespace WVM {
 	struct Address {
-		Word p0Offset: 8;
-		Word p1Offset: 8;
-		Word p2Offset: 8;
-		Word p3Offset: 8;
-		Word p4Offset: 8;
-		Word p5Offset: 8;
-		Word pageOffset: 16;
+		UWord p0Offset: 8;
+		UWord p1Offset: 8;
+		UWord p2Offset: 8;
+		UWord p3Offset: 8;
+		UWord p4Offset: 8;
+		UWord p5Offset: 8;
+		UWord pageOffset: 16;
 
 		Address(Word);
 	};
