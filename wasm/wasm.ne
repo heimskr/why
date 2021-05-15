@@ -68,6 +68,7 @@ string			-> dqstring									{% nth(0) %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
 int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
 int_dec			-> "-":? [0-9]:+							{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
+udec			-> [0-9]:+									{% d => parseInt(d[0].join("")) %}
 char			-> "'" sstrchar "'"							{% d => d[1].charCodeAt(0) %}
 int				-> (int_hex | int_bin | int_dec | char)		{% d => d[0][0] %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
@@ -95,19 +96,29 @@ datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
 				 | datakey "&" xvar							{% d => ["var",    d[0], d[2]] %}
 				 | _ sep 									{% d => null %}
 
+debug_section	-> _ debug_header _ sep debug_line:*		{% d => ["debug", filter(d[4])] %}
+debug_header	-> "#debug" | "#dbg"						{% d => null %}
+debug_line		-> (type1 | type2 | type3) _ sep			{% d => d[0][0] %}
+type1			-> "1" _ dqstring							{% d => [1, d[2]] %}
+type2			-> "2" _ dqstring							{% d => [2, d[2]] %}
+type3			-> "3" __ udec __ udec __ udec __ udec		{% d => [3, d[2], d[4], d[6], d[8]] %}
+
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
 code_header		-> "#code" | "#c"							{% d => null %}
-statement		-> _ op _ sep								{% d => [null, ...d[1][0]] %}
-				 | _ label (_ lineend):* _ op _ sep			{% d => [d[1], ...d[4][0]] %}
+statement		-> _ op (_ intbang):? _ sep					{% d => [null, ...d[1][0], d[2]? d[2][1] : null] %}
+				 | _ label (_ lineend):* _ op (_ intbang):? _ sep
+															{% d => [d[1], ...d[4][0], d[5]? d[5][1] : null] %}
 				 | _ sep									{% d => null %}
 				 | _ subroutine								{% d => ["subroutine", d[1]] %}
+
+intbang			-> "!" udec									{% d => ["bang", d[1]] %}
 
 subroutine		-> "sub" __ var _ par[sub_saved] _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2], d[4], filter(d[6])) %}
 				 | "sub" __ var _ epar _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2],   [], filter(d[6])) %}
-subroutine_code -> _ op										{% d => subify([null, ...d[1][0]]) %}
-				 | _ label (_ lineend):* _ op				{% d => subify([d[1], ...d[4][0]]) %}
+subroutine_code -> _ op (_ intbang):?						{% d => subify([null, ...d[1][0], d[2]? d[2][1] : null]) %}
+				 | _ label (_ lineend):* _ op (_ intbang):?	{% d => subify([d[1], ...d[4][0], d[5]? d[5][1] : null]) %}
 				 | _ sep									{% d =>  null %}
 				 | ___ "!done"								{% d => [null, S("done")] %}
 				 | _ label (lineend | __):+ "!done"			{% d => [d[1], S("done")] %}
