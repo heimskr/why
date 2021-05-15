@@ -27,10 +27,10 @@ const compileData = entries => {
 
 const compileSubroutine = (name, args, code) => {
 	return [
-		[name, "push", ...args],
-		...code.map(item => item[1] == S("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
-		[`${name}$done`, "pop", ...args.reverse()],
-		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
+		[name, null, "push", ...args],
+		...code.map(item => item[1] == S("done")? [item[0], null, "j", 0, ["label", `${name}$done`], false, null] : item),
+		[`${name}$done`, null, "pop", ...args.reverse()],
+		[`${name}$end`, null, "jr", 0, 0, ["register", "return", 0]]
 	];
 };
 
@@ -41,7 +41,7 @@ const compileCode = statements => {
 			statement[1].forEach(substatement => out.push(substatement));
 		} else if (statement != null) {
 			out.push(statement);
-		};
+		}
 	});
 
 	return out;
@@ -106,20 +106,20 @@ type3			-> "3" __ udec __ udec __ udec __ udec		{% d => [3, d[2], d[4], d[6], d[
 
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
 code_header		-> "#code" | "#c"							{% d => null %}
-statement		-> _ op (_ intbang):? _ sep					{% d => [null, ...d[1][0], d[2]? d[2][1] : null] %}
+statement		-> _ op (_ intbang):? _ sep					{% d => [null, d[2]? d[2][1] : null, ...d[1][0]] %}
 				 | _ label (_ lineend):* _ op (_ intbang):? _ sep
-															{% d => [d[1], ...d[4][0], d[5]? d[5][1] : null] %}
+															{% d => [d[1], d[5]? d[5][1] : null, ...d[4][0]] %}
 				 | _ sep									{% d => null %}
 				 | _ subroutine								{% d => ["subroutine", d[1]] %}
 
-intbang			-> "!" udec									{% d => ["bang", d[1]] %}
+intbang			-> "!" udec									{% d => d[1] %}
 
 subroutine		-> "sub" __ var _ par[sub_saved] _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2], d[4], filter(d[6])) %}
 				 | "sub" __ var _ epar _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2],   [], filter(d[6])) %}
-subroutine_code -> _ op (_ intbang):?						{% d => subify([null, ...d[1][0], d[2]? d[2][1] : null]) %}
-				 | _ label (_ lineend):* _ op (_ intbang):?	{% d => subify([d[1], ...d[4][0], d[5]? d[5][1] : null]) %}
+subroutine_code -> _ op (_ intbang):?						{% d => subify([null, d[2]? d[2][1] : null, ...d[1][0]]) %}
+				 | _ label (_ lineend):* _ op (_ intbang):?	{% d => subify([d[1], d[5]? d[5][1] : null, ...d[4][0]]) %}
 				 | _ sep									{% d =>  null %}
 				 | ___ "!done"								{% d => [null, S("done")] %}
 				 | _ label (lineend | __):+ "!done"			{% d => [d[1], S("done")] %}

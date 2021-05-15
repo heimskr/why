@@ -28,7 +28,8 @@ export type Register = ["register", "zero" | "return" | "stack" | "lo" | "hi" | 
 					 | ["register", "s" | "k" | "e" | "m" | "r" | "a" | "t", number];
 export type SymbolTable = {[key: string]: [number, Long, SymbolEnum]};
 export type Condition = "p" | "n" | "z" | "nz";
-export type ASMInstruction = [string, string, ...any[]] & ASMInstructionMeta; // [label, op, ...args]
+export type ASMInstruction = [string, number, string, ...any[]] & ASMInstructionMeta; // [label, debug index, op, ...args]
+export type UnlabeledASMInstruction = [number, string, ...any[]] & ASMInstructionMeta; // [debug index, op, ...args]
 export type ASMInstructionType = "r" | "i" | "j";
 export type ASMInstructionMeta = {
 	opcode?: number,
@@ -48,7 +49,7 @@ export type ASMInstructionMeta = {
 	link?: boolean,
 };
 export type DataPair = ["int" | "float", number] | ["string", string] | ["bytes", number] | ["var", string];
-export type ASMParsedInstruction = [string, string, ...any[]] & {inSubroutine?: boolean};
+export type ASMParsedInstruction = [string, number, string, ...any[]] & {inSubroutine?: boolean};
 export type ASMParsed = {
 	code: ASMParsedInstruction[],
 	meta: {[key: string]: any},
@@ -392,7 +393,7 @@ export default class WASMC {
 	 * Copies an array of expanded code into the {@link module:wasm~WASMC#code main code array}.
 	 * @param expanded The list of expanded instructions to compile and store.
 	 */
-	processCode(expanded: ASMInstruction[]): void {
+	processCode(expanded: UnlabeledASMInstruction[]): void {
 		expanded.forEach(item => this.addCode(item));
 	}
 
@@ -405,7 +406,7 @@ export default class WASMC {
 		// In the first pass, we expand pseudoinstructions into their constituent parts. Some instructions have to be
 		// processed once again after labels have been sorted out so we can replace variable references with addresses.
 		this.parsed.code.forEach(item => {
-			const [label, op, ...args] = item;
+			const [label, debug, op, ...args] = item;
 			if (label) {
 				this.offsets[label] = this.metaOffsetCode.toInt() + expanded.length * 8;
 				this.log(chalk.magenta("Assigning"), chalk.bold(this.offsets[label]), "to", label,
@@ -417,14 +418,14 @@ export default class WASMC {
 			const addPush = (args: Register[], _label: string = label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach(reg => {
-					add([getLabel(), "spush", _0, reg, _0]);
+					add([getLabel(), debug, "spush", _0, reg, _0]);
 				});
 			};
 
 			const addPop = (args: Register[], _label: string = label) => {
 				const getLabel = () => [_label, _label = null][0];
 				args.forEach((reg: Register) => {
-					add([getLabel(), "spop", _0, _0, reg]);
+					add([getLabel(), debug, "spop", _0, _0, reg]);
 				});
 			};
 
@@ -454,22 +455,22 @@ export default class WASMC {
 				// a label/variable reference.)
 				vals.forEach((val, i) => {
 					if (typeof val == "number") {
-						add([null, "set", _0, _A[i], Long.fromInt(val).toUnsigned().toInt()]);
+						add([null, debug, "set", _0, _A[i], Long.fromInt(val).toUnsigned().toInt()]);
 					} else if (!(val instanceof Array)) {
 						throw new Error(`Invalid value for argument ${i + 1}: ${JSON.stringify(val)}`);
 					} else if (val[0] == "register") {
-						add([null, "or", val, _0, _A[i]]);
+						add([null, debug, "or", val, _0, _A[i]]);
 					} else if (val[0] == "label") {
-						add([null, "li", _0, _A[i], val]);
+						add([null, debug, "li", _0, _A[i], val]);
 					} else if (val[0] == "address") {
-						add([null, "set", _0, _A[i], ["label", val[1]]]);
+						add([null, debug, "set", _0, _A[i], ["label", val[1]]]);
 					} else {
 						throw new Error(`Invalid value for argument ${i + 1}: ${JSON.stringify(val)}`);
 					}
 				});
 
 				// Store the program counter in $rt and jump to the subroutine.
-				add([null, "j", _0, ["label", name], true]);
+				add([null, debug, "j", _0, ["label", name], true]);
 
 				if (currentValues.length) {
 					// Now that we've returned from the subroutine, pop the values we pushed earlier,
@@ -481,28 +482,28 @@ export default class WASMC {
 				if (funct == EXTS.prc) {
 					const type = args[1][0];
 					if (type == "char") {
-						add([label, "set", _0, _M[2], args[1][1]]);
-						add([null, "ext", 0, ["register", "m", 2], 0, EXTS.prc]);
+						add([label, debug, "set", _0, _M[2], args[1][1]]);
+						add([null, debug, "ext", 0, ["register", "m", 2], 0, EXTS.prc]);
 						return;
 					} else if (type == "string") {
 						let lastChar;
 						args[1][1].split("").forEach((c, i) => {
 							const char = c.charCodeAt(0);
 							if (char != lastChar) {
-								add([i == 0? label : null, "set", _0, _M[2], char]);
+								add([i == 0? label : null, debug, "set", _0, _M[2], char]);
 								lastChar = char;
 							}
 							
-							add([null, "ext", 0, ["register", "m", 2], 0, EXTS.prc]);
+							add([null, debug, "ext", 0, ["register", "m", 2], 0, EXTS.prc]);
 						});
 
 						return;
 					}
 				}
 				
-				add([label, "ext", ...args]);
+				add([label, debug, "ext", ...args]);
 			} else if (op == "mv") {
-				add([label, "or", args[0], _0, args[1]]);
+				add([label, debug, "or", args[0], _0, args[1]]);
 			} else if (op == "push") {
 				addPush(args);
 			} else if (op == "pop") {
@@ -511,26 +512,26 @@ export default class WASMC {
 				const right = args[0];
 				const left = args[1];
 				if (isLabelRef(right)) {
-					add([label, "li", _0, _M[2], right]);
-					add([null, "seq", _M[2], left, _M[0]]);
+					add([label, debug, "li", _0, _M[2], right]);
+					add([null, debug, "seq", _M[2], left, _M[0]]);
 				} else if (typeof right == "number") {
-					add([label, "seqi", left, _M[0], right]);
+					add([label, debug, "seqi", left, _M[0], right]);
 				} else {
-					add([label, "seq", right, left, _M[0]]);
+					add([label, debug, "seq", right, left, _M[0]]);
 				}
 
 				if (args[2][0] == "value") {
 					// Set $m1 to the immediate value and then conditionally jump to $m1.
-					add([null, "set", _0, _M[1], args[2][1]]);
-					add([null, "jrc", _0, _M[0], _M[1]]);
+					add([null, debug, "set", _0, _M[1], args[2][1]]);
+					add([null, debug, "jrc", _0, _M[0], _M[1]]);
 				} else if (args[2][0] == "register") {
 					// We're already given a register, so we don't have to do anything with $m1.
-					add([null, "jrc", _0, _M[0], args[2]]);
+					add([null, debug, "jrc", _0, _M[0], args[2]]);
 				} else if (args[2][0] == "label") {
 					// Load the value of the given variable into $m1 and then conditionally jump to $m1.
 					this.log("jeq with label:", args[2]);
-					add([null, "set",  _0, _M[1], args[2]]);
-					add([null, "jrc", _0, _M[0],   _M[1]]);
+					add([null, debug, "set",  _0, _M[1], args[2]]);
+					add([null, debug, "jrc", _0, _M[0],   _M[1]]);
 				}
 			} else if (R_TYPES.includes(OPCODES[op]) && args.some(isLabelRef)) {
 				let [rt, rs, rd] = args;
@@ -539,31 +540,31 @@ export default class WASMC {
 				[rt, rs].forEach((reg, i) => {
 					if (isLabelRef(reg)) {
 						// Whoops, this register isn't actually a register
-						add([getLabel(), "li", _0, _M[i], reg]);
+						add([getLabel(), debug, "li", _0, _M[i], reg]);
 					}
 				});
 
-				add([getLabel(), op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
+				add([getLabel(), debug, op, ...[rt, rs, rd].map((reg, i) => [lt, ls, ld][i]? _M[i] : reg)]);
 
 				if (ld) {
-					add([getLabel(), "si", _M[2], _0, rd]);
+					add([getLabel(), debug, "si", _M[2], _0, rd]);
 				}
 			} else if (I_TYPES.includes(OPCODES[op]) && args.some(isLabelRef)) {
 				let [rs, rd, imm] = args;
 				let [ls, ld] = [rs, rd].map(isLabelRef);
 				let _label = label, getLabel = () => [_label, _label = null][0];
 				if (ls) {
-					add([getLabel(), "li", _0, _M[0], rs]);
+					add([getLabel(), debug, "li", _0, _M[0], rs]);
 				}
 
-				add([getLabel(), op, ...[...[rs, rd].map((reg, i) => [ls, ld][i]? _M[i] : reg), imm]]);
+				add([getLabel(), debug, op, ...[...[rs, rd].map((reg, i) => [ls, ld][i]? _M[i] : reg), imm]]);
 
 				if (ld) {
-					add([getLabel(), "si", _M[1], _0, rd]);
+					add([getLabel(), debug, "si", _M[1], _0, rd]);
 				}
 			} else if (op == "gap") {
 				for (let i = 0; i < args[0]; i++) {
-					add([i? null : label, "nop"]);
+					add([i? null : label, null, "nop"]);
 				}
 			} else {
 				add(item);
@@ -579,42 +580,44 @@ export default class WASMC {
 	 * @param  expanded An array of expanded instructions (see {@link module:wasm~WASMC#expandCode expandCode}).
 	 * @return The mutated input array with label references replaced with memory addresses.
 	 */
-	expandLabels(expanded: ASMInstruction[]): ASMInstruction[] {
+	expandLabels(expanded: ASMInstruction[]): UnlabeledASMInstruction[] {
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
 		expanded.forEach(item => {
 			// First off, now that we've recorded all the label positions,
 			// we can remove the label tags.
+			console.log("Old:", item);
 			item.shift();
+			console.log("New:", item);
 
 			// Look at everything past the operation name (the arguments).
-			item.slice(1).forEach((arg, i) => {
+			item.slice(2).forEach((arg, i) => {
 				// If the argument is a label reference,
 				if (isLabelRef(arg)) {
 					// replace it with an address from the offsets map. 
 					const offset = this.offsets[arg[1]];
 					if (typeof offset == "undefined") {
-						item[i + 1] = WASMC.encodeSymbol(arg[1]);
+						item[i + 2] = WASMC.encodeSymbol(arg[1]);
 						item.flags = FLAGS.UNKNOWN_SYMBOL;
 						if (!this.unknownSymbols.includes(arg[1])) {
 							this.unknownSymbols.push(arg[1]);
 						}
 					} else {
-						item[i + 1] = offset;
+						item[i + 2] = offset;
 						item.flags = FLAGS.KNOWN_SYMBOL;
 					}
 				}
 			});
 		});
 
-		return expanded;
+		return expanded as any as UnlabeledASMInstruction[];
 	}
 
 	/**
 	 * Compiles an instruction and adds it to the {@link module:wasm~WASMC#code code array}.
 	 * @param item The instruction to compile and add.
 	 */
-	addCode(item: ASMInstruction): void {
+	addCode(item: UnlabeledASMInstruction): void {
 		this.code.push(this.compileInstruction(item));
 	}
 
@@ -623,8 +626,8 @@ export default class WASMC {
 	 * @param  instruction An uncompiled instruction.
 	 * @return The bytecode representation of the instruction.
 	 */
-	compileInstruction(instruction: ASMInstruction): Long {
-		const [op, ...args] = instruction;
+	compileInstruction(instruction: UnlabeledASMInstruction): Long {
+		const [debug, op, ...args] = instruction;
 		const {flags} = instruction;
 		if (op == "ext") {
 			const [rt, rs, rd] = args.slice(0, 3).map(WASMC.convertRegister);
@@ -640,7 +643,7 @@ export default class WASMC {
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [op, ...args]);
+			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [debug, op, ...args]);
 			return Long.fromString("6666deadc0de6666", true, 16);
 		}
 	}
@@ -824,11 +827,11 @@ export default class WASMC {
 
 	/**
 	 * Returns a symbol table.
-	 * @param  labels         An array of labels.
-	 * @param [skeleton=true] Whether to set all addresses to zero at first.
+	 * @param  labels    An array of labels.
+	 * @param  skeleton  Whether to set all addresses to zero at first.
 	 * @return An encoded symbol table.
 	 */
-	createSymbolTable(labels: string[], skeleton: boolean = true): Long[] {
+	createSymbolTable(labels: string[], skeleton: boolean): Long[] {
 		return _.flatten(_.uniq([...labels, ".end"]).map(label => {
 			const length = Math.ceil(label.length / 8) & 0xffff;
 			let type = SYMBOL_TYPES.unknown;
