@@ -294,6 +294,8 @@ An entry with type `2` declares a function name. It uses the same format as a ty
 
 An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2` entry. The final eight bytes indicate the address of an instruction.
 
+The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3` instruction, two type `3` entries would be generated for the template with index 2.
+
 ### Assembly syntax
 <pre>
 #debug
@@ -304,8 +306,7 @@ An entry with type `3` references a line on a source file defined by a type `1` 
 
 #code
 // ...
-	$t6 -> [$ta] !2
-// ...
+	$t6 -> [$ta]     !2
 	[$t3] -> $t4 /b  !3
 	1 -> $m0         !3
 	$m0 << 7  -> $m0 !3
