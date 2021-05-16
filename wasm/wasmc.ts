@@ -321,9 +321,9 @@ export default class WASMC {
 		}
 		
 		// Convert the ORCID into two Longs and stash them in the correct positions in meta.
-		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, ...[orcid.substr(0, 8), orcid.substr(8)]
-		            .map(half => WASMC.chunk2long(half.split("")))];
-		
+		this.meta = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO,
+			...[orcid.substr(0, 8), orcid.substr(8)].map(half => WASMC.chunk2long(half.split("")))];
+
 		// Append the name-version-author string.
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
 		
@@ -906,6 +906,9 @@ export default class WASMC {
 					break;
 			}
 
+			// I could make it break it up into ceil(n/256) entries, but when would that ever be necessary?
+			if (0xff < count)
+				WASMC.warn("Instruction count too high:", count)
 			if (0xffffff < file)
 				WASMC.warn("File index too large:", file);
 			if (0xffffffff < line)
@@ -954,6 +957,8 @@ export default class WASMC {
 				const [type, file, line, col, func] = item;
 				const {count, address} = item;
 
+				if (0xff < count)
+					WASMC.warn("Instruction count too high:", count)
 				if (0xffffff < file)
 					WASMC.warn("File index too large:", file);
 				if (0xffffffff < line)

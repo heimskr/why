@@ -166,7 +166,7 @@ export default class Parser {
 		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$debug / 8);
 
 		/** Contains all the unparsed Longs in the debug data section. */
-		this.rawData = longs.slice(this.offsets.$debug / 8, this.offsets.$end / 8);
+		this.rawDebugData = longs.slice(this.offsets.$debug / 8, this.offsets.$end / 8);
 
 		if (!silent) {
 			console.log(dim("/*"));

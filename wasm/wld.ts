@@ -232,8 +232,9 @@ export default class Linker {
 			this.combinedSymbols[".end"] = [WASMC.encodeSymbol(".end"), Long.UZERO, SYMBOL_TYPES.unknown];
 		}
 
+		const encodedDebug = WASMC.encodeDebugData(this.combinedDebug);
 		const end = 8 * (this.parser.rawMeta.length + WASMC.encodeSymbolTable(this.combinedSymbols).length
-			+ this.combinedCode.length + this.combinedData.length);
+			+ this.combinedCode.length + this.combinedData.length + encodedDebug.length);
 		this.combinedSymbols[".end"][1] = Long.fromInt(end, true);
 		const encodedCombinedSymbols = WASMC.encodeSymbolTable(this.combinedSymbols);
 		const codeOffset = (encodedCombinedSymbols.length - symtabLength) * 8;
@@ -242,7 +243,6 @@ export default class Linker {
 		Linker.resymbolize(this.combinedCode, this.combinedSymbols);
 
 		// Step 11: Update the offset section in the metadata.
-		const encodedDebug = WASMC.encodeDebugData(this.combinedDebug);
 		const meta = this.parser.rawMeta;
 		meta[1] = meta[1].add(codeOffset); // Beginning of code
 		meta[2] = meta[1].add(this.combinedCode.length * 8); // Beginning of data
