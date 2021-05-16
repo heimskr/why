@@ -47,9 +47,10 @@ namespace WVM {
 			Word registers[Why::totalRegisters];
 			std::map<std::string, Symbol> symbolTable;
 			Word symbolsOffset = -1;
-			Word codeOffset = -1;
-			Word dataOffset = -1;
-			Word  endOffset = -1;
+			Word  codeOffset = -1;
+			Word  dataOffset = -1;
+			Word debugOffset = -1;
+			Word   endOffset = -1;
 			Word p0 = 0;
 			bool paused = false;
 			bool strict = true;

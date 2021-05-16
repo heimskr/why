@@ -475,8 +475,10 @@ namespace WVM {
 			codeOffset = programCounter = getWord(8, Endianness::Big);
 		if (dataOffset == -1)
 			dataOffset = getWord(16, Endianness::Big);
+		if (debugOffset == -1)
+			debugOffset = getWord(24, Endianness::Big);
 		if (endOffset == -1)
-			endOffset = getWord(24, Endianness::Big);
+			endOffset = getWord(32, Endianness::Big);
 		registers[Why::globalAreaPointerOffset] = endOffset;
 		sp() = memorySize;
 		onRegisterChange(Why::globalAreaPointerOffset);
