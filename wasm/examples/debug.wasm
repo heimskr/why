@@ -25,9 +25,9 @@ int main() {
 <print $r0>
 <halt>
 
-sub main() {
+@main
 	-2 -> $t0 !2
 	$t0 + 1 -> $t0 !3
 	$t0 + 1 -> $t1 !4
 	$t1 -> $r0 !4
-}
+	: $rt !4

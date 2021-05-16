@@ -97,6 +97,8 @@ namespace WVM::Mode {
 				send(":Redo");
 			} else if (key == '/') {
 				toggleSearchbox();
+			} else if (key == 'd') {
+				send(":DebugData");
 			} else return false;
 			return true;
 		};
@@ -469,7 +471,10 @@ namespace WVM::Mode {
 			if (report.action == Haunted::MouseAction::Up) {
 				if (report.x <= 1 + padding) {
 					// Clicked on [.....]
-					send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
+					if (report.button == Haunted::MouseButton::Left)
+						send(":DebugData " + std::to_string(address));
+					else
+						send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
 				} else if (padding + 4 <= report.x && report.x <= padding + 21) {
 					// Clicked on 0x................
 					if (report.button == Haunted::MouseButton::Left) {
