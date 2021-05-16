@@ -401,6 +401,12 @@ namespace WVM::Mode {
 			server.send(client, ":Strict " + std::string(vm.strict? "on" : "off"));
 		} else if (verb == "GetPC") {
 			server.send(client, ":PC " + std::to_string(vm.programCounter));
+		} else if (verb == "DebugMap") {
+			if (vm.debugMap.empty())
+				warn() << "The debug map is empty.\n";
+			else
+				for (const auto &[address, debug]: vm.debugMap)
+					info() << address << ": " << std::string(debug) << '\n';
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}

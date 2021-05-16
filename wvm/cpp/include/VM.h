@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Changes.h"
+#include "DebugData.h"
 #include "Defs.h"
 #include "Interrupts.h"
 #include "Paging.h"
@@ -46,6 +47,8 @@ namespace WVM {
 			Word interruptTableAddress = 0;
 			Word registers[Why::totalRegisters];
 			std::map<std::string, Symbol> symbolTable;
+			std::map<Word, DebugData> debugMap;
+			std::map<int, const std::string *> debugFiles, debugFunctions;
 			Word symbolsOffset = -1;
 			Word  codeOffset = -1;
 			Word  dataOffset = -1;
@@ -117,6 +120,7 @@ namespace WVM {
 			void init();
 			void reset(bool reload = false);
 			void loadSymbols();
+			void loadDebugData();
 
 			size_t getMemorySize() { return memorySize; }
 

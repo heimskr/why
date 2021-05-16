@@ -4,11 +4,14 @@
 
 #include "lib/ansi.h"
 #include "Operations.h"
+#include "StringSet.h"
 #include "Util.h"
 #include "VM.h"
 #include "VMError.h"
 
 #define DEBUG_VIRTMEM
+// #define CATCH_DEBUG
+// #define CATCH_OPEN
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
@@ -436,16 +439,20 @@ namespace WVM {
 	void VM::load(const std::filesystem::path &path) {
 		loadedFrom = path;
 		std::ifstream stream;
+#ifdef CATCH_OPEN
 		try {
+#endif
 			stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 			stream.open(path);
 			stream.exceptions(std::ifstream::goodbit);
 			load(stream);
 			stream.close();
+#ifdef CATCH_OPEN
 		} catch (std::exception &err) {
 			error() << "Couldn't open \e[1m" << path << "\e[22m: " << err.what() << "\n";
 			throw;
 		}
+#endif
 	}
 
 	void VM::load(std::istream &stream) {
@@ -484,6 +491,7 @@ namespace WVM {
 		onRegisterChange(Why::globalAreaPointerOffset);
 		onRegisterChange(Why::stackPointerOffset);
 		loadSymbols();
+		loadDebugData();
 	}
 
 	void VM::reset(bool reload) {
@@ -515,6 +523,52 @@ namespace WVM {
 			symbolTable.emplace(name, Symbol(hash, location));
 			i += 16 + length * 8;
 		}
+	}
+
+	void VM::loadDebugData() {
+		debugMap.clear();
+#ifdef CATCH_DEBUG
+		try {
+#endif
+			int index = 0;
+			for (Word i = debugOffset; i < endOffset;) {
+				Word word = getWord(i, Endianness::Little);
+				const uint8_t type = word & 0xff;
+				if (type == 1 || type == 2) {
+					const unsigned length = (word >> 8) & 0xffffff;
+					std::string str;
+					str.reserve(length);
+					for (unsigned j = 0; j < length; ++j)
+						str += getByte(i + 4 + j);
+					if (type == 1)
+						debugFiles.emplace(index++, StringSet::intern(str));
+					else
+						debugFunctions.emplace(index++, StringSet::intern(str));
+					i += 8 + (length <= 4? 0 : Util::upalign(length - 4, 8));
+				} else if (type == 3) {
+					const unsigned file = (word >> 8) & 0xffffff;
+					const unsigned line = word >> 32;
+					word = getWord(i += 8, Endianness::Little);
+					const unsigned column = word & 0xffffff;
+					const unsigned char count = word >> 24;
+					const unsigned function = word >> 32;
+					Word address = getWord(i += 8, Endianness::Little);
+					for (unsigned j = 0; j < count; ++j) {
+						debugMap.emplace(address, DebugData(debugFiles.at(file), debugFunctions.at(function), line,
+							column, count, address));
+						address += 8;
+					}
+					i += 8;
+					++index;
+				} else throw VMError("Unrecognized debug data entry type: " + std::to_string(type));
+			}
+#ifdef CATCH_DEBUG
+		} catch (std::exception &err) {
+			debugMap.clear();
+			warn() << "Failed to load debug data: " << err.what() << '\n';
+			throw;
+		}
+#endif
 	}
 
 	void VM::finishChange() {
