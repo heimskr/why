@@ -2,6 +2,7 @@
 #define WVM_UTIL_H_
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,20 @@ namespace WVM {
 		template <typename T>
 		inline T updiv(T n, T d) {
 			return n / d + (n % d? 1 : 0);
+		}
+
+		template <typename Iter>
+		std::string join(Iter begin, Iter end, const std::string &delimiter = " ") {
+			std::stringstream out;
+			bool first = true;
+			for (; begin != end; ++begin) {
+				if (first)
+					first = false;
+				else
+					out << delimiter;
+				out << *begin;
+			}
+			return out.str();
 		}
 	}
 

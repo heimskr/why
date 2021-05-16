@@ -130,7 +130,7 @@ namespace WVM::Mode {
 		const size_t size = split.size();
 		const std::string verb = split[0].substr(1);
 
-		auto invalid = [&]() { server.send(client, ":InvalidMessage " + message); };
+		auto invalid = [&] { server.send(client, ":InvalidMessage " + message); };
 
 		if (verb == "Stop") {
 			stop();
@@ -407,6 +407,17 @@ namespace WVM::Mode {
 			else
 				for (const auto &[address, debug]: vm.debugMap)
 					info() << address << ": " << std::string(debug) << '\n';
+		} else if (verb == "DebugData") {
+			Word address = vm.programCounter;
+			if (size != 1 && !Util::parseLong(split[1], address)) {
+				invalid();
+				return;
+			}
+
+			if (vm.debugMap.count(address) == 0)
+				broadcast(":Debug " + std::to_string(address) + " Not found");
+			else
+				broadcast(":Debug " + std::to_string(address) + " " + std::string(vm.debugMap.at(address)));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
