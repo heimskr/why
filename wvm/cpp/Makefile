@@ -3,8 +3,8 @@ COMPILER		?= clang++
 OPTIMIZATION	?= -O0 -g
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
-# TESTFILE		?= ~/src/thurisaz/Thurisaz.why
-TESTFILE		?= ../../wasm/compiled/debug.why
+TESTFILE		?= ~/src/thurisaz/Thurisaz.why
+# TESTFILE		?= ../../wasm/compiled/debug.why
 
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(Tests?|Test_.+)\.cpp$$/!p')
 OBJECTS_WVM		:= $(patsubst src/%.cpp,build/%.o, $(SOURCES_WVM))

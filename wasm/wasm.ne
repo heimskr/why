@@ -130,7 +130,7 @@ include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}
 inclusion		-> .:+ "\n"									{% (d, l, r) => { const t = d[0].join("").trim(); return ["", "#data"].includes(t)? r : t } %}
 				 | _ "\n" 									{% d => null %}
 
-label			-> "@" var									{% nth(1) %}
+label			-> "@" var (_ "!" [0-9]:+):?				{% nth(1) %}
 xvar			-> var										{% d => d[0] %}
 ptr_ref			-> "&" xvar									{% nth(1) %}
 var_addr		-> ptr_ref									{% d => ["address", d[0]] %}

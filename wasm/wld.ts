@@ -188,6 +188,10 @@ export default class Linker {
 				}
 			}
 
+			for (const item of this.combinedDebug)
+				if (item[0] == 3 && item.address)
+					item.address = item.address.add(subtableLength * 8);
+
 			// Step 8h
 			for (let item of subdebug)
 				if (item[0] == 3) {
