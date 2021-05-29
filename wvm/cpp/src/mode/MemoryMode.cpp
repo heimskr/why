@@ -27,6 +27,9 @@ namespace WVM::Mode {
 				autotickVariable.wait(lock, [this] { return autotickReady; });
 				autotickReady = false;
 
+				if (!alive.load())
+					break;
+
 				// Strictly speaking I should use a mutex to check autotick, but because I want to avoid the overhead of
 				// locking a mutex repeatedly and I don't mind a few accidental extra ticks, I'm deciding not to.
 				while (0 <= autotick) {
@@ -98,7 +101,7 @@ namespace WVM::Mode {
 			} else if (key == '/') {
 				toggleSearchbox();
 			} else if (key == 'd') {
-				send(":DebugData");
+				send(":DebugData " + std::to_string(vm.programCounter));
 			} else return false;
 			return true;
 		};
@@ -112,8 +115,14 @@ namespace WVM::Mode {
 		terminal.watchSize();
 		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
 		send(":Reg " + std::to_string(Why::stackPointerOffset));
+		alive = false;
 		terminal.join();
 		networkThread.join();
+		autotickMutex.lock();
+		autotickReady = true;
+		autotickMutex.unlock();
+		autotickVariable.notify_all();
+		autotickThread.join();
 	}
 
 	void MemoryMode::toggleSearchbox() {

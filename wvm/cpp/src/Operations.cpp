@@ -983,7 +983,7 @@ namespace WVM::Operations {
 	}
 
 	void prcOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		info() << "prc: '" << static_cast<char>(rs) << "', " << static_cast<unsigned int>(static_cast<unsigned char>(rs)) << "\n";
+		info() << "prc(" << vm.programCounter << "): '" << static_cast<char>(rs) << "', " << static_cast<unsigned int>(static_cast<unsigned char>(rs)) << "\n";
 		vm.onPrint(std::string(1,  static_cast<char>(rs)));
 		vm.increment();
 	}

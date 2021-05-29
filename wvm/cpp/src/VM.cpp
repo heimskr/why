@@ -10,8 +10,8 @@
 #include "VMError.h"
 
 #define DEBUG_VIRTMEM
-// #define CATCH_DEBUG
-// #define CATCH_OPEN
+#define CATCH_DEBUG
+#define CATCH_OPEN
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
