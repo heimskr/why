@@ -162,9 +162,8 @@ meta_separator: ":" | "=";
 
 include_section: "#include" "\n" _includes { $$ = $1->adopt($3); D($2); };
 _includes: includes | { $$ = nullptr; };
-includes: includes endop include { $$ = $1->adopt($3); D($2); }
-        | include { $$ = (new AN(Wasmcpp::wasmParser, WASM_INCLUDES))->adopt($1, true); };
-include: WASMTOK_STRING;
+includes: includes endop string { $$ = $1->adopt($3); D($2); }
+        | string { $$ = (new AN(Wasmcpp::wasmParser, WASM_INCLUDES))->adopt($1, true); };
 
 data_section: "#data" "\n" { D($2); }
             | data_section data_def "\n" { $$ = $1->adopt($2); D($3); }
@@ -176,6 +175,12 @@ data_def: data_key WASMTOK_FLOAT { $$ = $1-adopt($2); }
         | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); };
 data_key: ident _data_sep { D($2); };
 _data_sep: ":" | { $$ = nullptr; };
+
+debug_section: "#debug" "\n" { D($2); }
+             | debug_section debug_line "\n" { $$ = $1->adopt($2); D($3); }
+             | debug_section "\n" { D($2) };
+debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") wasmerror("Invalid debug line type (expected 1 or 2)"); $$ = $1->adopt($2); }
+          | number number number number number { if (*$1->lexerInfo != "3") wasmerror("Invalid debug line type (expected 3)"); $$ = $1->adopt({$2, $3, $4, $5}); };
 
 statement: operation;
 endop: "\n" | ";";
@@ -305,6 +310,7 @@ zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump co
 reg: WASMTOK_REG;
 number: WASMTOK_NUMBER;
 character: WASMTOK_CHAR;
+string: WASMTOK_STRING;
 
 %%
 

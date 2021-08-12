@@ -57,6 +57,5 @@ namespace Wasmcpp {
 int wasmlex();
 int wasmlex_destroy();
 int wasmparse();
-void wasmerror(const char *);
 void wasmerror(const std::string &);
 void wasmerror(const std::string &, const Wasmcpp::ASTLocation &);

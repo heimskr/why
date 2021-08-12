@@ -56,10 +56,6 @@ namespace Wasmcpp {
 	}
 }
 
-void wasmerror(const char *message) {
-	wasmerror(std::string(message), Wasmcpp::wasmLexer.location);
-}
-
 void wasmerror(const std::string &message) {
 	wasmerror(message, Wasmcpp::wasmLexer.location);
 }
