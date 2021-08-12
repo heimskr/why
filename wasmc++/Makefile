@@ -18,7 +18,7 @@ SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= ../wasm/examples/conditions.wasm
 
-.PHONY: all clean count countbf test
+.PHONY: all counter test clean count countbf
 
 all: $(OUTPUT)
 
@@ -39,6 +39,9 @@ $(WASMPARSECPP:.cpp=.o): $(WASMPARSECPP) $(WASMPARSEHDR)
 
 %.o: %.cpp include/wasmparse.h
 	$(COMPILER) $(CFLAGS) -c $< -o $@
+
+counter:
+	bison -Wcounterexamples $(BISON_OPTIONS) --defines=$(WASMPARSEHDR) --output=$(WASMPARSECPP) $(WASMBISONSRC)
 
 test: $(OUTPUT)
 	./$< $(TESTFILE)

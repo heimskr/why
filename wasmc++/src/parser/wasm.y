@@ -1,4 +1,6 @@
 %{
+// No subroutine support for now.
+
 #include <cassert>
 #include <cstdarg>
 #include <initializer_list>
@@ -98,10 +100,10 @@ using AN = Wasmcpp::ASTNode;
 %token WASMTOK_NOTEQUAL "!="
 %token WASMTOK_IF "if"
 %token WASMTOK_NOP "<>"
-%token WASMTOK_INT "int"
+%token WASMTOK_INT "%int"
 %token WASMTOK_RIT "rit"
-%token WASMTOK_TIME "time"
-%token WASMTOK_RING "ring"
+%token WASMTOK_TIME "%time"
+%token WASMTOK_RING "%ring"
 %token WASMTOK_LL "<<"
 %token WASMTOK_RL ">>>"
 %token WASMTOK_RA ">>"
@@ -114,8 +116,8 @@ using AN = Wasmcpp::ASTNode;
 %token WASMTOK_SLEEP "sleep"
 %token WASMTOK_ON "on"
 %token WASMTOK_OFF "off"
-%token WASMTOK_PAGE "page"
-%token WASMTOK_SETPT "setpt"
+%token WASMTOK_PAGE "%page"
+%token WASMTOK_SETPT "%setpt"
 %token WASMTOK_SHORT "/s"
 %token WASMTOK_QUESTION "?"
 %token WASMTOK_MEM "mem"
@@ -140,7 +142,7 @@ using AN = Wasmcpp::ASTNode;
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT
 
 %start start
 
@@ -149,7 +151,6 @@ using AN = Wasmcpp::ASTNode;
 start: program;
 
 program: program section { $$ = $1->adopt($2); }
-       | program "\n"    { D($2); }
        | { $$ = Wasmcpp::wasmParser.root; };
 
 section: meta_section | include_section | data_section | debug_section | code_section;
@@ -168,22 +169,31 @@ includes: includes endop string { $$ = $1->adopt($3); D($2); }
 data_section: "#data" "\n" { D($2); }
             | data_section data_def "\n" { $$ = $1->adopt($2); D($3); }
             | data_section "\n" { D($2); };
-data_def: data_key WASMTOK_FLOAT { $$ = $1-adopt($2); }
-        | data_key WASMTOK_NUMBER { $$ = $1->adopt($2); }
-        | data_key WASMTOK_STRING { $$ = $1->adopt($2); }
-        | data_key "(" WASMTOK_NUMBER ")" { $$ = $1->adopt($2->adopt($3)); D($4); }
+data_def: data_key WASMTOK_FLOAT { $$ = $1->adopt($2); }
+        | data_key number { $$ = $1->adopt($2); }
+        | data_key string { $$ = $1->adopt($2); }
+        | data_key "(" number ")" { $$ = $1->adopt($2->adopt($3)); D($4); }
         | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); };
 data_key: ident _data_sep { D($2); };
 _data_sep: ":" | { $$ = nullptr; };
 
 debug_section: "#debug" "\n" { D($2); }
              | debug_section debug_line "\n" { $$ = $1->adopt($2); D($3); }
-             | debug_section "\n" { D($2) };
+             | debug_section "\n" { D($2); };
 debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") wasmerror("Invalid debug line type (expected 1 or 2)"); $$ = $1->adopt($2); }
           | number number number number number { if (*$1->lexerInfo != "3") wasmerror("Invalid debug line type (expected 3)"); $$ = $1->adopt({$2, $3, $4, $5}); };
 
-statement: operation;
+code_section: "#code" "\n" { D($2); };
+            | code_section operation { $$ = $1->adopt(new WASMStatementNode($2)); }
+            | code_section operation intbang { $$ = $1->adopt(new WASMStatementNode($2, $3)); }
+            | code_section label _newlines operation { $$ = $1->adopt(new WASMStatementNode($4, nullptr, $2)); D($3); }
+            | code_section label _newlines operation intbang { $$ = $1->adopt(new WASMStatementNode($4, $5, $2)); D($3); }
+            | code_section endop { D($2); };
+intbang: "!" number { $$ = $1->adopt($2); };
+
 endop: "\n" | ";";
+newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
+_newlines: newlines | { $$ = nullptr; };
 
 operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
@@ -262,17 +272,17 @@ op_spop: "]" reg { $$ = new WASMStackNode($2, false); D($1); };
 
 op_nop: "<>" { $$ = new WASMNopNode(); D($1); };
 
-op_int: "int" immediate { $$ = new WASMIntINode($2); D($1); };
+op_int: "%int" immediate { $$ = new WASMIntINode($2); D($1); };
 
-op_rit: "rit" immediate { $$ = new WASMRitINode($2); D($1); };
+op_rit: "%rit" immediate { $$ = new WASMRitINode($2); D($1); };
 
-op_time: "time" reg { $$ = new WASMTimeRNode($2); D($1); };
+op_time: "%time" reg { $$ = new WASMTimeRNode($2); D($1); };
 
-op_timei: "time" immediate { $$ = new WASMTimeINode($2); D($1); };
+op_timei: "%time" immediate { $$ = new WASMTimeINode($2); D($1); };
 
-op_ring: "ring" reg { $$ = new WASMRingRNode($2); D($1); };
+op_ring: "%ring" reg { $$ = new WASMRingRNode($2); D($1); };
 
-op_ringi: "ring" immediate { $$ = new WASMRingINode($2); D($1); };
+op_ringi: "%ring" immediate { $$ = new WASMRingINode($2); D($1); };
 
 op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
 
@@ -290,19 +300,19 @@ op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2,
 
 op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 
-op_page: "page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
-       | "page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
+op_page: "%page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
+       | "%page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
-op_setpt: "setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
+op_setpt: "%setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
 
-op_svpg: "page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
+op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident | character;
 
-ident: "memset" | "time" | "ring" | "lui" | "int" | "rit" | "if" | "halt" | "on" | "off" | "setpt" | "sleep" | "page"
+ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep"
      | "version" | "author" | "orcid" | "name" | printop | "p" | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };

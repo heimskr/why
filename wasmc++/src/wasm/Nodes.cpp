@@ -84,6 +84,35 @@ namespace Wasmcpp {
 
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
+	WASMStatementNode::WASMStatementNode(ASTNode *statement, ASTNode *intbang, ASTNode *label_):
+	WASMBaseNode(WASM_STATEMENT) {
+		adopt(statement);
+
+		if (intbang) {
+			bang = intbang->children.front()->atoi();
+			delete intbang;
+		}
+
+		if (label_) {
+			label = label_->lexerInfo;
+			delete label_;
+		}
+	}
+
+	std::string WASMStatementNode::debugExtra() const {
+		const std::string out = children.front()->debugExtra();
+		return bang != -1? out + " !" + std::to_string(bang) : out;
+	}
+
+	WASMStatementNode::operator std::string() const {
+		std::string out;
+		if (auto *basenode = dynamic_cast<WASMBaseNode *>(children.front()))
+			out = *basenode;
+		else
+			out = "???";
+		return bang != -1? out + " !" + std::to_string(bang) : out;
+	}
+
 	WASMImmediateNode::WASMImmediateNode(ASTNode *node): WASMBaseNode(WASM_IMMEDIATE), imm(getImmediate(node)) {
 		delete node;
 	}

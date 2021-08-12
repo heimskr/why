@@ -11,7 +11,7 @@ namespace Wasmcpp {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement
 	};
 
 	class WhyInstruction;
@@ -24,6 +24,16 @@ namespace Wasmcpp {
 		WASMBaseNode(int sym);
 		virtual WASMNodeType nodeType() const = 0;
 		virtual operator std::string() const = 0;
+	};
+
+	struct WASMStatementNode: public WASMBaseNode {
+		int bang = -1;
+		const std::string *label = nullptr;
+
+		WASMStatementNode(ASTNode *statement, ASTNode *intbang = nullptr, ASTNode *label_ = nullptr);
+		virtual WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
 	};
 
 	struct WASMInstructionNode: public WASMBaseNode {
