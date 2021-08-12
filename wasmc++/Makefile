@@ -1,0 +1,70 @@
+COMPILER		?= clang++
+DEBUGGER		?= lldb
+OPTIMIZATION	?= -O0
+STANDARD		?= c++20
+WARNINGS		?= -Wall -Wextra
+CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
+OUTPUT			?= wasmc++
+LEXFLAGS		:= -Wno-sign-compare -Wno-register
+WASMLEXCPP		:= src/parser/wasmlex.cpp
+WASMPARSECPP	:= src/parser/wasmparse.cpp
+WASMPARSEHDR	:= include/wasmparse.h
+WASMFLEXSRC		:= src/parser/wasm.l
+WASMBISONSRC	:= src/parser/wasm.y
+
+CLOC_OPTIONS	:= --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+BISON_OPTIONS	:= --color=always
+SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
+OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
+TESTFILE        ?= ../wasm/examples/conditions.wasm
+
+.PHONY: all clean count countbf test
+
+all: $(OUTPUT)
+
+$(OUTPUT): $(OBJECTS)
+	$(COMPILER) -o $@ $^ $(LDFLAGS)
+
+$(WASMLEXCPP): $(WASMFLEXSRC) $(WASMPARSEHDR)
+	flex --prefix=wasm --outfile=$(WASMLEXCPP) $(WASMFLEXSRC)
+
+$(WASMPARSECPP) $(WASMPARSEHDR): $(WASMBISONSRC)
+	bison $(BISON_OPTIONS) --defines=$(WASMPARSEHDR) --output=$(WASMPARSECPP) $(WASMBISONSRC)
+
+$(WASMLEXCPP:.cpp=.o): $(WASMLEXCPP)
+	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
+
+$(WASMPARSECPP:.cpp=.o): $(WASMPARSECPP) $(WASMPARSEHDR)
+	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
+
+%.o: %.cpp include/wasmparse.h
+	$(COMPILER) $(CFLAGS) -c $< -o $@
+
+test: $(OUTPUT)
+	./$< $(TESTFILE)
+
+clean:
+	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png \
+		$(LLVMPARSEHDR) $(LLVMPARSECPP) $(LLVMLEXCPP) $(LLVMPARSECPP:.c=.output) $(LLVMLEXCPP) $(LLVMPARSECPP) \
+		$(WASMPARSEHDR) $(WASMPARSECPP) $(WASMLEXCPP) $(WASMPARSECPP:.c=.output) $(WASMLEXCPP) $(WASMPARSECPP) \
+		PVS-Studio.log report.tasks strace_out
+
+grind: $(OUTPUT)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=no ./$< $(TESTFILE)
+
+count:
+	cloc . parser $(CLOC_OPTIONS)
+
+countbf:
+	cloc --by-file . parser $(CLOC_OPTIONS)
+
+DEPFILE  = .dep
+DEPTOKEN = "\# MAKEDEPENDS"
+DEPFLAGS = -f $(DEPFILE) -s $(DEPTOKEN)
+
+depend:
+	@ echo $(DEPTOKEN) > $(DEPFILE)
+	makedepend $(DEPFLAGS) -- $(COMPILER) $(CFLAGS) -- $(SOURCES) 2>/dev/null
+	@ rm $(DEPFILE).bak
+
+sinclude $(DEPFILE)

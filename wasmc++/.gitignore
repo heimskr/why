@@ -1,0 +1,7 @@
+src/parser/wasmlex.cpp
+src/parser/wasmparse.cpp
+src/parser/wasmparse.output
+include/wasmparse.h
+*.o
+wasmc++
+.dep
