@@ -17,7 +17,7 @@ namespace WVM::Operations {
 		OP_NOT, OP_OR, OP_XNOR, OP_XOR, OP_LAND, OP_LNAND, OP_LNOR, OP_LNOT, OP_LOR, OP_LXNOR, OP_LXOR, OP_CMP, OP_SL,
 		OP_SLE, OP_SEQ, OP_SLU, OP_SLEU, OP_JR, OP_JRC, OP_JRL, OP_JRLC, OP_C, OP_L, OP_S, OP_CB, OP_LB, OP_SB,
 		OP_SPUSH, OP_SPOP, OP_CH, OP_LH, OP_SH, OP_TIME, OP_RING, OP_PR, OP_HALT, OP_EVAL, OP_PRC, OP_PRD, OP_PRX,
-		OP_SLEEP, OP_PRB, OP_SEL, OP_MS, OP_PAGE,
+		OP_SLEEP, OP_PRB, OP_SEL, OP_MS, OP_PAGE, OP_QUERY,
 	};
 
 	std::set<int> ISet {
@@ -145,6 +145,11 @@ namespace WVM::Operations {
 					case FN_PGON:   pgonOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SETPT: setptOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SVPG:   svpgOp(vm, rs, rt, rd, conditions, flags); return;
+				}
+				break;
+			case OP_QUERY:
+				switch (funct) {
+					case FN_QM: qmOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 		}
@@ -604,7 +609,7 @@ namespace WVM::Operations {
 			const Word translated = vm.translateAddress(rd, &success);
 			if (!success)
 				vm.intPfault();
-			else 
+			else
 				vm.jump(translated, true);
 		} else vm.increment();
 	}
@@ -961,8 +966,8 @@ namespace WVM::Operations {
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		std::stringstream ss;
 		ss << Why::coloredRegister(&rs - vm.registers) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
-		   << rs;
-		// vm.onPrint(ss.str());
+		   << rs << "\n";
+		vm.onPrint(ss.str());
 		DBG(ss.str());
 		vm.increment();
 	}
@@ -1040,6 +1045,11 @@ namespace WVM::Operations {
 
 	void svpgOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
 		setReg(vm, rd, vm.pagingOn? 1 : 0, false);
+		vm.increment();
+	}
+
+	void qmOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
+		setReg(vm, rd, vm.getMemorySize(), false);
 		vm.increment();
 	}
 }

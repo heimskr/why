@@ -4,3 +4,4 @@ build
 .log
 .port
 .vscode
+*.log

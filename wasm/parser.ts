@@ -3,8 +3,10 @@ import * as fs from "fs";
 import * as Long from "long";
 import _ from "../util";
 
-import {SymbolTable} from "./wasmc";
-import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS, ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
+import {SymbolTable, DebugData, Debug1, Debug2, Debug3} from "./wasmc";
+import WASMC from "./wasmc";
+import {EXCEPTIONS, R_TYPES, I_TYPES, J_TYPES, OPCODES, FUNCTS, REGISTER_OFFSETS, EXTS, CONDITIONS, FLAGS,
+        ConditionName, OpType, FlagValue, RType, IType, JType, isFlag} from "./constants";
 
 const minimist = require("minimist");
 const chalk_ = require("chalk");
@@ -23,7 +25,7 @@ const OFFSETS_INV = _.multiInvert(REGISTER_OFFSETS);
 const CONDITIONS_INV = <{[key: number]: ConditionName}> _.invert(CONDITIONS);
 const OFFSET_VALUES = _.uniq(Object.values(REGISTER_OFFSETS)).sort((a, b) => (b as any) - (a as any));
 
-export type SegmentOffsets = {$symtab: number, $code: number, $data: number, $end: number};
+export type SegmentOffsets = {$symtab: number, $code: number, $data: number, $debug: number, $end: number};
 type MetaField = "orcid" | "name" | "version" | "author";
 type FormatRFunction = (op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue,
                         conditions: ConditionName | null) => string;
@@ -67,19 +69,19 @@ export type ParserInstructionJ = {
 };
 
 export type ParserNOP = {op: "nop", type: "nop", opcode: null, flags: null, rs: null, conditions: null};
-export type ParserInstruction = ParserInstructionR | ParserInstructionI | ParserInstructionJ | ParserNOP;
+export type ParserInstruction = (ParserInstructionR | ParserInstructionI | ParserInstructionJ | ParserNOP)
+                              & {debugIndex?: number};
 export type ParserMeta = {[key in MetaField]: string};
 type FormatStyle = "wasm" | "mnem";
 
-/**
- * Contains code for parsing compiled wvm bytecode.
- */
+/** Contains code for parsing compiled wasm bytecode. */
 export default class Parser {
 	raw: Long[];
 	rawSymbols: Long[];
 	rawMeta: Long[];
 	rawCode: Long[];
 	rawData: Long[];
+	rawDebugData: Long[];
 	meta: ParserMeta;
 	
 	private static _formatStyle: FormatStyle = "wasm";
@@ -91,75 +93,56 @@ export default class Parser {
 	symbols: SymbolTable;
 	code: ParserInstruction[];
 
-	/**
-	 * Constructs a new `Parser` instance.
-	 * @param {Long[]} [longs] An optional array of Longs that will be passed to {@link module:wasm~Parser#load load}
-	 *                         if specified.
-	 */
+	/** Constructs a new `Parser` instance.
+	 *  @param {Long[]} [longs] An optional array of Longs that will be passed to {@link module:wasm~Parser#load load}
+	 *                          if specified. */
 	constructor(longs?: Long[]) {
-		if (longs) {
+		if (longs)
 			this.load(longs);
-		}
 	}
 
-	/**
-	 * Loads a program from a file and parses it.
-	 * @param {string}   filename     The filename of the program to load.
-	 * @param {boolean} [silent=true] Whether to suppress debug output.
-	 */
+	/** Loads a program from a file and parses it.
+	 *  @param {string}   filename     The filename of the program to load.
+	 *  @param {boolean} [silent=true] Whether to suppress debug output. */
 	open(filename: string, silent: boolean = true) {
 		this.read(fs.readFileSync(filename, "utf8"), silent);
 	}
 
-	/**
-	 * Parses a string representation of a program.
-	 * @param {string}   text         A text representation (\n-separated hexadecimal numbers) of a program.
-	 * @param {boolean} [silent=true] Whether to suppress debug output.
-	 */
+	/** Parses a string representation of a program.
+	 *  @param {string}   text         A text representation (\n-separated hexadecimal numbers) of a program.
+	 *  @param {boolean} [silent=true] Whether to suppress debug output. */
 	read(text: string, silent: boolean = true) {
 		this.load(text.split("\n").map((s) => Long.fromString(s, true, 16)), silent);
 	}
 
-	/**
-	 * Stores an array of longs and {@link module:wasm~Parser#parse parses} them.
-	 * @param {Long[]}   longs        An array of Longs.
-	 * @param {boolean} [silent=true] Whether to suppress debug output.
-	 */
+	/** Stores an array of longs and {@link module:wasm~Parser#parse parses} them.
+	 *  @param {Long[]}   longs        An array of Longs.
+	 *  @param {boolean} [silent=true] Whether to suppress debug output. */
 	load(longs: Long[], silent: boolean = true) {
 		this.raw = longs;
 		this.parse(silent);
 	}
 
-	/**
-	 * Parses the stored raw longs.
-	 * @param {boolean} [silent=true] Whether to suppress debug output.
-	 */
+	/** Parses the stored raw longs.
+	 *  @param {boolean} [silent=true] Whether to suppress debug output. */
 	parse(silent: boolean = true) {
 		const longs = this.raw;
 
-		/**
-		 * The offsets defined in the program's metadata section.
-		 * @type {Object<string, number>}
-		 */
+		/** The offsets defined in the program's metadata section.  */
 		this.offsets = {
 			$symtab: longs[0].toInt(),
 			$code:   longs[1].toInt(),
 			$data:   longs[2].toInt(),
-			$end:    longs[3].toInt()
+			$debug:  longs[3].toInt(),
+			$end:    longs[4].toInt()
 		};
 
-		/**
-		 * Contains all the unparsed Longs in the metadata section.
-		 * @type {Long[]}
-		 */
+		/** Contains all the unparsed Longs in the metadata section. */
 		this.rawMeta = longs.slice(0, this.offsets.$symtab / 8);
 
 		const [metaName, metaVersion, metaAuthor] = _.longStrings(longs.slice(7, this.offsets.$code));
 		
-		/**
-		 * The parsed metadata section.
-		 * @type {Object}
-		 */
+		/** The parsed metadata section. */
 		this.meta = {
 			orcid: _.chunk(_.longString([longs[5], longs[6]]), 4).map(n => n.join("")).join("-"),
 			name: metaName,
@@ -167,35 +150,23 @@ export default class Parser {
 			author: metaAuthor,
 		};
 
-		/**
-		 * Contains all the unparsed Longs in the symbol table.
-		 * @type {Long[]}
-		 */
+		/** Contains all the unparsed Longs in the symbol table. */
 		this.rawSymbols = longs.slice(this.offsets.$symtab / 8, this.offsets.$code / 8);
 
-		/**
-		 * Contains the parsed symbol table.
-		 * @type {SymbolTable}
-		 */
+		/** Contains the parsed symbol table. */
 		this.symbols = this.getSymbols();
 
-		/**
-		 * Contains all the unparsed Longs in the code section.
-		 * @type {Long[]}
-		 */
+		/** Contains all the unparsed Longs in the code section. */
 		this.rawCode = longs.slice(this.offsets.$code / 8, this.offsets.$data / 8);
 
-		/**
-		 * Contains all the parsed instructions.
-		 * @type {Object}
-		 */
+		/** Contains all the parsed instructions. */
 		this.code = this.rawCode.map(Parser.parseInstruction);
 
-		/**
-		 * Contains all the unparsed Longs in the data section.
-		 * @type {Long[]}
-		 */
-		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$end / 8);
+		/** Contains all the unparsed Longs in the data section. */
+		this.rawData = longs.slice(this.offsets.$data / 8, this.offsets.$debug / 8);
+
+		/** Contains all the unparsed Longs in the debug data section. */
+		this.rawDebugData = longs.slice(this.offsets.$debug / 8, this.offsets.$end / 8);
 
 		if (!silent) {
 			console.log(dim("/*"));
@@ -218,10 +189,8 @@ export default class Parser {
 		}
 	}
 
-	/**
-	 * Reads the program's symbol table.
-	 * @return {SymbolTable} An object mapping a symbol name to tuple of its ID and its address.
-	 */
+	/** Reads the program's symbol table.
+	 * @return {SymbolTable} An object mapping a symbol name to tuple of its ID and its address. */
 	getSymbols(): SymbolTable {
 		const longs = this.raw;
 		const start = longs[0].toInt() / 8;
@@ -244,44 +213,78 @@ export default class Parser {
 		return out;
 	}
 
-	/**
-	 * Finds the length of the metadata section of the program.
-	 * @return {number} The length of the metadata section in bytes.
-	 */
+	/** Parses the program's debug data section. */
+	getDebugData(): DebugData {
+		const longs = this.raw;
+		const start = longs[3].toInt() / 8;
+		const end = longs[4].toInt() / 8;
+		const out: DebugData = [];
+		for (let i = start; i < end;) {
+			let bytes = longs[i].toBytesBE();
+			const type = bytes[0];
+			if (type == 1 || type == 2) {
+				const nameLength = bytes[1] | (bytes[2] << 8) | (bytes[3] << 16);
+				let name = "";
+				for (let j = 4; j < nameLength + 4; j++) {
+					const mod = j % 8;
+					if (mod == 0)
+						bytes = longs[++i].toBytesBE();
+					name += String.fromCharCode(bytes[mod]);
+				}
+				// This is stupid, but it's necessary to appease TypeScript.
+				if (type == 1)
+					out.push([1, name]);
+				else
+					out.push([2, name]);
+				i++;
+			} else if (type == 3) {
+				const fileIndex = bytes[1] | (bytes[2] << 8) | (bytes[3] << 16);
+				const line = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
+				bytes = longs[++i].toBytesBE();
+				const column = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16);
+				const count = bytes[3];
+				const funcIndex = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
+				const toAdd: Debug3 = [3, fileIndex, line, column, funcIndex];
+				toAdd.count = count;
+				toAdd.address = WASMC.swapEndian(longs[++i]);
+				out.push(toAdd);
+				i++;
+			} else {
+				throw `Invalid debug data entry type: ${type}`;
+			}
+		}
+		return out;
+	}
+
+	/** Finds the length in bytes of the metadata section of the program. */
 	getMetaLength(): number {
 		return this.raw[0].toInt();
 	}
 
-	/**
-	 * Finds the length of the symbol table of the program.
-	 * @return {number} The length of the symbol table in bytes.
-	 */
+	/** Finds the length in bytes of the symbol table of the program. */
 	getSymbolTableLength(): number {
-		return this.raw[1].subtract(this.raw[0]).toNumber();
+		return this.raw[1].subtract(this.raw[0]).toInt();
 	}
 
-	/**
-	 * Finds the length of the code section of the program.
-	 * @return {number} The length of the code section in bytes.
-	 */
+	/** Finds the length in bytes of the code section of the program. */
 	getCodeLength(): number {
-		return this.raw[2].subtract(this.raw[1]).toNumber();
+		return this.raw[2].subtract(this.raw[1]).toInt();
 	}
 
-	/**
-	 * Finds the length of the data section of the program.
-	 * @return {number} The length of the data section in bytes.
-	 */
+	/** Finds the length in bytes of the data section of the program. */
 	getDataLength(): number {
-		return this.raw[3].subtract(this.raw[2]).toNumber();
+		return this.raw[3].subtract(this.raw[2]).toInt();
 	}
 
-	/**
-	 * Parses a single instruction.
-	 * @param  {Long|string} instruction An instruction represented as either a Long of a 64-long string of binary digits.
-	 * @return {Object} An object containing information about the instruction. Always contains `op`, `opcode`, `rs`,
-	 *                  `flags` and `type` for non-NOPs; other output varies depending on the type of the instruction.
-	 */
+	/** Finds the length in bytes of the debug data section of the program. */
+	getDebugLength() {
+		return this.raw[4].subtract(this.raw[3]).toInt();
+	}
+
+	/** Parses a single instruction.
+	 *  @param  {Long|string} instruction An instruction represented as either a Long of a 64-long string of binary digits.
+	 *  @return {Object} An object containing information about the instruction. Always contains `op`, `opcode`, `rs`,
+	 *                  `flags` and `type` for non-NOPs; other output varies depending on the type of the instruction. */
 	static parseInstruction(instruction: Long | string): ParserInstruction {
 		const instructionString: string = typeof instruction == "string"?
 			instruction : instruction.toString(2).padStart(64, "0");
@@ -339,22 +342,23 @@ export default class Parser {
 		}
 	}
 
-	/**
-	 * Styles an operator.
-	 * @param  {string} oper An operator.
-	 * @return {string} A styled operator.
-	 */
+	parseInstructionWithDebug(instruction: Long | string, address: Long): ParserInstruction {
+		let parsed: ParserInstruction = Parser.parseInstruction(instruction);
+		return parsed;
+	}
+
+	/** Styles an operator.
+	 *  @param  {string} oper An operator.
+	 *  @return {string} A styled operator. */
 	static colorOper(oper: string): string {
 		return bold(oper);
 	}
 
-	/**
-	 * Decompiles an instruction to the corresponding wasm source.
-	 * @param  {Long|string|Object} instruction An instruction represented as either a Long, a 64-long string of
-	 *                                          binary digits or an already-parsed object.
-	 * @param  {SymbolTable} [symbols] A symbol table.
-	 * @return {string} The wasm equivalent of the instruction.
-	 */
+	/** Decompiles an instruction to the corresponding wasm source.
+	 *  @param  {Long|string|Object} instruction An instruction represented as either a Long, a 64-long string of
+	 *                                           binary digits or an already-parsed object.
+	 *  @param  {SymbolTable} [symbols] A symbol table.
+	 *  @return {string} The wasm equivalent of the instruction. */
 	static formatInstruction(instruction: Long | string | ParserInstruction, symbols: SymbolTable): string {
 		let parsed: ParserInstruction;
 		if (instruction instanceof Long) {
@@ -401,11 +405,9 @@ export default class Parser {
 		throw new Error(`Can't parse instruction (opcode = ${opcode}, type = "${type}").`);
 	}
 
-	/**
-	 * Returns the instruction type corresponding to an opcode.
-	 * @param  {number} opcode An opcode.
-	 * @return {?("r"|"i"|"j")} One of the operation types (r, i, j) if the opcode was recognized; `null` otherwise.
-	 */
+	/** Returns the instruction type corresponding to an opcode.
+	 *  @param  {number} opcode An opcode.
+	 *  @return {?("r"|"i"|"j")} One of the operation types (r, i, j) if the opcode was recognized; `null` otherwise. */
 	static instructionType(opcode: number): OpType | null {
 		if (R_TYPES.includes(opcode)) return "r";
 		if (I_TYPES.includes(opcode)) return "i";
@@ -413,11 +415,9 @@ export default class Parser {
 		return null;
 	}
 
-	/**
-	 * Converts a numeric register ID to its string representation.
-	 * @param  {number} n A register ID.
-	 * @return {string} A register name.
-	 */
+	/** Converts a numeric register ID to its string representation.
+	 *  @param  {number} n A register ID.
+	 *  @return {string} A register name. */
 	static getRegister(n: number): string {
 		if (n == REGISTER_OFFSETS.return) {
 			return "$rt";
@@ -433,17 +433,15 @@ export default class Parser {
 		return null;
 	}
 
-	/**
-	 * Converts an R-type instruction to its original wasm source.
-	 * @param  {string} op The name of the operation.
-	 * @param  {string} rt The name of the `rt` register.
-	 * @param  {string} rs The name of the `rs` register.
-	 * @param  {string} rd The name of the `rt` register.
-	 * @param  {number} funct The ID of the function.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @return {string} A line of wasm source.
-	 */
+	/** Converts an R-type instruction to its original wasm source.
+	 *  @param  {string} op The name of the operation.
+	 *  @param  {string} rt The name of the `rt` register.
+	 *  @param  {string} rs The name of the `rs` register.
+	 *  @param  {string} rd The name of the `rt` register.
+	 *  @param  {number} funct The ID of the function.
+	 *  @param  {number} [flags=0] The assembler flags.
+	 *  @param  {string} [conditions] The instruction conditions.
+	 *  @return {string} A line of wasm source. */
 	static formatR_w(op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue = 0,
 		conditions: ConditionName | null = null): string {
 		const alt_op = (oper) => {
@@ -514,20 +512,21 @@ export default class Parser {
 		}
 		if (op == "pgoff") return `${cyan("page")} off`;
 		if (op == "pgon")  return `${cyan("page")} on`;
+		if (op == "setpt") return `${cyan("setpt")} ${yellow(rs)}`;
+		if (op == "svpg")  return `${cyan("page")} -> ${yellow(rd)}`;
+		if (op == "qm")    return `? ${cyan("mem")} -> ${yellow(rd)}`;
 		return `(unknown R-type: ${Parser.colorOper(op)})`;
 	}
 
-	/**
-	 * Converts an I-type instruction to its original wasm source.
-	 * @param  {string} op The name of the operation.
-	 * @param  {string} rs The name of the `rs` register.
-	 * @param  {string} rd The name of the `rt` register.
-	 * @param  {number} imm An immediate value.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @param  {SymbolTable} [symbols] A symbol table.
-	 * @return {string} A line of wasm source.
-	 */
+	/** Converts an I-type instruction to its original wasm source.
+	 *  @param  {string} op The name of the operation.
+	 *  @param  {string} rs The name of the `rs` register.
+	 *  @param  {string} rd The name of the `rt` register.
+	 *  @param  {number} imm An immediate value.
+	 *  @param  {number} [flags=0] The assembler flags.
+	 *  @param  {string} [conditions] The instruction conditions.
+	 *  @param  {SymbolTable} [symbols] A symbol table.
+	 *  @return {string} A line of wasm source. */
 	static formatI_w(op: string, rs: string, rd: string, imm: Long, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
@@ -568,8 +567,10 @@ export default class Parser {
 		if (op == "slli")   return alt_op("<<");
 		if (op == "srli")   return alt_op(">>>");
 		if (op == "srai")   return alt_op(">>");
-		if (op == "lui")    return `${dim("lui:")} ${magenta(target)} ${dim("->")} `
-		                         + yellow(rd);
+		if (op == "sllii")  return `${magenta(target)} ${Parser.colorOper("<<")} ${dim(" -> ")} ${yellow(rd)}`;
+		if (op == "srlii")  return `${magenta(target)} ${Parser.colorOper(">>>")} ${dim(" -> ")} ${yellow(rd)}`;
+		if (op == "sraii")  return `${magenta(target)} ${Parser.colorOper(">>")} ${dim(" -> ")} ${yellow(rd)}`;
+		if (op == "lui")    return `${dim("lui:")} ${magenta(target)} ${dim("->")} ${yellow(rd)}`;
 		if (op == "li")     return `[${magenta(target)}] ${dim("->")} ${yellow(rd)}`;
 		if (op == "si")     return `${yellow(rs)} ${dim("->")} [${magenta(target)}]`;
 		if (op == "set")    return `${magenta(target)} ${dim("->")} ${yellow(rd)}`;
@@ -598,17 +599,15 @@ export default class Parser {
 		return `(unknown I-type: ${Parser.colorOper(op)})`;
 	}
 
-	/**
-	 * Converts a J-type instruction to its original wasm source.
-	 * @param  {string}  op   The name of the operation.
-	 * @param  {string}  rs   The name of the `rs` register.
-	 * @param  {number}  addr An immediate value.
-	 * @param  {boolean} link Whether the link bit is set.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @param  {SymbolTable} [symbols] A symbol table.
-	 * @return {string} A line of wasm source.
-	 */
+	/** Converts a J-type instruction to its original wasm source.
+	 *  @param  {string}  op   The name of the operation.
+	 *  @param  {string}  rs   The name of the `rs` register.
+	 *  @param  {number}  addr An immediate value.
+	 *  @param  {boolean} link Whether the link bit is set.
+	 *  @param  {number} [flags=0] The assembler flags.
+	 *  @param  {string} [conditions] The instruction conditions.
+	 *  @param  {SymbolTable} [symbols] A symbol table.
+	 *  @return {string} A line of wasm source. */
 	static formatJ_w(op: string, rs: string, addr: Long, link: boolean, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = magenta(Parser.getTarget(addr, flags, symbols));
@@ -619,17 +618,15 @@ export default class Parser {
 		return `(unknown J-type: ${Parser.colorOper(op)})`;
 	}
 
-	/**
-	 * Converts an R-type instruction to its mnemonic representation.
-	 * @param  {string}  op The name of the operation.
-	 * @param  {string}  rt The name of the `rt` register.
-	 * @param  {string}  rs The name of the `rs` register.
-	 * @param  {string}  rd The name of the `rt` register.
-	 * @param  {number}  funct The ID of the function.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @return {string} A mnemonic representation of the instruction.
-	 */
+	/** Converts an R-type instruction to its mnemonic representation.
+	 *  @param  {string}  op The name of the operation.
+	 *  @param  {string}  rt The name of the `rt` register.
+	 *  @param  {string}  rs The name of the `rs` register.
+	 *  @param  {string}  rd The name of the `rt` register.
+	 *  @param  {number}  funct The ID of the function.
+	 *  @param  {number} [flags=0] The assembler flags.
+	 *  @param  {string} [conditions] The instruction conditions.
+	 *  @return {string} A mnemonic representation of the instruction. */
 	static formatR_m(op: string, rt: string, rs: string, rd: string, funct: number, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null): string {
 		let base = cyan(op);
@@ -640,34 +637,30 @@ export default class Parser {
 		return `${base} ${yellow(rs)}${dim(",")} ${yellow(rt)} ${dim("->")} ${yellow(rd)}`;
 	}
 
-	/**
-	 * Converts an I-type instruction to its mnemonic representation.
-	 * @param  {string}  op  The name of the operation.
-	 * @param  {string}  rs  The name of the `rs` register.
-	 * @param  {string}  rd  The name of the `rt` register.
-	 * @param  {number}  imm An immediate value.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @param  {SymbolTable} [symbols] A symbol table.
-	 * @return {string} A mnemonic representation of the instruction.
-	 */
+	/** Converts an I-type instruction to its mnemonic representation.
+	 *  @param  {string}  op  The name of the operation.
+	 *  @param  {string}  rs  The name of the `rs` register.
+	 *  @param  {string}  rd  The name of the `rt` register.
+	 *  @param  {number}  imm An immediate value.
+	 *  @param  {number} [flags=0] The assembler flags.
+	 *  @param  {string} [conditions] The instruction conditions.
+	 *  @param  {SymbolTable} [symbols] A symbol table.
+	 *  @return {string} A mnemonic representation of the instruction. */
 	static formatI_m(op: string, rs: string, rd: string, imm: Long, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = Parser.getTarget(imm, flags, symbols);
 		return `${cyan(op)} ${yellow(rs) + dim(",")} ${magenta(target)} ${dim("->")} ${yellow(rd)}`;
 	}
 
-	/**
-	 * Converts a J-type instruction to its mnemonic representation.
-	 * @param  {string}  op   The name of the operation.
-	 * @param  {string}  rs   The name of the `rs` register.
-	 * @param  {number}  addr An immediate value.
-	 * @param  {boolean} link Whether the link bit is set.
-	 * @param  {number} [flags=0] The assembler flags.
-	 * @param  {string} [conditions] The instruction conditions.
-	 * @param  {SymbolTable} [symbols] A symbol table.
-	 * @return {string} A mnemonic representation of the instruction.
-	 */
+	/** Converts a J-type instruction to its mnemonic representation.
+	 *  @param  {string}  op   The name of the operation.
+	 *  @param  {string}  rs   The name of the `rs` register.
+	 *  @param  {number}  addr An immediate value.
+	 *  @param  {boolean} link Whether the link bit is set.
+	 *  @param  {number} [flags=0] The assembler flags.
+	 *  @param  {string} [conditions] The instruction conditions.
+	 *  @param  {SymbolTable} [symbols] A symbol table.
+	 *  @return {string} A mnemonic representation of the instruction. */
 	static formatJ_m(op: string, rs: string, addr: Long, link: boolean, flags: FlagValue = 0,
 	                 conditions: ConditionName | null = null, symbols: SymbolTable = {}): string {
 		const target = magenta(Parser.getTarget(addr, flags, symbols));
@@ -691,14 +684,12 @@ export default class Parser {
 		}
 	}
 
-	/**
-	 * Converts an external instruction to its original wasm source.
-	 * @param  {string} rt The name of the `rt` register.
-	 * @param  {string} rs The name of the `rs` register.
-	 * @param  {string} rd The name of the `rt` register.
-	 * @param  {number} funct The ID of the function.
-	 * @return {string} A line of wasm source.
-	 */
+	/** Converts an external instruction to its original wasm source.
+	 *  @param  {string} rt The name of the `rt` register.
+	 *  @param  {string} rs The name of the `rs` register.
+	 *  @param  {string} rd The name of the `rt` register.
+	 *  @param  {number} funct The ID of the function.
+	 *  @return {string} A line of wasm source. */
 	static formatExt(rt: string, rs: string, rd: string, funct: number): string {
 		if (funct == EXTS.printr) return `<${cyan("print")} ${yellow(rs)}>`;
 		if (funct == EXTS.prc)    return `<${cyan("prc")} ${yellow(rs)}>`;
@@ -747,6 +738,8 @@ if (require.main === module) {
 
 		console.log(Parser.formatInstruction(num.toString(2).padStart(64, "0"), {}));
 	} else {
-		new Parser().open(name, false);
+		const parser = new Parser();
+		parser.open(name, false);
+		console.log("Debug data:", parser.getDebugData());
 	}
 }

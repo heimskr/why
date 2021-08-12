@@ -27,10 +27,10 @@ const compileData = entries => {
 
 const compileSubroutine = (name, args, code) => {
 	return [
-		[name, "push", ...args],
-		...code.map(item => item[1] == S("done")? [item[0], "j", 0, ["label", `${name}$done`], false, null] : item),
-		[`${name}$done`, "pop", ...args.reverse()],
-		[`${name}$end`, "jr", 0, 0, ["register", "return", 0]]
+		[name, null, "push", ...args],
+		...code.map(item => item[1] == S("done")? [item[0], null, "j", 0, ["label", `${name}$done`], false, null] : item),
+		[`${name}$done`, null, "pop", ...args.reverse()],
+		[`${name}$end`, null, "jr", 0, 0, ["register", "return", 0]]
 	];
 };
 
@@ -41,7 +41,7 @@ const compileCode = statements => {
 			statement[1].forEach(substatement => out.push(substatement));
 		} else if (statement != null) {
 			out.push(statement);
-		};
+		}
 	});
 
 	return out;
@@ -68,12 +68,13 @@ string			-> dqstring									{% nth(0) %}
 int_hex			-> "-":? "0x" [0-9a-fA-F]:+					{% d => parseInt((d[0] || "") + d[2].join(""), 16) %}
 int_bin			-> "-":? "0b" [01]:+						{% d => parseInt((d[0] || "") + d[2].join(""), 2 ) %}
 int_dec			-> "-":? [0-9]:+							{% d => parseInt((d[0] || "") + d[1].join("")    ) %}
+udec			-> [0-9]:+									{% d => parseInt(d[0].join("")) %}
 char			-> "'" sstrchar "'"							{% d => d[1].charCodeAt(0) %}
 int				-> (int_hex | int_bin | int_dec | char)		{% d => d[0][0] %}
 float			-> "-":? [0-9]:+ "." [0-9]:*				{% d => parseFloat((d[0] || "") + d[1].join("") + d[2] + d[3].join("")) %}
 				 | ("-":? ".") [0-9]:+						{% d => parseFloat(filter(d[0]).join("") + d[1].join("")) %}
 
-section			-> (data_section | code_section | meta_section | include_section)
+section			-> (data_section | code_section | meta_section | include_section | debug_section)
 															{% d => d[0][0] %}
 
 meta_section	-> _ meta_header _ sep meta:*				{% d => ["meta", compileObject(d[4])] %}
@@ -95,19 +96,30 @@ datadef			-> datakey float  _ sep						{% d => ["float",  d[0], d[1]] %}
 				 | datakey "&" xvar							{% d => ["var",    d[0], d[2]] %}
 				 | _ sep 									{% d => null %}
 
+debug_section	-> _ debug_header _ sep debug_line:*		{% d => ["debug", filter(d[4])] %}
+debug_header	-> "#debug" | "#dbg"						{% d => null %}
+debug_line		-> (type1 | type2 | type3) _ sep			{% d => d[0][0] %}
+				 | _ sep									{% d => null %}
+type1			-> "1" _ dqstring							{% d => [1, d[2]] %}
+type2			-> "2" _ dqstring							{% d => [2, d[2]] %}
+type3			-> "3" __ udec __ udec __ udec __ udec		{% d => [3, d[2], d[4], d[6], d[8]] %}
+
 code_section	-> _ code_header _ sep statement:*			{% d => ["code", compileCode(d[4])] %}
 code_header		-> "#code" | "#c"							{% d => null %}
-statement		-> _ op _ sep								{% d => [null, ...d[1][0]] %}
-				 | _ label (_ lineend):* _ op _ sep			{% d => [d[1], ...d[4][0]] %}
+statement		-> _ op (_ intbang):? _ sep					{% d => [null, d[2]? d[2][1] : null, ...d[1][0]] %}
+				 | _ label (_ lineend):* _ op (_ intbang):? _ sep
+															{% d => [d[1], d[5]? d[5][1] : null, ...d[4][0]] %}
 				 | _ sep									{% d => null %}
 				 | _ subroutine								{% d => ["subroutine", d[1]] %}
+
+intbang			-> "!" udec									{% d => d[1] %}
 
 subroutine		-> "sub" __ var _ par[sub_saved] _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2], d[4], filter(d[6])) %}
 				 | "sub" __ var _ epar _ brc[subroutine_code:*]
 															{% d => compileSubroutine(d[2],   [], filter(d[6])) %}
-subroutine_code -> _ op										{% d => subify([null, ...d[1][0]]) %}
-				 | _ label (_ lineend):* _ op				{% d => subify([d[1], ...d[4][0]]) %}
+subroutine_code -> _ op (_ intbang):?						{% d => subify([null, d[2]? d[2][1] : null, ...d[1][0]]) %}
+				 | _ label (_ lineend):* _ op (_ intbang):?	{% d => subify([d[1], d[5]? d[5][1] : null, ...d[4][0]]) %}
 				 | _ sep									{% d =>  null %}
 				 | ___ "!done"								{% d => [null, S("done")] %}
 				 | _ label (lineend | __):+ "!done"			{% d => [d[1], S("done")] %}
@@ -118,7 +130,7 @@ include_header	-> ("#include" | "#includes" | "#i")		{% d => null %}
 inclusion		-> .:+ "\n"									{% (d, l, r) => { const t = d[0].join("").trim(); return ["", "#data"].includes(t)? r : t } %}
 				 | _ "\n" 									{% d => null %}
 
-label			-> "@" var									{% nth(1) %}
+label			-> "@" var (_ "!" [0-9]:+):?				{% nth(1) %}
 xvar			-> var										{% d => d[0] %}
 ptr_ref			-> "&" xvar									{% nth(1) %}
 var_addr		-> ptr_ref									{% d => ["address", d[0]] %}
@@ -149,7 +161,7 @@ op				-> call | op_add | op_sub | op_mult | op_addi | op_subi | op_multi
 				 | op_ringi | op_sll | op_srl | op_sra | op_slli | op_srli | op_srai | op_sspush | op_sspop
 				 | gap | ext_prc | ext_printr | ext_halt | ext_n | ext_eval | ext_prd | ext_prx | ext_prs | ext_pr
 				 | ext_sleep | ext_prb | ext_xn_init | ext_xn_connect | ext_xn_send | ext_xn_recv
-				 | op_page | op_setpt | op_svpg
+				 | op_page | op_setpt | op_svpg | op_sllii | op_srlii | op_sraii | op_qm
 
 into			-> _ "->" _									{% d => null %}
 
@@ -295,6 +307,9 @@ op_srli			-> rv _ ">>>"  _ int into rv				{% d => ["srli",   d[0], d[6], d[4]] %
 				 | rv _ ">>>=" _ int						{% d => ["srli",   d[0], d[0], d[4]] %}
 op_srai			-> rv _ ">>"   _ int into rv				{% d => ["srai",   d[0], d[6], d[4]] %}
 				 | rv _ ">>="  _ int						{% d => ["srai",   d[0], d[0], d[4]] %}
+op_sllii		-> int _ "<<"  _ rv into rv					{% d => ["sllii",  d[4], d[6], d[0]] %}
+op_srlii		-> int _ ">>>" _ rv into rv					{% d => ["srlii",  d[4], d[6], d[0]] %}
+op_sraii		-> int _ ">>"  _ rv into rv					{% d => ["sraii",  d[4], d[6], d[0]] %}
 op_lui			-> "lui" _ ":" _ int into reg				{% d => ["lui",      0,  d[6], d[4]] %}
 op_lbi			-> "[" _ int  _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], d[2]] %}
 				 | "[" _ xvar _ "]" into rv _ "/b"			{% d => ["lbi",      0,  d[6], ["label", d[2]]] %}
@@ -385,6 +400,7 @@ op_page			-> "page" __ "on"							{% d => ["pgon",  0,   0,    0 ] %}
 				 | "page" __ "off"							{% d => ["pgoff", 0,   0,    0 ] %}
 op_setpt		-> "setpt" _ reg							{% d => ["setpt", 0, d[2],   0 ] %}
 op_svpg			-> "page" into reg							{% d => ["svpg",  0,   0,  d[2]] %}
+op_qm			-> "?" _ "mem" into reg						{% d => ["qm",    0,   0,  d[4]] %}
 
 gap				-> brc[int]									{% d => ["gap",  d[0]] %}
 

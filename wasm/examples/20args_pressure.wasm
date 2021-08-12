@@ -1,0 +1,1108 @@
+#meta
+name: "20args.c"
+
+#data
+
+#code
+
+:: main
+<halt>
+
+sub main() {
+	@__main_label2
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	$sp -> $fp
+	// InsertStackSkip
+	$sp - 0 -> $m5
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %3
+	$m5 -> $t0
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %4
+	$m5 -> $t1
+	// LowerMemory: %0 -> [%3]
+	$a0 -> [$t0] /h
+	// LowerMemory: %1 -> [%4]
+	$a1 -> [$t1]
+	[ $a0
+	[ $a1
+	10 -> $a0
+	20 -> $a1
+	30 -> $a2
+	40 -> $a3
+	50 -> $a4
+	60 -> $a5
+	70 -> $a6
+	80 -> $a7
+	90 -> $a8
+	100 -> $a9
+	110 -> $aa
+	120 -> $ab
+	130 -> $ac
+	140 -> $ad
+	150 -> $ae
+	160 -> $af
+	200 -> $t2
+	[:8 $t2
+	190 -> $t3
+	[:8 $t3
+	180 -> $t4
+	[:8 $t4
+	170 -> $t5
+	[:8 $t5
+	:: fn
+	// SetupCalls: readjust stack pointer
+	$sp + 32 -> $sp
+	] $a1
+	] $a0
+	$fp -> $sp
+	0 -> $r0
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub fn() {
+	@__fn_label20
+	[ $rt
+	[ $fp
+	[ $t0
+	[ $t1
+	[ $t2
+	[ $t3
+	[ $t4
+	[ $t5
+	[ $t6
+	[ $t7
+	[ $t8
+	[ $t9
+	[ $ta
+	[ $tb
+	[ $tc
+	[ $td
+	[ $te
+	[ $tf
+	[ $t10
+	[ $t11
+	[ $t12
+	[ $t13
+	[ $t14
+	[ $t15
+	[ $t16
+	[ $s0
+	$sp -> $fp
+	// LoadArguments: $sp - to_skip -> %temp
+	// Increased by 208 bytes
+	$sp - 216 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t0 /h
+	// LoadArguments: $sp - to_skip -> %temp
+	// Increased by 208 bytes
+	$sp - 224 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t1 /h
+	// LoadArguments: $sp - to_skip -> %temp
+	// Increased by 208 bytes
+	$sp - 232 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t2 /h
+	// LoadArguments: $sp - to_skip -> %temp
+	// Increased by 208 bytes
+	$sp - 240 -> $m0
+	// LoadArguments: [%temp] -> %var
+	[$m0] -> $t3 /h
+	// InsertStackSkip
+	$sp - 0 -> $m5
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %21
+	$m5 -> $t4
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %22
+	$m5 -> $t5
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %23
+	$m5 -> $t6
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %24
+	$m5 -> $t7
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %25
+	$m5 -> $t8
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %26
+	$m5 -> $t9
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %27
+	$m5 -> $ta
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %28
+	$m5 -> $tb
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %29
+	$m5 -> $tc
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %30
+	$m5 -> $td
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %31
+	$m5 -> $te
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %32
+	$m5 -> $tf
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %33
+	$m5 -> $t10
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %34
+	$m5 -> $t11
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %35
+	$m5 -> $t12
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %36
+	$m5 -> $t13
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %37
+	$m5 -> $t14
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %38
+	$m5 -> $t15
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %39
+	$m5 -> $t16
+	// LowerAlloca: align stack pointer
+	$m5 % 8 -> $m0
+	$m5 - $m0 -> $m5
+	// LowerAlloca: $sp -= to_sub
+	$m5 - 8 -> $m5
+	// LowerAlloca: $sp -> %40
+	$m5 -> $s0
+	// LowerMemory: %0 -> [%21]
+	$a0 -> [$t4] /h
+	// LowerMemory: %1 -> [%22]
+	$a1 -> [$t5] /h
+	// LowerMemory: %2 -> [%23]
+	$a2 -> [$t6] /h
+	// LowerMemory: %3 -> [%24]
+	$a3 -> [$t7] /h
+	// LowerMemory: %4 -> [%25]
+	$a4 -> [$t8] /h
+	// LowerMemory: %5 -> [%26]
+	$a5 -> [$t9] /h
+	// LowerMemory: %6 -> [%27]
+	$a6 -> [$ta] /h
+	// LowerMemory: %7 -> [%28]
+	$a7 -> [$tb] /h
+	// LowerMemory: %8 -> [%29]
+	$a8 -> [$tc] /h
+	// LowerMemory: %9 -> [%30]
+	$a9 -> [$td] /h
+	// LowerMemory: %10 -> [%31]
+	$aa -> [$te] /h
+	// LowerMemory: %11 -> [%32]
+	$ab -> [$tf] /h
+	// LowerMemory: %12 -> [%33]
+	$ac -> [$t10] /h
+	// LowerMemory: %13 -> [%34]
+	$ad -> [$t11] /h
+	// LowerMemory: %14 -> [%35]
+	$ae -> [$t12] /h
+	// LowerMemory: %15 -> [%36]
+	$af -> [$t13] /h
+	// LowerMemory: %16 -> [%37]
+	$t0 -> [$t14] /h
+	// LowerMemory: %17 -> [%38]
+	$t1 -> [$t15] /h
+	// LowerMemory: %18 -> [%39]
+	$t2 -> [$t16] /h
+	// LowerMemory: %19 -> [%40]
+	$t3 -> [$s0] /h
+	// LowerMemory(load): [%21] -> %41
+	[$t4] -> $t0 /h
+	$t0 * 20
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%22] -> %43
+	[$t5] -> $t2 /h
+	$t2 * 19
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%23] -> %45
+	[$t6] -> $t0 /h
+	$t0 * 18
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%24] -> %47
+	[$t7] -> $t2 /h
+	$t2 * 17
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%25] -> %49
+	[$t8] -> $t0 /h
+	$t0 * 16
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%26] -> %51
+	[$t9] -> $t2 /h
+	$t2 * 15
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%27] -> %53
+	[$ta] -> $t0 /h
+	$t0 * 14
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%28] -> %55
+	[$tb] -> $t2 /h
+	$t2 * 13
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%29] -> %57
+	[$tc] -> $t0 /h
+	$t0 * 12
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%30] -> %59
+	[$td] -> $t2 /h
+	$t2 * 11
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%31] -> %61
+	[$te] -> $t0 /h
+	$t0 * 10
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%32] -> %63
+	[$tf] -> $t2 /h
+	$t2 * 9
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%33] -> %65
+	[$t10] -> $t0 /h
+	$t0 * 8
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%34] -> %67
+	[$t11] -> $t2 /h
+	$t2 * 7
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%35] -> %69
+	[$t12] -> $t0 /h
+	$t0 * 6
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%36] -> %71
+	[$t13] -> $t2 /h
+	$t2 * 5
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%37] -> %73
+	[$t14] -> $t0 /h
+	$t0 * 4
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%38] -> %75
+	[$t15] -> $t2 /h
+	$t2 * 3
+	$lo -> $t3
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t3 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%39] -> %77
+	[$t16] -> $t0 /h
+	$t0 * 2
+	$lo -> $t1
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t1 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	// LowerMemory(load): [%40] -> %79
+	[$s0] -> $t2 /h
+	[ $a0
+	[ $a1
+	[ $a2
+	[ $a3
+	[ $a4
+	[ $a5
+	[ $a6
+	[ $a7
+	[ $a8
+	[ $a9
+	[ $aa
+	[ $ab
+	[ $ac
+	[ $ad
+	[ $ae
+	[ $af
+	$t2 -> $a0
+	:: prd
+	] $af
+	] $ae
+	] $ad
+	] $ac
+	] $ab
+	] $aa
+	] $a9
+	] $a8
+	] $a7
+	] $a6
+	] $a5
+	] $a4
+	] $a3
+	] $a2
+	] $a1
+	] $a0
+	$fp -> $sp
+	] $s0
+	] $t16
+	] $t15
+	] $t14
+	] $t13
+	] $t12
+	] $t11
+	] $t10
+	] $tf
+	] $te
+	] $td
+	] $tc
+	] $tb
+	] $ta
+	] $t9
+	] $t8
+	] $t7
+	] $t6
+	] $t5
+	] $t4
+	] $t3
+	] $t2
+	] $t1
+	] $t0
+	] $fp
+	] $rt
+	: $rt
+}
+
+sub prd() {
+	<prd $a0>
+	<prc '\n'>
+}

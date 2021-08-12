@@ -148,6 +148,12 @@ namespace WVM::Unparser {
 					case FN_PGON:  return "\e[36mpage\e[39m on";
 					case FN_PGOFF: return "\e[36mpage\e[39m off";
 					case FN_SETPT: return "\e[36msetpt\e[39m " + color(rs);
+					case FN_SVPG:  return "\e[36mpage\e[39m \e[2m->\e[22m " + color(rd);
+				}
+				break;
+			case OP_QUERY:
+				switch (funct) {
+					case FN_QM: return "? \e[36mmem\e[39m \e[2m->\e[22m " + color(rd);
 				}
 				break;
 		}

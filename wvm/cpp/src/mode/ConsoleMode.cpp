@@ -79,6 +79,14 @@ namespace WVM::Mode {
 			textbox += "Paging \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "P0") {
 			textbox += "P0 set to \e[1m" + split[0] + "\e[22m.";
+		} else if (verb == "PC") {
+			textbox += "Program counter: " + split[0];
+		} else if (verb == "Debug") {
+			const std::string joined = Util::join(split.begin() + 1, split.end());
+			if (joined == "Not found")
+				textbox += "Address \e[1m" + split[0] + "\e[22m: " + joined;
+			else
+				textbox += "Address \e[1m" + split[0] + "\e[22m: \e[4m" + joined + "\e[24m";
 		}
 	}
 
@@ -159,6 +167,16 @@ namespace WVM::Mode {
 				*socket << ":Strict\n";
 			else
 				*socket << ":Strict " << split[1] << "\n";
+		} else if (first == "pc") {
+			if (size == 0)
+				*socket << ":GetPC\n";
+			else
+				textbox += errorPrefix + std::string("Setting the program counter is currently unsupported.");
+		} else if (first == "d" || first == "dbg" || first == "debug") {
+			if (size == 0)
+				*socket << ":DebugData\n";
+			else
+				*socket << ":DebugData " << split[1] << "\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

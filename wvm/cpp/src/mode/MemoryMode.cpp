@@ -27,6 +27,9 @@ namespace WVM::Mode {
 				autotickVariable.wait(lock, [this] { return autotickReady; });
 				autotickReady = false;
 
+				if (!alive.load())
+					break;
+
 				// Strictly speaking I should use a mutex to check autotick, but because I want to avoid the overhead of
 				// locking a mutex repeatedly and I don't mind a few accidental extra ticks, I'm deciding not to.
 				while (0 <= autotick) {
@@ -97,6 +100,8 @@ namespace WVM::Mode {
 				send(":Redo");
 			} else if (key == '/') {
 				toggleSearchbox();
+			} else if (key == 'd') {
+				send(":DebugData " + std::to_string(vm.programCounter));
 			} else return false;
 			return true;
 		};
@@ -110,8 +115,14 @@ namespace WVM::Mode {
 		terminal.watchSize();
 		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
 		send(":Reg " + std::to_string(Why::stackPointerOffset));
+		alive = false;
 		terminal.join();
 		networkThread.join();
+		autotickMutex.lock();
+		autotickReady = true;
+		autotickMutex.unlock();
+		autotickVariable.notify_all();
+		autotickThread.join();
 	}
 
 	void MemoryMode::toggleSearchbox() {
@@ -155,7 +166,7 @@ namespace WVM::Mode {
 
 			for (Word address = min, i = 0; address < max + 128 * 8; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
-				    || address == vm.endOffset) {
+				    || address == vm.debugOffset || address == vm.endOffset) {
 					*textbox += "\e[2m" + hyphens + "\e[22m";
 				}
 
@@ -210,7 +221,7 @@ namespace WVM::Mode {
 
 		ss << hex << "  ";
 
-		if (address < 32) {
+		if (address < 40) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
 		} else if (address < vm.symbolsOffset || vm.dataOffset <= address) {
 			for (int i = 0; i < 8; ++i) {
@@ -469,7 +480,10 @@ namespace WVM::Mode {
 			if (report.action == Haunted::MouseAction::Up) {
 				if (report.x <= 1 + padding) {
 					// Clicked on [.....]
-					send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
+					if (report.button == Haunted::MouseButton::Left)
+						send(":DebugData " + std::to_string(address));
+					else
+						send((vm.hasBreakpoint(address)? ":RemoveBP " : ":AddBP ") + std::to_string(address));
 				} else if (padding + 4 <= report.x && report.x <= padding + 21) {
 					// Clicked on 0x................
 					if (report.button == Haunted::MouseButton::Left) {

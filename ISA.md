@@ -11,8 +11,9 @@
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
-				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
+				<li><a href="#prog-data">Data Section</a></li>
+				<li><a href="#prog-debug">Debug Data Section</a></li>
 			</ol>
 		</li>
 		<li><a href="#rings">Rings</a></li>
@@ -76,6 +77,9 @@
 						<li><a href="#op-slli">Shift Left Logical Immediate</a> (<code>slli</code>)</li>
 						<li><a href="#op-srli">Shift Right Logical Immediate</a> (<code>srli</code>)</li>
 						<li><a href="#op-srai">Shift Right Arithmetic Immediate</a> (<code>srai</code>)</li>
+						<li><a href="#op-slli">Shift Left Logical Inverse Immediate</a> (<code>sllii</code>)</li>
+						<li><a href="#op-srli">Shift Right Logical Inverse Immediate</a> (<code>srlii</code>)</li>
+						<li><a href="#op-srai">Shift Right Arithmetic Inverse Immediate</a> (<code>sraii</code>)</li>
 						<li><a href="#op-modi">Modulo Immediate</a> (<code>modi</code>)</li>
 						<li><a href="#op-divi">Divide Immediate</a> (<code>divi</code>)</li>
 						<li><a href="#op-divui">Divide Unsigned Immediate</a> (<code>divui</code>)</li>
@@ -178,6 +182,7 @@
 						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
 						<li><a href="#op-setpt">Set Page Table</a> (<code>setpt</code>)</li>
 						<li><a href="#op-svpg">Save Paging</a> (<code>svpg</code>)</li>
+						<li><a href="#op-qm">Query Memory</a> (<code>qm</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -260,12 +265,13 @@ The metadata section is a block of data at the beginning of the program that con
 * `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
 * `0x01`: Address of the beginning of the [code section](#prog-code).
 * `0x02`: Address of the beginning of the [data section](#prog-data).
-* `0x03`: Total size of the program.
-* `0x04`–`0x05`: ORCID of the author (represented with ASCII).
-* `0x06`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x03`: Address of the beginning of the [debug data section](#prog-debug).
+* `0x04`: Total size of the program.
+* `0x05`–`0x06`: ORCID of the author (represented with ASCII).
+* `0x07`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
-### Assembler syntax
+### Assembly syntax
 <pre>
 #meta
 author: "Kai Tamkun"
@@ -275,7 +281,7 @@ version: "4"
 </pre>
 
 ## <a name="prog-symtab"></a>Symbol Table Section
-The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of the 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to the CRC64 hash of its name. Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
 ## <a name="prog-code"></a>Code Section
 The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
@@ -283,13 +289,46 @@ The code section consists of executable code. This is the only section of the co
 ## <a name="prog-data"></a>Data Section
 The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
 
-### Assembler syntax
-Variables and their values are declared (once again) with JSON-like markup:
+### Assembly syntax
+Variables and their values are declared with JSON-like markup:
 
 <pre>
 #data
 some_string: "this is an example."
 some_number: 42
+</pre>
+
+## <a name="prog-debug"></a>Debug Data Section
+The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
+
+An entry with type `0` is invalid.
+
+An entry with type `1` declares the filename of a source file and can be referenced by other entries. After the first byte in a type `1` entry, the next three bytes indicate the length of the filename. The filename then follows, plus padding until the total length of the entry is divisible by eight bytes.
+
+An entry with type `2` declares a function name. It uses the same format as a type `1` entry, but instead of a filename, a function name is stored instead.
+
+An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2` entry. The final eight bytes indicate the address of an instruction.
+
+The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3` instruction, two type `3` entries would be generated for the template with index 2.
+
+### Assembly syntax
+<pre>
+#debug
+1 "src/printf.cpp" // 0
+2 "_vsnprintf"     // 1
+3 0 541 10 1       // 2 (File 0, line 541, column 10, function 1)
+3 0 551 12 1       // 3 (File 0, line 551, column 12, function 1)
+
+#code
+// ...
+	$t6 -> [$ta]     !2
+	[$t3] -> $t4 /b  !3
+	1 -> $m0         !3
+	$m0 << 7  -> $m0 !3
+	$t4 x $m0 -> $t5 !3
+	$t5 - $m0 -> $t5 !3
+	$t5 & -1  -> $t5 !3
+// ...
 </pre>
 
 # <a name="rings"></a>Rings
@@ -570,6 +609,24 @@ Logically shifts the value in `rs` to the right by a number of bits equal to `im
 > `000000100100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Arithmetically shifts the value in `rs` to the right by a number of bits equal to `imm` and stores the result in `rd`.
+
+### <a name="op-sllii"></a>Shift Left Logical Inverse Immediate (`sllii`)
+> `imm << $rs -> $rd`  
+> `000000111110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Logically shifts `imm` to the left by a number of bits equal to the value in `rs` and stores the result in `rd`.
+
+### <a name="op-srlii"></a>Shift Right Logical Inverse Immediate (`srlii`)
+> `imm >>> $rs -> $rd`  
+> `000000111111` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Logically shifts `imm` to the right by a number of bits equal to the value in `rs` and stores the result in `rd`.
+
+### <a name="op-sraii"></a>Shift Right Arithmetic Inverse Immediate (`sraii`)
+> `imm >> $rs -> $rd`  
+> `000001000000` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Arithmetically shifts `imm` to the right by a number of bits equal to the value in `rs` and stores the result in `rd`.
 
 ### <a name="op-modi"></a>Modulo Immediate (`modi`)
 > `$rs % imm -> $rd` or `$rd %= imm`  
@@ -990,27 +1047,31 @@ Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">
 > `page off`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
 
-Disables virtual memory.
+Disables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-pgon"></a>Enable Paging (`pgon`)
 > `page on`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
-Enables virtual memory.
+Enables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-setpt"></a>Set Page Table (`setpt`)
-
 > `setpt $rs`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
 
 Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-svpg"></a>Save Paging (`svpg`)
-
 > `page -> $rd`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000011`
 
 Sets `rd` to 1 if paging is enabled or 0 if paging is disabled.
+
+### <a name="op-qm"></a>Query Memory (`qm`)
+> `? mem -> $rd`  
+> `000001000001` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+
+Sets `rd` to the size of the main memory in bytes.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 

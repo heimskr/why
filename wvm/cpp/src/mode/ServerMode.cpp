@@ -11,6 +11,8 @@
 #include "Util.h"
 #include "VMError.h"
 
+// #define CATCH_TICK
+
 void sigint_handler(int) {
 	if (WVM::Mode::ServerMode::instance)
 		WVM::Mode::ServerMode::instance->stop();
@@ -128,7 +130,7 @@ namespace WVM::Mode {
 		const size_t size = split.size();
 		const std::string verb = split[0].substr(1);
 
-		auto invalid = [&]() { server.send(client, ":InvalidMessage " + message); };
+		auto invalid = [&] { server.send(client, ":InvalidMessage " + message); };
 
 		if (verb == "Stop") {
 			stop();
@@ -397,6 +399,25 @@ namespace WVM::Mode {
 			}
 
 			server.send(client, ":Strict " + std::string(vm.strict? "on" : "off"));
+		} else if (verb == "GetPC") {
+			server.send(client, ":PC " + std::to_string(vm.programCounter));
+		} else if (verb == "DebugMap") {
+			if (vm.debugMap.empty())
+				warn() << "The debug map is empty.\n";
+			else
+				for (const auto &[address, debug]: vm.debugMap)
+					info() << address << ": " << std::string(debug) << '\n';
+		} else if (verb == "DebugData") {
+			Word address = vm.programCounter;
+			if (size != 1 && !Util::parseLong(split[1], address)) {
+				invalid();
+				return;
+			}
+
+			if (vm.debugMap.count(address) == 0)
+				broadcast(":Debug " + std::to_string(address) + " Not found");
+			else
+				broadcast(":Debug " + std::to_string(address) + " " + std::string(vm.debugMap.at(address)));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
@@ -435,9 +456,12 @@ namespace WVM::Mode {
 	}
 
 	bool ServerMode::tick() {
-		Word pc = vm.programCounter;
+#ifdef CATCH_TICK
+		const Word pc = vm.programCounter;
 		try {
+#endif
 			return vm.tick();
+#ifdef CATCH_TICK
 		} catch (std::exception &err) {
 			std::cerr << "Execution failed: " << err.what() << "\n";
 			std::cerr << "Offending address: " << pc << "\n";
@@ -452,5 +476,6 @@ namespace WVM::Mode {
 
 			throw;
 		}
+#endif
 	}
 }

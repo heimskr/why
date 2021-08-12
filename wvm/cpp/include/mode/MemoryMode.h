@@ -1,6 +1,7 @@
 #ifndef WVM_MODE_MEMORYMODE_H_
 #define WVM_MODE_MEMORYMODE_H_
 
+#include <atomic>
 #include <condition_variable>
 #include <map>
 #include <mutex>
@@ -21,6 +22,7 @@ namespace WVM::Mode {
 		using Container = std::vector<T>;
 
 		private:
+			std::atomic_bool alive = true;
 			Haunted::Terminal terminal;
 			Haunted::UI::Boxes::ExpandoBox *expando;
 			Haunted::UI::Textbox<Container> *textbox;
