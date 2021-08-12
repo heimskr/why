@@ -1008,61 +1008,61 @@ Performs a special instruction, typically for interaction with the world outside
 Checks the [status register](#reg-st) and the [condition bits](#condbits). If the condition matches the status register, `rd` is set to `rs`; otherwise, it's set to `rt`.
 
 ### <a name="op-int"></a>Interrupt (`int`)
-> `int imm`  
+> `%int imm`  
 > `000000100000` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Performs an interrupt. If no interrupt table has been registered, nothing interesting happens.
 
 ### <a name="op-rit"></a>Register Interrupt Table (`rit`)
-> `rit imm`  
+> `%rit imm`  
 > `000000100001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode; will cause the machine to halt if called in user mode.
 
 ### <a name="op-time"></a>Set Timer (`time`)
-> `time $rs`  
+> `%time $rs`  
 > `000000110000` `.......` `sssssss` `.......` `0000000000000` `......` `000000000000`
 
 Sets the hardware timer to the number stored in `rs` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
 
 ### <a name="op-timei"></a>Set Timer Immediate (`timei`)
-> `time imm`  
+> `%time imm`  
 > `000000110001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets the hardware timer to the number stored in `imm` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
 
 ### <a name="op-ring"></a>Change Ring (`ring`)
-> `ring $rs`  
+> `%ring $rs`  
 > `000000110010` `.......` `sssssss` `.......` `0000000000000` `......` `000000000000`
 
 Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
 ### <a name="op-ring"></a>Change Ring Immediate (`ring`)
-> `ring imm`  
+> `%ring imm`  
 > `000000110011` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
 ### <a name="op-pgoff"></a>Disable Paging (`pgoff`)
-> `page off`  
+> `%page off`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
 
 Disables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-pgon"></a>Enable Paging (`pgon`)
-> `page on`  
+> `%page on`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
 Enables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-setpt"></a>Set Page Table (`setpt`)
-> `setpt $rs`  
+> `%setpt $rs`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
 
 Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 
 ### <a name="op-svpg"></a>Save Paging (`svpg`)
-> `page -> $rd`  
+> `%page -> $rd`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000011`
 
 Sets `rd` to 1 if paging is enabled or 0 if paging is disabled.
