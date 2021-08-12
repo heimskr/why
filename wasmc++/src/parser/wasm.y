@@ -1,7 +1,4 @@
 %{
-// Parser for a slightly limited subset of Why.js assembly.
-// Some pseudoinstructions and the "&="-type shorthands aren't supported.
-
 #include <cassert>
 #include <cstdarg>
 #include <initializer_list>
@@ -120,7 +117,6 @@ using AN = Wasmcpp::ASTNode;
 %token WASMTOK_PAGE "page"
 %token WASMTOK_SETPT "setpt"
 %token WASMTOK_SHORT "/s"
-%token WASMTOK_INIT "*init"
 %token WASMTOK_QUESTION "?"
 %token WASMTOK_MEM "mem"
 %token WASMTOK_P "p"
@@ -169,6 +165,8 @@ includes: includes endop include { $$ = $1->adopt($3); D($2); }
         | include { $$ = (new AN(Wasmcpp::wasmParser, WASM_INCLUDES))->adopt($1, true); };
 include: WASMTOK_STRING;
 
+
+
 statement: operation;
 endop: "\n" | ";";
 
@@ -181,10 +179,12 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
-    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is a unary op
-    | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here.
-basic_oper: "+" | "-" | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
-          | "<" | "<=" | "==" | ">" | ">=" | "<<" | ">>>" | ">>" | "!";
+    | reg shorthandable "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
+    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is unary
+    | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here, but with "!".
+basic_oper: shorthandable | "<" | "<=" | "==" | ">" | ">=" | "!";
+shorthandable: "+" | "-" | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
+              | "<<" | ">>>" | ">>";
 _unsigned: "/u" | { $$ = nullptr; };
 
 op_mult: reg "*" reg _unsigned { $$ = new WASMMultRNode($1, $3, $4); D($2); };
@@ -193,7 +193,8 @@ op_multi: reg "*" immediate _unsigned { $$ = new WASMMultINode($1, $3, $4); D($2
 
 op_lui: "lui" ":" immediate "->" reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
 
-op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
+op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); }
+    | reg shorthandable "=" immediate _unsigned   { $$ = new INode($1, $2, $4, $1, $5); D($3); };
 
 op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 _byte: "/b" | { $$ = nullptr; };

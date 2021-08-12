@@ -61,7 +61,6 @@ WASM_CODE_HEADER		("#code"|"#c")
 "print"						{ WASMRTOKEN(PRINT) }
 "sleep"						{ WASMRTOKEN(SLEEP) }
 "setpt"						{ WASMRTOKEN(SETPT) }
-"*init"						{ WASMRTOKEN(INIT) }
 "name"						{ WASMRTOKEN(NAME) }
 "time"						{ WASMRTOKEN(TIME) }
 "ring"						{ WASMRTOKEN(RING) }
