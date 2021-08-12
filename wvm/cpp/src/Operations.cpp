@@ -978,7 +978,7 @@ namespace WVM::Operations {
 	}
 
 	void prcOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
-		vm.onPrint(std::string(1,  static_cast<char>(rs)));
+		vm.onPrint(std::string(1, static_cast<char>(rs)));
 		vm.increment();
 	}
 
