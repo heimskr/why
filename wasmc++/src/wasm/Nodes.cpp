@@ -23,7 +23,7 @@ static std::string blue(const std::string &interior) {
 	return "\e[34m" + interior + "\e[39m";
 }
 
-namespace Wasmcpp {
+namespace Wasmc {
 	static Condition getCondition(const std::string &str) {
 		if (str == "0")
 			return Condition::Zero;
@@ -442,6 +442,9 @@ namespace Wasmcpp {
 		}
 	}
 
+	WASMJrNode::WASMJrNode(Condition condition_, bool link_, const std::string &rd_):
+		WASMInstructionNode(WASM_JRNODE), condition(condition_), link(link_), rd(StringSet::intern(rd_)) {}
+
 	std::string WASMJrNode::debugExtra() const {
 		return dim(conditionString(condition) + std::string(link? "::" : ":")) + " " + cyan(*rd);
 	}
@@ -795,5 +798,16 @@ namespace Wasmcpp {
 
 	WASMPseudoPrintNode::operator std::string() const {
 		return "<p " + toString(imm) + ">";
+	}
+
+	WASMCallNode::WASMCallNode(ASTNode *function_, ASTNode *args_):
+		WASMInstructionNode(WASM_CALLNODE), function(function_->lexerInfo), args(args_) {}
+
+	std::string WASMCallNode::debugExtra() const {
+		return "";
+	}
+
+	WASMCallNode::operator std::string() const {
+		return "";
 	}
 }

@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_set>
 
-namespace Wasmcpp {
+namespace Wasmc {
 	struct StringSet {
 		StringSet();
 

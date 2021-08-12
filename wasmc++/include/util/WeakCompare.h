@@ -3,7 +3,7 @@
 #include <memory>
 #include <set>
 
-namespace Wasmcpp {
+namespace Wasmc {
 	template <typename T>
 	struct WeakCompare {
 		bool operator()(std::weak_ptr<T> left, std::weak_ptr<T> right) const {

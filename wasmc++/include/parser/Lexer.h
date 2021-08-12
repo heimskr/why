@@ -8,7 +8,7 @@
 #include "ASTNode.h"
 
 #define WASMSTYPE_IS_DECLARED
-typedef Wasmcpp::ASTNode * WASMSTYPE;
+typedef Wasmc::ASTNode * WASMSTYPE;
 
 #ifndef NO_YYPARSE
 #include "wasmparse.h"
@@ -26,7 +26,7 @@ extern yysize wasmleng;
 extern int wasm_flex_debug;
 extern int wasmdebug;
 
-namespace Wasmcpp {
+namespace Wasmc {
 	class Parser;
 
 	class Lexer {
@@ -58,4 +58,4 @@ int wasmlex();
 int wasmlex_destroy();
 int wasmparse();
 void wasmerror(const std::string &);
-void wasmerror(const std::string &, const Wasmcpp::ASTLocation &);
+void wasmerror(const std::string &, const Wasmc::ASTLocation &);

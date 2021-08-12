@@ -3,7 +3,7 @@
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
 
-namespace Wasmcpp {
+namespace Wasmc {
 	Lexer wasmLexer(wasmParser, wasmleng, wasmlval);
 
 	Lexer::Lexer(Parser &parser_, yysize &yyleng_ref, ASTNode *&yylval_ref):
@@ -57,12 +57,12 @@ namespace Wasmcpp {
 }
 
 void wasmerror(const std::string &message) {
-	wasmerror(message, Wasmcpp::wasmLexer.location);
+	wasmerror(message, Wasmc::wasmLexer.location);
 }
 
-void wasmerror(const std::string &message, const Wasmcpp::ASTLocation &location) {
-	std::cerr << Wasmcpp::wasmParser.getBuffer() << "\n";
+void wasmerror(const std::string &message, const Wasmc::ASTLocation &location) {
+	std::cerr << Wasmc::wasmParser.getBuffer() << "\n";
 	std::cerr << "\e[31mWASM error at \e[1m" << location << "\e[22m: " << message << "\e[0m\n";
-	++Wasmcpp::wasmParser.errorCount;
-	Wasmcpp::wasmLexer.errors.push_back({message, location});
+	++Wasmc::wasmParser.errorCount;
+	Wasmc::wasmLexer.errors.push_back({message, location});
 }

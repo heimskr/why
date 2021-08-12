@@ -6,12 +6,13 @@
 #include "compiler/Immediate.h"
 #include "parser/ASTNode.h"
 #include "parser/Enums.h"
+#include "wasm/Args.h"
 
-namespace Wasmcpp {
+namespace Wasmc {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call
 	};
 
 	class WhyInstruction;
@@ -233,6 +234,7 @@ namespace Wasmcpp {
 		const std::string *rd;
 
 		WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_);
+		WASMJrNode(Condition condition_, bool link_, const std::string &rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Jr; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -460,6 +462,16 @@ namespace Wasmcpp {
 
 		WASMPseudoPrintNode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::PseudoPrint; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMCallNode: public WASMInstructionNode {
+		const std::string *function;
+		Args args;
+
+		WASMCallNode(ASTNode *function_, ASTNode *args_ = nullptr);
+		WASMNodeType nodeType() const override { return WASMNodeType::Call; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

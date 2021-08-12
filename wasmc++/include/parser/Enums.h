@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace Wasmcpp {
+namespace Wasmc {
 	enum class Condition {Positive, Negative, Zero, Nonzero, None};
 	enum class PrintType {Dec, Bin, Hex, Char, Full};
 	enum class QueryType {Memory};

@@ -1,7 +1,7 @@
 #include "parser/StringSet.h"
 #include "wasm/Registers.h"
 
-namespace Wasmcpp {
+namespace Wasmc {
 	std::map<const std::string *, int> registerMap {
 		{StringSet::intern("$$0"),     0},
 		{StringSet::intern("$$g"),     1},

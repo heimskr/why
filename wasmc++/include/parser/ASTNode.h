@@ -6,7 +6,7 @@
 #include <ostream>
 #include <string>
 
-namespace Wasmcpp {
+namespace Wasmc {
 	struct ASTLocation {
 		size_t line;
 		size_t column;

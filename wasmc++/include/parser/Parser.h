@@ -9,7 +9,7 @@
 
 typedef struct yy_buffer_state * YY_BUFFER_STATE;
 
-namespace Wasmcpp {
+namespace Wasmc {
 	class Parser {
 		private:
 			std::string filename;

@@ -1,6 +1,6 @@
 #include "parser/StringSet.h"
 
-namespace Wasmcpp {
+namespace Wasmc {
 	std::unordered_set<std::string> StringSet::set;
 	StringSet set;
 

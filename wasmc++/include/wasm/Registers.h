@@ -2,6 +2,6 @@
 
 #include <map>
 
-namespace Wasmcpp {
+namespace Wasmc {
 	extern std::map<const std::string *, int> registerMap;
 }

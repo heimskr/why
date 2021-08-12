@@ -13,7 +13,7 @@
 #include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
 
-namespace Wasmcpp::Util {
+namespace Wasmc::Util {
 	long parseLong(const std::string &, int base = 10);
 	long parseLong(const std::string *, int base = 10);
 	long parseLong(const char *, int base = 10);

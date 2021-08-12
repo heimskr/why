@@ -22,15 +22,15 @@ void D(Args && ...args) {
 }
 
 template <typename T>
-const Wasmcpp::ASTLocation & L(std::initializer_list<const T *> nodes) {
+const Wasmc::ASTLocation & L(std::initializer_list<const T *> nodes) {
 	for (const T *node: nodes)
 		if (node)
 			return node->location;
 	throw std::runtime_error("Couldn't find location: all nodes are null");
 }
 
-using namespace Wasmcpp;
-using AN = Wasmcpp::ASTNode;
+using namespace Wasmc;
+using AN = Wasmc::ASTNode;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -46,7 +46,7 @@ using AN = Wasmcpp::ASTNode;
 %define api.prefix {wasm}
 
 %initial-action {
-    Wasmcpp::wasmParser.root = new Wasmcpp::ASTNode(Wasmcpp::wasmParser, WASMTOK_ROOT, {0, 0}, "");
+    Wasmc::wasmParser.root = new Wasmc::ASTNode(Wasmc::wasmParser, WASMTOK_ROOT, {0, 0}, "");
 }
 
 %token WASMTOK_ROOT WASMTOK_IDENT
@@ -136,13 +136,14 @@ using AN = Wasmcpp::ASTNode;
 %token WASMTOK_AUTHOR "author"
 %token WASMTOK_ORCID "orcid"
 %token WASMTOK_NAME "name"
+%token WASMTOK_RET "!ret"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
 
 %start start
 
@@ -151,7 +152,7 @@ using AN = Wasmcpp::ASTNode;
 start: program;
 
 program: program section { $$ = $1->adopt($2); }
-       | { $$ = Wasmcpp::wasmParser.root; };
+       | { $$ = Wasmc::wasmParser.root; };
 
 section: meta_section | include_section | data_section | debug_section | code_section;
 
@@ -164,7 +165,8 @@ meta_separator: ":" | "=";
 include_section: "#include" "\n" _includes { $$ = $1->adopt($3); D($2); };
 _includes: includes | { $$ = nullptr; };
 includes: includes endop string { $$ = $1->adopt($3); D($2); }
-        | string { $$ = (new AN(Wasmcpp::wasmParser, WASM_INCLUDES))->adopt($1, true); };
+        | includes "\n" { D($2); }
+        | string { $$ = (new AN(Wasmc::wasmParser, WASM_INCLUDES))->adopt($1, true); };
 
 data_section: "#data" "\n" { D($2); }
             | data_section data_def "\n" { $$ = $1->adopt($2); D($3); }
@@ -198,10 +200,14 @@ _newlines: newlines | { $$ = nullptr; };
 operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
-         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | label
-         | op_svpg | op_qmem;
+         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
+         | op_qmem | op_ret   | call;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
+
+call: ident "(" args ")" { $$ = new WASMCallNode($1, $3); D($2, $4); }
+    | ident "(" ")"      { $$ = new WASMCallNode($1); D($2, $3); };
+args: "\n";
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | reg shorthandable "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
@@ -309,6 +315,8 @@ op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
+op_ret: "!ret" { $$ = new WASMJrNode(Condition::None, false, "$rt"); D($1); };
+
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident | character;
 
@@ -326,6 +334,6 @@ string: WASMTOK_STRING;
 
 #pragma GCC diagnostic pop
 
-const char * Wasmcpp::Parser::getNameWASM(int symbol) {
+const char * Wasmc::Parser::getNameWASM(int symbol) {
     return yytname[YYTRANSLATE(symbol)];
 }

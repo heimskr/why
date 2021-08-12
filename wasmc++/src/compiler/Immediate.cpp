@@ -1,6 +1,6 @@
 #include "compiler/Immediate.h"
 
-namespace Wasmcpp {
+namespace Wasmc {
 	std::string colorize(const Immediate &imm, bool ampersand) {
 		if (std::holds_alternative<int>(imm))
 			return "\e[32m" + std::to_string(std::get<int>(imm)) + "\e[39m";

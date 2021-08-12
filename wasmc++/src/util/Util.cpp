@@ -3,7 +3,7 @@
 
 #include "util/Util.h"
 
-namespace Wasmcpp::Util {
+namespace Wasmc::Util {
 	long parseLong(const std::string &str, int base) {
 		const char *c_str = str.c_str();
 		char *end;

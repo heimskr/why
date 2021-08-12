@@ -8,7 +8,7 @@
 // #include "parser/Types.h"
 #include "util/Util.h"
 
-namespace Wasmcpp {
+namespace Wasmc {
 	ASTLocation::operator std::string() const {
 		return std::to_string(line + 1) + ":" + std::to_string(column);
 	}

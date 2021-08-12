@@ -11,7 +11,7 @@ int wasmwrap() { return 1; }
 extern YY_BUFFER_STATE wasm_scan_buffer(char *, size_t);
 extern void wasm_delete_buffer(YY_BUFFER_STATE);
 
-namespace Wasmcpp {
+namespace Wasmc {
 	void Parser::open(const std::string &filename_) {
 		errorCount = 0;
 		filename = filename_;

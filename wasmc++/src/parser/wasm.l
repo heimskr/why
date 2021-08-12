@@ -3,8 +3,8 @@
 #ifdef YY_USER_ACTION
 #error "YY_USER_ACTION is already defined"
 #endif
-#define YY_USER_ACTION { Wasmcpp::wasmLexer.advance(wasmtext); }
-#define WASMRTOKEN(x) return Wasmcpp::wasmLexer.token(wasmtext, WASMTOK_##x);
+#define YY_USER_ACTION { Wasmc::wasmLexer.advance(wasmtext); }
+#define WASMRTOKEN(x) return Wasmc::wasmLexer.token(wasmtext, WASMTOK_##x);
 
 // Disable PVS-Studio warnings about branches that do the same thing.
 //-V::1037
@@ -43,7 +43,7 @@ WASM_CODE_HEADER		("#code"|"#c")
 {WASM_SGCOMMENT}			{ }
 {WASM_MLCOMMENT}			{ }
 [ \t]+						{ }
-\n							{ Wasmcpp::wasmLexer.newline(); WASMRTOKEN(NEWLINE) }
+\n							{ Wasmc::wasmLexer.newline(); WASMRTOKEN(NEWLINE) }
 
 {WASM_REG}					{ WASMRTOKEN(REG) }
 {WASM_CHAR}					{ WASMRTOKEN(CHAR) }
@@ -70,6 +70,7 @@ WASM_CODE_HEADER		("#code"|"#c")
 "lui"						{ WASMRTOKEN(LUI) }
 "%int"						{ WASMRTOKEN(INT) }
 "%rit"						{ WASMRTOKEN(RIT) }
+"!ret"						{ WASMRTOKEN(RET) }
 "prc"						{ WASMRTOKEN(PRC) }
 "prx"						{ WASMRTOKEN(PRX) }
 "prd"						{ WASMRTOKEN(PRD) }
@@ -131,7 +132,7 @@ WASM_CODE_HEADER		("#code"|"#c")
 
 {WASM_NUMBER}				{ WASMRTOKEN(NUMBER) }
 {WASM_IDENT}				{ WASMRTOKEN(IDENT) }
-.							{ Wasmcpp::wasmLexer.badchar(*yytext); }
+.							{ Wasmc::wasmLexer.badchar(*yytext); }
 
 %%
 
