@@ -9,8 +9,6 @@
 // Disable PVS-Studio warnings about branches that do the same thing.
 //-V::1037
 
-// PARATTR and FNATTR_BASIC both include "readonly", which has to be treated specially.
-
 %}
 
 %option 8bit
@@ -32,9 +30,12 @@ WASM_IDENT				([-a-zA-Z._][-a-zA-Z._0-9]*)
 WASM_STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
 WASM_SGCOMMENT			("//"[^\n]*)
 WASM_MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
-/* The LLVM IR generated for "$t0 -> %1" looks like "$$t0 -> $1" */
-WASM_DOUBLE_REG			("$$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
-WASM_SINGLE_REG			("$"[0-9]+)
+WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
+WASM_META_HEADER		("#meta"|"#m")
+WASM_INCLUDE_HEADER		("#includes"|"#include"|"#i")
+WASM_DATA_HEADER		("#data"|"#d")
+WASM_DEBUG_HEADER		("#debug"|"#dbg")
+WASM_CODE_HEADER		("#code"|"#c")
 
 %%
 
@@ -42,17 +43,26 @@ WASM_SINGLE_REG			("$"[0-9]+)
 {WASM_MLCOMMENT}			{ }
 [ \t]+						{ }
 \n							{ Wasmcpp::wasmLexer.newline(); WASMRTOKEN(NEWLINE) }
-"\\09"						{ }
 
-{WASM_DOUBLE_REG}			{ WASMRTOKEN(REG) }
-{WASM_SINGLE_REG}			{ WASMRTOKEN(REG) }
+{WASM_REG}					{ WASMRTOKEN(REG) }
 {WASM_CHAR}					{ WASMRTOKEN(CHAR) }
+{WASM_STRING}				{ WASMRTOKEN(STRING) }
 
+{WASM_META_HEADER}			{ WASMRTOKEN(META_HEADER) }
+{WASM_INCLUDE_HEADER}		{ WASMRTOKEN(INCLUDE_HEADER) }
+{WASM_DATA_HEADER}			{ WASMRTOKEN(DATA_HEADER) }
+{WASM_DEBUG_HEADER}			{ WASMRTOKEN(DEBUG_HEADER) }
+{WASM_CODE_HEADER}			{ WASMRTOKEN(CODE_HEADER) }
+
+"version"					{ WASMRTOKEN(VERSION) }
 "memset"					{ WASMRTOKEN(MEMSET) }
+"author"					{ WASMRTOKEN(AUTHOR) }
+"orcid"						{ WASMRTOKEN(ORCID) }
 "print"						{ WASMRTOKEN(PRINT) }
 "sleep"						{ WASMRTOKEN(SLEEP) }
 "setpt"						{ WASMRTOKEN(SETPT) }
 "*init"						{ WASMRTOKEN(INIT) }
+"name"						{ WASMRTOKEN(NAME) }
 "time"						{ WASMRTOKEN(TIME) }
 "ring"						{ WASMRTOKEN(RING) }
 "halt"						{ WASMRTOKEN(HALT) }

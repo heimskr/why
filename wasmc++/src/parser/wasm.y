@@ -127,13 +127,23 @@ using AN = Wasmcpp::ASTNode;
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 %token WASMTOK_CHAR
+%token WASMTOK_STRING
+%token WASMTOK_META_HEADER "#meta"
+%token WASMTOK_INCLUDE_HEADER "#include"
+%token WASMTOK_DATA_HEADER "#data"
+%token WASMTOK_DEBUG_HEADER "#debug"
+%token WASMTOK_CODE_HEADER "#code"
+%token WASMTOK_VERSION "version"
+%token WASMTOK_AUTHOR "author"
+%token WASMTOK_ORCID "orcid"
+%token WASMTOK_NAME "name"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES
 
 %start start
 
@@ -141,10 +151,23 @@ using AN = Wasmcpp::ASTNode;
 
 start: program;
 
-program: program statement { $$ = $1->adopt($2); }
-       | program "*init"   { $$ = $1->adopt($2); } // Optional; allows the user to control where the initial setup for
-       | program endop { $$ = $1; D($2); }         // an inline asm lowering goes.
+program: program section { $$ = $1->adopt($2); }
+       | program "\n"    { D($2); }
        | { $$ = Wasmcpp::wasmParser.root; };
+
+section: meta_section | include_section | data_section | debug_section | code_section;
+
+meta_section: "#meta"
+            | meta_section meta_key meta_separator WASMTOK_STRING { $$ = $1->adopt($2->adopt($4)); D($3); }
+            | meta_section "\n" { D($2); };
+meta_key: "version" | "author" | "orcid" | "name";
+meta_separator: ":" | "=";
+
+include_section: "#include" _includes { $$ = $1->adopt($2); };
+_includes: includes | { $$ = nullptr; };
+includes: includes endop include { $$ = $1->adopt($3); D($2); }
+        | include { $$ = (new AN(Wasmcpp::wasmParser, WASM_INCLUDES))->adopt($1, true); };
+include: WASMTOK_STRING;
 
 statement: operation;
 endop: "\n" | ";";
@@ -264,7 +287,7 @@ immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident | character;
 
 ident: "memset" | "time" | "ring" | "lui" | "int" | "rit" | "if" | "halt" | "on" | "off" | "setpt" | "sleep" | "page"
-     | printop  | "p"    | WASMTOK_IDENT;
+     | "version" | "author" | "orcid" | "name" | printop | "p" | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
