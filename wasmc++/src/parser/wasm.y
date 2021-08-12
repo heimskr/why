@@ -124,6 +124,7 @@ using AN = Wasmcpp::ASTNode;
 %token WASMTOK_NUMBER
 %token WASMTOK_CHAR
 %token WASMTOK_STRING
+%token WASMTOK_FLOAT
 %token WASMTOK_META_HEADER "#meta"
 %token WASMTOK_INCLUDE_HEADER "#include"
 %token WASMTOK_DATA_HEADER "#data"
@@ -153,19 +154,28 @@ program: program section { $$ = $1->adopt($2); }
 
 section: meta_section | include_section | data_section | debug_section | code_section;
 
-meta_section: "#meta"
+meta_section: "#meta" "\n" { D($2); }
             | meta_section meta_key meta_separator WASMTOK_STRING { $$ = $1->adopt($2->adopt($4)); D($3); }
             | meta_section "\n" { D($2); };
 meta_key: "version" | "author" | "orcid" | "name";
 meta_separator: ":" | "=";
 
-include_section: "#include" _includes { $$ = $1->adopt($2); };
+include_section: "#include" "\n" _includes { $$ = $1->adopt($3); D($2); };
 _includes: includes | { $$ = nullptr; };
 includes: includes endop include { $$ = $1->adopt($3); D($2); }
         | include { $$ = (new AN(Wasmcpp::wasmParser, WASM_INCLUDES))->adopt($1, true); };
 include: WASMTOK_STRING;
 
-
+data_section: "#data" "\n" { D($2); }
+            | data_section data_def "\n" { $$ = $1->adopt($2); D($3); }
+            | data_section "\n" { D($2); };
+data_def: data_key WASMTOK_FLOAT { $$ = $1-adopt($2); }
+        | data_key WASMTOK_NUMBER { $$ = $1->adopt($2); }
+        | data_key WASMTOK_STRING { $$ = $1->adopt($2); }
+        | data_key "(" WASMTOK_NUMBER ")" { $$ = $1->adopt($2->adopt($3)); D($4); }
+        | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); };
+data_key: ident _data_sep { D($2); };
+_data_sep: ":" | { $$ = nullptr; };
 
 statement: operation;
 endop: "\n" | ";";
