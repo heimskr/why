@@ -12,7 +12,7 @@ s_c: "Checking "
 s_p: "positive\n"
 s_n: "negative\n"
 s_z: "zero\n"
-s_nz: "zonzero\n"
+s_nz: "nonzero\n"
 
 #code
 
