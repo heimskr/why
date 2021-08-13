@@ -17,6 +17,9 @@ namespace Wasmc::Util {
 	long parseLong(const std::string &, int base = 10);
 	long parseLong(const std::string *, int base = 10);
 	long parseLong(const char *, int base = 10);
+	double parseDouble(const std::string &);
+	double parseDouble(const std::string *);
+	double parseDouble(const char *);
 
 	template <typename T>
 	inline T upalign(T num, long alignment) {
@@ -32,6 +35,9 @@ namespace Wasmc::Util {
 	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 
 	std::string escape(const std::string &);
+
+	std::string toHex(size_t);
+	std::string toHex(const void *);
 
 	template <typename T>
 	std::string hex(T n) {
@@ -140,7 +146,7 @@ namespace Wasmc::Util {
 	}
 }
 
-namespace LL2W {
+namespace Wasmc {
 	inline std::ostream & warn(bool cout = false) {
 		return (cout? std::cout : std::cerr) << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
 	}

@@ -21,6 +21,23 @@ namespace Wasmc::Util {
 		return parseLong(std::string(str), base);
 	}
 
+	double parseDouble(const std::string &str) {
+		const char *c_str = str.c_str();
+		char *end;
+		double parsed = strtod(c_str, &end);
+		if (c_str + str.length() != end)
+			throw std::invalid_argument("Not a float: \"" + str + "\"");
+		return parsed;
+	}
+
+	double parseDouble(const std::string *str) {
+		return parseDouble(*str);
+	}
+
+	double parseDouble(const char *str) {
+		return parseDouble(std::string(str));
+	}
+
 	bool isNumeric(const std::string &str) {
 		if (str.empty())
 			return false;
@@ -83,5 +100,19 @@ namespace Wasmc::Util {
 		}
 
 		return out;
+	}
+
+	std::string toHex(size_t n) {
+		std::stringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << "0x" << std::hex << n;
+		return ss.str();
+	}
+
+	std::string toHex(const void *ptr) {
+		std::stringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << ptr;
+		return ss.str();
 	}
 }

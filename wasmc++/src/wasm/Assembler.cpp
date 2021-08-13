@@ -17,6 +17,7 @@ namespace Wasmc {
 		findAllLabels();
 		symbolTable = createSymbolTable(allLabels, true);
 		processMetadata();
+		processData();
 	}
 
 	void Assembler::validateSectionCounts() {
@@ -63,7 +64,7 @@ namespace Wasmc {
 		allLabels.clear();
 
 		if (dataNode) {
-			for (ASTNode *node: *dataNode) {
+			for (const ASTNode *node: *dataNode) {
 				if (node->symbol != WASMTOK_IDENT)
 					throw std::runtime_error("Unexpected symbol found in data section at "
 						+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
@@ -72,11 +73,11 @@ namespace Wasmc {
 		}
 
 		if (codeNode) {
-			for (ASTNode *node: *codeNode) {
+			for (const ASTNode *node: *codeNode) {
 				if (node->symbol != WASM_STATEMENT)
 					throw std::runtime_error("Unexpected symbol found in code section at "
 						+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
-				for (const std::string *label: dynamic_cast<WASMStatementNode *>(node)->labels)
+				for (const std::string *label: dynamic_cast<const WASMStatementNode *>(node)->labels)
 					allLabels.insert(label);
 			}
 		}
@@ -121,7 +122,7 @@ namespace Wasmc {
 		return hash;
 	}
 
-	std::vector<Long> Assembler::str2longs(const std::string &str) {
+	std::vector<Long> Assembler::str2longs(const std::string &str) const {
 		if (str.empty())
 			return {0};
 		std::vector<Long> out;
@@ -147,24 +148,25 @@ namespace Wasmc {
 	void Assembler::processMetadata() {
 		std::string orcid = "0000000000000000", name = "?", version = "?", author = "?";
 
-		for (ASTNode *node: *metaNode)
-			switch (node->symbol) {
-				case WASMTOK_NAME:
-					name = *node->front()->lexerInfo;
-					break;
-				case WASMTOK_AUTHOR:
-					author = *node->front()->lexerInfo;
-					break;
-				case WASMTOK_VERSION:
-					version = *node->front()->lexerInfo;
-					break;
-				case WASMTOK_ORCID:
-					orcid = *node->front()->lexerInfo;
-					break;
-				default:
-					throw std::runtime_error("Unexpected symbol found in meta section at "
-						+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
-			}
+		if (metaNode)
+			for (const ASTNode *node: *metaNode)
+				switch (node->symbol) {
+					case WASMTOK_NAME:
+						name = *node->front()->lexerInfo;
+						break;
+					case WASMTOK_AUTHOR:
+						author = *node->front()->lexerInfo;
+						break;
+					case WASMTOK_VERSION:
+						version = *node->front()->lexerInfo;
+						break;
+					case WASMTOK_ORCID:
+						orcid = *node->front()->lexerInfo;
+						break;
+					default:
+						throw std::runtime_error("Unexpected symbol found in meta section at "
+							+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
+				}
 
 		if (orcid.find_first_not_of("0123456789") != std::string::npos) {
 			std::string new_orcid;
@@ -195,5 +197,51 @@ namespace Wasmc {
 
 		metaOffsetSymbols() = meta.size() * 8;
 		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
+	}
+
+	void Assembler::processData() {
+		if (!dataNode)
+			return;
+
+		size_t length = 0;
+		for (ASTNode *node: *dataNode) {
+			const std::string *ident = node->lexerInfo;
+			if (ident->front() != '%') {
+				std::cerr << "Assigning " << length << " to " << *ident << "\n";
+				dataOffsets.emplace(ident, length);
+			}
+
+			const auto pieces = convertDataPieces(node);
+			for (const Long piece: pieces)
+				data.push_back(piece);
+			length += pieces.size() * 8;
+		}
+	}
+
+	std::vector<Long> Assembler::convertDataPieces(const ASTNode *node) {
+		const ASTNode *child = node->front();
+		static_assert(sizeof(Long) == sizeof(double));
+		switch (child->symbol) {
+			case WASMTOK_FLOAT: {
+				double parsed = Util::parseDouble(child->lexerInfo);
+				return {*reinterpret_cast<Long *>(&parsed)};
+			}
+			case WASMTOK_NUMBER:
+				return {static_cast<Long>(child->atoi())};
+			case WASMTOK_STRING: {
+				std::string str = *child->lexerInfo;
+				str.push_back('\0');
+				return str2longs(str);
+			}
+			case WASMTOK_LPAR:
+				return str2longs(std::string(child->front()->atoi(), '\0'));
+			case WASMTOK_AND:
+				dataVariables[node->lexerInfo] = child->front()->lexerInfo;
+				return {0};
+			default:
+				throw std::runtime_error("Unexpected symbol found in data section at " + std::string(child->location)
+					+ ": " + std::string(parser.getName(child->symbol)));
+		}
+		return {};
 	}
 }

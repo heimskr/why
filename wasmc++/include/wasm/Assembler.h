@@ -44,9 +44,13 @@ namespace Wasmc {
 
 			uint32_t encodeSymbol(const std::string *);
 
-			std::vector<Long> str2longs(const std::string &);
+			std::vector<Long> str2longs(const std::string &) const;
 
 			void processMetadata();
+
+			void processData();
+
+			std::vector<Long> convertDataPieces(const ASTNode *);
 	};
 
 }
