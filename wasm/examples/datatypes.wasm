@@ -1,0 +1,13 @@
+#meta
+name: "Data Types"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+float: 4.2
+dec: 42
+hex: 0x64
+string: "Hello there."
+gap: (12)
+address: &int
