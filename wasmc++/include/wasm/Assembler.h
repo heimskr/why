@@ -12,6 +12,8 @@ namespace Wasmc {
 
 	enum class SymbolType: unsigned {Unknown, KnownPointer, UnknownPointer, Code, Data};
 
+	struct WASMStatementNode;
+
 	class Assembler {
 		public:
 			Assembler(Parser &);
@@ -51,6 +53,8 @@ namespace Wasmc {
 			void processData();
 
 			std::vector<Long> convertDataPieces(const ASTNode *);
+
+			std::vector<std::unique_ptr<WASMStatementNode>> expandCode();
 	};
 
 }

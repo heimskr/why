@@ -16,7 +16,7 @@ CLOC_OPTIONS	:= --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 BISON_OPTIONS	:= --color=always
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
-TESTFILE        ?= ../wasm/examples/datatypes.wasm
+TESTFILE        ?= ../wasm/examples/conditions.wasm
 
 .PHONY: all counter test clean count countbf
 

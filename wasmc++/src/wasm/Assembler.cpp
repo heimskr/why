@@ -18,6 +18,8 @@ namespace Wasmc {
 		symbolTable = createSymbolTable(allLabels, true);
 		processMetadata();
 		processData();
+
+		const auto expanded = expandCode();
 	}
 
 	void Assembler::validateSectionCounts() {
@@ -125,6 +127,7 @@ namespace Wasmc {
 	std::vector<Long> Assembler::str2longs(const std::string &str) const {
 		if (str.empty())
 			return {0};
+
 		std::vector<Long> out;
 		out.reserve(Util::updiv(str.size(), 8ul));
 
@@ -242,6 +245,32 @@ namespace Wasmc {
 				throw std::runtime_error("Unexpected symbol found in data section at " + std::string(child->location)
 					+ ": " + std::string(parser.getName(child->symbol)));
 		}
-		return {};
+	}
+
+	std::vector<std::unique_ptr<WASMStatementNode>> Assembler::expandCode() {
+		if (!codeNode)
+			return {};
+
+		std::vector<std::unique_ptr<WASMStatementNode>> expanded;
+		expanded.reserve(codeNode->size());
+
+		for (const ASTNode *node: *codeNode) {
+			const auto *statement = dynamic_cast<const WASMStatementNode *>(node);
+			if (!statement) {
+				node->debug();
+				throw std::runtime_error("Unexpected symbol found in code section at " + std::string(node->location)
+					+ ": " + std::string(parser.getName(node->symbol)));
+			}
+
+			for (const std::string *label: statement->labels) {
+				if (offsets.count(label) != 0)
+					throw std::runtime_error("Label " + *label + " redefined at " + std::string(node->location));
+				offsets[label] = metaOffsetCode() + expanded.size() * 8;
+				std::cerr << "Assigning " << offsets[label] << " to " << *label << " based on an expanded length equal "
+				             "to " << expanded.size() << "\n";
+			}
+		}
+
+		return expanded;
 	}
 }
