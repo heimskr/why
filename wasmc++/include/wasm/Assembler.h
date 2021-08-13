@@ -18,13 +18,16 @@ namespace Wasmc {
 			Parser &parser;
 			std::unordered_map<const std::string *, size_t> offsets, dataOffsets;
 			std::vector<uint64_t> meta, data, code, symbolTable, debugData, assembled;
-			std::unordered_set<const std::string *> unknownSymbols;
+			std::unordered_set<const std::string *> allLabels, unknownSymbols;
 			std::unordered_map<const std::string *, const std::string *> dataVariables;
 
-			/** Throws an exception if there exist more than one of any section type in the AST. */
-			void validateSectionCounts() const;
+			ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
+			        *codeNode = nullptr;
 
-			std::vector<const std::string *> findAllLabels() const;
+			/** Throws an exception if there exist more than one of any section type in the AST. */
+			void validateSectionCounts();
+
+			void findAllLabels();
 	};
 
 }
