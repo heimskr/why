@@ -1,3 +1,6 @@
 [submodule "wvm/cpp/haunted"]
 	path = wvm/cpp/haunted
 	url = https://github.com/heimskr/haunted
+[submodule "wasmc++/PicoSHA2"]
+	path = wasmc++/PicoSHA2
+	url = https://github.com/okdshin/PicoSHA2.git
