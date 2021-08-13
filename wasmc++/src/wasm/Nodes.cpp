@@ -116,6 +116,11 @@ namespace Wasmc {
 		return this;
 	}
 
+	WASMInstructionNode * WASMInstructionNode::setBang(int value) {
+		bang = value;
+		return this;
+	}
+
 	std::string WASMInstructionNode::debugExtra() const {
 		std::string out = "";
 		for (const std::string *label: labels)
@@ -130,7 +135,8 @@ namespace Wasmc {
 		return out;
 	}
 
-	WASMImmediateNode::WASMImmediateNode(ASTNode *node): WASMBaseNode(WASM_IMMEDIATE), imm(getImmediate(node)) {
+	WASMImmediateNode::WASMImmediateNode(ASTNode *node):
+	WASMBaseNode(WASM_IMMEDIATE), HasImmediate(getImmediate(node)) {
 		delete node;
 	}
 
@@ -179,8 +185,8 @@ namespace Wasmc {
 	}
 
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_INODE), rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo),
-	operToken(oper_->symbol), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_INODE), HasImmediate(getImmediate(imm_)), rs(rs_->lexerInfo), oper(oper_->lexerInfo),
+	rd(rd_->lexerInfo), operToken(oper_->symbol), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
 		delete imm_;
@@ -244,10 +250,13 @@ namespace Wasmc {
 	}
 
 	WASMSetNode::WASMSetNode(ASTNode *imm_, ASTNode *rd_):
-	WASMInstructionNode(WASM_SETNODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMSetNode(getImmediate(imm_), rd_->lexerInfo) {
 		delete imm_;
 		delete rd_;
 	}
+
+	WASMSetNode::WASMSetNode(const Immediate &imm_, const std::string *rd_):
+		WASMInstructionNode(WASM_SETNODE), HasImmediate(imm_), rd(rd_) {}
 
 	std::string WASMSetNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + colorize(imm) + dim(" -> ") + cyan(*rd);
@@ -258,7 +267,7 @@ namespace Wasmc {
 	}
 
 	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
-	WASMInstructionNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
+	WASMInstructionNode(WASM_LINODE), HasImmediate(getImmediate(imm_)), rd(rd_->lexerInfo), isByte(!!byte_) {
 		delete imm_;
 		delete rd_;
 		if (byte_)
@@ -275,7 +284,7 @@ namespace Wasmc {
 	}
 
 	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
-	WASMInstructionNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
+	WASMInstructionNode(WASM_SINODE), HasImmediate(getImmediate(imm_)), rs(rs_->lexerInfo), isByte(!!byte_) {
 		delete rs_;
 		delete imm_;
 		if (byte_)
@@ -359,7 +368,7 @@ namespace Wasmc {
 	}
 
 	WASMCmpiNode::WASMCmpiNode(ASTNode *rs_, ASTNode *imm_):
-	WASMInstructionNode(WASM_CMPINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_CMPINODE), HasImmediate(getImmediate(imm_)), rs(rs_->lexerInfo) {
 		delete rs_;
 		delete imm_;
 	}
@@ -541,7 +550,7 @@ namespace Wasmc {
 	}
 
 	WASMMultINode::WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_MULTINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_MULTINODE), HasImmediate(getImmediate(imm_)), rs(rs_->lexerInfo), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete imm_;
 		if (unsigned_)
@@ -557,7 +566,7 @@ namespace Wasmc {
 	}
 
 	WASMDiviINode::WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_DIVIINODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)),
+	WASMInstructionNode(WASM_DIVIINODE), HasImmediate(getImmediate(imm_)), rs(rs_->lexerInfo), rd(rd_->lexerInfo),
 	isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete rd_;
@@ -577,7 +586,7 @@ namespace Wasmc {
 	}
 
 	WASMLuiNode::WASMLuiNode(ASTNode *imm_, ASTNode *rd_):
-	WASMInstructionNode(WASM_LUINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_LUINODE), HasImmediate(getImmediate(imm_)), rd(rd_->lexerInfo) {
 		delete imm_;
 		delete rd_;
 	}
@@ -616,7 +625,7 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "<>";
 	}
 
-	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMInstructionNode(WASM_INTINODE), imm(getImmediate(imm_)) {
+	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMInstructionNode(WASM_INTINODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -628,7 +637,7 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%int " + toString(imm);
 	}
 
-	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMInstructionNode(WASM_RITINODE), imm(getImmediate(imm_)) {
+	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMInstructionNode(WASM_RITINODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -640,7 +649,7 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%rit " + toString(imm);
 	}
 
-	WASMTimeINode::WASMTimeINode(ASTNode *imm_): WASMInstructionNode(WASM_TIMEINODE), imm(getImmediate(imm_)) {
+	WASMTimeINode::WASMTimeINode(ASTNode *imm_): WASMInstructionNode(WASM_TIMEINODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -664,7 +673,7 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%time " + *rs;
 	}
 
-	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMInstructionNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
+	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMInstructionNode(WASM_RINGINODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -767,7 +776,8 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%page " + std::string(on? "on" : "off");
 	}
 
-	WASMSetptINode::WASMSetptINode(ASTNode *imm_): WASMInstructionNode(WASM_SETPTINODE), imm(getImmediate(imm_)) {
+	WASMSetptINode::WASMSetptINode(ASTNode *imm_):
+	WASMInstructionNode(WASM_SETPTINODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -832,7 +842,7 @@ namespace Wasmc {
 	}
 
 	WASMPseudoPrintNode::WASMPseudoPrintNode(ASTNode *imm_):
-	WASMInstructionNode(WASM_PSEUDOPRINTNODE), imm(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_PSEUDOPRINTNODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
 
