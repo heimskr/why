@@ -35,7 +35,7 @@ namespace Wasmc {
 	};
 
 	struct NumberArg: Arg {
-		int64_t value;
+		int value;
 		NumberArg(ASTNode *);
 		Type getType() override { return Type::Number; }
 		operator std::string() const override;
@@ -44,6 +44,7 @@ namespace Wasmc {
 	struct Args {
 		std::vector<std::unique_ptr<Arg>> args;
 		Args(ASTNode *);
+		Arg & operator[](size_t index) const { return *args[index]; }
 		size_t size() const { return args.size(); }
 		bool empty() const { return args.empty(); }
 		decltype(args)::const_iterator begin() const { return args.begin(); }

@@ -286,16 +286,44 @@ namespace Wasmc {
 					const auto *call = dynamic_cast<const WASMCallNode *>(instruction);
 					const std::string *function = call->function;
 					const Args &args = call->args;
+
 					if (Why::argumentCount < args.size())
 						throw std::runtime_error("Too many arguments given in subroutine call (given "
 							+ std::to_string(args.size()) + ", maximum is " + std::to_string(Why::argumentCount) + ")");
+
 					std::vector<int> current_values;
+
 					if (instruction->inSubroutine)
 						current_values.push_back(Why::returnAddressOffset);
+
 					for (size_t i = 0; i < args.size(); ++i)
 						current_values.push_back(Why::argumentOffset + i);
+
 					if (!current_values.empty())
 						addStack(expanded, current_values, instruction->labels, true);
+
+					for (size_t i = 0; i < args.size(); ++i) {
+						const std::string *reg = registerArray[Why::argumentOffset + i];
+						Arg &arg = args[i];
+						switch (arg.getType()) {
+							case Arg::Type::Address:
+								expanded.emplace_back(new WASMSetNode(dynamic_cast<AddressArg &>(arg).ident, reg));
+								break;
+							case Arg::Type::Value:
+								expanded.emplace_back(new WASMLiNode(dynamic_cast<ValueArg &>(arg).ident, reg, false));
+								break;
+							case Arg::Type::Number:
+								expanded.emplace_back(new WASMSetNode(dynamic_cast<NumberArg &>(arg).value, reg));
+								break;
+							case Arg::Type::Register:
+								expanded.emplace_back(new WASMMvNode(
+									registerArray[dynamic_cast<RegisterArg &>(arg).reg], reg));
+								break;
+							default:
+								throw std::runtime_error("Invalid Arg type");
+						}
+						expanded.back()->setBang(call->bang);
+					}
 					break;
 				}
 

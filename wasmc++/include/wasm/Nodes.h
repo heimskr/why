@@ -68,7 +68,7 @@ namespace Wasmc {
 		const std::string *rs, *oper, *rt, *rd;
 		int operToken;
 		bool isUnsigned;
-		
+
 		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
@@ -129,6 +129,7 @@ namespace Wasmc {
 		bool isByte;
 
 		WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
+		WASMLiNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -206,8 +207,7 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	struct WASMJNode: WASMInstructionNode {
-		Immediate addr;
+	struct WASMJNode: WASMInstructionNode, HasImmediate {
 		Condition condition;
 		bool link;
 
@@ -217,9 +217,8 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	struct WASMJcNode: WASMInstructionNode {
+	struct WASMJcNode: WASMInstructionNode, HasImmediate {
 		bool link;
-		Immediate addr;
 		const std::string *rs;
 
 		WASMJcNode(WASMJNode *, ASTNode *rs_);
@@ -422,6 +421,7 @@ namespace Wasmc {
 		const std::string *rs, *rd;
 
 		WASMMvNode(ASTNode *rs_, ASTNode *rd_);
+		WASMMvNode(const std::string *rs_, const std::string *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Mv; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
