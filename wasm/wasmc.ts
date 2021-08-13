@@ -1017,7 +1017,7 @@ export default class WASMC {
 		const hash = createHash("sha256");
 		hash.update(name);
 		// Can be up to 13 digits before precision limits become apparent, but we need only 8 anyway
-		return Math.abs(parseInt(hash.digest("hex").substr(0, 7), 16));
+		return Math.abs(parseInt(hash.digest("hex").substr(0, 8), 16));
 	}
 
 	/**
