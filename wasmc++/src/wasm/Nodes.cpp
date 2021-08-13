@@ -172,9 +172,10 @@ namespace Wasmc {
 	}
 
 	RNode::operator std::string() const {
+		const std::string base = WASMInstructionNode::operator std::string();
 		if (*oper == "!" || *oper == "~")
-			return *oper + *rs + " -> " + *rd + (isUnsigned? " /u" : "");
-		return *rs + " " + *oper + " " + *rt + " -> " + *rd + (isUnsigned? " /u" : "");
+			return base + *oper + *rs + " -> " + *rd + (isUnsigned? " /u" : "");
+		return base + *rs + " " + *oper + " " + *rt + " -> " + *rd + (isUnsigned? " /u" : "");
 	}
 
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
@@ -194,7 +195,8 @@ namespace Wasmc {
 	}
 
 	INode::operator std::string() const {
-		return *rs + " " + *oper + " " + toString(imm) + " -> " + *rd + (isUnsigned? " /u" : "");
+		return WASMInstructionNode::operator std::string() + *rs + " " + *oper + " " + toString(imm) + " -> " + *rd
+			+ (isUnsigned? " /u" : "");
 	}
 
 	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
@@ -214,7 +216,7 @@ namespace Wasmc {
 	}
 
 	WASMCopyNode::operator std::string() const {
-		return "[" + *rs + "] -> [" + *rd + "]" + (isByte? " /b" : "");
+		return WASMInstructionNode::operator std::string() + "[" + *rs + "] -> [" + *rd + "]" + (isByte? " /b" : "");
 	}
 
 	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
@@ -226,7 +228,7 @@ namespace Wasmc {
 	}
 
 	WASMLoadNode::operator std::string() const {
-		return "[" + *rs + "] -> " + *rd + (isByte? " /b" : "");
+		return WASMInstructionNode::operator std::string() + "[" + *rs + "] -> " + *rd + (isByte? " /b" : "");
 	}
 
 	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
@@ -238,7 +240,7 @@ namespace Wasmc {
 	}
 
 	WASMStoreNode::operator std::string() const {
-		return *rs + " -> [" + *rd + "]" + (isByte? " /b" : "");
+		return WASMInstructionNode::operator std::string() + *rs + " -> [" + *rd + "]" + (isByte? " /b" : "");
 	}
 
 	WASMSetNode::WASMSetNode(ASTNode *imm_, ASTNode *rd_):
@@ -252,7 +254,7 @@ namespace Wasmc {
 	}
 
 	WASMSetNode::operator std::string() const {
-		return toString(imm) + " -> " + *rd;
+		return WASMInstructionNode::operator std::string() + toString(imm) + " -> " + *rd;
 	}
 
 	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
@@ -269,7 +271,7 @@ namespace Wasmc {
 	}
 
 	WASMLiNode::operator std::string() const {
-		return "[" + toString(imm) + "] -> " + *rd + (isByte? " /b" : "");
+		return WASMInstructionNode::operator std::string() + "[" + toString(imm) + "] -> " + *rd + (isByte? " /b" : "");
 	}
 
 	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
@@ -286,7 +288,7 @@ namespace Wasmc {
 	}
 
 	WASMSiNode::operator std::string() const {
-		return *rs + " -> [" + toString(imm) + "]" + (isByte? " /b" : "");
+		return WASMInstructionNode::operator std::string() + *rs + " -> [" + toString(imm) + "]" + (isByte? " /b" : "");
 	}
 
 	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_): WASMLiNode(imm_, rd_, byte_) {
@@ -299,7 +301,8 @@ namespace Wasmc {
 	}
 
 	WASMLniNode::operator std::string() const {
-		return "[" + toString(imm) + "] -> [" + *rd + "]" + (isByte? " /b" : "");
+		return WASMInstructionNode::operator std::string() + "[" + toString(imm) + "] -> [" + *rd + "]"
+			+ (isByte? " /b" : "");
 	}
 
 	WASMHalfMemoryNode::WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
@@ -316,7 +319,7 @@ namespace Wasmc {
 	}
 
 	WASMChNode::operator std::string() const {
-		return "[" + *rs + "] -> [" + *rd + "] /h";
+		return WASMInstructionNode::operator std::string() + "[" + *rs + "] -> [" + *rd + "] /h";
 	}
 
 	WASMLhNode::WASMLhNode(ASTNode *rs_, ASTNode *rd_):
@@ -327,7 +330,7 @@ namespace Wasmc {
 	}
 
 	WASMLhNode::operator std::string() const {
-		return "[" + *rs + "] -> " + *rd + " /h";
+		return WASMInstructionNode::operator std::string() + "[" + *rs + "] -> " + *rd + " /h";
 	}
 
 	WASMShNode::WASMShNode(ASTNode *rs_, ASTNode *rd_):
@@ -338,7 +341,7 @@ namespace Wasmc {
 	}
 
 	WASMShNode::operator std::string() const {
-		return *rs + " -> [" + *rd + "] /h";
+		return WASMInstructionNode::operator std::string() + *rs + " -> [" + *rd + "] /h";
 	}
 
 	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rt_):
@@ -352,7 +355,7 @@ namespace Wasmc {
 	}
 
 	WASMCmpNode::operator std::string() const {
-		return *rs + " ~ " + *rt;
+		return WASMInstructionNode::operator std::string() + *rs + " ~ " + *rt;
 	}
 
 	WASMCmpiNode::WASMCmpiNode(ASTNode *rs_, ASTNode *imm_):
@@ -366,7 +369,7 @@ namespace Wasmc {
 	}
 
 	WASMCmpiNode::operator std::string() const {
-		return *rs + " ~ " + toString(imm);
+		return WASMInstructionNode::operator std::string() + *rs + " ~ " + toString(imm);
 	}
 
 	WASMSelNode::WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_):
@@ -413,7 +416,7 @@ namespace Wasmc {
 				throw std::runtime_error("Invalid operator in WASMSelNode: " +
 					std::to_string(static_cast<int>(condition)));
 		}
-		return "[" + *rs + " " + oper_ + " " + *rt + "] -> " + *rd;
+		return WASMInstructionNode::operator std::string() + "[" + *rs + " " + oper_ + " " + *rt + "] -> " + *rd;
 	}
 
 	WASMJNode::WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_):
@@ -434,7 +437,8 @@ namespace Wasmc {
 	}
 
 	WASMJNode::operator std::string() const {
-		return conditionString(condition) + std::string(link? "::" : ":") + " " + toString(addr);
+		return WASMInstructionNode::operator std::string() + conditionString(condition) + std::string(link? "::" : ":")
+			+ " " + toString(addr);
 	}
 
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
@@ -455,7 +459,8 @@ namespace Wasmc {
 	}
 
 	WASMJcNode::operator std::string() const {
-		return std::string(link? "::" : ":") + " " + toString(addr) + " if " + *rs;
+		return WASMInstructionNode::operator std::string() + std::string(link? "::" : ":") + " " + toString(addr)
+			+ " if " + *rs;
 	}
 
 	WASMJrNode::WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_):
@@ -479,7 +484,8 @@ namespace Wasmc {
 	}
 
 	WASMJrNode::operator std::string() const {
-		return conditionString(condition) + std::string(link? "::" : ":") + " " + *rd;
+		return WASMInstructionNode::operator std::string() + conditionString(condition) + std::string(link? "::" : ":")
+			+ " " + *rd;
 	}
 
 	WASMJrcNode::WASMJrcNode(WASMJrNode *jr, ASTNode *rs_):
@@ -499,7 +505,7 @@ namespace Wasmc {
 	}
 
 	WASMJrcNode::operator std::string() const {
-		return std::string(link? "::" : ":") + " " + *rd + " if " + *rs;
+		return WASMInstructionNode::operator std::string() + std::string(link? "::" : ":") + " " + *rd + " if " + *rs;
 	}
 
 	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push):
@@ -514,7 +520,8 @@ namespace Wasmc {
 	}
 
 	WASMSizedStackNode::operator std::string() const {
-		return std::string(isPush? "[" : "]") + ":" + std::to_string(size) + " " + *rs;
+		return WASMInstructionNode::operator std::string() + std::string(isPush? "[" : "]") + ":" + std::to_string(size)
+			+ " " + *rs;
 	}
 
 	WASMMultRNode::WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_):
@@ -530,7 +537,7 @@ namespace Wasmc {
 	}
 
 	WASMMultRNode::operator std::string() const {
-		return *rs + " * " + *rt + (isUnsigned? " /u" : "");
+		return WASMInstructionNode::operator std::string() + *rs + " * " + *rt + (isUnsigned? " /u" : "");
 	}
 
 	WASMMultINode::WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_):
@@ -546,7 +553,7 @@ namespace Wasmc {
 	};
 
 	WASMMultINode::operator std::string() const {
-		return *rs + " * " + toString(imm) + (isUnsigned? " /u" : "");
+		return WASMInstructionNode::operator std::string() + *rs + " * " + toString(imm) + (isUnsigned? " /u" : "");
 	}
 
 	WASMDiviINode::WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_):
@@ -565,7 +572,8 @@ namespace Wasmc {
 	}
 
 	WASMDiviINode::operator std::string() const {
-		return toString(imm) + " / " + *rs + " -> " + *rd + (isUnsigned? " /u" : "");
+		return WASMInstructionNode::operator std::string() + toString(imm) + " / " + *rs + " -> " + *rd
+			+ (isUnsigned? " /u" : "");
 	}
 
 	WASMLuiNode::WASMLuiNode(ASTNode *imm_, ASTNode *rd_):
@@ -579,7 +587,7 @@ namespace Wasmc {
 	}
 
 	WASMLuiNode::operator std::string() const {
-		return "lui: " + toString(imm) + " -> " + *rd;
+		return WASMInstructionNode::operator std::string() + "lui: " + toString(imm) + " -> " + *rd;
 	}
 
 	WASMStackNode::WASMStackNode(ASTNode *reg_, bool is_push):
@@ -595,7 +603,7 @@ namespace Wasmc {
 	}
 
 	WASMStackNode::operator std::string() const {
-		return std::string(isPush? "[" : "]") + " " + *reg;
+		return WASMInstructionNode::operator std::string() + std::string(isPush? "[" : "]") + " " + *reg;
 	}
 
 	WASMNopNode::WASMNopNode(): WASMInstructionNode(WASM_NOPNODE) {}
@@ -605,7 +613,7 @@ namespace Wasmc {
 	}
 
 	WASMNopNode::operator std::string() const {
-		return "<>";
+		return WASMInstructionNode::operator std::string() + "<>";
 	}
 
 	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMInstructionNode(WASM_INTINODE), imm(getImmediate(imm_)) {
@@ -613,11 +621,11 @@ namespace Wasmc {
 	}
 
 	std::string WASMIntINode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("int") + " " + colorize(imm);
+		return WASMInstructionNode::debugExtra() + blue("%int") + " " + colorize(imm);
 	}
 
 	WASMIntINode::operator std::string() const {
-		return "int " + toString(imm);
+		return WASMInstructionNode::operator std::string() + "%int " + toString(imm);
 	}
 
 	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMInstructionNode(WASM_RITINODE), imm(getImmediate(imm_)) {
@@ -625,11 +633,11 @@ namespace Wasmc {
 	}
 
 	std::string WASMRitINode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("rit") + " " + colorize(imm);
+		return WASMInstructionNode::debugExtra() + blue("%rit") + " " + colorize(imm);
 	}
 
 	WASMRitINode::operator std::string() const {
-		return "rit " + toString(imm);
+		return WASMInstructionNode::operator std::string() + "%rit " + toString(imm);
 	}
 
 	WASMTimeINode::WASMTimeINode(ASTNode *imm_): WASMInstructionNode(WASM_TIMEINODE), imm(getImmediate(imm_)) {
@@ -637,11 +645,11 @@ namespace Wasmc {
 	}
 
 	std::string WASMTimeINode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("time") + " " + colorize(imm);
+		return WASMInstructionNode::debugExtra() + blue("%time") + " " + colorize(imm);
 	}
 
 	WASMTimeINode::operator std::string() const {
-		return "time " + toString(imm);
+		return WASMInstructionNode::operator std::string() + "%time " + toString(imm);
 	}
 
 	WASMTimeRNode::WASMTimeRNode(ASTNode *rs_): WASMInstructionNode(WASM_TIMERNODE), rs(rs_->lexerInfo) {
@@ -649,11 +657,11 @@ namespace Wasmc {
 	}
 
 	std::string WASMTimeRNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("time") + " " + cyan(*rs);
+		return WASMInstructionNode::debugExtra() + blue("%time") + " " + cyan(*rs);
 	}
 
 	WASMTimeRNode::operator std::string() const {
-		return "time " + *rs;
+		return WASMInstructionNode::operator std::string() + "%time " + *rs;
 	}
 
 	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMInstructionNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
@@ -661,11 +669,11 @@ namespace Wasmc {
 	}
 
 	std::string WASMRingINode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("ring") + " " + colorize(imm);
+		return WASMInstructionNode::debugExtra() + blue("%ring") + " " + colorize(imm);
 	}
 
 	WASMRingINode::operator std::string() const {
-		return "ring " + toString(imm);
+		return WASMInstructionNode::operator std::string() + "%ring " + toString(imm);
 	}
 
 	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
@@ -673,11 +681,11 @@ namespace Wasmc {
 	}
 
 	std::string WASMRingRNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("ring") + " " + cyan(*rs);
+		return WASMInstructionNode::debugExtra() + blue("%ring") + " " + cyan(*rs);
 	}
 
 	WASMRingRNode::operator std::string() const {
-		return "ring " + *rs;
+		return WASMInstructionNode::operator std::string() + "%ring " + *rs;
 	}
 
 	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):
@@ -715,14 +723,15 @@ namespace Wasmc {
 	}
 
 	WASMPrintNode::operator std::string() const {
+		const std::string base = WASMInstructionNode::operator std::string();
 		switch (type) {
-			case PrintType::Hex:  return "<prx "   + *rs + ">";
-			case PrintType::Dec:  return "<prd "   + *rs + ">";
-			case PrintType::Char: return "<prc "   + *rs + ">";
-			case PrintType::Full: return "<print " + *rs + ">";
-			case PrintType::Bin:  return "<prb "   + *rs + ">";
+			case PrintType::Hex:  return  base + "<prx "   + *rs + ">";
+			case PrintType::Dec:  return  base + "<prd "   + *rs + ">";
+			case PrintType::Char: return  base + "<prc "   + *rs + ">";
+			case PrintType::Full: return  base + "<print " + *rs + ">";
+			case PrintType::Bin:  return  base + "<prb "   + *rs + ">";
 			default:
-				return "???";
+				return base + "???";
 		}
 	}
 
@@ -733,7 +742,7 @@ namespace Wasmc {
 	}
 
 	WASMHaltNode::operator std::string() const {
-		return "<halt>";
+		return WASMInstructionNode::operator std::string() + "<halt>";
 	}
 
 	WASMSleepRNode::WASMSleepRNode(ASTNode *rs_): WASMInstructionNode(WASM_SLEEPRNODE), rs(rs_->lexerInfo) {
@@ -745,7 +754,7 @@ namespace Wasmc {
 	}
 
 	WASMSleepRNode::operator std::string() const {
-		return "<sleep " + *rs + ">";
+		return WASMInstructionNode::operator std::string() + "<sleep " + *rs + ">";
 	}
 
 	WASMPageNode::WASMPageNode(bool on_): WASMInstructionNode(WASM_PAGENODE), on(on_) {}
@@ -755,7 +764,7 @@ namespace Wasmc {
 	}
 
 	WASMPageNode::operator std::string() const {
-		return "%page " + std::string(on? "on" : "off");
+		return WASMInstructionNode::operator std::string() + "%page " + std::string(on? "on" : "off");
 	}
 
 	WASMSetptINode::WASMSetptINode(ASTNode *imm_): WASMInstructionNode(WASM_SETPTINODE), imm(getImmediate(imm_)) {
@@ -767,7 +776,7 @@ namespace Wasmc {
 	}
 
 	WASMSetptINode::operator std::string() const {
-		return "%setpt " + toString(imm);
+		return WASMInstructionNode::operator std::string() + "%setpt " + toString(imm);
 	}
 
 	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_): WASMInstructionNode(WASM_SETPTRNODE), rs(rs_->lexerInfo) {
@@ -779,7 +788,7 @@ namespace Wasmc {
 	}
 
 	WASMSetptRNode::operator std::string() const {
-		return "%setpt " + *rs;
+		return WASMInstructionNode::operator std::string() + "%setpt " + *rs;
 	}
 
 	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_):
@@ -793,7 +802,7 @@ namespace Wasmc {
 	}
 
 	WASMMvNode::operator std::string() const {
-		return *rs + " -> " + *rd;
+		return WASMInstructionNode::operator std::string() + *rs + " -> " + *rd;
 	}
 
 	WASMSvpgNode::WASMSvpgNode(ASTNode *rd_):
@@ -806,7 +815,7 @@ namespace Wasmc {
 	}
 
 	WASMSvpgNode::operator std::string() const {
-		return "%page -> " + *rd;
+		return WASMInstructionNode::operator std::string() + "%page -> " + *rd;
 	}
 
 	WASMQueryNode::WASMQueryNode(QueryType type_, ASTNode *rd_):
@@ -819,7 +828,7 @@ namespace Wasmc {
 	}
 
 	WASMQueryNode::operator std::string() const {
-		return "? mem -> " + *rd;
+		return WASMInstructionNode::operator std::string() + "? mem -> " + *rd;
 	}
 
 	WASMPseudoPrintNode::WASMPseudoPrintNode(ASTNode *imm_):
@@ -832,7 +841,7 @@ namespace Wasmc {
 	}
 
 	WASMPseudoPrintNode::operator std::string() const {
-		return "<p " + toString(imm) + ">";
+		return WASMInstructionNode::operator std::string() + "<p " + toString(imm) + ">";
 	}
 
 	WASMStringPrintNode::WASMStringPrintNode(ASTNode *string_):
@@ -845,7 +854,7 @@ namespace Wasmc {
 	}
 
 	WASMStringPrintNode::operator std::string() const {
-		return "<p \"" + *string + "\">";
+		return WASMInstructionNode::operator std::string() + "<p \"" + *string + "\">";
 	}
 
 	WASMCallNode::WASMCallNode(ASTNode *function_, ASTNode *args_):
