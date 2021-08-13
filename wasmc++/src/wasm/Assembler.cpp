@@ -192,5 +192,8 @@ namespace Wasmc {
 
 		for (const Long piece: str2longs(nva))
 			meta.push_back(piece);
+
+		metaOffsetSymbols() = meta.size() * 8;
+		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
 	}
 }
