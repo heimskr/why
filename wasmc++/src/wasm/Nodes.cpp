@@ -24,6 +24,10 @@ static std::string blue(const std::string &interior) {
 	return "\e[34m" + interior + "\e[39m";
 }
 
+static std::string orange(const std::string &interior) {
+	return "\e[38;5;202m" + interior + "\e[39m";
+}
+
 namespace Wasmc {
 	static Condition getCondition(const std::string &str) {
 		if (str == "0")
@@ -101,7 +105,7 @@ namespace Wasmc {
 
 	WASMStatementNode * WASMStatementNode::absorbLabel(ASTNode *label) {
 		if (label) {
-			labels.push_back(label->lexerInfo);
+			labels.push_back(dynamic_cast<WASMLabelNode *>(label)->label);
 			delete label;
 		}
 
@@ -109,12 +113,17 @@ namespace Wasmc {
 	}
 
 	std::string WASMStatementNode::debugExtra() const {
-		const std::string out = children.front()->debugExtra();
+		std::string out = "";
+		for (const std::string *label: labels)
+			out += blue("@") + orange(*label) + " ";
+		out += children.front()->debugExtra();
 		return bang != -1? out + " !" + std::to_string(bang) : out;
 	}
 
 	WASMStatementNode::operator std::string() const {
 		std::string out;
+		for (const std::string *label: labels)
+			out += "@" + *label + " ";
 		if (auto *basenode = dynamic_cast<WASMBaseNode *>(children.front()))
 			out = *basenode;
 		else
