@@ -144,7 +144,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
-%token WASM_ARGS
+%token WASM_ARGS WASM_STRINGPRINTNODE
 
 %start start
 
@@ -187,12 +187,13 @@ debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") 
           | number number number number number { if (*$1->lexerInfo != "3") wasmerror("Invalid debug line type (expected 3)"); $$ = $1->adopt({$2, $3, $4, $5}); };
 
 code_section: "#code" "\n" { D($2); };
-            | code_section operation { $$ = $1->adopt(new WASMStatementNode($2)); }
-            | code_section operation intbang { $$ = $1->adopt(new WASMStatementNode($2, $3)); }
-            | code_section label _newlines operation { $$ = $1->adopt(new WASMStatementNode($4, nullptr, $2)); D($3); }
-            | code_section label _newlines operation intbang { $$ = $1->adopt(new WASMStatementNode($4, $5, $2)); D($3); }
+            | code_section statement { $$ = $1->adopt($2); }
+            | code_section statement intbang { $$ = $1->adopt(dynamic_cast<WASMStatementNode *>($2)->absorbIntbang($3)); }
             | code_section endop { D($2); };
 intbang: "!" number { $$ = $1->adopt($2); };
+
+statement: operation { $$ = new WASMStatementNode($1); }
+         | label _newlines statement { $$ = dynamic_cast<WASMStatementNode *>($3)->absorbLabel($1); D($2); };
 
 endop: "\n" | ";";
 newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
@@ -202,7 +203,7 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | call;
+         | op_qmem | op_ret   | call     | op_sprint;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -305,10 +306,12 @@ op_ext: op_print | op_pprint | op_sleep | op_halt;
 op_sleep: "<" "sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
 
 op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
-printop: "print" | "prx" | "prd" | "prc" | "prb";
+printop: "print" | "prx" | "prd" | "prc" | "prb" | "p";
 
 op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
          | "<" "p"   immediate ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); };
+
+op_sprint: "<" "p" string ">" { $$ = new WASMStringPrintNode($3); D($1, $2, $4); };
 
 op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 
@@ -324,10 +327,13 @@ op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($
 op_ret: "!ret" { $$ = new WASMJrNode(Condition::None, false, "$rt"); D($1); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
-_immediate: number | ident | character;
+_immediate: "&" ident { $$ = $2; D($1); }
+          | ident
+          | number
+          | character;
 
 ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep"
-     | "version" | "author" | "orcid" | "name" | printop | "p" | WASMTOK_IDENT;
+     | "version" | "author" | "orcid" | "name" | printop | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

@@ -12,7 +12,7 @@ namespace Wasmc {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint
 	};
 
 	class WhyInstruction;
@@ -29,9 +29,11 @@ namespace Wasmc {
 
 	struct WASMStatementNode: public WASMBaseNode {
 		int bang = -1;
-		const std::string *label = nullptr;
+		std::vector<const std::string *> labels;
 
-		WASMStatementNode(ASTNode *statement, ASTNode *intbang = nullptr, ASTNode *label_ = nullptr);
+		WASMStatementNode(ASTNode *statement);
+		WASMStatementNode * absorbIntbang(ASTNode *);
+		WASMStatementNode * absorbLabel(ASTNode *);
 		virtual WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -462,6 +464,15 @@ namespace Wasmc {
 
 		WASMPseudoPrintNode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::PseudoPrint; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMStringPrintNode: public WASMInstructionNode {
+		const std::string *string;
+
+		WASMStringPrintNode(ASTNode *string_);
+		WASMNodeType nodeType() const override { return WASMNodeType::StringPrint; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

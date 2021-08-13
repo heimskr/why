@@ -85,19 +85,27 @@ namespace Wasmc {
 
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
-	WASMStatementNode::WASMStatementNode(ASTNode *statement, ASTNode *intbang, ASTNode *label_):
+	WASMStatementNode::WASMStatementNode(ASTNode *statement):
 	WASMBaseNode(WASM_STATEMENT) {
 		adopt(statement);
+	}
 
+	WASMStatementNode * WASMStatementNode::absorbIntbang(ASTNode *intbang) {
 		if (intbang) {
 			bang = intbang->children.front()->atoi();
 			delete intbang;
 		}
 
-		if (label_) {
-			label = label_->lexerInfo;
-			delete label_;
+		return this;
+	}
+
+	WASMStatementNode * WASMStatementNode::absorbLabel(ASTNode *label) {
+		if (label) {
+			labels.push_back(label->lexerInfo);
+			delete label;
 		}
+
+		return this;
 	}
 
 	std::string WASMStatementNode::debugExtra() const {
@@ -651,17 +659,17 @@ namespace Wasmc {
 	WASMInstructionNode(WASM_PRINTNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 		const std::string &typestr = *type_->lexerInfo;
-		if (typestr == "prx")
+		if (typestr == "prx") {
 			type = PrintType::Hex;
-		else if (typestr == "prd")
+		} else if (typestr == "prd" || typestr == "p") {
 			type = PrintType::Dec;
-		else if (typestr == "prc")
+		} else if (typestr == "prc") {
 			type = PrintType::Char;
-		else if (typestr == "print")
+		} else if (typestr == "print") {
 			type = PrintType::Full;
-		else if (typestr == "prb")
+		} else if (typestr == "prb") {
 			type = PrintType::Bin;
-		else {
+		} else {
 			wasmerror("Invalid print type: " + typestr);
 			type = PrintType::Full;
 		}
@@ -799,6 +807,19 @@ namespace Wasmc {
 
 	WASMPseudoPrintNode::operator std::string() const {
 		return "<p " + toString(imm) + ">";
+	}
+
+	WASMStringPrintNode::WASMStringPrintNode(ASTNode *string_):
+	WASMInstructionNode(WASM_STRINGPRINTNODE), string(StringSet::intern(string_->unquote())) {
+		delete string_;
+	}
+
+	std::string WASMStringPrintNode::debugExtra() const {
+		return "<" + blue("p") + " \"" + *string + "\">";
+	}
+
+	WASMStringPrintNode::operator std::string() const {
+		return "<p \"" + *string + "\">";
 	}
 
 	WASMCallNode::WASMCallNode(ASTNode *function_, ASTNode *args_):
