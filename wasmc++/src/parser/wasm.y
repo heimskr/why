@@ -188,12 +188,12 @@ debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") 
 
 code_section: "#code" "\n" { D($2); };
             | code_section statement { $$ = $1->adopt($2); }
-            | code_section statement intbang { $$ = $1->adopt(dynamic_cast<WASMStatementNode *>($2)->absorbIntbang($3)); }
+            | code_section statement intbang { $$ = $1->adopt(dynamic_cast<WASMInstructionNode *>($2)->absorbIntbang($3)); }
             | code_section endop { D($2); };
 intbang: "!" number { $$ = $1->adopt($2); };
 
-statement: operation { $$ = new WASMStatementNode($1); }
-         | label _newlines statement { $$ = dynamic_cast<WASMStatementNode *>($3)->absorbLabel($1); D($2); };
+statement: operation
+         | label _newlines statement { $$ = dynamic_cast<WASMInstructionNode *>($3)->absorbLabel($1); D($2); };
 
 endop: "\n" | ";";
 newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };

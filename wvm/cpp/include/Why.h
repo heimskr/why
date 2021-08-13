@@ -4,9 +4,9 @@
 #include <string>
 
 namespace WVM {
-	/** Contains constants pertaining to the Why.js architecture. */
 	enum class Endianness: char {Big='B', Little='L'};
 
+	/** Contains constants pertaining to the Why.js architecture. */
 	struct Why {
 		constexpr static int wordSize = 8; // in bytes
 		constexpr static int totalRegisters = 128;

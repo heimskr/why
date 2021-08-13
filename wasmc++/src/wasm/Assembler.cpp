@@ -7,6 +7,7 @@
 #include "util/Util.h"
 #include "wasm/Assembler.h"
 #include "wasm/Nodes.h"
+#include "wasm/Why.h"
 
 namespace Wasmc {
 	Assembler::Assembler(Parser &parser_): parser(parser_) {}
@@ -76,10 +77,11 @@ namespace Wasmc {
 
 		if (codeNode) {
 			for (const ASTNode *node: *codeNode) {
-				if (node->symbol != WASM_STATEMENT)
+				const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
+				if (!instruction)
 					throw std::runtime_error("Unexpected symbol found in code section at "
 						+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
-				for (const std::string *label: dynamic_cast<const WASMStatementNode *>(node)->labels)
+				for (const std::string *label: instruction->labels)
 					allLabels.insert(label);
 			}
 		}
@@ -210,7 +212,8 @@ namespace Wasmc {
 		for (ASTNode *node: *dataNode) {
 			const std::string *ident = node->lexerInfo;
 			if (ident->front() != '%') {
-				std::cerr << "Assigning " << length << " to " << *ident << "\n";
+				if (verbose)
+					std::cerr << "Assigning " << length << " to " << *ident << "\n";
 				dataOffsets.emplace(ident, length);
 			}
 
@@ -247,30 +250,64 @@ namespace Wasmc {
 		}
 	}
 
-	std::vector<std::unique_ptr<WASMStatementNode>> Assembler::expandCode() {
+	Statements Assembler::expandCode() {
+		// Known bug: locations for statement nodes are inaccurate.
+
 		if (!codeNode)
 			return {};
 
-		std::vector<std::unique_ptr<WASMStatementNode>> expanded;
+		Statements expanded;
 		expanded.reserve(codeNode->size());
 
+		// auto add = [&](std::shared_ptr<WASMStatementNode> &&statement) {
+		// 	expanded.push_back(statement);
+		// };
+
 		for (const ASTNode *node: *codeNode) {
-			const auto *statement = dynamic_cast<const WASMStatementNode *>(node);
-			if (!statement) {
+			const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
+			if (!instruction) {
 				node->debug();
 				throw std::runtime_error("Unexpected symbol found in code section at " + std::string(node->location)
 					+ ": " + std::string(parser.getName(node->symbol)));
 			}
 
-			for (const std::string *label: statement->labels) {
+			for (const std::string *label: instruction->labels) {
 				if (offsets.count(label) != 0)
 					throw std::runtime_error("Label " + *label + " redefined at " + std::string(node->location));
 				offsets[label] = metaOffsetCode() + expanded.size() * 8;
-				std::cerr << "Assigning " << offsets[label] << " to " << *label << " based on an expanded length equal "
-				             "to " << expanded.size() << "\n";
+				if (verbose)
+					std::cerr << "Assigning " << offsets[label] << " to " << *label << " based on an expanded length "
+					             "equal to " << expanded.size() << "\n";
+			}
+
+			switch (instruction->nodeType()) {
+				case WASMNodeType::Call: {
+					const auto *call = dynamic_cast<const WASMCallNode *>(instruction);
+					const std::string *function = call->function;
+					const Args &args = call->args;
+					if (Why::argumentCount < args.size())
+						throw std::runtime_error("Too many arguments given in subroutine call (given "
+							+ std::to_string(args.size()) + ", maximum is " + std::to_string(Why::argumentCount) + ")");
+					std::vector<int> current_values;
+					if (instruction->inSubroutine)
+						current_values.push_back(Why::returnAddressOffset);
+					for (size_t i = 0; i < args.size(); ++i)
+						current_values.push_back(Why::argumentOffset + i);
+					if (!current_values.empty()) {
+						addPush(expanded, current_values, instruction->labels);
+					}
+					break;
+				}
+
+				default:
+					break;
 			}
 		}
 
 		return expanded;
+	}
+
+	void Assembler::addPush(Statements &expanded, const std::vector<int> &regs, const Strings &labels) {
+		// expanded.push_back(std::make_shared<WASMStackNode>());
 	}
 }

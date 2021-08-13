@@ -8,11 +8,13 @@
 #include "parser/Parser.h"
 
 namespace Wasmc {
+	struct WASMInstructionNode;
+
 	using Long = uint64_t;
+	using Statements = std::vector<std::shared_ptr<WASMInstructionNode>>;
+	using Strings = std::vector<const std::string *>;
 
 	enum class SymbolType: unsigned {Unknown, KnownPointer, UnknownPointer, Code, Data};
-
-	struct WASMStatementNode;
 
 	class Assembler {
 		public:
@@ -27,6 +29,7 @@ namespace Wasmc {
 			std::unordered_set<const std::string *> allLabels, unknownSymbols;
 			std::unordered_map<const std::string *, const std::string *> dataVariables;
 			std::unordered_map<uint32_t, const std::string *> hashes;
+			bool verbose = false;
 
 			Long & metaOffsetSymbols() { return meta.at(0); }
 			Long & metaOffsetCode()    { return meta.at(1); }
@@ -54,7 +57,9 @@ namespace Wasmc {
 
 			std::vector<Long> convertDataPieces(const ASTNode *);
 
-			std::vector<std::unique_ptr<WASMStatementNode>> expandCode();
+			Statements expandCode();
+
+			void addPush(Statements &, const std::vector<int> &, const Strings &);
 	};
 
 }

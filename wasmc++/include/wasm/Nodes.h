@@ -25,22 +25,21 @@ namespace Wasmc {
 		WASMBaseNode(int sym);
 		virtual WASMNodeType nodeType() const = 0;
 		virtual operator std::string() const = 0;
-	};
+	};\
 
-	struct WASMStatementNode: public WASMBaseNode {
+	struct WASMInstructionNode: public WASMBaseNode {
 		int bang = -1;
 		std::vector<const std::string *> labels;
+		bool inSubroutine = false;
 
-		WASMStatementNode(ASTNode *statement);
-		WASMStatementNode * absorbIntbang(ASTNode *);
-		WASMStatementNode * absorbLabel(ASTNode *);
+		using WASMBaseNode::WASMBaseNode;
+
+		WASMInstructionNode * absorbIntbang(ASTNode *);
+		WASMInstructionNode * absorbLabel(ASTNode *);
+		WASMInstructionNode * setInSubroutine(bool);
 		virtual WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
-	};
-
-	struct WASMInstructionNode: public WASMBaseNode {
-		using WASMBaseNode::WASMBaseNode;
 	};
 
 	struct WASMImmediateNode: public WASMBaseNode {
@@ -312,6 +311,7 @@ namespace Wasmc {
 		bool isPush;
 
 		WASMStackNode(ASTNode *reg_, bool is_push);
+		WASMStackNode(const std::string *reg_, bool is_push);
 		WASMNodeType nodeType() const override { return WASMNodeType::Stack; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

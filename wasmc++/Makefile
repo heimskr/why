@@ -1,21 +1,21 @@
-COMPILER		?= clang++
-DEBUGGER		?= lldb
-OPTIMIZATION	?= -O0 -g
-STANDARD		?= c++20
-WARNINGS		?= -Wall -Wextra
-CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
-OUTPUT			?= wasmc++
-LEXFLAGS		:= -Wno-sign-compare -Wno-register
-WASMLEXCPP		:= src/parser/wasmlex.cpp
-WASMPARSECPP	:= src/parser/wasmparse.cpp
-WASMPARSEHDR	:= include/wasmparse.h
-WASMFLEXSRC		:= src/parser/wasm.l
-WASMBISONSRC	:= src/parser/wasm.y
+COMPILER        ?= clang++
+DEBUGGER        ?= lldb
+OPTIMIZATION    ?= -O0 -g
+STANDARD        ?= c++20
+WARNINGS        ?= -Wall -Wextra
+CFLAGS          := -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
+OUTPUT          ?= wasmc++
+LEXFLAGS        := -Wno-sign-compare -Wno-register
+WASMLEXCPP      := src/parser/wasmlex.cpp
+WASMPARSECPP    := src/parser/wasmparse.cpp
+WASMPARSEHDR    := include/wasmparse.h
+WASMFLEXSRC     := src/parser/wasm.l
+WASMBISONSRC    := src/parser/wasm.y
 
-CLOC_OPTIONS	:= --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
-BISON_OPTIONS	:= --color=always
-SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
-OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
+CLOC_OPTIONS    := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+BISON_OPTIONS   := --color=always
+SOURCES         := $(shell find src/**/*.cpp src/*.cpp)
+OBJECTS         := $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= ../wasm/examples/conditions.wasm
 
 .PHONY: all counter test clean count countbf
