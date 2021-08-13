@@ -44,5 +44,9 @@ namespace Wasmc {
 	struct Args {
 		std::vector<std::unique_ptr<Arg>> args;
 		Args(ASTNode *);
+		decltype(args)::const_iterator begin() const { return args.begin(); }
+		decltype(args)::const_iterator end() const { return args.end(); }
+		decltype(args)::const_iterator cbegin() const { return args.cbegin(); }
+		decltype(args)::const_iterator cend() const { return args.cend(); }
 	};
 }

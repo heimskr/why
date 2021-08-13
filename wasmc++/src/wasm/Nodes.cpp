@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
@@ -804,10 +805,21 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_CALLNODE), function(function_->lexerInfo), args(args_) {}
 
 	std::string WASMCallNode::debugExtra() const {
-		return "";
+		return std::string(*this);
 	}
 
 	WASMCallNode::operator std::string() const {
-		return "";
+		std::stringstream ss;
+		ss << *function << "(";
+		bool first = true;
+		for (const auto &arg: args) {
+			if (first)
+				first = false;
+			else
+				ss << ", ";
+			ss << std::string(*arg);
+		}
+		ss << ")";
+		return ss.str();
 	}
 }
