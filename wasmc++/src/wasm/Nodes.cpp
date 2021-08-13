@@ -443,6 +443,9 @@ namespace Wasmc {
 		}
 	}
 
+	WASMJNode::WASMJNode(const Immediate &addr, bool link_, Condition cond):
+		WASMInstructionNode(WASM_JNODE), HasImmediate(addr), condition(cond), link(link_) {}
+
 	std::string WASMJNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim(conditionString(condition) + std::string(link? "::" : ":")) + " "
 			+ colorize(imm);

@@ -212,6 +212,7 @@ namespace Wasmc {
 		bool link;
 
 		WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_);
+		WASMJNode(const Immediate &addr, bool link_ = false, Condition cond = Condition::None);
 		WASMNodeType nodeType() const override { return WASMNodeType::J; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
