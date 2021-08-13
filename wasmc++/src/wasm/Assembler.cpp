@@ -7,6 +7,7 @@
 #include "util/Util.h"
 #include "wasm/Assembler.h"
 #include "wasm/Nodes.h"
+#include "wasm/Registers.h"
 #include "wasm/Why.h"
 
 namespace Wasmc {
@@ -293,9 +294,8 @@ namespace Wasmc {
 						current_values.push_back(Why::returnAddressOffset);
 					for (size_t i = 0; i < args.size(); ++i)
 						current_values.push_back(Why::argumentOffset + i);
-					if (!current_values.empty()) {
-						addPush(expanded, current_values, instruction->labels);
-					}
+					if (!current_values.empty())
+						addStack(expanded, current_values, instruction->labels, true);
 					break;
 				}
 
@@ -307,7 +307,15 @@ namespace Wasmc {
 		return expanded;
 	}
 
-	void Assembler::addPush(Statements &expanded, const std::vector<int> &regs, const Strings &labels) {
-		// expanded.push_back(std::make_shared<WASMStackNode>());
+	void Assembler::addStack(Statements &expanded, const std::vector<int> &regs, const Strings &labels, bool is_push) {
+		bool first = true;
+		for (const int reg: regs) {
+			auto node = std::make_shared<WASMStackNode>(registerArray[reg], is_push);
+			if (first)
+				node->labels = labels;
+			else
+				first = false;
+			expanded.push_back(node);
+		}
 	}
 }

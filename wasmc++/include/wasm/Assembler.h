@@ -59,7 +59,7 @@ namespace Wasmc {
 
 			Statements expandCode();
 
-			void addPush(Statements &, const std::vector<int> &, const Strings &);
+			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push);
 	};
 
 }
