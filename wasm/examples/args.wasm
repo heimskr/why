@@ -1,0 +1,6 @@
+#data
+bar: 42
+
+#code
+foo($s0, &bar, *bar, 64)
+<halt>

@@ -144,6 +144,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
+%token WASM_ARGS
 
 %start start
 
@@ -207,7 +208,12 @@ label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
 call: ident "(" args ")" { $$ = new WASMCallNode($1, $3); D($2, $4); }
     | ident "(" ")"      { $$ = new WASMCallNode($1); D($2, $3); };
-args: "\n";
+args: args "," arg { $$ = $1->adopt($3); D($2); }
+    | arg { $$ = (new AN(Wasmc::wasmParser, WASM_ARGS))->adopt($1, true); };
+arg: "&" ident { $$ = $1->adopt($2); }
+   | "*" ident { $$ = $1->adopt($2); }
+   | number
+   | reg;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | reg shorthandable "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
