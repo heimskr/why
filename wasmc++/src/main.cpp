@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "parser/Parser.h"
+#include "wasm/Assembler.h"
 
 int main(int argc, char **argv) {
 	if (argc != 2) {
@@ -22,7 +23,9 @@ int main(int argc, char **argv) {
 	parser.in(text);
 	parser.debug(false, false);
 	parser.parse();
-	parser.root->debug();
+
+	Wasmc::Assembler assembler(parser);
+	assembler.assemble();
 
 	return 0;
 }
