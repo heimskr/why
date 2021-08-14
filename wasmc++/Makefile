@@ -15,7 +15,7 @@ WASMBISONSRC    := src/parser/wasm.y
 CLOC_OPTIONS    := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 BISON_OPTIONS   := --color=always
 SOURCES         := $(shell find src/**/*.cpp src/*.cpp)
-OBJECTS         := $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
+OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= ../wasm/examples/conditions.wasm
 
 .PHONY: all counter test clean count countbf
@@ -47,10 +47,8 @@ test: $(OUTPUT)
 	./$< $(TESTFILE)
 
 clean:
-	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png \
-		$(LLVMPARSEHDR) $(LLVMPARSECPP) $(LLVMLEXCPP) $(LLVMPARSECPP:.c=.output) $(LLVMLEXCPP) $(LLVMPARSECPP) \
-		$(WASMPARSEHDR) $(WASMPARSECPP) $(WASMLEXCPP) $(WASMPARSECPP:.c=.output) $(WASMLEXCPP) $(WASMPARSECPP) \
-		PVS-Studio.log report.tasks strace_out
+	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png PVS-Studio.log report.tasks strace_out \
+		$(WASMPARSEHDR) $(WASMPARSECPP) $(WASMLEXCPP) $(WASMPARSECPP:.c=.output) $(WASMLEXCPP) $(WASMPARSECPP)
 
 grind: $(OUTPUT)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=no ./$< $(TESTFILE)
