@@ -43,14 +43,16 @@ namespace Wasmc {
 		WASMInstructionNode * absorbLabel(ASTNode *);
 		WASMInstructionNode * setInSubroutine(bool);
 		WASMInstructionNode * setBang(int);
-		virtual WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
+		virtual WASMInstructionNode * copy() const = 0;
+		WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
 
 	struct WASMImmediateNode: WASMBaseNode, HasImmediate {
 		WASMImmediateNode(ASTNode *);
-		virtual WASMNodeType nodeType() const override { return WASMNodeType::Immediate; }
+		WASMImmediateNode(const Immediate &);
+		WASMNodeType nodeType() const override { return WASMNodeType::Immediate; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -59,7 +61,9 @@ namespace Wasmc {
 		const std::string *label;
 
 		WASMLabelNode(ASTNode *);
-		virtual WASMNodeType nodeType() const override { return WASMNodeType::Label; }
+		WASMLabelNode(const std::string *);
+		WASMInstructionNode * copy() const override;
+		WASMNodeType nodeType() const override { return WASMNodeType::Label; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -70,6 +74,9 @@ namespace Wasmc {
 		bool isUnsigned;
 
 		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_);
+		RNode(const std::string *rs_, const std::string *oper_, const std::string *rt_, const std::string *rd_,
+		      int oper_token, bool is_unsigned);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -81,6 +88,9 @@ namespace Wasmc {
 		bool isUnsigned;
 
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
+		INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
+		      int oper_token, bool is_unsigned);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -91,10 +101,13 @@ namespace Wasmc {
 		bool isByte;
 
 		WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMMemoryNode(int sym, const std::string *rs_, const std::string *rd_, bool is_byte);
 	};
 
 	struct WASMCopyNode: WASMMemoryNode {
 		WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMCopyNode(const std::string *rs_, const std::string *rd_, bool is_byte);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -102,6 +115,8 @@ namespace Wasmc {
 
 	struct WASMLoadNode: WASMMemoryNode {
 		WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMLoadNode(const std::string *rs_, const std::string *rd_, bool is_byte);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Load; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -109,6 +124,8 @@ namespace Wasmc {
 
 	struct WASMStoreNode: WASMMemoryNode {
 		WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMStoreNode(const std::string *rs_, const std::string *rd_, bool is_byte);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -119,6 +136,7 @@ namespace Wasmc {
 
 		WASMSetNode(ASTNode *imm_, ASTNode *rd_);
 		WASMSetNode(const Immediate &imm_, const std::string *rd_);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

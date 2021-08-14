@@ -140,6 +140,8 @@ namespace Wasmc {
 		delete node;
 	}
 
+	WASMImmediateNode::WASMImmediateNode(const Immediate &imm_): WASMBaseNode(WASM_IMMEDIATE), HasImmediate(imm_) {}
+
 	std::string WASMImmediateNode::debugExtra() const {
 		return colorize(imm);
 	}
@@ -150,6 +152,12 @@ namespace Wasmc {
 
 	WASMLabelNode::WASMLabelNode(ASTNode *label_): WASMInstructionNode(WASM_LABEL), label(label_->lexerInfo) {
 		delete label_;
+	}
+
+	WASMLabelNode::WASMLabelNode(const std::string *label_): WASMInstructionNode(WASM_LABEL), label(label_) {}
+
+	WASMInstructionNode * WASMLabelNode::copy() const {
+		return new WASMLabelNode(label);
 	}
 
 	std::string WASMLabelNode::debugExtra() const {
@@ -170,6 +178,15 @@ namespace Wasmc {
 		delete rd_;
 		if (unsigned_)
 			delete unsigned_;
+	}
+
+	RNode::RNode(const std::string *rs_, const std::string *oper_, const std::string *rt_, const std::string *rd_,
+	             int oper_token, bool is_unsigned):
+		WASMInstructionNode(WASM_RNODE), rs(rs_), oper(oper_), rt(rt_), rd(rd_), operToken(oper_token),
+		isUnsigned(is_unsigned) {}
+
+	WASMInstructionNode * RNode::copy() const {
+		return new RNode(rs, oper, rt, rd, operToken, isUnsigned);
 	}
 
 	std::string RNode::debugExtra() const {
@@ -195,6 +212,15 @@ namespace Wasmc {
 			delete unsigned_;
 	}
 
+	INode::INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
+	             int oper_token, bool is_unsigned):
+		WASMInstructionNode(WASM_INODE), HasImmediate(imm_), rs(rs_), oper(oper_), rd(rd_), operToken(oper_token),
+		isUnsigned(is_unsigned) {}
+
+	WASMInstructionNode * INode::copy() const {
+		return new INode(rs, oper, imm, rd, operToken, isUnsigned);
+	}
+
 	std::string INode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + " " + dim(*oper) + " " + colorize(imm) + dim(" -> ")
 			+ cyan(*rd) + (isUnsigned? " /u" : "");
@@ -213,8 +239,18 @@ namespace Wasmc {
 			delete byte_;
 	}
 
+	WASMMemoryNode::WASMMemoryNode(int sym, const std::string *rs_, const std::string *rd_, bool is_byte):
+		WASMInstructionNode(sym), rs(rs_), rd(rd_), isByte(is_byte) {}
+
 	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
 		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, byte_) {}
+
+	WASMCopyNode::WASMCopyNode(const std::string *rs_, const std::string *rd_, bool is_byte):
+		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, is_byte) {}
+
+	WASMInstructionNode * WASMCopyNode::copy() const {
+		return new WASMCopyNode(rs, rd, isByte);
+	}
 
 	std::string WASMCopyNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]")
@@ -228,6 +264,13 @@ namespace Wasmc {
 	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
 		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, byte_) {}
 
+	WASMLoadNode::WASMLoadNode(const std::string *rs_, const std::string *rd_, bool is_byte):
+		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, is_byte) {}
+
+	WASMInstructionNode * WASMLoadNode::copy() const {
+		return new WASMLoadNode(rs, rd, isByte);
+	}
+
 	std::string WASMLoadNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd)
 			+ (isByte? " /b" : "");
@@ -239,6 +282,13 @@ namespace Wasmc {
 
 	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
 		WASMMemoryNode(WASM_STORENODE, rs_, rd_, byte_) {}
+
+	WASMStoreNode::WASMStoreNode(const std::string *rs_, const std::string *rd_, bool is_byte):
+		WASMMemoryNode(WASM_STORENODE, rs_, rd_, is_byte) {}
+
+	WASMInstructionNode * WASMStoreNode::copy() const {
+		return new WASMStoreNode(rs, rd, isByte);
+	}
 
 	std::string WASMStoreNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]")
@@ -257,6 +307,10 @@ namespace Wasmc {
 
 	WASMSetNode::WASMSetNode(const Immediate &imm_, const std::string *rd_):
 		WASMInstructionNode(WASM_SETNODE), HasImmediate(imm_), rd(rd_) {}
+
+	WASMInstructionNode * WASMSetNode::copy() const {
+		return new WASMSetNode(imm, rd);
+	}
 
 	std::string WASMSetNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + colorize(imm) + dim(" -> ") + cyan(*rd);
