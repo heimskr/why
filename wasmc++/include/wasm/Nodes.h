@@ -148,6 +148,7 @@ namespace Wasmc {
 
 		WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
 		WASMLiNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -158,6 +159,8 @@ namespace Wasmc {
 		bool isByte;
 
 		WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_);
+		WASMSiNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Si; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -165,6 +168,8 @@ namespace Wasmc {
 
 	struct WASMLniNode: WASMLiNode {
 		WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
+		WASMLniNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
+		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -174,10 +179,13 @@ namespace Wasmc {
 		const std::string *rs, *rd;
 
 		WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
+		WASMHalfMemoryNode(int sym, const std::string *rs_, const std::string *rd_);
 	};
 
 	struct WASMChNode: WASMHalfMemoryNode {
 		WASMChNode(ASTNode *rs_, ASTNode *rd_);
+		WASMChNode(const std::string *rs_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMChNode(rs, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Ch; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -185,6 +193,8 @@ namespace Wasmc {
 
 	struct WASMLhNode: WASMHalfMemoryNode {
 		WASMLhNode(ASTNode *rs_, ASTNode *rd_);
+		WASMLhNode(const std::string *rs_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMLhNode(rs, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Lh; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -192,6 +202,8 @@ namespace Wasmc {
 
 	struct WASMShNode: WASMHalfMemoryNode {
 		WASMShNode(ASTNode *rs_, ASTNode *rd_);
+		WASMShNode(const std::string *rs_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMShNode(rs, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -201,6 +213,8 @@ namespace Wasmc {
 		const std::string *rs, *rt;
 
 		WASMCmpNode(ASTNode *rs_, ASTNode *rt_);
+		WASMCmpNode(const std::string *rs_, const std::string *rt_);
+		WASMInstructionNode * copy() const override { return new WASMCmpNode(rs, rt); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmp; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -210,6 +224,8 @@ namespace Wasmc {
 		const std::string *rs;
 
 		WASMCmpiNode(ASTNode *rs_, ASTNode *imm_);
+		WASMCmpiNode(const std::string *rs_, const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMCmpiNode(rs, imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -220,6 +236,8 @@ namespace Wasmc {
 		Condition condition;
 
 		WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
+		WASMSelNode(const std::string *rs_, Condition cond, const std::string *rt_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMSelNode(rs, condition, rt, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Sel; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -231,6 +249,7 @@ namespace Wasmc {
 
 		WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_);
 		WASMJNode(const Immediate &addr, bool link_ = false, Condition cond = Condition::None);
+		WASMInstructionNode * copy() const override { return new WASMJNode(imm, link, condition); }
 		WASMNodeType nodeType() const override { return WASMNodeType::J; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -241,6 +260,8 @@ namespace Wasmc {
 		const std::string *rs;
 
 		WASMJcNode(WASMJNode *, ASTNode *rs_);
+		WASMJcNode(const Immediate &imm_, bool link_, const std::string *rs_);
+		WASMInstructionNode * copy() const override { return new WASMJcNode(imm, link, rs); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jc; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -254,6 +275,8 @@ namespace Wasmc {
 
 		WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_);
 		WASMJrNode(Condition condition_, bool link_, const std::string &rd_);
+		WASMJrNode(Condition condition_, bool link_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMJrNode(condition, link, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jr; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -265,6 +288,8 @@ namespace Wasmc {
 		const std::string *rs, *rd;
 
 		WASMJrcNode(WASMJrNode *, ASTNode *rs_);
+		WASMJrcNode(bool link_, const std::string *rs_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMJrcNode(link, rs, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jrc; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -277,6 +302,8 @@ namespace Wasmc {
 		bool isPush;
 
 		WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push);
+		WASMSizedStackNode(long size_, const std::string *rs_, bool is_push);
+		WASMInstructionNode * copy() const override { return new WASMSizedStackNode(size, rs, isPush); }
 		WASMNodeType nodeType() const override { return WASMNodeType::SizedStack; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -287,6 +314,8 @@ namespace Wasmc {
 		bool isUnsigned;
 
 		WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_ = nullptr);
+		WASMMultRNode(const std::string *rs_, const std::string *rt_, bool is_unsigned);
+		WASMInstructionNode * copy() const override { return new WASMMultRNode(rs, rt, isUnsigned); }
 		WASMNodeType nodeType() const override { return WASMNodeType::MultR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -297,6 +326,8 @@ namespace Wasmc {
 		bool isUnsigned;
 
 		WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_ = nullptr);
+		WASMMultINode(const std::string *rs_, const Immediate &imm_, bool is_unsigned);
+		WASMInstructionNode * copy() const override { return new WASMMultINode(rs, imm, isUnsigned); }
 		WASMNodeType nodeType() const override { return WASMNodeType::MultI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -307,6 +338,8 @@ namespace Wasmc {
 		bool isUnsigned;
 
 		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_ = nullptr);
+		WASMDiviINode(const Immediate &imm_, const std::string *rs_, const std::string *rd_, bool is_unsigned);
+		WASMInstructionNode * copy() const override { return new WASMDiviINode(imm, rs, rd, isUnsigned); }
 		WASMNodeType nodeType() const override { return WASMNodeType::DiviI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -316,6 +349,8 @@ namespace Wasmc {
 		const std::string *rd;
 
 		WASMLuiNode(ASTNode *imm_, ASTNode *rd_);
+		WASMLuiNode(const Immediate &imm_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMLuiNode(imm, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Lui; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -327,6 +362,7 @@ namespace Wasmc {
 
 		WASMStackNode(ASTNode *reg_, bool is_push);
 		WASMStackNode(const std::string *reg_, bool is_push);
+		WASMInstructionNode * copy() const override { return new WASMStackNode(reg, isPush); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Stack; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -334,6 +370,7 @@ namespace Wasmc {
 
 	struct WASMNopNode: WASMInstructionNode {
 		WASMNopNode();
+		WASMInstructionNode * copy() const override { return new WASMNopNode(); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Nop; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -341,6 +378,8 @@ namespace Wasmc {
 
 	struct WASMIntINode: WASMInstructionNode, HasImmediate {
 		WASMIntINode(ASTNode *imm_);
+		WASMIntINode(const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMIntINode(imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::IntI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -348,6 +387,8 @@ namespace Wasmc {
 
 	struct WASMRitINode: WASMInstructionNode, HasImmediate {
 		WASMRitINode(ASTNode *imm_);
+		WASMRitINode(const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMRitINode(imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::RitI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -355,6 +396,8 @@ namespace Wasmc {
 
 	struct WASMTimeINode: WASMInstructionNode, HasImmediate {
 		WASMTimeINode(ASTNode *imm_);
+		WASMTimeINode(const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMTimeINode(imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -364,6 +407,8 @@ namespace Wasmc {
 		const std::string *rs;
 
 		WASMTimeRNode(ASTNode *rs_);
+		WASMTimeRNode(const std::string *rs_);
+		WASMInstructionNode * copy() const override { return new WASMTimeRNode(rs); }
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -371,6 +416,8 @@ namespace Wasmc {
 
 	struct WASMRingINode: WASMInstructionNode, HasImmediate {
 		WASMRingINode(ASTNode *imm_);
+		WASMRingINode(const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMRingINode(imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::RingI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -380,6 +427,8 @@ namespace Wasmc {
 		const std::string *rs;
 
 		WASMRingRNode(ASTNode *rs_);
+		WASMRingRNode(const std::string *rs_);
+		WASMInstructionNode * copy() const override { return new WASMRingRNode(rs); }
 		WASMNodeType nodeType() const override { return WASMNodeType::RingR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -391,6 +440,7 @@ namespace Wasmc {
 
 		WASMPrintNode(ASTNode *rs_, ASTNode *type_);
 		WASMPrintNode(const std::string *rs_, PrintType type_);
+		WASMInstructionNode * copy() const override { return new WASMPrintNode(rs, type); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Print; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -398,6 +448,7 @@ namespace Wasmc {
 
 	struct WASMHaltNode: WASMInstructionNode {
 		WASMHaltNode();
+		WASMInstructionNode * copy() const override { return new WASMHaltNode(); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Halt; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -407,6 +458,8 @@ namespace Wasmc {
 		const std::string *rs;
 
 		WASMSleepRNode(ASTNode *rs_);
+		WASMSleepRNode(const std::string *rs_);
+		WASMInstructionNode * copy() const override { return new WASMSleepRNode(rs); }
 		WASMNodeType nodeType() const override { return WASMNodeType::SleepR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -416,6 +469,7 @@ namespace Wasmc {
 		bool on;
 
 		WASMPageNode(bool on_);
+		WASMInstructionNode * copy() const override { return new WASMPageNode(on); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Page; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -423,6 +477,8 @@ namespace Wasmc {
 
 	struct WASMSetptINode: WASMInstructionNode, HasImmediate {
 		WASMSetptINode(ASTNode *imm_);
+		WASMSetptINode(const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMSetptINode(imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::SetptI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -432,6 +488,8 @@ namespace Wasmc {
 		const std::string *rs;
 
 		WASMSetptRNode(ASTNode *rs_);
+		WASMSetptRNode(const std::string *rs_);
+		WASMInstructionNode * copy() const override { return new WASMSetptRNode(rs); }
 		WASMNodeType nodeType() const override { return WASMNodeType::SetptR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -442,6 +500,7 @@ namespace Wasmc {
 
 		WASMMvNode(ASTNode *rs_, ASTNode *rd_);
 		WASMMvNode(const std::string *rs_, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMMvNode(rs, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Mv; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -451,6 +510,8 @@ namespace Wasmc {
 		const std::string *rd;
 
 		WASMSvpgNode(ASTNode *rd_);
+		WASMSvpgNode(const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMSvpgNode(rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Svpg; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -461,6 +522,8 @@ namespace Wasmc {
 		const std::string *rd;
 
 		WASMQueryNode(QueryType, ASTNode *rd_);
+		WASMQueryNode(QueryType, const std::string *rd_);
+		WASMInstructionNode * copy() const override { return new WASMQueryNode(type, rd); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Query; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -468,6 +531,8 @@ namespace Wasmc {
 
 	struct WASMPseudoPrintNode: WASMInstructionNode, HasImmediate {
 		WASMPseudoPrintNode(ASTNode *imm_);
+		WASMPseudoPrintNode(const Immediate &imm_);
+		WASMInstructionNode * copy() const override { return new WASMPseudoPrintNode(imm); }
 		WASMNodeType nodeType() const override { return WASMNodeType::PseudoPrint; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -477,6 +542,8 @@ namespace Wasmc {
 		const std::string *string;
 
 		WASMStringPrintNode(ASTNode *string_);
+		WASMStringPrintNode(const std::string *string_);
+		WASMInstructionNode * copy() const override { return new WASMStringPrintNode(string); }
 		WASMNodeType nodeType() const override { return WASMNodeType::StringPrint; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -487,6 +554,8 @@ namespace Wasmc {
 		Args args;
 
 		WASMCallNode(ASTNode *function_, ASTNode *args_ = nullptr);
+		WASMCallNode(const std::string *function_, const Args &args_);
+		WASMInstructionNode * copy() const override { return new WASMCallNode(function, args); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Call; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

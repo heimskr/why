@@ -6,9 +6,7 @@
 #include "wasm/Registers.h"
 
 namespace Wasmc {
-	RegisterArg::RegisterArg(ASTNode *node) {
-		reg = registerMap.at(node->lexerInfo);
-	}
+	RegisterArg::RegisterArg(ASTNode *node): reg(registerMap.at(node->lexerInfo)) {}
 
 	RegisterArg::operator std::string() const {
 		return *registerArray[reg];
@@ -56,5 +54,11 @@ namespace Wasmc {
 			}
 			delete node;
 		}
+	}
+
+	Args::Args(const Args &other) {
+		args.reserve(other.args.size());
+		for (const auto &arg: other.args)
+			args.emplace_back(arg->copy());
 	}
 }
