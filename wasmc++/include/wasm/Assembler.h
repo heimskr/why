@@ -15,8 +15,6 @@ namespace Wasmc {
 	using Statements = std::vector<std::shared_ptr<WASMInstructionNode>>;
 	using Strings = std::vector<const std::string *>;
 
-	enum class SymbolType: unsigned {Unknown, KnownPointer, UnknownPointer, Code, Data};
-
 	class Assembler {
 		public:
 			Assembler(Parser &);
@@ -30,6 +28,7 @@ namespace Wasmc {
 			std::unordered_set<const std::string *> allLabels, unknownSymbols;
 			std::unordered_map<const std::string *, const std::string *> dataVariables;
 			std::unordered_map<uint32_t, const std::string *> hashes;
+			size_t dataLength = 0;
 			bool verbose = false;
 
 			Long & metaOffsetSymbols() { return meta.at(0); }
@@ -66,6 +65,8 @@ namespace Wasmc {
 			void addMove(Statements &, const WASMInstructionNode *);
 
 			void addPseudoPrint(Statements &, const WASMInstructionNode *);
+
+			void addStringPrint(Statements &, const WASMInstructionNode *);
 
 			void addCall(Statements &, const WASMInstructionNode *);
 

@@ -15,6 +15,8 @@ namespace Wasmc {
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI
 	};
 
+	enum class SymbolType: unsigned {Unknown, KnownPointer, UnknownPointer, Code, Data};
+
 	class WhyInstruction;
 	class Function;
 	class Variable;
@@ -41,6 +43,7 @@ namespace Wasmc {
 		int bang = -1;
 		std::vector<const std::string *> labels;
 		bool inSubroutine = false;
+		SymbolType symbolType = SymbolType::Unknown;
 
 		using WASMBaseNode::WASMBaseNode;
 
@@ -48,6 +51,7 @@ namespace Wasmc {
 		WASMInstructionNode * absorbLabel(ASTNode *);
 		WASMInstructionNode * setInSubroutine(bool);
 		WASMInstructionNode * setBang(int);
+		WASMInstructionNode * setSymbolType(SymbolType);
 		virtual WASMInstructionNode * copy() const = 0;
 		WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
 		std::string debugExtra() const override;

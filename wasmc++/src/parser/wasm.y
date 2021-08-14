@@ -311,7 +311,7 @@ op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
 printop: "print" | "prx" | "prd" | "prc" | "prb" | "p";
 
 op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
-         | "<" "p"   immediate ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); };
+         | "<" "p"   character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); };
 
 op_sprint: "<" "p" string ">" { $$ = new WASMStringPrintNode($3); D($1, $2, $4); };
 

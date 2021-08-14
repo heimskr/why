@@ -161,10 +161,11 @@ namespace Wasmc {
 		return Util::parseLong(lexerInfo->substr(offset));
 	}
 
-	std::string ASTNode::unquote() const {
+	std::string ASTNode::unquote(bool unescape) const {
 		if (lexerInfo->size() < 2 || lexerInfo->front() != '"' || lexerInfo->back() != '"')
 			throw std::runtime_error("Not a quoted string: " + *lexerInfo);
-		return lexerInfo->substr(1, lexerInfo->size() - 2);
+		const std::string out = lexerInfo->substr(1, lexerInfo->size() - 2);
+		return unescape? Util::unescape(out) : out;
 	}
 
 	const char * ASTNode::getName() const {

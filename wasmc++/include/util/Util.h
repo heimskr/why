@@ -35,6 +35,7 @@ namespace Wasmc::Util {
 	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 
 	std::string escape(const std::string &);
+	std::string unescape(const std::string &);
 
 	std::string toHex(size_t);
 	std::string toHex(const void *);

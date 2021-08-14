@@ -22,6 +22,16 @@ namespace Wasmc {
 		processData();
 
 		const auto expanded = expandCode();
+		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
+		metaOffsetDebug() = metaOffsetData() + dataLength; // TODO: verify
+
+		std::cerr << "metaOffsetSymbols: " << metaOffsetSymbols() << "\n";
+		std::cerr << "metaOffsetCode: " << metaOffsetCode() << "\n";
+		std::cerr << "metaOffsetData: " << metaOffsetData() << "\n";
+		std::cerr << "metaOffsetDebug: " << metaOffsetDebug() << "\n";
+		std::cerr << "metaOffsetEnd: " << metaOffsetEnd() << "\n";
+
+		for (const auto &instruction: expanded) instruction->debug();
 	}
 
 	void Assembler::validateSectionCounts() {
@@ -158,16 +168,16 @@ namespace Wasmc {
 			for (const ASTNode *node: *metaNode)
 				switch (node->symbol) {
 					case WASMTOK_NAME:
-						name = *node->front()->lexerInfo;
+						name = node->front()->unquote();
 						break;
 					case WASMTOK_AUTHOR:
-						author = *node->front()->lexerInfo;
+						author = node->front()->unquote();
 						break;
 					case WASMTOK_VERSION:
-						version = *node->front()->lexerInfo;
+						version = node->front()->unquote();
 						break;
 					case WASMTOK_ORCID:
-						orcid = *node->front()->lexerInfo;
+						orcid = node->front()->unquote();
 						break;
 					default:
 						throw std::runtime_error("Unexpected symbol found in meta section at "
@@ -202,6 +212,9 @@ namespace Wasmc {
 			meta.push_back(piece);
 
 		metaOffsetSymbols() = meta.size() * 8;
+		size_t i = 0;
+		for (Long piece: meta)
+			std::cout << i++ << ": " << Util::toHex(piece) << "\n";
 		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
 	}
 
@@ -209,19 +222,22 @@ namespace Wasmc {
 		if (!dataNode)
 			return;
 
-		size_t length = 0;
+		data.clear();
+		dataOffsets.clear();
+		dataLength = 0;
+
 		for (ASTNode *node: *dataNode) {
 			const std::string *ident = node->lexerInfo;
 			if (ident->front() != '%') {
 				if (verbose)
-					std::cerr << "Assigning " << length << " to " << *ident << "\n";
-				dataOffsets.emplace(ident, length);
+					std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
+				dataOffsets.emplace(ident, dataLength);
 			}
 
 			const auto pieces = convertDataPieces(node);
 			for (const Long piece: pieces)
 				data.push_back(piece);
-			length += pieces.size() * 8;
+			dataLength += pieces.size() * 8;
 		}
 	}
 
@@ -260,10 +276,6 @@ namespace Wasmc {
 		Statements expanded;
 		expanded.reserve(codeNode->size());
 
-		// auto add = [&](std::shared_ptr<WASMStatementNode> &&statement) {
-		// 	expanded.push_back(statement);
-		// };
-
 		for (const ASTNode *node: *codeNode) {
 			const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
 			if (!instruction) {
@@ -288,6 +300,10 @@ namespace Wasmc {
 
 				case WASMNodeType::PseudoPrint:
 					addPseudoPrint(expanded, instruction);
+					break;
+
+				case WASMNodeType::StringPrint:
+					addStringPrint(expanded, instruction);
 					break;
 
 				case WASMNodeType::Mv:
@@ -360,30 +376,33 @@ namespace Wasmc {
 
 	void Assembler::addPseudoPrint(Statements &expanded, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
-		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
 		if (std::holds_alternative<char>(print->imm)) {
+			const std::string *m7 = registerArray[Why::assemblerOffset + 7];
 			expanded.emplace_back(new WASMSetNode(print->imm, m7));
 			expanded.emplace_back(new WASMPrintNode(m7, PrintType::Char));
-		} else if (std::holds_alternative<const std::string *>(print->imm)) {
-			const std::string &str = *std::get<const std::string *>(print->imm);
-			if (str.empty())
-				return;
-			char last_char = str.front() - 1;
-			bool first = true;
-			for (char ch: str) {
-				if (ch != last_char) {
-					auto *set = (new WASMSetNode(ch, m7))->setBang(print->bang);
-					if (first)
-						set->labels = print->labels;
-					first = false;
-					expanded.emplace_back(set);
-					last_char = ch;
-				}
+		} else
+			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
+	}
 
-				expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(print->bang));
+	void Assembler::addStringPrint(Statements &expanded, const WASMInstructionNode *instruction) {
+		const auto *print = dynamic_cast<const WASMStringPrintNode *>(instruction);
+		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+		const std::string &str = *print->string;
+		if (str.empty())
+			return;
+		char last_char = str.front() - 1;
+		bool first = true;
+		for (char ch: str) {
+			if (ch != last_char) {
+				auto *set = (new WASMSetNode(ch, m7))->setBang(print->bang);
+				if (first)
+					set->labels = print->labels;
+				first = false;
+				expanded.emplace_back(set);
+				last_char = ch;
 			}
-		} else {
-			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char or string");
+
+			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(print->bang));
 		}
 	}
 

@@ -66,6 +66,11 @@ namespace Wasmc {
 		return this;
 	}
 
+	WASMInstructionNode * WASMInstructionNode::setSymbolType(SymbolType value) {
+		symbolType = value;
+		return this;
+	}
+
 	std::string WASMInstructionNode::debugExtra() const {
 		std::string out = "";
 		for (const std::string *label: labels)

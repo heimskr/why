@@ -77,6 +77,29 @@ namespace Wasmc::Util {
 		return out.str();
 	}
 
+	std::string unescape(const std::string &str) {
+		const size_t size = str.size();
+		if (size == 0)
+			return "";
+		std::stringstream out;
+		for (size_t i = 0; i < size; ++i) {
+			char ch = str[i];
+			if (ch == '\\') {
+				if (i == size - 1)
+					throw std::runtime_error("Backslash at end of string");
+				switch (str[++i]) {
+					case 'n':  out << '\n'; break;
+					case 'r':  out << '\r'; break;
+					case 't':  out << '\t'; break;
+					case '\\': out << '\\'; break;
+					default: throw std::runtime_error("Unrecognized character: \\" + std::string(1, str[i]));
+				}
+			} else
+				out << ch;
+		}
+		return out.str();
+	}
+
 	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense) {
 		if (str.empty())
 			return {};
