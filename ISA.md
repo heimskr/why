@@ -1083,7 +1083,7 @@ Copies the value of `rs` into `rd`.
 Translation:  
 <code>$rs [|](#op-or) $0 -> $rd</code>
 
-### <a name="op-ret"></a>Return (`ret`)
+### <s><a name="op-ret"></a>Return (`ret`)</s> (deprecated in wasmc++)
 > `ret`
 
 Jumps to the return address.
@@ -1091,7 +1091,7 @@ Jumps to the return address.
 Translation:  
 <code>[:](#op-jr) $r</code>
 
-### <a name="op-push"></a>Push (`push`)
+### <s><a name="op-push"></a>Push (`push`)</s> (deprecated in wasmc++)
 > `[ $x $y $z ...`
 
 Pushes the value of the specified register(s) to the stack. Acts as a shorthand for calling
@@ -1100,7 +1100,7 @@ Pushes the value of the specified register(s) to the stack. Acts as a shorthand 
 Translation for each register in order:  
 <code><a href="#op-spush">[</a> $rs</code>
 
-### <a name="op-pop"></a>Pop (`pop`)
+### <s><a name="op-pop"></a>Pop (`pop`)</s> (deprecated in wasmc++)
 > `] $x $y $z`
 
 Pops the value(s) at the top of the stack and stores the value(s) in the specified register(s).
@@ -1112,20 +1112,15 @@ Translation for each register in order:
 ### <a name="op-jeq"></a>Jump if Equal (`jeq`)
 > `: $rd if $rs == $rt`
 
-If the value in `rs` is equal to the value in `rt`, jumps to the address stored in `rd` (or to the address of `var`). (Modifies `m0`.)
+If the value in `rs` is equal to the value in `rt`, jumps to the address stored in `rd`. (Modifies `m7`.)
 
 Translation:  
-<code>$rs [==](#op-seq) $rt -> $m0</code>  
-<code>[:](#op-jrc) $rd if $m0</code>
+<code>$rs [==](#op-seq) $rt -> $m7</code>  
+<code>[:](#op-jrc) $rd if $m7</code>
 
 > `: label if $rs == $rt`
 
-If the value in `rs` is equal to the value in `rt`, jumps to `label`. (Modifies `m0` and `m1`.)
-
-Translation:  
-<code>$rs [==](#op-seq) $rt -> $m0</code>  
-<code>[label] [->](#op-li) $m1</code>  
-<code>[:](#op-jrc) $m1 if $m0</code>
+If the value in `rs` is equal to the value in `rt`, jumps to `label`. (Modifies `m7`.)
 
 ### <a name="op-sge"></a>Set on Greater Than or Equal (`sge`)
 > `$rs >= $rt -> $rd`
