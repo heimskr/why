@@ -290,12 +290,23 @@ namespace Wasmc {
 					addPseudoPrint(expanded, instruction);
 					break;
 
+				case WASMNodeType::Mv:
+					addMove(expanded, instruction);
+					break;
+
 				default:
+					expanded.emplace_back(instruction->copy());
 					break;
 			}
 		}
 
 		return expanded;
+	}
+
+	void Assembler::addMove(Statements &expanded, const WASMInstructionNode *instruction) {
+		const auto *move = dynamic_cast<const WASMMvNode *>(instruction);
+		expanded.emplace_back(new RNode(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
+			WASMTOK_OR, false));
 	}
 
 	void Assembler::addPseudoPrint(Statements &expanded, const WASMInstructionNode *instruction) {

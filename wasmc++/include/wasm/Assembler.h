@@ -59,6 +59,8 @@ namespace Wasmc {
 
 			Statements expandCode();
 
+			void addMove(Statements &, const WASMInstructionNode *);
+
 			void addPseudoPrint(Statements &, const WASMInstructionNode *);
 
 			void addCall(Statements &, const WASMInstructionNode *);
