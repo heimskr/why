@@ -724,6 +724,9 @@ namespace Wasmc {
 		delete type_;
 	}
 
+	WASMPrintNode::WASMPrintNode(const std::string *rs_, PrintType type_):
+		WASMInstructionNode(WASM_PRINTNODE), rs(rs_), type(type_) {}
+
 	std::string WASMPrintNode::debugExtra() const {
 		const std::string base = WASMInstructionNode::debugExtra();
 		switch (type) {

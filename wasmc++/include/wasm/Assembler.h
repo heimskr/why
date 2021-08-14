@@ -59,6 +59,8 @@ namespace Wasmc {
 
 			Statements expandCode();
 
+			void addPseudoPrint(Statements &, const WASMInstructionNode *);
+
 			void addCall(Statements &, const WASMInstructionNode *);
 
 			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push);

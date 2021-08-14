@@ -372,6 +372,7 @@ namespace Wasmc {
 		PrintType type;
 
 		WASMPrintNode(ASTNode *rs_, ASTNode *type_);
+		WASMPrintNode(const std::string *rs_, PrintType type_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Print; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

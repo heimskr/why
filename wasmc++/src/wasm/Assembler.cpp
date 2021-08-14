@@ -286,12 +286,45 @@ namespace Wasmc {
 					addCall(expanded, instruction);
 					break;
 
+				case WASMNodeType::PseudoPrint:
+					addPseudoPrint(expanded, instruction);
+					break;
+
 				default:
 					break;
 			}
 		}
 
 		return expanded;
+	}
+
+	void Assembler::addPseudoPrint(Statements &expanded, const WASMInstructionNode *instruction) {
+		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
+		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+		if (std::holds_alternative<char>(print->imm)) {
+			expanded.emplace_back(new WASMSetNode(print->imm, m7));
+			expanded.emplace_back(new WASMPrintNode(m7, PrintType::Char));
+		} else if (std::holds_alternative<const std::string *>(print->imm)) {
+			const std::string &str = *std::get<const std::string *>(print->imm);
+			if (str.empty())
+				return;
+			char last_char = str.front() - 1;
+			bool first = true;
+			for (char ch: str) {
+				if (ch != last_char) {
+					auto *set = (new WASMSetNode(ch, m7))->setBang(print->bang);
+					if (first)
+						set->labels = print->labels;
+					first = false;
+					expanded.emplace_back(set);
+					last_char = ch;
+				}
+
+				expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(print->bang));
+			}
+		} else {
+			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char or string");
+		}
 	}
 
 	void Assembler::addCall(Statements &expanded, const WASMInstructionNode *instruction) {
