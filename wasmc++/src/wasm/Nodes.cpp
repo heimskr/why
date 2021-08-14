@@ -4,33 +4,9 @@
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
+#include "util/Color.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
-
-
-static std::string cyan(const std::string &interior) {
-	return "\e[36m" + interior + "\e[39m";
-}
-
-static std::string dim(const std::string &interior) {
-	return "\e[2m" + interior + "\e[22m";
-}
-
-static std::string red(const std::string &interior) {
-	return "\e[31m" + interior + "\e[39m";
-}
-
-static std::string blue(const std::string &interior) {
-	return "\e[34m" + interior + "\e[39m";
-}
-
-static std::string orange(const std::string &interior) {
-	return "\e[38;5;202m" + interior + "\e[39m";
-}
-
-static std::string bold(const std::string &interior) {
-	return "\e[1m" + interior + "\e[22m";
-}
 
 namespace Wasmc {
 	static Condition getCondition(const std::string &str) {
@@ -58,37 +34,6 @@ namespace Wasmc {
 				throw std::runtime_error("Invalid condition in WASMJNode: "
 					+ std::to_string(static_cast<int>(condition)));
 		}
-	}
-
-	static Immediate getImmediate(ASTNode *node) {
-		if (node->symbol == WASM_IMMEDIATE)
-			return dynamic_cast<WASMImmediateNode *>(node)->imm;
-		if (node->symbol == WASMTOK_NUMBER)
-			return static_cast<int>(node->atoi());
-		if (node->symbol == WASMTOK_CHAR) {
-			const std::string middle = node->lexerInfo->substr(1, node->lexerInfo->size() - 2);
-			if (middle.size() == 1)
-				return middle.front();
-			if (middle.front() != '\\') {
-				if (middle == "$(")
-					return '{';
-				if (middle == "$)")
-					return '}';
-				throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
-			}
-			size_t pos = middle.find_first_not_of("\\");
-			if (pos == std::string::npos)
-				return '\\';
-			switch (middle[pos]) {
-				case 'n': return '\n';
-				case 'r': return '\r';
-				case 'a': return '\a';
-				case 't': return '\t';
-				case 'b': return '\b';
-				default:  throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
-			}
-		}
-		return node->lexerInfo;
 	}
 
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
@@ -549,6 +494,32 @@ namespace Wasmc {
 	WASMJNode::operator std::string() const {
 		return WASMInstructionNode::operator std::string() + conditionString(condition) + std::string(link? "::" : ":")
 			+ " " + toString(imm);
+	}
+
+	WASMJeqNode::WASMJeqNode(WASMJNode *j, ASTNode *rs_, ASTNode *rt_):
+	WASMInstructionNode(WASM_JEQNODE), link(j? j->link : false), addr(j? j->imm : 0), rt(getEither(rt_)),
+	rs(rs_->lexerInfo) {
+		if (!j) {
+			wasmerror("No WASMCJNode found in jeq instruction");
+		} else {
+			if (j->condition != Condition::None)
+				wasmerror("Conditions specified for jeq instruction will be ignored");
+			delete j;
+		}
+		delete rs_;
+	}
+
+	WASMJeqNode::WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_):
+		WASMInstructionNode(WASM_JEQNODE), link(link_), addr(addr_), rt(rt_), rs(rs_) {}
+
+	std::string WASMJeqNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim(link? "::" : ":") + " " + colorize(addr) + red(" if ")
+			+ cyan(*rs) + " == " + colorize(rt);
+	}
+
+	WASMJeqNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + std::string(link? "::" : ":") + " " + toString(addr)
+			+ " if " + *rs + " == " + toString(rt);
 	}
 
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
@@ -1060,5 +1031,10 @@ namespace Wasmc {
 		}
 		ss << ")";
 		return ss.str();
+	}
+
+	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd) {
+		static const auto deq = StringSet::intern("==");
+		return new RNode(rs, deq, rt, rd, WASMTOK_DEQ, false);
 	}
 }

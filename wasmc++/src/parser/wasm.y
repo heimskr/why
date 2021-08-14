@@ -144,7 +144,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
-%token WASM_ARGS WASM_STRINGPRINTNODE
+%token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE
 
 %start start
 
@@ -203,7 +203,7 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | call     | op_sprint;
+         | op_qmem | op_ret   | call     | op_jeq   | op_sprint;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -270,6 +270,8 @@ op_j: _jcond colons immediate { $$ = new WASMJNode($1, $2, $3); };
 _jcond: jcond | { $$ = nullptr; };
 jcond: zero | "+" | "-" | "*";
 colons: ":" ":" { $$ = $1->adopt($2); } | ":";
+
+op_jeq: op_j "if" reg "==" either { $$ = new WASMJeqNode(dynamic_cast<WASMJNode *>($1), $3, $5); D($2, $4); };
 
 op_jc: op_j "if" reg { $$ = new WASMJcNode(dynamic_cast<WASMJNode *>($1), $3); D($2); };
 
@@ -341,6 +343,7 @@ reg: WASMTOK_REG;
 number: WASMTOK_NUMBER;
 character: WASMTOK_CHAR;
 string: WASMTOK_STRING;
+either: reg | immediate;
 
 %%
 

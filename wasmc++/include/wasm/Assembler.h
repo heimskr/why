@@ -9,6 +9,7 @@
 
 namespace Wasmc {
 	struct WASMInstructionNode;
+	struct WASMJeqNode;
 
 	using Long = uint64_t;
 	using Statements = std::vector<std::shared_ptr<WASMInstructionNode>>;
@@ -58,6 +59,9 @@ namespace Wasmc {
 			std::vector<Long> convertDataPieces(const ASTNode *);
 
 			Statements expandCode();
+
+			void addJeq(Statements &, const WASMInstructionNode *);
+			void addJeqImmediateRHS(Statements &, const WASMJeqNode *, const std::string *m7);
 
 			void addMove(Statements &, const WASMInstructionNode *);
 

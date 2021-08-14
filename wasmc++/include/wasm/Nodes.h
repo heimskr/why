@@ -12,7 +12,7 @@ namespace Wasmc {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI
 	};
 
 	class WhyInstruction;
@@ -30,6 +30,11 @@ namespace Wasmc {
 	struct HasImmediate {
 		Immediate imm;
 		HasImmediate(const Immediate &imm_): imm(imm_) {}
+	};
+
+	struct HasSecondImmediate {
+		Immediate imm2;
+		HasSecondImmediate(const Immediate &imm2_): imm2(imm2_) {}
 	};
 
 	struct WASMInstructionNode: WASMBaseNode {
@@ -251,6 +256,19 @@ namespace Wasmc {
 		WASMJNode(const Immediate &addr, bool link_ = false, Condition cond = Condition::None);
 		WASMInstructionNode * copy() const override { return new WASMJNode(imm, link, condition); }
 		WASMNodeType nodeType() const override { return WASMNodeType::J; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMJeqNode: WASMInstructionNode {
+		bool link;
+		Either addr, rt;
+		const std::string *rs;
+
+		WASMJeqNode(WASMJNode *, ASTNode *rs_, ASTNode *rt_);
+		WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_);
+		WASMInstructionNode * copy() const override { return new WASMJeqNode(addr, link, rs, rt); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Jeq; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -560,4 +578,6 @@ namespace Wasmc {
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
+
+	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd);
 }

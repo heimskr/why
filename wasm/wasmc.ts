@@ -529,6 +529,7 @@ export default class WASMC {
 			} else if (op == "pop") {
 				addPop(args);
 			} else if (op == "jeq") {
+				// ["jeq", rt, rs, addr]
 				const right = args[0];
 				const left = args[1];
 				if (isLabelRef(right)) {

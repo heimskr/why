@@ -294,6 +294,9 @@ namespace Wasmc {
 					addMove(expanded, instruction);
 					break;
 
+				case WASMNodeType::Jeq:
+					addJeq(expanded, instruction);
+
 				default:
 					expanded.emplace_back(instruction->copy());
 					break;
@@ -301,6 +304,52 @@ namespace Wasmc {
 		}
 
 		return expanded;
+	}
+
+	void Assembler::addJeq(Statements &expanded, const WASMInstructionNode *instruction) {
+		const auto *jeq = dynamic_cast<const WASMJeqNode *>(instruction);
+		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+		if (std::holds_alternative<Register>(jeq->addr)) {
+			// Address is a register
+			if (std::holds_alternative<Register>(jeq->rt)) {
+				// RHS is a register
+				// rs == rt -> $m7
+				expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7));
+			} else {
+				addJeqImmediateRHS(expanded, jeq, m7);
+				// rs == $m7 -> $m7
+				expanded.emplace_back(makeSeq(jeq->rs, m7, m7));
+			}
+			// : rd if $m7
+			expanded.emplace_back(new WASMJrcNode(jeq->link, m7, std::get<Register>(jeq->addr)));
+		} else if (std::holds_alternative<Register>(jeq->rt)) {
+			// Address is an immediate, RHS is a register
+			// rs == rt -> $m7
+			expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7));
+			// : addr if $m7
+			expanded.emplace_back(new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7));
+		} else {
+			// Address is an immediate, RHS is an immediate
+			addJeqImmediateRHS(expanded, jeq, m7);
+			// : addr if $m7
+			expanded.emplace_back(new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7));
+		}
+	}
+
+	void Assembler::addJeqImmediateRHS(Statements &expanded, const WASMJeqNode *jeq, const std::string *m7) {
+		const Immediate &rhs = std::get<Immediate>(jeq->rt);
+		if (std::holds_alternative<const std::string *>(rhs)) {
+			// RHS is a label
+			// [label] -> $m7
+			expanded.emplace_back(new WASMLiNode(rhs, m7, false));
+		} else if (std::holds_alternative<int>(rhs)) {
+			// RHS is a number
+			// imm -> $m7
+			expanded.emplace_back(new WASMSetNode(rhs, m7));
+		} else {
+			jeq->debug();
+			throw std::runtime_error("Invalid right hand side in jeq instruction");
+		}
 	}
 
 	void Assembler::addMove(Statements &expanded, const WASMInstructionNode *instruction) {
