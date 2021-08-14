@@ -465,6 +465,9 @@ namespace Wasmc {
 		delete imm_;
 	}
 
+	WASMCmpiNode::WASMCmpiNode(const std::string *rs_, const Immediate &imm_):
+		WASMInstructionNode(WASM_CMPINODE), HasImmediate(imm_), rs(rs_) {}
+
 	std::string WASMCmpiNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + dim(" ~ ") + colorize(imm);
 	}
@@ -630,6 +633,9 @@ namespace Wasmc {
 		delete rs_;
 	}
 
+	WASMSizedStackNode::WASMSizedStackNode(long size_, const std::string *rs_, bool is_push):
+		WASMInstructionNode(WASM_SSNODE), size(size_), rs(rs_), isPush(is_push) {}
+
 	std::string WASMSizedStackNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim(std::string(isPush? "[" : "]") + ":" + std::to_string(size))
 			+ " " + cyan(*rs);
@@ -648,6 +654,9 @@ namespace Wasmc {
 			delete unsigned_;
 	}
 
+	WASMMultRNode::WASMMultRNode(const std::string *rs_, const std::string *rt_, bool is_unsigned):
+		WASMInstructionNode(WASM_MULTRNODE), rs(rs_), rt(rt_), isUnsigned(is_unsigned) {}
+
 	std::string WASMMultRNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + dim(" * ") + cyan(*rt) + (isUnsigned? " /u" : "");
 	}
@@ -663,6 +672,9 @@ namespace Wasmc {
 		if (unsigned_)
 			delete unsigned_;
 	}
+
+	WASMMultINode::WASMMultINode(const std::string *rs_, const Immediate &imm_, bool is_unsigned):
+		WASMInstructionNode(WASM_MULTINODE), HasImmediate(imm_), rs(rs_), isUnsigned(is_unsigned) {}
 
 	std::string WASMMultINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + dim(" * ") + colorize(imm) + (isUnsigned? " /u" : "");
@@ -681,6 +693,10 @@ namespace Wasmc {
 		if (unsigned_)
 			delete unsigned_;
 	}
+
+	WASMDiviINode::WASMDiviINode(const Immediate &imm_, const std::string *rs_, const std::string *rd_,
+	                             bool is_unsigned):
+		WASMInstructionNode(WASM_DIVIINODE), HasImmediate(imm_), rs(rs_), rd(rd_), isUnsigned(is_unsigned) {}
 
 	std::string WASMDiviINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + colorize(imm) + dim(" / ") + cyan(*rs) + dim(" -> ") + cyan(*rd)
@@ -739,6 +755,8 @@ namespace Wasmc {
 		delete imm_;
 	}
 
+	WASMIntINode::WASMIntINode(const Immediate &imm_): WASMInstructionNode(WASM_INTINODE), HasImmediate(imm_) {}
+
 	std::string WASMIntINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%int") + " " + colorize(imm);
 	}
@@ -750,6 +768,8 @@ namespace Wasmc {
 	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMInstructionNode(WASM_RITINODE), HasImmediate(getImmediate(imm_)) {
 		delete imm_;
 	}
+
+	WASMRitINode::WASMRitINode(const Immediate &imm_): WASMInstructionNode(WASM_RITINODE), HasImmediate(imm_) {}
 
 	std::string WASMRitINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%rit") + " " + colorize(imm);
@@ -763,6 +783,8 @@ namespace Wasmc {
 		delete imm_;
 	}
 
+	WASMTimeINode::WASMTimeINode(const Immediate &imm_): WASMInstructionNode(WASM_TIMEINODE), HasImmediate(imm_) {}
+
 	std::string WASMTimeINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%time") + " " + colorize(imm);
 	}
@@ -774,6 +796,8 @@ namespace Wasmc {
 	WASMTimeRNode::WASMTimeRNode(ASTNode *rs_): WASMInstructionNode(WASM_TIMERNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
+
+	WASMTimeRNode::WASMTimeRNode(const std::string *rs_): WASMInstructionNode(WASM_TIMERNODE), rs(rs_) {}
 
 	std::string WASMTimeRNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%time") + " " + cyan(*rs);
@@ -787,6 +811,8 @@ namespace Wasmc {
 		delete imm_;
 	}
 
+	WASMRingINode::WASMRingINode(const Immediate &imm_): WASMInstructionNode(WASM_RINGINODE), HasImmediate(imm_) {}
+
 	std::string WASMRingINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%ring") + " " + colorize(imm);
 	}
@@ -798,6 +824,8 @@ namespace Wasmc {
 	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
+
+	WASMRingRNode::WASMRingRNode(const std::string *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_) {}
 
 	std::string WASMRingRNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%ring") + " " + cyan(*rs);
@@ -871,6 +899,8 @@ namespace Wasmc {
 		delete rs_;
 	}
 
+	WASMSleepRNode::WASMSleepRNode(const std::string *rs_): WASMInstructionNode(WASM_SLEEPRNODE), rs(rs_) {}
+
 	std::string WASMSleepRNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "<" + blue("sleep") + " " + cyan(*rs) + ">";
 	}
@@ -894,6 +924,8 @@ namespace Wasmc {
 		delete imm_;
 	}
 
+	WASMSetptINode::WASMSetptINode(const Immediate &imm_): WASMInstructionNode(WASM_SETPTINODE), HasImmediate(imm_) {}
+
 	std::string WASMSetptINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%setpt") + " " + colorize(imm);
 	}
@@ -905,6 +937,8 @@ namespace Wasmc {
 	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_): WASMInstructionNode(WASM_SETPTRNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
+
+	WASMSetptRNode::WASMSetptRNode(const std::string *rs_): WASMInstructionNode(WASM_SETPTRNODE), rs(rs_) {}
 
 	std::string WASMSetptRNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%setpt") + " " + cyan(*rs);
@@ -930,10 +964,11 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + *rs + " -> " + *rd;
 	}
 
-	WASMSvpgNode::WASMSvpgNode(ASTNode *rd_):
-	WASMInstructionNode(WASM_SVPGNODE), rd(rd_->lexerInfo) {
+	WASMSvpgNode::WASMSvpgNode(ASTNode *rd_): WASMInstructionNode(WASM_SVPGNODE), rd(rd_->lexerInfo) {
 		delete rd_;
 	}
+
+	WASMSvpgNode::WASMSvpgNode(const std::string *rd_): WASMInstructionNode(WASM_SVPGNODE), rd(rd_) {}
 
 	std::string WASMSvpgNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%page") + dim(" -> ") + cyan(*rd);
@@ -948,6 +983,9 @@ namespace Wasmc {
 		delete rd_;
 	}
 
+	WASMQueryNode::WASMQueryNode(QueryType type_, const std::string *rd_):
+		WASMInstructionNode(WASM_QUERYNODE), type(type_), rd(rd_) {}
+
 	std::string WASMQueryNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "? " + blue(query_map.at(type)) + dim(" -> ") + cyan(*rd);
 	}
@@ -961,6 +999,9 @@ namespace Wasmc {
 		delete imm_;
 	}
 
+	WASMPseudoPrintNode::WASMPseudoPrintNode(const Immediate &imm_):
+		WASMInstructionNode(WASM_PSEUDOPRINTNODE), HasImmediate(imm_) {}
+
 	std::string WASMPseudoPrintNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "<" + blue("p") + " " + colorize(imm) + ">";
 	}
@@ -973,6 +1014,9 @@ namespace Wasmc {
 	WASMInstructionNode(WASM_STRINGPRINTNODE), string(StringSet::intern(string_->unquote())) {
 		delete string_;
 	}
+
+	WASMStringPrintNode::WASMStringPrintNode(const std::string *string_):
+		WASMInstructionNode(WASM_STRINGPRINTNODE), string(string_) {}
 
 	std::string WASMStringPrintNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "<" + blue("p") + " \"" + *string + "\">";
