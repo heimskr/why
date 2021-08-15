@@ -69,7 +69,8 @@ namespace Wasmc {
 
 			void addCall(Statements &, const WASMInstructionNode *);
 
-			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push);
+			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push,
+			              int bang = -1);
 
 			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
 

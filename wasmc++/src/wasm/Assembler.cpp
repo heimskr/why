@@ -291,30 +291,31 @@ namespace Wasmc {
 	void Assembler::addJeq(Statements &expanded, const WASMInstructionNode *instruction) {
 		const auto *jeq = dynamic_cast<const WASMJeqNode *>(instruction);
 		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+		const int bang = instruction->bang;
 		if (std::holds_alternative<Register>(jeq->addr)) {
 			// Address is a register
 			if (std::holds_alternative<Register>(jeq->rt)) {
 				// RHS is a register
 				// rs == rt -> $m7
-				expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7));
+				expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
 			} else {
 				addJeqImmediateRHS(expanded, jeq, m7);
 				// rs == $m7 -> $m7
-				expanded.emplace_back(makeSeq(jeq->rs, m7, m7));
+				expanded.emplace_back(makeSeq(jeq->rs, m7, m7, bang));
 			}
 			// : rd if $m7
 			expanded.emplace_back(new WASMJrcNode(jeq->link, m7, std::get<Register>(jeq->addr)));
 		} else if (std::holds_alternative<Register>(jeq->rt)) {
 			// Address is an immediate, RHS is a register
 			// rs == rt -> $m7
-			expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7));
+			expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
 			// : addr if $m7
-			expanded.emplace_back(new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7));
+			expanded.emplace_back((new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7))->setBang(bang));
 		} else {
 			// Address is an immediate, RHS is an immediate
 			addJeqImmediateRHS(expanded, jeq, m7);
 			// : addr if $m7
-			expanded.emplace_back(new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7));
+			expanded.emplace_back((new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7))->setBang(bang));
 		}
 	}
 
@@ -332,20 +333,21 @@ namespace Wasmc {
 			jeq->debug();
 			throw std::runtime_error("Invalid right hand side in jeq instruction");
 		}
+		expanded.back()->setBang(jeq->bang);
 	}
 
 	void Assembler::addMove(Statements &expanded, const WASMInstructionNode *instruction) {
 		const auto *move = dynamic_cast<const WASMMvNode *>(instruction);
-		expanded.emplace_back(new RNode(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
-			WASMTOK_OR, false));
+		expanded.emplace_back((new RNode(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
+			WASMTOK_OR, false))->setBang(instruction->bang));
 	}
 
 	void Assembler::addPseudoPrint(Statements &expanded, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
 		if (std::holds_alternative<char>(print->imm)) {
 			const std::string *m7 = registerArray[Why::assemblerOffset + 7];
-			expanded.emplace_back(new WASMSetNode(print->imm, m7));
-			expanded.emplace_back(new WASMPrintNode(m7, PrintType::Char));
+			expanded.emplace_back((new WASMSetNode(print->imm, m7))->setBang(instruction->bang));
+			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(instruction->bang));
 		} else
 			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
 	}
@@ -389,7 +391,7 @@ namespace Wasmc {
 			current_values.push_back(Why::argumentOffset + i);
 
 		if (!current_values.empty())
-			addStack(expanded, current_values, instruction->labels, true);
+			addStack(expanded, current_values, instruction->labels, true, call->bang);
 
 		for (size_t i = 0; i < args.size(); ++i) {
 			const std::string *reg = registerArray[Why::argumentOffset + i];
@@ -414,13 +416,14 @@ namespace Wasmc {
 			expanded.back()->setBang(call->bang);
 		}
 
-		expanded.emplace_back(new WASMJNode(call->function, true));
+		expanded.emplace_back((new WASMJNode(call->function, true))->setBang(call->bang));
 
 		std::reverse(current_values.begin(), current_values.end());
-		addStack(expanded, current_values, {}, false);
+		addStack(expanded, current_values, {}, false, call->bang);
 	}
 
-	void Assembler::addStack(Statements &expanded, const std::vector<int> &regs, const Strings &labels, bool is_push) {
+	void Assembler::addStack(Statements &expanded, const std::vector<int> &regs, const Strings &labels, bool is_push,
+	                         int bang) {
 		bool first = true;
 		for (const int reg: regs) {
 			auto node = std::make_shared<WASMStackNode>(registerArray[reg], is_push);
@@ -428,6 +431,7 @@ namespace Wasmc {
 				node->labels = labels;
 			else
 				first = false;
+			node->setBang(bang);
 			expanded.push_back(node);
 		}
 	}
@@ -468,6 +472,13 @@ namespace Wasmc {
 				default:
 					throw std::runtime_error("Unexpected debug node type: " + std::to_string(type));
 			}
+		}
+
+		for (const auto &instruction: expanded) {
+			std::cout << "bang[" << instruction->bang << "]\n";
+			// if (instruction->bang == -1)
+			// 	continue;
+			// instruction->debug();
 		}
 
 		return out;

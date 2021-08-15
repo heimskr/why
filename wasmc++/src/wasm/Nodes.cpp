@@ -107,7 +107,7 @@ namespace Wasmc {
 	WASMLabelNode::WASMLabelNode(const std::string *label_): WASMInstructionNode(WASM_LABEL), label(label_) {}
 
 	WASMInstructionNode * WASMLabelNode::copy() const {
-		return new WASMLabelNode(label);
+		return (new WASMLabelNode(label))->setBang(bang);
 	}
 
 	std::string WASMLabelNode::debugExtra() const {
@@ -136,7 +136,7 @@ namespace Wasmc {
 		isUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * RNode::copy() const {
-		return new RNode(rs, oper, rt, rd, operToken, isUnsigned);
+		return (new RNode(rs, oper, rt, rd, operToken, isUnsigned))->setBang(bang);
 	}
 
 	std::string RNode::debugExtra() const {
@@ -168,7 +168,7 @@ namespace Wasmc {
 		isUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * INode::copy() const {
-		return new INode(rs, oper, imm, rd, operToken, isUnsigned);
+		return (new INode(rs, oper, imm, rd, operToken, isUnsigned))->setBang(bang);
 	}
 
 	std::string INode::debugExtra() const {
@@ -199,7 +199,7 @@ namespace Wasmc {
 		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, is_byte) {}
 
 	WASMInstructionNode * WASMCopyNode::copy() const {
-		return new WASMCopyNode(rs, rd, isByte);
+		return (new WASMCopyNode(rs, rd, isByte))->setBang(bang);
 	}
 
 	std::string WASMCopyNode::debugExtra() const {
@@ -218,7 +218,7 @@ namespace Wasmc {
 		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, is_byte) {}
 
 	WASMInstructionNode * WASMLoadNode::copy() const {
-		return new WASMLoadNode(rs, rd, isByte);
+		return (new WASMLoadNode(rs, rd, isByte))->setBang(bang);
 	}
 
 	std::string WASMLoadNode::debugExtra() const {
@@ -237,7 +237,7 @@ namespace Wasmc {
 		WASMMemoryNode(WASM_STORENODE, rs_, rd_, is_byte) {}
 
 	WASMInstructionNode * WASMStoreNode::copy() const {
-		return new WASMStoreNode(rs, rd, isByte);
+		return (new WASMStoreNode(rs, rd, isByte))->setBang(bang);
 	}
 
 	std::string WASMStoreNode::debugExtra() const {
@@ -259,7 +259,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_SETNODE), HasImmediate(imm_), rd(rd_) {}
 
 	WASMInstructionNode * WASMSetNode::copy() const {
-		return new WASMSetNode(imm, rd);
+		return (new WASMSetNode(imm, rd))->setBang(bang);
 	}
 
 	std::string WASMSetNode::debugExtra() const {
@@ -282,7 +282,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_LINODE), HasImmediate(imm_), rd(rd_), isByte(is_byte) {}
 
 	WASMInstructionNode * WASMLiNode::copy() const {
-		return new WASMLiNode(imm, rd, isByte);
+		return (new WASMLiNode(imm, rd, isByte))->setBang(bang);
 	}
 
 	std::string WASMLiNode::debugExtra() const {
@@ -306,7 +306,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_SINODE), HasImmediate(imm_), rs(rs_), isByte(is_byte) {}
 
 	WASMInstructionNode * WASMSiNode::copy() const {
-		return new WASMSiNode(imm, rs, isByte);
+		return (new WASMSiNode(imm, rs, isByte))->setBang(bang);
 	}
 
 	std::string WASMSiNode::debugExtra() const {
@@ -328,7 +328,7 @@ namespace Wasmc {
 	}
 
 	WASMInstructionNode * WASMLniNode::copy() const {
-		return new WASMLniNode(imm, rd, isByte);
+		return (new WASMLniNode(imm, rd, isByte))->setBang(bang);
 	}
 
 	std::string WASMLniNode::debugExtra() const {
@@ -612,6 +612,10 @@ namespace Wasmc {
 	WASMSizedStackNode::WASMSizedStackNode(long size_, const std::string *rs_, bool is_push):
 		WASMInstructionNode(WASM_SSNODE), size(size_), rs(rs_), isPush(is_push) {}
 
+	WASMInstructionNode * WASMSizedStackNode::copy() const {
+		return (new WASMSizedStackNode(size, rs, isPush))->setBang(bang);
+	}
+
 	std::string WASMSizedStackNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim(std::string(isPush? "[" : "]") + ":" + std::to_string(size))
 			+ " " + cyan(*rs);
@@ -673,6 +677,10 @@ namespace Wasmc {
 	WASMDiviINode::WASMDiviINode(const Immediate &imm_, const std::string *rs_, const std::string *rd_,
 	                             bool is_unsigned):
 		WASMInstructionNode(WASM_DIVIINODE), HasImmediate(imm_), rs(rs_), rd(rd_), isUnsigned(is_unsigned) {}
+
+	WASMInstructionNode * WASMDiviINode::copy() const {
+		return (new WASMDiviINode(imm, rs, rd, isUnsigned))->setBang(bang);
+	}
 
 	std::string WASMDiviINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + colorize(imm) + dim(" / ") + cyan(*rs) + dim(" -> ") + cyan(*rd)
@@ -1038,8 +1046,10 @@ namespace Wasmc {
 		return ss.str();
 	}
 
-	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd) {
+	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang) {
 		static const auto deq = StringSet::intern("==");
-		return new RNode(rs, deq, rt, rd, WASMTOK_DEQ, false);
+		RNode *out = new RNode(rs, deq, rt, rd, WASMTOK_DEQ, false);
+		out->setBang(bang);
+		return out;
 	}
 }
