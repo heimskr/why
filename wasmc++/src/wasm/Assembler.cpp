@@ -438,6 +438,8 @@ namespace Wasmc {
 
 	std::vector<Long> Assembler::createDebugData(const ASTNode *node, const Statements &expanded) {
 		std::vector<Long> out;
+		debugEntries.clear();
+		debugEntries.reserve(node->size());
 
 		for (const ASTNode *child: *node) {
 			if (child->symbol != WASMTOK_NUMBER) {
@@ -463,10 +465,16 @@ namespace Wasmc {
 						encoded.push_back(static_cast<uint8_t>(ch));
 					for (const Long piece: getLongs(encoded))
 						out.push_back(piece);
+					if (type == 1)
+						debugEntries.emplace_back(new DebugFilename(unquoted));
+					else
+						debugEntries.emplace_back(new DebugFunction(unquoted));
 					break;
 				}
 
 				case 3:
+					debugEntries.emplace_back(new DebugLocation((*child)[0]->atoi(), (*child)[1]->atoi(),
+						(*child)[2]->atoi(), (*child)[3]->atoi()));
 					break;
 
 				default:
@@ -475,11 +483,65 @@ namespace Wasmc {
 		}
 
 		const size_t expanded_size = expanded.size();
+		const size_t debug_size = debugEntries.size();
 		for (size_t i = 0; i < expanded_size; ++i) {
 			const auto &instruction = expanded[i];
 			const int bang = instruction->bang;
 			if (bang == -1)
 				continue;
+			if (bang < 0 || debug_size <= static_cast<size_t>(bang)) {
+				instruction->debug();
+				throw std::runtime_error("Debug intbang out of bounds: " + std::to_string(bang));
+			}
+			if (debugEntries[bang]->getType() != DebugEntry::Type::Location) {
+				instruction->debug();
+				throw std::runtime_error("Debug intbang doesn't refer to a location");
+			}
+			DebugLocation *location = dynamic_cast<DebugLocation *>(debugEntries[bang].get());
+			if (!location) {
+				instruction->debug();
+				throw std::runtime_error("DebugLocation cast failed");
+			}
+			const size_t address = metaOffsetCode() + 8 * i;
+			size_t count = 1;
+			for (size_t j = i + 1; j < expanded_size; ++j)
+				if (bang == expanded[j]->bang)
+					++count;
+				else
+					break;
+
+			if (0xff < count)
+				throw std::runtime_error("Instruction count too high: " + std::to_string(count));
+
+			if (0xffffff < location->fileIndex)
+				throw std::runtime_error("File index too large: " + std::to_string(location->fileIndex));
+
+			if (0xffffffff < location->line)
+				throw std::runtime_error("Line number too large: " + std::to_string(location->line));
+
+			if (0xffffff < location->column)
+				throw std::runtime_error("Column number too large: " + std::to_string(location->column));
+
+			if (0xffffff < location->functionIndex)
+				throw std::runtime_error("Function index too large: " + std::to_string(location->functionIndex));
+
+			std::vector<uint8_t> bytes {static_cast<uint8_t>(location->getType())};
+
+			auto add = [&](size_t n, size_t byte_count) {
+				for (size_t j = 0; j < byte_count; ++j)
+					bytes.push_back((n >> (8 * j)) & 0xff);
+			};
+
+			add(location->fileIndex, 3);
+			add(location->line, 4);
+			add(location->column, 3);
+			bytes.push_back(count & 0xff);
+			add(location->functionIndex, 4);
+			add(address, 8);
+
+			for (const Long piece: getLongs(bytes))
+				out.push_back(piece);
+			i += count - 1;
 		}
 
 		return out;

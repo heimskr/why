@@ -7,6 +7,7 @@
 
 #include "parser/Parser.h"
 #include "util/Util.h"
+#include "wasm/Debug.h"
 
 namespace Wasmc {
 	struct WASMInstructionNode;
@@ -29,6 +30,7 @@ namespace Wasmc {
 			std::unordered_set<const std::string *> allLabels, unknownSymbols;
 			std::unordered_map<const std::string *, const std::string *> dataVariables;
 			std::unordered_map<uint32_t, const std::string *> hashes;
+			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			size_t dataLength = 0;
 			bool verbose = false;
 
