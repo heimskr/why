@@ -216,13 +216,13 @@ arg: "&" ident { $$ = $1->adopt($2); }
    | number
    | reg;
 
-op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
-    | reg shorthandable "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
+op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
+    | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is unary
     | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here, but with "!".
-basic_oper: shorthandable | "<" | "<=" | "==" | ">" | ">=" | "!";
-shorthandable: "+" | "-" | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
-              | "<<" | ">>>" | ">>";
+basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
+logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
+shorthandable_r: logical | shorthandable_i;
 _unsigned: "/u" | { $$ = nullptr; };
 
 op_mult: reg "*" reg _unsigned { $$ = new WASMMultRNode($1, $3, $4); D($2); };
@@ -231,8 +231,10 @@ op_multi: reg "*" immediate _unsigned { $$ = new WASMMultINode($1, $3, $4); D($2
 
 op_lui: "lui" ":" immediate "->" reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
 
-op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); }
-    | reg shorthandable "=" immediate _unsigned   { $$ = new INode($1, $2, $4, $1, $5); D($3); };
+op_i: reg basic_oper_i immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); }
+    | reg shorthandable_i "=" immediate _unsigned   { $$ = new INode($1, $2, $4, $1, $5); D($3); };
+basic_oper_i: shorthandable_i | "<" | "<=" | "==" | ">" | ">=" | "!";
+shorthandable_i: "+" | "-" | "&" | "|" | "x" | "~x" | "~&" | "~|" | "/" | "%" | "<<" | ">>>" | ">>";
 
 op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 _byte: "/b" | { $$ = nullptr; };
