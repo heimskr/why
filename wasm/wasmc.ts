@@ -879,7 +879,6 @@ export default class WASMC {
 
 		for (const item of arr) {
 			if (item[0] == 1 || item[0] == 2) {
-				console.log({item});
 				const length = item[1].length;
 				if (0xffffff < length)
 					WASMC.warn("Name too long (" + length + " characters, type = " + item[0] + ")");

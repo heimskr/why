@@ -49,7 +49,7 @@ namespace Wasmc {
 				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					if (offsets.count(label) == 0) {
-						auto encoded = encodeSymbol(label);
+						const auto encoded = encodeSymbol(label);
 						has_immediate->imm = static_cast<int>(encoded);
 						statement->flags = ConstantFlags::UnknownSymbol;
 						unknownSymbols.insert(label);
