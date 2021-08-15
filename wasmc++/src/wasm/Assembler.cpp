@@ -23,7 +23,7 @@ namespace Wasmc {
 
 		const auto expanded = expandCode();
 		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
-		metaOffsetDebug() = metaOffsetData() + dataLength; // TODO: verify
+		metaOffsetDebug() = metaOffsetData() + dataLength;
 
 		std::cerr << "metaOffsetSymbols: " << metaOffsetSymbols() << "\n";
 		std::cerr << "metaOffsetCode: " << metaOffsetCode() << "\n";

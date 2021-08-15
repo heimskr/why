@@ -265,12 +265,6 @@ export default class WASMC {
 		this.metaOffsetData = this.metaOffsetCode.add(expanded.length * 8);
 		this.metaOffsetDebug = this.metaOffsetData.add(this.dataLength * 8);
 
-		console.log("metaOffsetSymbols: ", this.metaOffsetSymbols);
-		console.log("metaOffsetCode: ", this.metaOffsetCode);
-		console.log("metaOffsetData: ", this.metaOffsetData);
-		console.log("metaOffsetDebug: ", this.metaOffsetDebug);
-		console.log("metaOffsetEnd: ", this.metaOffsetEnd);
-
 		this.debugData = this.createDebugData(this.parsed.debug, expanded);
 
 		this.metaOffsetEnd = this.metaOffsetDebug.add(this.debugData.length * 8);
@@ -332,9 +326,6 @@ export default class WASMC {
 
 		// Append the name-version-author string.
 		this.meta = this.meta.concat(WASMC.str2longs(`${name}\0${version}\0${author}\0`));
-
-		for (let i = 0; i < this.meta.length; ++i)
-			console.log(i + ": 0x" + this.meta[i].toString(16));
 		
 		// The beginning of the symbol table comes right after the end of the meta section.
 		this.metaOffsetSymbols = Long.fromInt(this.meta.length * 8, true);
