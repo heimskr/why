@@ -876,8 +876,10 @@ export default class WASMC {
 	/** Creates and encodes a debug data section given type 1/2 entries + type 3 templates and an array of code. */
 	createDebugData(arr: DebugData, code: ASMInstruction[]): Long[] {
 		let out: Long[] = [];
+
 		for (const item of arr) {
 			if (item[0] == 1 || item[0] == 2) {
+				console.log({item});
 				const length = item[1].length;
 				if (0xffffff < length)
 					WASMC.warn("Name too long (" + length + " characters, type = " + item[0] + ")");
@@ -947,6 +949,7 @@ export default class WASMC {
 	/** Encodes an array of type 1/2 entries + type 3 instantiations into an array of longs. */
 	static encodeDebugData(arr: DebugData): Long[] {
 		let out: Long[] = [];
+
 		for (const item of arr) {
 			if (item[0] == 1 || item[0] == 2) {
 				const length = item[1].length;

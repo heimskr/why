@@ -4,7 +4,6 @@
 #include "lib/picosha2.h"
 #include "parser/Lexer.h"
 #include "parser/StringSet.h"
-#include "util/Util.h"
 #include "wasm/Assembler.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
@@ -25,13 +24,7 @@ namespace Wasmc {
 		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
 		metaOffsetDebug() = metaOffsetData() + dataLength;
 
-		std::cerr << "metaOffsetSymbols: " << metaOffsetSymbols() << "\n";
-		std::cerr << "metaOffsetCode: " << metaOffsetCode() << "\n";
-		std::cerr << "metaOffsetData: " << metaOffsetData() << "\n";
-		std::cerr << "metaOffsetDebug: " << metaOffsetDebug() << "\n";
-		std::cerr << "metaOffsetEnd: " << metaOffsetEnd() << "\n";
-
-		for (const auto &instruction: expanded) instruction->debug();
+		debugData = createDebugData(debugNode, expanded);
 	}
 
 	void Assembler::validateSectionCounts() {
@@ -119,7 +112,7 @@ namespace Wasmc {
 
 			out.push_back(length | (static_cast<int>(type) << 16) | (static_cast<uint64_t>(encodeSymbol(label)) << 32));
 			out.push_back(skeleton? 0 : offsets.at(label));
-			for (const Long piece: str2longs(*label))
+			for (const Long piece: getLongs(*label))
 				out.push_back(piece);
 		}
 
@@ -135,30 +128,6 @@ namespace Wasmc {
 			throw std::runtime_error("\"" + *name + "\" and \"" + *hashes.at(hash) + "\" have the same hash!");
 		hashes.emplace(hash, name);
 		return hash;
-	}
-
-	std::vector<Long> Assembler::str2longs(const std::string &str) const {
-		if (str.empty())
-			return {0};
-
-		std::vector<Long> out;
-		out.reserve(Util::updiv(str.size(), 8ul));
-
-		uint8_t count = 0;
-		Long next = 0;
-		for (char ch: str) {
-			next = (next << 8) | ch;
-			if (++count == 8) {
-				out.push_back(next);
-				next = 0;
-				count = 0;
-			}
-		}
-
-		if (count != 0)
-			out.push_back(next << (8 * (8 - count)));
-
-		return out;
 	}
 
 	void Assembler::processMetadata() {
@@ -196,7 +165,7 @@ namespace Wasmc {
 		if (orcid.size() != 16)
 			throw std::runtime_error("Invalid ORCID length");
 
-		const auto longs = str2longs(orcid);
+		const auto longs = getLongs(orcid);
 		if (longs.size() != 2)
 			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(longs.size()));
 		meta = {0, 0, 0, 0, 0, longs[0], longs[1]};
@@ -208,13 +177,10 @@ namespace Wasmc {
 		nva.insert(nva.end(), author.begin(), author.end());
 		nva.push_back('\0');
 
-		for (const Long piece: str2longs(nva))
+		for (const Long piece: getLongs(nva))
 			meta.push_back(piece);
 
 		metaOffsetSymbols() = meta.size() * 8;
-		size_t i = 0;
-		for (Long piece: meta)
-			std::cout << i++ << ": " << Util::toHex(piece) << "\n";
 		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
 	}
 
@@ -254,10 +220,10 @@ namespace Wasmc {
 			case WASMTOK_STRING: {
 				std::string str = child->unquote();
 				str.push_back('\0');
-				return str2longs(str);
+				return getLongs(str);
 			}
 			case WASMTOK_LPAR:
-				return str2longs(std::string(child->front()->atoi(), '\0'));
+				return getLongs(std::string(child->front()->atoi(), '\0'));
 			case WASMTOK_AND:
 				dataVariables[node->lexerInfo] = child->front()->lexerInfo;
 				return {0};
@@ -464,5 +430,46 @@ namespace Wasmc {
 				first = false;
 			expanded.push_back(node);
 		}
+	}
+
+	std::vector<Long> Assembler::createDebugData(const ASTNode *node, const Statements &expanded) {
+		std::vector<Long> out;
+
+		for (const ASTNode *child: *node) {
+			if (child->symbol != WASMTOK_NUMBER) {
+				child->debug();
+				throw std::runtime_error("Unexpected symbol found in debug section at " + std::string(node->location)
+					+ ": " + std::string(parser.getName(node->symbol)));
+			}
+			const int type = child->atoi();
+			switch (type) {
+				case 1:
+				case 2: {
+					const ASTNode *subchild = child->front();
+					const std::string unquoted = subchild->unquote();
+					const size_t length = unquoted.size();
+					if (0xffffff < length)
+						throw std::runtime_error("Name too long (" + std::to_string(length) + " characters, type = "
+							+ std::to_string(type) + ")");
+					std::vector<uint8_t> encoded {
+						static_cast<uint8_t>(type), static_cast<uint8_t>(length & 0xff),
+						static_cast<uint8_t>((length >> 8) & 0xff), static_cast<uint8_t>((length >> 16) & 0xff)
+					};
+					for (char ch: unquoted)
+						encoded.push_back(static_cast<uint8_t>(ch));
+					for (const Long piece: getLongs(encoded))
+						out.push_back(piece);
+					break;
+				}
+
+				case 3:
+					break;
+
+				default:
+					throw std::runtime_error("Unexpected debug node type: " + std::to_string(type));
+			}
+		}
+
+		return out;
 	}
 }

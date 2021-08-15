@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "parser/Parser.h"
+#include "util/Util.h"
 
 namespace Wasmc {
 	struct WASMInstructionNode;
@@ -49,8 +50,6 @@ namespace Wasmc {
 
 			uint32_t encodeSymbol(const std::string *);
 
-			std::vector<Long> str2longs(const std::string &) const;
-
 			void processMetadata();
 
 			void processData();
@@ -71,6 +70,33 @@ namespace Wasmc {
 			void addCall(Statements &, const WASMInstructionNode *);
 
 			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push);
+
+			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
+
+			template <typename T>
+			std::vector<Long> getLongs(const T &str) const {
+				if (str.empty())
+					return {0};
+
+				std::vector<Long> out;
+				out.reserve(Util::updiv(str.size(), 8ul));
+
+				uint8_t count = 0;
+				Long next = 0;
+				for (char ch: str) {
+					next = (next << 8) | ch;
+					if (++count == 8) {
+						out.push_back(next);
+						next = 0;
+						count = 0;
+					}
+				}
+
+				if (count != 0)
+					out.push_back(next << (8 * (8 - count)));
+
+				return out;
+			}
 	};
 
 }
