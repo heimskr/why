@@ -43,6 +43,22 @@ namespace Wasmc {
 			ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
 			        *codeNode = nullptr;
 
+			Long compileInstruction(const WASMInstructionNode &);
+
+			void addCode(const WASMInstructionNode &);
+
+			/** Replaces all label references in a given vector of expanded instructions with the corresponding memory
+			 *  addresses. Mutates the input vector. */
+			Statements & expandLabels(Statements &);
+
+			/** Compiles a vector of expanded code into the main code vector. */
+			void processCode(const Statements &);
+
+			/** Replaces variable reference placeholders in the data section with the proper values of the pointers. */
+			void reprocessData();
+
+			void setDataOffsets();
+
 			/** Throws an exception if there exist more than one of any section type in the AST. */
 			void validateSectionCounts();
 

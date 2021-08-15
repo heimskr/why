@@ -613,7 +613,7 @@ export default class WASMC {
 			item.slice(2).forEach((arg, i) => {
 				// If the argument is a label reference,
 				if (isLabelRef(arg)) {
-					// replace it with an address from the offsets map. 
+					// replace it with an address from the offsets map.
 					const offset = this.offsets[arg[1]];
 					if (typeof offset == "undefined") {
 						item[i + 2] = WASMC.encodeSymbol(arg[1]);

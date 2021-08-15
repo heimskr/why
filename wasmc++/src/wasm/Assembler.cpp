@@ -20,11 +20,66 @@ namespace Wasmc {
 		processMetadata();
 		processData();
 
-		const auto expanded = expandCode();
+		auto expanded = expandCode();
 		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
 		metaOffsetDebug() = metaOffsetData() + dataLength;
 
 		debugData = createDebugData(debugNode, expanded);
+		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
+
+		setDataOffsets();
+		reprocessData();
+		processCode(expandLabels(expanded));
+	}
+
+	Long Assembler::compileInstruction(const WASMInstructionNode &node) {
+		return 0;
+	}
+
+	void Assembler::addCode(const WASMInstructionNode &node) {
+		code.push_back(compileInstruction(node));
+	}
+
+	Statements & Assembler::expandLabels(Statements &statements) {
+		// In the second pass, we replace label references with the corresponding
+		// addresses now that we know the address of all the labels.
+		for (auto &statement: statements) {
+			statement->labels.clear();
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement.get())) {
+				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
+					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+					if (offsets.count(label) == 0) {
+						auto encoded = encodeSymbol(label);
+						has_immediate->imm = static_cast<int>(encoded);
+						statement->flags = ConstantFlags::UnknownSymbol;
+						unknownSymbols.insert(label);
+					} else {
+						const Long offset = offsets.at(label);
+						if (INT_MAX < offset)
+							warn() << "Offset for label " << *label << " exceeds INT_MAX\n";
+						has_immediate->imm = static_cast<int>(offset);
+						statement->flags = ConstantFlags::KnownSymbol;
+					}
+				}
+			}
+		}
+
+		return statements;
+	}
+
+	void Assembler::processCode(const Statements &statements) {
+		for (const auto &statement: statements)
+			addCode(*statement);
+	}
+
+	void Assembler::reprocessData() {
+		for (const auto &[key, ref]: dataVariables)
+			data.at(dataOffsets.at(key) / 8) = offsets.at(ref);
+	}
+
+	void Assembler::setDataOffsets() {
+		for (const auto &[name, offset]: dataOffsets)
+			offsets[name] = offset + metaOffsetData();
 	}
 
 	void Assembler::validateSectionCounts() {

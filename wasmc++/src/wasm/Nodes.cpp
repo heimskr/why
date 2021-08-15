@@ -56,6 +56,14 @@ namespace Wasmc {
 		return this;
 	}
 
+	WASMInstructionNode * WASMInstructionNode::absorb(const WASMInstructionNode &other) {
+		bang = other.bang;
+		labels = other.labels;
+		symbolType = other.symbolType;
+		flags = other.flags;
+		return this;
+	}
+
 	WASMInstructionNode * WASMInstructionNode::setInSubroutine(bool value) {
 		inSubroutine = value;
 		return this;
@@ -107,7 +115,7 @@ namespace Wasmc {
 	WASMLabelNode::WASMLabelNode(const std::string *label_): WASMInstructionNode(WASM_LABEL), label(label_) {}
 
 	WASMInstructionNode * WASMLabelNode::copy() const {
-		return (new WASMLabelNode(label))->setBang(bang);
+		return (new WASMLabelNode(label))->absorb(*this);
 	}
 
 	std::string WASMLabelNode::debugExtra() const {
@@ -136,7 +144,7 @@ namespace Wasmc {
 		isUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * RNode::copy() const {
-		return (new RNode(rs, oper, rt, rd, operToken, isUnsigned))->setBang(bang);
+		return (new RNode(rs, oper, rt, rd, operToken, isUnsigned))->absorb(*this);
 	}
 
 	std::string RNode::debugExtra() const {
@@ -168,7 +176,7 @@ namespace Wasmc {
 		isUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * INode::copy() const {
-		return (new INode(rs, oper, imm, rd, operToken, isUnsigned))->setBang(bang);
+		return (new INode(rs, oper, imm, rd, operToken, isUnsigned))->absorb(*this);
 	}
 
 	std::string INode::debugExtra() const {
@@ -199,7 +207,7 @@ namespace Wasmc {
 		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, is_byte) {}
 
 	WASMInstructionNode * WASMCopyNode::copy() const {
-		return (new WASMCopyNode(rs, rd, isByte))->setBang(bang);
+		return (new WASMCopyNode(rs, rd, isByte))->absorb(*this);
 	}
 
 	std::string WASMCopyNode::debugExtra() const {
@@ -218,7 +226,7 @@ namespace Wasmc {
 		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, is_byte) {}
 
 	WASMInstructionNode * WASMLoadNode::copy() const {
-		return (new WASMLoadNode(rs, rd, isByte))->setBang(bang);
+		return (new WASMLoadNode(rs, rd, isByte))->absorb(*this);
 	}
 
 	std::string WASMLoadNode::debugExtra() const {
@@ -237,7 +245,7 @@ namespace Wasmc {
 		WASMMemoryNode(WASM_STORENODE, rs_, rd_, is_byte) {}
 
 	WASMInstructionNode * WASMStoreNode::copy() const {
-		return (new WASMStoreNode(rs, rd, isByte))->setBang(bang);
+		return (new WASMStoreNode(rs, rd, isByte))->absorb(*this);
 	}
 
 	std::string WASMStoreNode::debugExtra() const {
@@ -259,7 +267,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_SETNODE), HasImmediate(imm_), rd(rd_) {}
 
 	WASMInstructionNode * WASMSetNode::copy() const {
-		return (new WASMSetNode(imm, rd))->setBang(bang);
+		return (new WASMSetNode(imm, rd))->absorb(*this);
 	}
 
 	std::string WASMSetNode::debugExtra() const {
@@ -282,7 +290,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_LINODE), HasImmediate(imm_), rd(rd_), isByte(is_byte) {}
 
 	WASMInstructionNode * WASMLiNode::copy() const {
-		return (new WASMLiNode(imm, rd, isByte))->setBang(bang);
+		return (new WASMLiNode(imm, rd, isByte))->absorb(*this);
 	}
 
 	std::string WASMLiNode::debugExtra() const {
@@ -306,7 +314,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_SINODE), HasImmediate(imm_), rs(rs_), isByte(is_byte) {}
 
 	WASMInstructionNode * WASMSiNode::copy() const {
-		return (new WASMSiNode(imm, rs, isByte))->setBang(bang);
+		return (new WASMSiNode(imm, rs, isByte))->absorb(*this);
 	}
 
 	std::string WASMSiNode::debugExtra() const {
@@ -328,7 +336,7 @@ namespace Wasmc {
 	}
 
 	WASMInstructionNode * WASMLniNode::copy() const {
-		return (new WASMLniNode(imm, rd, isByte))->setBang(bang);
+		return (new WASMLniNode(imm, rd, isByte))->absorb(*this);
 	}
 
 	std::string WASMLniNode::debugExtra() const {
@@ -613,7 +621,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_SSNODE), size(size_), rs(rs_), isPush(is_push) {}
 
 	WASMInstructionNode * WASMSizedStackNode::copy() const {
-		return (new WASMSizedStackNode(size, rs, isPush))->setBang(bang);
+		return (new WASMSizedStackNode(size, rs, isPush))->absorb(*this);
 	}
 
 	std::string WASMSizedStackNode::debugExtra() const {
@@ -679,7 +687,7 @@ namespace Wasmc {
 		WASMInstructionNode(WASM_DIVIINODE), HasImmediate(imm_), rs(rs_), rd(rd_), isUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * WASMDiviINode::copy() const {
-		return (new WASMDiviINode(imm, rs, rd, isUnsigned))->setBang(bang);
+		return (new WASMDiviINode(imm, rs, rd, isUnsigned))->absorb(*this);
 	}
 
 	std::string WASMDiviINode::debugExtra() const {
