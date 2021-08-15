@@ -474,11 +474,12 @@ namespace Wasmc {
 			}
 		}
 
-		for (const auto &instruction: expanded) {
-			std::cout << "bang[" << instruction->bang << "]\n";
-			// if (instruction->bang == -1)
-			// 	continue;
-			// instruction->debug();
+		const size_t expanded_size = expanded.size();
+		for (size_t i = 0; i < expanded_size; ++i) {
+			const auto &instruction = expanded[i];
+			const int bang = instruction->bang;
+			if (bang == -1)
+				continue;
 		}
 
 		return out;
