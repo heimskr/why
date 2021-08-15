@@ -252,7 +252,7 @@ namespace Wasmc {
 			case WASMTOK_NUMBER:
 				return {static_cast<Long>(child->atoi())};
 			case WASMTOK_STRING: {
-				std::string str = *child->lexerInfo;
+				std::string str = child->unquote();
 				str.push_back('\0');
 				return str2longs(str);
 			}

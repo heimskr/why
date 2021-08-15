@@ -262,7 +262,6 @@ export default class WASMC {
 		this.processData();
 
 		const expanded = this.expandCode();
-		expanded.forEach(x => console.log(JSON.stringify(x)));
 		this.metaOffsetData = this.metaOffsetCode.add(expanded.length * 8);
 		this.metaOffsetDebug = this.metaOffsetData.add(this.dataLength * 8);
 
