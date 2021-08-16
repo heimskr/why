@@ -25,6 +25,9 @@ namespace Wasmc {
 
 	using VarMap = std::unordered_map<const std::string *, std::shared_ptr<Variable>>;
 
+	Condition getCondition(const std::string &);
+	Condition getCondition(const ASTNode *);
+
 	struct WASMBaseNode: ASTNode {
 		WASMBaseNode(int sym);
 		virtual WASMNodeType nodeType() const = 0;
@@ -43,19 +46,19 @@ namespace Wasmc {
 
 	struct HasRS {
 		const std::string *rs;
-		HasRS(const ASTNode *node): rs(node->lexerInfo) {}
+		HasRS(const ASTNode *node): rs(node? node->lexerInfo : nullptr) {}
 		HasRS(const std::string *rs_): rs(rs_) {}
 	};
 
 	struct HasRT {
 		const std::string *rt;
-		HasRT(const ASTNode *node): rt(node->lexerInfo) {}
+		HasRT(const ASTNode *node): rt(node? node->lexerInfo : nullptr) {}
 		HasRT(const std::string *rt_): rt(rt_) {}
 	};
 
 	struct HasRD {
 		const std::string *rd;
-		HasRD(const ASTNode *node): rd(node->lexerInfo) {}
+		HasRD(const ASTNode *node): rd(node? node->lexerInfo : nullptr) {}
 		HasRD(const std::string *rd_): rd(rd_) {}
 	};
 
@@ -135,10 +138,14 @@ namespace Wasmc {
 			ThreeRegs(rs_, rt_, rd_), HasOper(oper_token, oper_) {}
 	};
 
-	struct JType: AnyType, HasRS {
+	struct JType: AnyType, HasImmediate, HasRS {
 		Condition condition;
 		bool link;
-		// JType(const ASTNode *
+		JType(const ASTNode *cond, const ASTNode *colons, const ASTNode *addr, const ASTNode *rs_):
+		HasImmediate(getImmediate(addr)), HasRS(rs_), condition(getCondition(cond)), link(!colons->empty()) {
+			delete colons;
+			delete cond;
+		}
 	};
 
 	struct RNode: WASMInstructionNode, RType, HasUnsigned {

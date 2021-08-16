@@ -9,7 +9,7 @@
 #include "wasm/Registers.h"
 
 namespace Wasmc {
-	static Condition getCondition(const std::string &str) {
+	Condition getCondition(const std::string &str) {
 		if (str == "0")
 			return Condition::Zero;
 		if (str == "+")
@@ -23,7 +23,7 @@ namespace Wasmc {
 		return Condition::None;
 	}
 
-	static Condition getCondition(const ASTNode *node) {
+	Condition getCondition(const ASTNode *node) {
 		return node? getCondition(*node->lexerInfo) : Condition::None;
 	}
 

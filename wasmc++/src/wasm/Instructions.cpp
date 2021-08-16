@@ -186,6 +186,40 @@ namespace Wasmc {
 	};
 
 	std::unordered_map<int, Opcode> TOKEN_OPCODES_R {
-		{WASMTOK_AND, OPCODES.at("and")},
+		{WASMTOK_PLUS,    OPCODES.at("add")  },
+		{WASMTOK_MINUS,   OPCODES.at("sub")  },
+		{WASMTOK_AND,     OPCODES.at("and")  },
+		{WASMTOK_OR,      OPCODES.at("or")   },
+		{WASMTOK_LAND,    OPCODES.at("land") },
+		{WASMTOK_LOR,     OPCODES.at("lor")  },
+		{WASMTOK_X,       OPCODES.at("xor")  },
+		{WASMTOK_XNOR,    OPCODES.at("xnor") },
+		{WASMTOK_LNAND,   OPCODES.at("lnand")},
+		{WASMTOK_LNOR,    OPCODES.at("lnor") },
+		{WASMTOK_NAND,    OPCODES.at("nand") },
+		{WASMTOK_NOR,     OPCODES.at("nor")  },
+		{WASMTOK_SLASH,   OPCODES.at("div")  },
+		{WASMTOK_LXNOR,   OPCODES.at("lxnor")},
+		{WASMTOK_LXOR,    OPCODES.at("lxor") },
+		{WASMTOK_PERCENT, OPCODES.at("mod")  },
+		{WASMTOK_LL,      OPCODES.at("sll")  },
+		{WASMTOK_RL,      OPCODES.at("srl")  },
+		{WASMTOK_RA,      OPCODES.at("sra")  },
+	};
+
+	std::unordered_map<int, Opcode> TOKEN_OPCODES_I {
+		{WASMTOK_PLUS,    OPCODES.at("addi")  },
+		{WASMTOK_MINUS,   OPCODES.at("subi")  },
+		{WASMTOK_AND,     OPCODES.at("andi")  },
+		{WASMTOK_OR,      OPCODES.at("ori")   },
+		{WASMTOK_X,       OPCODES.at("xori")  },
+		{WASMTOK_XNOR,    OPCODES.at("xnori") },
+		{WASMTOK_NAND,    OPCODES.at("nandi") },
+		{WASMTOK_NOR,     OPCODES.at("nori")  },
+		{WASMTOK_SLASH,   OPCODES.at("divi")  },
+		{WASMTOK_PERCENT, OPCODES.at("modi")  },
+		{WASMTOK_LL,      OPCODES.at("slli")  },
+		{WASMTOK_RL,      OPCODES.at("srli")  },
+		{WASMTOK_RA,      OPCODES.at("srai")  },
 	};
 }

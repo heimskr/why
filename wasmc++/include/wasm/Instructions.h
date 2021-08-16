@@ -11,5 +11,5 @@ namespace Wasmc {
 
 	extern std::unordered_map<std::string, Opcode> OPCODES;
 
-	extern std::unordered_map<int, Opcode> TOKEN_OPCODES_R;
+	extern std::unordered_map<int, Opcode> TOKEN_OPCODES_R, TOKEN_OPCODES_I;
 }
