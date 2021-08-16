@@ -90,7 +90,19 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
-		return 0;
+		if (registerMap.count(jtype.rs) == 0)
+			throw std::runtime_error("Invalid rs in J-type: " + (jtype.rs? *jtype.rs : "null"));
+		if (!std::holds_alternative<int>(jtype.imm))
+			throw std::runtime_error("Can't compile a J-type with a label or character immediate");
+
+		Long out = static_cast<uint32_t>(std::get<int>(jtype.imm));
+		out |= static_cast<uint64_t>(node.flags) << 32;
+		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&jtype))
+			out |= static_cast<uint64_t>(has_condition->condition) << 34;
+		out |= static_cast<uint64_t>(jtype.link? 1 : 0) << 44;
+		out |= registerMap.at(jtype.rs) << 45;
+		out |= static_cast<uint64_t>(jtype.getOpcode()) << 52;
+		return out;
 	}
 
 	void Assembler::addCode(const WASMInstructionNode &node) {
