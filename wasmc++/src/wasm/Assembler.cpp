@@ -45,7 +45,7 @@ namespace Wasmc {
 		}
 	}
 
-	Long Assembler::compileR(const WASMInstructionNode &node, const RType &rtype) {
+	Long Assembler::compileR(const WASMInstructionNode &node, const RType &rtype) const {
 		if (registerMap.count(rtype.rs) == 0)
 			throw std::runtime_error("Invalid rs in R-type: " + (rtype.rs? *rtype.rs : "null"));
 		if (registerMap.count(rtype.rt) == 0)
@@ -68,11 +68,11 @@ namespace Wasmc {
 		return out;
 	}
 
-	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) {
+	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
 		return 0;
 	}
 
-	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) {
+	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
 		return 0;
 	}
 

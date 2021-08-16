@@ -49,11 +49,11 @@ namespace Wasmc {
 
 			Long compileInstruction(const WASMInstructionNode &);
 
-			Long compileR(const WASMInstructionNode &, const RType &);
+			Long compileR(const WASMInstructionNode &, const RType &) const;
 
-			Long compileI(const WASMInstructionNode &, const IType &);
+			Long compileI(const WASMInstructionNode &, const IType &) const;
 
-			Long compileJ(const WASMInstructionNode &, const JType &);
+			Long compileJ(const WASMInstructionNode &, const JType &) const;
 
 			void addCode(const WASMInstructionNode &);
 
