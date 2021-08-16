@@ -583,6 +583,10 @@ namespace Wasmc {
 	std::vector<Long> Assembler::createDebugData(const ASTNode *node, const Statements &expanded) {
 		std::vector<Long> out;
 		debugEntries.clear();
+
+		if (!node)
+			return out;
+
 		debugEntries.reserve(node->size());
 
 		for (const ASTNode *child: *node) {
