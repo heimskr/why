@@ -59,6 +59,8 @@ namespace Wasmc {
 			return compileI(node, *itype);
 		} else if (const JType *jtype = dynamic_cast<const JType *>(&node)) {
 			return compileJ(node, *jtype);
+		} else if (node.nodeType() == WASMNodeType::Nop) {
+			return 0;
 		} else {
 			node.debug();
 			throw std::runtime_error("Node isn't an R-, I- or J-type");

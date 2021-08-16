@@ -285,14 +285,18 @@ $s3 -> [42]
 $t0 -> $t1
 
 @ret
-&push -> $r
-!ret
+&push -> $rt
+: $rt
 
 @push
-[ $t0 $t1 $s0 $s1
+// [ $t0 $t1 $s0 $s1
+[ $t0
+[ $t1
 
 @pop
-] $s1 $s0 $t1 $t0
+// ] $s1 $s0 $t1 $t0
+] $t1
+] $t0
 
 @jeq
 &nop -> $t2
