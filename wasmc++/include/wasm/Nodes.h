@@ -187,10 +187,11 @@ namespace Wasmc {
 	};
 
 	/** For math and logical operations. */
-	struct INode: WASMInstructionNode, HasImmediate, TwoRegs, HasOper, HasUnsigned {
+	struct INode: WASMInstructionNode, IType, HasOper, HasUnsigned {
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
 		INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
 		      int oper_token, bool is_unsigned);
+		Opcode getOpcode() const override { return TOKEN_OPCODES_I.at(operToken); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;

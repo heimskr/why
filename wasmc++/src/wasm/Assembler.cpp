@@ -69,7 +69,24 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
-		return 0;
+		if (registerMap.count(itype.rs) == 0)
+			throw std::runtime_error("Invalid rs in I-type: " + (itype.rs? *itype.rs : "null"));
+		if (registerMap.count(itype.rd) == 0)
+			throw std::runtime_error("Invalid rd in I-type: " + (itype.rd? *itype.rd : "null"));
+		if (std::holds_alternative<const std::string *>(itype.imm))
+			throw std::runtime_error("Can't compile an I-type with a label immediate");
+
+		uint32_t imm = static_cast<uint32_t>(std::holds_alternative<int>(itype.imm)? std::get<int>(itype.imm)
+			: std::get<char>(itype.imm));
+
+		Long out = imm;
+		out |= registerMap.at(itype.rd) << 32;
+		out |= registerMap.at(itype.rs) << 39;
+		out |= static_cast<uint64_t>(node.flags) << 46;
+		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&itype))
+			out |= static_cast<uint64_t>(has_condition->condition) << 48;
+		out |= static_cast<uint64_t>(itype.getOpcode()) << 52;
+		return out;
 	}
 
 	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {

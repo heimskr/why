@@ -162,8 +162,7 @@ namespace Wasmc {
 	}
 
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_INODE), HasImmediate(getImmediate(imm_)), TwoRegs(rs_, rd_), HasOper(oper_),
-	HasUnsigned(unsigned_) {
+	WASMInstructionNode(WASM_INODE), IType(rs_, rd_, imm_), HasOper(oper_), HasUnsigned(unsigned_) {
 		delete rs_;
 		delete oper_;
 		delete imm_;
@@ -174,8 +173,7 @@ namespace Wasmc {
 
 	INode::INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
 	             int oper_token, bool is_unsigned):
-		WASMInstructionNode(WASM_INODE), HasImmediate(imm_), TwoRegs(rs_, rd_), HasOper(oper_token, oper_),
-		HasUnsigned(is_unsigned) {}
+		WASMInstructionNode(WASM_INODE), IType(rs_, rd_, imm_), HasOper(oper_token, oper_), HasUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * INode::copy() const {
 		return (new INode(rs, oper, imm, rd, operToken, isUnsigned))->absorb(*this);
