@@ -220,8 +220,8 @@ arg: "&" ident { $$ = $1->adopt($2); }
 
 op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
-    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is unary
-    | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here, but with "!".
+    | "~" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
+    | "!" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
 basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
 logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
 shorthandable_r: logical | shorthandable_i;
