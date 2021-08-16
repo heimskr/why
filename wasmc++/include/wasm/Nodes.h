@@ -361,19 +361,6 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	struct WASMJeqNode: WASMInstructionNode { // Pseudoinstruction; not handled by Assembler::compileInstruction
-		bool link;
-		Either addr, rt;
-		const std::string *rs;
-
-		WASMJeqNode(WASMJNode *, ASTNode *rs_, ASTNode *rt_);
-		WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_);
-		WASMInstructionNode * copy() const override { return (new WASMJeqNode(addr, link, rs, rt))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Jeq; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
 	struct WASMJcNode: WASMInstructionNode, JType {
 		WASMJcNode(WASMJNode *, ASTNode *rs_);
 		WASMJcNode(const Immediate &imm_, bool link_, const std::string *rs_);
@@ -405,6 +392,20 @@ namespace Wasmc {
 		Funct getFunct() const override { return FUNCTS.at(link? "jrlc" : "jrc"); }
 		WASMInstructionNode * copy() const override { return (new WASMJrcNode(link, rs, rd))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jrc; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMJeqNode: WASMInstructionNode { // Pseudoinstruction; not handled by Assembler::compileInstruction
+		bool link;
+		Either addr, rt;
+		const std::string *rs;
+
+		WASMJeqNode(WASMJNode *, ASTNode *rs_, ASTNode *rt_);
+		WASMJeqNode(WASMJrNode *, ASTNode *rs_, ASTNode *rt_);
+		WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_);
+		WASMInstructionNode * copy() const override { return (new WASMJeqNode(addr, link, rs, rt))->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Jeq; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

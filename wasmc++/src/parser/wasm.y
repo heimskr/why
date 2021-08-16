@@ -279,7 +279,8 @@ _jcond: jcond | { $$ = nullptr; };
 jcond: zero | "+" | "-" | "*";
 colons: ":" ":" { $$ = $1->adopt($2); } | ":";
 
-op_jeq: op_j "if" reg "==" either { $$ = new WASMJeqNode(dynamic_cast<WASMJNode *>($1), $3, $5); D($2, $4); };
+op_jeq: op_j "if" reg "==" either { $$ = new WASMJeqNode(dynamic_cast<WASMJNode *>($1), $3, $5); D($2, $4); }
+      | op_jr "if" reg "==" either { $$ = new WASMJeqNode(dynamic_cast<WASMJrNode *>($1), $3, $5); D($2, $4); };
 
 op_jc: op_j "if" reg { $$ = new WASMJcNode(dynamic_cast<WASMJNode *>($1), $3); D($2); };
 

@@ -505,36 +505,10 @@ namespace Wasmc {
 			+ " " + toString(imm);
 	}
 
-	WASMJeqNode::WASMJeqNode(WASMJNode *j, ASTNode *rs_, ASTNode *rt_):
-	WASMInstructionNode(WASM_JEQNODE), link(j? j->link : false), addr(j? j->imm : 0), rt(getEither(rt_)),
-	rs(rs_->lexerInfo) {
-		if (!j) {
-			wasmerror("No WASMCJNode found in jeq instruction");
-		} else {
-			if (j->condition != Condition::None)
-				wasmerror("Conditions specified for jeq instruction will be ignored");
-			delete j;
-		}
-		delete rs_;
-	}
-
-	WASMJeqNode::WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_):
-		WASMInstructionNode(WASM_JEQNODE), link(link_), addr(addr_), rt(rt_), rs(rs_) {}
-
-	std::string WASMJeqNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + dim(link? "::" : ":") + " " + colorize(addr) + red(" if ")
-			+ cyan(*rs) + " == " + colorize(rt);
-	}
-
-	WASMJeqNode::operator std::string() const {
-		return WASMInstructionNode::operator std::string() + std::string(link? "::" : ":") + " " + toString(addr)
-			+ " if " + *rs + " == " + toString(rt);
-	}
-
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_): WASMInstructionNode(WASM_JCNODE),
 	JType(j? j->condition : Condition::None, j? j->link : false, j? j->imm : 0, rs_->lexerInfo) {
 		if (!j) {
-			wasmerror("No WASMCJNode found in jc instruction");
+			wasmerror("No WASMJNode found in jc instruction");
 		} else {
 			if (j->condition != Condition::None)
 				wasmerror("Conditions specified for jc instruction will be ignored");
@@ -585,7 +559,7 @@ namespace Wasmc {
 	WASMInstructionNode(WASM_JRCNODE), RType(rs_->lexerInfo, nullptr, jr? jr->rd : nullptr),
 	HasLink(jr? jr->link : false) {
 		if (!jr) {
-			wasmerror("No WASMCJrNode found in jr(l)c instruction");
+			wasmerror("No WASMJrNode found in jr(l)c instruction");
 		} else {
 			if (jr->condition != Condition::None)
 				wasmerror("Conditions specified for jr(l)c instruction will be ignored");
@@ -603,6 +577,45 @@ namespace Wasmc {
 
 	WASMJrcNode::operator std::string() const {
 		return WASMInstructionNode::operator std::string() + std::string(link? "::" : ":") + " " + *rd + " if " + *rs;
+	}
+
+	WASMJeqNode::WASMJeqNode(WASMJNode *j, ASTNode *rs_, ASTNode *rt_):
+	WASMInstructionNode(WASM_JEQNODE), link(j? j->link : false), addr(j? j->imm : 0), rt(getEither(rt_)),
+	rs(rs_->lexerInfo) {
+		if (!j) {
+			wasmerror("No WASMJNode found in jeq instruction");
+		} else {
+			if (j->condition != Condition::None)
+				wasmerror("Conditions specified for jeq instruction will be ignored");
+			delete j;
+		}
+		delete rs_;
+	}
+
+	WASMJeqNode::WASMJeqNode(WASMJrNode *jr, ASTNode *rs_, ASTNode *rt_):
+	WASMInstructionNode(WASM_JEQNODE), link(jr? jr->link : false), addr(jr? jr->rd : nullptr), rt(getEither(rt_)),
+	rs(rs_->lexerInfo) {
+		if (!jr) {
+			wasmerror("No WASMJrNode found in jeq instruction");
+		} else {
+			if (jr->condition != Condition::None)
+				wasmerror("Conditions specified for jeq instruction will be ignored");
+			delete jr;
+		}
+		delete rs_;
+	}
+
+	WASMJeqNode::WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_):
+		WASMInstructionNode(WASM_JEQNODE), link(link_), addr(addr_), rt(rt_), rs(rs_) {}
+
+	std::string WASMJeqNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim(link? "::" : ":") + " " + colorize(addr) + red(" if ")
+			+ cyan(*rs) + " == " + colorize(rt);
+	}
+
+	WASMJeqNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + std::string(link? "::" : ":") + " " + toString(addr)
+			+ " if " + *rs + " == " + toString(rt);
 	}
 
 	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size, ASTNode *rs_, bool is_push):
