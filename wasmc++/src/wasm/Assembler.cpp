@@ -422,6 +422,7 @@ namespace Wasmc {
 
 				case WASMNodeType::Jeq:
 					addJeq(expanded, instruction);
+					break;
 
 				default:
 					expanded.emplace_back(flipSigns(instruction->copy()));
