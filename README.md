@@ -1,4 +1,4 @@
-[![wakatime](https://wakatime.com/badge/github/heimskr/why.js.svg)](https://wakatime.com/badge/github/heimskr/why.js)
+[![wakatime](https://wakatime.com/badge/github/heimskr/why.js.svg)](https://wakatime.com/badge/github/heimskr/why.js) (off by a few hundred hours probably)
 
 # why.js
 
