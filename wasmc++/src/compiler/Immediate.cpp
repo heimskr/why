@@ -49,6 +49,8 @@ namespace Wasmc {
 	}
 
 	Immediate getImmediate(const ASTNode *node) {
+		if (!node)
+			throw std::invalid_argument("getImmediate requires its argument not to be null");
 		if (node->symbol == WASM_IMMEDIATE)
 			return dynamic_cast<const WASMImmediateNode *>(node)->imm;
 		if (node->symbol == WASMTOK_NUMBER)

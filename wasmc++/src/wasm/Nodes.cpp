@@ -131,7 +131,7 @@ namespace Wasmc {
 	}
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_RNODE), RType(rs_, rt_, rd_, oper_), HasUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_RNODE), RType(rs_, rt_, rd_), HasOper(oper_), HasUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
 		if (oper_ != rt_)
@@ -143,7 +143,7 @@ namespace Wasmc {
 
 	RNode::RNode(const std::string *rs_, const std::string *oper_, const std::string *rt_, const std::string *rd_,
 	             int oper_token, bool is_unsigned):
-		WASMInstructionNode(WASM_RNODE), RType(rs_, rt_, rd_, oper_token, oper_), HasUnsigned(is_unsigned) {}
+		WASMInstructionNode(WASM_RNODE), RType(rs_, rt_, rd_), HasOper(oper_token, oper_), HasUnsigned(is_unsigned) {}
 
 	WASMInstructionNode * RNode::copy() const {
 		return (new RNode(rs, oper, rt, rd, operToken, isUnsigned))->absorb(*this);
@@ -196,7 +196,7 @@ namespace Wasmc {
 	}
 
 	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-	WASMInstructionNode(sym), TwoRegs(rs_, rd_), isByte(!!byte_) {
+	WASMInstructionNode(sym), RType(rs_, nullptr, rd_), isByte(!!byte_) {
 		delete rs_;
 		delete rd_;
 		if (byte_)
@@ -204,7 +204,7 @@ namespace Wasmc {
 	}
 
 	WASMMemoryNode::WASMMemoryNode(int sym, const std::string *rs_, const std::string *rd_, bool is_byte):
-		WASMInstructionNode(sym), TwoRegs(rs_, rd_), isByte(is_byte) {}
+		WASMInstructionNode(sym), RType(rs_, nullptr, rd_), isByte(is_byte) {}
 
 	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
 		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, byte_) {}
@@ -270,7 +270,7 @@ namespace Wasmc {
 	}
 
 	WASMSetNode::WASMSetNode(const Immediate &imm_, const std::string *rd_):
-		WASMInstructionNode(WASM_SETNODE), HasImmediate(imm_), HasRD(rd_) {}
+		WASMInstructionNode(WASM_SETNODE), IType(nullptr, rd_, imm_) {}
 
 	WASMInstructionNode * WASMSetNode::copy() const {
 		return (new WASMSetNode(imm, rd))->absorb(*this);
@@ -293,7 +293,7 @@ namespace Wasmc {
 	}
 
 	WASMLiNode::WASMLiNode(const Immediate &imm_, const std::string *rd_, bool is_byte):
-		WASMInstructionNode(WASM_LINODE), HasImmediate(imm_), HasRD(rd_), isByte(is_byte) {}
+		WASMInstructionNode(WASM_LINODE), IType(nullptr, rd_, imm_), isByte(is_byte) {}
 
 	WASMInstructionNode * WASMLiNode::copy() const {
 		return (new WASMLiNode(imm, rd, isByte))->absorb(*this);
@@ -309,7 +309,7 @@ namespace Wasmc {
 	}
 
 	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
-	WASMInstructionNode(WASM_SINODE), HasImmediate(getImmediate(imm_)), HasRS(rs_->lexerInfo), isByte(!!byte_) {
+	WASMInstructionNode(WASM_SINODE), IType(rs_, nullptr, imm_), isByte(!!byte_) {
 		delete rs_;
 		delete imm_;
 		if (byte_)
@@ -317,7 +317,7 @@ namespace Wasmc {
 	}
 
 	WASMSiNode::WASMSiNode(const Immediate &imm_, const std::string *rs_, bool is_byte):
-		WASMInstructionNode(WASM_SINODE), HasImmediate(imm_), HasRS(rs_), isByte(is_byte) {}
+		WASMInstructionNode(WASM_SINODE), IType(rs_, nullptr, imm_), isByte(is_byte) {}
 
 	WASMInstructionNode * WASMSiNode::copy() const {
 		return (new WASMSiNode(imm, rs, isByte))->absorb(*this);
@@ -813,11 +813,12 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%ring " + toString(imm);
 	}
 
-	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
+	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMInstructionNode(WASM_RINGRNODE), RType(rs_, nullptr, nullptr) {
 		delete rs_;
 	}
 
-	WASMRingRNode::WASMRingRNode(const std::string *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_) {}
+	WASMRingRNode::WASMRingRNode(const std::string *rs_):
+		WASMInstructionNode(WASM_RINGRNODE), RType(rs_, nullptr, nullptr) {}
 
 	std::string WASMRingRNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%ring") + " " + cyan(*rs);
