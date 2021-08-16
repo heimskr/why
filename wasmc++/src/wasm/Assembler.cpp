@@ -12,7 +12,7 @@
 namespace Wasmc {
 	Assembler::Assembler(Parser &parser_): parser(parser_) {}
 
-	void Assembler::assemble() {
+	std::string Assembler::assemble() {
 		meta.resize(5, 0);
 		validateSectionCounts();
 		findAllLabels();
@@ -30,6 +30,26 @@ namespace Wasmc {
 		setDataOffsets();
 		reprocessData();
 		processCode(expandLabels(expanded));
+		symbolTable = createSymbolTable(allLabels, false);
+
+		assembled.clear();
+		for (const auto &longs: {meta, symbolTable, code, data, debugData})
+			assembled.insert(assembled.end(), longs.begin(), longs.end());
+
+		return stringify(assembled);
+	}
+
+	std::string Assembler::stringify(const std::vector<Long> &longs) {
+		std::stringstream ss;
+		bool first = true;
+		for (const Long piece: longs) {
+			if (first)
+				first = false;
+			else
+				ss << "\n";
+			ss << std::hex << std::right << std::setw(16) << std::setfill('0') << piece;
+		}
+		return ss.str();
 	}
 
 	Long Assembler::compileInstruction(const WASMInstructionNode &node) {

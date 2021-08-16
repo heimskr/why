@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 	parser.parse();
 
 	Wasmc::Assembler assembler(parser);
-	assembler.assemble();
+	std::cout << assembler.assemble() << "\n";
 
 	return 0;
 }

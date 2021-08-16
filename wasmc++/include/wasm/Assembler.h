@@ -25,7 +25,7 @@ namespace Wasmc {
 		public:
 			Assembler(Parser &);
 
-			void assemble();
+			std::string assemble();
 
 		private:
 			Parser &parser;
@@ -46,6 +46,8 @@ namespace Wasmc {
 
 			ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
 			        *codeNode = nullptr;
+
+			std::string stringify(const std::vector<Long> &);
 
 			Long compileInstruction(const WASMInstructionNode &);
 
