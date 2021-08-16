@@ -149,10 +149,6 @@ namespace Wasmc {
 		return (new RNode(rs, oper, rt, rd, operToken, isUnsigned))->absorb(*this);
 	}
 
-	Opcode RNode::getOpcode() const {
-		return TOKEN_OPCODES_R.at(operToken);
-	}
-
 	std::string RNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + " " + dim(*oper) + " " + cyan(*rt) + dim(" -> ")
 			+ cyan(*rd) + (isUnsigned? " /u" : "");
@@ -849,6 +845,17 @@ namespace Wasmc {
 	WASMPrintNode::WASMPrintNode(const std::string *rs_, PrintType type_):
 		WASMInstructionNode(WASM_PRINTNODE), RType(rs_, nullptr, nullptr), type(type_) {}
 
+	Funct WASMPrintNode::getFunct() const {
+		switch (type) {
+			case PrintType::Hex:  return FUNCTS.at("prx");
+			case PrintType::Dec:  return FUNCTS.at("prd");
+			case PrintType::Char: return FUNCTS.at("prc");
+			case PrintType::Full: return FUNCTS.at("printr");
+			case PrintType::Bin:  return FUNCTS.at("prb");
+			default: throw std::runtime_error("Invalid print type: " + std::to_string(static_cast<int>(type)));
+		}
+	}
+
 	std::string WASMPrintNode::debugExtra() const {
 		const std::string base = WASMInstructionNode::debugExtra();
 		switch (type) {
@@ -963,6 +970,13 @@ namespace Wasmc {
 
 	WASMQueryNode::WASMQueryNode(QueryType type_, const std::string *rd_):
 		WASMInstructionNode(WASM_QUERYNODE), RType(nullptr, nullptr, rd_), type(type_) {}
+
+	Funct WASMQueryNode::getFunct() const {
+		switch (type) {
+			case QueryType::Memory: return FUNCTS.at("qm");
+			default: throw std::runtime_error("Invalid query type: " + std::to_string(static_cast<int>(type)));
+		}
+	}
 
 	std::string WASMQueryNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "? " + blue(query_map.at(type)) + dim(" -> ") + cyan(*rd);
