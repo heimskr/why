@@ -206,6 +206,7 @@ namespace Wasmc {
 		{WASMTOK_LL,      OPCODES.at("sll")  },
 		{WASMTOK_RL,      OPCODES.at("srl")  },
 		{WASMTOK_RA,      OPCODES.at("sra")  },
+		{WASMTOK_NOT,     OPCODES.at("not")  },
 	};
 
 	std::unordered_map<int, Opcode> TOKEN_OPCODES_I {
@@ -309,5 +310,6 @@ namespace Wasmc {
 		{WASMTOK_LL,      0b000000000110},
 		{WASMTOK_RL,      0b000000000111},
 		{WASMTOK_RA,      0b000000001000},
+		{WASMTOK_NOT,     0b000000000011},
 	};
 }

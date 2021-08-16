@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <unordered_map>
 
@@ -179,8 +180,8 @@ namespace Wasmc {
 		RNode(const std::string *rs_, const std::string *oper_, const std::string *rt_, const std::string *rd_,
 		      int oper_token, bool is_unsigned);
 		WASMInstructionNode * copy() const override;
-		Opcode getOpcode() const override { return TOKEN_OPCODES_R.at(operToken); }
-		Funct getFunct() const override { return TOKEN_FUNCTS.at(operToken); }
+		Opcode getOpcode() const override;
+		Funct getFunct() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

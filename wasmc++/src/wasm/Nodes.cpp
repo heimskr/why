@@ -150,6 +150,24 @@ namespace Wasmc {
 		return (new RNode(rs, oper, rt, rd, operToken, isUnsigned))->absorb(*this);
 	}
 
+	Opcode RNode::getOpcode() const {
+		try {
+			return TOKEN_OPCODES_R.at(operToken);
+		} catch (const std::out_of_range &) {
+			std::cerr << "Couldn't find opcode for token " << operToken << " (" << *oper << ")\n";
+			throw;
+		}
+	}
+
+	Funct RNode::getFunct() const {
+		try {
+			return TOKEN_FUNCTS.at(operToken);
+		} catch (const std::out_of_range &) {
+			std::cerr << "Couldn't find function for token " << operToken << " (" << *oper << ")\n";
+			throw;
+		}
+	}
+
 	std::string RNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + cyan(*rs) + " " + dim(*oper) + " " + cyan(*rt) + dim(" -> ")
 			+ cyan(*rd) + (isUnsigned? " /u" : "");
