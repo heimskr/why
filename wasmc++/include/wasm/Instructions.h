@@ -12,7 +12,8 @@ namespace Wasmc {
 
 	extern std::unordered_set<Opcode> RTYPES, ITYPES, JTYPES;
 	extern std::unordered_map<std::string, Opcode> OPCODES;
-	extern std::unordered_map<int, Opcode> TOKEN_OPCODES_R, TOKEN_OPCODES_I;
+	extern std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R, TOKEN_INSTRUCTIONS_I;
+	extern std::unordered_map<std::string, std::string> UNSIGNED_EQUIVALENTS;
 	extern std::unordered_map<std::string, Funct> FUNCTS;
 	extern std::unordered_map<int, Funct> TOKEN_FUNCTS;
 }

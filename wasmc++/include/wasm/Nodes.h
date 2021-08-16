@@ -192,7 +192,7 @@ namespace Wasmc {
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
 		INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
 		      int oper_token, bool is_unsigned);
-		Opcode getOpcode() const override { return TOKEN_OPCODES_I.at(operToken); }
+		Opcode getOpcode() const override;
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;

@@ -152,7 +152,8 @@ namespace Wasmc {
 
 	Opcode RNode::getOpcode() const {
 		try {
-			return TOKEN_OPCODES_R.at(operToken);
+			const std::string &instruction = TOKEN_INSTRUCTIONS_R.at(operToken);
+			return OPCODES.at(isUnsigned? UNSIGNED_EQUIVALENTS.at(instruction) : instruction);
 		} catch (const std::out_of_range &) {
 			debug();
 			std::cerr << "Couldn't find opcode for token " << operToken << " (" << *oper << ")\n";
@@ -162,7 +163,8 @@ namespace Wasmc {
 
 	Funct RNode::getFunct() const {
 		try {
-			return TOKEN_FUNCTS.at(operToken);
+			const std::string &instruction = TOKEN_INSTRUCTIONS_R.at(operToken);
+			return FUNCTS.at(isUnsigned? UNSIGNED_EQUIVALENTS.at(instruction) : instruction);
 		} catch (const std::out_of_range &) {
 			debug();
 			std::cerr << "Couldn't find function for token " << operToken << " (" << *oper << ")\n";
@@ -196,6 +198,17 @@ namespace Wasmc {
 	INode::INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
 	             int oper_token, bool is_unsigned):
 		WASMInstructionNode(WASM_INODE), IType(rs_, rd_, imm_), HasOper(oper_token, oper_), HasUnsigned(is_unsigned) {}
+
+	Opcode INode::getOpcode() const {
+		try {
+			const std::string &instruction = TOKEN_INSTRUCTIONS_I.at(operToken);
+			return OPCODES.at(isUnsigned? UNSIGNED_EQUIVALENTS.at(instruction) : instruction);
+		} catch (const std::out_of_range &) {
+			debug();
+			std::cerr << "Couldn't find opcode for token " << operToken << " (" << *oper << ")\n";
+			throw;
+		}
+	}
 
 	WASMInstructionNode * INode::copy() const {
 		return (new INode(rs, oper, imm, rd, operToken, isUnsigned))->absorb(*this);
