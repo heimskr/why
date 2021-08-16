@@ -132,7 +132,8 @@ namespace Wasmc {
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
 	WASMInstructionNode(WASM_RNODE), RType(rs_, rt_, rd_), HasOper(oper_), HasUnsigned(!!unsigned_) {
-		delete rs_;
+		if (rs_ != rd_)
+			delete rs_;
 		delete oper_;
 		if (oper_ != rt_)
 			delete rt_;
@@ -163,7 +164,8 @@ namespace Wasmc {
 
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
 	WASMInstructionNode(WASM_INODE), IType(rs_, rd_, imm_), HasOper(oper_), HasUnsigned(unsigned_) {
-		delete rs_;
+		if (rs_ != rd_)
+			delete rs_;
 		delete oper_;
 		delete imm_;
 		delete rd_;
