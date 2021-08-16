@@ -424,12 +424,28 @@ namespace Wasmc {
 					addJeq(expanded, instruction);
 
 				default:
-					expanded.emplace_back(instruction->copy());
+					expanded.emplace_back(flipSigns(instruction->copy()));
 					break;
 			}
 		}
 
 		return expanded;
+	}
+
+	WASMInstructionNode * Assembler::flipSigns(WASMInstructionNode *node) const {
+		if (RNode *rnode = dynamic_cast<RNode *>(node)) {
+			if (*rnode->oper == ">=") {
+				rnode->oper = StringSet::intern("<=");
+				rnode->operToken = WASMTOK_LEQ;
+				std::swap(rnode->rs, rnode->rt);
+			} else if (*rnode->oper == ">") {
+				rnode->oper = StringSet::intern("<");
+				rnode->operToken = WASMTOK_LANGLE;
+				std::swap(rnode->rs, rnode->rt);
+			}
+		}
+
+		return node;
 	}
 
 	void Assembler::addJeq(Statements &expanded, const WASMInstructionNode *instruction) {

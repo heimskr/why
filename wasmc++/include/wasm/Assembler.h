@@ -88,6 +88,8 @@ namespace Wasmc {
 
 			Statements expandCode();
 
+			WASMInstructionNode * flipSigns(WASMInstructionNode *) const;
+
 			void addJeq(Statements &, const WASMInstructionNode *);
 			void addJeqImmediateRHS(Statements &, const WASMJeqNode *, const std::string *m7);
 

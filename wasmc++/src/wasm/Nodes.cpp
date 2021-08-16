@@ -154,6 +154,7 @@ namespace Wasmc {
 		try {
 			return TOKEN_OPCODES_R.at(operToken);
 		} catch (const std::out_of_range &) {
+			debug();
 			std::cerr << "Couldn't find opcode for token " << operToken << " (" << *oper << ")\n";
 			throw;
 		}
@@ -163,6 +164,7 @@ namespace Wasmc {
 		try {
 			return TOKEN_FUNCTS.at(operToken);
 		} catch (const std::out_of_range &) {
+			debug();
 			std::cerr << "Couldn't find function for token " << operToken << " (" << *oper << ")\n";
 			throw;
 		}
