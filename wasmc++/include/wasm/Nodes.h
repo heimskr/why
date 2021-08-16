@@ -168,10 +168,7 @@ namespace Wasmc {
 
 	struct JType: HasOpcode, HasImmediate, HasRS, HasCondition, HasLink {
 		JType(const ASTNode *cond, const ASTNode *colons, const ASTNode *addr, const ASTNode *rs_):
-		HasImmediate(getImmediate(addr)), HasRS(rs_), HasCondition(cond), HasLink(colons) {
-			delete colons;
-			delete cond;
-		}
+			HasImmediate(getImmediate(addr)), HasRS(rs_), HasCondition(cond), HasLink(colons) {}
 		JType(Condition cond, bool link_, const Immediate &addr, const std::string *rs_):
 			HasImmediate(addr), HasRS(rs_), HasCondition(cond), HasLink(link_) {}
 	};
