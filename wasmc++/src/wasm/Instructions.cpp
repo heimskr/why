@@ -77,6 +77,7 @@ namespace Wasmc {
 	};
 
 	std::unordered_map<std::string, Opcode> OPCODES {
+		{"nop",    0b000000000000},
 		{"add",    0b000000000001},
 		{"sll",    0b000000000001},
 		{"srl",    0b000000000001},
