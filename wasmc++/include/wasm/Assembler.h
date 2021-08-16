@@ -13,6 +13,10 @@ namespace Wasmc {
 	struct WASMInstructionNode;
 	struct WASMJeqNode;
 
+	struct RType;
+	struct IType;
+	struct JType;
+
 	using Long = uint64_t;
 	using Statements = std::vector<std::shared_ptr<WASMInstructionNode>>;
 	using Strings = std::vector<const std::string *>;
@@ -44,6 +48,12 @@ namespace Wasmc {
 			        *codeNode = nullptr;
 
 			Long compileInstruction(const WASMInstructionNode &);
+
+			Long compileR(const WASMInstructionNode &, const RType &);
+
+			Long compileI(const WASMInstructionNode &, const IType &);
+
+			Long compileJ(const WASMInstructionNode &, const JType &);
 
 			void addCode(const WASMInstructionNode &);
 

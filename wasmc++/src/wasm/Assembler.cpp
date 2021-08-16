@@ -33,6 +33,46 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileInstruction(const WASMInstructionNode &node) {
+		if (const RType *rtype = dynamic_cast<const RType *>(&node)) {
+			return compileR(node, *rtype);
+		} else if (const IType *itype = dynamic_cast<const IType *>(&node)) {
+			return compileI(node, *itype);
+		} else if (const JType *jtype = dynamic_cast<const JType *>(&node)) {
+			return compileJ(node, *jtype);
+		} else {
+			node.debug();
+			throw std::runtime_error("Node isn't an R-, I- or J-type");
+		}
+	}
+
+	Long Assembler::compileR(const WASMInstructionNode &node, const RType &rtype) {
+		if (registerMap.count(rtype.rs) == 0)
+			throw std::runtime_error("Invalid rs in R-type: " + (rtype.rs? *rtype.rs : "null"));
+		if (registerMap.count(rtype.rt) == 0)
+			throw std::runtime_error("Invalid rt in R-type: " + (rtype.rt? *rtype.rt : "null"));
+		if (registerMap.count(rtype.rd) == 0)
+			throw std::runtime_error("Invalid rd in R-type: " + (rtype.rd? *rtype.rd : "null"));
+
+		const Funct funct = rtype.getFunct();
+		if (FUNCT_MAX < funct)
+			throw std::runtime_error("Invalid function value: " + std::to_string(funct));
+
+		Long out = funct;
+		out |= static_cast<unsigned>(node.flags) << 12;
+		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&rtype))
+			out |= static_cast<unsigned>(has_condition->condition) << 14;
+		out |= registerMap.at(rtype.rd) << 31;
+		out |= registerMap.at(rtype.rs) << 38;
+		out |= registerMap.at(rtype.rt) << 45;
+		out |= static_cast<uint64_t>(rtype.getOpcode()) << 52;
+		return out;
+	}
+
+	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) {
+		return 0;
+	}
+
+	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) {
 		return 0;
 	}
 
