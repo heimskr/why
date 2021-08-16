@@ -102,6 +102,8 @@ WASM_CODE_HEADER		("#code"|"#c")
 "<>"						{ WASMRTOKEN(NOP) }
 "<<"						{ WASMRTOKEN(LL) }
 ">>"						{ WASMRTOKEN(RA) }
+"++"						{ WASMRTOKEN(INC) }
+"--"						{ WASMRTOKEN(DEC) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }

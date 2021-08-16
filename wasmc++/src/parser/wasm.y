@@ -137,6 +137,8 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_ORCID "orcid"
 %token WASMTOK_NAME "name"
 %token WASMTOK_RET "!ret"
+%token WASMTOK_INC "++"
+%token WASMTOK_DEC "--"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -203,7 +205,7 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | call     | op_jeq   | op_sprint;
+         | op_qmem | op_ret   | call     | op_jeq   | op_sprint | op_inc   | op_dec;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -235,6 +237,10 @@ op_i: reg basic_oper_i immediate "->" reg _unsigned { $$ = new INode($1, $2, $3,
     | reg shorthandable_i "=" immediate _unsigned   { $$ = new INode($1, $2, $4, $1, $5); D($3); };
 basic_oper_i: shorthandable_i | "<" | "<=" | "==" | ">" | ">=" | "!";
 shorthandable_i: "+" | "-" | "&" | "|" | "x" | "~x" | "~&" | "~|" | "/" | "%" | "<<" | ">>>" | ">>";
+
+op_inc: reg "++" { $$ = new INode($1->lexerInfo, StringSet::intern("+"), 1, $1->lexerInfo, WASMTOK_PLUS, false); D($2); };
+
+op_dec: reg "--" { $$ = new INode($1->lexerInfo, StringSet::intern("-"), 1, $1->lexerInfo, WASMTOK_MINUS, false); D($2); };
 
 op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 _byte: "/b" | { $$ = nullptr; };
