@@ -1,11 +1,36 @@
+#include <cstring>
 #include <fstream>
 #include <iostream>
 
 #include "parser/Parser.h"
 #include "util/Util.h"
 #include "wasm/Assembler.h"
+#include "wasm/Linker.h"
+
+int link(int argc, char **argv);
+int assemble(int argc, char **argv);
 
 int main(int argc, char **argv) {
+	if (1 < argc && strcmp(argv[1], "-l") == 0)
+		return link(argc, argv);
+	return assemble(argc, argv);
+}
+
+int link(int argc, char **argv) {
+	if (argc < 5) {
+		std::cerr << "Usage: " << argv[0] << " -l <output binary> <main input binary> <other input binaries...>\n";
+		return 1;
+	}
+
+	Wasmc::Linker linker;
+
+	for (int i = 3; i < argc; ++i)
+		linker.addFile(argv[i]);
+
+	return 0;
+}
+
+int assemble(int argc, char **argv) {
 	if (argc != 3) {
 		std::cerr << "Usage: " << argv[0] << " <input> <output>\n";
 		return 1;
@@ -26,7 +51,14 @@ int main(int argc, char **argv) {
 	parser.debug(false, false);
 	parser.parse();
 
-	Wasmc::Assembler assembler(parser);
+	if (Wasmc::wasmParser.errorCount != 0) {
+		Wasmc::error() << "Failed to compile \e[1m" << argv[1] << "\e[22m.\n";
+		return 2;
+	}
+
+	Wasmc::Assembler assembler(parser.root);
+	parser.root = nullptr;
+	parser.done();
 
 	std::ofstream outfile(argv[2]);
 	if (!outfile.is_open())
@@ -36,7 +68,7 @@ int main(int argc, char **argv) {
 	} catch (const std::exception &err) {
 		Wasmc::error() << "Compilation failed: " << err.what() << "\n";
 		outfile.close();
-		return 2;
+		return 3;
 	}
 
 	outfile.close();

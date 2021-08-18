@@ -5,8 +5,8 @@ orcid: "0000-0001-7405-6654"
 version: "1"
 
 #includes
-../compiled/b.why
-../compiled/c.why
+"../compiled/b.why"
+"../compiled/c.why"
 
 #data
 a1d: "hello"

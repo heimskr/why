@@ -12,9 +12,10 @@
 #include "wasm/Why.h"
 
 namespace Wasmc {
-	Assembler::Assembler(Parser &parser_): parser(parser_) {}
+	Assembler::Assembler(const ASTNode *root_): root(root_) {}
 
 	std::string Assembler::assemble() {
+		wasmParser.errorCount = 0;
 		meta.resize(5, 0);
 		validateSectionCounts();
 		findAllLabels();
@@ -177,7 +178,7 @@ namespace Wasmc {
 
 	void Assembler::validateSectionCounts() {
 		bool meta_found = false, include_found = false, data_found = false, debug_found = false, code_found = false;
-		for (ASTNode *node: *parser.root)
+		for (const ASTNode *node: *root)
 			switch (node->symbol) {
 				case WASMTOK_META_HEADER:
 					if (meta_found)
@@ -211,7 +212,7 @@ namespace Wasmc {
 					break;
 				default:
 					throw std::runtime_error("Unexpected symbol found at root level: "
-						+ std::string(parser.getName(node->symbol)));
+						+ std::string(wasmParser.getName(node->symbol)));
 			}
 	}
 
@@ -222,7 +223,7 @@ namespace Wasmc {
 			for (const ASTNode *node: *dataNode) {
 				if (node->symbol != WASMTOK_IDENT)
 					throw std::runtime_error("Unexpected symbol found in data section at "
-						+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
+						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
 				allLabels.insert(node->lexerInfo);
 			}
 		}
@@ -232,7 +233,7 @@ namespace Wasmc {
 				const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
 				if (!instruction)
 					throw std::runtime_error("Unexpected symbol found in code section at "
-						+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
+						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
 				for (const std::string *label: instruction->labels)
 					allLabels.insert(label);
 			}
@@ -298,7 +299,7 @@ namespace Wasmc {
 						break;
 					default:
 						throw std::runtime_error("Unexpected symbol found in meta section at "
-							+ std::string(node->location) + ": " + std::string(parser.getName(node->symbol)));
+							+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
 				}
 
 		if (orcid.find_first_not_of("0123456789") != std::string::npos) {
@@ -377,7 +378,7 @@ namespace Wasmc {
 				return {0};
 			default:
 				throw std::runtime_error("Unexpected symbol found in data section at " + std::string(child->location)
-					+ ": " + std::string(parser.getName(child->symbol)));
+					+ ": " + std::string(wasmParser.getName(child->symbol)));
 		}
 	}
 
@@ -395,7 +396,7 @@ namespace Wasmc {
 			if (!instruction) {
 				node->debug();
 				throw std::runtime_error("Unexpected symbol found in code section at " + std::string(node->location)
-					+ ": " + std::string(parser.getName(node->symbol)));
+					+ ": " + std::string(wasmParser.getName(node->symbol)));
 			}
 
 			for (const std::string *label: instruction->labels) {
@@ -614,7 +615,7 @@ namespace Wasmc {
 			if (child->symbol != WASMTOK_NUMBER) {
 				child->debug();
 				throw std::runtime_error("Unexpected symbol found in debug section at " + std::string(node->location)
-					+ ": " + std::string(parser.getName(node->symbol)));
+					+ ": " + std::string(wasmParser.getName(node->symbol)));
 			}
 			const int type = child->atoi();
 			switch (type) {

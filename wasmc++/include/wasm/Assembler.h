@@ -8,8 +8,10 @@
 #include "parser/Parser.h"
 #include "util/Util.h"
 #include "wasm/Debug.h"
+#include "wasm/Types.h"
 
 namespace Wasmc {
+	class ASTNode;
 	struct WASMInstructionNode;
 	struct WASMJeqNode;
 
@@ -17,18 +19,20 @@ namespace Wasmc {
 	struct IType;
 	struct JType;
 
-	using Long = uint64_t;
 	using Statements = std::vector<std::shared_ptr<WASMInstructionNode>>;
 	using Strings = std::vector<const std::string *>;
 
 	class Assembler {
 		public:
-			Assembler(Parser &);
+			/** Takes ownership of the ASTNode argument. */
+			Assembler(const ASTNode *);
+
+			~Assembler() { delete root; }
 
 			std::string assemble();
 
 		private:
-			Parser &parser;
+			const ASTNode *root;
 			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
 			std::vector<Long> meta, data, code, symbolTable, debugData, assembled;
 			std::unordered_set<const std::string *> allLabels, unknownSymbols;
@@ -46,8 +50,8 @@ namespace Wasmc {
 			Long & metaOffsetDebug()   { return meta.at(3); }
 			Long & metaOffsetEnd()     { return meta.at(4); }
 
-			ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
-			        *codeNode = nullptr;
+			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
+			              *codeNode = nullptr;
 
 			std::string stringify(const std::vector<Long> &);
 

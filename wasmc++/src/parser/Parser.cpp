@@ -37,7 +37,9 @@ namespace Wasmc {
 
 	void Parser::done() {
 		wasmlex_destroy();
-		delete root;
+
+		if (root)
+			delete root;
 
 		if (buffer) {
 			delete buffer;
