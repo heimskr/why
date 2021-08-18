@@ -12,7 +12,7 @@
 /llvm/llvm.js
 /**/*.o
 /wvm/c/wvm
-/.vscode
+.vscode
 /yarn-error.log
 !/wvm/dist/index.html
 /llvm/llvm2why/tmp

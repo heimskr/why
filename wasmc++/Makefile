@@ -17,6 +17,7 @@ BISON_OPTIONS   := --color=always
 SOURCES         := $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= ../wasm/examples/ops.wasm
+OUTFILE         ?= ../wasm/compiled/ops.why
 
 .PHONY: all counter test clean count countbf
 
@@ -44,7 +45,7 @@ counter:
 	bison -Wcounterexamples $(BISON_OPTIONS) --defines=$(WASMPARSEHDR) --output=$(WASMPARSECPP) $(WASMBISONSRC)
 
 test: $(OUTPUT)
-	./$< $(TESTFILE)
+	./$< $(TESTFILE) $(OUTFILE)
 
 clean:
 	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png PVS-Studio.log report.tasks strace_out \
