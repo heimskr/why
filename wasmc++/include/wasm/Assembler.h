@@ -38,6 +38,8 @@ namespace Wasmc {
 			size_t dataLength = 0;
 			bool verbose = false;
 
+			const std::vector<Long> & getAssembled() const { return assembled; }
+
 			Long & metaOffsetSymbols() { return meta.at(0); }
 			Long & metaOffsetCode()    { return meta.at(1); }
 			Long & metaOffsetData()    { return meta.at(2); }
