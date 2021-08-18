@@ -1,4 +1,6 @@
 #include <cctype>
+#include <climits>
+#include <iomanip>
 #include <iostream>
 
 #include "lib/picosha2.h"
