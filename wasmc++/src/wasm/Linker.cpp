@@ -83,6 +83,8 @@ namespace Wasmc {
 		BinaryParser main_parser(mainUnit);
 		main_parser.parse();
 
+		const size_t meta_length = main_parser.getMetaLength();
+
 		const auto &main_symbols = main_parser.symbols;
 		auto combined_symbols = main_symbols;
 		auto combined_code = main_parser.rawCode;
@@ -103,12 +105,20 @@ namespace Wasmc {
 
 			const auto &subcode = subparser.rawCode;
 			auto subdata = subparser.rawData;
-			const auto &subtable = subparser.symbols;
+			auto subtable = subparser.symbols;
 			depointerize(subtable, subdata, subparser.offsets.data);
 			const size_t subcode_length = subparser.getCodeLength();
 			const size_t subdata_length = subparser.getDataLength();
 			size_t subtable_length = subparser.rawSymbols.size();
 			const auto &subdebug = subparser.debugData;
+			if (subtable.count(".end") != 0) {
+				subtable.erase(".end");
+				subtable_length -= 3;
+			}
+
+			detectSymbolCollisions(combined_symbols, subtable);
+
+			const size_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
 		}
 
 		return Assembler::stringify(linked);
@@ -195,5 +205,11 @@ namespace Wasmc {
 				++out;
 		}
 		return out;
+	}
+
+	void Linker::detectSymbolCollisions(const SymbolTable &one, const SymbolTable &two) {
+		for (const auto &[key, value]: one)
+			if (key != ".end" && two.count(key) != 0)
+				throw std::runtime_error("Encountered a symbol collision: \"" + key + "\"");
 	}
 }
