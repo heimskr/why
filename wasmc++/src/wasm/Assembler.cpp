@@ -82,15 +82,23 @@ namespace Wasmc {
 		if (FUNCT_MAX < funct)
 			throw std::runtime_error("Invalid function value: " + std::to_string(funct));
 
-		Long out = funct;
-		out |= static_cast<unsigned>(node.flags) << 12;
+		uint8_t condition = 0;
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&rtype))
-			out |= static_cast<unsigned>(has_condition->condition) << 14;
-		out |= registerMap.at(rtype.rd) << 31;
-		out |= registerMap.at(rtype.rs) << 38;
-		out |= registerMap.at(rtype.rt) << 45;
-		out |= static_cast<uint64_t>(rtype.getOpcode()) << 52;
-		return out;
+			condition = static_cast<uint8_t>(has_condition->condition);
+
+		return compileR(rtype.getOpcode(), registerMap.at(rtype.rs), registerMap.at(rtype.rt), registerMap.at(rtype.rd),
+			funct, static_cast<uint8_t>(node.flags), condition);
+	}
+
+	Long Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, uint16_t function, uint8_t flags,
+	                         uint8_t condition) const {
+		return static_cast<uint64_t>(function)
+			| (static_cast<uint64_t>(flags) << 12)
+			| (static_cast<uint64_t>(condition) << 14)
+			| (static_cast<uint64_t>(rd) << 31)
+			| (static_cast<uint64_t>(rs) << 38)
+			| (static_cast<uint64_t>(rt) << 45)
+			| (static_cast<uint64_t>(opcode) << 52);
 	}
 
 	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
@@ -104,14 +112,22 @@ namespace Wasmc {
 		uint32_t imm = static_cast<uint32_t>(std::holds_alternative<int>(itype.imm)? std::get<int>(itype.imm)
 			: std::get<char>(itype.imm));
 
-		Long out = imm;
-		out |= registerMap.at(itype.rd) << 32;
-		out |= registerMap.at(itype.rs) << 39;
-		out |= static_cast<uint64_t>(node.flags) << 46;
+		uint8_t condition = 0;
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&itype))
-			out |= static_cast<uint64_t>(has_condition->condition) << 48;
-		out |= static_cast<uint64_t>(itype.getOpcode()) << 52;
-		return out;
+			condition = static_cast<uint8_t>(has_condition->condition);
+
+		return compileI(itype.getOpcode(), registerMap.at(itype.rs), registerMap.at(itype.rd), imm,
+			static_cast<uint8_t>(node.flags), static_cast<uint8_t>(condition));
+	}
+
+	Long Assembler::compileI(Opcode opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
+	                         uint8_t condition) const {
+		return static_cast<uint64_t>(immediate)
+			| (static_cast<uint64_t>(rd) << 32)
+			| (static_cast<uint64_t>(rs) << 39)
+			| (static_cast<uint64_t>(flags) << 46)
+			| (static_cast<uint64_t>(condition) << 48)
+			| (static_cast<uint64_t>(opcode) << 52);
 	}
 
 	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
@@ -120,14 +136,22 @@ namespace Wasmc {
 		if (!std::holds_alternative<int>(jtype.imm))
 			throw std::runtime_error("Can't compile a J-type with a label or character immediate");
 
-		Long out = static_cast<uint32_t>(std::get<int>(jtype.imm));
-		out |= static_cast<uint64_t>(node.flags) << 32;
+		uint8_t condition = 0;
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&jtype))
-			out |= static_cast<uint64_t>(has_condition->condition) << 34;
-		out |= static_cast<uint64_t>(jtype.link? 1 : 0) << 44;
-		out |= registerMap.at(jtype.rs) << 45;
-		out |= static_cast<uint64_t>(jtype.getOpcode()) << 52;
-		return out;
+			condition = static_cast<uint64_t>(has_condition->condition);
+
+		return compileJ(jtype.getOpcode(), registerMap.at(jtype.rs), std::get<int>(jtype.imm), jtype.link,
+			static_cast<uint8_t>(node.flags), condition);
+	}
+
+	Long Assembler::compileJ(Opcode opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition)
+	const {
+		return static_cast<uint64_t>(address)
+			| (static_cast<uint64_t>(flags) << 32)
+			| (static_cast<uint64_t>(condition) << 34)
+			| (static_cast<uint64_t>(link? 1 : 0) << 44)
+			| (static_cast<uint64_t>(rs) << 45)
+			| (static_cast<uint64_t>(opcode) << 52);
 	}
 
 	void Assembler::addCode(const WASMInstructionNode &node) {
