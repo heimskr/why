@@ -8,12 +8,19 @@
 
 namespace Wasmc {
 	void Linker::addFile(const std::filesystem::path &path) {
+		if (paths.count(path) != 0) {
+			warn() << "Skipping file \e[1m" << path << "\e[22m: already included\n";
+			return;
+		}
+
 		if (!std::filesystem::exists(path))
 			throw std::runtime_error("Can't add file: path doesn't exist");
 
 		std::ifstream stream(path);
 		if (!stream.is_open())
 			throw std::runtime_error("Couldn't open file for reading");
+
+		paths.insert(path);
 
 		char first17[17];
 		stream.read(first17, 17);

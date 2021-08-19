@@ -4,9 +4,7 @@
 #include "wasm/Parser.h"
 
 namespace Wasmc {
-	Parser::Parser(const std::vector<Long> &longs_): longs(longs_) {}
-
-	AnyBase * Parser::parse(const Long instruction) {
+	AnyBase * parseInstruction(const Long instruction) {
 		auto get = [&](int offset, int length) -> Long {
 			return (instruction >> (64 - offset)) & ((1 << length) - 1);
 		};
