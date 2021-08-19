@@ -9,7 +9,7 @@ namespace Wasmc {
 
 	AnyBase * BinaryParser::parse(const Long instruction) {
 		auto get = [&](int offset, int length) -> Long {
-			return (instruction >> (64 - offset)) & ((1 << length) - 1);
+			return (instruction >> (64 - offset - length)) & ((1 << length) - 1);
 		};
 
 		const auto opcode = static_cast<Opcode>(get(0, 12));
@@ -30,7 +30,7 @@ namespace Wasmc {
 		if (ITYPES.count(opcode) != 0) {
 			const auto rs = get(18, 7);
 			const auto rd = get(25, 7);
-			const auto immediate = get(64, 32);
+			const auto immediate = instruction & 0xffffffff;
 			const auto condition = get(12, 4);
 			const auto flags = get(16, 2);
 			return new AnyI(opcode, rs, rd, immediate, condition, flags);
@@ -39,13 +39,14 @@ namespace Wasmc {
 		if (JTYPES.count(opcode) != 0) {
 			const auto rs = get(12, 7);
 			const auto link = get(19, 1);
-			const auto address = get(64, 32);
+			const auto address = instruction & 0xffffffff;
 			const auto condition = get(26, 4);
 			const auto flags = get(30, 2);
 			return new AnyJ(opcode, rs, link, address, condition, flags);
 		}
 
-		throw std::runtime_error("Invalid instruction: " + Util::toHex(instruction));
+		throw std::runtime_error("Invalid instruction (opcode " + Util::toHex(opcode) + "): "
+			+ Util::toHex(instruction, true));
 	}
 
 	void BinaryParser::parse() {
@@ -73,8 +74,11 @@ namespace Wasmc {
 		author = nva_string.substr(second + 1, third - second - 1);
 
 		rawSymbols = slice(getSymbolTableOffset() / 8, getCodeOffset() / 8);
-
 		symbols = getSymbols();
+
+		rawCode = slice(getCodeOffset() / 8, getDataOffset() / 8);
+		for (const Long instruction: rawCode)
+			code.emplace_back(parse(instruction));
 	}
 
 	Long BinaryParser::getMetaLength() const {
@@ -150,7 +154,7 @@ namespace Wasmc {
 			for (size_t index = i + 2; index < i + 2 + length; ++index) {
 				Long piece = longs[index];
 				size_t removed = 0;
-				// Take the next long and ignore any 00 bytes at the least significant end.
+				// Take the next long and ignore any null bytes at the least significant end.
 				while (piece && (piece & 0xff) == 0) {
 					piece >>= 8;
 					++removed;

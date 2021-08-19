@@ -9,9 +9,10 @@
 namespace Wasmc {
 	class BinaryParser {
 		public:
-			std::vector<Long> rawMeta, rawSymbols;
+			std::vector<Long> rawMeta, rawSymbols, rawCode;
 			std::string name, version, author, orcid;
 			SymbolTable symbols;
+			std::vector<std::unique_ptr<AnyBase>> code;
 
 			BinaryParser() = delete;
 			BinaryParser(const BinaryParser &) = default;
