@@ -346,7 +346,7 @@ export default class Linker {
 			return "code";
 		}
 
-		if ($data <= addr && addr < $end) {
+		if ($data <= addr && addr < $debug) {
 			return "data";
 		}
 
