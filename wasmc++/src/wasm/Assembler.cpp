@@ -145,14 +145,14 @@ namespace Wasmc {
 					if (offsets.count(label) == 0) {
 						const auto encoded = encodeSymbol(label);
 						has_immediate->imm = static_cast<int>(encoded);
-						statement->flags = ConstantFlags::UnknownSymbol;
+						statement->flags = LinkerFlags::UnknownSymbol;
 						unknownSymbols.insert(label);
 					} else {
 						const Long offset = offsets.at(label);
 						if (INT_MAX < offset)
 							warn() << "Offset for label " << *label << " exceeds INT_MAX\n";
 						has_immediate->imm = static_cast<int>(offset);
-						statement->flags = ConstantFlags::KnownSymbol;
+						statement->flags = LinkerFlags::KnownSymbol;
 					}
 				}
 			}
