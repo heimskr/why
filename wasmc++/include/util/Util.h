@@ -148,6 +148,8 @@ namespace Wasmc::Util {
 				return true;
 		return false;
 	}
+
+	uint64_t swapEndian(uint64_t n);
 }
 
 namespace Wasmc {

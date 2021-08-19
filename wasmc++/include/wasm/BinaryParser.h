@@ -3,16 +3,18 @@
 #include <string>
 #include <vector>
 
+#include "wasm/Debug.h"
 #include "wasm/SymbolTable.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
 	class BinaryParser {
 		public:
-			std::vector<Long> rawMeta, rawSymbols, rawCode;
+			std::vector<Long> raw, rawMeta, rawSymbols, rawCode, rawData, rawDebugData;
 			std::string name, version, author, orcid;
 			SymbolTable symbols;
 			std::vector<std::unique_ptr<AnyBase>> code;
+			std::vector<std::unique_ptr<DebugEntry>> debugData;
 
 			BinaryParser() = delete;
 			BinaryParser(const BinaryParser &) = default;
@@ -41,10 +43,9 @@ namespace Wasmc {
 			inline Long getEndOffset() const;
 
 		private:
-			std::vector<Long> longs;
-
 			std::vector<Long> slice(size_t begin, size_t end);
 			SymbolTable getSymbols() const;
+			std::vector<std::unique_ptr<DebugEntry>> getDebugData() const;
 
 			static std::string toString(Long);
 	};

@@ -5,7 +5,7 @@
 #include "wasm/Options.h"
 
 namespace Wasmc {
-	BinaryParser::BinaryParser(const std::vector<Long> &longs_): longs(longs_) {}
+	BinaryParser::BinaryParser(const std::vector<Long> &raw_): raw(raw_) {}
 
 	AnyBase * BinaryParser::parse(const Long instruction) {
 		auto get = [&](int offset, int length) -> Long {
@@ -68,7 +68,7 @@ namespace Wasmc {
 		if (third == std::string::npos)
 			throw std::runtime_error("Invalid name-version-author string");
 
-		orcid = toString(longs[getMetaOffset() / 8 + 5]) + toString(longs[getMetaOffset() / 8 + 6]);
+		orcid = toString(raw[getMetaOffset() / 8 + 5]) + toString(raw[getMetaOffset() / 8 + 6]);
 		name = nva_string.substr(0, first);
 		version = nva_string.substr(first + 1, second - first - 1);
 		author = nva_string.substr(second + 1, third - second - 1);
@@ -79,26 +79,31 @@ namespace Wasmc {
 		rawCode = slice(getCodeOffset() / 8, getDataOffset() / 8);
 		for (const Long instruction: rawCode)
 			code.emplace_back(parse(instruction));
+
+		rawData = slice(getDataOffset() / 8, getDebugOffset() / 8);
+		rawDebugData = slice(getDebugOffset() / 8, getEndOffset() / 8);
+
+		debugData = getDebugData();
 	}
 
 	Long BinaryParser::getMetaLength() const {
-		return longs[0];
+		return raw[0];
 	}
 
 	Long BinaryParser::getSymbolTableLength() const {
-		return longs[1] - longs[0];
+		return raw[1] - raw[0];
 	}
 
 	Long BinaryParser::getCodeLength() const {
-		return longs[2] - longs[1];
+		return raw[2] - raw[1];
 	}
 
 	Long BinaryParser::getDataLength() const {
-		return longs[3] - longs[2];
+		return raw[3] - raw[2];
 	}
 
 	Long BinaryParser::getDebugLength() const {
-		return longs[4] - longs[3];
+		return raw[4] - raw[3];
 	}
 
 	Long BinaryParser::getMetaOffset() const {
@@ -106,27 +111,27 @@ namespace Wasmc {
 	}
 
 	Long BinaryParser::getSymbolTableOffset() const {
-		return longs[0];
+		return raw[0];
 	}
 
 	Long BinaryParser::getCodeOffset() const {
-		return longs[1];
+		return raw[1];
 	}
 
 	Long BinaryParser::getDataOffset() const {
-		return longs[2];
+		return raw[2];
 	}
 
 	Long BinaryParser::getDebugOffset() const {
-		return longs[3];
+		return raw[3];
 	}
 
 	Long BinaryParser::getEndOffset() const {
-		return longs[4];
+		return raw[4];
 	}
 
 	std::vector<Long> BinaryParser::slice(size_t begin, size_t end) {
-		return {longs.begin() + begin, longs.begin() + end};
+		return {raw.begin() + begin, raw.begin() + end};
 	}
 
 	std::string BinaryParser::toString(Long number) {
@@ -143,16 +148,16 @@ namespace Wasmc {
 		const size_t end = getCodeOffset() / 8;
 
 		for (size_t i = getSymbolTableOffset() / 8, j = 0; i < end && j < MAX_SYMBOLS; ++j) {
-			const uint32_t id = longs[i] >> 32;
-			const short length = longs[i] & 0xffff;
-			const SymbolType type = static_cast<SymbolType>((longs[i] >> 16) & 0xffff);
-			const Long address = longs[i + 1];
+			const uint32_t id = raw[i] >> 32;
+			const short length = raw[i] & 0xffff;
+			const SymbolType type = static_cast<SymbolType>((raw[i] >> 16) & 0xffff);
+			const Long address = raw[i + 1];
 
 			std::string symbol_name;
 			symbol_name.reserve(8ul * length);
 
 			for (size_t index = i + 2; index < i + 2 + length; ++index) {
-				Long piece = longs[index];
+				Long piece = raw[index];
 				size_t removed = 0;
 				// Take the next long and ignore any null bytes at the least significant end.
 				while (piece && (piece & 0xff) == 0) {
@@ -166,6 +171,47 @@ namespace Wasmc {
 
 			out.try_emplace(symbol_name, id, address, type);
 			i += 2 + length;
+		}
+
+		return out;
+	}
+
+	std::vector<std::unique_ptr<DebugEntry>> BinaryParser::getDebugData() const {
+		std::vector<std::unique_ptr<DebugEntry>> out;
+
+		const size_t start = getDebugOffset() / 8, end = getEndOffset() / 8;
+
+		for (size_t i = start; i < end; ++i) {
+			Long piece = raw[i];
+			const auto get = [&piece](unsigned char index) -> size_t {
+				return (piece >> (64 - 8 * (index + 1))) & 0xff;
+			};
+
+			const uint8_t type = get(0);
+			if (type == 1 || type == 2) {
+				const size_t name_length = get(1) | (get(2) << 8) | (get(3) << 16);
+				std::string debug_name;
+				for (size_t j = 4; j < name_length + 4; ++j) {
+					const size_t mod = j % 8;
+					if (mod == 0)
+						piece = raw[++i];
+					debug_name += static_cast<char>(get(mod));
+				}
+				if (type == 1)
+					out.emplace_back(new DebugFilename(debug_name));
+				else
+					out.emplace_back(new DebugFunction(debug_name));
+			} else if (type == 3) {
+				const size_t file_index = get(1) | (get(2) << 8) | (get(3) << 16);
+				const uint32_t line = get(4) | (get(5) << 8) | (get(6) << 16) | (get(7) << 24);
+				piece = raw[++i];
+				const uint32_t column = get(0) | (get(1) << 8) | (get(2) << 16);
+				const uint8_t count = get(3);
+				const uint32_t function_index = get(4) | (get(5) << 8) | (get(6) << 16) | (get(7) << 24);
+				DebugLocation *location = new DebugLocation(file_index, line, column, function_index);
+				out.emplace_back(location->setCount(count)->setAddress(Util::swapEndian(raw[++i])));
+			} else
+				throw std::runtime_error("Invalid debug data entry type: " + std::to_string(type));
 		}
 
 		return out;

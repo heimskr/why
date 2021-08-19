@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 namespace Wasmc {
@@ -22,9 +23,19 @@ namespace Wasmc {
 	};
 
 	struct DebugLocation: DebugEntry {
-		int fileIndex, line, column, functionIndex;
-		DebugLocation(int file_index, int line_, int column_, int function_index):
+		uint32_t fileIndex, line, column, functionIndex;
+		uint8_t count = 1;
+		uint64_t address = 0;
+		DebugLocation(uint32_t file_index, uint32_t line_, uint32_t column_, uint32_t function_index):
 			fileIndex(file_index), line(line_), column(column_), functionIndex(function_index) {}
+		DebugLocation * setCount(uint8_t count_) {
+			count = count_;
+			return this;
+		}
+		DebugLocation * setAddress(uint8_t address_) {
+			address = address_;
+			return this;
+		}
 		Type getType() const override { return Type::Location; }
 	};
 }
