@@ -4,6 +4,7 @@
 #include <set>
 #include <vector>
 
+#include "wasm/SymbolTable.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
@@ -25,5 +26,9 @@ namespace Wasmc {
 			const ASTNode *root = nullptr;
 			std::vector<std::vector<Long>> units;
 			std::vector<Long> linked;
+
+			/** Replaces pointers inside all pointer variables of a symbol table
+			 *  with the encoded names of the symbols they point to. */
+			static void depointerize(const SymbolTable &, std::vector<Long> &data, Long data_offset);
 	};
 }

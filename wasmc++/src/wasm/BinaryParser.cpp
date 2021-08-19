@@ -50,9 +50,10 @@ namespace Wasmc {
 	}
 
 	void BinaryParser::parse() {
-		rawMeta = slice(0, getSymbolTableOffset() / 8);
+		offsets = {getSymbolTableOffset(), getCodeOffset(), getDataOffset(), getDebugOffset(), getEndOffset()};
+		rawMeta = slice(0, offsets.symbolTable / 8);
 
-		const std::vector<Long> nva_longs = slice(getMetaOffset() / 8 + 7, getSymbolTableOffset() / 8);
+		const std::vector<Long> nva_longs = slice(7, offsets.symbolTable / 8);
 		std::string nva_string;
 		nva_string.reserve(8 * nva_longs.size());
 		for (const Long piece: nva_longs)
@@ -68,20 +69,20 @@ namespace Wasmc {
 		if (third == std::string::npos)
 			throw std::runtime_error("Invalid name-version-author string");
 
-		orcid = toString(raw[getMetaOffset() / 8 + 5]) + toString(raw[getMetaOffset() / 8 + 6]);
+		orcid = toString(raw[5]) + toString(raw[6]);
 		name = nva_string.substr(0, first);
 		version = nva_string.substr(first + 1, second - first - 1);
 		author = nva_string.substr(second + 1, third - second - 1);
 
-		rawSymbols = slice(getSymbolTableOffset() / 8, getCodeOffset() / 8);
+		rawSymbols = slice(offsets.symbolTable / 8, offsets.code / 8);
 		symbols = getSymbols();
 
-		rawCode = slice(getCodeOffset() / 8, getDataOffset() / 8);
+		rawCode = slice(offsets.code / 8, offsets.data / 8);
 		for (const Long instruction: rawCode)
 			code.emplace_back(parse(instruction));
 
-		rawData = slice(getDataOffset() / 8, getDebugOffset() / 8);
-		rawDebugData = slice(getDebugOffset() / 8, getEndOffset() / 8);
+		rawData = slice(offsets.data / 8, offsets.debug / 8);
+		rawDebugData = slice(offsets.debug / 8, offsets.end / 8);
 
 		debugData = getDebugData();
 	}
@@ -179,7 +180,7 @@ namespace Wasmc {
 	std::vector<std::unique_ptr<DebugEntry>> BinaryParser::getDebugData() const {
 		std::vector<std::unique_ptr<DebugEntry>> out;
 
-		const size_t start = getDebugOffset() / 8, end = getEndOffset() / 8;
+		const size_t start = offsets.debug / 8, end = offsets.end / 8;
 
 		for (size_t i = start; i < end; ++i) {
 			Long piece = raw[i];

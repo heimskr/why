@@ -15,6 +15,7 @@ namespace Wasmc {
 			SymbolTable symbols;
 			std::vector<std::unique_ptr<AnyBase>> code;
 			std::vector<std::unique_ptr<DebugEntry>> debugData;
+			Offsets offsets;
 
 			BinaryParser() = delete;
 			BinaryParser(const BinaryParser &) = default;

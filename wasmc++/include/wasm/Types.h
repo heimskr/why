@@ -11,6 +11,13 @@ namespace Wasmc {
 	enum class SymbolType: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol, SymbolID};
 
+	struct Offsets {
+		Long symbolTable = 0, code = 0, data = 0, debug = 0, end = 0;
+		Offsets() = default;
+		Offsets(Long symbol_table, Long code_, Long data_, Long debug_, Long end_):
+			symbolTable(symbol_table), code(code_), data(data_), debug(debug_), end(end_) {}
+	};
+
 	struct AnyBase {
 		enum class Type {Other, R, I, J};
 

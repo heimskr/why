@@ -1,4 +1,5 @@
 #include <fstream>
+#include <optional>
 
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
@@ -82,5 +83,26 @@ namespace Wasmc {
 		}
 
 		return Assembler::stringify(linked);
+	}
+
+	void Linker::depointerize(const SymbolTable &table, std::vector<Long> &data, Long data_offset) {
+		for (const auto &[key, value]: table) {
+			const auto address = value.address;
+			const auto type = value.type;
+			const auto index = (address - data_offset) / 8;
+			if (type == SymbolType::KnownPointer) {
+				const Long current_value = Util::swapEndian(data.at(index));
+				std::optional<SymbolTableEntry> match;
+				for (const auto &pair: table)
+					if (pair.second.address == current_value) {
+						match = pair.second;
+						break;
+					}
+				if (!match.has_value())
+					throw std::runtime_error("Found no matches for " + Util::toHex(current_value) + "  from key \""
+						+ key + "\"");
+				data[index] = match->id;
+			}
+		}
 	}
 }
