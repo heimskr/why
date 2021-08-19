@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-#include "compiler/Immediate.h"
 #include "parser/Enums.h"
 #include "wasm/Instructions.h"
 
@@ -14,39 +13,36 @@ namespace Wasmc {
 
 	struct AnyBase {
 		Opcode opcode;
-		const std::string *rs;
-		Condition condition;
-		LinkerFlags flags;
-		AnyBase(Opcode opcode_, const std::string *rs_, Condition condition_, LinkerFlags flags_):
+		uint16_t rs;
+		uint16_t condition;
+		uint16_t flags;
+		AnyBase(Opcode opcode_, uint16_t rs_, uint16_t condition_, uint16_t flags_):
 			opcode(opcode_), rs(rs_), condition(condition_), flags(flags_) {}
 	};
 
 	struct AnyImmediate: AnyBase {
-		Immediate immediate;
-		AnyImmediate(Opcode opcode_, const std::string *rs_, const Immediate &immediate_, Condition condition_,
-		LinkerFlags flags_):
+		uint32_t immediate;
+		AnyImmediate(Opcode opcode_, uint16_t rs_, uint32_t immediate_, uint16_t condition_, uint16_t flags_):
 			AnyBase(opcode_, rs_, condition_, flags_), immediate(immediate_) {}
 	};
 
 	struct AnyR: AnyBase {
-		const std::string *rd, *rt;
+		uint16_t rd, rt;
 		const Funct function;
-		AnyR(Opcode opcode_, const std::string *rs_, const std::string *rt_, const std::string *rd_, Funct function_,
-		Condition condition_, LinkerFlags flags_):
+		AnyR(Opcode opcode_, uint16_t rs_, uint16_t rt_, uint16_t rd_, Funct function_, uint16_t condition_,
+		uint16_t flags_):
 			AnyBase(opcode_, rs_, condition_, flags_), rd(rd_), rt(rt_), function(function_) {}
 	};
 
 	struct AnyI: AnyImmediate {
-		const std::string *rd;
-		AnyI(Opcode opcode_, const std::string *rs_, const std::string *rd_, const Immediate &immediate_,
-		Condition condition_, LinkerFlags flags_):
+		uint16_t rd;
+		AnyI(Opcode opcode_, uint16_t rs_, uint16_t rd_, uint32_t immediate_, uint16_t condition_, uint16_t flags_):
 			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_), rd(rd_) {}
 	};
 
 	struct AnyJ: AnyImmediate {
 		bool link;
-		AnyJ(Opcode opcode_, const std::string *rs_, bool link_, const Immediate &immediate_,
-		Condition condition_, LinkerFlags flags_):
+		AnyJ(Opcode opcode_, uint16_t rs_, bool link_, uint32_t immediate_, uint16_t condition_, uint16_t flags_):
 			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_), link(link_) {}
 	};
 }
