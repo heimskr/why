@@ -23,6 +23,8 @@ namespace Wasmc {
 	using Strings = std::vector<const std::string *>;
 
 	class Assembler {
+		friend class Linker;
+
 		public:
 			/** Takes ownership of the ASTNode argument. */
 			Assembler(const ASTNode *);
@@ -53,7 +55,7 @@ namespace Wasmc {
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
 			              *codeNode = nullptr;
 
-			std::string stringify(const std::vector<Long> &);
+			static std::string stringify(const std::vector<Long> &);
 
 			Long compileInstruction(const WASMInstructionNode &);
 

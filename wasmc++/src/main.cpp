@@ -17,8 +17,8 @@ int main(int argc, char **argv) {
 }
 
 int link(int argc, char **argv) {
-	if (argc < 5) {
-		std::cerr << "Usage: " << argv[0] << " -l <output binary> <main input binary> <other input binaries...>\n";
+	if (argc < 4) {
+		std::cerr << "Usage: " << argv[0] << " -l <output binary> <main input> [other input binaries...]\n";
 		return 1;
 	}
 

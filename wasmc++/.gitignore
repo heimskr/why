@@ -5,3 +5,4 @@ include/wasmparse.h
 *.o
 wasmc++
 .dep
+*.why
