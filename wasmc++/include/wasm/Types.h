@@ -8,7 +8,8 @@
 namespace Wasmc {
 	using Long = uint64_t;
 
-	enum class SymbolType: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
+	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
+	enum class SymbolType {Other, Code, Data};
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol, SymbolID};
 
 	struct Offsets {

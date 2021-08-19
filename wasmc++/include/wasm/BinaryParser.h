@@ -30,6 +30,8 @@ namespace Wasmc {
 
 			void parse();
 
+			decltype(debugData) copyDebugData() const;
+
 			inline Long getMetaLength() const;
 			inline Long getSymbolTableLength() const;
 			inline Long getCodeLength() const;

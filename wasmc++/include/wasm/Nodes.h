@@ -101,7 +101,6 @@ namespace Wasmc {
 		int bang = -1;
 		std::vector<const std::string *> labels;
 		bool inSubroutine = false;
-		SymbolType symbolType = SymbolType::Unknown;
 		LinkerFlags flags = LinkerFlags::Ignore;
 
 		using WASMBaseNode::WASMBaseNode;
@@ -111,7 +110,6 @@ namespace Wasmc {
 		WASMInstructionNode * absorb(const WASMInstructionNode &);
 		WASMInstructionNode * setInSubroutine(bool);
 		WASMInstructionNode * setBang(int);
-		WASMInstructionNode * setSymbolType(SymbolType);
 		virtual WASMInstructionNode * copy() const = 0;
 		WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
 		std::string debugExtra() const override;

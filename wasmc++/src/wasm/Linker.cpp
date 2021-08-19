@@ -41,12 +41,15 @@ namespace Wasmc {
 		stream.seekg(0);
 
 		if (is_long) {
-			firstDone = true;
 			std::vector<Long> longs;
 			std::string line;
 			while (std::getline(stream, line))
 				longs.push_back(Util::parseUlong(line, 16));
-			units.push_back(longs);
+			if (firstDone)
+				subunits.push_back(longs);
+			else
+				mainUnit = std::move(longs);
+			firstDone = true;
 		} else if (firstDone) {
 			throw std::runtime_error("Only the first input file can be non-compiled assembly");
 		} else {
@@ -65,7 +68,7 @@ namespace Wasmc {
 			wasmParser.done();
 			Assembler assembler(root);
 			assembler.assemble();
-			units.push_back(assembler.getAssembled());
+			mainUnit = std::move(assembler.getAssembled());
 			for (const ASTNode *node: *root)
 				if (node->symbol == WASMTOK_INCLUDE_HEADER)
 					for (const ASTNode *sub: *node->front())
@@ -74,10 +77,17 @@ namespace Wasmc {
 	}
 
 	std::string Linker::link() {
-		if (units.empty())
+		if (mainUnit.empty())
 			throw std::runtime_error("Can't link before any files are added");
 
-		for (const std::vector<Long> &unit: units) {
+		BinaryParser main_parser(mainUnit);
+
+		auto combined_symbols = main_parser.symbols;
+		auto combined_code = main_parser.rawCode;
+		auto combined_data = main_parser.rawData;
+		auto combined_debug = main_parser.copyDebugData();
+
+		for (const std::vector<Long> &unit: subunits) {
 			BinaryParser binary_parser(unit);
 			binary_parser.parse();
 		}
@@ -90,7 +100,7 @@ namespace Wasmc {
 			const auto address = value.address;
 			const auto type = value.type;
 			const auto index = (address - data_offset) / 8;
-			if (type == SymbolType::KnownPointer) {
+			if (type == SymbolEnum::KnownPointer) {
 				const Long current_value = Util::swapEndian(data.at(index));
 				std::optional<SymbolTableEntry> match;
 				for (const auto &pair: table)
@@ -104,5 +114,22 @@ namespace Wasmc {
 				data[index] = match->id;
 			}
 		}
+	}
+
+	std::unordered_map<std::string, SymbolType>
+	Linker::collectSymbolTypes(const Offsets &offsets, const SymbolTable &table) {
+		std::unordered_map<std::string, SymbolType> out;
+		for (const auto &[key, value]: table)
+			out[key] = getSymbolType(offsets, table, key);
+		return out;
+	}
+
+	SymbolType Linker::getSymbolType(const Offsets &offsets, const SymbolTable &table, const std::string &symbol) {
+		const auto address = table.at(symbol).address;
+		if (offsets.code <= address && address < offsets.data)
+			return SymbolType::Code;
+		if (offsets.data <= address && address < offsets.debug)
+			return SymbolType::Data;
+		return SymbolType::Other;
 	}
 }

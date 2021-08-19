@@ -18,17 +18,22 @@ namespace Wasmc {
 
 			std::string link();
 
-			const std::vector<std::vector<Long>> & getUnits() const { return units; }
+			const std::vector<std::vector<Long>> & getSubunits() const { return subunits; }
 
 		private:
 			std::set<std::filesystem::path> paths;
 			bool firstDone = false;
 			const ASTNode *root = nullptr;
-			std::vector<std::vector<Long>> units;
+			std::vector<Long> mainUnit;
+			std::vector<std::vector<Long>> subunits;
 			std::vector<Long> linked;
 
 			/** Replaces pointers inside all pointer variables of a symbol table
 			 *  with the encoded names of the symbols they point to. */
 			static void depointerize(const SymbolTable &, std::vector<Long> &data, Long data_offset);
+
+			static std::unordered_map<std::string, SymbolType> collectSymbolTypes(const Offsets &, const SymbolTable &);
+
+			static SymbolType getSymbolType(const Offsets &, const SymbolTable &, const std::string &symbol);
 	};
 }

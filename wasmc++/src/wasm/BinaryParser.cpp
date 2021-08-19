@@ -87,6 +87,13 @@ namespace Wasmc {
 		debugData = getDebugData();
 	}
 
+	decltype(BinaryParser::debugData) BinaryParser::copyDebugData() const {
+		decltype(debugData) out;
+		for (const auto &entry: debugData)
+			out.emplace_back(entry->copy());
+		return out;
+	}
+
 	Long BinaryParser::getMetaLength() const {
 		return raw[0];
 	}
@@ -151,7 +158,7 @@ namespace Wasmc {
 		for (size_t i = getSymbolTableOffset() / 8, j = 0; i < end && j < MAX_SYMBOLS; ++j) {
 			const uint32_t id = raw[i] >> 32;
 			const short length = raw[i] & 0xffff;
-			const SymbolType type = static_cast<SymbolType>((raw[i] >> 16) & 0xffff);
+			const SymbolEnum type = static_cast<SymbolEnum>((raw[i] >> 16) & 0xffff);
 			const Long address = raw[i + 1];
 
 			std::string symbol_name;

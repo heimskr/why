@@ -63,7 +63,6 @@ namespace Wasmc {
 	WASMInstructionNode * WASMInstructionNode::absorb(const WASMInstructionNode &other) {
 		bang = other.bang;
 		labels = other.labels;
-		symbolType = other.symbolType;
 		flags = other.flags;
 		return this;
 	}
@@ -75,11 +74,6 @@ namespace Wasmc {
 
 	WASMInstructionNode * WASMInstructionNode::setBang(int value) {
 		bang = value;
-		return this;
-	}
-
-	WASMInstructionNode * WASMInstructionNode::setSymbolType(SymbolType value) {
-		symbolType = value;
 		return this;
 	}
 

@@ -248,10 +248,10 @@ namespace Wasmc {
 			const size_t length = Util::updiv(label->size(), 8ul);
 			if (0xffff < length)
 				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
-			SymbolType type = SymbolType::Unknown;
+			SymbolEnum type = SymbolEnum::Unknown;
 			if (!skeleton && dataVariables.count(label)) {
 				const std::string *ptr = dataVariables.at(label);
-				type = offsets.count(ptr)? SymbolType::KnownPointer : SymbolType::UnknownPointer;
+				type = offsets.count(ptr)? SymbolEnum::KnownPointer : SymbolEnum::UnknownPointer;
 				if (!offsets.count(ptr) && !unknownSymbols.count(ptr)) {
 					const size_t index = (offsets.at(label) - metaOffsetData()) / 8;
 					data.resize(index, 0);
