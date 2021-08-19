@@ -81,16 +81,34 @@ namespace Wasmc {
 			throw std::runtime_error("Can't link before any files are added");
 
 		BinaryParser main_parser(mainUnit);
+		main_parser.parse();
 
-		auto combined_symbols = main_parser.symbols;
+		const auto &main_symbols = main_parser.symbols;
+		auto combined_symbols = main_symbols;
 		auto combined_code = main_parser.rawCode;
 		auto combined_data = main_parser.rawData;
 		auto combined_debug = main_parser.copyDebugData();
 		const auto symbol_types = collectSymbolTypes(main_parser.offsets, combined_symbols);
 
+		desymbolize(combined_code, main_parser.offsets, main_symbols);
+
+		size_t extra_symbol_length = main_parser.rawSymbols.size() * 8;
+		size_t extra_code_length = main_parser.getCodeLength();
+		size_t extra_data_length = main_parser.getDataLength();
+		size_t extra_debug_length = countStringTypes(combined_debug);
+
 		for (const std::vector<Long> &unit: subunits) {
-			BinaryParser binary_parser(unit);
-			binary_parser.parse();
+			BinaryParser subparser(unit);
+			subparser.parse();
+
+			const auto &subcode = subparser.rawCode;
+			auto subdata = subparser.rawData;
+			const auto &subtable = subparser.symbols;
+			depointerize(subtable, subdata, subparser.offsets.data);
+			const size_t subcode_length = subparser.getCodeLength();
+			const size_t subdata_length = subparser.getDataLength();
+			size_t subtable_length = subparser.rawSymbols.size();
+			const auto &subdebug = subparser.debugData;
 		}
 
 		return Assembler::stringify(linked);
@@ -167,5 +185,15 @@ namespace Wasmc {
 			if (value.address == address)
 				return key;
 		return address == end_offset? ".end" : "";
+	}
+
+	size_t Linker::countStringTypes(std::vector<std::unique_ptr<DebugEntry>> &entries) {
+		size_t out = 0;
+		for (const auto &entry: entries) {
+			const auto type = entry->getType();
+			if (type == DebugEntry::Type::Filename || type == DebugEntry::Type::Function)
+				++out;
+		}
+		return out;
 	}
 }

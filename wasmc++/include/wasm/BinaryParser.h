@@ -32,18 +32,18 @@ namespace Wasmc {
 
 			decltype(debugData) copyDebugData() const;
 
-			inline Long getMetaLength() const;
-			inline Long getSymbolTableLength() const;
-			inline Long getCodeLength() const;
-			inline Long getDataLength() const;
-			inline Long getDebugLength() const;
+			Long getMetaLength() const;
+			Long getSymbolTableLength() const;
+			Long getCodeLength() const;
+			Long getDataLength() const;
+			Long getDebugLength() const;
 
-			inline Long getMetaOffset() const;
-			inline Long getSymbolTableOffset() const;
-			inline Long getCodeOffset() const;
-			inline Long getDataOffset() const;
-			inline Long getDebugOffset() const;
-			inline Long getEndOffset() const;
+			Long getMetaOffset() const;
+			Long getSymbolTableOffset() const;
+			Long getCodeOffset() const;
+			Long getDataOffset() const;
+			Long getDebugOffset() const;
+			Long getEndOffset() const;
 
 		private:
 			std::vector<Long> slice(size_t begin, size_t end);

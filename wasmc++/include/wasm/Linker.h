@@ -39,5 +39,7 @@ namespace Wasmc {
 			static void desymbolize(std::vector<Long> &, const Offsets &, const SymbolTable &);
 
 			static std::string findSymbolFromAddress(Long address, const SymbolTable &, Long end_offset);
+
+			static size_t countStringTypes(std::vector<std::unique_ptr<DebugEntry>> &);
 	};
 }
