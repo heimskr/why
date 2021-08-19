@@ -35,5 +35,9 @@ namespace Wasmc {
 			static std::unordered_map<std::string, SymbolType> collectSymbolTypes(const Offsets &, const SymbolTable &);
 
 			static SymbolType getSymbolType(const Offsets &, const SymbolTable &, const std::string &symbol);
+
+			static void desymbolize(std::vector<Long> &, const Offsets &, const SymbolTable &);
+
+			static std::string findSymbolFromAddress(Long address, const SymbolTable &, Long end_offset);
 	};
 }

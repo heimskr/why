@@ -91,7 +91,7 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, uint16_t function, uint8_t flags,
-	                         uint8_t condition) const {
+	                         uint8_t condition) {
 		return static_cast<uint64_t>(function)
 			| (static_cast<uint64_t>(flags) << 12)
 			| (static_cast<uint64_t>(condition) << 14)
@@ -121,7 +121,7 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileI(Opcode opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
-	                         uint8_t condition) const {
+	                         uint8_t condition) {
 		return static_cast<uint64_t>(immediate)
 			| (static_cast<uint64_t>(rd) << 32)
 			| (static_cast<uint64_t>(rs) << 39)
@@ -144,8 +144,7 @@ namespace Wasmc {
 			static_cast<uint8_t>(node.flags), condition);
 	}
 
-	Long Assembler::compileJ(Opcode opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition)
-	const {
+	Long Assembler::compileJ(Opcode opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition) {
 		return static_cast<uint64_t>(address)
 			| (static_cast<uint64_t>(flags) << 32)
 			| (static_cast<uint64_t>(condition) << 34)
