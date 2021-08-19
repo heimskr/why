@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "wasm/SymbolTable.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
@@ -10,6 +11,7 @@ namespace Wasmc {
 		public:
 			std::vector<Long> rawMeta, rawSymbols;
 			std::string name, version, author, orcid;
+			SymbolTable symbols;
 
 			BinaryParser() = delete;
 			BinaryParser(const BinaryParser &) = default;
@@ -41,6 +43,7 @@ namespace Wasmc {
 			std::vector<Long> longs;
 
 			std::vector<Long> slice(size_t begin, size_t end);
+			SymbolTable getSymbols() const;
 
 			static std::string toString(Long);
 	};

@@ -1,7 +1,8 @@
 #include "util/Util.h"
+#include "wasm/BinaryParser.h"
 #include "wasm/Instructions.h"
 #include "wasm/Nodes.h"
-#include "wasm/BinaryParser.h"
+#include "wasm/Options.h"
 
 namespace Wasmc {
 	BinaryParser::BinaryParser(const std::vector<Long> &longs_): longs(longs_) {}
@@ -70,6 +71,10 @@ namespace Wasmc {
 		name = nva_string.substr(0, first);
 		version = nva_string.substr(first + 1, second - first - 1);
 		author = nva_string.substr(second + 1, third - second - 1);
+
+		rawSymbols = slice(getSymbolTableOffset() / 8, getCodeOffset() / 8);
+
+		symbols = getSymbols();
 	}
 
 	Long BinaryParser::getMetaLength() const {
@@ -125,6 +130,40 @@ namespace Wasmc {
 		out.reserve(sizeof(number));
 		for (size_t i = 0; i < sizeof(number); ++i)
 			out += static_cast<char>((number >> (8 * (sizeof(number) - i - 1))) & 0xff);
+		return out;
+	}
+
+	SymbolTable BinaryParser::getSymbols() const {
+		SymbolTable out;
+
+		const size_t end = getCodeOffset() / 8;
+
+		for (size_t i = getSymbolTableOffset() / 8, j = 0; i < end && j < MAX_SYMBOLS; ++j) {
+			const uint32_t id = longs[i] >> 32;
+			const short length = longs[i] & 0xffff;
+			const SymbolType type = static_cast<SymbolType>((longs[i] >> 16) & 0xffff);
+			const Long address = longs[i + 1];
+
+			std::string symbol_name;
+			symbol_name.reserve(8ul * length);
+
+			for (size_t index = i + 2; index < i + 2 + length; ++index) {
+				Long piece = longs[index];
+				size_t removed = 0;
+				// Take the next long and ignore any 00 bytes at the least significant end.
+				while (piece && (piece & 0xff) == 0) {
+					piece >>= 8;
+					++removed;
+				}
+
+				for (size_t offset = removed; offset < sizeof(piece); ++offset)
+					symbol_name += static_cast<char>((piece >> (8 * (sizeof(piece) - offset - 1))) & 0xff);
+			}
+
+			out.try_emplace(symbol_name, id, address, type);
+			i += 2 + length;
+		}
+
 		return out;
 	}
 }
