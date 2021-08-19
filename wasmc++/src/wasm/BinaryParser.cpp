@@ -65,7 +65,8 @@ namespace Wasmc {
 		const size_t third = nva_string.find('\0', second + 1);
 		if (third == std::string::npos)
 			throw std::runtime_error("Invalid name-version-author string");
-		
+
+		orcid = toString(longs[getMetaOffset() / 8 + 5]) + toString(longs[getMetaOffset() / 8 + 6]);
 		name = nva_string.substr(0, first);
 		version = nva_string.substr(first + 1, second - first - 1);
 		author = nva_string.substr(second + 1, third - second - 1);

@@ -11,7 +11,14 @@ namespace Wasmc {
 			std::vector<Long> rawMeta, rawSymbols;
 			std::string name, version, author, orcid;
 
+			BinaryParser() = delete;
+			BinaryParser(const BinaryParser &) = default;
+			BinaryParser(BinaryParser &&) = default;
+
 			BinaryParser(const std::vector<Long> &);
+
+			BinaryParser & operator=(const BinaryParser &) = default;
+			BinaryParser & operator=(BinaryParser &&) = default;
 
 			static AnyBase * parse(Long);
 
