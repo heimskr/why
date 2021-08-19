@@ -44,7 +44,7 @@ namespace Wasmc {
 			std::vector<Long> longs;
 			std::string line;
 			while (std::getline(stream, line))
-				longs.push_back(Util::parseLong(line, 16));
+				longs.push_back(Util::parseUlong(line, 16));
 			units.push_back(longs);
 		} else if (firstDone) {
 			throw std::runtime_error("Only the first input file can be non-compiled assembly");

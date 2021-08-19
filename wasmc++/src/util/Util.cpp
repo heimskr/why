@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iomanip>
 #include <stdexcept>
 
 #include "util/Util.h"
@@ -19,6 +20,23 @@ namespace Wasmc::Util {
 
 	long parseLong(const char *str, int base) {
 		return parseLong(std::string(str), base);
+	}
+
+	unsigned long parseUlong(const std::string &str, int base) {
+		const char *c_str = str.c_str();
+		char *end;
+		unsigned long parsed = strtoul(c_str, &end, base);
+		if (c_str + str.length() != end)
+			throw std::invalid_argument("Not an integer: \"" + str + "\"");
+		return parsed;
+	}
+
+	unsigned long parseUlong(const std::string *str, int base) {
+		return parseUlong(*str, base);
+	}
+
+	unsigned long parseUlong(const char *str, int base) {
+		return parseUlong(std::string(str), base);
 	}
 
 	double parseDouble(const std::string &str) {
@@ -125,10 +143,13 @@ namespace Wasmc::Util {
 		return out;
 	}
 
-	std::string toHex(size_t n) {
+	std::string toHex(size_t n, bool pad) {
 		std::stringstream ss;
 		ss.imbue(std::locale::classic());
-		ss << "0x" << std::hex << n;
+		ss << "0x" << std::hex;
+		if (pad)
+			ss << std::right << std::setw(16) << std::setfill('0');
+		ss << n;
 		return ss.str();
 	}
 

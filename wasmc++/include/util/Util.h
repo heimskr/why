@@ -17,6 +17,9 @@ namespace Wasmc::Util {
 	long parseLong(const std::string &, int base = 10);
 	long parseLong(const std::string *, int base = 10);
 	long parseLong(const char *, int base = 10);
+	unsigned long parseUlong(const std::string &, int base = 10);
+	unsigned long parseUlong(const std::string *, int base = 10);
+	unsigned long parseUlong(const char *, int base = 10);
 	double parseDouble(const std::string &);
 	double parseDouble(const std::string *);
 	double parseDouble(const char *);
@@ -37,7 +40,7 @@ namespace Wasmc::Util {
 	std::string escape(const std::string &);
 	std::string unescape(const std::string &);
 
-	std::string toHex(size_t);
+	std::string toHex(size_t, bool pad = false);
 	std::string toHex(const void *);
 
 	template <typename T>
