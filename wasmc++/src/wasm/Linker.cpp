@@ -5,6 +5,7 @@
 #include "util/Util.h"
 #include "wasm/Assembler.h"
 #include "wasm/Linker.h"
+#include "wasm/BinaryParser.h"
 
 namespace Wasmc {
 	void Linker::addFile(const std::filesystem::path &path) {
@@ -72,6 +73,14 @@ namespace Wasmc {
 	}
 
 	std::string Linker::link() {
+		if (units.empty())
+			throw std::runtime_error("Can't link before any files are added");
+
+		for (const std::vector<Long> &unit: units) {
+			BinaryParser binary_parser(unit);
+			binary_parser.parse();
+		}
+
 		return Assembler::stringify(linked);
 	}
 }

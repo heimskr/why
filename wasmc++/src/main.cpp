@@ -27,6 +27,8 @@ int link(int argc, char **argv) {
 	for (int i = 3; i < argc; ++i)
 		linker.addFile(argv[i]);
 
+	linker.link();
+
 	return 0;
 }
 
