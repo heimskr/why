@@ -257,7 +257,7 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into four sections: metadata, symbol table, code and data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly.
+Programs are divided into five sections: metadata, symbol table, code, data and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
 
 ## <a name="prog-meta"></a>Metadata Section
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
