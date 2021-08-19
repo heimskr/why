@@ -10,6 +10,7 @@
 #include "parser/StringSet.h"
 #include "wasm/Args.h"
 #include "wasm/Instructions.h"
+#include "wasm/Types.h"
 
 namespace Wasmc {
 	enum class WASMNodeType {
@@ -17,15 +18,6 @@ namespace Wasmc {
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI
 	};
-
-	enum class SymbolType: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
-	enum class ConstantFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol, SymbolID};
-
-	class WhyInstruction;
-	class Function;
-	class Variable;
-
-	using VarMap = std::unordered_map<const std::string *, std::shared_ptr<Variable>>;
 
 	Condition getCondition(const std::string &);
 	Condition getCondition(const ASTNode *);
@@ -110,7 +102,7 @@ namespace Wasmc {
 		std::vector<const std::string *> labels;
 		bool inSubroutine = false;
 		SymbolType symbolType = SymbolType::Unknown;
-		ConstantFlags flags = ConstantFlags::Ignore;
+		LinkerFlags flags = LinkerFlags::Ignore;
 
 		using WASMBaseNode::WASMBaseNode;
 
