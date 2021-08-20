@@ -9,6 +9,7 @@ namespace Wasmc {
 		virtual ~DebugEntry() {}
 		virtual Type getType() const = 0;
 		virtual DebugEntry * copy() const = 0;
+		virtual const std::string * getString() const { return nullptr; }
 	};
 
 	struct DebugFilename: DebugEntry {
@@ -16,6 +17,7 @@ namespace Wasmc {
 		DebugFilename(const std::string &filename_): filename(filename_) {}
 		Type getType() const override { return Type::Filename; }
 		DebugEntry * copy() const override { return new DebugFilename(filename); }
+		const std::string * getString() const override { return &filename; }
 	};
 
 	struct DebugFunction: DebugEntry {
@@ -23,6 +25,7 @@ namespace Wasmc {
 		DebugFunction(const std::string &function_): function(function_) {}
 		Type getType() const override { return Type::Function; }
 		DebugEntry * copy() const override { return new DebugFunction(function); }
+		const std::string * getString() const override { return &function; }
 	};
 
 	struct DebugLocation: DebugEntry {

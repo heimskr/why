@@ -974,7 +974,7 @@ export default class WASMC {
 				const bytes: number[] = [type];
 				const add = (n, b) => {
 					for (let j = 0; j < b; ++j)
-					bytes.push((n >> (8 * j)) & 0xff);
+						bytes.push((n >> (8 * j)) & 0xff);
 				};
 
 				add(file, 3);

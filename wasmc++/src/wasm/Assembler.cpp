@@ -302,6 +302,13 @@ namespace Wasmc {
 		return hash;
 	}
 
+	uint32_t Assembler::encodeSymbol(const std::string &name) {
+		std::vector<uint8_t> hash_vec(picosha2::k_digest_size);
+		picosha2::hash256(name.begin(), name.end(), hash_vec.begin(), hash_vec.end());
+		// TODO: verify
+		return hash_vec[4] | (hash_vec[5] << 8) | (hash_vec[6] << 16) | (hash_vec[7] << 24);
+	}
+
 	void Assembler::processMetadata() {
 		std::string orcid = "0000000000000000", name = "?", version = "?", author = "?";
 

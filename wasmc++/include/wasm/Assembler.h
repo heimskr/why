@@ -92,6 +92,8 @@ namespace Wasmc {
 
 			uint32_t encodeSymbol(const std::string *);
 
+			static uint32_t encodeSymbol(const std::string &);
+
 			void processMetadata();
 
 			void processData();
@@ -119,7 +121,7 @@ namespace Wasmc {
 			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
 
 			template <typename T>
-			std::vector<Long> getLongs(const T &str) const {
+			static std::vector<Long> getLongs(const T &str) {
 				if (str.empty())
 					return {0};
 

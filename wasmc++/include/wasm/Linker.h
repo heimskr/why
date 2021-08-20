@@ -43,5 +43,7 @@ namespace Wasmc {
 			static size_t countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &);
 
 			static void detectSymbolCollisions(const SymbolTable &, const SymbolTable &);
+
+			static std::vector<Long> encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &);
 	};
 }

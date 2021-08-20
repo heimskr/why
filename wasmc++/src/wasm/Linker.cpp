@@ -189,6 +189,11 @@ namespace Wasmc {
 					combined_debug.push_back(entry);
 		}
 
+		if (combined_symbols.count(".end") == 0)
+			combined_symbols.try_emplace(".end", Assembler::encodeSymbol(".end"), 0, SymbolEnum::Unknown);
+
+
+
 		return Assembler::stringify(linked);
 	}
 
@@ -267,8 +272,8 @@ namespace Wasmc {
 
 	size_t Linker::countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &entries) {
 		size_t out = 0;
-		for (const auto &entry: entries) {
-			const auto type = entry->getType();
+		for (const std::shared_ptr<DebugEntry> &entry: entries) {
+			const DebugEntry::Type type = entry->getType();
 			if (type == DebugEntry::Type::Filename || type == DebugEntry::Type::Function)
 				++out;
 		}
@@ -279,5 +284,58 @@ namespace Wasmc {
 		for (const auto &[key, value]: one)
 			if (key != ".end" && two.count(key) != 0)
 				throw std::runtime_error("Encountered a symbol collision: \"" + key + "\"");
+	}
+
+	std::vector<Long> Linker::encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &debug) {
+		std::vector<Long> out;
+
+		for (const std::shared_ptr<DebugEntry> &entry: debug) {
+			const DebugEntry::Type type = entry->getType();
+			if (type == DebugEntry::Type::Filename || type == DebugEntry::Type::Function) {
+				const std::string *value = entry->getString();
+				const size_t length = value->size();
+				if (0xffffff < length)
+					throw std::runtime_error("Value for type " + std::to_string(static_cast<int>(type)) + " is too long"
+						" (" + std::to_string(length) + " characters)");
+				std::vector<char> bytes {
+					static_cast<char>(type),
+					static_cast<char>(length & 0xff),
+					static_cast<char>((length >> 8) & 0xff),
+					static_cast<char>((length >> 16) & 0xff)
+				};
+				bytes.insert(bytes.end(), value->begin(), value->end());
+				for (const Long piece: Assembler::getLongs(bytes))
+					out.push_back(piece);
+			} else if (type == DebugEntry::Type::Location) {
+				const DebugLocation &location = static_cast<DebugLocation &>(*entry);
+				if (0xff < location.count)
+					throw std::runtime_error("Instruction count too high: " + std::to_string(location.count));
+				if (0xffffff < location.fileIndex)
+					throw std::runtime_error("File index too high: " + std::to_string(location.fileIndex));
+				if (0xffffffff < location.line)
+					throw std::runtime_error("Line number too high: " + std::to_string(location.line));
+				if (0xffffff < location.column)
+					throw std::runtime_error("Column number too high: " + std::to_string(location.column));
+				if (0xffffff < location.functionIndex)
+					throw std::runtime_error("Function index too high: " + std::to_string(location.functionIndex));
+				std::vector<char> bytes {static_cast<char>(type)};
+				auto add = [&](size_t number, char byte_count) {
+					for (char i = 0; i < byte_count; ++i)
+						bytes.push_back((number >> (8 * i)) & 0xff);
+				};
+
+				add(location.fileIndex, 3);
+				add(location.line, 4);
+				add(location.column, 3);
+				bytes.push_back(location.count);
+				add(location.functionIndex, 4);
+				add(location.address, 8);
+				for (const Long piece: Assembler::getLongs(bytes))
+					out.push_back(piece);
+			} else
+				throw std::runtime_error("Invalid DebugEntry type: " + std::to_string(static_cast<int>(type)));
+		}
+
+		return out;
 	}
 }
