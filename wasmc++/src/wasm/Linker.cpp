@@ -276,7 +276,7 @@ namespace Wasmc {
 						static_cast<uint8_t>(LinkerFlags::SymbolID), itype->condition);
 				} else {
 					const auto *jtype = static_cast<AnyJ *>(parsed.get());
-					longs[i] = Assembler::compileJ(jtype->opcode, jtype->rs, jtype->immediate, jtype->link,
+					longs[i] = Assembler::compileJ(jtype->opcode, jtype->rs, id, jtype->link,
 						static_cast<uint8_t>(LinkerFlags::SymbolID), jtype->condition);
 				}
 			}
