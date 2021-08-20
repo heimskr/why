@@ -27,7 +27,21 @@ int link(int argc, char **argv) {
 	for (int i = 3; i < argc; ++i)
 		linker.addFile(argv[i]);
 
-	linker.link();
+	std::ofstream outfile(argv[2]);
+	if (!outfile.is_open())
+		throw std::runtime_error("Couldn't open file for writing");
+
+	try {
+		outfile << linker.link();
+	} catch (const std::exception &err) {
+		Wasmc::error() << "Linking failed: " << err.what() << "\n";
+		outfile.close();
+		return 3;
+	}
+
+	outfile.close();
+	Wasmc::success() << "Linked \e[1m" << argv[3] << "\e[22m and saved the results to \e[1m" << argv[2]
+		<< "\e[22m.\n";
 
 	return 0;
 }
