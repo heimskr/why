@@ -85,12 +85,13 @@ namespace Wasmc {
 
 		const size_t meta_length = main_parser.getMetaLength();
 
-		const auto &main_symbols = main_parser.symbols;
-		auto combined_symbols = main_symbols;
-		auto combined_code = main_parser.rawCode;
-		auto combined_data = main_parser.rawData;
-		auto combined_debug = main_parser.copyDebugData();
-		auto symbol_types = collectSymbolTypes(main_parser.offsets, combined_symbols);
+		const SymbolTable &main_symbols = main_parser.symbols;
+		SymbolTable combined_symbols = main_symbols;
+		std::vector<Long> combined_code = main_parser.rawCode;
+		std::vector<Long> combined_data = main_parser.rawData;
+		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
+		std::unordered_map<std::string, SymbolType> symbol_types =
+			collectSymbolTypes(main_parser.offsets, combined_symbols);
 
 		desymbolize(combined_code, main_parser.offsets, main_symbols);
 
@@ -103,14 +104,14 @@ namespace Wasmc {
 			BinaryParser subparser(unit);
 			subparser.parse();
 
-			auto &subcode = subparser.rawCode;
-			auto &subdata = subparser.rawData;
-			auto &subtable = subparser.symbols;
+			std::vector<Long> &subcode = subparser.rawCode;
+			std::vector<Long> &subdata = subparser.rawData;
+			SymbolTable &subtable = subparser.symbols;
 			depointerize(subtable, subdata, subparser.offsets.data);
 			const size_t subcode_length = subparser.getCodeLength();
 			const size_t subdata_length = subparser.getDataLength();
 			size_t subtable_length = subparser.rawSymbols.size();
-			auto &subdebug = subparser.debugData;
+			std::vector<std::shared_ptr<Wasmc::DebugEntry>> &subdebug = subparser.debugData;
 			if (subtable.count(".end") != 0) {
 				subtable.erase(".end");
 				subtable_length -= 3;
@@ -143,14 +144,14 @@ namespace Wasmc {
 
 			for (auto &entry: combined_debug)
 				if (entry->getType() == DebugEntry::Type::Location) {
-					auto *location = static_cast<DebugLocation *>(entry.get());
+					DebugLocation *location = static_cast<DebugLocation *>(entry.get());
 					if (location->address)
 						location->address += subtable_length * 8;
 				}
 
 			for (auto &entry: subdebug)
 				if (entry->getType() == DebugEntry::Type::Location) {
-					auto *location = static_cast<DebugLocation *>(entry.get());
+					DebugLocation *location = static_cast<DebugLocation *>(entry.get());
 					if (location->address)
 						location->address += extra_symbol_length + extra_code_length + meta_difference - 24;
 					location->fileIndex += extra_debug_length;
@@ -162,7 +163,7 @@ namespace Wasmc {
 			extra_data_length += subdata_length;
 
 			std::vector<std::shared_ptr<DebugEntry>> types1and2;
-			Util::filter(subdebug, types1and2, [](const auto &entry) {
+			Util::filter(subdebug, types1and2, [](const std::shared_ptr<DebugEntry> &entry) {
 				const auto type = entry->getType();
 				return type == DebugEntry::Type::Filename || type == DebugEntry::Type::Function;
 			});
@@ -184,7 +185,7 @@ namespace Wasmc {
 			combined_debug.insert(combined_debug.begin() + extra_debug_length + 1,
 				types1and2.begin(), types1and2.end());
 
-			for (const auto &entry: subdebug)
+			for (const std::shared_ptr<DebugEntry> &entry: subdebug)
 				if (entry->getType() == DebugEntry::Type::Location)
 					combined_debug.push_back(entry);
 		}
@@ -192,16 +193,16 @@ namespace Wasmc {
 		if (combined_symbols.count(".end") == 0)
 			combined_symbols.try_emplace(".end", Assembler::encodeSymbol(".end"), 0, SymbolEnum::Unknown);
 
-
+		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
 
 		return Assembler::stringify(linked);
 	}
 
 	void Linker::depointerize(const SymbolTable &table, std::vector<Long> &data, Long data_offset) {
 		for (const auto &[key, value]: table) {
-			const auto address = value.address;
-			const auto type = value.type;
-			const auto index = (address - data_offset) / 8;
+			const Long address = value.address;
+			const SymbolEnum type = value.type;
+			const Long index = (address - data_offset) / 8;
 			if (type == SymbolEnum::KnownPointer) {
 				const Long current_value = Util::swapEndian(data.at(index));
 				std::optional<SymbolTableEntry> match;
@@ -238,7 +239,7 @@ namespace Wasmc {
 	void Linker::desymbolize(std::vector<Long> &longs, const Offsets &offsets, const SymbolTable &table) {
 		const size_t longs_size = longs.size();
 		for (size_t i = 0; i < longs_size; ++i) {
-			const auto parsed = std::unique_ptr<AnyBase>(BinaryParser::parse(longs[i]));
+			const std::unique_ptr<AnyBase> parsed = std::unique_ptr<AnyBase>(BinaryParser::parse(longs[i]));
 			if (parsed->flags == static_cast<uint16_t>(LinkerFlags::KnownSymbol)) {
 				if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
 					throw std::runtime_error("Found an instruction not of type I or J with KnownSymbol set at " +
@@ -323,7 +324,6 @@ namespace Wasmc {
 					for (char i = 0; i < byte_count; ++i)
 						bytes.push_back((number >> (8 * i)) & 0xff);
 				};
-
 				add(location.fileIndex, 3);
 				add(location.line, 4);
 				add(location.column, 3);
