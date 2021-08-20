@@ -340,7 +340,7 @@ export default class Linker {
 	 */
 	static getSymbolType(offsets: SegmentOffsets, symbolTable: SymbolTable, symbol: string): SymbolType {
 		const addr = symbolTable[symbol][1].toInt();
-		const {$code, $data, $end} = offsets;
+		const {$code, $data, $end, $debug} = offsets;
 
 		if ($code <= addr && addr < $data) {
 			return "code";
