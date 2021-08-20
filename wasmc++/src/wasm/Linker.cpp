@@ -339,4 +339,18 @@ namespace Wasmc {
 
 		return out;
 	}
+
+	std::vector<Long> Linker::encodeSymbolTable(const SymbolTable &table) {
+		std::vector<Long> out;
+
+		for (const auto &[symbol, entry]: table) {
+			out.push_back((static_cast<uint64_t>(Assembler::encodeSymbol(symbol)) << 32)
+				| Util::updiv(symbol.size(), size_t(8)));
+			out.push_back(entry.address);
+			for (const Long piece: Assembler::getLongs(symbol))
+				out.push_back(piece);
+		}
+
+		return out;
+	}
 }

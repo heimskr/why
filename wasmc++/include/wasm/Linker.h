@@ -45,5 +45,7 @@ namespace Wasmc {
 			static void detectSymbolCollisions(const SymbolTable &, const SymbolTable &);
 
 			static std::vector<Long> encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &);
+
+			static std::vector<Long> encodeSymbolTable(const SymbolTable &);
 	};
 }
