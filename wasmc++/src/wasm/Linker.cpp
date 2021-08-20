@@ -203,6 +203,17 @@ namespace Wasmc {
 
 		resymbolize(combined_code, combined_symbols);
 
+		std::vector<Long> &meta = main_parser.rawMeta;
+		meta.at(1) += code_offset;
+		meta.at(2) = meta.at(1) + combined_code.size() * 8;
+		meta.at(3) = meta.at(2) + combined_data.size() * 8;
+		meta.at(4) = meta.at(3) + encoded_debug.size() * 8;
+
+		linked.clear();
+		for (const auto &longs: {meta, encoded_combined_symbols, combined_code, combined_data, encoded_debug})
+			for (const Long piece: longs)
+				linked.push_back(piece);
+
 		return Assembler::stringify(linked);
 	}
 
