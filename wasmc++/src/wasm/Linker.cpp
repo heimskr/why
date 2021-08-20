@@ -5,8 +5,8 @@
 #include "parser/Parser.h"
 #include "util/Util.h"
 #include "wasm/Assembler.h"
-#include "wasm/Linker.h"
 #include "wasm/BinaryParser.h"
+#include "wasm/Linker.h"
 
 namespace Wasmc {
 	void Linker::addFile(const std::filesystem::path &path) {
@@ -195,6 +195,7 @@ namespace Wasmc {
 
 		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
 
+
 		return Assembler::stringify(linked);
 	}
 
@@ -310,15 +311,15 @@ namespace Wasmc {
 			} else if (type == DebugEntry::Type::Location) {
 				const DebugLocation &location = static_cast<DebugLocation &>(*entry);
 				if (0xff < location.count)
-					throw std::runtime_error("Instruction count too high: " + std::to_string(location.count));
+					warn() << "Instruction count too high: " << location.count << "\n";
 				if (0xffffff < location.fileIndex)
-					throw std::runtime_error("File index too high: " + std::to_string(location.fileIndex));
+					warn() << "File index too high: " << location.fileIndex << "\n";
 				if (0xffffffff < location.line)
-					throw std::runtime_error("Line number too high: " + std::to_string(location.line));
+					warn() << "Line number too high: " << location.line << "\n";
 				if (0xffffff < location.column)
-					throw std::runtime_error("Column number too high: " + std::to_string(location.column));
+					warn() << "Column number too high: " << location.column << "\n";
 				if (0xffffff < location.functionIndex)
-					throw std::runtime_error("Function index too high: " + std::to_string(location.functionIndex));
+					warn() << "Function index too high: " << location.functionIndex << "\n";
 				std::vector<char> bytes {static_cast<char>(type)};
 				auto add = [&](size_t number, char byte_count) {
 					for (char i = 0; i < byte_count; ++i)
