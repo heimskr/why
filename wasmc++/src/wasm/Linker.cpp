@@ -90,7 +90,7 @@ namespace Wasmc {
 		auto combined_code = main_parser.rawCode;
 		auto combined_data = main_parser.rawData;
 		auto combined_debug = main_parser.copyDebugData();
-		const auto symbol_types = collectSymbolTypes(main_parser.offsets, combined_symbols);
+		auto symbol_types = collectSymbolTypes(main_parser.offsets, combined_symbols);
 
 		desymbolize(combined_code, main_parser.offsets, main_symbols);
 
@@ -103,14 +103,14 @@ namespace Wasmc {
 			BinaryParser subparser(unit);
 			subparser.parse();
 
-			const auto &subcode = subparser.rawCode;
-			auto subdata = subparser.rawData;
-			auto subtable = subparser.symbols;
+			auto &subcode = subparser.rawCode;
+			auto &subdata = subparser.rawData;
+			auto &subtable = subparser.symbols;
 			depointerize(subtable, subdata, subparser.offsets.data);
 			const size_t subcode_length = subparser.getCodeLength();
 			const size_t subdata_length = subparser.getDataLength();
 			size_t subtable_length = subparser.rawSymbols.size();
-			const auto &subdebug = subparser.debugData;
+			auto &subdebug = subparser.debugData;
 			if (subtable.count(".end") != 0) {
 				subtable.erase(".end");
 				subtable_length -= 3;
@@ -119,6 +119,74 @@ namespace Wasmc {
 			detectSymbolCollisions(combined_symbols, subtable);
 
 			const size_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
+
+			desymbolize(subcode, subparser.offsets, subtable);
+
+			for (auto &[symbol, entry]: subtable) {
+				const SymbolType type = getSymbolType(subparser.offsets, subtable, symbol);
+				if (type == SymbolType::Code)
+					entry.address += extra_symbol_length + extra_code_length + meta_difference - 24;
+				else if (type == SymbolType::Data)
+					entry.address += extra_symbol_length + extra_code_length + extra_data_length + meta_difference - 24;
+				else if (symbol != ".end")
+					throw std::runtime_error("Encountered symbol \"" + symbol + "\" of unknown type");
+				symbol_types[symbol] = type;
+			}
+
+			for (auto &[symbol, entry]: combined_symbols) {
+				const SymbolType type = symbol_types.at(symbol);
+				if (type == SymbolType::Code)
+					entry.address += subtable_length * 8;
+				else if (type == SymbolType::Code || symbol == ".end") // TODO: is `symbol == ".end"` correct?
+					entry.address += subtable_length * 8 + subcode_length;
+			}
+
+			for (auto &entry: combined_debug)
+				if (entry->getType() == DebugEntry::Type::Location) {
+					auto *location = static_cast<DebugLocation *>(entry.get());
+					if (location->address)
+						location->address += subtable_length * 8;
+				}
+
+			for (auto &entry: subdebug)
+				if (entry->getType() == DebugEntry::Type::Location) {
+					auto *location = static_cast<DebugLocation *>(entry.get());
+					if (location->address)
+						location->address += extra_symbol_length + extra_code_length + meta_difference - 24;
+					location->fileIndex += extra_debug_length;
+					location->functionIndex += extra_debug_length;
+				}
+
+			extra_symbol_length += subtable_length * 8;
+			extra_code_length += subcode_length;
+			extra_data_length += subdata_length;
+
+			std::vector<std::shared_ptr<DebugEntry>> types1and2;
+			Util::filter(subdebug, types1and2, [](const auto &entry) {
+				const auto type = entry->getType();
+				return type == DebugEntry::Type::Filename || type == DebugEntry::Type::Function;
+			});
+
+			extra_debug_length += types1and2.size();
+
+			for (const auto &[key, value]: subtable)
+				if (combined_symbols.count(key) == 0)
+					combined_symbols.try_emplace(key, value);
+				else
+					combined_symbols.at(key) = value;
+
+			for (const Long piece: subcode)
+				combined_code.push_back(piece);
+
+			for (const Long piece: subdata)
+				combined_data.push_back(piece);
+
+			combined_debug.insert(combined_debug.begin() + extra_debug_length + 1,
+				types1and2.begin(), types1and2.end());
+
+			for (const auto &entry: subdebug)
+				if (entry->getType() == DebugEntry::Type::Location)
+					combined_debug.push_back(entry);
 		}
 
 		return Assembler::stringify(linked);
@@ -197,7 +265,7 @@ namespace Wasmc {
 		return address == end_offset? ".end" : "";
 	}
 
-	size_t Linker::countStringTypes(std::vector<std::unique_ptr<DebugEntry>> &entries) {
+	size_t Linker::countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &entries) {
 		size_t out = 0;
 		for (const auto &entry: entries) {
 			const auto type = entry->getType();

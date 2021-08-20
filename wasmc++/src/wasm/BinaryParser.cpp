@@ -184,8 +184,8 @@ namespace Wasmc {
 		return out;
 	}
 
-	std::vector<std::unique_ptr<DebugEntry>> BinaryParser::getDebugData() const {
-		std::vector<std::unique_ptr<DebugEntry>> out;
+	std::vector<std::shared_ptr<DebugEntry>> BinaryParser::getDebugData() const {
+		std::vector<std::shared_ptr<DebugEntry>> out;
 
 		const size_t start = offsets.debug / 8, end = offsets.end / 8;
 

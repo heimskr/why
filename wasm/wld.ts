@@ -163,11 +163,11 @@ export default class Linker {
 					// its address by extraSymbolLength + extraCodeLength + extraDataLength + metaDifference.
 					subtable[symbol][1] = subtable[symbol][1].add(extraSymbolLength + extraCodeLength + extraDataLength
 					                                              + metaDifference - 24);
+				}
 
-					if (type != "data" && symbol != ".end") {
-						console.warn(chalk.yellow.bold(" !"), "Encountered a symbol other than .end of type",
-						                                      `${chalk.bold(type)}: ${chalk.bold(symbol)}`);
-					}
+				if (type != "data" && symbol != ".end") {
+					console.warn(chalk.yellow.bold(" !"), "Encountered a symbol other than .end of type",
+						`${chalk.bold(type)}: ${chalk.bold(symbol)}`);
 				}
 
 				symbolTypes[symbol] = type;

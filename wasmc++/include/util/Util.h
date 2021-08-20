@@ -1,6 +1,6 @@
-#ifndef UTIL_UTIL_H_
-#define UTIL_UTIL_H_
+#pragma once
 
+#include <algorithm>
 #include <initializer_list>
 #include <iostream>
 #include <signal.h>
@@ -150,6 +150,11 @@ namespace Wasmc::Util {
 	}
 
 	uint64_t swapEndian(uint64_t n);
+
+	template <typename C, typename Pred>
+	void filter(const C &source, C &destination, Pred predicate) {
+		std::copy_if(source.begin(), source.end(), std::back_inserter(destination), predicate);
+	}
 }
 
 namespace Wasmc {
@@ -173,5 +178,3 @@ namespace Wasmc {
 		raise(SIGTRAP);
 	}
 }
-
-#endif

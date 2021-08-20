@@ -40,7 +40,7 @@ namespace Wasmc {
 
 			static std::string findSymbolFromAddress(Long address, const SymbolTable &, Long end_offset);
 
-			static size_t countStringTypes(std::vector<std::unique_ptr<DebugEntry>> &);
+			static size_t countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &);
 
 			static void detectSymbolCollisions(const SymbolTable &, const SymbolTable &);
 	};

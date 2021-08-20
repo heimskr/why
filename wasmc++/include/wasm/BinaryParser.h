@@ -14,7 +14,7 @@ namespace Wasmc {
 			std::string name, version, author, orcid;
 			SymbolTable symbols;
 			std::vector<std::unique_ptr<AnyBase>> code;
-			std::vector<std::unique_ptr<DebugEntry>> debugData;
+			std::vector<std::shared_ptr<DebugEntry>> debugData;
 			Offsets offsets;
 
 			BinaryParser() = delete;
@@ -48,7 +48,7 @@ namespace Wasmc {
 		private:
 			std::vector<Long> slice(size_t begin, size_t end);
 			SymbolTable getSymbols() const;
-			std::vector<std::unique_ptr<DebugEntry>> getDebugData() const;
+			std::vector<std::shared_ptr<DebugEntry>> getDebugData() const;
 
 			static std::string toString(Long);
 	};
