@@ -199,7 +199,7 @@ namespace Wasmc {
 			+ encodeSymbolTable(combined_symbols).size() + combined_code.size() + combined_data.size()
 			+ encoded_debug.size());
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
-		const size_t code_offset = (encoded_combined_symbols.size() - symbol_table_length);
+		const size_t code_offset = (encoded_combined_symbols.size() - symbol_table_length) * 8;
 
 		resymbolize(combined_code, combined_symbols);
 

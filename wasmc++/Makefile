@@ -19,8 +19,8 @@ OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=
 TESTFILE        ?= ../wasm/examples/ops.wasm
 OUTFILE         ?= ../wasm/compiled/ops.why
 # TESTARGS        ?= $(TESTFILE) $(OUTFILE)
-# TESTARGS        ?= -l ../wasm/compiled/c.why ../wasm/examples/c.wasm
-TESTARGS        ?= -l ../wasm/compiled/debug.why ../wasm/examples/debug.wasm
+TESTARGS        ?= -l ../wasm/compiled/a.why ../wasm/examples/a.wasm
+# TESTARGS        ?= -l ../wasm/compiled/debug.why ../wasm/examples/debug.wasm
 
 .PHONY: all counter test clean count countbf
 

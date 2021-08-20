@@ -43,6 +43,8 @@ namespace Wasmc {
 			return this;
 		}
 		Type getType() const override { return Type::Location; }
-		DebugEntry * copy() const override { return new DebugLocation(fileIndex, line, column, functionIndex); }
+		DebugEntry * copy() const override {
+			return (new DebugLocation(fileIndex, line, column, functionIndex))->setCount(count)->setAddress(address);
+		}
 	};
 }
