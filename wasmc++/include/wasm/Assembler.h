@@ -33,6 +33,13 @@ namespace Wasmc {
 
 			std::string assemble();
 
+			static Long compileR(Opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
+			                     uint8_t condition);
+
+			static Long compileI(Opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags, uint8_t condition);
+
+			static Long compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition);
+
 		private:
 			const ASTNode *root;
 			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
@@ -60,14 +67,10 @@ namespace Wasmc {
 			Long compileInstruction(const WASMInstructionNode &);
 
 			Long compileR(const WASMInstructionNode &, const RType &) const;
-			static Long compileR(Opcode, uint8_t rs, uint8_t rt, uint8_t rd, uint16_t function, uint8_t flags,
-			                     uint8_t condition);
 
 			Long compileI(const WASMInstructionNode &, const IType &) const;
-			static Long compileI(Opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags, uint8_t condition);
 
 			Long compileJ(const WASMInstructionNode &, const JType &) const;
-			static Long compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition);
 
 			void addCode(const WASMInstructionNode &);
 

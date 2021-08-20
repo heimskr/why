@@ -92,10 +92,11 @@ namespace Wasmc {
 		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
 		std::unordered_map<std::string, SymbolType> symbol_types =
 			collectSymbolTypes(main_parser.offsets, combined_symbols);
+		const size_t symbol_table_length = main_parser.rawSymbols.size();
 
 		desymbolize(combined_code, main_parser.offsets, main_symbols);
 
-		size_t extra_symbol_length = main_parser.rawSymbols.size() * 8;
+		size_t extra_symbol_length = symbol_table_length * 8;
 		size_t extra_code_length = main_parser.getCodeLength();
 		size_t extra_data_length = main_parser.getDataLength();
 		size_t extra_debug_length = countStringTypes(combined_debug);
@@ -194,7 +195,13 @@ namespace Wasmc {
 			combined_symbols.try_emplace(".end", Assembler::encodeSymbol(".end"), 0, SymbolEnum::Unknown);
 
 		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
+		combined_symbols.at(".end").address = 8 * (main_parser.rawMeta.size()
+			+ encodeSymbolTable(combined_symbols).size() + combined_code.size() + combined_data.size()
+			+ encoded_debug.size());
+		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
+		const size_t code_offset = (encoded_combined_symbols.size() - symbol_table_length);
 
+		resymbolize(combined_code, combined_symbols);
 
 		return Assembler::stringify(linked);
 	}
@@ -266,10 +273,17 @@ namespace Wasmc {
 	}
 
 	std::string Linker::findSymbolFromAddress(Long address, const SymbolTable &table, Long end_offset) {
-		for (const auto &[key, value]: table)
-			if (value.address == address)
-				return key;
+		for (const auto &[symbol, entry]: table)
+			if (entry.address == address)
+				return symbol;
 		return address == end_offset? ".end" : "";
+	}
+
+	std::string Linker::findSymbolFromID(uint32_t id, const SymbolTable &table) {
+		for (const auto &[symbol, entry]: table)
+			if (entry.id == id)
+				return symbol;
+		return "";
 	}
 
 	size_t Linker::countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &entries) {
@@ -352,5 +366,50 @@ namespace Wasmc {
 		}
 
 		return out;
+	}
+
+	void Linker::resymbolize(std::vector<Long> &instructions, const SymbolTable &table) {
+		size_t offset = 0;
+		for (Long &instruction: instructions) {
+			const AnyBase *parsed = BinaryParser::parse(instruction);
+			const LinkerFlags flags = static_cast<LinkerFlags>(parsed->flags);
+			if (flags == LinkerFlags::SymbolID || flags == LinkerFlags::UnknownSymbol) {
+				if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
+					throw std::runtime_error("Found an instruction not of type I or J with "
+						+ std::string(flags == LinkerFlags::UnknownSymbol? "UnknownSymbol" : "SymbolID") + " set at "
+						"offset " + std::to_string(offset));
+
+				const size_t immediate = dynamic_cast<const AnyImmediate &>(*parsed).immediate;
+				const std::string name = findSymbolFromID(immediate, table);
+
+				if (name.empty() || table.count(name) == 0) {
+					// Unknown labels in included binaries are okay if they're resolved later.
+					// For example, B could reference symbols defined in C without including C,
+					// but if A includes B and C, then the symbols will be resolved in the compiled
+					// output for A.
+					if (flags == LinkerFlags::UnknownSymbol)
+						continue;
+					throw std::runtime_error("Couldn't find symbol for immediate " + Util::toHex(immediate));
+				}
+
+				Long address = table.at(name).address;
+				if (0xffffffff < address)
+					warn() << "Truncating address of label \e[1m" << name << "\e[22m from \e[1m" << Util::toHex(address)
+					       << "\e[22m to \e[1m" << Util::toHex(address & 0xffffffff) << "\e[22m.\n";
+
+				if (parsed->type == AnyBase::Type::I) {
+					const AnyI *itype = static_cast<const AnyI *>(parsed);
+					instruction = Assembler::compileI(itype->opcode, itype->rs, itype->rd,
+						static_cast<uint32_t>(address), static_cast<uint8_t>(LinkerFlags::KnownSymbol),
+						itype->condition);
+				} else {
+					const AnyJ *jtype = static_cast<const AnyJ *>(parsed);
+					instruction = Assembler::compileJ(jtype->opcode, jtype->rs, static_cast<uint32_t>(address),
+						jtype->link, static_cast<uint8_t>(LinkerFlags::KnownSymbol), jtype->condition);
+				}
+			}
+
+			offset += 8;
+		}
 	}
 }

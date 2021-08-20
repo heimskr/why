@@ -24,38 +24,45 @@ namespace Wasmc {
 
 		const Type type;
 		Opcode opcode;
-		uint16_t rs;
-		uint16_t condition;
-		uint16_t flags;
+		uint8_t rs;
+		uint8_t condition;
+		uint8_t flags;
 
-		AnyBase(Opcode opcode_, uint16_t rs_, uint16_t condition_, uint16_t flags_, Type type_ = Type::Other):
+		AnyBase(Opcode opcode_, uint8_t rs_, uint8_t condition_, uint8_t flags_, Type type_ = Type::Other):
 			type(type_), opcode(opcode_), rs(rs_), condition(condition_), flags(flags_) {}
+
+		virtual ~AnyBase() {}
+
+		virtual Long encode() const { return 0; }
 	};
 
 	struct AnyImmediate: AnyBase {
 		uint32_t immediate;
-		AnyImmediate(Opcode opcode_, uint16_t rs_, uint32_t immediate_, uint16_t condition_, uint16_t flags_,
+		AnyImmediate(Opcode opcode_, uint8_t rs_, uint32_t immediate_, uint8_t condition_, uint8_t flags_,
 		Type type_):
 			AnyBase(opcode_, rs_, condition_, flags_, type_), immediate(immediate_) {}
 	};
 
 	struct AnyR: AnyBase {
-		uint16_t rd, rt;
+		uint8_t rd, rt;
 		const Funct function;
-		AnyR(Opcode opcode_, uint16_t rs_, uint16_t rt_, uint16_t rd_, Funct function_, uint16_t condition_,
-		uint16_t flags_):
+		AnyR(Opcode opcode_, uint8_t rs_, uint8_t rt_, uint8_t rd_, Funct function_, uint8_t condition_,
+		uint8_t flags_):
 			AnyBase(opcode_, rs_, condition_, flags_, Type::R), rd(rd_), rt(rt_), function(function_) {}
+		Long encode() const override;
 	};
 
 	struct AnyI: AnyImmediate {
-		uint16_t rd;
-		AnyI(Opcode opcode_, uint16_t rs_, uint16_t rd_, uint32_t immediate_, uint16_t condition_, uint16_t flags_):
+		uint8_t rd;
+		AnyI(Opcode opcode_, uint8_t rs_, uint8_t rd_, uint32_t immediate_, uint8_t condition_, uint8_t flags_):
 			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, Type::I), rd(rd_) {}
+		Long encode() const override;
 	};
 
 	struct AnyJ: AnyImmediate {
 		bool link;
-		AnyJ(Opcode opcode_, uint16_t rs_, bool link_, uint32_t immediate_, uint16_t condition_, uint16_t flags_):
+		AnyJ(Opcode opcode_, uint8_t rs_, bool link_, uint32_t immediate_, uint8_t condition_, uint8_t flags_):
 			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, Type::J), link(link_) {}
+		Long encode() const override;
 	};
 }

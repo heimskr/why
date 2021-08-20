@@ -40,6 +40,8 @@ namespace Wasmc {
 
 			static std::string findSymbolFromAddress(Long address, const SymbolTable &, Long end_offset);
 
+			static std::string findSymbolFromID(uint32_t id, const SymbolTable &);
+
 			static size_t countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &);
 
 			static void detectSymbolCollisions(const SymbolTable &, const SymbolTable &);
@@ -47,5 +49,7 @@ namespace Wasmc {
 			static std::vector<Long> encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &);
 
 			static std::vector<Long> encodeSymbolTable(const SymbolTable &);
+
+			static void resymbolize(std::vector<Long> &, const SymbolTable &);
 	};
 }

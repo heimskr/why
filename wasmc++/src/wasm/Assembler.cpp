@@ -90,7 +90,7 @@ namespace Wasmc {
 			funct, static_cast<uint8_t>(node.flags), condition);
 	}
 
-	Long Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, uint16_t function, uint8_t flags,
+	Long Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
 	                         uint8_t condition) {
 		return static_cast<uint64_t>(function)
 			| (static_cast<uint64_t>(flags) << 12)
