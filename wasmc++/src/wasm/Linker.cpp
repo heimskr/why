@@ -139,7 +139,7 @@ namespace Wasmc {
 				const SymbolType type = symbol_types.at(symbol);
 				if (type == SymbolType::Code)
 					entry.address += subtable_length * 8;
-				else if (type == SymbolType::Code || symbol == ".end") // TODO: is `symbol == ".end"` correct?
+				else if (type == SymbolType::Data || symbol == ".end") // TODO: is `symbol == ".end"` correct?
 					entry.address += subtable_length * 8 + subcode_length;
 			}
 

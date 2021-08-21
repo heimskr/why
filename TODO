@@ -3,5 +3,3 @@
 [2020/04/09 00:13:42] Add unsigned compare instructions.
 [2021/04/18 01:38:00] Implement accessed/modified bit changes in WVM++.
 [2021/04/27 01:20:54] Add floating point support.
-[2021/08/20 10:19:39] There's a bug in wasmc++'s linker. The result for a.wasm has a jump to c1d (a data symbol) instead
-                      of the expected (as produced by wld.ts) jump to c2c_print (a code symbol).

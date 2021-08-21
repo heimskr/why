@@ -190,7 +190,7 @@ export default class Parser {
 	}
 
 	/** Reads the program's symbol table.
-	 * @return {SymbolTable} An object mapping a symbol name to tuple of its ID and its address. */
+	 * @return {SymbolTable} An object mapping a symbol name to a tuple of its ID, address and type. */
 	getSymbols(): SymbolTable {
 		const longs = this.raw;
 		const start = longs[0].toInt() / 8;
