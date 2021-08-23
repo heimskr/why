@@ -110,6 +110,15 @@ namespace Wasmc::Util {
 					case 'r':  out << '\r'; break;
 					case 't':  out << '\t'; break;
 					case '\\': out << '\\'; break;
+					case 'x': {
+						if (size <= i + 2)
+							throw std::runtime_error("Hexadecimal escape is too close to end of string");
+						const char first = str[++i], second = str[++i];
+						if (!isxdigit(first) || !isxdigit(second))
+							throw std::runtime_error(std::string("Invalid hexadecimal escape: \\x") + first + second);
+						out << static_cast<char>(strtol((std::string(1, first) + second).c_str(), nullptr, 16));
+						break;
+					}
 					default: throw std::runtime_error("Unrecognized character: \\" + std::string(1, str[i]));
 				}
 			} else
