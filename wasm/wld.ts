@@ -57,7 +57,7 @@ export default class Linker {
 			if (Linker.assembler.parsed.includes) {
 				// Included files are relative to the source file, so we need to resolve the paths.
 				this.objectFilenames.splice(1, 0,
-				    ...Linker.assembler.parsed.includes.map(f => path.resolve(path.dirname(filename), f)));
+				    ...Linker.assembler.parsed.includes.map(f => path.resolve(path.dirname(filename), JSON.parse(f))));
 				// In case the main source includes a file already specified as an input from the command line,
 				// we need to remove duplicates.
 				this.objectFilenames = _.uniq(this.objectFilenames);

@@ -662,7 +662,7 @@ export default class WASMC {
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, [debug, op, ...args]);
+			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)} in compileInstruction.`, [debug, op, ...args]);
 			return Long.fromString("6666deadc0de6666", true, 16);
 		}
 	}
@@ -686,7 +686,7 @@ export default class WASMC {
 		} else if (op == "nop") {
 			return Long.UZERO;
 		} else {
-			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)}.`, instruction);
+			WASMC.warn(`Unhandled instruction ${chalk.bold.red(op)} in unparseInstruction.`, instruction);
 			return Long.fromString("6666deadc0de6666", true, 16);
 		}
 	}
