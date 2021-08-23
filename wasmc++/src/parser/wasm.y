@@ -101,7 +101,7 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_IF "if"
 %token WASMTOK_NOP "<>"
 %token WASMTOK_INT "%int"
-%token WASMTOK_RIT "rit"
+%token WASMTOK_RIT "%rit"
 %token WASMTOK_TIME "%time"
 %token WASMTOK_RING "%ring"
 %token WASMTOK_LL "<<"
