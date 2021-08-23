@@ -479,7 +479,7 @@ namespace Wasmc {
 	struct WASMIntINode: WASMInstructionNode, IType {
 		WASMIntINode(ASTNode *imm_);
 		WASMIntINode(const Immediate &imm_);
-		Opcode getOpcode() const override { return OPCODES.at("inti"); }
+		Opcode getOpcode() const override { return OPCODES.at("int"); }
 		WASMInstructionNode * copy() const override { return (new WASMIntINode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::IntI; }
 		std::string debugExtra() const override;
@@ -489,7 +489,7 @@ namespace Wasmc {
 	struct WASMRitINode: WASMInstructionNode, IType {
 		WASMRitINode(ASTNode *imm_);
 		WASMRitINode(const Immediate &imm_);
-		Opcode getOpcode() const override { return OPCODES.at("riti"); }
+		Opcode getOpcode() const override { return OPCODES.at("rit"); }
 		WASMInstructionNode * copy() const override { return (new WASMRitINode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::RitI; }
 		std::string debugExtra() const override;
