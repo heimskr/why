@@ -245,6 +245,7 @@ namespace Wasmc {
 		{"multi", "multui"},
 		{"sl",    "slu"   },
 		{"sle",   "sleu"  },
+		{"div",   "divu"  },
 	};
 
 	std::unordered_map<std::string, Funct> FUNCTS {

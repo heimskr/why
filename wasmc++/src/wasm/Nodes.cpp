@@ -5,6 +5,7 @@
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
 #include "util/Color.h"
+#include "util/Util.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
 
@@ -156,12 +157,30 @@ namespace Wasmc {
 	}
 
 	Funct RNode::getFunct() const {
+		const std::string *instruction;
 		try {
-			const std::string &instruction = TOKEN_INSTRUCTIONS_R.at(operToken);
-			return FUNCTS.at(isUnsigned? UNSIGNED_EQUIVALENTS.at(instruction) : instruction);
+			instruction = &TOKEN_INSTRUCTIONS_R.at(operToken);
 		} catch (const std::out_of_range &) {
 			debug();
-			std::cerr << "Couldn't find function for token " << operToken << " (" << *oper << ")\n";
+			error() << "Couldn't find instruction for token " << operToken << " (" << *oper << ")\n";
+			throw;
+		}
+
+		std::string function;
+
+		try {
+			function = isUnsigned? UNSIGNED_EQUIVALENTS.at(*instruction) : *instruction;
+		} catch (const std::out_of_range &) {
+			debug();
+			error() << "Couldn't find unsigned equivalent for " << *instruction << "\n";
+			throw;
+		}
+
+		try {
+			return FUNCTS.at(isUnsigned? UNSIGNED_EQUIVALENTS.at(*instruction) : *instruction);
+		} catch (const std::out_of_range &) {
+			debug();
+			error() << "Couldn't find function for token " << operToken << " (" << *oper << ")\n";
 			throw;
 		}
 	}
