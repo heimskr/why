@@ -1,5 +1,4 @@
-#ifndef WVM_UTIL_H_
-#define WVM_UTIL_H_
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -11,6 +10,10 @@ namespace WVM {
 		std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 		bool parseUL(const std::string &str, uint64_t &out, int base = 10);
 		bool parseLong(const std::string &str, int64_t &out, int base = 10);
+
+		std::string toHex(size_t);
+		std::string toHex(const void *);
+		std::string toHex(size_t, int pad);
 
 		template <typename T>
 		inline T upalign(T num, long alignment) {
@@ -53,5 +56,3 @@ namespace WVM {
 		return std::cerr << infoPrefix;
 	}
 }
-
-#endif

@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <iomanip>
+#include <sstream>
 
 #include "Util.h"
 
@@ -38,5 +40,26 @@ namespace WVM::Util {
 		char *endptr;
 		out = strtoll(str.c_str(), &endptr, base);
 		return static_cast<unsigned long>(endptr - str.c_str()) == str.size();
+	}
+
+	std::string toHex(size_t n) {
+		std::stringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << "0x" << std::hex << n;
+		return ss.str();
+	}
+
+	std::string toHex(size_t n, int pad) {
+		std::stringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << "0x" << std::hex << std::right << std::setw(pad) << std::setfill('0') << n;
+		return ss.str();
+	}
+
+	std::string toHex(const void *ptr) {
+		std::stringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << ptr;
+		return ss.str();
 	}
 }

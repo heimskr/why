@@ -369,8 +369,10 @@ namespace WVM::Mode {
 				return;
 			}
 
-			broadcast(":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) + ", " +
-				std::to_string(vm.getHalfword(address + 4)) + ", " + std::to_string(vm.getWord(address)));
+			Word word = vm.getWord(address);
+
+			broadcast(":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) + " & " +
+				std::to_string(vm.getHalfword(address + 4)) + "; " + std::to_string(word) + " == " + Util::toHex(word));
 		} else if (verb == "Undo") {
 			vm.undo();
 		} else if (verb == "Redo") {
