@@ -12,6 +12,7 @@
 
 #include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
+#include "wasm/Types.h"
 
 namespace Wasmc::Util {
 	long parseLong(const std::string &, int base = 10);
@@ -40,8 +41,9 @@ namespace Wasmc::Util {
 	std::string escape(const std::string &);
 	std::string unescape(const std::string &);
 
-	std::string toHex(size_t, bool pad = false);
+	std::string toHex(size_t);
 	std::string toHex(const void *);
+	std::string toHex(size_t, int pad);
 
 	template <typename T>
 	std::string hex(T n) {
@@ -154,6 +156,31 @@ namespace Wasmc::Util {
 	template <typename C, typename Pred>
 	void filter(const C &source, C &destination, Pred predicate) {
 		std::copy_if(source.begin(), source.end(), std::back_inserter(destination), predicate);
+	}
+
+	template <typename T>
+	static std::vector<Long> getLongs(const T &str) {
+		if (str.empty())
+			return {0};
+
+		std::vector<Long> out;
+		out.reserve(Util::updiv(str.size(), 8ul));
+
+		uint8_t count = 0;
+		Long next = 0;
+		for (auto ch: str) {
+			next = (next << 8) | static_cast<uint8_t>(ch);
+			if (++count == 8) {
+				out.push_back(next);
+				next = 0;
+				count = 0;
+			}
+		}
+
+		if (count != 0)
+			out.push_back(next << (8 * (8 - count)));
+
+		return out;
 	}
 }
 

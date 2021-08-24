@@ -1,6 +1,8 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <utility>
 
 #include "parser/Parser.h"
 #include "util/Util.h"
@@ -8,12 +10,69 @@
 #include "wasm/Linker.h"
 
 int link(int argc, char **argv);
+int test();
 int assemble(int argc, char **argv);
 
 int main(int argc, char **argv) {
-	if (1 < argc && strcmp(argv[1], "-l") == 0)
-		return link(argc, argv);
+	if (1 < argc) {
+		if (strcmp(argv[1], "-l") == 0)
+			return link(argc, argv);
+		if (strcmp(argv[1], "--test") == 0)
+			return test();
+	}
 	return assemble(argc, argv);
+}
+
+std::string stringify(const std::string &str) {
+	return "\"" + str + "\"";
+}
+
+template <typename T>
+std::string stringify(const std::vector<T> &bytes) {
+	std::stringstream ss;
+	bool first = true;
+	ss << "{";
+	for (T byte: bytes) {
+		if (first)
+			first = false;
+		else
+			ss << ", ";
+		ss << Wasmc::Util::toHex(byte, 2);
+	}
+	ss << "}";
+	return ss.str();
+}
+
+template <typename T>
+void run_tests(const T &tests) {
+	using namespace Wasmc;
+		for (const auto &[input, expected]: tests) {
+		std::cout << '\n' << stringify(input) << '\n';
+		std::vector<Long> actual = Util::getLongs(input);
+		if (actual.size() != expected.size()) {
+			std::cout << "Size mismatch: expected " << expected.size() << ", got " << actual.size() << '\n';
+		} else {
+			for (size_t i = 0; i < actual.size(); ++i) {
+				if (actual[i] == expected[i])
+					std::cout << "Pass: " << Util::toHex(expected[i], 16) << '\n';
+				else
+					std::cout << "Fail: " << Util::toHex(actual[i], 16) << " != " << Util::toHex(expected[i], 16) << '\n';
+			}
+		}
+	}
+}
+
+int test() {
+	using namespace Wasmc;
+	run_tests(std::vector<std::pair<std::string, std::vector<Long>>> {
+		{"F", {0x4600000000000000}},
+	});
+	run_tests(std::vector<std::pair<std::vector<uint8_t>, std::vector<Long>>> {
+		{{'F'}, {0x4600000000000000}},
+		{{0x03, 0x0a, 0x00, 0x00, 0x98, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x1b, 0x52, 0x00, 0x00, 0x00, 0xb0, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			{0x030a000098030000, 0x0100001b52000000, 0xb079000000000000}},
+	});
+	return 0;
 }
 
 int link(int argc, char **argv) {

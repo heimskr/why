@@ -152,13 +152,17 @@ namespace Wasmc::Util {
 		return out;
 	}
 
-	std::string toHex(size_t n, bool pad) {
+	std::string toHex(size_t n) {
 		std::stringstream ss;
 		ss.imbue(std::locale::classic());
-		ss << "0x" << std::hex;
-		if (pad)
-			ss << std::right << std::setw(16) << std::setfill('0');
-		ss << n;
+		ss << "0x" << std::hex << n;
+		return ss.str();
+	}
+
+	std::string toHex(size_t n, int pad) {
+		std::stringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << "0x" << std::hex << std::right << std::setw(pad) << std::setfill('0') << n;
 		return ss.str();
 	}
 

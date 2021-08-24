@@ -284,7 +284,7 @@ namespace Wasmc {
 
 			out.push_back(length | (static_cast<int>(type) << 16) | (static_cast<uint64_t>(encodeSymbol(label)) << 32));
 			out.push_back(skeleton? 0 : offsets.at(label));
-			for (const Long piece: getLongs(*label))
+			for (const Long piece: Util::getLongs(*label))
 				out.push_back(piece);
 		}
 
@@ -344,7 +344,7 @@ namespace Wasmc {
 		if (orcid.size() != 16)
 			throw std::runtime_error("Invalid ORCID length");
 
-		const auto longs = getLongs(orcid);
+		const auto longs = Util::getLongs(orcid);
 		if (longs.size() != 2)
 			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(longs.size()));
 		meta = {0, 0, 0, 0, 0, longs[0], longs[1]};
@@ -356,7 +356,7 @@ namespace Wasmc {
 		nva.insert(nva.end(), author.begin(), author.end());
 		nva.push_back('\0');
 
-		for (const Long piece: getLongs(nva))
+		for (const Long piece: Util::getLongs(nva))
 			meta.push_back(piece);
 
 		metaOffsetSymbols() = meta.size() * 8;
@@ -399,10 +399,10 @@ namespace Wasmc {
 			case WASMTOK_STRING: {
 				std::string str = child->unquote();
 				str.push_back('\0');
-				return getLongs(str);
+				return Util::getLongs(str);
 			}
 			case WASMTOK_LPAR:
-				return getLongs(std::string(child->front()->atoi(), '\0'));
+				return Util::getLongs(std::string(child->front()->atoi(), '\0'));
 			case WASMTOK_AND:
 				dataVariables[node->lexerInfo] = child->front()->lexerInfo;
 				return {0};
@@ -663,7 +663,7 @@ namespace Wasmc {
 					};
 					for (char ch: unquoted)
 						encoded.push_back(static_cast<uint8_t>(ch));
-					for (const Long piece: getLongs(encoded))
+					for (const Long piece: Util::getLongs(encoded))
 						out.push_back(piece);
 					if (type == 1)
 						debugEntries.emplace_back(new DebugFilename(unquoted));
@@ -739,7 +739,7 @@ namespace Wasmc {
 			add(location->functionIndex, 4);
 			add(address, 8);
 
-			for (const Long piece: getLongs(bytes))
+			for (const Long piece: Util::getLongs(bytes))
 				out.push_back(piece);
 			i += count - 1;
 		}

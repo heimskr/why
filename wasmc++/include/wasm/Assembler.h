@@ -122,31 +122,6 @@ namespace Wasmc {
 			              int bang = -1);
 
 			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
-
-			template <typename T>
-			static std::vector<Long> getLongs(const T &str) {
-				if (str.empty())
-					return {0};
-
-				std::vector<Long> out;
-				out.reserve(Util::updiv(str.size(), 8ul));
-
-				uint8_t count = 0;
-				Long next = 0;
-				for (char ch: str) {
-					next = (next << 8) | ch;
-					if (++count == 8) {
-						out.push_back(next);
-						next = 0;
-						count = 0;
-					}
-				}
-
-				if (count != 0)
-					out.push_back(next << (8 * (8 - count)));
-
-				return out;
-			}
 	};
 
 }

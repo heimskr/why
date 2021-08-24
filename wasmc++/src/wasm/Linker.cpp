@@ -331,7 +331,7 @@ namespace Wasmc {
 					static_cast<char>((length >> 16) & 0xff)
 				};
 				bytes.insert(bytes.end(), value->begin(), value->end());
-				for (const Long piece: Assembler::getLongs(bytes))
+				for (const Long piece: Util::getLongs(bytes))
 					out.push_back(piece);
 			} else if (type == DebugEntry::Type::Location) {
 				const DebugLocation &location = static_cast<DebugLocation &>(*entry);
@@ -356,7 +356,7 @@ namespace Wasmc {
 				bytes.push_back(location.count);
 				add(location.functionIndex, 4);
 				add(location.address, 8);
-				for (const Long piece: Assembler::getLongs(bytes))
+				for (const Long piece: Util::getLongs(bytes))
 					out.push_back(piece);
 			} else
 				throw std::runtime_error("Invalid DebugEntry type: " + std::to_string(static_cast<int>(type)));
@@ -372,7 +372,7 @@ namespace Wasmc {
 			out.push_back((static_cast<uint64_t>(Assembler::encodeSymbol(symbol)) << 32)
 				| Util::updiv(symbol.size(), size_t(8)));
 			out.push_back(entry.address);
-			for (const Long piece: Assembler::getLongs(symbol))
+			for (const Long piece: Util::getLongs(symbol))
 				out.push_back(piece);
 		}
 

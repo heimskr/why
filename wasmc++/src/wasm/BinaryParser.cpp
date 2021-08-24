@@ -46,7 +46,7 @@ namespace Wasmc {
 		}
 
 		throw std::runtime_error("Invalid instruction (opcode " + Util::toHex(opcode) + "): "
-			+ Util::toHex(instruction, true));
+			+ Util::toHex(instruction, 16));
 	}
 
 	void BinaryParser::parse() {
@@ -218,8 +218,10 @@ namespace Wasmc {
 				const uint32_t function_index = get(4) | (get(5) << 8) | (get(6) << 16) | (get(7) << 24);
 				DebugLocation *location = new DebugLocation(file_index, line, column, function_index);
 				out.emplace_back(location->setCount(count)->setAddress(Util::swapEndian(raw[++i])));
-			} else
-				throw std::runtime_error("Invalid debug data entry type: " + std::to_string(type));
+			} else {
+				throw std::runtime_error("Invalid debug data entry type (" + std::to_string(type) + ") at line "
+					+ std::to_string(i + 1) + " of " + std::to_string(raw.size()));
+			}
 		}
 
 		return out;
