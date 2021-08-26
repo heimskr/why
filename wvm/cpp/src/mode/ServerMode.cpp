@@ -41,7 +41,7 @@ namespace WVM::Mode {
 				DBG("[" << unadjusted << "] <- " << vm.get(unadjusted, size));
 			writtenAddresses.insert(address);
 			const std::string message = ":MemoryWord " + std::to_string(address) + " " +
-				std::to_string(vm.getWord(address));
+				std::to_string(static_cast<Word>(vm.getWord(address))) + " " + std::to_string(vm.programCounter);
 			for (int client: memorySubscribers)
 				server.send(client, message);
 		};

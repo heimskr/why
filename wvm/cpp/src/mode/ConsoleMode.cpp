@@ -67,7 +67,11 @@ namespace WVM::Mode {
 				textbox += infoPrefix + Why::coloredRegister(registerID) + " \e[2m<-\e[22m " + std::to_string(newValue);
 			}
 		} else if (verb == "MemoryWord") {
-			textbox += std::string(infoPrefix) + "\e[2m[" + split[0] + "] = \e[22m" + split[1];
+			std::string to_add = infoPrefix;
+			if (split.size() == 3)
+				to_add += "\e[2m(@ \e[1m" + split[2] + "\e[22;2m) ";
+			to_add += "\e[2m[" + split[0] + "] = \e[22m" + split[1];
+			textbox += to_add;
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
