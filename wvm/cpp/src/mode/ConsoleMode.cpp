@@ -161,7 +161,10 @@ namespace WVM::Mode {
 				*socket << ":AskAbout " << address << "\n";
 			} else badInput();
 		} else if (first == "str" || first == "string") {
-			*socket << ":GetString " << split[0] << "\n";
+			if (size != 0)
+				*socket << ":GetString " << split[0] << "\n";
+			else
+				badInput();
 		} else if (first == "u" || first == "un" || first == "undo" || first == "[") {
 			*socket << ":Undo\n";
 		} else if (first == "re" || first == "redo" || first == "]") {
@@ -170,7 +173,7 @@ namespace WVM::Mode {
 			if (size == 0)
 				*socket << ":Strict\n";
 			else
-				*socket << ":Strict " << split[1] << "\n";
+				*socket << ":Strict " << split[0] << "\n";
 		} else if (first == "pc") {
 			if (size == 0)
 				*socket << ":GetPC\n";
@@ -180,7 +183,7 @@ namespace WVM::Mode {
 			if (size == 0)
 				*socket << ":DebugData\n";
 			else
-				*socket << ":DebugData " << split[1] << "\n";
+				*socket << ":DebugData " << split[0] << "\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
