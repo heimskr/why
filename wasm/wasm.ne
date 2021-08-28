@@ -330,11 +330,11 @@ op_lni			-> "[" _ int  _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8],
 				 | "[" _ xvar _ "]" into "[" _ rv _ "]"		{% d => ["lni",      0,  d[8], ["label", d[2]]] %}
 op_set			-> int into rv								{% d => ["set",      0,  d[2], d[0]] %}
 				 | ptr_ref into rv							{% d => ["set",      0,  d[2], ["label", d[0]]] %}
-op_int			-> "int" __ int								{% d => ["int",      0,    0,  d[2]] %}
-op_rit			-> "rit" __ int								{% d => ["rit",      0,    0,  d[2]] %}
-				 | "rit" __ var								{% d => ["rit",      0,    0,  ["label", d[2]]] %}
-op_timei		-> "time" __ int							{% d => ["timei",    0,    0,  d[2]] %}
-op_ringi		-> "ring" __ int							{% d => ["ringi",    0,    0,  d[2]] %}
+op_int			-> "%int" __ int							{% d => ["int",      0,    0,  d[2]] %}
+op_rit			-> "%rit" __ int							{% d => ["rit",      0,    0,  d[2]] %}
+				 | "%rit" __ var							{% d => ["rit",      0,    0,  ["label", d[2]]] %}
+op_timei		-> "%time" __ int							{% d => ["timei",    0,    0,  d[2]] %}
+op_ringi		-> "%ring" __ int							{% d => ["ringi",    0,    0,  d[2]] %}
 op_sspush		-> "[" _ ":" _ int __ rv					{% d => ["sspush", d[6],   0,  d[4]] %}
 op_sspop		-> "]" _ ":" _ int __ rv					{% d => ["sspop",    0,  d[6], d[4]] %}
 
@@ -396,10 +396,10 @@ ext_xn_connect	-> "<" _ "xn" __ "connect" _ reg _ reg _ ">"{% d => ["ext", d[8],
 ext_xn_send		-> "<" _ "xn" __ "send" _ reg _ ">"			{% d => ["ext",   0,  d[6],   0,  EXTS.xn_send   ] %}
 ext_xn_recv		-> "<" _ "xn" __ "recv" _ reg _ reg _ ">"	{% d => ["ext",   0,  d[8], d[6], EXTS.xn_recv   ] %}
 
-op_page			-> "page" __ "on"							{% d => ["pgon",  0,   0,    0 ] %}
-				 | "page" __ "off"							{% d => ["pgoff", 0,   0,    0 ] %}
-op_setpt		-> "setpt" _ reg							{% d => ["setpt", 0, d[2],   0 ] %}
-op_svpg			-> "page" into reg							{% d => ["svpg",  0,   0,  d[2]] %}
+op_page			-> "%page" __ "on"							{% d => ["pgon",  0,   0,    0 ] %}
+				 | "%page" __ "off"							{% d => ["pgoff", 0,   0,    0 ] %}
+op_setpt		-> "%setpt" _ reg							{% d => ["setpt", 0, d[2],   0 ] %}
+op_svpg			-> "%page" into reg							{% d => ["svpg",  0,   0,  d[2]] %}
 op_qm			-> "?" _ "mem" into reg						{% d => ["qm",    0,   0,  d[4]] %}
 
 gap				-> brc[int]									{% d => ["gap",  d[0]] %}
