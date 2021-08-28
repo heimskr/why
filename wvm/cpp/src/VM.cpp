@@ -554,8 +554,8 @@ namespace WVM {
 					const unsigned function = word >> 32;
 					Word address = getWord(i += 8, Endianness::Little);
 					for (unsigned j = 0; j < count; ++j) {
-						debugMap.emplace(address, DebugData(debugFiles.at(file), debugFunctions.at(function), line,
-							column, count, address));
+						debugMap.try_emplace(address, debugFiles.at(file), debugFunctions.at(function), line, column,
+							count, address);
 						address += 8;
 					}
 					i += 8;
