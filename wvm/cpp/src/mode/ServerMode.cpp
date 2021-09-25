@@ -411,9 +411,19 @@ namespace WVM::Mode {
 					info() << address << ": " << std::string(debug) << '\n';
 		} else if (verb == "DebugData") {
 			Word address = vm.programCounter;
-			if (size != 1 && !Util::parseLong(split[1], address)) {
-				invalid();
-				return;
+			if (size != 1) {
+				if (split[1] == "all") {
+					std::cerr << "Debug map entries: " << vm.debugMap.size() << '\n';
+					for (const auto &[offset, data]: vm.debugMap)
+						std::cerr << offset << ": " << std::string(data) << '\n';
+					std::cerr.flush();
+					return;
+				}
+
+				if (!Util::parseLong(split[1], address)) {
+					invalid();
+					return;
+				}
 			}
 
 			if (vm.debugMap.count(address) == 0)
