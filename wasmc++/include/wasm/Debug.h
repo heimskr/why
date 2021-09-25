@@ -38,7 +38,7 @@ namespace Wasmc {
 			count = count_;
 			return this;
 		}
-		DebugLocation * setAddress(uint8_t address_) {
+		DebugLocation * setAddress(uint64_t address_) {
 			address = address_;
 			return this;
 		}
