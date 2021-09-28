@@ -420,6 +420,28 @@ namespace WVM::Mode {
 				broadcast(":Debug " + std::to_string(address) + " Not found");
 			else
 				broadcast(":Debug " + std::to_string(address) + " " + std::string(vm.debugMap.at(address)));
+		} else if (verb == "SetReg") {
+			if (size != 3) {
+				invalid();
+				return;
+			}
+
+			const int reg = Why::registerID(split[1]);
+			if (reg == -1) {
+				server.send(client, ":Error Invalid register.\n");
+				return;
+			}
+
+			Word new_value;
+			if (!Util::parseLong(split[2], new_value)) {
+				invalid();
+				return;
+			}
+
+			vm.bufferChange<RegisterChange>(vm, reg, new_value);
+			vm.registers[reg] = new_value;
+			vm.onRegisterChange(reg);
+			server.send(client, ":SetReg " + std::to_string(reg) + " " + std::to_string(new_value));
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}

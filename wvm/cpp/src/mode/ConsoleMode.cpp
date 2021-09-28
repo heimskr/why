@@ -91,6 +91,15 @@ namespace WVM::Mode {
 				textbox += "Address \e[1m" + split[0] + "\e[22m: " + joined;
 			else
 				textbox += "Address \e[1m" + split[0] + "\e[22m: \e[4m" + joined + "\e[24m";
+		} else if (verb == "SetReg") {
+			Word reg = -1;
+			if (!Util::parseLong(split[0], reg))
+				textbox += std::string(errorPrefix) + "Invalid register: \e[1m" + split[0] + "\e[22m\n";
+			else
+				textbox += std::string(infoPrefix) + "Register " + Why::coloredRegister(reg) + " set to \e[1m"
+					+ split[1] + "\e[22m.";
+		} else if (verb == "InvalidMessage") {
+			textbox += std::string(errorPrefix) + "Invalid message.";
 		}
 	}
 
@@ -184,6 +193,11 @@ namespace WVM::Mode {
 				*socket << ":DebugData\n";
 			else
 				*socket << ":DebugData " << split[0] << "\n";
+		} else if (first == "set") {
+			if (size == 2)
+				*socket << ":SetReg " << split[0] << " " << split[1] << "\n";
+			else
+				badInput();
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
