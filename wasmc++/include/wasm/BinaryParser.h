@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,7 @@ namespace Wasmc {
 			BinaryParser(BinaryParser &&) = default;
 
 			BinaryParser(const std::vector<Long> &);
+			BinaryParser(const std::filesystem::path &);
 
 			BinaryParser & operator=(const BinaryParser &) = default;
 			BinaryParser & operator=(BinaryParser &&) = default;

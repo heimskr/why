@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include "util/Util.h"
 #include "wasm/BinaryParser.h"
 #include "wasm/Instructions.h"
@@ -6,6 +8,19 @@
 
 namespace Wasmc {
 	BinaryParser::BinaryParser(const std::vector<Long> &raw_): raw(raw_) {}
+
+	BinaryParser::BinaryParser(const std::filesystem::path &path) {
+		if (!std::filesystem::exists(path))
+			throw std::runtime_error("Can't construct BinaryParser: file doesn't exist");
+
+		std::ifstream stream(path);
+		if (!stream.is_open())
+			throw std::runtime_error("Can't construct BinaryParser: can't open file");
+
+		std::string line;
+		while (std::getline(stream, line))
+			raw.push_back(Util::parseUlong(line, 16));
+	}
 
 	AnyBase * BinaryParser::parse(const Long instruction) {
 		auto get = [&](int offset, int length) -> Long {

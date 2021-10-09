@@ -6,3 +6,4 @@ include/wasmparse.h
 wasmc++
 .dep
 *.why
+ds++

@@ -14,7 +14,7 @@ WASMBISONSRC    := src/parser/wasm.y
 
 CLOC_OPTIONS    := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 BISON_OPTIONS   := --color=always
-SOURCES         := $(shell find src/**/*.cpp src/*.cpp)
+SOURCES         := $(filter-out src/DebugSearch.cpp src/main.cpp,$(shell find src/**/*.cpp src/*.cpp))
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= ../wasm/examples/ops.wasm
 OUTFILE         ?= ../wasm/compiled/ops.why
@@ -25,9 +25,12 @@ TESTARGS        ?= --test
 
 .PHONY: all counter test clean count countbf
 
-all: $(OUTPUT)
+all: $(OUTPUT) ds++
 
-$(OUTPUT): $(OBJECTS)
+$(OUTPUT): $(OBJECTS) src/main.o
+	$(COMPILER) -o $@ $^ $(LDFLAGS)
+
+ds++: $(OBJECTS) src/DebugSearch.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
 $(WASMLEXCPP): $(WASMFLEXSRC) $(WASMPARSEHDR)
