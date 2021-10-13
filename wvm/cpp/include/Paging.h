@@ -5,7 +5,7 @@
 #include "Defs.h"
 
 namespace WVM {
-	struct Address {
+	struct __attribute__((packed)) Address {
 		UWord p0Offset: 8;
 		UWord p1Offset: 8;
 		UWord p2Offset: 8;
@@ -17,7 +17,7 @@ namespace WVM {
 		Address(Word);
 	};
 
-	struct P04Entry {
+	struct __attribute__((packed)) P04Entry {
 		Word next:   56;
 		int unused:   7;
 		bool present: 1;
@@ -27,7 +27,7 @@ namespace WVM {
 		operator std::string() const;
 	};
 
-	struct P5Entry {
+	struct __attribute__((packed)) P5Entry {
 		Word pageStart: 48;
 		int unused:     10;
 		bool modified:   1;
