@@ -924,7 +924,7 @@ See also: <a href="#op-pop">pop pseudoinstruction</a>
 
 ### <a name="op-ms"></a>Memset (`ms`)
 > `memset $rs x $rt -> $rd`  
-> `000000010010` `ttttttt` `ddddddd` `sssssss` `0000000000000` `......` `000000001000`
+> `000000010010` `ttttttt` `ddddddd` `sssssss` `0000000000000` `......` `000000001011`
 
 Sets `rs` bytes to `rt` starting at address `rd`. The value in `rt` will be truncated to 8 bits.
 
