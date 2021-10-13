@@ -50,10 +50,10 @@ int main(int argc, char **argv) {
 					const size_t last_slash = fn.find_last_of('/');
 					if (last_slash != std::string::npos && fn.substr(last_slash + 1) == filename)
 						is_match = true;
-				}
 
+				}
 				if (is_match && location->line == line_number)
-					std::cout << location->address << '\n';
+					std::cout << location->address << " column " << location->column << '\n';
 			}
 		}
 
