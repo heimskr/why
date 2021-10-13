@@ -211,6 +211,7 @@ namespace Wasmc {
 		{WASMTOK_LEQ,     "sle"  },
 		{WASMTOK_DEQ,     "seq"  },
 		{WASMTOK_BANG,    "lnot" },
+		{WASMTOK_MEMSET,  "ms"   },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_I {
@@ -337,5 +338,6 @@ namespace Wasmc {
 		{WASMTOK_LANGLE,  0b000000000000},
 		{WASMTOK_LEQ,     0b000000000001},
 		{WASMTOK_DEQ,     0b000000000010},
+		{WASMTOK_MEMSET,  0b000000001011},
 	};
 }
