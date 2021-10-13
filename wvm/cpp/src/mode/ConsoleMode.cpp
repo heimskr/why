@@ -98,6 +98,9 @@ namespace WVM::Mode {
 			else
 				textbox += std::string(infoPrefix) + "Register " + Why::coloredRegister(reg) + " set to \e[1m"
 					+ split[1] + "\e[22m.";
+		} else if (verb == "AddedBP") {
+			if (split.size() == 1)
+				textbox += std::string(infoPrefix) + "Added breakpoint at " + split[0] + ".";
 		} else if (verb == "InvalidMessage") {
 			textbox += std::string(errorPrefix) + "Invalid message.";
 		}
@@ -140,13 +143,7 @@ namespace WVM::Mode {
 		} else if (first == "b" || first == "ab" || first == "break" || first == "breakpoint" || first == "+breakpoint"
 		           || first == "+b" || first == "+bp" || first == "+break") {
 			if (size == 1) {
-				Word address;
-				if (!Util::parseLong(split[0], address)) {
-					badInput();
-				} else {
-					*socket << ":AddBP " << address << "\n";
-					textbox += std::string(infoPrefix) + "Added breakpoint at " + split[0] + ".";
-				}
+				*socket << ":AddBP " << split[0] << "\n";
 			} else badInput();
 		} else if (first == "rb" || first == "ub" || first == "unbreak" || first == "-breakpoint" || first == "-bp"
 		           || first == "-b" || first == "-break") {

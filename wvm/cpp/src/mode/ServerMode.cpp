@@ -349,11 +349,21 @@ namespace WVM::Mode {
 		} else if (verb == "AddBP") {
 			Word breakpoint;
 			if (size != 2 || !Util::parseLong(split[1], breakpoint)) {
-				invalid();
-				return;
+				if (size == 2) {
+					if (vm.symbolTable.count(split[1]) == 0) {
+						server.send(client, ":Error Function not found.");
+						return;
+					}
+
+					breakpoint = vm.symbolTable.at(split[1]).location;
+				} else {
+					invalid();
+					return;
+				}
 			}
 
 			vm.addBreakpoint(breakpoint);
+			server.send(client, ":AddedBP " + std::to_string(breakpoint));
 		} else if (verb == "RemoveBP") {
 			Word breakpoint;
 			if (size != 2 || !Util::parseLong(split[1], breakpoint)) {
