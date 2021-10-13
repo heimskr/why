@@ -11,6 +11,10 @@
 #include "Util.h"
 #include "VM.h"
 
+// If set, the server will print a notice each time paging is enabled or disabled or when the page table address is
+// changed.
+#define DEBUG_PAGING
+
 namespace WVM::Operations {
 	std::set<int> RSet {
 		OP_ADD, OP_SUB, OP_MULT, OP_MULTU, OP_SLL, OP_SRL, OP_SRA, OP_MOD, OP_DIV, OP_DIVU, OP_AND, OP_NAND, OP_NOR,
@@ -1020,6 +1024,7 @@ namespace WVM::Operations {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.recordChange<PagingChange>(vm.pagingOn, false);
 			vm.pagingOn = false;
+			std::cerr << "Paging disabled (PC: " << vm.programCounter << ").\n";
 			vm.onPagingChange(false);
 			vm.increment();
 		}
@@ -1029,6 +1034,7 @@ namespace WVM::Operations {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.recordChange<PagingChange>(vm.pagingOn, true);
 			vm.pagingOn = true;
+			std::cerr << "Paging enabled (PC: " << vm.programCounter << ").\n";
 			vm.onPagingChange(true);
 			vm.increment();
 		}
@@ -1038,6 +1044,7 @@ namespace WVM::Operations {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.recordChange<P0Change>(vm.p0, rs);
 			vm.p0 = rs;
+			std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
 			vm.onP0Change(rs);
 			vm.increment();
 		}

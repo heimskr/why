@@ -20,7 +20,8 @@ namespace WVM {
 
 	P04Entry::operator std::string() const {
 		std::stringstream out;
-		out << std::hex << "0x" << next << " p" << present;
+		out << std::hex << "0x" << next << " " << (present? "!" : "") << "present <"
+		    << *reinterpret_cast<const uint64_t *>(this) << ">";
 		return out.str();
 	}
 
