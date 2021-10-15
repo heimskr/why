@@ -32,6 +32,8 @@ namespace Wasmc {
 			 *  with the encoded names of the symbols they point to. */
 			static void depointerize(const SymbolTable &, std::vector<Long> &data, Long data_offset);
 
+			static void repointerize(const SymbolTable &, std::vector<Long> &combined);
+
 			static std::unordered_map<std::string, SymbolType> collectSymbolTypes(const Offsets &, const SymbolTable &);
 
 			static SymbolType getSymbolType(const Offsets &, const SymbolTable &, const std::string &symbol);

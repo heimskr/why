@@ -89,6 +89,7 @@ namespace Wasmc {
 		SymbolTable combined_symbols = main_symbols;
 		std::vector<Long> combined_code = main_parser.rawCode;
 		std::vector<Long> combined_data = main_parser.rawData;
+		depointerize(combined_symbols, combined_data, main_parser.offsets.data);
 		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
 		std::unordered_map<std::string, SymbolType> symbol_types =
 			collectSymbolTypes(main_parser.offsets, combined_symbols);
@@ -214,6 +215,8 @@ namespace Wasmc {
 			for (const Long piece: longs)
 				linked.push_back(piece);
 
+		repointerize(combined_symbols, linked);
+
 		return Assembler::stringify(linked);
 	}
 
@@ -223,7 +226,7 @@ namespace Wasmc {
 			const SymbolEnum type = value.type;
 			const Long index = (address - data_offset) / 8;
 			if (type == SymbolEnum::KnownPointer) {
-				const Long current_value = Util::swapEndian(data.at(index));
+				const Long current_value = data.at(index);
 				std::optional<SymbolTableEntry> match;
 				for (const auto &pair: table)
 					if (pair.second.address == current_value) {
@@ -231,9 +234,24 @@ namespace Wasmc {
 						break;
 					}
 				if (!match.has_value())
-					throw std::runtime_error("Found no matches for " + Util::toHex(current_value) + "  from key \""
-						+ key + "\"");
+					throw std::runtime_error("Found no matches for " + Util::toHex(current_value) + " from key \"" + key
+						+ "\"");
 				data[index] = match->id;
+			}
+		}
+	}
+
+	void Linker::repointerize(const SymbolTable &table, std::vector<Long> &combined) {
+		for (const auto &[key, value]: table) {
+			const auto address = value.address;
+			const auto type = value.type;
+			if (type == SymbolEnum::KnownPointer || type == SymbolEnum::UnknownPointer) {
+				const auto index = address / 8;
+				const std::string ptr = findSymbolFromID(combined[index], table);
+				if (table.count(ptr) != 0)
+					combined[index] = table.at(ptr).address;
+				else
+					warn() << "Couldn't find pointer for " << key << ".\n";
 			}
 		}
 	}
