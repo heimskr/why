@@ -73,6 +73,11 @@ namespace Wasmc {
 				default:  throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
 			}
 		}
+		if (node->symbol == WASMTOK_STRING) {
+			if (node->lexerInfo->size() < 2)
+				throw std::runtime_error("Encountered WASMTOK_STRING with a lexerInfo shorter than 2 characters");
+			return StringSet::intern(node->lexerInfo->substr(1, node->lexerInfo->size() - 2));
+		}
 		return node->lexerInfo;
 	}
 

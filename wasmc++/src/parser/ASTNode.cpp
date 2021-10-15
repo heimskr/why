@@ -236,4 +236,15 @@ namespace Wasmc {
 	decltype(ASTNode::children)::const_iterator ASTNode::cend() const noexcept {
 		return children.cend();
 	}
+
+	std::string ASTNode::extractName() const {
+		if (symbol == WASMTOK_STRING)
+			return lexerInfo->substr(1, lexerInfo->size() - 2);
+		throw std::runtime_error("extractName() was called on an inappropriate symbol: " +
+			std::string(parser->getName(symbol)));
+	}
+
+	const std::string * ASTNode::extracted() const {
+		return StringSet::intern(extractName());
+	}
 }

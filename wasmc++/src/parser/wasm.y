@@ -207,7 +207,8 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
          | op_qmem | op_ret   | call     | op_jeq   | op_sprint | op_inc   | op_dec;
 
-label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
+label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
+     | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
 
 call: ident "(" args ")" { $$ = new WASMCallNode($1, $3); D($2, $4); }
     | ident "(" ")"      { $$ = new WASMCallNode($1); D($2, $3); };
@@ -341,7 +342,8 @@ immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: "&" ident { $$ = $2; D($1); }
           | ident
           | number
-          | character;
+          | character
+          | WASMTOK_STRING;
 
 ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep"
      | "version" | "author" | "orcid" | "name" | printop | WASMTOK_IDENT;

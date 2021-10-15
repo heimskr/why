@@ -74,6 +74,9 @@ namespace Wasmc {
 			decltype(children)::const_iterator end() const;
 			decltype(children)::const_iterator cbegin() const noexcept;
 			decltype(children)::const_iterator cend() const noexcept;
+
+			std::string extractName() const;
+			const std::string * extracted() const;
 	};
 }
 
