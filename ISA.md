@@ -267,7 +267,7 @@ The metadata section is a block of data at the beginning of the program that con
 * `0x02`: Address of the beginning of the [data section](#prog-data).
 * `0x03`: Address of the beginning of the [debug data section](#prog-debug).
 * `0x04`: Total size of the program.
-* `0x05`–`0x06`: ORCID of the author (represented with ASCII).
+* `0x05`–`0x06`: ORCID of the author (represented in ASCII without hyphens).
 * `0x07`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
