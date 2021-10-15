@@ -212,7 +212,7 @@
 
 # <a name="intro"></a>Introduction
 
-The VM emulates WhySA, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, but the memory addressability is 32 bits.
+The VM emulates WhySA, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, and memory addressability is also 64 bits.
 
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
