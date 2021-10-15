@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <string.h>
 
 #include "wasm/BinaryParser.h"
 #include "util/Util.h"
@@ -58,7 +59,7 @@ int main(int argc, char **argv) {
 			case SymbolEnum::KnownPointer: std::cout << "knownptr"; break;
 			case SymbolEnum::UnknownPointer: std::cout << "unknownptr"; break;
 			case SymbolEnum::Unknown: std::cout << "unknown"; break;
-			default: std::cout << "?"; break;
+			default: std::cout << static_cast<int>(entry.type); break;
 		}
 		std::cout << "\n\n";
 	}
