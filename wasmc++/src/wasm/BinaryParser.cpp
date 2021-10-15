@@ -203,13 +203,13 @@ namespace Wasmc {
 		std::vector<std::shared_ptr<DebugEntry>> out;
 
 		const size_t start = offsets.debug / 8, end = offsets.end / 8;
+		Long piece;
+		const auto get = [&piece](unsigned char index) -> size_t {
+			return (piece >> (64 - 8 * (index + 1))) & 0xff;
+		};
 
 		for (size_t i = start; i < end; ++i) {
-			Long piece = raw[i];
-			const auto get = [&piece](unsigned char index) -> size_t {
-				return (piece >> (64 - 8 * (index + 1))) & 0xff;
-			};
-
+			piece = raw[i];
 			const uint8_t type = get(0);
 			if (type == 1 || type == 2) {
 				const size_t name_length = get(1) | (get(2) << 8) | (get(3) << 16);
