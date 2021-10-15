@@ -7,3 +7,5 @@ wasmc++
 .dep
 *.why
 ds++
+syms
+
