@@ -110,6 +110,9 @@ namespace WVM::Operations {
 	void lhOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 9
 	void shOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 10
 	void msOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 11
+	void csOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 12
+	void lsOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 13
+	void ssOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 14
 
 	void liOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 19  I
 	void siOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 20  I
@@ -262,6 +265,12 @@ namespace WVM::Operations {
 #define FN_SH 10
 #define OP_MS OP_RMEM
 #define FN_MS 11
+#define OP_CS OP_RMEM
+#define FN_CS 12
+#define OP_LS OP_RMEM
+#define FN_LS 13
+#define OP_SS OP_RMEM
+#define FN_SS 14
 
 #define OP_LI 19
 #define OP_SI 20

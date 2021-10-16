@@ -126,6 +126,9 @@ namespace WVM::Operations {
 					case FN_LH:       lhOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SH:       shOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_MS:       msOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_CS:       csOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_LS:       lsOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SS:       ssOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_REXT:
@@ -848,6 +851,47 @@ namespace WVM::Operations {
 		}
 
 		vm.increment();
+	}
+
+	void csOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		bool success;
+		const Word translated_source = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			const QWord value = vm.getQuarterword(translated_source);
+			const Word translated_destination = vm.translateAddress(rd, &success);
+			if (!success) {
+				vm.intPfault();
+			} else if (vm.checkWritable()) {
+				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::QWord);
+				vm.setQuarterword(translated_destination, value);
+				vm.increment();
+			}
+		}
+	}
+
+	void lsOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		bool success;
+		const Word translated = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getQuarterword(translated), false);
+			vm.increment();
+		}
+	}
+
+	void ssOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		bool success;
+		const Word translated = vm.translateAddress(rd, &success);
+		if (!success) {
+			vm.intPfault();
+		} else if (vm.checkWritable()) {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::QWord);
+			vm.setQuarterword(translated, rs);
+			vm.increment();
+		}
 	}
 
 	void liOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
