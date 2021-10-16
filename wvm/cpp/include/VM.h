@@ -100,6 +100,7 @@ namespace WVM {
 			bool checkRing(Ring);
 			bool intProtec();
 			bool intPfault();
+			bool intBwrite();
 			void start();
 			void stop();
 			bool undo();

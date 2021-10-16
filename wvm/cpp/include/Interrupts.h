@@ -8,7 +8,7 @@
 namespace WVM {
 	class VM;
 
-	enum class InterruptType: int {System = 1, Timer, Protec, Pfault, Inexec};
+	enum class InterruptType: int {System = 1, Timer, Protec, Pfault, Inexec, Bwrite};
 
 	struct Interrupt {
 		InterruptType type;

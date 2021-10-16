@@ -35,5 +35,6 @@ namespace WVM {
 		{InterruptType::Protec, {InterruptType::Protec, Ring::Zero,    Ring::Two}},
 		{InterruptType::Pfault, {InterruptType::Pfault, Ring::Zero,    Ring::Two}},
 		{InterruptType::Inexec, {InterruptType::Inexec, Ring::Zero,    Ring::Two}},
+		{InterruptType::Bwrite, {InterruptType::Bwrite, Ring::Zero,    Ring::Invalid}},
 	};
 }

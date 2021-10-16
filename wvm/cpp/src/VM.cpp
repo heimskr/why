@@ -356,6 +356,10 @@ namespace WVM {
 		return interrupt(InterruptType::Pfault, true);
 	}
 
+	bool VM::intBwrite() {
+		return interrupt(InterruptType::Bwrite, true);
+	}
+
 	void VM::start() {
 		active = true;
 	}

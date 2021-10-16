@@ -646,7 +646,8 @@ namespace WVM::Operations {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::Word);
 				vm.setWord(translated_destination, value);
 				vm.increment();
-			}
+			} else
+				vm.intBwrite();
 		}
 	}
 
@@ -670,7 +671,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void cbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
@@ -687,7 +689,8 @@ namespace WVM::Operations {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::Byte);
 				vm.setByte(translated_destination, value);
 				vm.increment();
-			}
+			} else
+				vm.intBwrite();
 		}
 	}
 
@@ -711,7 +714,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
 			vm.setByte(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void spushOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
@@ -724,7 +728,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void spopOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
@@ -746,7 +751,6 @@ namespace WVM::Operations {
 		if (!success) {
 			vm.intPfault();
 		} else if (vm.checkWritable()) {
-
 			switch (immediate) {
 				case 1:
 					vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
@@ -769,7 +773,8 @@ namespace WVM::Operations {
 			}
 
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void sspopOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
@@ -814,7 +819,8 @@ namespace WVM::Operations {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::HWord);
 				vm.setHalfword(translated_destination, value);
 				vm.increment();
-			}
+			} else
+				vm.intBwrite();
 		}
 	}
 
@@ -838,7 +844,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::HWord);
 			vm.setHalfword(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void msOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
@@ -852,8 +859,10 @@ namespace WVM::Operations {
 			} else if (vm.checkWritable()) {
 				vm.bufferChange<MemoryChange>(vm, translated + i, rt & 0xff, Size::Byte);
 				vm.setByte(translated + i, rt & 0xff);
-			} else
+			} else {
+				vm.intBwrite();
 				return;
+			}
 		}
 
 		vm.increment();
@@ -873,7 +882,8 @@ namespace WVM::Operations {
 				vm.bufferChange<MemoryChange>(vm, translated_destination, value, Size::QWord);
 				vm.setQuarterword(translated_destination, value);
 				vm.increment();
-			}
+			} else
+				vm.intBwrite();
 		}
 	}
 
@@ -897,7 +907,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::QWord);
 			vm.setQuarterword(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void liOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
@@ -920,7 +931,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
 			vm.setWord(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void setOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
@@ -948,7 +960,8 @@ namespace WVM::Operations {
 			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Byte);
 			vm.setByte(translated, rs);
 			vm.increment();
-		}
+		} else
+			vm.intBwrite();
 	}
 
 	void lniOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
