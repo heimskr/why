@@ -692,8 +692,14 @@ namespace WVM::Operations {
 	}
 
 	void lbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
-		setReg(vm, rd, vm.getByte(rs), false);
-		vm.increment();
+		bool success;
+		const Word translated = vm.translateAddress(rs, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getByte(translated), false);
+			vm.increment();
+		}
 	}
 
 	void sbOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
