@@ -576,7 +576,7 @@ namespace WVM {
 	}
 
 	void VM::finishChange() {
-		if (changeBuffer.empty())
+		if (!enableHistory || changeBuffer.empty())
 			return;
 
 		if (static_cast<size_t>(undoPointer) < undoStack.size())

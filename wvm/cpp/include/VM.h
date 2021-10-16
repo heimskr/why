@@ -58,6 +58,7 @@ namespace WVM {
 			bool paused = false;
 			bool strict = false;
 			bool pagingOn = false;
+			bool enableHistory = false;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
@@ -129,13 +130,16 @@ namespace WVM {
 
 			template <typename T, typename... Args>
 			void recordChange(Args && ...args) {
-				changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-				finishChange();
+				if (enableHistory) {
+					changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+					finishChange();
+				}
 			}
 
 			template <typename T, typename... Args>
 			void bufferChange(Args && ...args) {
-				changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+				if (enableHistory)
+					changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
 			}
 
 			Word & hi();
