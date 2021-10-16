@@ -1,6 +1,6 @@
 CHECK			:= none
 COMPILER		?= clang++
-OPTIMIZATION	?= -O0 -g
+OPTIMIZATION	?= -Ofast -march=native
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 TESTFILE		?= ~/src/thurisaz/Thurisaz.why
