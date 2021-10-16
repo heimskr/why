@@ -1,9 +1,11 @@
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 
 #include "lib/ansi.h"
 #include "Operations.h"
+#include "Registers.h"
 #include "StringSet.h"
 #include "Util.h"
 #include "VM.h"
@@ -24,6 +26,11 @@ namespace WVM {
 	void VM::setN(bool on) { st() = (st() & ~0b0010) | (on << 1); }
 	void VM::setC(bool on) { st() = (st() & ~0b0100) | (on << 2); }
 	void VM::setO(bool on) { st() = (st() & ~0b1000) | (on << 3); }
+
+	std::chrono::milliseconds VM::getMilliseconds() {
+		return std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch());
+	}
 
 	Word VM::translateAddress(Word virtual_address, bool *success, PageMeta *meta_out) {
 		if (!pagingOn) {
@@ -360,6 +367,10 @@ namespace WVM {
 		return interrupt(InterruptType::Bwrite, true);
 	}
 
+	bool VM::intTimer() {
+		return interrupt(InterruptType::Timer, true);
+	}
+
 	void VM::start() {
 		active = true;
 	}
@@ -416,6 +427,24 @@ namespace WVM {
 		}
 
 		return true;
+	}
+
+	void VM::setTimer(UWord microseconds) {
+		timerThread = std::thread([this](UWord microseconds, size_t id) {
+			std::cerr << "Timer thread " << id << " starting.\n";
+			timerStart = getMilliseconds();
+			std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+			if (timerThreadID == id) {
+				std::cerr << "Timer thread " << id << " finishing.\n";
+				auto lock = lockVM();
+				bufferChange<RegisterChange>(*this, REG_E + 2, microseconds);
+				intTimer();
+			} else {
+				std::cerr << "Timer thread " << id << " superseded.\n";
+			}
+			std::cerr << "Timer thread " << id << " finished.\n";
+		}, microseconds, ++timerThreadID);
+		timerThread.detach();
 	}
 
 	void VM::addBreakpoint(Word breakpoint) {

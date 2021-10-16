@@ -34,6 +34,7 @@ namespace WVM::Operations {
 	std::set<int> JSet {OP_J, OP_JC};
 
 	void execute(VM &vm, UWord instruction) {
+		auto lock = vm.lockVM();
 		int opcode = (instruction >> 52) & 0xfff;
 		if (opcode == OP_NOP) {
 			vm.increment();
@@ -1010,14 +1011,18 @@ namespace WVM::Operations {
 		}
 	}
 
-	void timeOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
-		// TODO
-		vm.increment();
+	void timeOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			vm.setTimer(static_cast<UWord>(rs));
+			vm.increment();
+		}
 	}
 
-	void timeiOp(VM &vm, Word &, Word &, Conditions, int, HWord) {
-		// TODO
-		vm.increment();
+	void timeiOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
+		if (vm.checkRing(Ring::Zero)) {
+			vm.setTimer(static_cast<UWord>(immediate));
+			vm.increment();
+		}
 	}
 
 	void ringOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {

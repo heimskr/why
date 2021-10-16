@@ -1,11 +1,13 @@
-#ifndef WVM_VM_H_
-#define WVM_VM_H_
+#pragma once
 
+#include <atomic>
 #include <filesystem>
 #include <functional>
 #include <istream>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 
@@ -31,6 +33,10 @@ namespace WVM {
 			std::vector<std::unique_ptr<Change>> changeBuffer;
 			size_t undoPointer = 0;
 			PageMeta lastMeta;
+			std::recursive_mutex mutex;
+			std::atomic<size_t> timerThreadID = 0;
+			std::thread timerThread;
+			std::chrono::milliseconds timerStart;
 
 			bool getZ();
 			bool getN();
@@ -40,6 +46,7 @@ namespace WVM {
 			void setN(bool);
 			void setC(bool);
 			void setO(bool);
+			static std::chrono::milliseconds getMilliseconds();
 
 		public:
 			Ring ring = Ring::Zero;
@@ -102,6 +109,7 @@ namespace WVM {
 			bool intProtec();
 			bool intPfault();
 			bool intBwrite();
+			bool intTimer();
 			void start();
 			void stop();
 			bool undo();
@@ -110,6 +118,7 @@ namespace WVM {
 			bool tick();
 			Word nextInstructionAddress() const;
 			bool checkWritable();
+			void setTimer(UWord microseconds);
 
 			void addBreakpoint(Word);
 			void removeBreakpoint(Word);
@@ -125,6 +134,7 @@ namespace WVM {
 			void loadDebugData();
 
 			size_t getMemorySize() { return memorySize; }
+			std::unique_lock<std::recursive_mutex> lockVM() { return std::unique_lock(mutex); }
 
 			void finishChange();
 
@@ -156,5 +166,3 @@ namespace WVM {
 			const Word & rt() const;
 	};
 }
-
-#endif
