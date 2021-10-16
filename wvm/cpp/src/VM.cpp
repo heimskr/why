@@ -9,7 +9,7 @@
 #include "VM.h"
 #include "VMError.h"
 
-#define DEBUG_VIRTMEM
+// #define DEBUG_VIRTMEM
 #define CATCH_DEBUG
 #define CATCH_OPEN
 
