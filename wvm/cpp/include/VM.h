@@ -56,7 +56,7 @@ namespace WVM {
 			Word   endOffset = -1;
 			Word p0 = 0;
 			bool paused = false;
-			bool strict = true;
+			bool strict = false;
 			bool pagingOn = false;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
