@@ -210,6 +210,10 @@ namespace WVM::Unparser {
 			case OP_CMPI:   return color(rs) + " " + colorOper("~") + " " + coloredImm;
 			case OP_SSPUSH: return "[:" + coloredImm + " " + color(rs);
 			case OP_SSPOP:  return "]:" + coloredImm + " " + color(rd);
+			case OP_DIVI:   return iAltOp(rs, rd, coloredImm, "/");
+			case OP_DIVUI:  return iAltOp(rs, rd, coloredImm, "/") + " /u";
+			case OP_DIVII:  return iAltOpInv(rs, rd, coloredImm, "/");
+			case OP_DIVUII: return iAltOpInv(rs, rd, coloredImm, "/") + " /u";
 			case OP_INT: {
 				const std::string base = "\e[36mint\e[39m ";
 				switch (immediate) {
@@ -259,6 +263,10 @@ namespace WVM::Unparser {
 	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper) {
 		std::string out = color(rs) + " \e[1m" + oper + (rs == rd? "=" : "") + "\e[22m " + immediate;
 		return rs == rd? out : out + into + color(rd);
+	}
+
+	std::string iAltOpInv(int rs, int rd, const std::string &immediate, const std::string &oper) {
+		return immediate + " \e[1m" + oper + "\e[22m " + color(rs) + into + color(rd);
 	}
 
 	std::string iMath(int rs, int rd, const std::string &immediate, const std::string &oper) {

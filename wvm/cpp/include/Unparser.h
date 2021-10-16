@@ -16,6 +16,7 @@ namespace WVM::Unparser {
 
 	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix = "");
 	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper);
+	std::string iAltOpInv(int rs, int rd, const std::string &immediate, const std::string &oper);
 	std::string iMath(int rs, int rd, const std::string &immediate, const std::string &oper);
 	std::string iComp(int rs, int rd, const std::string &immediate, const std::string &oper);
 
