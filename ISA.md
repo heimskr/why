@@ -141,18 +141,21 @@
 				</li>
 				<li><a href="#ops-mem-r">Memory (R-Types)</a>
 					<ol>
-						<li><a href="#op-c">Copy</a>           (<code>c</code>)</li>
-						<li><a href="#op-l">Load</a>           (<code>l</code>)</li>
-						<li><a href="#op-s">Store</a>          (<code>s</code>)</li>
-						<li><a href="#op-cb">Copy Byte</a>     (<code>cb</code>)</li>
-						<li><a href="#op-lb">Load Byte</a>     (<code>lb</code>)</li>
-						<li><a href="#op-sb">Store Byte</a>    (<code>sb</code>)</li>
-						<li><a href="#op-ch">Copy Halfword</a>     (<code>ch</code>)</li>
-						<li><a href="#op-lh">Load Halfword</a>     (<code>lh</code>)</li>
-						<li><a href="#op-sh">Store Halfword</a>    (<code>sh</code>)</li>
-						<li><a href="#op-spush">Stack Push</a> (<code>spush</code>)</li>
-						<li><a href="#op-spop">Stack Pop</a>   (<code>spop</code>)</li>
-						<li><a href="#op-ms">Memset</a> (<code>ms</code>)</li>
+						<li><a href="#op-c">Copy</a>            (<code>c</code>)</li>
+						<li><a href="#op-l">Load</a>            (<code>l</code>)</li>
+						<li><a href="#op-s">Store</a>           (<code>s</code>)</li>
+						<li><a href="#op-cb">Copy Byte</a>      (<code>cb</code>)</li>
+						<li><a href="#op-lb">Load Byte</a>      (<code>lb</code>)</li>
+						<li><a href="#op-sb">Store Byte</a>     (<code>sb</code>)</li>
+						<li><a href="#op-ch">Copy Halfword</a>  (<code>ch</code>)</li>
+						<li><a href="#op-lh">Load Halfword</a>  (<code>lh</code>)</li>
+						<li><a href="#op-sh">Store Halfword</a> (<code>sh</code>)</li>
+						<li><a href="#op-cs">Copy Short</a>     (<code>cs</code>)</li>
+						<li><a href="#op-ls">Load Short</a>     (<code>ls</code>)</li>
+						<li><a href="#op-ss">Store Short</a>    (<code>ss</code>)</li>
+						<li><a href="#op-spush">Stack Push</a>  (<code>spush</code>)</li>
+						<li><a href="#op-spop">Stack Pop</a>    (<code>spop</code>)</li>
+						<li><a href="#op-ms">Memset</a>         (<code>ms</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
@@ -907,6 +910,24 @@ Loads the halfword stored at the memory address pointed to by `rs` into `rd`.
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001010`
 
 Stores the lowest 32 bits of `rs` into the memory address pointed to by `rd`.
+
+### <a name="op-cs"></a>Copy Short (`cs`)
+> `[$rs] -> [$rd] /s`  
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001100`
+
+Copies the short stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
+
+### <a name="op-ls"></a>Load Short (`ls`)
+> `[$rs] -> $rd /s`  
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001101`
+
+Loads the short stored at the memory address pointed to by `rs` into `rd`.
+
+### <a name="op-ss"></a>Store Short (`ss`)
+> `$rs -> [$rd] /s`  
+> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001110`
+
+Stores the lowest 16 bits of `rs` into the memory address pointed to by `rd`.
 
 ### <a name="op-spush"></a>Stack Push (`spush`)
 > `[ $rs`  
