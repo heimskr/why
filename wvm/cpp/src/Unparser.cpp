@@ -118,6 +118,9 @@ namespace WVM::Unparser {
 					case FN_LH:    return left + color(rs) + right + into + color(rd) + " /h";
 					case FN_SH:    return color(rs) + into + left + color(rd) + right + " /h";
 					case FN_MS:    return "\e[36mmemset\e[39m " + color(rs) + " x " + color(rt) + into + color(rd);
+					case FN_CS:    return left + color(rs) + right + into + left + color(rd) + "] /s";
+					case FN_LS:    return left + color(rs) + right + into + color(rd) + " /s";
+					case FN_SS:    return color(rs) + into + left + color(rd) + right + " /s";
 				}
 				break;
 			case OP_REXT:
