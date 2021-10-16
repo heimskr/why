@@ -16,7 +16,7 @@ namespace Wasmc {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI, Cs, Ls, Ss
 	};
 
 	Condition getCondition(const std::string &);
@@ -306,6 +306,44 @@ namespace Wasmc {
 		Funct getFunct() const override { return FUNCTS.at("sh"); }
 		WASMInstructionNode * copy() const override { return (new WASMShNode(rs, rd))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMShortMemoryNode: WASMInstructionNode, RType {
+		WASMShortMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
+		WASMShortMemoryNode(int sym, const std::string *rs_, const std::string *rd_);
+	};
+
+	struct WASMCsNode: WASMShortMemoryNode {
+		WASMCsNode(ASTNode *rs_, ASTNode *rd_);
+		WASMCsNode(const std::string *rs_, const std::string *rd_);
+		Opcode getOpcode() const override { return OPCODES.at("cs"); }
+		Funct getFunct() const override { return FUNCTS.at("cs"); }
+		WASMInstructionNode * copy() const override { return (new WASMCsNode(rs, rd))->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Cs; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMLsNode: WASMShortMemoryNode {
+		WASMLsNode(ASTNode *rs_, ASTNode *rd_);
+		WASMLsNode(const std::string *rs_, const std::string *rd_);
+		Opcode getOpcode() const override { return OPCODES.at("ls"); }
+		Funct getFunct() const override { return FUNCTS.at("ls"); }
+		WASMInstructionNode * copy() const override { return (new WASMLsNode(rs, rd))->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Ls; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMSsNode: WASMShortMemoryNode {
+		WASMSsNode(ASTNode *rs_, ASTNode *rd_);
+		WASMSsNode(const std::string *rs_, const std::string *rd_);
+		Opcode getOpcode() const override { return OPCODES.at("ss"); }
+		Funct getFunct() const override { return FUNCTS.at("ss"); }
+		WASMInstructionNode * copy() const override { return (new WASMSsNode(rs, rd))->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Ss; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

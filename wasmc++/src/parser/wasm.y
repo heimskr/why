@@ -142,11 +142,11 @@ using AN = Wasmc::ASTNode;
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
-%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
-%token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
+%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE WASM_LUINODE
+%token WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
-%token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE
+%token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE
 
 %start start
 
@@ -205,7 +205,7 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | call     | op_jeq   | op_sprint | op_inc   | op_dec;
+         | op_qmem | op_ret   | call     | op_jeq   | op_sprint | op_inc   | op_dec  | op_cs   | op_ls    | op_ss;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
@@ -267,6 +267,12 @@ op_ch: "[" reg "]" "->" "[" reg "]" "/h" { $$ = new WASMChNode($2, $6); D($1, $3
 op_lh: "[" reg "]" "->" reg "/h" { $$ = new WASMLhNode($2, $5); D($1, $3, $4, $6); };
 
 op_sh: reg "->" "[" reg "]" "/h" { $$ = new WASMShNode($1, $4); D($2, $3, $5, $6); };
+
+op_cs: "[" reg "]" "->" "[" reg "]" "/s" { $$ = new WASMCsNode($2, $6); D($1, $3, $4, $5, $7, $8); };
+
+op_ls: "[" reg "]" "->" reg "/s" { $$ = new WASMLsNode($2, $5); D($1, $3, $4, $6); };
+
+op_ss: reg "->" "[" reg "]" "/s" { $$ = new WASMSsNode($1, $4); D($2, $3, $5, $6); };
 
 op_cmp: reg "~" reg { $$ = new WASMCmpNode($1, $3); D($2); };
 

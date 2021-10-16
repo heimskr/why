@@ -448,6 +448,57 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + *rs + " -> [" + *rd + "] /h";
 	}
 
+	WASMShortMemoryNode::WASMShortMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
+	WASMInstructionNode(sym), RType(rs_, nullptr, rd_) {
+		delete rs_;
+		delete rd_;
+	}
+
+	WASMShortMemoryNode::WASMShortMemoryNode(int sym, const std::string *rs_, const std::string *rd_):
+		WASMInstructionNode(sym), RType(rs_, nullptr, rd_) {}
+
+	WASMCsNode::WASMCsNode(ASTNode *rs_, ASTNode *rd_):
+		WASMShortMemoryNode(WASM_CSNODE, rs_, rd_) {}
+
+	WASMCsNode::WASMCsNode(const std::string *rs_, const std::string *rd_):
+		WASMShortMemoryNode(WASM_CSNODE, rs_, rd_) {}
+
+	std::string WASMCsNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]") + " /s";
+	}
+
+	WASMCsNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "[" + *rs + "] -> [" + *rd + "] /s";
+	}
+
+	WASMLsNode::WASMLsNode(ASTNode *rs_, ASTNode *rd_):
+		WASMShortMemoryNode(WASM_LSNODE, rs_, rd_) {}
+
+	WASMLsNode::WASMLsNode(const std::string *rs_, const std::string *rd_):
+		WASMShortMemoryNode(WASM_LSNODE, rs_, rd_) {}
+
+	std::string WASMLsNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd) + " /s";
+	}
+
+	WASMLsNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "[" + *rs + "] -> " + *rd + " /s";
+	}
+
+	WASMSsNode::WASMSsNode(ASTNode *rs_, ASTNode *rd_):
+		WASMShortMemoryNode(WASM_SSNODE, rs_, rd_) {}
+
+	WASMSsNode::WASMSsNode(const std::string *rs_, const std::string *rd_):
+		WASMShortMemoryNode(WASM_SSNODE, rs_, rd_) {}
+
+	std::string WASMSsNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]") + " /s";
+	}
+
+	WASMSsNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + *rs + " -> [" + *rd + "] /s";
+	}
+
 	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rt_): WASMInstructionNode(WASM_CMPNODE), RType(rs_, rt_, nullptr) {
 		delete rs_;
 		delete rt_;
@@ -665,13 +716,13 @@ namespace Wasmc {
 	}
 
 	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size, ASTNode *rs_, bool is_push):
-	WASMInstructionNode(WASM_SSNODE), IType(rs_, nullptr, size), isPush(is_push) {
+	WASMInstructionNode(WASM_SIZEDSTACKNODE), IType(rs_, nullptr, size), isPush(is_push) {
 		delete size;
 		delete rs_;
 	}
 
 	WASMSizedStackNode::WASMSizedStackNode(int size, const std::string *rs_, bool is_push):
-		WASMInstructionNode(WASM_SSNODE), IType(rs_, nullptr, size), isPush(is_push) {}
+		WASMInstructionNode(WASM_SIZEDSTACKNODE), IType(rs_, nullptr, size), isPush(is_push) {}
 
 	WASMInstructionNode * WASMSizedStackNode::copy() const {
 		return (new WASMSizedStackNode(std::get<int>(imm), rs, isPush))->absorb(*this);
