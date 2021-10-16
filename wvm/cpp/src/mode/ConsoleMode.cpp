@@ -157,14 +157,17 @@ namespace WVM::Mode {
 				}
 			} else badInput();
 		} else if (first == "a" || first == "ask") {
-			if (size == 1) {
+			if (size == 1 || size == 2) {
 				Word address;
 				if (!Util::parseLong(split[0], address)) {
 					badInput();
 					return;
 				}
 
-				*socket << ":AskAbout " << address << "\n";
+				if (size == 2)
+					*socket << ":AskAbout " << address << " " << split[1] << "\n";
+				else
+					*socket << ":AskAbout " << address << "\n";
 			} else badInput();
 		} else if (first == "str" || first == "string") {
 			if (size != 0)

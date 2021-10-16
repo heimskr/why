@@ -374,15 +374,24 @@ namespace WVM::Mode {
 			vm.removeBreakpoint(breakpoint);
 		} else if (verb == "AskAbout") {
 			Word address;
-			if (size != 2 || !Util::parseLong(split[1], address)) {
+
+			if (size < 2 || 3 < size || !Util::parseLong(split[1], address)) {
 				invalid();
 				return;
 			}
 
-			Word word = vm.getWord(address);
+			try {
+				if (size == 3 && split[2] == "t")
+					address = vm.translateAddress(address);
 
-			broadcast(":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) + " & " +
-				std::to_string(vm.getHalfword(address + 4)) + "; " + std::to_string(word) + " == " + Util::toHex(word));
+				const Word word = vm.getWord(address);
+
+				server.send(client, ":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) +
+					" & " + std::to_string(vm.getHalfword(address + 4)) + "; " + std::to_string(word) + " == " +
+					Util::toHex(word));
+			} catch (const std::exception &err) {
+				server.send(client, ":Error " + std::string(err.what()));
+			}
 		} else if (verb == "Undo") {
 			vm.undo();
 		} else if (verb == "Redo") {
