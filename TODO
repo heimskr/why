@@ -4,3 +4,4 @@
 [2021/04/18 01:38:00] Implement accessed/modified bit changes in WVM++.
 [2021/04/27 01:20:54] Add floating point support.
 [2021/10/13 21:30:15] Add the equivalent of MSRs for processor configuration.
+[2021/10/15 20:18:56] Add an instruction to swap a value's endianness.
