@@ -18,22 +18,25 @@ namespace WVM::Mode {
 			return true;
 		};
 
-		input.listen(Haunted::UI::TextInput::Event::Submit, [&](const Haunted::ustring &str, int) -> void {
+		input = new Haunted::UI::TextInput(&terminal);
+		textbox = new Haunted::UI::VectorBox(&terminal);
+
+		input->listen(Haunted::UI::TextInput::Event::Submit, [&](const Haunted::ustring &str, int) -> void {
 			handleInput(str);
-			input.clear();
+			input->clear();
 		});
 
-		expando.emplace(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
-			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{&textbox, -1}, {&input, 1}});
+		expando = new Haunted::UI::Boxes::ExpandoBox(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
+			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{textbox, -1}, {input, 1}});
 
 		terminal.startInput();
 		terminal.setRoot(&*expando);
-		input.focus();
-		input.setPrefix("\e[2m>>\e[22m ");
-		textbox.setBackground(ansi::color::verydark);
-		textbox.setAutoscroll(true);
+		input->focus();
+		input->setPrefix("\e[2m>>\e[22m ");
+		textbox->setBackground(ansi::color::verydark);
+		textbox->setAutoscroll(true);
 		terminal.mouse(Haunted::MouseMode::Motion);
-		textbox.draw();
+		textbox->draw();
 		terminal.watchSize();
 		terminal.join();
 		networkThread.join();
@@ -55,54 +58,54 @@ namespace WVM::Mode {
 		const std::vector<std::string> split = Util::split(rest, " ", false);
 
 		if (verb == "Error") {
-			textbox += errorPrefix + rest;
+			*textbox += errorPrefix + rest;
 		} else if (verb == "Subscribed") {
-			textbox += std::string(infoPrefix) + "Subscribed to " + rest;
+			*textbox += std::string(infoPrefix) + "Subscribed to " + rest;
 		} else if (verb == "Register") {
 			Word registerID, newValue;
 			if (split.size() != 2 || !Util::parseLong(split[0], registerID) || !Util::parseLong(split[1], newValue)) {
-				textbox += std::string(errorPrefix) + "Invalid response from server.";
+				*textbox += std::string(errorPrefix) + "Invalid response from server.";
 				DBG("Bad Register response [" << rest << "]");
-			} else {
-				textbox += infoPrefix + Why::coloredRegister(registerID) + " \e[2m<-\e[22m " + std::to_string(newValue);
-			}
+			} else
+				*textbox += infoPrefix + Why::coloredRegister(registerID) + " \e[2m<-\e[22m " +
+					std::to_string(newValue);
 		} else if (verb == "MemoryWord") {
 			std::string to_add = infoPrefix;
 			if (split.size() == 3)
 				to_add += "\e[2m(@ \e[1m" + split[2] + "\e[22;2m) ";
 			to_add += "\e[2m[" + split[0] + "] = \e[22m" + split[1];
-			textbox += to_add;
+			*textbox += to_add;
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
 		} else if (verb == "Strict") {
-			textbox += "Strict mode \e[1m" + split[0] + "\e[22m.";
+			*textbox += "Strict mode \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "Log") {
-			textbox += infoPrefix + rest;
+			*textbox += infoPrefix + rest;
 		} else if (verb == "Paging") {
-			textbox += "Paging \e[1m" + split[0] + "\e[22m.";
+			*textbox += "Paging \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "P0") {
-			textbox += "P0 set to \e[1m" + split[0] + "\e[22m.";
+			*textbox += "P0 set to \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "PC") {
-			textbox += "Program counter: " + split[0];
+			*textbox += "Program counter: " + split[0];
 		} else if (verb == "Debug") {
 			const std::string joined = Util::join(split.begin() + 1, split.end());
 			if (joined == "Not found")
-				textbox += "Address \e[1m" + split[0] + "\e[22m: " + joined;
+				*textbox += "Address \e[1m" + split[0] + "\e[22m: " + joined;
 			else
-				textbox += "Address \e[1m" + split[0] + "\e[22m: \e[4m" + joined + "\e[24m";
+				*textbox += "Address \e[1m" + split[0] + "\e[22m: \e[4m" + joined + "\e[24m";
 		} else if (verb == "SetReg") {
 			Word reg = -1;
 			if (!Util::parseLong(split[0], reg))
-				textbox += std::string(errorPrefix) + "Invalid register: \e[1m" + split[0] + "\e[22m\n";
+				*textbox += std::string(errorPrefix) + "Invalid register: \e[1m" + split[0] + "\e[22m\n";
 			else
-				textbox += std::string(infoPrefix) + "Register " + Why::coloredRegister(reg) + " set to \e[1m"
+				*textbox += std::string(infoPrefix) + "Register " + Why::coloredRegister(reg) + " set to \e[1m"
 					+ split[1] + "\e[22m.";
 		} else if (verb == "AddedBP") {
 			if (split.size() == 1)
-				textbox += std::string(infoPrefix) + "Added breakpoint at " + split[0] + ".";
+				*textbox += std::string(infoPrefix) + "Added breakpoint at " + split[0] + ".";
 		} else if (verb == "InvalidMessage") {
-			textbox += std::string(errorPrefix) + "Invalid message.";
+			*textbox += std::string(errorPrefix) + "Invalid message.";
 		}
 	}
 
@@ -153,7 +156,7 @@ namespace WVM::Mode {
 					badInput();
 				} else {
 					*socket << ":RemoveBP " << address << "\n";
-					textbox += std::string(infoPrefix) + "Removed breakpoint at " + split[0] + ".";
+					*textbox += std::string(infoPrefix) + "Removed breakpoint at " + split[0] + ".";
 				}
 			} else badInput();
 		} else if (first == "a" || first == "ask") {
@@ -187,7 +190,7 @@ namespace WVM::Mode {
 			if (size == 0)
 				*socket << ":GetPC\n";
 			else
-				textbox += errorPrefix + std::string("Setting the program counter is currently unsupported.");
+				*textbox += errorPrefix + std::string("Setting the program counter is currently unsupported.");
 		} else if (first == "d" || first == "dbg" || first == "debug") {
 			if (size == 0)
 				*socket << ":DebugData\n";
@@ -218,6 +221,6 @@ namespace WVM::Mode {
 	}
 
 	void ConsoleMode::badInput(const std::string &type) {
-		textbox += errorPrefix + type + " input.";
+		*textbox += errorPrefix + type + " input.";
 	}
 }

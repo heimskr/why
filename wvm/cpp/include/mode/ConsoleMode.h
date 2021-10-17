@@ -14,9 +14,9 @@ namespace WVM::Mode {
 		private:
 			Haunted::Terminal terminal;
 			std::thread networkThread;
-			std::optional<Haunted::UI::Boxes::ExpandoBox> expando;
-			Haunted::UI::VectorBox textbox;
-			Haunted::UI::TextInput input;
+			Haunted::UI::Boxes::ExpandoBox *expando;
+			Haunted::UI::VectorBox *textbox;
+			Haunted::UI::TextInput *input;
 
 			void badInput(const std::string & = "Invalid");
 
