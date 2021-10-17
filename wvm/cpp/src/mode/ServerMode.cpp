@@ -23,7 +23,8 @@ namespace WVM::Mode {
 	void ServerMode::run(const std::string &path) {
 		instance = this;
 		server.messageHandler = [&](int client, const std::string &message) { handleMessage(client, message); };
-		std::cerr << "ServerMode running on port " << server.getPort() << "\n";
+		ansi::out << ansi::info << "ServerMode is running on port " << ansi::style::bold << server.getPort()
+		          >> ansi::style::bold << ".\n";
 		std::ofstream port_stream;
 		port_stream.open(".port");
 		port_stream << server.getPort();
