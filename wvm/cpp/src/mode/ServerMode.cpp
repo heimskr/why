@@ -145,6 +145,22 @@ namespace WVM::Mode {
 		} else if (verb == "Close") {
 			cleanupClient(client);
 			server.removeClient(client);
+		} else if (verb == "Play") {
+			if (size == 2) {
+				UWord microdelay;
+				if (!Util::parseUL(split[1], microdelay))
+					server.send(client, ":Error Invalid delay.");
+				else
+					vm.play(microdelay);
+			} else if (size == 1)
+				vm.play(0);
+			else
+				invalid();
+		} else if (verb == "Pause") {
+			if (size == 1)
+				vm.pause();
+			else
+				invalid();
 		} else if (verb == "Subscribe") {
 			if (size != 2) {
 				invalid();

@@ -394,6 +394,7 @@ namespace WVM {
 				} while (playing && active);
 				onPlayEnd();
 			}
+			playing = false;
 		}, microdelay);
 		playThread.detach();
 		return true;
