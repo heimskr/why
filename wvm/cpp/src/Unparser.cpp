@@ -132,6 +132,7 @@ namespace WVM::Unparser {
 					case FN_PRD:   return "<\e[36mprd\e[39m "   + color(rs) + ">";
 					case FN_PRX:   return "<\e[36mprx\e[39m "   + color(rs) + ">";
 					case FN_SLEEP: return "<\e[36msleep\e[39m " + color(rs) + ">";
+					case FN_REST:  return "<\e[36mrest\e[39m>";
 				}
 				break;
 			case OP_TIME: return "\e[36mtime\e[39m " + color(rs);
