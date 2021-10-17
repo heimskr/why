@@ -211,6 +211,7 @@
 				<li><a href="#ext-sleep">Sleep</a> (<code>sleep</code>)</li>
 				<li><a href="#ext-prb">Print Binary</a> (<code>prb</code>)</li>
 				<li><a href="#ext-rest">Rest</a> (<code>rest</code>)</li>
+				<li><a href="#ext-io">I/O</a> (<code>io</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -1237,3 +1238,9 @@ Syntax: `<rest>`
 Function value: `000000001001`
 
 Pauses execution until an interrupt occurs.
+
+### <a name="ext-io"></a>I/O
+Syntax: `<io operation_name>`  
+Function value: `000000001010`
+
+Interacts with storage devices. See [the I/O document](IO.md) for details.
