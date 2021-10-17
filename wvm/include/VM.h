@@ -23,7 +23,7 @@
 namespace WVM {
 	class VM {
 		private:
-			std::vector<UByte> memory, initial;
+			std::vector<UByte> initial;
 			std::filesystem::path loadedFrom;
 			size_t memorySize;
 			bool keepInitial;
@@ -56,6 +56,7 @@ namespace WVM {
 		public:
 			static constexpr size_t PAGE_SIZE = 65536;
 
+			std::vector<UByte> memory;
 			Ring ring = Ring::Zero;
 			Word programCounter = -1;
 			Word interruptTableAddress = 0;

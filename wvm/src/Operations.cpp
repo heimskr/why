@@ -1093,22 +1093,72 @@ namespace WVM::Operations {
 			           &a3 = vm.registers[Why::argumentOffset + 3];
 			Word &r0 = vm.registers[Why::returnValueOffset], &e0 = vm.registers[Why::exceptionOffset];
 
+			const size_t device_id = size_t(a1);
+			const bool valid_id = device_id < vm.fds.size();
+
 			switch (a0) {
 				case IO_DEVCOUNT:
-					setReg(vm, r0, vm.fds.size(), false);
+					setReg(vm, r0, vm.fds.size());
 					break;
 				case IO_SEEKABS:
-					if (a1 < 0 || Word(vm.fds.size()) <= a1)
+					if (!valid_id)
 						setReg(vm, e0, 1);
-					else if (lseek(vm.fds.at(a1), a2, SEEK_SET) == -1)
+					else if (lseek(vm.fds.at(device_id), a2, SEEK_SET) == -1)
 						setReg(vm, e0, 2);
 					break;
 				case IO_SEEKREL:
-					if (a1 < 0 || Word(vm.fds.size()) <= a1)
+					if (!valid_id)
 						setReg(vm, e0, 1);
-					else if (lseek(vm.fds.at(a1), a2, SEEK_CUR) == -1)
+					else if (lseek(vm.fds.at(device_id), a2, SEEK_CUR) == -1)
 						setReg(vm, e0, 2);
 					break;
+				case IO_READ: { // TODO: verify. This code is suspicious.
+					if (!valid_id) {
+						setReg(vm, e0, 1);
+					} else {
+						size_t address = a2, remaining = a3, total_bytes_read = 0;
+						const int fd = vm.fds.at(device_id);
+						const size_t memsize = vm.getMemorySize();
+
+						while (0 < remaining) {
+							const size_t mod = address % VM::PAGE_SIZE; // Especially this.
+
+							bool translate_success;
+							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
+							if (!translate_success) {
+								vm.intPfault();
+								return;
+							}
+
+							if (!vm.checkWritable()) {
+								vm.intBwrite();
+								return;
+							}
+
+							if (memsize <= translated) {
+								break;
+							} else {
+								const size_t diff = memsize - translated;
+								if (diff < remaining)
+									remaining = diff;
+							}
+
+							const size_t to_read = std::min(mod? mod : VM::PAGE_SIZE, remaining); // And this.
+							const ssize_t bytes_read = ::read(fd, &vm.memory[translated], to_read);
+
+							if (bytes_read < 0)
+								setReg(vm, e0, errno + 1, false);
+							if (bytes_read <= 0)
+								break;
+							remaining -= size_t(bytes_read);
+							address += size_t(bytes_read);
+							total_bytes_read += size_t(bytes_read);
+						}
+
+						setReg(vm, r0, total_bytes_read);
+					}
+					break;
+				}
 				default:
 					setReg(vm, e0, 666, false);
 			}
