@@ -16,7 +16,7 @@ namespace WVM::Mode {
 			              bpSubscribers, pagingSubscribers, p0Subscribers;
 			std::set<Word> writtenAddresses;
 			bool logMemoryWrites = false, logRegisters = false;
-			std::mutex subscriberMutex;
+			std::recursive_mutex subscriberMutex;
 
 			void setFastForward(bool);
 			void broadcast(const std::string &);
@@ -33,6 +33,6 @@ namespace WVM::Mode {
 			void stop();
 			void handleMessage(int, const std::string &);
 
-			std::unique_lock<std::mutex> lockSubscribers() { return std::unique_lock(subscriberMutex); }
+			std::unique_lock<std::recursive_mutex> lockSubscribers() { return std::unique_lock(subscriberMutex); }
 	};
 }
