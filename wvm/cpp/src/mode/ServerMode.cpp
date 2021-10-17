@@ -191,6 +191,8 @@ namespace WVM::Mode {
 					return;
 				}
 
+				server.send(client, ":Log Ticking...");
+
 				setFastForward(true);
 				Word i;
 				vm.start();
@@ -209,6 +211,8 @@ namespace WVM::Mode {
 
 				if (vm.paused)
 					broadcast(":Paused");
+
+				server.send(client, ":Log Ticked " + std::to_string(i) + " time" + (i == 1? "" : "s") + ".");
 
 				DBG("Server ticked " << i << " time" << (i == 1? "" : "s") << ".");
 
