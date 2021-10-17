@@ -1080,10 +1080,8 @@ namespace WVM::Operations {
 		vm.increment();
 	}
 
-	void restOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions cond, int flags) {
-		// TODO
-		haltOp(vm, rs, rt, rd, cond, flags);
-		// vm.increment();
+	void restOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		vm.rest();
 	}
 
 	void selOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {

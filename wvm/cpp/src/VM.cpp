@@ -343,6 +343,7 @@ namespace WVM {
 		if (interrupts.count(type) == 0)
 			throw std::runtime_error("Invalid interrupt: " + std::to_string(static_cast<int>(type)));
 		interrupts.at(type)(*this, force);
+		wakeRest();
 		return true; // Can't remember what the return value is supposed to represent...
 	}
 
@@ -388,6 +389,10 @@ namespace WVM {
 				const std::chrono::microseconds delay(microdelay);
 				onPlayStart();
 				do {
+					if (resting) {
+						std::unique_lock<std::mutex> lock(restMutex);
+						restCondition.wait(lock, [this] { return !resting; });
+					}
 					tick();
 					if (microdelay)
 						std::this_thread::sleep_for(delay);
@@ -402,6 +407,17 @@ namespace WVM {
 
 	bool VM::pause() {
 		return playing.exchange(false);
+	}
+
+	void VM::wakeRest() {
+		std::unique_lock<std::mutex> lock(restMutex);
+		resting = false;
+		restCondition.notify_all();
+	}
+
+	void VM::rest() {
+		std::unique_lock<std::mutex> lock(restMutex);
+		resting = true;
 	}
 
 	bool VM::undo() {

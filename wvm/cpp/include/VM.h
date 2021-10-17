@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <condition_variable>
 #include <filesystem>
 #include <functional>
 #include <istream>
@@ -39,6 +40,8 @@ namespace WVM {
 			std::chrono::milliseconds timerStart;
 			std::thread playThread;
 			std::atomic<bool> playing = false;
+			std::mutex restMutex;
+			std::condition_variable restCondition;
 
 			bool getZ();
 			bool getN();
@@ -118,6 +121,8 @@ namespace WVM {
 			void stop();
 			bool play(size_t microdelay = 0);
 			bool pause();
+			void wakeRest();
+			void rest();
 			bool undo();
 			bool redo();
 			bool getActive() const { return active; }
