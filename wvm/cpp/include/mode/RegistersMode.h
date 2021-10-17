@@ -21,8 +21,8 @@ namespace WVM::Mode {
 			Base base = Base::Decimal;
 			Haunted::Terminal terminal;
 			std::thread networkThread;
-			std::optional<Haunted::UI::Boxes::ExpandoBox> expando;
-			Haunted::UI::VectorBox textbox;
+			Haunted::UI::Boxes::ExpandoBox *expando;
+			Haunted::UI::VectorBox *textbox;
 			std::array<Word, Why::totalRegisters> registers;
 			bool fastForward = false, ready = false;
 

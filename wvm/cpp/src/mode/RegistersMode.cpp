@@ -21,10 +21,12 @@ namespace WVM::Mode {
 			return true;
 		};
 
-		expando.emplace(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
-			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{&textbox, -1}});
+		textbox = new Haunted::UI::VectorBox(&terminal);
 
-		textbox.keyFunction = [&](const Haunted::Key &key) {
+		expando = new Haunted::UI::Boxes::ExpandoBox(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
+			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{textbox, -1}});
+
+		textbox->keyFunction = [&](const Haunted::Key &key) {
 			if (key == Haunted::KeyMod::Ctrl) {
 				if (key == 't') {
 					*buffer << ":Tick\n";
@@ -60,9 +62,9 @@ namespace WVM::Mode {
 
 		terminal.startInput();
 		terminal.setRoot(&*expando);
-		textbox.setAutoscroll(false);
+		textbox->setAutoscroll(false);
 		terminal.mouse(Haunted::MouseMode::Motion);
-		textbox.focus();
+		textbox->focus();
 		expando->draw();
 		terminal.watchSize();
 		*buffer << ":Registers raw\n";
@@ -72,19 +74,19 @@ namespace WVM::Mode {
 	}
 
 	void RegistersMode::remakeList() {
-		textbox.clearLines();
+		textbox->clearLines();
 		std::stringstream ss;
-		textbox.draw();
-		textbox.suppressDraw = true;
+		textbox->draw();
+		textbox->suppressDraw = true;
 
 		for (int reg = 0; reg < Why::totalRegisters; ++reg) {
 			stringify(reg, ss);
-			textbox += ss.str();
+			*textbox += ss.str();
 			ss.clear();
 			ss.str("");
 		}
 
-		textbox.suppressDraw = false;
+		textbox->suppressDraw = false;
 		terminal.redraw();
 	}
 
@@ -110,7 +112,7 @@ namespace WVM::Mode {
 	void RegistersMode::updateLine(int reg) {
 		auto &simple = getLine(reg);
 		simple.text = stringify(reg);
-		textbox.redrawLine(simple);
+		textbox->redrawLine(simple);
 	}
 
 	void RegistersMode::stop() {
@@ -170,9 +172,8 @@ namespace WVM::Mode {
 	}
 
 	Haunted::UI::SimpleLine<std::vector> & RegistersMode::getLine(int reg) {
-		std::shared_ptr<Haunted::UI::TextLine<std::vector>> &line = *std::next(textbox.getLines().begin(), reg);
-
-		if (Haunted::UI::SimpleLine<std::vector> *simple = dynamic_cast<Haunted::UI::SimpleLine<std::vector> *>(line.get())) {
+		auto &line = *std::next(textbox->getLines().begin(), reg);
+		if (auto *simple = dynamic_cast<Haunted::UI::SimpleLine<std::vector> *>(line.get())) {
 			return *simple;
 		} else throw std::runtime_error("Unable to cast line to Haunted::UI::simpleline");
 	}
