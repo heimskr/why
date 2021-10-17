@@ -428,6 +428,7 @@ namespace WVM {
 	}
 
 	bool VM::tick() {
+		auto lock = lockVM();
 		UWord instruction = getWord(programCounter, Endianness::Big);
 		Operations::execute(*this, instruction);
 
