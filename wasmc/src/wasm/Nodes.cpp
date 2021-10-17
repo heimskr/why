@@ -1174,6 +1174,17 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "<rest>";
 	}
 
+	WASMIONode::WASMIONode(const std::string *ident_): WASMInstructionNode(WASM_IONODE), ident(ident_) {}
+
+	std::string WASMIONode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + (ident? "<" + blue("io") + " " + *ident + ">" : "<" + blue("io") +
+			">");
+	}
+
+	WASMIONode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + (ident? "<io " + *ident + ">" : "<io>");
+	}
+
 	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang) {
 		static const auto deq = StringSet::intern("==");
 		RNode *out = new RNode(rs, deq, rt, rd, WASMTOK_DEQ, false);
