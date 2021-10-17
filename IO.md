@@ -2,7 +2,7 @@
 
 Block storage can be provided to the VM by giving it a list of files. When a program requests to perform I/O on one of the "devices," the VM will perform the corresponding operation on the file.
 
-There's one instruction for doing IO, the IO external. Different subinstructions can be specified by providing an ID in `$a0` before calling `<io>`. Subinstructions can have their own arguments in `$a1` and beyond. Results are put into the result registers (`$r0` and beyond). IO commands are possible in ring 2 and below only. 0 is stored in `$e0` if the operation succeeded; a positive value is stored in `$e0` if the operation failed.
+There's one instruction for doing IO, the IO external. Different subinstructions can be specified by providing an ID in `$a0` before calling `<io>`. Subinstructions can have their own arguments in `$a1` and beyond. Results are put into the result registers (`$r0` and beyond). IO commands are possible in ring 2 and below only. 0 is stored in `$e0` if the operation succeeded; a positive value is stored in `$e0` if the operation failed. 666 will be put in `$e0` if the value in `$a0` is invalid.
 
 ### `devcount` (0)
 
