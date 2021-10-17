@@ -4,7 +4,7 @@ OPTIMIZATION    ?= -O0 -g
 STANDARD        ?= c++20
 WARNINGS        ?= -Wall -Wextra
 CFLAGS          := -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
-OUTPUT          ?= wasmc++
+OUTPUT          ?= wasmc
 LEXFLAGS        := -Wno-sign-compare -Wno-register
 WASMLEXCPP      := src/parser/wasmlex.cpp
 WASMPARSECPP    := src/parser/wasmparse.cpp
