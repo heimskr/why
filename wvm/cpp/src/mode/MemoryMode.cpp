@@ -102,6 +102,8 @@ namespace WVM::Mode {
 				toggleSearchbox();
 			} else if (key == 'd') {
 				send(":DebugData " + std::to_string(vm.programCounter));
+			} else if (key == 'h') {
+				send(":History toggle");
 			} else return false;
 			return true;
 		};

@@ -526,7 +526,7 @@ namespace WVM::Mode {
 				return;
 			}
 
-			broadcast(":Log History recording turned " + split[1] + ".");
+			broadcast(":Log History recording turned " + std::string(vm.enableHistory? "on" : "off") + ".");
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
