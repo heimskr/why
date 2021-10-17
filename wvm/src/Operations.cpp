@@ -1087,13 +1087,27 @@ namespace WVM::Operations {
 
 	void ioOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Two)) {
-			const Word &a0 = vm.registers[Why::argumentOffset];
-			Word &r0 = vm.registers[Why::returnValueOffset];
-			Word &e0 = vm.registers[Why::exceptionOffset];
+			const Word &a0 = vm.registers[Why::argumentOffset],
+			           &a1 = vm.registers[Why::argumentOffset + 1],
+			           &a2 = vm.registers[Why::argumentOffset + 2],
+			           &a3 = vm.registers[Why::argumentOffset + 3];
+			Word &r0 = vm.registers[Why::returnValueOffset], &e0 = vm.registers[Why::exceptionOffset];
 
 			switch (a0) {
 				case IO_DEVCOUNT:
 					setReg(vm, r0, vm.fds.size(), false);
+					break;
+				case IO_SEEKABS:
+					if (a1 < 0 || Word(vm.fds.size()) <= a1)
+						setReg(vm, e0, 1);
+					else if (lseek(vm.fds.at(a1), a2, SEEK_SET) == -1)
+						setReg(vm, e0, 2);
+					break;
+				case IO_SEEKREL:
+					if (a1 < 0 || Word(vm.fds.size()) <= a1)
+						setReg(vm, e0, 1);
+					else if (lseek(vm.fds.at(a1), a2, SEEK_CUR) == -1)
+						setReg(vm, e0, 2);
 					break;
 				default:
 					setReg(vm, e0, 666, false);
