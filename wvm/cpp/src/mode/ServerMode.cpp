@@ -27,8 +27,10 @@ namespace WVM::Mode {
 		          >> ansi::style::bold << ".\n";
 		std::ofstream port_stream;
 		port_stream.open(".port");
-		port_stream << server.getPort();
-		port_stream.close();
+		if (port_stream) {
+			port_stream << server.getPort();
+			port_stream.close();
+		}
 		vm.load(path);
 		initVM();
 		signal(SIGINT, sigint_handler);
