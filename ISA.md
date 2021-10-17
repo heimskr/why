@@ -302,6 +302,7 @@ Variables and their values are declared with JSON-like markup:
 #data
 some_string: "this is an example."
 some_number: 42
+some_gap: (16) // Expands to 16 empty bytes
 </pre>
 
 ## <a name="prog-debug"></a>Debug Data Section
