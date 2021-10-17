@@ -71,7 +71,7 @@ namespace WVM {
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
-			std::function<void()> onInterruptTableChange = []() {};
+			std::function<void()> onInterruptTableChange = [] {};
 			std::function<void(Word, Word, Size)> onUpdateMemory = [](Word, Word, Size) {};
 			std::function<void(Word, Word)> onJump = [](Word, Word) {};
 			std::function<void(const std::string &)> onPrint = [](const std::string &) {};
@@ -79,6 +79,7 @@ namespace WVM {
 			std::function<void(Word)> onRemoveBreakpoint = [](Word) {};
 			std::function<void(bool)> onPagingChange = [](bool) {};
 			std::function<void(Word)> onP0Change = [](Word) {};
+			std::function<void()> onPlayStart = [] {}, onPlayEnd = [] {};
 
 			VM(size_t memory_size, bool keep_initial = true);
 

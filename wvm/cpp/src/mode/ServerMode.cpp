@@ -99,6 +99,14 @@ namespace WVM::Mode {
 			for (int client: p0Subscribers)
 				server.send(client, ":P0 " + std::to_string(addr));
 		};
+
+		vm.onPlayStart = [&] {
+			broadcast(":Log Playing...");
+		};
+
+		vm.onPlayEnd = [&] {
+			broadcast(":Log Paused.");
+		};
 	}
 
 	void ServerMode::cleanupClient(int client) {

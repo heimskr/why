@@ -382,12 +382,17 @@ namespace WVM {
 	bool VM::play(size_t microdelay) {
 		if (playing.exchange(true))
 			return false;
+		start();
 		playThread = std::thread([this](size_t microdelay) {
-			const std::chrono::microseconds delay(microdelay);
-			while (playing && active) {
-				tick();
-				if (microdelay)
-					std::this_thread::sleep_for(delay);
+			if (playing && active) {
+				const std::chrono::microseconds delay(microdelay);
+				onPlayStart();
+				do {
+					tick();
+					if (microdelay)
+						std::this_thread::sleep_for(delay);
+				} while (playing && active);
+				onPlayEnd();
 			}
 		}, microdelay);
 		playThread.detach();
