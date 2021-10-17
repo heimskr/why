@@ -16,7 +16,8 @@ namespace Wasmc {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI, Cs, Ls, Ss
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI, Cs, Ls, Ss,
+		Rest,
 	};
 
 	Condition getCondition(const std::string &);
@@ -698,6 +699,16 @@ namespace Wasmc {
 		WASMCallNode(const std::string *function_, const Args &args_);
 		WASMInstructionNode * copy() const override { return (new WASMCallNode(function, args))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Call; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMRestNode: WASMInstructionNode, RType {
+		WASMRestNode();
+		Opcode getOpcode() const override { return OPCODES.at("ext"); }
+		Funct getFunct() const override { return FUNCTS.at("rest"); }
+		WASMInstructionNode * copy() const override { return (new WASMRestNode())->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Rest; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

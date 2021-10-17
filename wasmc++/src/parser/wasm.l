@@ -62,6 +62,7 @@ WASM_CODE_HEADER		("#code"|"#c")
 "orcid"						{ WASMRTOKEN(ORCID) }
 "print"						{ WASMRTOKEN(PRINT) }
 "sleep"						{ WASMRTOKEN(SLEEP) }
+"rest"						{ WASMRTOKEN(REST) }
 "%setpt"					{ WASMRTOKEN(SETPT) }
 "name"						{ WASMRTOKEN(NAME) }
 "%time"						{ WASMRTOKEN(TIME) }
