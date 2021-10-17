@@ -1,5 +1,5 @@
 [submodule "wvm/cpp/haunted"]
-	path = wvm/cpp/haunted
+	path = wvm++/haunted
 	url = https://github.com/heimskr/haunted
 [submodule "wasmc++/PicoSHA2"]
 	path = wasmc++/PicoSHA2
