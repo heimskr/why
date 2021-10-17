@@ -4,6 +4,8 @@ Block storage can be provided to the VM by giving it a list of files. When a pro
 
 There's one instruction for doing IO, the IO external. Different subinstructions can be specified by providing an ID in `$a0` before calling `<io>`. Subinstructions can have their own arguments in `$a1` and beyond. Results are put into the result registers (`$r0` and beyond). IO commands are possible in ring 2 and below only. 0 is stored in `$e0` if the operation succeeded; a positive value is stored in `$e0` if the operation failed. 666 will be put in `$e0` if the value in `$a0` is invalid.
 
+Note that `read` and `write` are incompatible with WVM's history functionality. Undoing a `read` or `write` operation won't undo the changes to the VM memory or to the file.
+
 ### `devcount` (0)
 
 Queries the number of attached "drives."
@@ -40,7 +42,7 @@ Reads from a device.
 - 1 return value: # bytes read
 - Can fail
 	- 1: invalid device ID
-	- 2: invalid position
+	- errno + 1: read failed
 
 ### `write` (4)
 
@@ -48,7 +50,7 @@ Reads from a device.
 - 1 return value: # bytes written
 - Can fail
 	- 1: invalid device ID
-	- 2: invalid position
+	- errno + 1: write failed
 
 ### `getsize` (5)
 
