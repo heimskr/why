@@ -1,5 +1,0 @@
-digraph "CFG for 'op_sbi' function" {
-	label="CFG for 'op_sbi' function";
-
-	Node0x7f8ef0d40a70 [shape=record,label="{%1:\l  %2 = tail call zeroext i8 @wvm_i_rs(i64 %0) #6\l  %3 = tail call i32 @wvm_i_imm(i64 %0) #6\l  %4 = zext i32 %3 to i64\l  %5 = zext i8 %2 to i64\l  %6 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0, i64\l... %5\l  %7 = load i64, i64* %6, align 8, !tbaa !2\l  %8 = trunc i64 %7 to i8\l  tail call void @wvm_set_byte(i64 %4, i8 zeroext %8) #6\l  tail call void (...) @wvm_increment_pc() #6\l  ret void\l}"];
-}

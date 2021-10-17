@@ -1,5 +1,0 @@
-digraph "CFG for 'op_eval' function" {
-	label="CFG for 'op_eval' function";
-
-	Node0x7f8ef0d42da0 [shape=record,label="{%1:\l  %2 = load %struct.__sFILE*, %struct.__sFILE** @__stderrp, align 8, !tbaa !2\l  %3 = tail call i64 @fwrite(i8* getelementptr inbounds ([26 x i8], [26 x i8]*\l... @.str.1, i64 0, i64 0), i64 25, i64 1, %struct.__sFILE* %2)\l  tail call void @exit(i32 1) #8\l  unreachable\l}"];
-}

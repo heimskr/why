@@ -1,5 +1,0 @@
-digraph "CFG for 'op_sgi' function" {
-	label="CFG for 'op_sgi' function";
-
-	Node0x7f8ef0c0f2d0 [shape=record,label="{%1:\l  %2 = tail call zeroext i8 @wvm_i_rs(i64 %0) #6\l  %3 = tail call zeroext i8 @wvm_i_rd(i64 %0) #6\l  %4 = tail call i32 @wvm_i_imm(i64 %0) #6\l  %5 = zext i8 %2 to i64\l  %6 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0, i64\l... %5\l  %7 = load i64, i64* %6, align 8, !tbaa !2\l  %8 = zext i32 %4 to i64\l  %9 = icmp sgt i64 %7, %8\l  %10 = zext i1 %9 to i64\l  %11 = zext i8 %3 to i64\l  %12 = getelementptr inbounds [128 x i64], [128 x i64]* @registers, i64 0,\l... i64 %11\l  store i64 %10, i64* %12, align 8, !tbaa !2\l  tail call void (...) @wvm_increment_pc() #6\l  ret void\l}"];
-}
