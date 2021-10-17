@@ -16,7 +16,7 @@ std::optional<WVM::Mode::ServerMode> server;
 
 void usage() {
 	std::cerr << "Usage:\n- wvm server <executable>\n- wvm registers <hostname> <port>\n- wvm memory <hostname> <port>"
-	         << "\n- wvm console <hostname> <port>\n";
+	          << "\n- wvm console <hostname> <port>\n";
 }
 
 int main(int argc, char **argv) {
