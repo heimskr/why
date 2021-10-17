@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <string>
+
 namespace Wasmc::Why {
 	constexpr int wordSize = 8; // in bytes
 	constexpr int totalRegisters = 128;
@@ -26,4 +29,6 @@ namespace Wasmc::Why {
 
 	constexpr int halfFloatWidth = 4, floatWidth = 8, doubleWidth = 8, pointerWidth = 8; // in bytes
 	constexpr int generalPurposeRegisters = temporaryCount + savedCount;
+
+	extern std::map<std::string, int> ioIDs;
 }

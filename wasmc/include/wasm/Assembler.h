@@ -114,6 +114,8 @@ namespace Wasmc {
 
 			void addPseudoPrint(Statements &, const WASMInstructionNode *);
 
+			void addIO(Statements &, const WASMInstructionNode *);
+
 			void addStringPrint(Statements &, const WASMInstructionNode *);
 
 			void addCall(Statements &, const WASMInstructionNode *);

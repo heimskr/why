@@ -2,6 +2,7 @@
 #include <climits>
 #include <iomanip>
 #include <iostream>
+#include <variant>
 
 #include "lib/picosha2.h"
 #include "parser/Lexer.h"
@@ -447,6 +448,10 @@ namespace Wasmc {
 					addPseudoPrint(expanded, instruction);
 					break;
 
+				case WASMNodeType::IO:
+					addIO(expanded, instruction);
+					break;
+
 				case WASMNodeType::StringPrint:
 					addStringPrint(expanded, instruction);
 					break;
@@ -546,6 +551,22 @@ namespace Wasmc {
 			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(instruction->bang));
 		} else
 			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
+	}
+
+	void Assembler::addIO(Statements &expanded, const WASMInstructionNode *instruction) {
+		const auto *io = dynamic_cast<const WASMIONode *>(instruction);
+
+		if (!io->ident) {
+			expanded.emplace_back(io->copy());
+			return;
+		}
+
+		if (Why::ioIDs.count(*io->ident) == 0)
+			throw std::runtime_error("Unknown IO ident: \"" + *io->ident + "\"");
+
+		const std::string *a0 = registerArray[Why::argumentOffset];
+		expanded.emplace_back((new WASMSetNode(Why::ioIDs.at(*io->ident), a0))->setBang(instruction->bang));
+		expanded.emplace_back((new WASMIONode(nullptr))->setBang(instruction->bang));
 	}
 
 	void Assembler::addStringPrint(Statements &expanded, const WASMInstructionNode *instruction) {
