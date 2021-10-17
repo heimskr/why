@@ -12,7 +12,7 @@ WASMPARSEHDR    := include/wasmparse.h
 WASMFLEXSRC     := src/parser/wasm.l
 WASMBISONSRC    := src/parser/wasm.y
 
-CLOC_OPTIONS    := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+CLOC_OPTIONS    := --exclude-dir=.vscode,PicoSHA2,tools --not-match-f='^(yy|wasm)(lex|parse)|pico|strnat'
 BISON_OPTIONS   := --color=always
 SOURCES         := $(filter-out src/DebugSearch.cpp src/DumpSymbols.cpp src/main.cpp,$(shell find src/**/*.cpp src/*.cpp))
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
