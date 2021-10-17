@@ -7,17 +7,13 @@ namespace WVM {
 	void Interrupt::operator()(VM &vm, bool) {
 		// TODO: taking newRing and maxPermitted into account.
 
-		std::cerr << "Interrupt: " << int(this->type) << "\n";
-
 		if (vm.interruptTableAddress == 0) {
-			std::cerr << "Interrupt " << int(this->type) << " failed: no interrupt table.\n";
 			vm.recordChange<HaltChange>();
 			vm.stop();
 		} else {
 			const Word destination = vm.getWord(vm.interruptTableAddress + static_cast<Word>(type) * 8,
 				Endianness::Big);
 			if (destination == 0) {
-				std::cerr << "Interrupt " << int(this->type) << " failed: no destination.\n";
 				vm.recordChange<HaltChange>();
 				vm.stop();
 			} else {
@@ -29,7 +25,6 @@ namespace WVM {
 				vm.onRegisterChange(REG_E + 0);
 				vm.onRegisterChange(REG_E + 1);
 				extra();
-				std::cerr << "Interrupt " << int(this->type) << " jumping to " << destination << ".\n";
 				vm.jump(destination, false);
 			}
 		}
