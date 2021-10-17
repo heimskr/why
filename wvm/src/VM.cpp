@@ -537,10 +537,12 @@ namespace WVM {
 	void VM::load(std::istream &stream, const std::vector<std::string> &disks) {
 		for (const std::string &disk: disks) {
 			const int fd = open(disk.c_str(), O_RDWR);
-			if (fd == -1)
+			if (fd == -1) {
 				std::cerr << "Couldn't open " << disk << ": " << strerror(errno) << "\n";
-			else
+			} else {
 				fds.push_back(fd);
+				diskNames.push_back(disk);
+			}
 		}
 
 		std::string line;

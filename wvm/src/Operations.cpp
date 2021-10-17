@@ -1086,8 +1086,21 @@ namespace WVM::Operations {
 	}
 
 	void ioOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
-		// TODO
-		vm.increment();
+		if (vm.checkRing(Ring::Two)) {
+			const Word &a0 = vm.registers[Why::argumentOffset];
+			Word &r0 = vm.registers[Why::returnValueOffset];
+			Word &e0 = vm.registers[Why::exceptionOffset];
+
+			switch (a0) {
+				case IO_DEVCOUNT:
+					setReg(vm, r0, vm.fds.size(), false);
+					break;
+				default:
+					setReg(vm, e0, 666, false);
+			}
+
+			vm.increment();
+		}
 	}
 
 	void selOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {

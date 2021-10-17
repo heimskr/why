@@ -42,7 +42,6 @@ namespace WVM {
 			std::atomic<bool> playing = false;
 			std::mutex restMutex;
 			std::condition_variable restCondition;
-			std::vector<int> fds;
 
 			bool getZ();
 			bool getN();
@@ -55,6 +54,8 @@ namespace WVM {
 			static std::chrono::milliseconds getMilliseconds();
 
 		public:
+			static constexpr size_t PAGE_SIZE = 65536;
+
 			Ring ring = Ring::Zero;
 			Word programCounter = -1;
 			Word interruptTableAddress = 0;
@@ -62,6 +63,8 @@ namespace WVM {
 			std::map<std::string, Symbol> symbolTable;
 			std::map<Word, DebugData> debugMap;
 			std::map<int, const std::string *> debugFiles, debugFunctions;
+			std::vector<int> fds;
+			std::vector<std::string> diskNames;
 			Word symbolsOffset = -1;
 			Word  codeOffset = -1;
 			Word  dataOffset = -1;
