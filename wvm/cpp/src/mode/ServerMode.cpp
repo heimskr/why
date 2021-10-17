@@ -508,6 +508,23 @@ namespace WVM::Mode {
 			vm.registers[reg] = new_value;
 			vm.onRegisterChange(reg);
 			server.send(client, ":SetReg " + std::to_string(reg) + " " + std::to_string(new_value));
+		} else if (verb == "History") {
+			if (size == 1) {
+				server.send(client, ":Log History recording is " + std::string(vm.enableHistory? "on" : "off") + ".");
+				return;
+			} else if (size != 2) {
+				invalid();
+				return;
+			} else if (split[1] == "on") {
+				vm.enableHistory = true;
+			} else if (split[1] == "off") {
+				vm.enableHistory = false;
+			} else {
+				invalid();
+				return;
+			}
+
+			server.send(client, ":Log History recording turned " + split[1] + ".");
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
