@@ -39,7 +39,8 @@ int main(int argc, char **argv) {
 		try {
 			server->run(argv[2]);
 		} catch (const WVM::Net::NetError &err) {
-			std::cerr << err.what() << "\n";
+			if (err.statusCode != 4) // Interrupted system call
+				std::cerr << err.what() << "\n";
 		}
 
 		return 0;

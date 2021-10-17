@@ -419,12 +419,10 @@ namespace WVM::Mode {
 				try {
 					if (size == 3 && split[2] == "t")
 						address = vm.translateAddress(address);
-
 					const Word word = vm.getWord(address);
-
-					server.send(client, ":Log " + std::to_string(address) + ": " + std::to_string(vm.getHalfword(address)) +
-						" & " + std::to_string(vm.getHalfword(address + 4)) + "; " + std::to_string(word) + " == " +
-						Util::toHex(word));
+					server.send(client, ":Log " + std::to_string(address) + ": " +
+						std::to_string(vm.getHalfword(address)) + " & " + std::to_string(vm.getHalfword(address + 4)) +
+						"; " + std::to_string(word) + " == " + Util::toHex(word));
 				} catch (const std::exception &err) {
 					server.send(client, ":Error " + std::string(err.what()));
 				}

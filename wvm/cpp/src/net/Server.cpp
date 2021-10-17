@@ -101,9 +101,8 @@ namespace WVM::Net {
 		size_t size;
 
 		int control_pipe[2];
-		if (pipe(control_pipe) < 0) {
+		if (pipe(control_pipe) < 0)
 			throw NetError("pipe()", errno);
-		}
 
 		controlRead  = control_pipe[0];
 		controlWrite = control_pipe[1];
