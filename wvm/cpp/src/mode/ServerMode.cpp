@@ -519,12 +519,14 @@ namespace WVM::Mode {
 				vm.enableHistory = true;
 			} else if (split[1] == "off") {
 				vm.enableHistory = false;
+			} else if (split[1] == "toggle") {
+				vm.enableHistory = !vm.enableHistory;
 			} else {
 				invalid();
 				return;
 			}
 
-			server.send(client, ":Log History recording turned " + split[1] + ".");
+			broadcast(":Log History recording turned " + split[1] + ".");
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
