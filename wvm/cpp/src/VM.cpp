@@ -459,7 +459,7 @@ namespace WVM {
 		timerThread = std::thread([this](UWord microseconds, size_t id) {
 			timerStart = getMilliseconds();
 			std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
-			if (timerThreadID == id) {
+			if (timerThreadID == id && active) {
 				auto lock = lockVM();
 				bufferChange<RegisterChange>(*this, REG_E + 2, microseconds);
 				intTimer();
