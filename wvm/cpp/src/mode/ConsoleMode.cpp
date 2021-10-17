@@ -198,6 +198,18 @@ namespace WVM::Mode {
 				*socket << ":SetReg " << split[0] << " " << split[1] << "\n";
 			else
 				badInput();
+		} else if (first == "p" || first == "pl" || first == "play" || first == "+") {
+			if (size == 0)
+				*socket << ":Play\n";
+			else if (size == 1)
+				*socket << ":Play " << split[0] << "\n";
+			else
+				badInput();
+		} else if (first == "pa" || first == "pause" || first == "-") {
+			if (size == 0)
+				*socket << ":Pause\n";
+			else
+				badInput();
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
