@@ -472,12 +472,7 @@ namespace WVM {
 	}
 
 	bool VM::checkWritable() {
-		if (pagingOn && !lastMeta.writable) {
-			intProtec();
-			return false;
-		}
-
-		return true;
+		return !pagingOn || lastMeta.writable;
 	}
 
 	void VM::setTimer(UWord microseconds) {
