@@ -139,6 +139,7 @@ namespace WVM::Operations {
 					case FN_SLEEP: sleepOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_PRB:     prbOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_REST:   restOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_IO:       ioOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_TIME: timeOp(vm, rs, rt, rd, conditions, flags); return;
@@ -1082,6 +1083,11 @@ namespace WVM::Operations {
 
 	void restOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
 		vm.rest();
+	}
+
+	void ioOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		// TODO
+		vm.increment();
 	}
 
 	void selOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {

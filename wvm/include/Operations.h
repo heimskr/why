@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <set>
 
 #include "Defs.h"
@@ -138,6 +139,7 @@ namespace WVM::Operations {
 	void sleepOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 31 ?R 7
 	void prbOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 31 ?R 8
 	void restOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 31 ?R 9
+	void ioOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 31 ?R 10
 
 	void selOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 56  R
 	void pgoffOp(VM &, Word &, Word &, Word &, Conditions, int flags);               // 61  R 0
@@ -303,6 +305,8 @@ namespace WVM::Operations {
 #define FN_PRB 8
 #define OP_REST OP_REXT
 #define FN_REST 9
+#define OP_IO OP_REXT
+#define FN_IO 10
 
 #define OP_INT 32
 #define OP_RIT 33
@@ -357,4 +361,12 @@ namespace WVM::Operations {
 #define INT_PROTEC		3
 #define INT_PROTEC_FROM	0
 #define INT_PROTEC_TO	2
+
+#define IO_DEVCOUNT  0
+#define IO_SEEKABS   1
+#define IO_SEEKREL   2
+#define IO_READ      3
+#define IO_WRITE     4
+#define IO_GETSIZE   5
+#define IO_GETCURSOR 6
 }
