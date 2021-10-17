@@ -113,10 +113,12 @@ namespace WVM::Mode {
 		};
 
 		vm.onPlayStart = [this] {
+			setFastForward(true);
 			broadcast(":Log Playing...");
 		};
 
 		vm.onPlayEnd = [this] {
+			setFastForward(false);
 			broadcast(":Log Paused.");
 		};
 	}
