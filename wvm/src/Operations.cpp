@@ -1159,6 +1159,48 @@ namespace WVM::Operations {
 					}
 					break;
 				}
+				case IO_WRITE: { // TODO: verify this too.
+					if (!valid_id) {
+						setReg(vm, e0, 1);
+					} else {
+						size_t address = a2, remaining = a3, total_bytes_written = 0;
+						const int fd = vm.fds.at(device_id);
+						const size_t memsize = vm.getMemorySize();
+
+						while (0 < remaining) {
+							const size_t mod = address % VM::PAGE_SIZE;
+
+							bool translate_success;
+							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
+							if (!translate_success) {
+								vm.intPfault();
+								return;
+							}
+
+							if (memsize <= translated) {
+								break;
+							} else {
+								const size_t diff = memsize - translated;
+								if (diff < remaining)
+									remaining = diff;
+							}
+
+							const size_t to_write = std::min(mod? mod : VM::PAGE_SIZE, remaining); // And this.
+							const ssize_t bytes_written = ::write(fd, &vm.memory[translated], to_write);
+
+							if (bytes_written < 0)
+								setReg(vm, e0, errno + 1, false);
+							if (bytes_written <= 0)
+								break;
+							remaining -= size_t(bytes_written);
+							address += size_t(bytes_written);
+							total_bytes_written += size_t(bytes_written);
+						}
+
+						setReg(vm, r0, total_bytes_written);
+					}
+					break;
+				}
 				default:
 					setReg(vm, e0, 666, false);
 			}
