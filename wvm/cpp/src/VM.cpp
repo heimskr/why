@@ -431,18 +431,13 @@ namespace WVM {
 
 	void VM::setTimer(UWord microseconds) {
 		timerThread = std::thread([this](UWord microseconds, size_t id) {
-			std::cerr << "Timer thread " << id << " starting.\n";
 			timerStart = getMilliseconds();
 			std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 			if (timerThreadID == id) {
-				std::cerr << "Timer thread " << id << " finishing.\n";
 				auto lock = lockVM();
 				bufferChange<RegisterChange>(*this, REG_E + 2, microseconds);
 				intTimer();
-			} else {
-				std::cerr << "Timer thread " << id << " superseded.\n";
 			}
-			std::cerr << "Timer thread " << id << " finished.\n";
 		}, microseconds, ++timerThreadID);
 		timerThread.detach();
 	}
