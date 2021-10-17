@@ -210,6 +210,7 @@
 				<li><a href="#ext-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
 				<li><a href="#ext-sleep">Sleep</a> (<code>sleep</code>)</li>
 				<li><a href="#ext-prb">Print Binary</a> (<code>prb</code>)</li>
+				<li><a href="#ext-rest">Rest</a> (<code>rest</code>)</li>
 			</ol>
 		</li>
 	</ol>
@@ -1229,3 +1230,9 @@ Syntax: `<prb $rs>`
 Function value: `000000001000`
 
 Prints the number stored in `rs` to the console as a binary number.
+
+### <a name="ext-rest"></a>Rest
+Syntax: `<rest>`  
+Function value: `000000001001`
+
+Pauses execution until an interrupt occurs.
