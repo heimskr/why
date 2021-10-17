@@ -214,8 +214,10 @@ namespace WVM::Mode {
 			else
 				badInput();
 		} else if (first == "h" || first == "hist" || first == "history") {
-			if (size != 1 || (split[0] != "on" && split[0] != "off"))
+			if (1 < size || (size == 1 && split[0] != "on" && split[0] != "off"))
 				badInput();
+			else if (size == 0)
+				*socket << ":History toggle\n";
 			else
 				*socket << ":History " << split[0] << "\n";
 		} else if (text.front() == ':') {
