@@ -208,6 +208,7 @@
 				<li><a href="#ext-prc">Print Character</a> (<code>prc</code>)</li>
 				<li><a href="#ext-prd">Print Decimal</a> (<code>prd</code>)</li>
 				<li><a href="#ext-prx">Print Hexadecimal</a> (<code>prx</code>)</li>
+				<li><a href="#ext-sleep">Sleep</a> (<code>sleep</code>)</li>
 				<li><a href="#ext-prb">Print Binary</a> (<code>prb</code>)</li>
 			</ol>
 		</li>
@@ -1217,8 +1218,14 @@ Function value: `000000000110`
 
 Prints the number stored in `rs` to the console as a hexadecimal number.
 
+### <a name="ext-sleep"></a>Sleep
+Syntax: `<sleep $rs>`  
+Function value: `000000000111`
+
+Sleeps for the number of microseconds stored in `rs`.
+
 ### <a name="ext-prb"></a>Print Binary
 Syntax: `<prb $rs>`  
-Function value: `000000000111`
+Function value: `000000001000`
 
 Prints the number stored in `rs` to the console as a binary number.
