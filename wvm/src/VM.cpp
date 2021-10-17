@@ -3,6 +3,9 @@
 #include <iomanip>
 #include <iostream>
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "lib/ansi.h"
 #include "Operations.h"
 #include "Registers.h"
@@ -17,6 +20,12 @@
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
+
+	VM::~VM() {
+		for (int fd: fds)
+			if (::close(fd) == -1)
+				std::cerr << "Couldn't close " << fd << ": " << strerror(errno) << "\n";
+	}
 
 	bool VM::getZ() { return (st() & 0b0001) != 0; }
 	bool VM::getN() { return (st() & 0b0010) != 0; }
@@ -502,11 +511,11 @@ namespace WVM {
 		return 0 < breakpoints.count(breakpoint);
 	}
 
-	void VM::load(const std::string &path) {
-		load(std::filesystem::path(path));
+	void VM::load(const std::string &path, const std::vector<std::string> &disks) {
+		load(std::filesystem::path(path), disks);
 	}
 
-	void VM::load(const std::filesystem::path &path) {
+	void VM::load(const std::filesystem::path &path, const std::vector<std::string> &disks) {
 		loadedFrom = path;
 		std::ifstream stream;
 #ifdef CATCH_OPEN
@@ -515,7 +524,7 @@ namespace WVM {
 			stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 			stream.open(path);
 			stream.exceptions(std::ifstream::goodbit);
-			load(stream);
+			load(stream, disks);
 			stream.close();
 #ifdef CATCH_OPEN
 		} catch (std::exception &err) {
@@ -525,7 +534,15 @@ namespace WVM {
 #endif
 	}
 
-	void VM::load(std::istream &stream) {
+	void VM::load(std::istream &stream, const std::vector<std::string> &disks) {
+		for (const std::string &disk: disks) {
+			const int fd = open(disk.c_str(), O_RDWR);
+			if (fd == -1)
+				std::cerr << "Couldn't open " << disk << ": " << strerror(errno) << "\n";
+			else
+				fds.push_back(fd);
+		}
+
 		std::string line;
 		int lineno = 0;
 		memory.clear();

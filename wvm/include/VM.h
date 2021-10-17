@@ -42,6 +42,7 @@ namespace WVM {
 			std::atomic<bool> playing = false;
 			std::mutex restMutex;
 			std::condition_variable restCondition;
+			std::vector<int> fds;
 
 			bool getZ();
 			bool getN();
@@ -86,6 +87,7 @@ namespace WVM {
 			std::function<void()> onPlayStart = [] {}, onPlayEnd = [] {};
 
 			VM(size_t memory_size, bool keep_initial = true);
+			~VM();
 
 			Word translateAddress(Word virtual_address, bool *success = nullptr, PageMeta *meta_out = nullptr);
 
@@ -136,9 +138,9 @@ namespace WVM {
 			const std::unordered_set<Word> & getBreakpoints() const;
 			bool hasBreakpoint(Word) const;
 
-			void load(const std::string &);
-			void load(const std::filesystem::path &);
-			void load(std::istream &);
+			void load(const std::string &, const std::vector<std::string> &disks = {});
+			void load(const std::filesystem::path &, const std::vector<std::string> &disks = {});
+			void load(std::istream &, const std::vector<std::string> &disks = {});
 			void init();
 			void reset(bool reload = false);
 			void loadSymbols();

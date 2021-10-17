@@ -20,7 +20,8 @@ void sigint_handler(int) {
 
 namespace WVM::Mode {
 	ServerMode * ServerMode::instance = nullptr;
-	void ServerMode::run(const std::string &path) {
+
+	void ServerMode::run(const std::string &path, const std::vector<std::string> &disks) {
 		instance = this;
 		server.messageHandler = [&](int client, const std::string &message) { handleMessage(client, message); };
 		ansi::out << ansi::info << "ServerMode is running on port " << ansi::style::bold << server.getPort()
@@ -31,7 +32,7 @@ namespace WVM::Mode {
 			port_stream << server.getPort();
 			port_stream.close();
 		}
-		vm.load(path);
+		vm.load(path, disks);
 		initVM();
 		signal(SIGINT, sigint_handler);
 		server.onEnd = [this](int client, int) { cleanupClient(client); };

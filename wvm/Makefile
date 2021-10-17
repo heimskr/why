@@ -37,8 +37,11 @@ $(OUT): $(OBJECTS)
 
 test: memtest
 
+disk.img:
+	dd if=/dev/zero of=disk.img bs=1024 count=10240
+
 servertest: $(OUT)
-	./$(OUT) server $(TESTFILE)
+	./$(OUT) server $(TESTFILE) disk.img
 
 consoletest: $(OUT)
 	./$(OUT) console 127.0.0.1 `cat .port`

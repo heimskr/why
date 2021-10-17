@@ -15,8 +15,11 @@
 std::optional<WVM::Mode::ServerMode> server;
 
 void usage() {
-	std::cerr << "Usage:\n- wvm server <executable>\n- wvm registers <hostname> <port>\n- wvm memory <hostname> <port>"
-	          << "\n- wvm console <hostname> <port>\n";
+	std::cerr << "Usage:\n"
+	          << "- wvm server <executable> [files]...\n"
+	          << "- wvm registers <hostname> <port>\n"
+	          << "- wvm memory <hostname> <port>\n"
+	          << "- wvm console <hostname> <port>\n";
 }
 
 int main(int argc, char **argv) {
@@ -36,8 +39,10 @@ int main(int argc, char **argv) {
 		srand(time(NULL));
 		server.emplace(rand() % 65535);
 		signal(SIGINT, +[](int) { server->stop(); });
+		const std::vector<std::string> files(argv + 3, argv + argc);
+
 		try {
-			server->run(argv[2]);
+			server->run(argv[2], files);
 		} catch (const WVM::Net::NetError &err) {
 			if (err.statusCode != 4) // Interrupted system call
 				std::cerr << err.what() << "\n";
