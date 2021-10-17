@@ -1,6 +1,6 @@
-#ifndef WVM_MODE_SERVERMODE_H_
-#define WVM_MODE_SERVERMODE_H_
+#pragma once
 
+#include <mutex>
 #include <set>
 
 #include "mode/Mode.h"
@@ -16,6 +16,7 @@ namespace WVM::Mode {
 			              bpSubscribers, pagingSubscribers, p0Subscribers;
 			std::set<Word> writtenAddresses;
 			bool logMemoryWrites = false, logRegisters = false;
+			std::mutex subscriberMutex;
 
 			void setFastForward(bool);
 			void broadcast(const std::string &);
@@ -31,7 +32,7 @@ namespace WVM::Mode {
 			void cleanupClient(int);
 			void stop();
 			void handleMessage(int, const std::string &);
+
+			std::unique_lock<std::mutex> lockSubscribers() { return std::unique_lock(subscriberMutex); }
 	};
 }
-
-#endif
