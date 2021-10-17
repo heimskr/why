@@ -213,6 +213,11 @@ namespace WVM::Mode {
 				*socket << ":Pause\n";
 			else
 				badInput();
+		} else if (first == "h" || first == "hist" || first == "history") {
+			if (size != 1 || (split[0] != "on" && split[0] != "off"))
+				badInput();
+			else
+				*socket << ":History " << split[0] << "\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {
