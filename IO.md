@@ -60,6 +60,7 @@ Queries the capacity of a device.
 - 1 return value: capacity of device in bytes
 - Can fail
 	- 1: invalid device ID
+	- errno + 1: couldn't find size
 
 ### `getcursor` (6)
 
@@ -69,3 +70,4 @@ Queries a device's cursor position.
 - 1 return value: cursor position in bytes
 - Can fail
 	- 1: invalid device ID
+	- errno + 1: couldn't find cursor

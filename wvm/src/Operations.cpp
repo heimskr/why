@@ -1098,27 +1098,32 @@ namespace WVM::Operations {
 
 			switch (a0) {
 				case IO_DEVCOUNT:
-					setReg(vm, r0, vm.fds.size());
+					setReg(vm, e0, 0, false);
+					setReg(vm, r0, vm.fds.size(), false);
 					break;
+
 				case IO_SEEKABS:
 					if (!valid_id)
-						setReg(vm, e0, 1);
+						setReg(vm, e0, 1, false);
 					else if (lseek(vm.fds.at(device_id), a2, SEEK_SET) == -1)
-						setReg(vm, e0, 2);
+						setReg(vm, e0, 2, false);
 					break;
+
 				case IO_SEEKREL:
 					if (!valid_id)
-						setReg(vm, e0, 1);
+						setReg(vm, e0, 1, false);
 					else if (lseek(vm.fds.at(device_id), a2, SEEK_CUR) == -1)
-						setReg(vm, e0, 2);
+						setReg(vm, e0, 2, false);
 					break;
+
 				case IO_READ: { // TODO: verify. This code is suspicious.
 					if (!valid_id) {
-						setReg(vm, e0, 1);
+						setReg(vm, e0, 1, false);
 					} else {
 						size_t address = a2, remaining = a3, total_bytes_read = 0;
 						const int fd = vm.fds.at(device_id);
 						const size_t memsize = vm.getMemorySize();
+						setReg(vm, e0, 0, false);
 
 						while (0 < remaining) {
 							const size_t mod = address % VM::PAGE_SIZE; // Especially this.
@@ -1155,17 +1160,20 @@ namespace WVM::Operations {
 							total_bytes_read += size_t(bytes_read);
 						}
 
-						setReg(vm, r0, total_bytes_read);
+						setReg(vm, r0, total_bytes_read, false);
 					}
+
 					break;
 				}
+
 				case IO_WRITE: { // TODO: verify this too.
 					if (!valid_id) {
-						setReg(vm, e0, 1);
+						setReg(vm, e0, 1, false);
 					} else {
 						size_t address = a2, remaining = a3, total_bytes_written = 0;
 						const int fd = vm.fds.at(device_id);
 						const size_t memsize = vm.getMemorySize();
+						setReg(vm, e0, 0, false);
 
 						while (0 < remaining) {
 							const size_t mod = address % VM::PAGE_SIZE;
@@ -1197,10 +1205,38 @@ namespace WVM::Operations {
 							total_bytes_written += size_t(bytes_written);
 						}
 
-						setReg(vm, r0, total_bytes_written);
+						setReg(vm, r0, total_bytes_written, false);
 					}
+
 					break;
 				}
+
+				case IO_GETSIZE: {
+					if (!valid_id) {
+						setReg(vm, e0, 1);
+					} else {
+						const int fd = vm.fds.at(device_id);
+						const off_t old_cursor = lseek(fd, 0, SEEK_CUR);
+						if (old_cursor == -1) {
+							setReg(vm, e0, errno + 1);
+							break;
+						}
+
+						const off_t end_cursor = lseek(fd, 0, SEEK_END);
+						if (end_cursor == -1) {
+							setReg(vm, e0, errno + 1);
+							break;
+						}
+
+						setReg(vm, r0, Word(end_cursor), false);
+	
+						const off_t result = lseek(fd, old_cursor, SEEK_SET);
+						setReg(vm, e0, result == -1? errno + 1 : 0, false);
+					}
+
+					break;
+				}
+
 				default:
 					setReg(vm, e0, 666, false);
 			}
