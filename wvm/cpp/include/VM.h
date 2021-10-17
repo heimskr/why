@@ -26,7 +26,7 @@ namespace WVM {
 			std::filesystem::path loadedFrom;
 			size_t memorySize;
 			bool keepInitial;
-			bool active = false;
+			std::atomic<bool> active = false;
 			size_t cycles = 0;
 			std::unordered_set<Word> breakpoints;
 			std::vector<std::vector<std::unique_ptr<Change>>> undoStack;
@@ -37,6 +37,8 @@ namespace WVM {
 			std::atomic<size_t> timerThreadID = 0;
 			std::thread timerThread;
 			std::chrono::milliseconds timerStart;
+			std::thread playThread;
+			std::atomic<bool> playing = false;
 
 			bool getZ();
 			bool getN();
@@ -112,6 +114,8 @@ namespace WVM {
 			bool intTimer();
 			void start();
 			void stop();
+			bool play(size_t microdelay = 0);
+			bool pause();
 			bool undo();
 			bool redo();
 			bool getActive() const { return active; }
