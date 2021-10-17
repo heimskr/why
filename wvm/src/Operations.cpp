@@ -1213,18 +1213,18 @@ namespace WVM::Operations {
 
 				case IO_GETSIZE: {
 					if (!valid_id) {
-						setReg(vm, e0, 1);
+						setReg(vm, e0, 1, false);
 					} else {
 						const int fd = vm.fds.at(device_id);
 						const off_t old_cursor = lseek(fd, 0, SEEK_CUR);
 						if (old_cursor == -1) {
-							setReg(vm, e0, errno + 1);
+							setReg(vm, e0, errno + 1, false);
 							break;
 						}
 
 						const off_t end_cursor = lseek(fd, 0, SEEK_END);
 						if (end_cursor == -1) {
-							setReg(vm, e0, errno + 1);
+							setReg(vm, e0, errno + 1, false);
 							break;
 						}
 
@@ -1234,6 +1234,18 @@ namespace WVM::Operations {
 						setReg(vm, e0, result == -1? errno + 1 : 0, false);
 					}
 
+					break;
+				}
+
+				case IO_GETCURSOR: {
+					if (!valid_id) {
+						setReg(vm, e0, 1, false);
+					} else {
+						const off_t cursor = lseek(vm.fds.at(device_id), 0, SEEK_CUR);
+						setReg(vm, e0, cursor == -1? errno + 1 : 0, false);
+						if (cursor != -1)
+							setReg(vm, r0, cursor, false);
+					}
 					break;
 				}
 
