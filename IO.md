@@ -8,9 +8,9 @@ Note that `read` and `write` are incompatible with WVM's history functionality. 
 
 ### `devcount` (0)
 
-Queries the number of attached "drives."
+Queries the number of attached drives.
 
-- 0 arguments
+- No arguments
 - 1 return value: device count
 - Cannot fail
 
@@ -18,39 +18,53 @@ Queries the number of attached "drives."
 
 Seeks to an absolute position.
 
-- 2 arguments: device ID, position to seek to
+- 2 arguments:
+	1. Device ID
+	2. Position to seek to
 - 0 return values
 - Can fail
-	- 1: invalid device ID
-	- 2: invalid position
+	- 1: Invalid device ID
+	- 2: Invalid position
 
 ### `seekrel` (2)
 
 Seeks relative to the current position.
 
-- 2 arguments: device ID, # bytes to skip (positive or negative)
+- 2 arguments:
+	1. Device ID
+	2. \# bytes to skip (positive or negative)
 - 1 return value: new position
 - Can fail
-	- 1: invalid device ID
-	- 2: invalid position
+	- 1: Invalid device ID
+	- 2: Invalid position
 
 ### `read` (3)
 
 Reads from a device.
 
-- 3 arguments: device ID, address of buffer to read into, # bytes to read
+- 3 arguments:
+	1. Device ID
+	2. Address of buffer to read into
+	3. \# bytes to read
 - 1 return value: # bytes read
 - Can fail
-	- 1: invalid device ID
-	- errno + 1: read failed
+	- 1: Invalid device ID
+	- 2 & PFAULT: A page fault occurred while writing to the buffer
+	- 3 & BWRITE: The page containing part of the buffer is unwritable
+	- errno + 3: Read failed
 
 ### `write` (4)
 
-- 3 arguments: device ID, address of buffer to write from, # bytes to write
+Writes to a device.
+
+- 3 arguments:
+	1. Device ID
+	2. Address of buffer to write from
+	3. \# bytes to write
 - 1 return value: # bytes written
 - Can fail
-	- 1: invalid device ID
-	- errno + 1: write failed
+	- 1: Invalid device ID
+	- 2 & PFAULT: A page fault occurred while reading from the buffer	- errno + 2: Write failed
 
 ### `getsize` (5)
 
@@ -59,8 +73,8 @@ Queries the capacity of a device.
 - 1 argument: device ID
 - 1 return value: capacity of device in bytes
 - Can fail
-	- 1: invalid device ID
-	- errno + 1: couldn't find size
+	- 1: Invalid device ID
+	- errno + 1: Couldn't find size
 
 ### `getcursor` (6)
 
@@ -69,5 +83,19 @@ Queries a device's cursor position.
 - 1 argument: device ID
 - 1 return value: cursor position in bytes
 - Can fail
-	- 1: invalid device ID
-	- errno + 1: couldn't find cursor
+	- 1: Invalid device ID
+	- errno + 1: Couldn't find cursor
+
+### `getname` (7)
+
+Queries a device's name.
+
+- 3 arguments:
+	1. Device ID
+	2. Address of buffer to store device name in
+	3. Size of buffer in bytes
+- 1 return value: number of bytes in the name (excluding null terminator)
+- Can fail
+	- 1: Invalid device ID
+	- 2 + PFAULT: A page fault occurred while writing to the buffer
+	- 3 + BWRITE: The page containing part of the buffer is unwritable
