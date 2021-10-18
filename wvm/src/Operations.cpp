@@ -1107,13 +1107,23 @@ namespace WVM::Operations {
 						setReg(vm, e0, 1, false);
 					else if (lseek(vm.fds.at(device_id), a2, SEEK_SET) == -1)
 						setReg(vm, e0, 2, false);
+					else
+						setReg(vm, e0, 0, false);
 					break;
 
 				case IO_SEEKREL:
-					if (!valid_id)
+					if (!valid_id) {
 						setReg(vm, e0, 1, false);
-					else if (lseek(vm.fds.at(device_id), a2, SEEK_CUR) == -1)
-						setReg(vm, e0, 2, false);
+					} else {
+						const ssize_t result = lseek(vm.fds.at(device_id), a2, SEEK_CUR);
+						if (result == -1) {
+							setReg(vm, e0, 2, false);
+						} else {
+							setReg(vm, e0, 0, false);
+							setReg(vm, r0, result, false);
+						}
+					}
+
 					break;
 
 				case IO_READ: { // TODO: verify. This code is suspicious.
