@@ -9,5 +9,6 @@ namespace Wasmc::Why {
 		{"write",     4},
 		{"getsize",   5},
 		{"getcursor", 6},
+		{"getname",   7},
 	};
 }
