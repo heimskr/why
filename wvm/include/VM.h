@@ -21,6 +21,12 @@
 #include "Why.h"
 
 namespace WVM {
+	struct Drive {
+		const std::string name;
+		const int fd;
+		Drive(const std::string &name_, int fd_): name(name_), fd(fd_) {}
+	};
+
 	class VM {
 		private:
 			std::vector<UByte> initial;
@@ -64,8 +70,7 @@ namespace WVM {
 			std::map<std::string, Symbol> symbolTable;
 			std::map<Word, DebugData> debugMap;
 			std::map<int, const std::string *> debugFiles, debugFunctions;
-			std::vector<int> fds;
-			std::vector<std::string> diskNames;
+			std::vector<Drive> drives;
 			Word symbolsOffset = -1;
 			Word  codeOffset = -1;
 			Word  dataOffset = -1;

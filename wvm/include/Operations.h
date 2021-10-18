@@ -369,4 +369,5 @@ namespace WVM::Operations {
 #define IO_WRITE     4
 #define IO_GETSIZE   5
 #define IO_GETCURSOR 6
+#define IO_GETNAME   7
 }

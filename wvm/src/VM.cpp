@@ -22,9 +22,9 @@ namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
 
 	VM::~VM() {
-		for (int fd: fds)
-			if (::close(fd) == -1)
-				std::cerr << "Couldn't close " << fd << ": " << strerror(errno) << "\n";
+		for (const Drive &drive: drives)
+			if (::close(drive.fd) == -1)
+				std::cerr << "Couldn't close " << drive.name << " (" << drive.fd << "): " << strerror(errno) << "\n";
 	}
 
 	bool VM::getZ() { return (st() & 0b0001) != 0; }
@@ -532,12 +532,10 @@ namespace WVM {
 	void VM::load(std::istream &stream, const std::vector<std::string> &disks) {
 		for (const std::string &disk: disks) {
 			const int fd = open(disk.c_str(), O_RDWR);
-			if (fd == -1) {
+			if (fd == -1)
 				std::cerr << "Couldn't open " << disk << ": " << strerror(errno) << "\n";
-			} else {
-				fds.push_back(fd);
-				diskNames.push_back(disk);
-			}
+			else
+				drives.emplace_back(disk, fd);
 		}
 
 		std::string line;

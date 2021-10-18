@@ -1094,18 +1094,18 @@ namespace WVM::Operations {
 			Word &r0 = vm.registers[Why::returnValueOffset], &e0 = vm.registers[Why::exceptionOffset];
 
 			const size_t device_id = size_t(a1);
-			const bool valid_id = device_id < vm.fds.size();
+			const bool valid_id = device_id < vm.drives.size();
 
 			switch (a0) {
 				case IO_DEVCOUNT:
 					setReg(vm, e0, 0, false);
-					setReg(vm, r0, vm.fds.size(), false);
+					setReg(vm, r0, vm.drives.size(), false);
 					break;
 
 				case IO_SEEKABS:
 					if (!valid_id)
 						setReg(vm, e0, 1, false);
-					else if (lseek(vm.fds.at(device_id), a2, SEEK_SET) == -1)
+					else if (lseek(vm.drives.at(device_id).fd, a2, SEEK_SET) == -1)
 						setReg(vm, e0, 2, false);
 					else
 						setReg(vm, e0, 0, false);
@@ -1115,7 +1115,7 @@ namespace WVM::Operations {
 					if (!valid_id) {
 						setReg(vm, e0, 1, false);
 					} else {
-						const ssize_t result = lseek(vm.fds.at(device_id), a2, SEEK_CUR);
+						const ssize_t result = lseek(vm.drives.at(device_id).fd, a2, SEEK_CUR);
 						if (result == -1) {
 							setReg(vm, e0, 2, false);
 						} else {
@@ -1131,7 +1131,7 @@ namespace WVM::Operations {
 						setReg(vm, e0, 1, false);
 					} else {
 						size_t address = a2, remaining = a3, total_bytes_read = 0;
-						const int fd = vm.fds.at(device_id);
+						const int fd = vm.drives.at(device_id).fd;
 						const size_t memsize = vm.getMemorySize();
 						setReg(vm, e0, 0, false);
 
@@ -1141,11 +1141,13 @@ namespace WVM::Operations {
 							bool translate_success;
 							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
 							if (!translate_success) {
+								setReg(vm, e0, 2, false);
 								vm.intPfault();
 								return;
 							}
 
 							if (!vm.checkWritable()) {
+								setReg(vm, e0, 3, false);
 								vm.intBwrite();
 								return;
 							}
@@ -1162,7 +1164,7 @@ namespace WVM::Operations {
 							const ssize_t bytes_read = ::read(fd, &vm.memory[translated], to_read);
 
 							if (bytes_read < 0)
-								setReg(vm, e0, errno + 1, false);
+								setReg(vm, e0, errno + 3, false);
 							if (bytes_read <= 0)
 								break;
 							remaining -= size_t(bytes_read);
@@ -1181,7 +1183,7 @@ namespace WVM::Operations {
 						setReg(vm, e0, 1, false);
 					} else {
 						size_t address = a2, remaining = a3, total_bytes_written = 0;
-						const int fd = vm.fds.at(device_id);
+						const int fd = vm.drives.at(device_id).fd;
 						const size_t memsize = vm.getMemorySize();
 						setReg(vm, e0, 0, false);
 
@@ -1191,6 +1193,7 @@ namespace WVM::Operations {
 							bool translate_success;
 							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
 							if (!translate_success) {
+								setReg(vm, e0, 2, false);
 								vm.intPfault();
 								return;
 							}
@@ -1207,7 +1210,7 @@ namespace WVM::Operations {
 							const ssize_t bytes_written = ::write(fd, &vm.memory[translated], to_write);
 
 							if (bytes_written < 0)
-								setReg(vm, e0, errno + 1, false);
+								setReg(vm, e0, errno + 2, false);
 							if (bytes_written <= 0)
 								break;
 							remaining -= size_t(bytes_written);
@@ -1225,7 +1228,7 @@ namespace WVM::Operations {
 					if (!valid_id) {
 						setReg(vm, e0, 1, false);
 					} else {
-						const int fd = vm.fds.at(device_id);
+						const int fd = vm.drives.at(device_id).fd;
 						const off_t old_cursor = lseek(fd, 0, SEEK_CUR);
 						if (old_cursor == -1) {
 							setReg(vm, e0, errno + 1, false);
@@ -1251,11 +1254,61 @@ namespace WVM::Operations {
 					if (!valid_id) {
 						setReg(vm, e0, 1, false);
 					} else {
-						const off_t cursor = lseek(vm.fds.at(device_id), 0, SEEK_CUR);
+						const off_t cursor = lseek(vm.drives.at(device_id).fd, 0, SEEK_CUR);
 						setReg(vm, e0, cursor == -1? errno + 1 : 0, false);
 						if (cursor != -1)
 							setReg(vm, r0, cursor, false);
 					}
+					break;
+				}
+
+				case IO_GETNAME: {
+					if (!valid_id) {
+						setReg(vm, e0, 1, false);
+					} else {
+						const std::string &name = vm.drives.at(a1).name;
+						const char *c_str = name.c_str();
+						size_t address = a2, remaining = std::min(size_t(a2), name.size() + 1), total_bytes_read = 0;
+						const size_t memsize = vm.getMemorySize();
+						setReg(vm, e0, 0, false);
+
+						while (0 < remaining) {
+							const size_t mod = address % VM::PAGE_SIZE;
+
+							bool translate_success;
+							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
+							if (!translate_success) {
+								setReg(vm, e0, 2, false);
+								vm.intPfault();
+								return;
+							}
+
+							if (!vm.checkWritable()) {
+								setReg(vm, e0, 3, false);
+								vm.intBwrite();
+								return;
+							}
+
+							if (memsize <= translated) {
+								break;
+							} else {
+								const size_t diff = memsize - translated;
+								if (diff < remaining)
+									remaining = diff;
+							}
+
+							const size_t to_read = std::min(mod? mod : VM::PAGE_SIZE, remaining);
+							std::memcpy(&vm.memory[translated], c_str + total_bytes_read, to_read);
+
+							remaining -= to_read;
+							address += to_read;
+							total_bytes_read += to_read;
+						}
+
+						// Don't include the null terminator in the byte count
+						setReg(vm, r0, 0 < total_bytes_read? total_bytes_read - 1 : 0, false);
+					}
+
 					break;
 				}
 
