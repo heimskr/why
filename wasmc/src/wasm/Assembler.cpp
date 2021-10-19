@@ -463,7 +463,6 @@ namespace Wasmc {
 					break;
 				case WASMTOK_LCURLY:
 				case WASM_ARRAYTYPE:
-					std::cerr << "struct/array\n";
 					if (!current->empty())
 						for (const ASTNode *aggregatevalue: *current->front())
 							stack.push_back(aggregatevalue);
