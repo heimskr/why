@@ -30,6 +30,7 @@ namespace WVM::Operations {
 	std::set<int> JSet {OP_J, OP_JC};
 
 	void execute(VM &vm, UWord instruction) {
+		instruction = Util::swapEndian(instruction);
 		auto lock = vm.lockVM();
 		int opcode = (instruction >> 52) & 0xfff;
 		if (opcode == OP_NOP) {
