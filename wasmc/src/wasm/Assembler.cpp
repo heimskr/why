@@ -392,9 +392,9 @@ namespace Wasmc {
 				pieces.push_back(0);
 
 			for (size_t i = 0; i < pieces.size(); i += 8)
-				data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
-					(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
-					(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
+				data.push_back(Long(pieces[i + 7])   | (Long(pieces[i + 6]) <<  8l) | (Long(pieces[i + 5]) << 16l) |
+					(Long(pieces[i + 4]) << 24l)     | (Long(pieces[i + 3]) << 32l) | (Long(pieces[i + 2]) << 40l) |
+					(Long(pieces[i + 1]) << 48l)     | (Long(pieces[i]) << 56l));
 
 			dataLength += pieces.size();
 		}
