@@ -19,7 +19,7 @@ namespace Wasmc {
 
 		std::string line;
 		while (std::getline(stream, line))
-			raw.push_back(Util::parseUlong(line, 16));
+			raw.push_back(Util::swapEndian(Util::parseUlong(line, 16)));
 	}
 
 	AnyBase * BinaryParser::parse(const Long instruction) {
@@ -188,8 +188,12 @@ namespace Wasmc {
 					++removed;
 				}
 
-				for (size_t offset = removed; offset < sizeof(piece); ++offset)
-					symbol_name += static_cast<char>((piece >> (8 * (sizeof(piece) - offset - 1))) & 0xff);
+				for (size_t offset = removed; offset < sizeof(piece); ++offset) {
+					char ch = static_cast<char>((piece >> (8 * offset)) & 0xff);
+					if (ch == '\0')
+						break;
+					symbol_name += ch;
+				}
 			}
 
 			out.try_emplace(symbol_name, id, address, type);

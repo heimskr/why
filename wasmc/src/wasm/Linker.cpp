@@ -44,7 +44,7 @@ namespace Wasmc {
 			std::vector<Long> longs;
 			std::string line;
 			while (std::getline(stream, line))
-				longs.push_back(Util::parseUlong(line, 16));
+				longs.push_back(Util::swapEndian(Util::parseUlong(line, 16)));
 			if (firstDone)
 				subunits.push_back(longs);
 			else
@@ -250,11 +250,11 @@ namespace Wasmc {
 			const auto type = value.type;
 			if (type == SymbolEnum::KnownPointer || type == SymbolEnum::UnknownPointer) {
 				const auto index = address / 8;
-				const std::string ptr = findSymbolFromID(combined[index], table);
+				const std::string ptr = findSymbolFromID(combined[index] & 0xffffffff, table);
 				if (table.count(ptr) != 0)
 					combined[index] = table.at(ptr).address;
 				else
-					warn() << "Couldn't find pointer for " << key << ".\n";
+					warn() << "Couldn't find pointer for \e[1m" << key << "\e[22m.\n";
 			}
 		}
 	}
@@ -312,10 +312,14 @@ namespace Wasmc {
 	}
 
 	std::string Linker::findSymbolFromID(uint32_t id, const SymbolTable &table) {
-		for (const auto &[symbol, entry]: table)
+		// std::cerr << "\e[32m" << Util::toHex(id) << "\e[39m\n";
+		for (const auto &[symbol, entry]: table) {
+			// std::cerr << symbol << " -> [\e[1m" << Util::toHex(entry.id) << "\e[22m, " << entry.address << "]\n";
+			// std::cerr << Util::toHex(__builtin_bswap32(id)) << "(id:swap), " << Util::toHex(id) << "(id), " << Util::toHex(entry.id) << "(entry.id)\n";
 			if (entry.id == id)
 				return symbol;
-		return "";
+		}
+		return "[?]";
 	}
 
 	size_t Linker::countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &entries) {
@@ -391,7 +395,7 @@ namespace Wasmc {
 
 		for (const auto &[symbol, entry]: table) {
 			out.push_back((static_cast<uint64_t>(Assembler::encodeSymbol(symbol)) << 32)
-				| Util::updiv(symbol.size(), size_t(8)));
+				| (Util::updiv(symbol.size(), size_t(8)) & 0xffff) | (size_t(entry.type) << 16));
 			out.push_back(entry.address);
 			for (const Long piece: Util::getLongs(symbol))
 				out.push_back(piece);

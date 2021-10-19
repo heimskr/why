@@ -20,6 +20,7 @@ ptr: &table
 table: (7 # #fn*) [#i8 0, #i8 0, &_Z5timerv, #i8 0, &_Z9pagefaultv, &_Z6inexecv, &_Z6bwritev]
 nothing: (1)
 str: "Hey there."
+
 #code
 
 @_ZN1A1aEv
@@ -38,4 +39,30 @@ str: "Hey there."
 <>
 @_Z6bwritev
 <>
+
+@fizzbuzz_loop
+	$s0 % 3 -> $t0
+	$s0 % 5 -> $t1
+
+	<prd $s0>
+	<p ": ">
+
+	: fizzbuzz_fizz_done if $t0
+	<p "Fizz">
+
+	@fizzbuzz_fizz_done
+	: fizzbuzz_buzz_done if $t1
+	<p "Buzz">
+
+	@fizzbuzz_buzz_done
+	<prc '\n'>
+	$s0++
+	: fizzbuzz_done if $s0 == $s1
+	: fizzbuzz_loop
+
+@fizzbuzz_done
+	<p "Done.\n">
+	<halt>
+
+
 <halt>

@@ -1,4 +1,3 @@
-#include <bit>
 #include <cctype>
 #include <climits>
 #include <cstdlib>
