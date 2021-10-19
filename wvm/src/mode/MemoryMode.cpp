@@ -198,7 +198,7 @@ namespace WVM::Mode {
 
 	std::string MemoryMode::stringify(Word address) const {
 		std::stringstream ss;
-		UWord word = vm.getWord(address, Endianness::Big);
+		UWord word = vm.getWord(address, Endianness::Little);
 
 		bool at_sp = vm.sp() - (vm.sp() % 8) == address;
 		if (at_sp)
@@ -214,7 +214,8 @@ namespace WVM::Mode {
 		ss << "[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
 		
 		std::stringstream hex_ss;
-		hex_ss << std::setw(16) << std::setfill('0') << std::hex << word;
+		for (int i = 0; i < 8; ++i)
+			hex_ss << std::right << std::setw(2) << std::setfill('0') << std::hex << ((word >> (8 * i)) & 0xff);
 		std::string hex = hex_ss.str();
 		if (at_sp) {
 			int offset = vm.sp() % 8;
@@ -240,7 +241,7 @@ namespace WVM::Mode {
 			} else if (symbolTableEdges.count(address - 8) == 1) {
 				ss << word;
 			} else if (symbolTableEdges.count(address - 16) == 1) {
-				ss << "\e[35m" << vm.getString(address, 8 * vm.getQuarterword(address - 10, Endianness::Big))
+				ss << "\e[35m" << vm.getString(address, 8 * vm.getQuarterword(address - 16, Endianness::Little))
 				   << "\e[39m";
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
@@ -263,7 +264,7 @@ namespace WVM::Mode {
 		symbolTableEdges.clear();
 		symbolTableEdges.insert(vm.symbolsOffset);
 		for (Word i = vm.symbolsOffset; i < vm.codeOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
-			i += 16 + 8 * vm.getQuarterword(i + 6, Endianness::Big);
+			i += 16 + 8 * vm.getQuarterword(i, Endianness::Little);
 			if (i < vm.codeOffset)
 				symbolTableEdges.insert(i);
 		}
@@ -297,6 +298,7 @@ namespace WVM::Mode {
 			if (size < 2 || !Util::parseLong(split[0], start) || !Util::parseLong(split[1], count)
 			    || static_cast<Word>(size) != 2 + count) {
 				DBG("Invalid MemoryWords content: [" << rest << "]");
+				DBG(Word(size) << ", " << 2 << " + " << count);
 				return;
 			}
 

@@ -62,4 +62,8 @@ namespace WVM::Util {
 		ss << ptr;
 		return ss.str();
 	}
+
+	uint64_t swapEndian(uint64_t n) {
+		return __builtin_bswap64(n);
+	}
 }

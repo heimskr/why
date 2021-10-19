@@ -15,6 +15,8 @@ namespace WVM {
 		std::string toHex(const void *);
 		std::string toHex(size_t, int pad);
 
+		uint64_t swapEndian(uint64_t n);
+
 		template <typename T>
 		inline T upalign(T num, long alignment) {
 			return num + ((alignment - (num % alignment)) % alignment);
