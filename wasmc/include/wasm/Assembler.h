@@ -42,6 +42,8 @@ namespace Wasmc {
 			static Long compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition);
 
 		private:
+			static size_t assemblerCount;
+
 			const ASTNode *root;
 			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
 			std::vector<Long> meta, data, code, symbolTable, debugData, assembled;
@@ -52,7 +54,7 @@ namespace Wasmc {
 			size_t dataLength = 0;
 			bool verbose = false;
 			/** Used in naming anonymous pointers (i.e., pointer members of structs and arrays). */
-			const std::string randomID;
+			const std::string id;
 			size_t anonymousPointerCount = 0;
 
 			const std::vector<Long> & getAssembled() const { return assembled; }

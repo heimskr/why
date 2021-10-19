@@ -15,7 +15,9 @@
 #include "wasm/Why.h"
 
 namespace Wasmc {
-	Assembler::Assembler(const ASTNode *root_): root(root_), randomID(std::to_string(rand() % 100000)) {}
+	size_t Assembler::assemblerCount = 0;
+
+	Assembler::Assembler(const ASTNode *root_): root(root_), id(std::to_string(assemblerCount++)) {}
 
 	std::string Assembler::assemble() {
 		wasmParser.errorCount = 0;
@@ -195,7 +197,7 @@ namespace Wasmc {
 
 	void Assembler::reprocessData() {
 		for (const auto &[key, ref]: dataVariables)
-			data.at(dataOffsets.at(key) / 8) = offsets.at(ref);
+			data.at(dataOffsets.at(key) / 8) = offsets.count(ref) == 0? encodeSymbol(ref) : offsets.at(ref);
 	}
 
 	void Assembler::setDataOffsets() {
@@ -281,7 +283,8 @@ namespace Wasmc {
 				type = offsets.count(ptr)? SymbolEnum::KnownPointer : SymbolEnum::UnknownPointer;
 				if (!offsets.count(ptr) && !unknownSymbols.count(ptr)) {
 					const size_t index = (offsets.at(label) - metaOffsetData()) / 8;
-					data.resize(index, 0);
+					if (data.size() < index)
+						data.resize(index, 0);
 					data[index] = encodeSymbol(ptr);
 				}
 			}
@@ -451,7 +454,7 @@ namespace Wasmc {
 						dataVariables[node->lexerInfo] = current->front()->lexerInfo;
 					} else {
 						// "asm" here stands for "array/struct member."
-						const std::string *new_label = StringSet::intern("_asm_" + randomID + "_" +
+						const std::string *new_label = StringSet::intern("_asm_" + id + "_" +
 							std::to_string(anonymousPointerCount++));
 						labels.insert(new_label);
 						dataVariables[new_label] = current->front()->lexerInfo;
