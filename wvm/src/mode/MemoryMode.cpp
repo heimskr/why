@@ -240,7 +240,8 @@ namespace WVM::Mode {
 			} else if (symbolTableEdges.count(address - 8) == 1) {
 				ss << word;
 			} else if (symbolTableEdges.count(address - 16) == 1) {
-				ss << "\e[35m" << vm.getString(address, 8 * vm.getHalfword(address - 12, Endianness::Big)) << "\e[39m";
+				ss << "\e[35m" << vm.getString(address, 8 * vm.getQuarterword(address - 10, Endianness::Big))
+				   << "\e[39m";
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
 			ss << Unparser::stringify(word, &vm);
