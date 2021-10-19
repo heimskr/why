@@ -1,3 +1,4 @@
+#include <bit>
 #include <cctype>
 #include <climits>
 #include <cstdlib>
@@ -51,11 +52,13 @@ namespace Wasmc {
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
 		std::stringstream ss;
 		bool first = true;
-		for (const Long piece: longs) {
+		for (Long piece: longs) {
 			if (first)
 				first = false;
 			else
 				ss << "\n";
+			if (std::endian::native == std::endian::little)
+				piece = Util::swapEndian(piece);
 			ss << std::hex << std::right << std::setw(16) << std::setfill('0') << piece;
 		}
 		return ss.str();
@@ -391,10 +394,14 @@ namespace Wasmc {
 			while (padding--)
 				pieces.push_back(0);
 
-			for (size_t i = 0; i < pieces.size(); i += 8)
-				data.push_back(Long(pieces[i + 7])   | (Long(pieces[i + 6]) <<  8l) | (Long(pieces[i + 5]) << 16l) |
-					(Long(pieces[i + 4]) << 24l)     | (Long(pieces[i + 3]) << 32l) | (Long(pieces[i + 2]) << 40l) |
-					(Long(pieces[i + 1]) << 48l)     | (Long(pieces[i]) << 56l));
+			for (size_t i = 0; i < pieces.size(); i += 8) {
+				// data.push_back(Long(pieces[i + 7]) | (Long(pieces[i + 6]) <<  8l) | (Long(pieces[i + 5]) << 16l) |
+				// 	(Long(pieces[i + 4]) << 24l)   | (Long(pieces[i + 3]) << 32l) | (Long(pieces[i + 2]) << 40l) |
+				// 	(Long(pieces[i + 1]) << 48l)   | (Long(pieces[i]) << 56l));
+				data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
+					(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
+					(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
+			}
 
 			dataLength += pieces.size();
 		}
@@ -408,7 +415,7 @@ namespace Wasmc {
 
 		auto add = [&](Long value) {
 			for (int i = 0; i < 8; ++i) {
-				bytes.push_back((value >> (8 * i)) & 0xff);
+				bytes.push_back((value >> (8 * (7 - i))) & 0xff);
 				++data_length;
 			}
 		};

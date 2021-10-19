@@ -19,6 +19,7 @@ _ZTV1C: {
 ptr: &table
 table: (7 # #fn*) [#i8 0, #i8 0, &_Z5timerv, #i8 0, &_Z9pagefaultv, &_Z6inexecv, &_Z6bwritev]
 nothing: (1)
+str: "Hey there."
 #code
 
 @_ZN1A1aEv
