@@ -1,0 +1,23 @@
+#meta
+
+name: "Structs/Arrays Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#data
+
+_ZTV1A: {
+	(4 # #i8*) [#i8 0, #i8 0, &_ZN1A1aEv, &__cxa_pure_virtual]
+}
+_ZTV1B: {
+	(4 # #i8*) [#i8 0, #i8 0, &_ZN1B1aEv, &__cxa_pure_virtual]
+}
+_ZTV1C: {
+	(4 # #i8*) [#i8 0, #i8 0, &_ZN1B1aEv, &_ZN1C1bEv]
+}
+table: (7 # #fn*) [#i8 0, #i8 0, &_Z5timerv, #i8 0, &_Z9pagefaultv, &_Z6inexecv, &_Z6bwritev]
+
+#code
+
+<halt>
