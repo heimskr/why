@@ -262,7 +262,7 @@ namespace WVM::Mode {
 		symbolTableEdges.clear();
 		symbolTableEdges.insert(vm.symbolsOffset);
 		for (Word i = vm.symbolsOffset; i < vm.codeOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
-			i += 16 + 8 * vm.getHalfword(i + 4, Endianness::Big);
+			i += 16 + 8 * vm.getQuarterword(i + 6, Endianness::Big);
 			if (i < vm.codeOffset)
 				symbolTableEdges.insert(i);
 		}
