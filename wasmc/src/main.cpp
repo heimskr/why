@@ -10,6 +10,8 @@
 #include "wasm/Assembler.h"
 #include "wasm/Linker.h"
 
+// #define CATCH_ASSEMBLE
+
 int link(int argc, char **argv);
 int test();
 int assemble(int argc, char **argv);
@@ -140,13 +142,17 @@ int assemble(int argc, char **argv) {
 	std::ofstream outfile(argv[2]);
 	if (!outfile.is_open())
 		throw std::runtime_error("Couldn't open file for writing");
+#ifdef CATCH_ASSEMBLE
 	try {
+#endif
 		outfile << assembler.assemble();
+#ifdef CATCH_ASSEMBLE
 	} catch (const std::exception &err) {
 		Wasmc::error() << "Compilation failed: " << err.what() << "\n";
 		outfile.close();
 		return 3;
 	}
+#endif
 
 	outfile.close();
 	Wasmc::success() << "Assembled \e[1m" << argv[1] << "\e[22m and saved the results to \e[1m" << argv[2]

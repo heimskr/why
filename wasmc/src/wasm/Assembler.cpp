@@ -34,9 +34,13 @@ namespace Wasmc {
 		debugData = createDebugData(debugNode, expanded);
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
 
+		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		setDataOffsets();
+		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		reprocessData();
+		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		processCode(expandLabels(expanded));
+		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		symbolTable = createSymbolTable(allLabels, false);
 
 		assembled.clear();
@@ -194,13 +198,17 @@ namespace Wasmc {
 	}
 
 	void Assembler::reprocessData() {
-		for (const auto &[key, ref]: dataVariables)
+		for (const auto &[key, ref]: dataVariables) {
+			std::cerr << "trying " << *ref << "\n";
 			data.at(dataOffsets.at(key) / 8) = offsets.at(ref);
+		}
 	}
 
 	void Assembler::setDataOffsets() {
-		for (const auto &[name, offset]: dataOffsets)
+		for (const auto &[name, offset]: dataOffsets) {
+			std::cerr << "offsets[" << *name << "] = " << (offset + metaOffsetData()) << "\n";
 			offsets[name] = offset + metaOffsetData();
+		}
 	}
 
 	void Assembler::validateSectionCounts() {
@@ -426,6 +434,10 @@ namespace Wasmc {
 					std::cerr << "number(" << static_cast<Long>(current->atoi()) << ")\n";
 					add(static_cast<Long>(current->atoi()));
 					break;
+				case WASMTOK_INT_TYPE:
+					std::cerr << "int(" << static_cast<Long>(current->front()->atoi()) << ")\n";
+					add(static_cast<Long>(current->front()->atoi()));
+					break;
 				case WASMTOK_STRING: {
 					std::cerr << "string(" << *current->lexerInfo << ")\n";
 					const std::string str = current->unquote() + '\0';
@@ -462,10 +474,14 @@ namespace Wasmc {
 					add(0);
 					break;
 				case WASMTOK_LCURLY:
-				case WASM_ARRAYTYPE:
 					if (!current->empty())
-						for (const ASTNode *aggregatevalue: *current->front())
-							stack.push_back(aggregatevalue);
+						for (const ASTNode *structvalue: *current->front())
+							stack.push_back(structvalue);
+					break;
+				case WASM_ARRAYTYPE:
+					if (!current->empty() && 2 < current->size())
+						for (const ASTNode *arrayvalue: *current->at(2))
+							stack.push_back(arrayvalue);
 					break;
 				default:
 					current->debug();
