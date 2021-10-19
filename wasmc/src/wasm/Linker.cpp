@@ -345,11 +345,11 @@ namespace Wasmc {
 				if (0xffffff < length)
 					throw std::runtime_error("Value for type " + std::to_string(static_cast<int>(type)) + " is too long"
 						" (" + std::to_string(length) + " characters)");
-				std::vector<char> bytes {
-					static_cast<char>(type),
-					static_cast<char>(length & 0xff),
-					static_cast<char>((length >> 8) & 0xff),
-					static_cast<char>((length >> 16) & 0xff)
+				std::vector<uint8_t> bytes {
+					static_cast<uint8_t>(type),
+					static_cast<uint8_t>(length & 0xff),
+					static_cast<uint8_t>((length >> 8) & 0xff),
+					static_cast<uint8_t>((length >> 16) & 0xff)
 				};
 				bytes.insert(bytes.end(), value->begin(), value->end());
 				for (const Long piece: Util::getLongs(bytes))
@@ -366,7 +366,7 @@ namespace Wasmc {
 					warn() << "Column number too high: " << location.column << "\n";
 				if (0xffffff < location.functionIndex)
 					warn() << "Function index too high: " << location.functionIndex << "\n";
-				std::vector<char> bytes {static_cast<char>(type)};
+				std::vector<uint8_t> bytes {static_cast<uint8_t>(type)};
 				auto add = [&](size_t number, char byte_count) {
 					for (char i = 0; i < byte_count; ++i)
 						bytes.push_back((number >> (8 * i)) & 0xff);
@@ -377,6 +377,7 @@ namespace Wasmc {
 				bytes.push_back(location.count);
 				add(location.functionIndex, 4);
 				add(location.address, 8);
+
 				for (const Long piece: Util::getLongs(bytes))
 					out.push_back(piece);
 			} else
