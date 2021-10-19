@@ -312,13 +312,9 @@ namespace Wasmc {
 	}
 
 	std::string Linker::findSymbolFromID(uint32_t id, const SymbolTable &table) {
-		// std::cerr << "\e[32m" << Util::toHex(id) << "\e[39m\n";
-		for (const auto &[symbol, entry]: table) {
-			// std::cerr << symbol << " -> [\e[1m" << Util::toHex(entry.id) << "\e[22m, " << entry.address << "]\n";
-			// std::cerr << Util::toHex(__builtin_bswap32(id)) << "(id:swap), " << Util::toHex(id) << "(id), " << Util::toHex(entry.id) << "(entry.id)\n";
+		for (const auto &[symbol, entry]: table)
 			if (entry.id == id)
 				return symbol;
-		}
 		return "[?]";
 	}
 

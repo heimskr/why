@@ -40,6 +40,9 @@ str: "Hey there."
 @_Z6bwritev
 <>
 
+0 -> $s0
+1000 -> $s1
+
 @fizzbuzz_loop
 	$s0 % 3 -> $t0
 	$s0 % 5 -> $t1
@@ -57,7 +60,8 @@ str: "Hey there."
 	@fizzbuzz_buzz_done
 	<prc '\n'>
 	$s0++
-	: fizzbuzz_done if $s0 == $s1
+	$s0 == $s1 -> $t2
+	: fizzbuzz_done if $t2
 	: fizzbuzz_loop
 
 @fizzbuzz_done
