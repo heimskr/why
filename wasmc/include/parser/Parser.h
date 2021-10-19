@@ -15,7 +15,6 @@ namespace Wasmc {
 			std::string filename;
 			char *buffer = nullptr;
 			YY_BUFFER_STATE bufferState = nullptr;
-			const char * getNameLLVM(int symbol);
 			const char * getNameWASM(int symbol);
 
 		public:

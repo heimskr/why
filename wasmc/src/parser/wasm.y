@@ -193,12 +193,12 @@ _data_sep: ":" | { $$ = nullptr; };
 
 value: arrayvalue | structvalue | ptrvalue | intvalue;
 intvalue: inttype number { $$ = $1->adopt($2); };
-arrayvalue: arraytype "(" ")" { D($2, $3); }
-          | arraytype "(" aggregatelist ")" { $$ = $1->adopt($3); D($2, $4); };
-structvalue: "{" aggregatelist "}" { $$ = $1->adopt($2); D($3); };
+arrayvalue: arraytype "[" "]" { D($2, $3); }
+          | arraytype "[" aggregatelist "]" { $$ = $1->adopt($3); D($2, $4); };
+structvalue: "{" _newlines aggregatelist _newlines "}" { $$ = $1->adopt($3); D($2, $4, $5); };
 ptrvalue: "&" ident { $$ = $1->adopt($2); };
 
-aggregatelist: aggregatelist "," value { $$ = $1->adopt($3); D($2); }
+aggregatelist: aggregatelist "," _newlines value { $$ = $1->adopt($4); D($2, $3); }
              | value { $$ = (new AN(wasmParser, WASM_AGGREGATELIST))->adopt($1, true); }
 
 type: arraytype | structtype | ptrtype | inttype | functiontype;

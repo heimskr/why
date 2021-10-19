@@ -19,7 +19,7 @@ namespace Wasmc {
 			throw std::runtime_error("Can't add file: path doesn't exist");
 
 		std::ifstream stream(path);
-		if (!stream.is_open())
+		if (!stream)
 			throw std::runtime_error("Couldn't open file for reading");
 
 		paths.insert(path);
@@ -56,7 +56,10 @@ namespace Wasmc {
 			firstDone = true;
 			std::string text;
 			stream.seekg(0, std::ios::end);
-			text.reserve(stream.tellg());
+			const std::streampos tellg = stream.tellg();
+			if (tellg == -1 || !stream)
+				throw std::runtime_error("Input stream is in an invalid state");
+			text.reserve(tellg);
 			stream.seekg(0, std::ios::beg);
 			text.assign((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 			stream.close();

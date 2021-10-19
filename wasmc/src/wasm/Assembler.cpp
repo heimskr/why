@@ -1,5 +1,7 @@
 #include <cctype>
 #include <climits>
+#include <cstdlib>
+#include <deque>
 #include <iomanip>
 #include <iostream>
 #include <variant>
@@ -13,16 +15,17 @@
 #include "wasm/Why.h"
 
 namespace Wasmc {
-	Assembler::Assembler(const ASTNode *root_): root(root_) {}
+	Assembler::Assembler(const ASTNode *root_): root(root_), randomID(std::to_string(rand() % 100000)) {}
 
 	std::string Assembler::assemble() {
 		wasmParser.errorCount = 0;
 		meta.resize(5, 0);
 		validateSectionCounts();
 		findAllLabels();
-		symbolTable = createSymbolTable(allLabels, true);
 		processMetadata();
-		processData();
+		processData(allLabels);
+		symbolTable = createSymbolTable(allLabels, true);
+		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
 
 		auto expanded = expandCode();
 		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
@@ -361,10 +364,9 @@ namespace Wasmc {
 			meta.push_back(piece);
 
 		metaOffsetSymbols() = meta.size() * 8;
-		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
 	}
 
-	void Assembler::processData() {
+	void Assembler::processData(std::unordered_set<const std::string *> &labels) {
 		if (!dataNode)
 			return;
 
@@ -380,37 +382,103 @@ namespace Wasmc {
 				dataOffsets.emplace(ident, dataLength);
 			}
 
-			const auto pieces = convertDataPieces(node);
-			for (const Long piece: pieces)
-				data.push_back(piece);
-			dataLength += pieces.size() * 8;
+			std::vector<uint8_t> pieces = convertDataPieces(dataLength, node, labels);
+
+			int padding = (8 - (pieces.size() % 8)) % 8;
+			while (padding--)
+				pieces.push_back(0);
+
+			for (size_t i = 0; i < pieces.size(); i += 8)
+				data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
+					(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
+					(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
+
+			dataLength += pieces.size();
 		}
 	}
 
-	std::vector<Long> Assembler::convertDataPieces(const ASTNode *node) {
+	std::vector<uint8_t> Assembler::convertDataPieces(size_t data_length, const ASTNode *node,
+	                                                  std::unordered_set<const std::string *> &labels) {
 		const ASTNode *child = node->front();
 		static_assert(sizeof(Long) == sizeof(double));
-		switch (child->symbol) {
-			case WASMTOK_FLOAT: {
-				double parsed = Util::parseDouble(child->lexerInfo);
-				return {*reinterpret_cast<Long *>(&parsed)};
+		std::vector<uint8_t> bytes;
+
+		auto add = [&](Long value) {
+			for (int i = 0; i < 8; ++i) {
+				bytes.push_back((value >> (8 * i)) & 0xff);
+				++data_length;
 			}
-			case WASMTOK_NUMBER:
-				return {static_cast<Long>(child->atoi())};
-			case WASMTOK_STRING: {
-				std::string str = child->unquote();
-				str.push_back('\0');
-				return Util::getLongs(str);
+		};
+
+		std::deque<const ASTNode *> stack {child};
+		size_t processed = 0;
+		while (!stack.empty()) {
+			const ASTNode *current = stack.front();
+			stack.pop_front();
+			switch (current->symbol) {
+				case WASMTOK_FLOAT: {
+					double parsed = Util::parseDouble(current->lexerInfo);
+					std::cerr << "float(" << parsed << ")\n";
+					add(*reinterpret_cast<Long *>(&parsed));
+					break;
+				}
+				case WASMTOK_NUMBER:
+					std::cerr << "number(" << static_cast<Long>(current->atoi()) << ")\n";
+					add(static_cast<Long>(current->atoi()));
+					break;
+				case WASMTOK_STRING: {
+					std::cerr << "string(" << *current->lexerInfo << ")\n";
+					const std::string str = current->unquote() + '\0';
+					bytes.insert(bytes.end(), str.cbegin(), str.cend());
+					data_length += str.size();
+					break;
+				}
+				case WASMTOK_LPAR: {
+					std::cerr << "gap(" << current->front()->atoi() << ")\n";
+					const long count = current->front()->atoi();
+					for (long i = 0; i < count; ++i) {
+						bytes.push_back(0);
+						++data_length;
+					}
+					break;
+				}
+				case WASMTOK_AND:
+					std::cerr << "pointer(" << *current->front()->lexerInfo << ")\n";
+					// Pointers have to be 8-padded?
+					while (data_length % 8) {
+						bytes.push_back(0);
+						++data_length;
+					}
+					if (processed == 0) { // i.e., if we're not a struct/array member
+						dataVariables[node->lexerInfo] = current->front()->lexerInfo;
+					} else {
+						// "asm" here stands for "array/struct member."
+						const std::string *new_label = StringSet::intern("_asm_" + randomID + "_" +
+							std::to_string(anonymousPointerCount++));
+						labels.insert(new_label);
+						dataVariables[new_label] = current->front()->lexerInfo;
+						dataOffsets.emplace(new_label, data_length);
+					}
+					add(0);
+					break;
+				case WASMTOK_LCURLY:
+				case WASM_ARRAYTYPE:
+					std::cerr << "struct/array\n";
+					if (!current->empty())
+						for (const ASTNode *aggregatevalue: *current->front())
+							stack.push_back(aggregatevalue);
+					break;
+				default:
+					current->debug();
+					throw std::runtime_error("Unexpected symbol (" + std::to_string(current->symbol) + ") found in data"
+						" section at " + std::string(current->location) + ": " +
+						std::string(wasmParser.getName(current->symbol)));
 			}
-			case WASMTOK_LPAR:
-				return Util::getLongs(std::string(child->front()->atoi(), '\0'));
-			case WASMTOK_AND:
-				dataVariables[node->lexerInfo] = child->front()->lexerInfo;
-				return {0};
-			default:
-				throw std::runtime_error("Unexpected symbol found in data section at " + std::string(child->location)
-					+ ": " + std::string(wasmParser.getName(child->symbol)));
+
+			++processed;
 		}
+
+		return bytes;
 	}
 
 	Statements Assembler::expandCode() {

@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -14,6 +15,7 @@ int test();
 int assemble(int argc, char **argv);
 
 int main(int argc, char **argv) {
+	srand(time(nullptr));
 	if (1 < argc) {
 		if (strcmp(argv[1], "-l") == 0)
 			return link(argc, argv);

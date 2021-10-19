@@ -37,6 +37,12 @@ namespace Wasmc {
 		return std::make_unique<PointerType>(subtype.get());
 	}
 
+	FunctionType::FunctionType() {}
+
+	std::unique_ptr<Type> FunctionType::copy() const {
+		return std::make_unique<FunctionType>();
+	}
+
 	std::unique_ptr<Type> getType(const ASTNode *node) {
 		switch (node->symbol) {
 			case WASMTOK_INT_TYPE:
@@ -56,11 +62,5 @@ namespace Wasmc {
 			default:
 				throw std::runtime_error("Unknown symbol in getType: " + std::to_string(node->symbol));
 		}
-	}
-
-	FunctionType::FunctionType() {}
-
-	std::unique_ptr<Type> FunctionType::copy() const {
-		return std::make_unique<FunctionType>();
 	}
 }

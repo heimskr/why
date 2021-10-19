@@ -26,11 +26,12 @@ namespace Wasmc {
 		friend class Linker;
 
 		public:
-			/** Takes ownership of the ASTNode argument. */
+			/** Takes ownership of the ASTNode argument. It's recommended to call srand() beforehand. */
 			Assembler(const ASTNode *);
 
 			~Assembler() { delete root; }
 
+			/** Assembles the program and returns the compiled .why data. */
 			std::string assemble();
 
 			static Long compileR(Opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
@@ -50,6 +51,9 @@ namespace Wasmc {
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			size_t dataLength = 0;
 			bool verbose = false;
+			/** Used in naming anonymous pointers (i.e., pointer members of structs and arrays). */
+			const std::string randomID;
+			size_t anonymousPointerCount = 0;
 
 			const std::vector<Long> & getAssembled() const { return assembled; }
 
@@ -99,9 +103,10 @@ namespace Wasmc {
 
 			void processMetadata();
 
-			void processData();
+			void processData(std::unordered_set<const std::string *> &labels);
 
-			std::vector<Long> convertDataPieces(const ASTNode *);
+			std::vector<uint8_t> convertDataPieces(size_t data_length, const ASTNode *,
+				std::unordered_set<const std::string *> &);
 
 			Statements expandCode();
 
