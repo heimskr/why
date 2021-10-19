@@ -57,9 +57,8 @@ namespace Wasmc {
 				first = false;
 			else
 				ss << "\n";
-			if (std::endian::native == std::endian::little)
-				piece = Util::swapEndian(piece);
-			ss << std::hex << std::right << std::setw(16) << std::setfill('0') << piece;
+			for (int i = 0; i < 8; ++i)
+				ss << std::hex << std::right << std::setw(2) << std::setfill('0') << ((piece >> (8 * i)) & 0xff);
 		}
 		return ss.str();
 	}
@@ -292,7 +291,7 @@ namespace Wasmc {
 				}
 			}
 
-			out.push_back(length | (static_cast<int>(type) << 16) | (static_cast<uint64_t>(encodeSymbol(label)) << 32));
+			out.push_back(length | (static_cast<Long>(type) << 16) | (static_cast<Long>(encodeSymbol(label)) << 32));
 			out.push_back(skeleton? 0 : offsets.at(label));
 			for (const Long piece: Util::getLongs(*label))
 				out.push_back(piece);
@@ -395,9 +394,6 @@ namespace Wasmc {
 				pieces.push_back(0);
 
 			for (size_t i = 0; i < pieces.size(); i += 8) {
-				// data.push_back(Long(pieces[i + 7]) | (Long(pieces[i + 6]) <<  8l) | (Long(pieces[i + 5]) << 16l) |
-				// 	(Long(pieces[i + 4]) << 24l)   | (Long(pieces[i + 3]) << 32l) | (Long(pieces[i + 2]) << 40l) |
-				// 	(Long(pieces[i + 1]) << 48l)   | (Long(pieces[i]) << 56l));
 				data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
 					(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
 					(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));

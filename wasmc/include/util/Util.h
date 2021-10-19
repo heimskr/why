@@ -168,8 +168,11 @@ namespace Wasmc::Util {
 
 		uint8_t count = 0;
 		Long next = 0;
+		int index = 0;
 		for (auto ch: str) {
-			next = (next << 8) | static_cast<uint8_t>(ch);
+			next |= Long(ch) << (8 * index++);
+			index = index == 8? 0 : index;
+
 			if (++count == 8) {
 				out.push_back(next);
 				next = 0;
@@ -178,7 +181,7 @@ namespace Wasmc::Util {
 		}
 
 		if (count != 0)
-			out.push_back(next << (8 * (8 - count)));
+			out.push_back(next);
 
 		return out;
 	}
