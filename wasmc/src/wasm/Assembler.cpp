@@ -34,13 +34,9 @@ namespace Wasmc {
 		debugData = createDebugData(debugNode, expanded);
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
 
-		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		setDataOffsets();
-		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		reprocessData();
-		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		processCode(expandLabels(expanded));
-		std::cerr << __FILE__ << ":" << __LINE__ << std::endl;
 		symbolTable = createSymbolTable(allLabels, false);
 
 		assembled.clear();
@@ -198,17 +194,13 @@ namespace Wasmc {
 	}
 
 	void Assembler::reprocessData() {
-		for (const auto &[key, ref]: dataVariables) {
-			std::cerr << "trying " << *ref << "\n";
+		for (const auto &[key, ref]: dataVariables)
 			data.at(dataOffsets.at(key) / 8) = offsets.at(ref);
-		}
 	}
 
 	void Assembler::setDataOffsets() {
-		for (const auto &[name, offset]: dataOffsets) {
-			std::cerr << "offsets[" << *name << "] = " << (offset + metaOffsetData()) << "\n";
+		for (const auto &[name, offset]: dataOffsets)
 			offsets[name] = offset + metaOffsetData();
-		}
 	}
 
 	void Assembler::validateSectionCounts() {
@@ -426,27 +418,22 @@ namespace Wasmc {
 			switch (current->symbol) {
 				case WASMTOK_FLOAT: {
 					double parsed = Util::parseDouble(current->lexerInfo);
-					std::cerr << "float(" << parsed << ")\n";
 					add(*reinterpret_cast<Long *>(&parsed));
 					break;
 				}
 				case WASMTOK_NUMBER:
-					std::cerr << "number(" << static_cast<Long>(current->atoi()) << ")\n";
 					add(static_cast<Long>(current->atoi()));
 					break;
 				case WASMTOK_INT_TYPE:
-					std::cerr << "int(" << static_cast<Long>(current->front()->atoi()) << ")\n";
 					add(static_cast<Long>(current->front()->atoi()));
 					break;
 				case WASMTOK_STRING: {
-					std::cerr << "string(" << *current->lexerInfo << ")\n";
 					const std::string str = current->unquote() + '\0';
 					bytes.insert(bytes.end(), str.cbegin(), str.cend());
 					data_length += str.size();
 					break;
 				}
 				case WASMTOK_LPAR: {
-					std::cerr << "gap(" << current->front()->atoi() << ")\n";
 					const long count = current->front()->atoi();
 					for (long i = 0; i < count; ++i) {
 						bytes.push_back(0);
@@ -455,7 +442,6 @@ namespace Wasmc {
 					break;
 				}
 				case WASMTOK_AND:
-					std::cerr << "pointer(" << *current->front()->lexerInfo << ")\n";
 					// Pointers have to be 8-padded?
 					while (data_length % 8) {
 						bytes.push_back(0);
