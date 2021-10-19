@@ -9,6 +9,7 @@
 #include "parser/Lexer.h"
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
+#include "parser/Values.h"
 #include "wasm/Nodes.h"
 
 // Disable PVS-Studio warnings about branches that do the same thing.
@@ -141,6 +142,8 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_DEC "--"
 %token WASMTOK_REST "rest"
 %token WASMTOK_IO "io"
+%token WASMTOK_FUNCTION_TYPE "#fn"
+%token WASMTOK_INT_TYPE
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -149,7 +152,8 @@ using AN = Wasmc::ASTNode;
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
 %token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE WASM_RESTNODE
-%token WASM_IONODE
+%token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
+%token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST
 
 %start start
 
@@ -181,9 +185,31 @@ data_def: data_key WASMTOK_FLOAT { $$ = $1->adopt($2); }
         | data_key number { $$ = $1->adopt($2); }
         | data_key string { $$ = $1->adopt($2); }
         | data_key "(" number ")" { $$ = $1->adopt($2->adopt($3)); D($4); }
-        | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); };
+        | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); }
+        | data_key structvalue { $$ = $1->adopt($2); }
+        | data_key arrayvalue  { $$ = $1->adopt($2); };
 data_key: ident _data_sep { D($2); };
 _data_sep: ":" | { $$ = nullptr; };
+
+value: arrayvalue | structvalue | ptrvalue | intvalue;
+intvalue: inttype number { $$ = $1->adopt($2); };
+arrayvalue: arraytype "(" ")" { D($2, $3); }
+          | arraytype "(" aggregatelist ")" { $$ = $1->adopt($3); D($2, $4); };
+structvalue: "{" aggregatelist "}" { $$ = $1->adopt($2); D($3); };
+ptrvalue: "&" ident { $$ = $1->adopt($2); };
+
+aggregatelist: aggregatelist "," value { $$ = $1->adopt($3); D($2); }
+             | value { $$ = (new AN(wasmParser, WASM_AGGREGATELIST))->adopt($1, true); }
+
+type: arraytype | structtype | ptrtype | inttype | functiontype;
+arraytype: "(" number "#" type ")" { $1->adopt({$2, $4})->symbol = WASM_ARRAYTYPE; D($3, $5); };
+structtype: "{" _typelist "}" { $1->adopt($2)->symbol = WASM_STRUCTTYPE; D($3); };
+ptrtype: type "*" { $2->adopt($1)->symbol = WASM_POINTERTYPE; $$ = $2; };
+inttype: WASMTOK_INT_TYPE;
+functiontype: WASMTOK_FUNCTION_TYPE;
+typelist: typelist "," type { $$ = $1->adopt($3); D($2); }
+        | type { $$ = new AN(wasmParser, WASM_TYPELIST); };
+_typelist: typelist | { $$ = nullptr; };
 
 debug_section: "#debug" "\n" { D($2); }
              | debug_section debug_line "\n" { $$ = $1->adopt($2); D($3); }
@@ -216,7 +242,7 @@ label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
 call: ident "(" args ")" { $$ = new WASMCallNode($1, $3); D($2, $4); }
     | ident "(" ")"      { $$ = new WASMCallNode($1); D($2, $3); };
 args: args "," arg { $$ = $1->adopt($3); D($2); }
-    | arg { $$ = (new AN(Wasmc::wasmParser, WASM_ARGS))->adopt($1, true); };
+    | arg { $$ = (new AN(wasmParser, WASM_ARGS))->adopt($1, true); };
 arg: "&" ident { $$ = $1->adopt($2); }
    | "*" ident { $$ = $1->adopt($2); }
    | number

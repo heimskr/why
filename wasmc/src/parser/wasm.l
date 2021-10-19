@@ -20,23 +20,24 @@
 %option noyywrap
 %option warn
 
-WASM_LETTER				[A-Za-z_]
-WASM_DIGIT				[0-9]
-WASM_DECIMAL			([\-+]?{WASM_DIGIT}+)
-WASM_HEXADECIMAL		([\-+]?0x[a-fA-F0-9]+)
-WASM_FLOAT				([\-+]?((([0-9]*"."[0-9]+|[0-9]+"."[0-9]*)([eE][\-+]?[0-9]+)?)|([0-9]+[eE][\-+]?[0-9]+)))
-WASM_CHAR				('([^'\\\n]|("\\""\\"?[nratb])|\$[()])')
-WASM_NUMBER				({WASM_DECIMAL}|{WASM_HEXADECIMAL})
-WASM_IDENT				([-a-zA-Z._][-a-zA-Z._0-9]*)
-WASM_STRING				(\"([^\\"\n]|\\([\\'"nt]|x[0-9a-fA-F][0-9a-fA-F]))*\")
-WASM_SGCOMMENT			("//"[^\n]*)
-WASM_MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
-WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
-WASM_META_HEADER		("#meta"|"#m")
-WASM_INCLUDE_HEADER		("#includes"|"#include"|"#i")
-WASM_DATA_HEADER		("#data"|"#d")
-WASM_DEBUG_HEADER		("#debug"|"#dbg")
-WASM_CODE_HEADER		("#code"|"#c")
+WASM_LETTER             [A-Za-z_]
+WASM_DIGIT              [0-9]
+WASM_DECIMAL            ([\-+]?{WASM_DIGIT}+)
+WASM_HEXADECIMAL        ([\-+]?0x[a-fA-F0-9]+)
+WASM_FLOAT              ([\-+]?((([0-9]*"."[0-9]+|[0-9]+"."[0-9]*)([eE][\-+]?[0-9]+)?)|([0-9]+[eE][\-+]?[0-9]+)))
+WASM_CHAR               ('([^'\\\n]|("\\""\\"?[nratb])|\$[()])')
+WASM_NUMBER             ({WASM_DECIMAL}|{WASM_HEXADECIMAL})
+WASM_IDENT              ([-a-zA-Z._][-a-zA-Z._0-9]*)
+WASM_STRING             (\"([^\\"\n]|\\([\\'"nt]|x[0-9a-fA-F][0-9a-fA-F]))*\")
+WASM_SGCOMMENT          ("//"[^\n]*)
+WASM_MLCOMMENT          ("/*"([^*]|"*"[^/])*"*/")
+WASM_REG                ("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
+WASM_META_HEADER        ("#meta"|"#m")
+WASM_INCLUDE_HEADER     ("#includes"|"#include")
+WASM_DATA_HEADER        ("#data"|"#d")
+WASM_DEBUG_HEADER       ("#debug"|"#dbg")
+WASM_CODE_HEADER        ("#code"|"#c")
+WASM_INT_TYPE           ("#i"[0-9]+)
 
 %%
 
@@ -49,6 +50,8 @@ WASM_CODE_HEADER		("#code"|"#c")
 {WASM_CHAR}					{ WASMRTOKEN(CHAR) }
 {WASM_STRING}				{ WASMRTOKEN(STRING) }
 {WASM_FLOAT}				{ WASMRTOKEN(FLOAT) }
+
+{WASM_INT_TYPE}				{ WASMRTOKEN(INT_TYPE) }
 
 {WASM_META_HEADER}			{ WASMRTOKEN(META_HEADER) }
 {WASM_INCLUDE_HEADER}		{ WASMRTOKEN(INCLUDE_HEADER) }
@@ -106,6 +109,7 @@ WASM_CODE_HEADER		("#code"|"#c")
 "++"						{ WASMRTOKEN(INC) }
 "--"						{ WASMRTOKEN(DEC) }
 "io"						{ WASMRTOKEN(IO) }
+"#fn"						{ WASMRTOKEN(FUNCTION_TYPE) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
