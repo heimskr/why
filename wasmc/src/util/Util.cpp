@@ -23,10 +23,9 @@ namespace Wasmc::Util {
 	}
 
 	unsigned long parseUlong(const std::string &str, int base) {
-		const char *c_str = str.c_str();
-		char *end;
-		unsigned long parsed = strtoul(c_str, &end, base);
-		if (c_str + str.length() != end)
+		std::size_t pos;
+		unsigned long parsed = std::stoul(str, &pos, base);
+		if (pos != str.size())
 			throw std::invalid_argument("Not an integer: \"" + str + "\"");
 		return parsed;
 	}

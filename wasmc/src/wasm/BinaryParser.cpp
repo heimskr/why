@@ -161,7 +161,7 @@ namespace Wasmc {
 		std::string out;
 		out.reserve(sizeof(number));
 		for (size_t i = 0; i < sizeof(number); ++i)
-			out += static_cast<char>((number >> (8 * (sizeof(number) - i - 1))) & 0xff);
+			out += static_cast<char>((number >> (8 * i)) & 0xff);
 		return out;
 	}
 
@@ -209,7 +209,7 @@ namespace Wasmc {
 		const size_t start = offsets.debug / 8, end = offsets.end / 8;
 		Long piece;
 		const auto get = [&piece](unsigned char index) -> size_t {
-			return (piece >> (64 - 8 * (index + 1))) & 0xff;
+			return (piece >> (8 * index)) & 0xff;
 		};
 
 		for (size_t i = start; i < end; ++i) {
@@ -236,10 +236,10 @@ namespace Wasmc {
 				const uint8_t count = get(3);
 				const uint32_t function_index = get(4) | (get(5) << 8) | (get(6) << 16) | (get(7) << 24);
 				DebugLocation *location = new DebugLocation(file_index, line, column, function_index);
-				out.emplace_back(location->setCount(count)->setAddress(Util::swapEndian(raw[++i])));
+				out.emplace_back(location->setCount(count)->setAddress(raw[++i]));
 			} else {
 				throw std::runtime_error("Invalid debug data entry type (" + std::to_string(type) + ") at line "
-					+ std::to_string(i + 1) + " of " + std::to_string(raw.size()));
+					+ std::to_string(i + 1) + " of " + std::to_string(raw.size()) + " in " + name);
 			}
 		}
 
