@@ -425,8 +425,9 @@ namespace WVM::Mode {
 						address = vm.translateAddress(address);
 					const Word word = vm.getWord(address);
 					server.send(client, ":Log " + std::to_string(address) + ": " +
-						std::to_string(vm.getHalfword(address)) + " & " + std::to_string(vm.getHalfword(address + 4)) +
-						"; " + std::to_string(word) + " == " + Util::toHex(word));
+						std::to_string(vm.getByte(address)) + ", " + std::to_string(vm.getHalfword(address)) + " & " +
+						std::to_string(vm.getHalfword(address + 4)) + "; " + std::to_string(word) + " == " +
+						Util::toHex(word));
 				} catch (const std::exception &err) {
 					server.send(client, ":Error " + std::string(err.what()));
 				}
