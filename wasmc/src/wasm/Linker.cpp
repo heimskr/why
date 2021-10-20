@@ -315,7 +315,7 @@ namespace Wasmc {
 		for (const auto &[symbol, entry]: table)
 			if (entry.id == id)
 				return symbol;
-		return "[?]";
+		return "";
 	}
 
 	size_t Linker::countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &entries) {

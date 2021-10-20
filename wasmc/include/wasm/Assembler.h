@@ -32,7 +32,7 @@ namespace Wasmc {
 			~Assembler() { delete root; }
 
 			/** Assembles the program and returns the compiled .why data. */
-			std::string assemble();
+			std::string assemble(bool can_warn = true);
 
 			static Long compileR(Opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
 			                     uint8_t condition);

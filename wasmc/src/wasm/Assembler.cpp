@@ -19,7 +19,7 @@ namespace Wasmc {
 
 	Assembler::Assembler(const ASTNode *root_): root(root_), id(std::to_string(assemblerCount++)) {}
 
-	std::string Assembler::assemble() {
+	std::string Assembler::assemble(bool can_warn) {
 		wasmParser.errorCount = 0;
 		meta.resize(5, 0);
 		validateSectionCounts();
@@ -45,6 +45,18 @@ namespace Wasmc {
 		for (const auto &longs: {meta, symbolTable, code, data, debugData})
 			assembled.insert(assembled.end(), longs.begin(), longs.end());
 
+		if (can_warn && 0 < unknownSymbols.size()) {
+			std::cerr << " \e[1;33m?\e[22;39m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s") << ": ";
+			bool first = true;
+			for (const std::string *symbol: unknownSymbols) {
+				if (first)
+					first = false;
+				else
+					std::cerr << ", ";
+				std::cerr << "\e[1m" << *symbol << "\e[22m";
+			}
+			std::cerr << '\n';
+		}
 		return stringify(assembled);
 	}
 
