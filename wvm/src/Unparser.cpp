@@ -66,6 +66,8 @@ namespace WVM::Unparser {
 					case FN_OR:
 						if (rs == Why::zeroOffset)
 							return color(rt) + into + color(rd);
+						if (rt == Why::zeroOffset)
+							return color(rs) + into + color(rd);
 						oper = "|";
 						break;
 					case FN_XNOR:  oper = "~x";  break;
