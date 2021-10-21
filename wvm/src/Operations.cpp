@@ -56,7 +56,9 @@ namespace WVM::Operations {
 			HWord address;
 			decodeJType(instruction, rs, link, conditions, flags, address);
 			executeJType(opcode, vm, vm.registers[rs], link, conditions, flags, address);
-		} else throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
+		} else
+			throw std::runtime_error("Unknown opcode at " + std::to_string(vm.programCounter) + ": " +
+				std::to_string(opcode));
 	}
 
 	void executeRType(int opcode, VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags, int funct) {

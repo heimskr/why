@@ -455,7 +455,13 @@ namespace WVM {
 	bool VM::tick() {
 		auto lock = lockVM();
 		UWord instruction = getWord(programCounter, Endianness::Big);
-		Operations::execute(*this, instruction);
+		try {
+			Operations::execute(*this, instruction);
+		} catch (const std::exception &err) {
+			error() << "Error while ticking: " << err.what() << '\n';
+			paused = true;
+			return false;
+		}
 
 		++cycles;
 
