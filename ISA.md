@@ -25,6 +25,7 @@
 				<li><a href="#int-pfault"><code>PFAULT</code></a>
 				<li><a href="#int-inexec"><code>INEXEC</code></a>
 				<li><a href="#int-bwrite"><code>BWRITE</code></a>
+				<li><a href="#int-keybrd"><code>KEYBRD</code></a>
 			</ol>
 		</li>
 		<li><a href="#paging">Paging</a></li>
@@ -362,6 +363,13 @@ The `INEXEC` interrupt is raised if program control flows to an address whose pa
 
 ## <a name="int-bwrite"></a>6: `BWRITE`
 The `BWRITE` (bad write) interrupt is raised if paging is enabled and an instruction attempts to write to a nonwritable page.
+
+## <a name="int-keybrd"></a>7: `KEYBRD`
+The `KEYBRD` interrupt is raised when a key is pressed. The value of the key will be stored in `$e2` according to the format below. If this interrupt isn't set in the interrupt table, key presses will be ignored. This interrupt causes a switch to kernel mode.
+
+| Range       | 63–36 (28) | 35   | 34   | 33  | 32    | 31–0 (32)         |
+|------------:|:----------:|:----:|:----:|:---:|:-----:|:-----------------:|
+| **Purpose** | Unused     | Meta | Ctrl | Alt | Shift | Key value (UTF-8) |
 
 # <a name="format"></a>Instruction Format
 Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
