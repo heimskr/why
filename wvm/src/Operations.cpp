@@ -1085,6 +1085,7 @@ namespace WVM::Operations {
 	}
 
 	void restOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		vm.increment();
 		vm.rest();
 	}
 
