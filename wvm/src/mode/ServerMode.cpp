@@ -529,6 +529,13 @@ namespace WVM::Mode {
 			}
 
 			broadcast(":Log History recording turned " + std::string(vm.enableHistory? "on" : "off") + ".");
+		} else if (verb == "Keybrd") {
+			UWord key;
+			if (size != 2 || !Util::parseUL(split[1], key, 16)) {
+				invalid();
+				return;
+			}
+			vm.intKeybrd(key);
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
