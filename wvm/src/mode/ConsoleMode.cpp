@@ -60,7 +60,7 @@ namespace WVM::Mode {
 		if (verb == "Error") {
 			*textbox += errorPrefix + rest;
 		} else if (verb == "Subscribed") {
-			*textbox += std::string(infoPrefix) + "Subscribed to " + rest;
+			*textbox += std::string(infoPrefix) + "Subscribed to " + rest + ".";
 		} else if (verb == "Register") {
 			Word registerID, newValue;
 			if (split.size() != 2 || !Util::parseLong(split[0], registerID) || !Util::parseLong(split[1], newValue)) {
@@ -70,11 +70,16 @@ namespace WVM::Mode {
 				*textbox += infoPrefix + Why::coloredRegister(registerID) + " \e[2m<-\e[22m " +
 					std::to_string(newValue);
 		} else if (verb == "MemoryWord") {
-			std::string to_add = infoPrefix;
-			if (split.size() == 3)
-				to_add += "\e[2m(@ \e[1m" + split[2] + "\e[22;2m) ";
-			to_add += "\e[2m[" + split[0] + "] = \e[22m" + split[1];
-			*textbox += to_add;
+			UWord pc, address;
+			if (!Util::parseUL(split[2], pc) || !Util::parseUL(split[0], address)) {
+				*textbox += std::string(errorPrefix) + "Invalid message.";
+			} else if (filter.empty() || filter.count(address) != 0 || filter.count(pc) != 0) {
+				std::string to_add = infoPrefix;
+				if (split.size() == 3)
+					to_add += "\e[2m(@ \e[1m" + split[2] + "\e[22;2m) ";
+				to_add += "\e[2m[" + split[0] + "] = \e[22m" + split[1];
+				*textbox += to_add;
+			}
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
@@ -220,6 +225,39 @@ namespace WVM::Mode {
 				*socket << ":History toggle\n";
 			else
 				*socket << ":History " << split[0] << "\n";
+		} else if (first == "f" || first == "filt" || first == "filter") {
+			if (size == 0) {
+				std::string to_add = std::string(infoPrefix) + "Filtered addresses:";
+				for (UWord address: filter)
+					to_add += " " + std::to_string(address);
+				*textbox += to_add;
+			} else if (size != 2) {
+				badInput();
+			} else if (split[0] == "add" || split[0] == "remove" || split[0] == "+" || split[0] == "-") {
+				UWord address;
+				if (!Util::parseUL(split[1], address)) {
+					badInput();
+				} else {
+					const bool present = filter.count(address) != 0;
+					const std::string base = std::string(infoPrefix) + "Address \e[1m" + std::to_string(address) +
+						"\e[22m ";
+					if (split[0] == "add" || split[0] == "+") {
+						if (present) {
+							*textbox += base + "already in filter.";
+						} else {
+							filter.insert(address);
+							*textbox += base + "added to filter.";
+						}
+					} else {
+						if (present) {
+							filter.erase(address);
+							*textbox += base + "removed from filter.";
+						} else
+							*textbox += base + "not present in filter.";
+					}
+				}
+			} else
+				badInput();
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

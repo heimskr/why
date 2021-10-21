@@ -1,6 +1,6 @@
-#ifndef WVM_MODE_CONSOLEMODE_H_
-#define WVM_MODE_CONSOLEMODE_H_
+#pragma once
 
+#include <set>
 #include <thread>
 
 #include "haunted/core/Terminal.h"
@@ -8,6 +8,7 @@
 #include "haunted/ui/Textbox.h"
 #include "haunted/ui/TextInput.h"
 #include "mode/ClientMode.h"
+#include "Defs.h"
 
 namespace WVM::Mode {
 	class ConsoleMode: public ClientMode {
@@ -17,6 +18,9 @@ namespace WVM::Mode {
 			Haunted::UI::Boxes::ExpandoBox *expando;
 			Haunted::UI::VectorBox *textbox;
 			Haunted::UI::TextInput *input;
+			/** If this set isn't empty, then when subscribed to memory, only writes to addresses in the set will be
+			 *  displayed. */
+			std::set<UWord> filter;
 
 			void badInput(const std::string & = "Invalid");
 
@@ -29,5 +33,3 @@ namespace WVM::Mode {
 			void handleInput(const std::string &);
 	};
 }
-
-#endif
