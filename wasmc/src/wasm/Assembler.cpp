@@ -398,7 +398,7 @@ namespace Wasmc {
 			if (ident->front() == '"')
 				ident = StringSet::intern(node->unquote());
 			if (ident->front() != '%') {
-				if (true || verbose)
+				if (verbose)
 					std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
 				dataOffsets.emplace(ident, dataLength);
 			}
