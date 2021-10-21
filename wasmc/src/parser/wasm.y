@@ -188,7 +188,8 @@ data_def: data_key WASMTOK_FLOAT { $$ = $1->adopt($2); }
         | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); }
         | data_key structvalue { $$ = $1->adopt($2); }
         | data_key arrayvalue  { $$ = $1->adopt($2); };
-data_key: ident _data_sep { D($2); };
+data_key: ident _data_sep { D($2); }
+        | WASMTOK_STRING _data_sep { D($2); };
 _data_sep: ":" | { $$ = nullptr; };
 
 value: arrayvalue | structvalue | ptrvalue | intvalue;
@@ -379,6 +380,7 @@ op_ret: "!ret" { $$ = new WASMJrNode(Condition::None, false, "$rt"); D($1); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: "&" ident { $$ = $2; D($1); }
+          | "&" WASMTOK_STRING { $$ = $2; D($1); }
           | ident
           | number
           | character

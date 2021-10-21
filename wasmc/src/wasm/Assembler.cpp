@@ -263,10 +263,13 @@ namespace Wasmc {
 
 		if (dataNode) {
 			for (const ASTNode *node: *dataNode) {
-				if (node->symbol != WASMTOK_IDENT)
+				if (node->symbol == WASMTOK_IDENT)
+					allLabels.insert(node->lexerInfo);
+				else if (node->symbol == WASMTOK_STRING)
+					allLabels.insert(StringSet::intern(node->unquote()));
+				else
 					throw std::runtime_error("Unexpected symbol found in data section at "
 						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-				allLabels.insert(node->lexerInfo);
 			}
 		}
 
@@ -392,8 +395,10 @@ namespace Wasmc {
 
 		for (ASTNode *node: *dataNode) {
 			const std::string *ident = node->lexerInfo;
+			if (ident->front() == '"')
+				ident = StringSet::intern(node->unquote());
 			if (ident->front() != '%') {
-				if (verbose)
+				if (true || verbose)
 					std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
 				dataOffsets.emplace(ident, dataLength);
 			}
