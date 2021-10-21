@@ -859,8 +859,8 @@ namespace WVM::Operations {
 				vm.intPfault();
 				return;
 			} else if (vm.checkWritable()) {
-				vm.bufferChange<MemoryChange>(vm, translated + i, rt & 0xff, Size::Byte);
-				vm.setByte(translated + i, rt & 0xff);
+				vm.bufferChange<MemoryChange>(vm, translated, rt & 0xff, Size::Byte);
+				vm.setByte(translated, rt & 0xff);
 			} else {
 				vm.intBwrite();
 				return;
