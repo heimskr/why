@@ -13,6 +13,7 @@
 #include "Util.h"
 #include "VM.h"
 #include "VMError.h"
+#include "Why.h"
 
 // #define DEBUG_VIRTMEM
 #define CATCH_DEBUG
@@ -379,6 +380,13 @@ namespace WVM {
 
 	bool VM::intTimer() {
 		return interrupt(InterruptType::Timer, true);
+	}
+
+	bool VM::intKeybrd(UWord key) {
+		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, key);
+		registers[Why::exceptionOffset + 2] = key;
+		onRegisterChange(Why::exceptionOffset + 2);
+		return interrupt(InterruptType::Keybrd, true);
 	}
 
 	void VM::start() {

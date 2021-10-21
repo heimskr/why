@@ -128,6 +128,7 @@ namespace WVM {
 			bool intPfault();
 			bool intBwrite();
 			bool intTimer();
+			bool intKeybrd(UWord);
 			void start();
 			void stop();
 			bool play(size_t microdelay = 0);
