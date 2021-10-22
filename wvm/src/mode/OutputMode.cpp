@@ -12,7 +12,24 @@ namespace WVM::Mode {
 			ClientMode::loop();
 		});
 
+		terminal.onInterrupt = [this]() {
+			stop();
+			return true;
+		};
+
 		*buffer << ":Subscribe output\n";
+		terminal.keyPostlistener = [this](const Haunted::Key &key) {
+			uint64_t encoded = uint64_t(key.type);
+			if (key.hasShift())
+				encoded |= 1ul << 32;
+			if (key.hasAlt())
+				encoded |= 1ul << 33;
+			if (key.hasCtrl())
+				encoded |= 1ul << 34;
+			*buffer << ":Keybrd " << Util::toHex(encoded) << "\n";
+		};
+		terminal.startInput();
+		terminal.join();
 		networkThread.join();
 	}
 

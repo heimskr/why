@@ -4,15 +4,13 @@
 #include <thread>
 
 #include "haunted/core/Terminal.h"
-#include "haunted/ui/boxes/ExpandoBox.h"
-#include "haunted/ui/Textbox.h"
-#include "haunted/ui/TextInput.h"
 #include "mode/ClientMode.h"
 
 namespace WVM::Mode {
 	class OutputMode: public ClientMode {
 		private:
 			std::thread networkThread;
+			Haunted::Terminal terminal;
 
 		public:
 			OutputMode(): ClientMode() {}
