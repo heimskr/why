@@ -183,11 +183,14 @@
 						<li><a href="#op-time">Set Timer</a> (<code>time</code>)</li>
 						<li><a href="#op-timei">Set Timer Immediate</a> (<code>timei</code>)</li>
 						<li><a href="#op-ring">Change Ring</a> (<code>ring</code>)</li>
+						<li><a href="#op-ringi">Change Ring Immediate</a> (<code>ringi</code>)</li>
 						<li><a href="#op-pgoff">Disable Paging</a> (<code>pgoff</code>)</li>
 						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
 						<li><a href="#op-setpt">Set Page Table</a> (<code>setpt</code>)</li>
 						<li><a href="#op-svpg">Save Paging</a> (<code>svpg</code>)</li>
 						<li><a href="#op-qm">Query Memory</a> (<code>qm</code>)</li>
+						<li><a href="#op-di">Disable Interrupts</a> (<code>di</code>)</li>
+						<li><a href="#op-ei">Enable Interrupts</a> (<code>ei</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -367,9 +370,9 @@ The `BWRITE` (bad write) interrupt is raised if paging is enabled and an instruc
 ## <a name="int-keybrd"></a>7: `KEYBRD`
 The `KEYBRD` interrupt is raised when a key is pressed. The value of the key will be stored in `$e2` according to the format below. If this interrupt isn't set in the interrupt table, key presses will be ignored. This interrupt causes a switch to kernel mode.
 
-| Range       | 63–36 (28) | 35   | 34   | 33  | 32    | 31–0 (32)         |
-|------------:|:----------:|:----:|:----:|:---:|:-----:|:-----------------:|
-| **Purpose** | Unused     | Meta | Ctrl | Alt | Shift | Key value (UTF-8) |
+| Range       | 63–35 (29) | 34   | 33  | 32    | 31–0 (32)         |
+|------------:|:----------:|:----:|:---:|:-----:|:-----------------:|
+| **Purpose** | Unused     | Ctrl | Alt | Shift | Key value (UTF-8) |
 
 # <a name="format"></a>Instruction Format
 Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
@@ -1046,13 +1049,13 @@ Checks the [status register](#reg-st) and the [condition bits](#condbits). If th
 
 ### <a name="op-int"></a>Interrupt (`int`)
 > `%int imm`  
-> `000000100000` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000100000` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Performs an interrupt. If no interrupt table has been registered, nothing interesting happens.
 
 ### <a name="op-rit"></a>Register Interrupt Table (`rit`)
 > `%rit imm`  
-> `000000100001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000100001` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode; will cause the machine to halt if called in user mode.
 
@@ -1064,7 +1067,7 @@ Sets the hardware timer to the number stored in `rs` (in microseconds), cancelin
 
 ### <a name="op-timei"></a>Set Timer Immediate (`timei`)
 > `%time imm`  
-> `000000110001` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000110001` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets the hardware timer to the number stored in `imm` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
 
@@ -1074,9 +1077,9 @@ Sets the hardware timer to the number stored in `imm` (in microseconds), canceli
 
 Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
-### <a name="op-ring"></a>Change Ring Immediate (`ring`)
+### <a name="op-ringi"></a>Change Ring Immediate (`ringi`)
 > `%ring imm`  
-> `000000110011` `......` `......` `......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+> `000000110011` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
@@ -1100,15 +1103,27 @@ Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a
 
 ### <a name="op-svpg"></a>Save Paging (`svpg`)
 > `%page -> $rd`  
-> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000011`
+> `000000111101` `.......` `.......` `ddddddd` `0000000000000` `......` `000000000011`
 
 Sets `rd` to 1 if paging is enabled or 0 if paging is disabled.
 
 ### <a name="op-qm"></a>Query Memory (`qm`)
 > `? mem -> $rd`  
-> `000001000001` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+> `000001000001` `.......` `.......` `ddddddd` `0000000000000` `......` `000000000000`
 
 Sets `rd` to the size of the main memory in bytes.
+
+### <a name="op-di"></a>Disable Interrupts (`di`)
+> `%di`  
+> `000001000010` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+
+Disables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
+
+### <a name="op-ei"></a>Enable Interrupts (`ei`)
+> `%ei`  
+> `000001000011` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+
+Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
