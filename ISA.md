@@ -1121,7 +1121,7 @@ Disables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 
 ### <a name="op-ei"></a>Enable Interrupts (`ei`)
 > `%ei`  
-> `000001000011` `.......` `.......` `.......` `0000000000000` `......` `000000000000`
+> `000001000010` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
 Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 
