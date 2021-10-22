@@ -100,9 +100,9 @@ namespace WVM::Unparser {
 			case OP_RJUMP: {
 				switch (funct) {
 					case FN_JR:   return "\e[2m" + jumpConditions(conditions) + ":\e[22m " + color(rd);
-					case FN_JRC:  return "\e[2m:\e[22m" + color(rd) + " \e[31mif\e[39m " + color(rs);
+					case FN_JRC:  return "\e[2m:\e[22m " + color(rd) + " \e[31mif\e[39m " + color(rs);
 					case FN_JRL:  return "\e[2m" + jumpConditions(conditions) + "::\e[22m " + color(rd);
-					case FN_JRLC: return "\e[2m::\e[22m" + color(rd) + " \e[31mif\e[39m " + color(rs);
+					case FN_JRLC: return "\e[2m::\e[22m " + color(rd) + " \e[31mif\e[39m " + color(rs);
 				}
 				break;
 			}
