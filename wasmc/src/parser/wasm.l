@@ -75,6 +75,8 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "lui"						{ WASMRTOKEN(LUI) }
 "%int"						{ WASMRTOKEN(INT) }
 "%rit"						{ WASMRTOKEN(RIT) }
+"%di"						{ WASMRTOKEN(DI) }
+"%ei"						{ WASMRTOKEN(EI) }
 "!ret"						{ WASMRTOKEN(RET) }
 "prc"						{ WASMRTOKEN(PRC) }
 "prx"						{ WASMRTOKEN(PRX) }

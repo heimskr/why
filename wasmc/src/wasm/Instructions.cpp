@@ -15,6 +15,7 @@ namespace Wasmc {
 		0b000000111000, // Select
 		0b000000111101, // Paging
 		0b000001000001, // Query
+		0b000001000010, // Disable/Enable Interrupts
 	};
 
 	std::unordered_set<Opcode> ITYPES {
@@ -187,6 +188,8 @@ namespace Wasmc {
 		{"srlii",  0b000000111111},
 		{"sraii",  0b000001000000},
 		{"qm",     0b000001000001},
+		{"ei",     0b000001000010},
+		{"di",     0b000001000010},
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {
@@ -263,6 +266,7 @@ namespace Wasmc {
 		{"sel",    0b000000000000},
 		{"pgoff",  0b000000000000},
 		{"qm",     0b000000000000},
+		{"di",     0b000000000000},
 		{"jrc",    0b000000000001},
 		{"l",      0b000000000001},
 		{"nand",   0b000000000001},
@@ -270,6 +274,7 @@ namespace Wasmc {
 		{"sub",    0b000000000001},
 		{"pgon",   0b000000000001},
 		{"printr", 0b000000000001},
+		{"ei",     0b000000000001},
 		{"jrl",    0b000000000010},
 		{"mult",   0b000000000010},
 		{"nor",    0b000000000010},

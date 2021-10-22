@@ -125,4 +125,6 @@ namespace Wasmc {
 	constexpr Opcode OP_SRLII  = 0b000000111111;
 	constexpr Opcode OP_SRAII  = 0b000001000000;
 	constexpr Opcode OP_QM     = 0b000001000001;
+	constexpr Opcode OP_DI     = 0b000001000010;
+	constexpr Opcode OP_EI     = 0b000001000010;
 }

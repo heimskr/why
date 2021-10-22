@@ -1185,6 +1185,16 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + (ident? "<io " + *ident + ">" : "<io>");
 	}
 
+	WASMInterruptsNode::WASMInterruptsNode(bool enable_): WASMInstructionNode(WASM_INTERRUPTSNODE), enable(enable_) {}
+
+	std::string WASMInterruptsNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + blue(enable? "%ei" : "%di");
+	}
+
+	WASMInterruptsNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + (enable? "%ei" : "%di");
+	}
+
 	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang) {
 		static const auto deq = StringSet::intern("==");
 		RNode *out = new RNode(rs, deq, rt, rd, WASMTOK_DEQ, false);
