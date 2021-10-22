@@ -82,6 +82,7 @@ namespace WVM {
 			bool pagingOn = false;
 			bool enableHistory = false;
 			bool resting = false;
+			bool hardwareInterruptsEnabled = true;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};

@@ -31,12 +31,12 @@ namespace WVM {
 	}
 
 	std::unordered_map<InterruptType, Interrupt> interrupts {
-		{InterruptType::System, {InterruptType::System, Ring::Zero,    Ring::Invalid}},
-		{InterruptType::Timer,  {InterruptType::Timer,  Ring::Invalid, Ring::Zero}},
-		{InterruptType::Protec, {InterruptType::Protec, Ring::Zero,    Ring::Two}},
-		{InterruptType::Pfault, {InterruptType::Pfault, Ring::Zero,    Ring::Two}},
-		{InterruptType::Inexec, {InterruptType::Inexec, Ring::Zero,    Ring::Two}},
-		{InterruptType::Bwrite, {InterruptType::Bwrite, Ring::Zero,    Ring::Invalid}},
-		{InterruptType::Keybrd, {InterruptType::Keybrd, Ring::Zero,    Ring::Two}},
+		{InterruptType::System, {InterruptType::System, Ring::Zero,    Ring::Invalid, false}},
+		{InterruptType::Timer,  {InterruptType::Timer,  Ring::Invalid, Ring::Zero,    true}},
+		{InterruptType::Protec, {InterruptType::Protec, Ring::Zero,    Ring::Two,     false}},
+		{InterruptType::Pfault, {InterruptType::Pfault, Ring::Zero,    Ring::Two,     false}},
+		{InterruptType::Inexec, {InterruptType::Inexec, Ring::Zero,    Ring::Two,     false}},
+		{InterruptType::Bwrite, {InterruptType::Bwrite, Ring::Zero,    Ring::Invalid, false}},
+		{InterruptType::Keybrd, {InterruptType::Keybrd, Ring::Zero,    Ring::Two,     true}},
 	};
 }

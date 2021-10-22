@@ -352,9 +352,15 @@ namespace WVM {
 	bool VM::interrupt(InterruptType type, bool force) {
 		if (interrupts.count(type) == 0)
 			throw std::runtime_error("Invalid interrupt: " + std::to_string(static_cast<int>(type)));
-		interrupts.at(type)(*this, force);
-		wakeRest();
-		return true; // Can't remember what the return value is supposed to represent...
+
+		Interrupt &in_map = interrupts.at(type);
+		if (!in_map.canDisable || hardwareInterruptsEnabled) {
+			interrupts.at(type)(*this, force);
+			wakeRest();
+			return true;
+		}
+
+		return false;
 	}
 
 	bool VM::checkRing(Ring check) {

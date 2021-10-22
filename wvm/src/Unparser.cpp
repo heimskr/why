@@ -138,8 +138,8 @@ namespace WVM::Unparser {
 					case FN_IO:    return "<\e[36mio\e[39m>";
 				}
 				break;
-			case OP_TIME: return "\e[36mtime\e[39m " + color(rs);
-			case OP_RING: return "\e[36mring\e[39m " + color(rs);
+			case OP_TIME: return "\e[36m%time\e[39m " + color(rs);
+			case OP_RING: return "\e[36m%ring\e[39m " + color(rs);
 			case OP_SEL: {
 				std::string oper;
 				if (conditions == Conditions::Zero) oper = "=";
@@ -152,15 +152,21 @@ namespace WVM::Unparser {
 			}
 			case OP_PAGE:
 				switch (funct) {
-					case FN_PGON:  return "\e[36mpage\e[39m on";
-					case FN_PGOFF: return "\e[36mpage\e[39m off";
-					case FN_SETPT: return "\e[36msetpt\e[39m " + color(rs);
-					case FN_SVPG:  return "\e[36mpage\e[39m \e[2m->\e[22m " + color(rd);
+					case FN_PGON:  return "\e[36m%page\e[39m on";
+					case FN_PGOFF: return "\e[36m%page\e[39m off";
+					case FN_SETPT: return "\e[36m%setpt\e[39m " + color(rs);
+					case FN_SVPG:  return "\e[36m%page\e[39m \e[2m->\e[22m " + color(rd);
 				}
 				break;
 			case OP_QUERY:
 				switch (funct) {
 					case FN_QM: return "? \e[36mmem\e[39m \e[2m->\e[22m " + color(rd);
+				}
+				break;
+			case OP_INTERRUPTS:
+				switch (funct) {
+					case FN_DI: return "\e[36m%di\e[39m";
+					case FN_EI: return "\e[36m%ei\e[39m";
 				}
 				break;
 		}

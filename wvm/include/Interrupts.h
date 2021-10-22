@@ -13,13 +13,15 @@ namespace WVM {
 	struct Interrupt {
 		InterruptType type;
 		Ring newRing, maxPermitted;
+		bool canDisable;
 		std::function<void()> extra = [] {};
 
-		Interrupt(InterruptType type_, Ring new_ring, Ring max_permitted):
-			type(type_), newRing(new_ring), maxPermitted(max_permitted) {}
+		Interrupt(InterruptType type_, Ring new_ring, Ring max_permitted, bool can_disable):
+			type(type_), newRing(new_ring), maxPermitted(max_permitted), canDisable(can_disable) {}
 
-		Interrupt(InterruptType type_, Ring new_ring, Ring max_permitted, const std::function<void()> &extra_):
-			type(type_), newRing(new_ring), maxPermitted(max_permitted), extra(extra_) {}
+		Interrupt(InterruptType type_, Ring new_ring, Ring max_permitted, bool can_disable, 
+		          const std::function<void()> &extra_):
+			type(type_), newRing(new_ring), maxPermitted(max_permitted), canDisable(can_disable), extra(extra_) {}
 
 		void operator()(VM &, bool force);
 	};

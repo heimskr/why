@@ -147,6 +147,8 @@ namespace WVM::Operations {
 	void setptOp(VM &, Word &rs, Word &, Word &, Conditions, int flags);             // 61  R 2
 	void svpgOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);              // 61  R 3
 	void qmOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);                // 65  R 0
+	void diOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);                // 66  R 0
+	void eiOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);                // 66  R 1
 
 #define OP_NOP 0
 #define OP_RMATH 1
@@ -343,6 +345,10 @@ namespace WVM::Operations {
 #define OP_QUERY 65
 #define OP_QM OP_QUERY
 #define FN_QM 0
+
+#define OP_INTERRUPTS 66
+#define FN_DI 0
+#define FN_EI 1
 
 #define INTERRUPT_MAX	3
 

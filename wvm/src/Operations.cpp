@@ -18,6 +18,7 @@
 namespace WVM::Operations {
 	std::set<int> RSet {
 		OP_RMATH, OP_AND, OP_RLOGIC, OP_RCOMP, OP_RJUMP, OP_RMEM, OP_TIME, OP_RING, OP_SEL, OP_PAGE, OP_QUERY, OP_REXT,
+		OP_INTERRUPTS,
 	};
 
 	std::set<int> ISet {
@@ -159,6 +160,12 @@ namespace WVM::Operations {
 			case OP_QUERY:
 				switch (funct) {
 					case FN_QM: qmOp(vm, rs, rt, rd, conditions, flags); return;
+				}
+				break;
+			case OP_INTERRUPTS:
+				switch (funct) {
+					case FN_DI: diOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_EI: eiOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 		}
@@ -1009,21 +1016,24 @@ namespace WVM::Operations {
 				vm.onInterruptTableChange();
 				vm.increment();
 			}
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void timeOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.setTimer(static_cast<UWord>(rs));
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void timeiOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.setTimer(static_cast<UWord>(immediate));
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void ringOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
@@ -1321,7 +1331,8 @@ namespace WVM::Operations {
 			}
 
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void selOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int) {
@@ -1336,7 +1347,8 @@ namespace WVM::Operations {
 			std::cerr << "Paging disabled (PC: " << vm.programCounter << ").\n";
 			vm.onPagingChange(false);
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void pgonOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
@@ -1346,7 +1358,8 @@ namespace WVM::Operations {
 			std::cerr << "Paging enabled (PC: " << vm.programCounter << ").\n";
 			vm.onPagingChange(true);
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void setptOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
@@ -1356,7 +1369,8 @@ namespace WVM::Operations {
 			std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
 			vm.onP0Change(rs);
 			vm.increment();
-		}
+		} else
+			vm.intProtec();
 	}
 
 	void svpgOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
@@ -1367,5 +1381,21 @@ namespace WVM::Operations {
 	void qmOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
 		setReg(vm, rd, vm.getMemorySize(), false);
 		vm.increment();
+	}
+
+	void diOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			vm.hardwareInterruptsEnabled = false;
+			vm.increment();
+		} else
+			vm.intProtec();
+	}
+
+	void eiOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			vm.hardwareInterruptsEnabled = true;
+			vm.increment();
+		} else
+			vm.intProtec();
 	}
 }
