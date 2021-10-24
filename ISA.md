@@ -50,6 +50,7 @@
 						<li><a href="#op-mod">Modulo</a> (<code>mod</code>)</li>
 						<li><a href="#op-div">Divide</a> (<code>div</code>)</li>
 						<li><a href="#op-divu">Divide Unsigned</a> (<code>divu</code>)</li>
+						<li><a href="#op-modu">Modulo Unsigned</a> (<code>modu</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-r">Logic (R-Types)</a>
@@ -87,6 +88,7 @@
 						<li><a href="#op-divui">Divide Unsigned Immediate</a> (<code>divui</code>)</li>
 						<li><a href="#op-divii">Divide Inverse Immediate</a> (<code>divii</code>)</li>
 						<li><a href="#op-divuii">Divide Unsigned Inverse Immediate</a> (<code>divuii</code>)</li>
+						<li><a href="#op-modui">Modulo Unsigned Immediate</a> (<code>modui</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-i">Logic (I-Types)</a>
@@ -488,7 +490,7 @@ Arithmetically shifts the value in `rs` to the left by a number of bits equal to
 > `$rs % $rt -> $rd` or `$rs %= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001001`
 
-Computes the `rt`-modulo of `rs` and stores the result in `rd`.
+Computes the signed `rt`-modulo of `rs` and stores the result in `rd`.
 
 ### <a name="op-div"></a>Divide (`div`)
 > `$rs / $rt -> $rd`  
@@ -501,6 +503,12 @@ Divides the value in `rs` by the value in `rt` and stores the result in `rd`, di
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001011`
 
 Divides the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
+
+### <a name="op-modu"></a>Modulo Unsigned (`modu`)
+> `$rs % $rt -> $rd /u` or `$rs %= $rt /u`  
+> `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001100`
+
+Computes the unsigned `rt`-modulo of `rs` and stores the result in `rd`.
 
 ## <a name="ops-logic-r"></a>Logic (R-Types)
 
@@ -654,7 +662,7 @@ Arithmetically shifts `imm` to the right by a number of bits equal to the value 
 > `$rs % imm -> $rd` or `$rd %= imm`  
 > `000000011110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Computes the `imm`-modulo of `rs` and stores the result in `rd`.
+Computes the signed `imm`-modulo of `rs` and stores the result in `rd`.
 
 ### <a name="op-divi"></a>Divide Immediate (`divi`)
 > `$rs / imm -> $rd`  
@@ -671,6 +679,12 @@ Divides the value in `rs` by a constant and stores the result in `rd`, discardin
 > `000000110110` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Divides a constant by the value in `rs` and stores the result in `rd`, discarding the remainder.
+
+### <a name="op-modui"></a>Modulo Unsigned Immediate (`modui`)
+> `$rs % imm -> $rd /u` or `$rd %= imm /u`  
+> `000001000011` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Computes the unsigned `imm`-modulo of `rs` and stores the result in `rd`.
 
 ### <a name="op-divuii"></a>Divide Unsigned Inverse Immediate (`divuii`)
 > `imm / $rs -> $rd /u`  

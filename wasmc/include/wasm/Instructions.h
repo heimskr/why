@@ -127,4 +127,5 @@ namespace Wasmc {
 	constexpr Opcode OP_QM     = 0b000001000001;
 	constexpr Opcode OP_DI     = 0b000001000010;
 	constexpr Opcode OP_EI     = 0b000001000010;
+	constexpr Opcode OP_MODUI  = 0b000001000011;
 }

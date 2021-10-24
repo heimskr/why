@@ -66,6 +66,7 @@ namespace Wasmc {
 		0b000000111110, // Shift Left Logical Inverse Immediate
 		0b000000111111, // Shift Right Logical Inverse Immediate
 		0b000001000000, // Shift Right Arithmetic Inverse Immediate
+		0b000001000011, // Modulo Unsigned Immediate
 	};
 
 	std::unordered_set<Opcode> JTYPES {
@@ -89,6 +90,7 @@ namespace Wasmc {
 		{"mod",    0b000000000001},
 		{"div",    0b000000000001},
 		{"divu",   0b000000000001},
+		{"modu",   0b000000000001},
 		{"and",    0b000000000010},
 		{"nand",   0b000000000010},
 		{"nor",    0b000000000010},
@@ -190,6 +192,7 @@ namespace Wasmc {
 		{"qm",     0b000001000001},
 		{"ei",     0b000001000010},
 		{"di",     0b000001000010},
+		{"modui",  0b000001000011},
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {
@@ -253,6 +256,8 @@ namespace Wasmc {
 		{"sl",    "slu"   },
 		{"sle",   "sleu"  },
 		{"div",   "divu"  },
+		{"mod",   "modu"  },
+		{"modi",  "modui" },
 	};
 
 	std::unordered_map<std::string, Funct> FUNCTS {
@@ -321,6 +326,7 @@ namespace Wasmc {
 		{"ms",     0b000000001011},
 		{"cs",     0b000000001100},
 		{"lor",    0b000000001100},
+		{"modu",   0b000000001100},
 		{"lxnor",  0b000000001101},
 		{"ls",     0b000000001101},
 		{"lxor",   0b000000001110},
