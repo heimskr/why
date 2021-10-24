@@ -25,7 +25,7 @@ namespace WVM::Operations {
 		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII,
 		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI,
 		OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT,
-		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI,
+		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI, OP_MODUI,
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
@@ -76,6 +76,7 @@ namespace WVM::Operations {
 					case FN_MOD:     modOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_DIV:     divOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_DIVU:   divuOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MODU:   moduOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RLOGIC:
@@ -185,6 +186,7 @@ namespace WVM::Operations {
 			case OP_MODI:     modiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_DIVI:     diviOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_DIVUI:   divuiOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_MODUI:   moduiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_DIVII:   diviiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_DIVUII: divuiiOp(vm, rs, rd, conditions, flags, immediate); return;
 			case OP_ANDI:     andiOp(vm, rs, rd, conditions, flags, immediate); return;
@@ -320,6 +322,11 @@ namespace WVM::Operations {
 		vm.increment();
 	}
 
+	void moduOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
+		setReg(vm, rd, static_cast<UWord>(rs) % static_cast<UWord>(rt));
+		vm.increment();
+	}
+
 	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
 		setReg(vm, rd, rs & rt);
 		vm.increment();
@@ -447,6 +454,11 @@ namespace WVM::Operations {
 
 	void divuiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		setReg(vm, rd, static_cast<UWord>(rs) / static_cast<UWord>(immediate));
+		vm.increment();
+	}
+
+	void moduiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		setReg(vm, rd, static_cast<UWord>(rs) % static_cast<UWord>(immediate));
 		vm.increment();
 	}
 

@@ -32,6 +32,7 @@ namespace WVM::Operations {
 	void modOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 9
 	void divOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 1   R 10
 	void divuOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 1   R 11
+	void moduOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 1   R 12
 
 	void andOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 0
 	void nandOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 1
@@ -62,6 +63,7 @@ namespace WVM::Operations {
 	void divuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 53  I
 	void diviiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 54  I
 	void divuiiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate); // 55  I
+	void moduiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 67  I
 
 	void andiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 6   I
 	void nandiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 7   I
@@ -178,6 +180,8 @@ namespace WVM::Operations {
 #define FN_DIV 10
 #define OP_DIVU OP_RMATH
 #define FN_DIVU 11
+#define OP_MODU OP_RMATH
+#define FN_MODU 12
 
 #define OP_AND OP_RLOGIC
 #define FN_AND 0
@@ -349,6 +353,8 @@ namespace WVM::Operations {
 #define OP_INTERRUPTS 66
 #define FN_DI 0
 #define FN_EI 1
+
+#define OP_MODUI 67
 
 #define INTERRUPT_MAX	3
 
