@@ -18,6 +18,7 @@
 // #define DEBUG_VIRTMEM
 #define CATCH_DEBUG
 #define CATCH_OPEN
+// #define CATCH_TICK
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
@@ -469,13 +470,17 @@ namespace WVM {
 	bool VM::tick() {
 		auto lock = lockVM();
 		UWord instruction = getWord(programCounter, Endianness::Big);
+#ifdef CATCH_TICK
 		try {
+#endif
 			Operations::execute(*this, instruction);
+#ifdef CATCH_TICK
 		} catch (const std::exception &err) {
 			error() << "Error while ticking: " << err.what() << '\n';
 			paused = true;
 			return false;
 		}
+#endif
 
 		++cycles;
 

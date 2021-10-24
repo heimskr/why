@@ -11,7 +11,7 @@
 #include "Util.h"
 #include "VMError.h"
 
-// #define CATCH_TICK
+#define CATCH_TICK
 
 void sigint_handler(int) {
 	if (WVM::Mode::ServerMode::instance)
