@@ -109,6 +109,7 @@ namespace Wasmc::Util {
 					case 'r':  out << '\r'; break;
 					case 't':  out << '\t'; break;
 					case '\\': out << '\\'; break;
+					case '"':  out << '"';  break;
 					case 'x': {
 						if (size <= i + 2)
 							throw std::runtime_error("Hexadecimal escape is too close to end of string");
