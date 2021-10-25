@@ -323,8 +323,13 @@ namespace WVM::Operations {
 	}
 
 	void moduOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		setReg(vm, rd, static_cast<UWord>(rs) % static_cast<UWord>(rt));
-		vm.increment();
+		if (rt == 0) {
+			vm.recordChange<HaltChange>();
+			vm.stop();
+		} else {
+			setReg(vm, rd, static_cast<UWord>(rs) % static_cast<UWord>(rt));
+			vm.increment();
+		}
 	}
 
 	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {

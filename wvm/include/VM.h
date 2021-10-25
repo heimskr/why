@@ -72,16 +72,16 @@ namespace WVM {
 			std::map<int, const std::string *> debugFiles, debugFunctions;
 			std::vector<Drive> drives;
 			Word symbolsOffset = -1;
-			Word  codeOffset = -1;
-			Word  dataOffset = -1;
-			Word debugOffset = -1;
-			Word   endOffset = -1;
+			Word    codeOffset = -1;
+			Word    dataOffset = -1;
+			Word   debugOffset = -1;
+			Word     endOffset = -1;
 			Word p0 = 0;
-			bool paused = false;
+			std::atomic_bool paused = false;
 			bool strict = false;
 			bool pagingOn = false;
 			bool enableHistory = false;
-			bool resting = false;
+			std::atomic_bool resting = false;
 			bool hardwareInterruptsEnabled = true;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
@@ -165,6 +165,7 @@ namespace WVM {
 			template <typename T, typename... Args>
 			void recordChange(Args && ...args) {
 				if (enableHistory) {
+					auto lock = lockVM();
 					changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
 					finishChange();
 				}
@@ -172,8 +173,10 @@ namespace WVM {
 
 			template <typename T, typename... Args>
 			void bufferChange(Args && ...args) {
-				if (enableHistory)
+				if (enableHistory) {
+					auto lock = lockVM();
 					changeBuffer.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+				}
 			}
 
 			Word & hi();
