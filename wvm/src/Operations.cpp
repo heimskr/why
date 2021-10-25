@@ -1,4 +1,5 @@
 #include <bitset>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
