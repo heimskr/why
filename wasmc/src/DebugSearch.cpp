@@ -65,6 +65,14 @@ int main(int argc, char **argv) {
 					const std::string mangled = demangle(std::regex_replace(highest_name, mangled_label, "$1"));
 					const std::string label(std::regex_replace(highest_name, std::regex("^___Z.+_label(\\d+)$"), "$1"));
 					highest_name = mangled + " (label " + label + ")";
+				} else {
+					const std::regex labeled("^__(.+)_label\\d+$");
+					if (std::regex_match(highest_name, labeled)) {
+						const std::string base = std::regex_replace(highest_name, labeled, "$1");
+						const std::string label(std::regex_replace(highest_name, std::regex("^__.+_label(\\d+)$"),
+							"$1"));
+						highest_name = base + " (label " + label + ")";
+					}
 				}
 			}
 			std::cout << "Closest symbol to " << parsed << " is \e[1m"
