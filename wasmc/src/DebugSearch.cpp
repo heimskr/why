@@ -60,6 +60,7 @@ int main(int argc, char **argv) {
 			if (highest_name.substr(0, 2) == "_Z") {
 				highest_name = demangle(highest_name);
 			} else {
+				// This can be simplified.
 				const std::regex mangled_label("^__(_Z.+)_label\\d+$");
 				if (std::regex_match(highest_name, mangled_label)) {
 					const std::string mangled = demangle(std::regex_replace(highest_name, mangled_label, "$1"));
@@ -75,8 +76,18 @@ int main(int argc, char **argv) {
 					}
 				}
 			}
-			std::cout << "Closest symbol to " << parsed << " is \e[1m"
-			          << std::regex_replace(highest_name, std::regex("::__1"), "") << "\e[0m at " << highest << ".\n";
+			std::cout << "Closest symbol to " << parsed << " is \e[32m"
+			          << std::regex_replace(highest_name, std::regex("::__1"), "") << "\e[39m at " << highest << ".\n";
+			for (const auto &entry: parser->debugData)
+				if (entry->getType() == DebugEntry::Type::Location) {
+					auto *location = dynamic_cast<DebugLocation *>(entry.get());
+					if (location->address == parsed || location->address == highest)
+						std::cout << "    \e[1m"
+						          << dynamic_cast<DebugFilename *>(parser->debugData.at(location->fileIndex)
+						             .get())->filename
+						          << ':' << location->line << "\e[22m\n";
+				}
+			std::cout << '\n';
 		}
 	} catch (const std::invalid_argument &) {
 		const size_t colon = combined.find(':');
