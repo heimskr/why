@@ -422,7 +422,12 @@ namespace WVM {
 						std::unique_lock<std::mutex> lock(restMutex);
 						restCondition.wait(lock, [this] { return !resting; });
 					}
-					tick();
+					try {
+						tick();
+					} catch (const std::exception &err) {
+						std::cerr << "Play thread caught an exception: " << err.what() << std::endl;
+						break;
+					}
 					if (microdelay)
 						std::this_thread::sleep_for(delay);
 				} while (playing && active && !paused);
