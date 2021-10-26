@@ -499,7 +499,7 @@ Computes the signed `rt`-modulo of `rs` and stores the result in `rd`.
 Divides the value in `rs` by the value in `rt` and stores the result in `rd`, discarding the remainder.
 
 ### <a name="op-divu"></a>Divide Unsigned (`divu`)
-> `$rs * $rt /u`  
+> `$rs / $rt -> $rd /u`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001011`
 
 Divides the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
