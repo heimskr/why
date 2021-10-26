@@ -265,6 +265,8 @@ namespace WVM::Mode {
 				*socket << ":Dump " << split[0] << " " << split[1] << " " << split[2] << "\n";
 			else
 				badInput();
+		} else if (first == "stack" || first == "stacktrace" || first == "trace") {
+			*socket << ":Stacktrace\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

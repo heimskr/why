@@ -564,6 +564,27 @@ namespace WVM::Mode {
 				error() << "Failed to dump memory (address=" << address << ", length=" << length << "): "
 				        << err.what() << std::endl;
 			}
+		} else if (verb == "Stacktrace") {
+			try {
+				size_t i = 0;
+				std::cerr << "Stacktrace:\n";
+				Word m5 = vm.registers[Why::assemblerOffset + 5];
+				while (m5 != 0) {
+					bool success;
+					const Word rt_addr = vm.translateAddress(m5 + 16, &success);
+					if (!success)
+						throw std::runtime_error("Address translation failed");
+					std::cerr << "    " << i++ << ": " << vm.getWord(rt_addr) << std::endl;
+					const Word m5_addr = vm.translateAddress(m5, &success);
+					if (!success)
+						throw std::runtime_error("Address translation failed");
+					m5 = vm.getWord(m5_addr);
+				}
+				if (i == 0)
+					std::cerr << "    (empty)\n";
+			} catch (const std::exception &err) {
+				error() << "Printing stacktrace failed: " << err.what() << std::endl;
+			}
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
