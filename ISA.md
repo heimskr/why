@@ -230,24 +230,24 @@ The VM emulates WhySA, a custom RISC instruction set that may or may not actuall
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
 
-| Number   | Name         | Purpose                                     |
-|----------|--------------|---------------------------------------------|
-| 0        | `$0`         | Always contains zero.                       |
-| 1        | `$g`         | Global area pointer (start of data segment) |
-| 2        | `$sp`        | Stack pointer.                              |
-| 3        | `$fp`        | Frame pointer.                              |
-| 4        | `$rt`        | Return address.                             |
-| 5        | `$lo`        | Stores the lower half of a mult result.     |
-| 6        | `$hi`        | Stores the upper half of a mult result.     |
-| 7–22     | `$r0`–`$rf`  | Contains return values.                     |
-| 23–38    | `$a0`–`$af`  | Contains arguments for subroutines.         |
-| 39–61    | `$t0`–`$t16` | Temporary registers.                        |
-| 62–84    | `$s0`–`$s16` | Saved registers.                            |
-| 85–100   | `$k0`–`$kf`  | Kernel registers.                           |
-| 101      | `$st`        | Status register.                            |
-| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.          |
-| 118–121  | `$f0`–`$f3`  | Floating point return values.               |
-| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.             |
+| Number   | Name         | Purpose                                           |
+|----------|--------------|---------------------------------------------------|
+| 0        | `$0`         | Always contains zero.                             |
+| 1        | `$g`         | Global area pointer (right after end of program). |
+| 2        | `$sp`        | Stack pointer.                                    |
+| 3        | `$fp`        | Frame pointer.                                    |
+| 4        | `$rt`        | Return address.                                   |
+| 5        | `$lo`        | Stores the lower half of a mult result.           |
+| 6        | `$hi`        | Stores the upper half of a mult result.           |
+| 7–22     | `$r0`–`$rf`  | Contains return values.                           |
+| 23–38    | `$a0`–`$af`  | Contains arguments for subroutines.               |
+| 39–61    | `$t0`–`$t16` | Temporary registers.                              |
+| 62–84    | `$s0`–`$s16` | Saved registers.                                  |
+| 85–100   | `$k0`–`$kf`  | Kernel registers.                                 |
+| 101      | `$st`        | Status register.                                  |
+| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.                |
+| 118–121  | `$f0`–`$f3`  | Floating point return values.                     |
+| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.                   |
 
 ## <a name="reg-st"></a>Status Register
 The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order of significance, these are:
@@ -460,13 +460,13 @@ Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`
 > `$rs * $rt`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000010`
 
-Multiplies the value in `rs` by the value in `rt` and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by the value in `rt` and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-multu"></a>Multiply Unsigned (`multu`)
 > `$rs * $rt /u`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000101`
 
-Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-sll"></a>Shift Left Logical (`sll`)
 > `$rs << $rt -> $rd` or `$rd <<= $rt`  
@@ -499,7 +499,7 @@ Computes the signed `rt`-modulo of `rs` and stores the result in `rd`.
 Divides the value in `rs` by the value in `rt` and stores the result in `rd`, discarding the remainder.
 
 ### <a name="op-divu"></a>Divide Unsigned (`divu`)
-> `$rs * $rt /u`  
+> `$rs / $rt -> $rd /u`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001011`
 
 Divides the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
@@ -614,13 +614,13 @@ Subtracts a constant from the value in `rs` and stores the result in `rd`.
 > `$rs * imm`  
 > `000000000101` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by a constant and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-multui"></a>Multiply Unsigned Immediate (`multui`)
 > `$rs * imm /u`  
 > `000000011000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-slli"></a>Shift Left Logical Immediate (`slli`)
 > `$rs << imm -> $rd` or `$rd <<= imm`  
