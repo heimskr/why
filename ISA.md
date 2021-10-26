@@ -230,24 +230,24 @@ The VM emulates WhySA, a custom RISC instruction set that may or may not actuall
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
 
-| Number   | Name         | Purpose                                               |
-|----------|--------------|---------------------------------------------          |
-| 0        | `$0`         | Always contains zero.                                 |
-| 1        | `$g`         | Global area pointer (right after end of data segment) |
-| 2        | `$sp`        | Stack pointer.                                        |
-| 3        | `$fp`        | Frame pointer.                                        |
-| 4        | `$rt`        | Return address.                                       |
-| 5        | `$lo`        | Stores the lower half of a mult result.               |
-| 6        | `$hi`        | Stores the upper half of a mult result.               |
-| 7–22     | `$r0`–`$rf`  | Contains return values.                               |
-| 23–38    | `$a0`–`$af`  | Contains arguments for subroutines.                   |
-| 39–61    | `$t0`–`$t16` | Temporary registers.                                  |
-| 62–84    | `$s0`–`$s16` | Saved registers.                                      |
-| 85–100   | `$k0`–`$kf`  | Kernel registers.                                     |
-| 101      | `$st`        | Status register.                                      |
-| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.                    |
-| 118–121  | `$f0`–`$f3`  | Floating point return values.                         |
-| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.                       |
+| Number   | Name         | Purpose                                           |
+|----------|--------------|---------------------------------------------------|
+| 0        | `$0`         | Always contains zero.                             |
+| 1        | `$g`         | Global area pointer (right after end of program). |
+| 2        | `$sp`        | Stack pointer.                                    |
+| 3        | `$fp`        | Frame pointer.                                    |
+| 4        | `$rt`        | Return address.                                   |
+| 5        | `$lo`        | Stores the lower half of a mult result.           |
+| 6        | `$hi`        | Stores the upper half of a mult result.           |
+| 7–22     | `$r0`–`$rf`  | Contains return values.                           |
+| 23–38    | `$a0`–`$af`  | Contains arguments for subroutines.               |
+| 39–61    | `$t0`–`$t16` | Temporary registers.                              |
+| 62–84    | `$s0`–`$s16` | Saved registers.                                  |
+| 85–100   | `$k0`–`$kf`  | Kernel registers.                                 |
+| 101      | `$st`        | Status register.                                  |
+| 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.                |
+| 118–121  | `$f0`–`$f3`  | Floating point return values.                     |
+| 122–127  | `$e0`–`$e5`  | Contains data about exceptions.                   |
 
 ## <a name="reg-st"></a>Status Register
 The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order of significance, these are:
