@@ -1,6 +1,6 @@
 COMPILER        ?= clang++
 DEBUGGER        ?= lldb
-OPTIMIZATION    ?= -O0 -g
+OPTIMIZATION    ?= -Ofast -march=native
 STANDARD        ?= c++20
 WARNINGS        ?= -Wall -Wextra
 CFLAGS          := -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
@@ -58,7 +58,7 @@ test: $(OUTPUT)
 	./$< $(TESTARGS)
 
 clean:
-	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png PVS-Studio.log report.tasks strace_out \
+	rm -f $(OUTPUT) ds++ syms src/*.o src/**/*.o graph_*.png PVS-Studio.log report.tasks strace_out \
 		$(WASMPARSEHDR) $(WASMPARSECPP) $(WASMLEXCPP) $(WASMPARSECPP:.c=.output) $(WASMLEXCPP) $(WASMPARSECPP)
 
 grind: $(OUTPUT)
