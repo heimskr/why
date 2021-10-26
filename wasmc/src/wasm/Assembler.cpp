@@ -427,7 +427,7 @@ namespace Wasmc {
 
 		auto add = [&](Long value) {
 			for (int i = 0; i < 8; ++i) {
-				bytes.push_back((value >> (8 * (7 - i))) & 0xff);
+				bytes.push_back((value >> (8 * i)) & 0xff);
 				++data_length;
 			}
 		};
