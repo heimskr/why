@@ -460,13 +460,13 @@ Subtracts the value in `rt` from the value in `rs` and stores the result in `rd`
 > `$rs * $rt`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000010`
 
-Multiplies the value in `rs` by the value in `rt` and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by the value in `rt` and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-multu"></a>Multiply Unsigned (`multu`)
 > `$rs * $rt /u`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000101`
 
-Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-sll"></a>Shift Left Logical (`sll`)
 > `$rs << $rt -> $rd` or `$rd <<= $rt`  
@@ -614,13 +614,13 @@ Subtracts a constant from the value in `rs` and stores the result in `rd`.
 > `$rs * imm`  
 > `000000000101` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by a constant and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-multui"></a>Multiply Unsigned Immediate (`multui`)
 > `$rs * imm /u`  
 > `000000011000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in [`HI`](#hi-lo) and the lower half in [`LO`](#hi-lo).
+Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in `$hi` and the lower half in `$lo`.
 
 ### <a name="op-slli"></a>Shift Left Logical Immediate (`slli`)
 > `$rs << imm -> $rd` or `$rd <<= imm`  
