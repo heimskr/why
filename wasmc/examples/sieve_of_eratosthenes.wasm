@@ -1,0 +1,171 @@
+#meta
+
+name: "Prime Sieve"
+author: "Vadim"
+version: "1.1"
+
+#data
+
+upper_bound: 97 // Exclusive. Actual number of bytes in sieve is this / 8
+max_size: 4000000000
+
+#code
+
+[upper_bound] -> $a0
+::main
+<halt>
+
+// Note: g register tells me where it is safe
+// for me to start using memory. In other words,
+// from address $g and beyond, I won't be overriding
+// other important stuff like what's in the metadata section
+
+// Another note: values in memory not already used will start
+// out as 0's, as opposed to arbitrary data.
+
+// Yet Another Note: Memory is byte addressed.
+
+@main
+	<p "$g: ">
+	<prx $g>
+	<prc '\n'>
+
+	// No primes smaller than 2
+	$a0 >= 2 -> $t0
+	: skip_error if $t0
+		<p "Sieve size can't be less than 2">
+	@skip_error
+
+	// Somewhat arbitrary. But at least ensures my squaring current prime doesn't overflow.
+	// Also, I'll be storing the primes as 32 bit numbers.
+	[max_size] -> $t0
+	$a0 <= $t0 -> $t0
+	: skip_error2 if $t0
+		<p "Sieve size can't be more than 4 billion">
+	@skip_error2
+	
+	// Computing which address I'll store the results. Sieve is a bitvector.
+	// Divide by 64 rounding up, for how many words I'll touch. Then multiply by 8
+	// because memory is byte addressed.
+	// So t15 will store the start of the primes array.
+	$a0 + 63 -> $t0
+	$t0 / 64 -> $t15
+	$t15 * 8
+	$lo -> $t15
+	$g + $t15 -> $t15
+
+	// t16 will store the length of the primes array
+	0 -> $t16
+
+	2 -> $t0 // here on, t0 will store which prime we're currently using
+	@outer_loop
+		// append our newest prime
+		$t16 * 4
+		$t15 + $lo -> $t1
+		$t0 -> [$t1] /h
+		$t16 + 1 -> $t16
+		<p "Adding: ">
+		<prd $t0>
+		<prc '\n'>
+
+		// Check if we're done.
+		$t0 * $t0
+		[upper_bound] -> $t1
+		$lo >= $t1 -> $t1
+		: done_marking if $t1
+		<p "Not Done\n">
+
+		$lo -> $t1
+		// mark all multiples of our current prime
+		@mark_loop
+		$t1 / 8 -> $t2 // byte address
+		$t2 += $g
+		[$t2] -> $t3
+		<p "Marking Location: ">
+		<prx $t2>
+		<prc '\n'>
+		<p "Before: ">
+		<prb $t3>
+		<prc '\n'>
+
+		$t1 % 8 -> $t4 // which bit to set
+		1 -> $t5
+		$t5 << $t4 -> $t4
+
+		$t3 |= $t4
+		$t3 -> [$t2]
+		<p "After : ">
+		<prb $t3>
+		<prc '\n'> 
+		<prc '\n'> 
+	
+		$t1 += $t0
+		[upper_bound] -> $t2
+		$t1 < $t2 -> $t2
+		: mark_loop if $t2
+		<p "Multiples Marked\n">
+		
+		// find next prime
+		@find_loop
+		$t0 += 1
+		$t0 / 8 -> $t2
+		$t2 += $g
+		[$t2] -> $t3
+
+		$t0 % 8 -> $t4
+		1 -> $t5
+		$t5 << $t4 -> $t4
+
+		$t3 &= $t4
+		: find_loop if $t3
+		<p "New Prime Found\n">
+		: outer_loop
+	@done_marking
+	
+	<p "Done Marking, now can find remaining primes\n">
+	
+	@finishing_loop
+		@find_loop2
+		$t0 += 1
+		[upper_bound] -> $t1
+		$t0 >= $t1 -> $t1
+		: done_search if $t1
+
+		$t0 / 8 -> $t2
+		$t2 += $g
+		[$t2] -> $t3
+
+		$t0 % 8 -> $t4
+		1 -> $t5
+		$t5 << $t4 -> $t4
+
+		$t3 &= $t4
+		: find_loop2 if $t3
+		// append our newest prime
+		$t16 * 4
+		$t15 + $lo -> $t1
+		$t0 -> [$t1] /h
+		$t16 + 1 -> $t16
+		<p "Adding: ">
+		<prd $t0>
+		<prc '\n'>
+		: find_loop2
+		
+	@done_search
+	<p "Number of primes found: ">
+	<prd $t16>
+	<prc '\n'>
+
+	<p "Primes: \n">
+	0 -> $t0
+	@print_primes_loop
+		$t0 * 4
+		$t15 + $lo -> $t1
+		[$t1] -> $t1 /h
+		<prd $t1>
+		<prc '\n'>	
+
+		$t0 += 1
+		$t0 < $t16 -> $t1
+		: print_primes_loop if $t1
+	: $rt
