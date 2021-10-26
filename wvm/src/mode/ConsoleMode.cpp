@@ -258,6 +258,13 @@ namespace WVM::Mode {
 				}
 			} else
 				badInput();
+		} else if (first == "dump") {
+			if (size == 2)
+				*socket << ":Dump " << split[0] << " " << split[1] << "\n";
+			else if (size == 3)
+				*socket << ":Dump " << split[0] << " " << split[1] << " " << split[2] << "\n";
+			else
+				badInput();
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

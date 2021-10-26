@@ -536,6 +536,34 @@ namespace WVM::Mode {
 				return;
 			}
 			vm.intKeybrd(key);
+		} else if (verb == "Dump") {
+			Word address, length;
+			if ((size != 3 && size != 4) || !Util::parseLong(split[1], address) || !Util::parseLong(split[2], length)) {
+				invalid();
+				return;
+			}
+
+			if (length <= 0) {
+				invalid();
+				return;
+			}
+
+			try {
+				if (size == 4 && (split[3] == "t" || split[3] == "tr" || split[3] == "rt"))
+					address = vm.translateAddress(address);
+
+				if (size == 4 && (split[3] == "r" || split[3] == "tr" || split[3] == "rt"))
+					for (Word i = length - 1; 0 <= i; --i)
+						std::cout << Util::toHex(vm.memory.at(address + i), 2).substr(2);
+				else
+					for (Word i = 0; i < length; ++i)
+						std::cout << Util::toHex(vm.memory.at(address + i), 2).substr(2);
+
+				std::cout << std::endl;
+			} catch (const std::exception &err) {
+				error() << "Failed to dump memory (address=" << address << ", length=" << length << "): "
+				        << err.what() << std::endl;
+			}
 		} else {
 			server.send(client, ":UnknownVerb " + verb);
 		}
