@@ -17,12 +17,12 @@ namespace WVM::Mode {
 	void MemoryMode::run(const std::string &hostname, int port) {
 		ClientMode::run(hostname, port);
 
-		networkThread = std::thread([&]() {
+		networkThread = std::thread([this]() {
 			loop();
 		});
 
-		autotickThread = std::thread([&]() {
-			while (true) {
+		autotickThread = std::thread([this]() {
+			for (;;) {
 				std::unique_lock<std::mutex> lock(autotickMutex);
 				autotickVariable.wait(lock, [this] { return autotickReady; });
 				autotickReady = false;
@@ -55,7 +55,7 @@ namespace WVM::Mode {
 		expando = new Haunted::UI::Boxes::ExpandoBox(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
 			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{textbox, -1}});
 
-		textbox->keyFunction = [&](const Haunted::Key &key) {
+		textbox->keyFunction = [this](const Haunted::Key &key) {
 			if (key == Haunted::KeyMod::Ctrl) {
 				if (key == 't') {
 					send(":Tick");
@@ -143,19 +143,17 @@ namespace WVM::Mode {
 		DBG("searching is now " << (searching? "on" : "off"));
 	}
 
-	void MemoryMode::remakeList() {
+	void MemoryMode::remakeList(const std::function<void()> on_complete) {
 		textbox->clearLines();
 		lines.clear();
 		std::stringstream stream;
 		if (min % 8 || max % 8)
 			throw std::runtime_error("MemoryMode min/max are misaligned");
 
-		textbox->draw();
+		// textbox->draw();
 		textbox->suppressDraw = true;
 
-		const int height = textbox->getPosition().height;
-
-		std::thread loops = std::thread([&]() {
+		std::thread loops = std::thread([this, on_complete]() {
 			const std::string hyphens(42 + padding, '-');
 			const std::string spaces(24 + padding, ' ');
 
@@ -178,22 +176,19 @@ namespace WVM::Mode {
 							*textbox += spaces + "\e[36m@\e[39;1;4m" + pair.first + "\e[22;24m";
 
 				addLine(address);
-
-				if (i == height) {
-					textbox->suppressDraw = false;
-					textbox->draw();
-					textbox->suppressDraw = true;
-				}
 			}
 
-			Word size = static_cast<Word>(vm.getMemorySize());
+			Word size = vm.getMemorySize();
 			for (Word address = size - 256 * 8; address < size; address += 8)
 				addLine(address);
+
+			auto lock = terminal.lockRender();
+			textbox->suppressDraw = false;
+			terminal.redraw();
+			on_complete();
 		});
 
-		loops.join();
-		textbox->suppressDraw = false;
-		terminal.redraw();
+		loops.detach();
 	}
 
 	std::string MemoryMode::stringify(Word address) const {
@@ -298,7 +293,7 @@ namespace WVM::Mode {
 			if (size < 2 || !Util::parseLong(split[0], start) || !Util::parseLong(split[1], count)
 			    || static_cast<Word>(size) != 2 + count) {
 				DBG("Invalid MemoryWords content: [" << rest << "]");
-				DBG(Word(size) << ", " << 2 << " + " << count);
+				DBG(Word(size) << ", 2 + " << count);
 				return;
 			}
 
@@ -312,12 +307,11 @@ namespace WVM::Mode {
 			if (vm.getMemorySize() < static_cast<size_t>(end))
 				vm.resize(end);
 
-			for (Word address = start, i = 0; i < count; address += 8, ++i) {
+			for (Word address = start, i = 0; i < count; address += 8, ++i)
 				if (!Util::parseUL(split[i + 2], uword, 16))
 					DBG("Invalid word at index " << i << ": " << split[i + 2]);
 				else
 					vm.setWord(address, uword, Endianness::Little);
-			}
 
 			padding = std::to_string(max).size();
 
@@ -374,10 +368,8 @@ namespace WVM::Mode {
 				DBG("Invalid: FastForward[" << rest << "]");
 			}
 		} else if (verb == "Done") {
-			if (size == 1 && split[0] == "GetMain") {
-				remakeList();
-				jumpToPC();
-			}
+			if (size == 1 && split[0] == "GetMain")
+				remakeList([this] { jumpToPC(); });
 		} else if (verb == "AddBP") {
 			Word breakpoint;
 			if (size != 1 || !Util::parseLong(split[0], breakpoint)) {
@@ -474,14 +466,14 @@ namespace WVM::Mode {
 
 		if (auto *simple = dynamic_cast<Haunted::UI::SimpleLine<Container> *>(line.get())) {
 			return *simple;
-		} else throw std::runtime_error("Unable to cast line to Haunted::UI::simpleline");
+		} else throw std::runtime_error("Unable to cast line to Haunted::UI::SimpleLine");
 	}
 
 	Haunted::UI::SimpleLine<MemoryMode::Container> & MemoryMode::addLine(Word address) {
 		*textbox += stringify(address);
 		auto ptr = textbox->getLines().back();
 		lines.emplace(address, ptr);
-		ptr->mouseFunction = [&, address](const Haunted::MouseReport &report) {
+		ptr->mouseFunction = [this, address](const Haunted::MouseReport &report) {
 			if (report.action == Haunted::MouseAction::Up) {
 				if (report.x <= 1 + padding) {
 					// Clicked on [.....]
@@ -503,7 +495,7 @@ namespace WVM::Mode {
 		};
 		if (auto *simple = dynamic_cast<Haunted::UI::SimpleLine<Container> *>(ptr.get())) {
 			return *simple;
-		} else throw std::runtime_error("Couldn't cast new textline to simpleline");
+		} else throw std::runtime_error("Couldn't cast new TextLine to SimpleLine");
 	}
 
 	void MemoryMode::addBreakpoint(Word breakpoint) {

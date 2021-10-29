@@ -57,7 +57,7 @@ namespace WVM::Mode {
 			~MemoryMode();
 
 			void run(const std::string &hostname, int port) override;
-			void remakeList();
+			void remakeList(const std::function<void()> on_complete = [] {});
 			std::string stringify(Word address) const;
 			void updateLine(Word address, bool careless = false);
 			void makeSymbolTableEdges();
