@@ -40,12 +40,21 @@ namespace WVM::Mode {
 	}
 
 	void ServerMode::initVM() {
-		vm.onUpdateMemory = [this](Word address, Word unadjusted, Size size) {
+		vm.onUpdateMemory = [this](Word pc, Word address, Word unadjusted, Size size) {
+			if (memorySubscribers.empty())
+				return;
 			if (logMemoryWrites)
 				DBG("[" << unadjusted << "] <- " << vm.get(unadjusted, size));
 			writtenAddresses.insert(address);
-			const std::string message = ":MemoryWord " + std::to_string(address) + " " +
-				std::to_string(static_cast<Word>(vm.getWord(address))) + " " + std::to_string(vm.programCounter);
+			std::string message = ":MemoryWord " + std::to_string(address) + " " +
+				std::to_string(static_cast<Word>(vm.getWord(address))) + " " + std::to_string(pc) + " ";
+			switch (size) {
+				case Size::Word:  message += "8B"; break;
+				case Size::HWord: message += "4B"; break;
+				case Size::QWord: message += "2B"; break;
+				case Size::Byte:  message += "1B"; break;
+				default: message += "?"; break;
+			}
 			auto lock = lockSubscribers();
 			for (int client: memorySubscribers)
 				server.send(client, message);

@@ -71,15 +71,11 @@ namespace WVM::Mode {
 					std::to_string(newValue);
 		} else if (verb == "MemoryWord") {
 			UWord pc, address;
-			if (!Util::parseUL(split[2], pc) || !Util::parseUL(split[0], address)) {
+			if (!Util::parseUL(split[2], pc) || !Util::parseUL(split[0], address))
 				*textbox += std::string(errorPrefix) + "Invalid message.";
-			} else if (filter.empty() || filter.count(address) != 0 || filter.count(pc) != 0) {
-				std::string to_add = infoPrefix;
-				if (split.size() == 3)
-					to_add += "\e[2m(@ \e[1m" + split[2] + "\e[22;2m) ";
-				to_add += "\e[2m[" + split[0] + "] = \e[22m" + split[1];
-				*textbox += to_add;
-			}
+			else if (filter.empty() || filter.count(address) != 0 || filter.count(pc) != 0)
+				*textbox += std::string(infoPrefix) + "\e[2m(@ \e[1m" + split[2] + "\e[22;2m) " + "\e[2m[" + split[0] +
+					"] = \e[22m" + split[1] + " /" + split[3];
 		} else if (verb == "Quit") {
 			stop();
 			std::terminate();
@@ -195,7 +191,7 @@ namespace WVM::Mode {
 			if (size == 0)
 				*socket << ":GetPC\n";
 			else
-				*textbox += errorPrefix + std::string("Setting the program counter is currently unsupported.");
+				*socket << ":SetPC " << split[0] << "\n";
 		} else if (first == "d" || first == "dbg" || first == "debug") {
 			if (size == 0)
 				*socket << ":DebugData\n";

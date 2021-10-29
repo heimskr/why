@@ -49,8 +49,8 @@ namespace WVM::Mode {
 			return true;
 		};
 
-		textbox = new Haunted::UI::Textbox<Container>();
-		textinput = new Haunted::UI::TextInput();
+		textbox = new Haunted::UI::Textbox<Container>(nullptr, false);
+		textinput = new Haunted::UI::TextInput(nullptr);
 
 		expando = new Haunted::UI::Boxes::ExpandoBox(&terminal, Haunted::UI::Boxes::BoxOrientation::Vertical,
 			std::initializer_list<Haunted::UI::Boxes::ExpandoBox::ChildPair> {{textbox, -1}});

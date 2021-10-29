@@ -20,7 +20,7 @@
 // #define DEBUG_VIRTMEM
 #define CATCH_DEBUG
 #define CATCH_OPEN
-#define CATCH_TICK
+// #define CATCH_TICK
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
@@ -148,9 +148,9 @@ namespace WVM {
 		else
 			for (char i = 0; i < 8; i++)
 				memory[address + 7 - i] = (value >> (8*i)) & 0xff;
-		onUpdateMemory(address - (address % 8), address, Size::Word);
+		onUpdateMemory(programCounter, address - (address % 8), address, Size::Word);
 		if (address % 8 != 0)
-			onUpdateMemory(address - (address % 8) + 8, address, Size::Word);
+			onUpdateMemory(programCounter, address - (address % 8) + 8, address, Size::Word);
 	}
 
 	void VM::setHalfword(Word address, UHWord value, Endianness endianness) {
@@ -166,9 +166,9 @@ namespace WVM {
 				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
 		}
 
-		onUpdateMemory(address - (address % 8), address, Size::HWord);
+		onUpdateMemory(programCounter, address - (address % 8), address, Size::HWord);
 		if (4 < address % 8)
-			onUpdateMemory(address - (address % 8) + 8, address, Size::HWord);
+			onUpdateMemory(programCounter, address - (address % 8) + 8, address, Size::HWord);
 	}
 
 	void VM::setQuarterword(Word address, UQWord value, Endianness endianness) {
@@ -184,9 +184,9 @@ namespace WVM {
 			memory[address + 1] = value & 0xff;
 		}
 
-		onUpdateMemory(address - (address % 8), address, Size::QWord);
+		onUpdateMemory(programCounter, address - (address % 8), address, Size::QWord);
 		if (6 < address % 8)
-			onUpdateMemory(address - (address % 8) + 8, address, Size::QWord);
+			onUpdateMemory(programCounter, address - (address % 8) + 8, address, Size::QWord);
 	}
 
 	void VM::setByte(Word address, UByte value) {
@@ -195,7 +195,7 @@ namespace WVM {
 				std::to_string(programCounter));
 
 		memory[address] = value;
-		onUpdateMemory(address - (address % 8), address, Size::Byte);
+		onUpdateMemory(programCounter, address - (address % 8), address, Size::Byte);
 	}
 
 	UWord VM::getWord(Word address, Endianness endianness) const {
