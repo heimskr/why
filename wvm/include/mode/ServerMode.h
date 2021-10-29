@@ -26,7 +26,9 @@ namespace WVM::Mode {
 		public:
 			static ServerMode *instance;
 
-			ServerMode(int port): server(port, true), vm(134'217'728) {}
+			ServerMode(int port): server(port, true), vm(134'217'728) {
+				vm.logJumps = true;
+			}
 
 			void run(const std::string &path, const std::vector<std::string> &disks);
 			void initVM();

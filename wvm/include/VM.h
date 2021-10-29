@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <functional>
 #include <istream>
+#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -58,6 +59,7 @@ namespace WVM {
 			void setC(bool);
 			void setO(bool);
 			static std::chrono::milliseconds getMilliseconds();
+			static std::string demangleLabel(const std::string &str);
 
 		public:
 			static constexpr size_t PAGE_SIZE = 65536;
@@ -68,6 +70,7 @@ namespace WVM {
 			Word interruptTableAddress = 0;
 			Word registers[Why::totalRegisters];
 			std::map<std::string, Symbol> symbolTable;
+			std::multimap<Word, std::string> symbolsByPosition;
 			std::map<Word, DebugData> debugMap;
 			std::map<int, const std::string *> debugFiles, debugFunctions;
 			std::vector<Drive> drives;
@@ -83,6 +86,8 @@ namespace WVM {
 			bool enableHistory = false;
 			std::atomic_bool resting = false;
 			bool hardwareInterruptsEnabled = true;
+			bool logJumps = false;
+			std::list<const std::string *> jumpStack;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};
@@ -117,7 +122,7 @@ namespace WVM {
 			unsigned char registerID(Word &) const;
 			void resize(size_t);
 
-			void jump(Word, bool should_link = false);
+			void jump(Word, bool should_link = false, bool from_rt = false);
 			void link(bool record = false);
 			void increment();
 			bool changeRing(Ring);

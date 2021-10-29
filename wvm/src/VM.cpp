@@ -4,11 +4,13 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <regex>
 
 #include <fcntl.h>
 #include <unistd.h>
 
 #include "lib/ansi.h"
+#include "haunted/core/Util.h"
 #include "Operations.h"
 #include "Registers.h"
 #include "StringSet.h"
@@ -43,6 +45,13 @@ namespace WVM {
 	std::chrono::milliseconds VM::getMilliseconds() {
 		return std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::system_clock::now().time_since_epoch());
+	}
+
+	std::string VM::demangleLabel(const std::string &str) {
+		std::regex why_label_regex("^__(.+)_label\\d+$");
+		if (std::regex_match(str, why_label_regex))
+			return Haunted::Util::demangle(std::regex_replace(str, why_label_regex, "$1"));
+		return Haunted::Util::demangle(str);
 	}
 
 	Word VM::translateAddress(Word virtual_address, bool *success, PageMeta *meta_out) {
@@ -293,9 +302,26 @@ namespace WVM {
 		memorySize = new_size;
 	}
 
-	void VM::jump(Word address, bool should_link) {
-		if (should_link)
+	void VM::jump(Word address, bool should_link, bool from_rt) {
+		if (should_link) {
 			link(false);
+			if (logJumps) {
+				auto [begin, end] = symbolsByPosition.equal_range(address);
+				if (begin != end) {
+					// for (auto iter = begin; iter != end; ++iter)
+					// 	std::cerr << (iter == begin? "Jumping to " : ", ") << iter->second;
+					std::cerr << "\e[32mJumping\e[39m to " << demangleLabel(begin->second);
+					std::cerr << '\n';
+					jumpStack.push_back(&begin->second);
+				}
+			}
+		}
+
+		if (logJumps && from_rt && !jumpStack.empty()) {
+			std::cerr << "\e[31mLeaving\e[39m " << demangleLabel(*jumpStack.back()) << '\n';
+			jumpStack.pop_back();
+		}
+
 		recordChange<JumpChange>(*this, address, should_link);
 		Word old_address = programCounter;
 		programCounter = address;
@@ -425,7 +451,17 @@ namespace WVM {
 					try {
 						tick();
 					} catch (const std::exception &err) {
-						std::cerr << "Play thread caught an exception: " << err.what() << std::endl;
+						std::cerr << "Play thread caught an exception";
+						if (!jumpStack.empty()) {
+							const std::string demangled = demangleLabel(*jumpStack.back());
+							std::cerr << " in \e[31m" << *jumpStack.back() << "\e[39m";
+							if (*jumpStack.back() != demangled)
+								std::cerr << " (\e[33;1m" << demangled << "\e[22;39m)";
+						}
+						std::cerr << ": " << err.what() << std::endl;
+						size_t i = 0;
+						for (const std::string *label: jumpStack)
+							std::cerr << i++ << ": " << *label << '\n';
 						break;
 					}
 					if (microdelay)
@@ -630,14 +666,15 @@ namespace WVM {
 
 	void VM::loadSymbols() {
 		symbolTable.clear();
-		for (Word i = symbolsOffset; i < codeOffset && static_cast<size_t>(i + 16) < memorySize;) {
+		for (Word i = symbolsOffset; i < codeOffset && size_t(i + 16) < memorySize;) {
 			const HWord length = getQuarterword(i, Endianness::Little);
 			const HWord hash = getHalfword(i + 4, Endianness::Little);
 			const Word location = getWord(i + 8, Endianness::Little);
-			if (memorySize <= static_cast<size_t>(i + 16 + length * 8))
+			if (memorySize <= size_t(i + 16 + length * 8))
 				break;
 			const std::string name = getString(i + 16, length * 8);
 			symbolTable.emplace(name, Symbol(hash, location));
+			symbolsByPosition.emplace(location, name);
 			i += 16 + length * 8;
 		}
 	}

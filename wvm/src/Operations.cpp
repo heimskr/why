@@ -622,7 +622,7 @@ namespace WVM::Operations {
 			if (!success)
 				vm.intPfault();
 			else
-				vm.jump(translated, false);
+				vm.jump(translated, false, vm.registerID(rd) == Why::returnAddressOffset);
 		} else vm.increment();
 	}
 
@@ -633,7 +633,7 @@ namespace WVM::Operations {
 			if (!success)
 				vm.intPfault();
 			else
-				vm.jump(translated, false);
+				vm.jump(translated, false, vm.registerID(rd) == Why::returnAddressOffset);
 		} else vm.increment();
 	}
 
