@@ -23,7 +23,7 @@ namespace WVM {
 		          const std::function<void()> &extra_):
 			type(type_), newRing(new_ring), maxPermitted(max_permitted), canDisable(can_disable), extra(extra_) {}
 
-		void operator()(VM &, bool force);
+		void operator()(VM &, bool force) const;
 	};
 
 	extern std::unordered_map<InterruptType, Interrupt> interrupts;

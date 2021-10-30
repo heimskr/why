@@ -46,9 +46,11 @@ namespace WVM {
 			std::thread timerThread;
 			std::chrono::milliseconds timerStart;
 			std::thread playThread;
-			std::atomic<bool> playing = false;
-			std::mutex restMutex;
-			std::condition_variable restCondition;
+			std::atomic_bool playing = false;
+			std::atomic_bool restAcknowledged = false;
+			std::mutex restMutex, restAcknowledgeMutex;
+			std::condition_variable restCondition, restAcknowledgeCondition;
+			std::atomic_bool playThreadAlive = false;
 
 			bool getZ();
 			bool getN();

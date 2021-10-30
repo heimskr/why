@@ -4,7 +4,7 @@
 #include "VM.h"
 
 namespace WVM {
-	void Interrupt::operator()(VM &vm, bool) {
+	void Interrupt::operator()(VM &vm, bool) const {
 		// TODO: taking newRing and maxPermitted into account.
 
 		if (vm.interruptTableAddress == 0) {

@@ -23,6 +23,7 @@
 #define CATCH_DEBUG
 #define CATCH_OPEN
 // #define CATCH_TICK
+#define CATCH_TICK_IN_PLAY
 
 namespace WVM {
 	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
@@ -147,7 +148,7 @@ namespace WVM {
 	}
 
 	void VM::setWord(Word address, UWord value, Endianness endianness) {
-		if (static_cast<Word>(memorySize) <= address - 7 || address < 0)
+		if (Word(memorySize) <= address - 7 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::setWord (" + std::to_string(address - 7) + ") at " +
 				std::to_string(programCounter));
 
@@ -163,7 +164,7 @@ namespace WVM {
 	}
 
 	void VM::setHalfword(Word address, UHWord value, Endianness endianness) {
-		if (static_cast<Word>(memorySize) <= address - 3 || address < 0)
+		if (Word(memorySize) <= address - 3 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::setHalfword (" + std::to_string(address - 3) + ") at " +
 				std::to_string(programCounter));
 
@@ -181,7 +182,7 @@ namespace WVM {
 	}
 
 	void VM::setQuarterword(Word address, UQWord value, Endianness endianness) {
-		if (static_cast<Word>(memorySize) <= address - 1 || address < 0)
+		if (Word(memorySize) <= address - 1 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::setQuarterword (" + std::to_string(address - 1) + ") at "
 				+ std::to_string(programCounter));
 
@@ -199,7 +200,7 @@ namespace WVM {
 	}
 
 	void VM::setByte(Word address, UByte value) {
-		if (static_cast<Word>(memorySize) <= address || address < 0)
+		if (Word(memorySize) <= address || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::setByte (" + std::to_string(address) + ") at " +
 				std::to_string(programCounter));
 
@@ -208,49 +209,49 @@ namespace WVM {
 	}
 
 	UWord VM::getWord(Word address, Endianness endianness) const {
-		if (static_cast<Word>(memorySize) <= address - 7 || address < 0)
+		if (Word(memorySize) <= address - 7 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::getWord (" + std::to_string(address - 7) + ") at " +
 				std::to_string(programCounter));
 
 		UWord out = 0;
 		if (endianness == Endianness::Little)
 			for (char i = 0; i < 8; i++)
-				out |= static_cast<Word>(memory[address + i]) << (i * 8);
+				out |= Word(memory[address + i]) << (i * 8);
 		else
 			for (char i = 0; i < 8; i++)
-				out |= static_cast<Word>(memory[address + i]) << ((7 - i) * 8);
+				out |= Word(memory[address + i]) << ((7 - i) * 8);
 
 		return out;
 	}
 
 	UHWord VM::getHalfword(Word address, Endianness endianness) const {
-		if (static_cast<Word>(memorySize) <= address - 3 || address < 0)
+		if (Word(memorySize) <= address - 3 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::getHalfword (" + std::to_string(address - 3) + ") at " +
 				std::to_string(programCounter));
 
 		UHWord out = 0;
 		if (endianness == Endianness::Little)
 			for (char i = 0; i < 4; i++)
-				out |= static_cast<HWord>(memory[address + i]) << (8*i);
+				out |= HWord(memory[address + i]) << (8*i);
 		else
 			for (char i = 0; i < 4; i++)
-				out |= static_cast<HWord>(memory[address + 3 - i]) << (8*i);
+				out |= HWord(memory[address + 3 - i]) << (8*i);
 
 		return out;
 	}
 
 	UQWord VM::getQuarterword(Word address, Endianness endianness) const {
-		if (static_cast<Word>(memorySize) <= address - 1 || address < 0)
+		if (Word(memorySize) <= address - 1 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::getQuarterword (" + std::to_string(address - 1) + ") at "
 				+ std::to_string(programCounter));
 
 		if (endianness == Endianness::Little)
-			return static_cast<UHWord>(memory[address] | (memory[address + 1] << 8));
-		return static_cast<UHWord>(memory[address + 1] | (memory[address] << 8));
+			return UHWord(memory[address] | (memory[address + 1] << 8));
+		return UHWord(memory[address + 1] | (memory[address] << 8));
 	}
 
 	UByte VM::getByte(Word address) const {
-		if (static_cast<Word>(memorySize) <= address || address < 0)
+		if (Word(memorySize) <= address || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::getByte (" + std::to_string(address) + ") at " +
 				std::to_string(programCounter));
 
@@ -308,17 +309,14 @@ namespace WVM {
 			if (logJumps) {
 				auto [begin, end] = symbolsByPosition.equal_range(address);
 				if (begin != end) {
-					// for (auto iter = begin; iter != end; ++iter)
-					// 	std::cerr << (iter == begin? "Jumping to " : ", ") << iter->second;
-					std::cerr << "\e[32mJumping\e[39m to " << demangleLabel(begin->second);
-					std::cerr << '\n';
+					std::cerr << "\e[32mJumping\e[39m to " << begin->second << '\n';
 					jumpStack.push_back(&begin->second);
 				}
 			}
 		}
 
 		if (logJumps && from_rt && !jumpStack.empty()) {
-			std::cerr << "\e[31mLeaving\e[39m " << demangleLabel(*jumpStack.back()) << '\n';
+			std::cerr << "\e[31mLeaving\e[39m " << *jumpStack.back() << '\n';
 			jumpStack.pop_back();
 		}
 
@@ -342,7 +340,7 @@ namespace WVM {
 
 	bool VM::changeRing(Ring new_ring) {
 		const Ring old_ring = ring;
-		if (static_cast<int>(new_ring) < Why::ringMin || Why::ringMax < static_cast<int>(new_ring) || new_ring < ring) {
+		if (int(new_ring) < Why::ringMin || Why::ringMax < int(new_ring) || new_ring < ring) {
 			intProtec();
 			return false;
 		}
@@ -374,29 +372,37 @@ namespace WVM {
 			case Conditions::Disabled: return true;
 		}
 
-		throw std::runtime_error("Invalid conditions flag: " + std::to_string(static_cast<int>(conditions)));
+		throw std::runtime_error("Invalid conditions flag: " + std::to_string(int(conditions)));
 	}
 
 	bool VM::interrupt(int type, bool force) {
-		return interrupt(static_cast<InterruptType>(type), force);
+		return interrupt(InterruptType(type), force);
 	}
 
 	bool VM::interrupt(InterruptType type, bool force) {
 		if (interrupts.count(type) == 0)
-			throw std::runtime_error("Invalid interrupt: " + std::to_string(static_cast<int>(type)));
+			throw std::runtime_error("Invalid interrupt: " + std::to_string(int(type)));
+		static size_t x = 0;
 
-		Interrupt &in_map = interrupts.at(type);
+		const Interrupt &in_map = interrupts.at(type);
 		if (!in_map.canDisable || hardwareInterruptsEnabled) {
-			interrupts.at(type)(*this, force);
+			// Disable hardware interrupts if jumping to one.
+			if (in_map.canDisable) {
+				std::cerr << "Disabling interrupts. " << x++ << '\n';
+				hardwareInterruptsEnabled = false;
+			}
+			in_map(*this, force);
 			wakeRest();
 			return true;
 		}
 
+		std::cerr << "Uh oh. " << x++ << '\n';
+		wakeRest(); // TODO: verify
 		return false;
 	}
 
 	bool VM::checkRing(Ring check) {
-		if (static_cast<int>(check) != -1 && static_cast<int>(check) < static_cast<int>(ring)) {
+		if (int(check) != -1 && int(check) < int(ring)) {
 			intProtec();
 			return false;
 		}
@@ -443,11 +449,27 @@ namespace WVM {
 			if (playing && active && !paused) {
 				const std::chrono::microseconds delay(microdelay);
 				onPlayStart();
+				playThreadAlive = true;
 				do {
 					if (resting) {
-						std::unique_lock<std::mutex> lock(restMutex);
-						restCondition.wait(lock, [this] { return !resting; });
+						std::cerr << "\e[33mResting...\e[39m\n";
+						if (resting.load()) {
+							std::unique_lock<std::mutex> lock(restMutex);
+							std::cerr << "[P] Rest lock acquired.\n";
+							restCondition.wait(lock, [this] { return !resting.load(); });
+						}
+						// std::cerr << "[P] Acquiring ack_lock...\n";
+						{
+							// std::unique_lock<std::mutex> ack_lock(restAcknowledgeMutex);
+							std::cerr << "[P] Acknowledging rest...\n";
+							restAcknowledged.store(true);
+							std::cerr << "[P] Rest acknowledged.\n";
+							// std::cerr << "[P] ack_lock acquired.\n";
+							// restAcknowledgeCondition.notify_all();
+						}
+						std::cerr << "\e[32mDone resting.\e[39m\n";
 					}
+#ifdef CATCH_TICK_IN_PLAY
 					try {
 						tick();
 					} catch (const std::exception &err) {
@@ -464,9 +486,13 @@ namespace WVM {
 							std::cerr << i++ << ": " << *label << '\n';
 						break;
 					}
+#else
+					tick();
+#endif
 					if (microdelay)
 						std::this_thread::sleep_for(delay);
 				} while (playing && active && !paused);
+				playThreadAlive = false;
 				onPlayEnd();
 			}
 			playing = false;
@@ -480,13 +506,36 @@ namespace WVM {
 	}
 
 	void VM::wakeRest() {
-		std::unique_lock<std::mutex> lock(restMutex);
-		resting = false;
-		restCondition.notify_all();
+		if (!resting.load()) {
+			std::cerr << "[M] Not doing wakeRest.\n";
+			return;
+		}
+
+		std::cerr << "[M] wakeRest called.\n";
+		restAcknowledged.store(false);
+		{
+			std::unique_lock<std::mutex> lock(restMutex);
+			std::cerr << "[M] Setting resting to false.\n";
+			resting = false;
+			std::cerr << "[M] Notifying all.\n";
+			restCondition.notify_all();
+		}
+		if (playThreadAlive.load()) {
+			// std::cerr << "[M] Notified. Acquiring ack_lock...\n";
+			std::cerr << "[M] Notified. Waiting for acknowledgment...\n";
+			while (!restAcknowledged.load()); // Sorry.
+			// {
+				// std::unique_lock<std::mutex> ack_lock(restAcknowledgeMutex);
+				// std::cerr << "[M] ack_lock acquired. Waiting for acknowledgment.\n";
+				// restAcknowledgeCondition.wait(ack_lock, [this] { return restAcknowledged.load(); });
+			// }
+			std::cerr << "[M] Rest acknowledged.\n";
+		}
+		std::cerr << "[M] \e[32mwakeRest complete.\e[39m\n";
 	}
 
 	void VM::rest() {
-		std::unique_lock<std::mutex> lock(restMutex);
+		// std::unique_lock<std::mutex> lock(restMutex);
 		resting = true;
 	}
 
@@ -729,7 +778,7 @@ namespace WVM {
 		if (!enableHistory || changeBuffer.empty())
 			return;
 
-		if (static_cast<size_t>(undoPointer) < undoStack.size())
+		if (size_t(undoPointer) < undoStack.size())
 			undoStack.erase(std::next(undoStack.begin(), undoPointer), undoStack.end());
 		++undoPointer;
 		undoStack.emplace_back(std::move(changeBuffer));

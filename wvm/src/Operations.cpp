@@ -619,10 +619,17 @@ namespace WVM::Operations {
 		if (vm.checkConditions(conditions)) {
 			bool success;
 			const Word translated = vm.translateAddress(rd, &success);
-			if (!success)
+			if (!success) {
 				vm.intPfault();
-			else
-				vm.jump(translated, false, vm.registerID(rd) == Why::returnAddressOffset);
+			} else {
+				const auto reg_id = vm.registerID(rd);
+				// Reenable interrupts if jumping to $e0.
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
+					std::cerr << "Enabling interrupts.\n";
+					vm.hardwareInterruptsEnabled = true;
+				}
+				vm.jump(translated, false, reg_id == Why::returnAddressOffset);
+			}
 		} else vm.increment();
 	}
 
@@ -1066,10 +1073,11 @@ namespace WVM::Operations {
 
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		std::stringstream ss;
-		ss << Why::coloredRegister(&rs - vm.registers) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
-		   << rs << "\n";
-		vm.onPrint(ss.str());
-		DBG(ss.str());
+		ss << Why::coloredRegister(vm.registerID(rs)) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
+		   << rs;
+		// vm.onPrint(ss.str() + "\n");
+		// DBG(ss.str());
+		std::cerr << ss.str() << '\n';
 		vm.increment();
 	}
 

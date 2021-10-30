@@ -578,12 +578,13 @@ namespace WVM::Mode {
 				size_t i = 0;
 				std::cerr << "Stacktrace:\n";
 				Word m5 = vm.registers[Why::assemblerOffset + 5];
+				std::cerr << "    " << i << ": " << vm.registers[Why::returnAddressOffset] << '\n';
 				while (m5 != 0) {
 					bool success;
 					const Word rt_addr = vm.translateAddress(m5 + 16, &success);
 					if (!success)
 						throw std::runtime_error("Address translation failed");
-					std::cerr << "    " << i++ << ": " << vm.getWord(rt_addr) << std::endl;
+					std::cerr << "    " << ++i << ": " << vm.getWord(rt_addr) << std::endl;
 					const Word m5_addr = vm.translateAddress(m5, &success);
 					if (!success)
 						throw std::runtime_error("Address translation failed");
