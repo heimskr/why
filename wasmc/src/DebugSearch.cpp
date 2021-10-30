@@ -48,11 +48,11 @@ int main(int argc, char **argv) {
 	try {
 		const Long parsed = Util::parseUlong(combined);
 		Long highest = 0;
-		std::string highest_name;
+		std::string highest_name, highest_original;
 		for (const auto &[name, symbol]: parser->symbols)
 			if (symbol.address <= parsed && highest < symbol.address) {
 				highest = symbol.address;
-				highest_name = name;
+				highest_original = highest_name = name;
 			}
 		if (highest == 0) {
 			std::cout << "No symbol found for address " << parsed << ".\n";
@@ -78,6 +78,9 @@ int main(int argc, char **argv) {
 			}
 			std::cout << "Closest symbol to " << parsed << " is \e[32m"
 			          << std::regex_replace(highest_name, std::regex("::__1"), "") << "\e[39m at " << highest << ".\n";
+			if (highest_name != highest_original)
+				std::cout << "Also known as \e[33m"
+				          << std::regex_replace(highest_original, std::regex("^__(.+)_label\\d+$"), "$1") << "\e[39m\n";
 			for (const auto &entry: parser->debugData)
 				if (entry->getType() == DebugEntry::Type::Location) {
 					auto *location = dynamic_cast<DebugLocation *>(entry.get());
