@@ -80,9 +80,9 @@
 						<li><a href="#op-slli">Shift Left Logical Immediate</a> (<code>slli</code>)</li>
 						<li><a href="#op-srli">Shift Right Logical Immediate</a> (<code>srli</code>)</li>
 						<li><a href="#op-srai">Shift Right Arithmetic Immediate</a> (<code>srai</code>)</li>
-						<li><a href="#op-slli">Shift Left Logical Inverse Immediate</a> (<code>sllii</code>)</li>
-						<li><a href="#op-srli">Shift Right Logical Inverse Immediate</a> (<code>srlii</code>)</li>
-						<li><a href="#op-srai">Shift Right Arithmetic Inverse Immediate</a> (<code>sraii</code>)</li>
+						<li><a href="#op-sllii">Shift Left Logical Inverse Immediate</a> (<code>sllii</code>)</li>
+						<li><a href="#op-srlii">Shift Right Logical Inverse Immediate</a> (<code>srlii</code>)</li>
+						<li><a href="#op-sraii">Shift Right Arithmetic Inverse Immediate</a> (<code>sraii</code>)</li>
 						<li><a href="#op-modi">Modulo Immediate</a> (<code>modi</code>)</li>
 						<li><a href="#op-divi">Divide Immediate</a> (<code>divi</code>)</li>
 						<li><a href="#op-divui">Divide Unsigned Immediate</a> (<code>divui</code>)</li>
