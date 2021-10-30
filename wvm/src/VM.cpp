@@ -382,22 +382,17 @@ namespace WVM {
 	bool VM::interrupt(InterruptType type, bool force) {
 		if (interrupts.count(type) == 0)
 			throw std::runtime_error("Invalid interrupt: " + std::to_string(int(type)));
-		static size_t x = 0;
 
 		const Interrupt &in_map = interrupts.at(type);
 		if (!in_map.canDisable || hardwareInterruptsEnabled) {
 			// Disable hardware interrupts if jumping to one.
-			if (in_map.canDisable) {
-				std::cerr << "Disabling interrupts. " << x++ << '\n';
+			if (in_map.canDisable)
 				hardwareInterruptsEnabled = false;
-			}
 			in_map(*this, force);
 			wakeRest();
 			return true;
 		}
 
-		std::cerr << "Uh oh. " << x++ << '\n';
-		// wakeRest(); // TODO: verify
 		return false;
 	}
 
@@ -451,23 +446,11 @@ namespace WVM {
 				onPlayStart();
 				playThreadAlive = true;
 				do {
-					if (resting) {
-						std::cerr << "\e[33mResting...\e[39m\n";
-						if (resting.load()) {
-							std::unique_lock<std::mutex> lock(restMutex);
-							std::cerr << "[P] Rest lock acquired.\n";
-							restCondition.wait(lock, [this] { return !resting.load(); });
-						}
-						// std::cerr << "[P] Acquiring ack_lock...\n";
-						{
-							// std::unique_lock<std::mutex> ack_lock(restAcknowledgeMutex);
-							std::cerr << "[P] Acknowledging rest...\n";
-							restAcknowledged.store(true);
-							std::cerr << "[P] Rest acknowledged.\n";
-							// std::cerr << "[P] ack_lock acquired.\n";
-							// restAcknowledgeCondition.notify_all();
-						}
-						std::cerr << "\e[32mDone resting.\e[39m\n";
+					if (resting.load()) {
+						std::unique_lock<std::mutex> lock(restMutex);
+						restCondition.wait(lock, [this] { return !resting.load(); });
+						restAcknowledged.store(true);
+						restAcknowledgeCondition.notify_all();
 					}
 #ifdef CATCH_TICK_IN_PLAY
 					try {
@@ -506,32 +489,19 @@ namespace WVM {
 	}
 
 	void VM::wakeRest() {
-		if (!resting.load()) {
-			std::cerr << "[M] Not doing wakeRest.\n";
+		if (!resting.load())
 			return;
-		}
 
-		std::cerr << "[M] wakeRest called.\n";
-		restAcknowledged.store(false);
+		restAcknowledged = false;
 		{
 			std::unique_lock<std::mutex> lock(restMutex);
-			std::cerr << "[M] Setting resting to false.\n";
 			resting = false;
-			std::cerr << "[M] Notifying all.\n";
 			restCondition.notify_all();
 		}
 		if (playThreadAlive.load()) {
-			// std::cerr << "[M] Notified. Acquiring ack_lock...\n";
-			std::cerr << "[M] Notified. Waiting for acknowledgment...\n";
-			while (!restAcknowledged.load()); // Sorry.
-			// {
-				// std::unique_lock<std::mutex> ack_lock(restAcknowledgeMutex);
-				// std::cerr << "[M] ack_lock acquired. Waiting for acknowledgment.\n";
-				// restAcknowledgeCondition.wait(ack_lock, [this] { return restAcknowledged.load(); });
-			// }
-			std::cerr << "[M] Rest acknowledged.\n";
+			std::unique_lock<std::mutex> lock(restAcknowledgeMutex);
+			restAcknowledgeCondition.wait(lock, [this] { return restAcknowledged.load(); });
 		}
-		std::cerr << "[M] \e[32mwakeRest complete.\e[39m\n";
 	}
 
 	void VM::rest() {

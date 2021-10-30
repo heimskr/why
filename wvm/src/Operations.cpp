@@ -624,10 +624,8 @@ namespace WVM::Operations {
 			} else {
 				const auto reg_id = vm.registerID(rd);
 				// Reenable interrupts if jumping to $e0.
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
-					std::cerr << "Enabling interrupts.\n";
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
 					vm.hardwareInterruptsEnabled = true;
-				}
 				vm.jump(translated, false, reg_id == Why::returnAddressOffset);
 			}
 		} else vm.increment();
