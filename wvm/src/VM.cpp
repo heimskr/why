@@ -397,7 +397,7 @@ namespace WVM {
 		}
 
 		std::cerr << "Uh oh. " << x++ << '\n';
-		wakeRest(); // TODO: verify
+		// wakeRest(); // TODO: verify
 		return false;
 	}
 

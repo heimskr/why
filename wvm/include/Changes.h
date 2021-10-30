@@ -1,5 +1,4 @@
-#ifndef WVM_CHANGES_H_
-#define WVM_CHANGES_H_
+#pragma once
 
 #include "Defs.h"
 
@@ -94,5 +93,3 @@ namespace WVM {
 		void undo(VM &, bool strict = false) override;
 	};
 }
-
-#endif

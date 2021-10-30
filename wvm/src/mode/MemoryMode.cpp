@@ -344,7 +344,8 @@ namespace WVM::Mode {
 				return;
 			}
 
-			Word old_pc = vm.programCounter;
+			auto lock = vm.lockVM();
+			const Word old_pc = vm.programCounter;
 			vm.programCounter = to;
 			if (!fastForward) {
 				if (lines.count(old_pc) == 1)

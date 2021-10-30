@@ -5,19 +5,20 @@
 
 namespace WVM {
 	void Interrupt::operator()(VM &vm, bool) const {
-		// TODO: taking newRing and maxPermitted into account.
+		// TODO: take newRing and maxPermitted into account.
+		auto lock = vm.lockVM();
 
 		if (vm.interruptTableAddress == 0) {
 			vm.recordChange<HaltChange>();
 			vm.stop();
 		} else {
-			const Word destination = vm.getWord(vm.interruptTableAddress + static_cast<Word>(type) * 8,
+			const Word destination = vm.getWord(vm.interruptTableAddress + Word(type) * 8,
 				Endianness::Little);
 			if (destination == 0) {
 				vm.recordChange<HaltChange>();
 				vm.stop();
 			} else {
-				const Word ring = static_cast<Word>(vm.ring);
+				const Word ring = Word(vm.ring);
 				vm.bufferChange<RegisterChange>(vm, REG_E + 0, vm.programCounter);
 				vm.recordChange<RegisterChange>(vm, REG_E + 1, ring);
 				vm.registers[REG_E + 0] = vm.programCounter;
