@@ -23,9 +23,11 @@ namespace WVM::Mode {
 
 		autotickThread = std::thread([this]() {
 			for (;;) {
-				std::unique_lock<std::mutex> lock(autotickMutex);
-				autotickVariable.wait(lock, [this] { return autotickReady; });
-				autotickReady = false;
+				{
+					std::unique_lock<std::mutex> lock(autotickMutex);
+					autotickVariable.wait(lock, [this] { return autotickReady; });
+					autotickReady = false;
+				}
 
 				if (!alive.load())
 					break;
@@ -117,13 +119,13 @@ namespace WVM::Mode {
 		terminal.watchSize();
 		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
 		send(":Reg " + std::to_string(Why::stackPointerOffset));
-		alive = false;
-		terminal.join();
-		networkThread.join();
-		autotickMutex.lock();
 		autotickReady = true;
 		autotickMutex.unlock();
 		autotickVariable.notify_all();
+		terminal.join();
+		alive = false;
+		networkThread.join();
+		autotickMutex.lock();
 		autotickThread.join();
 	}
 
@@ -431,7 +433,7 @@ namespace WVM::Mode {
 		autotick = autotick < 0? -autotick : autotick;
 		std::unique_lock<std::mutex> lock(autotickMutex);
 		autotickReady = true;
-		autotickVariable.notify_one();
+		autotickVariable.notify_all();
 	}
 
 	void MemoryMode::send(const std::string &to_send) {

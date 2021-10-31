@@ -1,5 +1,4 @@
-#ifndef WVM_MODE_MEMORYMODE_H_
-#define WVM_MODE_MEMORYMODE_H_
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
@@ -67,5 +66,3 @@ namespace WVM::Mode {
 			void toggleSearchbox();
 	};
 }
-
-#endif
