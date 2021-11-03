@@ -64,7 +64,8 @@ Writes to a device.
 - 1 return value: # bytes written
 - Can fail
 	- 1: Invalid device ID
-	- 2 & PFAULT: A page fault occurred while reading from the buffer	- errno + 2: Write failed
+	- 2 & PFAULT: A page fault occurred while reading from the buffer
+	- errno + 2: Write failed
 
 ### `getsize` (5)
 
