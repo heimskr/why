@@ -1,0 +1,43 @@
+#meta
+
+name: "Write Test"
+author: "Kai Tamkun"
+version: "1"
+orcid: "0000-0001-7405-6654"
+
+#data
+
+string: "Hello there\n"
+
+#code
+
+<io devcount>
+: devcount_fail if $e0
+$r0 < 1 -> $t0
+: no_drives if $t0
+
+0 -> $a1
+&string -> $a2
+12 -> $a3
+<io write>
+: write_fail if $e0
+<print $r0>
+<p "Success\n">
+: end
+
+@no_drives
+<p "No drives.\n">
+: end
+
+@devcount_fail
+<p "Devcount failed\n">
+<print $e0>
+: end
+
+@write_fail
+<p "Write failed\n">
+<print $e0>
+: end
+
+@end
+<halt>
