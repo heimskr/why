@@ -351,6 +351,12 @@ The assembly syntax for type `3` entries defines a template. Multiple type `3` e
 
 Directives are instructions to the assembler. They control the assembly process.
 
+## <a name="dir-code"></a><code>%code</code>
+Switches the current section to the code section. After using this, anything emitted using `%8b`, `%string` and other such directives will be placed in the code section. (Note that inserting 8-byte values directly in the code section is discouraged and that inserting strings is absolutely pointless.)
+
+## <a name="dir-data"></a><code>%data</code>
+Switches the current section to the data section. After using this, anything emitted using `%8b`, `%string` and other such directives will be placed in the data section. (Note that putting instructions in the data section causes unspecified behavior.)
+
 ## <a name="dir-type"></a><code>%type</code>
 <!-- TODO: explain whether it's necessary to specify the type, and if so, why -->
 Tells the assembler the type of a symbol. The type can be either `object` (for data) or `function` (for code).
