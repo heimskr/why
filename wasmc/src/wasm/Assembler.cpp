@@ -219,7 +219,7 @@ namespace Wasmc {
 	}
 
 	void Assembler::validateSectionCounts() {
-		bool meta_found = false, include_found = false, data_found = false, debug_found = false, code_found = false;
+		bool meta_found = false, include_found = false, debug_found = false, text_found = false;
 		for (const ASTNode *node: *root)
 			switch (node->symbol) {
 				case WASMTOK_META_HEADER:
@@ -234,23 +234,17 @@ namespace Wasmc {
 					include_found = true;
 					includeNode = node;
 					break;
-				case WASMTOK_DATA_HEADER:
-					if (data_found)
-						throw std::runtime_error("Multiple data sections detected");
-					data_found = true;
-					dataNode = node;
-					break;
 				case WASMTOK_DEBUG_HEADER:
 					if (debug_found)
 						throw std::runtime_error("Multiple debug sections detected");
 					debug_found = true;
 					debugNode = node;
 					break;
-				case WASMTOK_CODE_HEADER:
-					if (code_found)
-						throw std::runtime_error("Multiple code sections detected");
-					code_found = true;
-					codeNode = node;
+				case WASMTOK_TEXT_HEADER:
+					if (text_found)
+						throw std::runtime_error("Multiple text sections detected");
+					text_found = true;
+					textNode = node;
 					break;
 				default:
 					throw std::runtime_error("Unexpected symbol found at root level: "
@@ -261,28 +255,28 @@ namespace Wasmc {
 	void Assembler::findAllLabels() {
 		allLabels.clear();
 
-		if (dataNode) {
-			for (const ASTNode *node: *dataNode) {
-				if (node->symbol == WASMTOK_IDENT)
-					allLabels.insert(node->lexerInfo);
-				else if (node->symbol == WASMTOK_STRING)
-					allLabels.insert(StringSet::intern(node->unquote()));
-				else
-					throw std::runtime_error("Unexpected symbol found in data section at "
-						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-			}
-		}
+		// if (dataNode) {
+		// 	for (const ASTNode *node: *dataNode) {
+		// 		if (node->symbol == WASMTOK_IDENT)
+		// 			allLabels.insert(node->lexerInfo);
+		// 		else if (node->symbol == WASMTOK_STRING)
+		// 			allLabels.insert(StringSet::intern(node->unquote()));
+		// 		else
+		// 			throw std::runtime_error("Unexpected symbol found in data section at "
+		// 				+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
+		// 	}
+		// }
 
-		if (codeNode) {
-			for (const ASTNode *node: *codeNode) {
-				const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
-				if (!instruction)
-					throw std::runtime_error("Unexpected symbol found in code section at "
-						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-				for (const std::string *label: instruction->labels)
-					allLabels.insert(label);
-			}
-		}
+		// if (codeNode) {
+		// 	for (const ASTNode *node: *codeNode) {
+		// 		const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
+		// 		if (!instruction)
+		// 			throw std::runtime_error("Unexpected symbol found in code section at "
+		// 				+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
+		// 		for (const std::string *label: instruction->labels)
+		// 			allLabels.insert(label);
+		// 	}
+		// }
 	}
 
 	std::vector<Long> Assembler::createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton) {
@@ -386,37 +380,37 @@ namespace Wasmc {
 	}
 
 	void Assembler::processData(std::unordered_set<const std::string *> &labels) {
-		if (!dataNode)
-			return;
+		// if (!dataNode)
+		// 	return;
 
 		data.clear();
 		dataOffsets.clear();
 		dataLength = 0;
 
-		for (ASTNode *node: *dataNode) {
-			const std::string *ident = node->lexerInfo;
-			if (ident->front() == '"')
-				ident = StringSet::intern(node->unquote());
-			if (ident->front() != '%') {
-				if (verbose)
-					std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
-				dataOffsets.emplace(ident, dataLength);
-			}
+		// for (ASTNode *node: *dataNode) {
+		// 	const std::string *ident = node->lexerInfo;
+		// 	if (ident->front() == '"')
+		// 		ident = StringSet::intern(node->unquote());
+		// 	if (ident->front() != '%') {
+		// 		if (verbose)
+		// 			std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
+		// 		dataOffsets.emplace(ident, dataLength);
+		// 	}
 
-			std::vector<uint8_t> pieces = convertDataPieces(dataLength, node, labels);
+		// 	std::vector<uint8_t> pieces = convertDataPieces(dataLength, node, labels);
 
-			int padding = (8 - (pieces.size() % 8)) % 8;
-			while (padding--)
-				pieces.push_back(0);
+		// 	int padding = (8 - (pieces.size() % 8)) % 8;
+		// 	while (padding--)
+		// 		pieces.push_back(0);
 
-			for (size_t i = 0; i < pieces.size(); i += 8) {
-				data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
-					(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
-					(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
-			}
+		// 	for (size_t i = 0; i < pieces.size(); i += 8) {
+		// 		data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
+		// 			(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
+		// 			(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
+		// 	}
 
-			dataLength += pieces.size();
-		}
+		// 	dataLength += pieces.size();
+		// }
 	}
 
 	std::vector<uint8_t> Assembler::convertDataPieces(size_t data_length, const ASTNode *node,
@@ -507,13 +501,13 @@ namespace Wasmc {
 	Statements Assembler::expandCode() {
 		// Known bug: locations for statement nodes are inaccurate.
 
-		if (!codeNode)
+		if (!textNode)
 			return {};
 
 		Statements expanded;
-		expanded.reserve(codeNode->size());
+		expanded.reserve(textNode->size());
 
-		for (const ASTNode *node: *codeNode) {
+		for (const ASTNode *node: *textNode) {
 			const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
 			if (!instruction) {
 				node->debug();

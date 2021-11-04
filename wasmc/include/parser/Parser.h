@@ -1,9 +1,7 @@
-#ifndef PARSER_PARSER_H_
-#define PARSER_PARSER_H_
+#pragma once
 
+#include <cstdio>
 #include <string>
-
-#include <stdio.h>
 
 #include "ASTNode.h"
 
@@ -34,5 +32,3 @@ namespace Wasmc {
 
 	extern Parser wasmParser;
 }
-
-#endif

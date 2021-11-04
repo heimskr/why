@@ -65,8 +65,7 @@ namespace Wasmc {
 			Long & metaOffsetDebug()   { return meta.at(3); }
 			Long & metaOffsetEnd()     { return meta.at(4); }
 
-			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
-			              *codeNode = nullptr;
+			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 
 			static std::string stringify(const std::vector<Long> &);
 
