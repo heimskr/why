@@ -5,8 +5,11 @@
 #include "parser/ASTNode.h"
 
 namespace Wasmc {
+	enum class DirectiveType {Type, Size, String, Value, Align, Fill};
+
 	struct Directive: ASTNode {
 		Directive(int symbol_);
+		virtual DirectiveType getType() const = 0;
 	};
 
 	struct TypeDirective: Directive {
@@ -17,6 +20,7 @@ namespace Wasmc {
 		TypeDirective(const std::string *, Type);
 		TypeDirective(const std::string &, Type);
 		TypeDirective(const ASTNode *symbol_, const ASTNode *type_);
+		DirectiveType getType() const override { return DirectiveType::Type; }
 	};
 
 	struct SizeDirective: Directive {
@@ -27,6 +31,7 @@ namespace Wasmc {
 		SizeDirective(const std::string *, const ASTNode *expression_);
 		SizeDirective(const ASTNode *symbol_, const ASTNode *expression_);
 		~SizeDirective();
+		DirectiveType getType() const override { return DirectiveType::Size; }
 	};
 
 	struct StringDirective: Directive {
@@ -36,6 +41,7 @@ namespace Wasmc {
 		StringDirective() = delete;
 		StringDirective(const std::string *, bool);
 		StringDirective(const ASTNode *, bool);
+		DirectiveType getType() const override { return DirectiveType::String; }
 	};
 
 	class ValueDirective: public Directive {
@@ -48,6 +54,7 @@ namespace Wasmc {
 
 			ValueDirective() = delete;
 			ValueDirective(const ASTNode *size_, const ASTNode *expression_);
+			DirectiveType getType() const override { return DirectiveType::Value; }
 	};
 
 	struct AlignDirective: Directive {
@@ -55,6 +62,7 @@ namespace Wasmc {
 
 		AlignDirective() = delete;
 		AlignDirective(long);
+		DirectiveType getType() const override { return DirectiveType::Align; }
 	};
 
 	struct FillDirective: Directive {
@@ -62,5 +70,6 @@ namespace Wasmc {
 
 		FillDirective() = delete;
 		FillDirective(long count_, long value_);
+		DirectiveType getType() const override { return DirectiveType::Fill; }
 	};
 }
