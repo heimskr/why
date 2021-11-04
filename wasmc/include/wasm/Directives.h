@@ -1,12 +1,13 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "parser/ASTNode.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
-	enum class DirectiveType {Type, Size, String, Value, Align, Fill};
+	enum class DirectiveType {Type, Size, String, Value, Align, Fill, Data, Code};
 
 	struct Directive: ASTNode {
 		Directive(int symbol_);
@@ -25,12 +26,11 @@ namespace Wasmc {
 
 	struct SizeDirective: Directive {
 		const std::string *symbol;
-		const ASTNode *expression; // will be deleted when SizeDirective is destroyed
+		std::shared_ptr<ASTNode> expression;
 
 		SizeDirective() = delete;
-		SizeDirective(const std::string *, const ASTNode *expression_);
-		SizeDirective(const ASTNode *symbol_, const ASTNode *expression_);
-		~SizeDirective();
+		SizeDirective(const std::string *, ASTNode *expression_);
+		SizeDirective(const ASTNode *symbol_, ASTNode *expression_);
 		DirectiveType getType() const override { return DirectiveType::Size; }
 	};
 
@@ -50,10 +50,10 @@ namespace Wasmc {
 
 		public:
 			uint8_t size;
-			const ASTNode *expression; // will be deleted when ValueDirective is destroyed
+			std::shared_ptr<ASTNode> expression;
 
 			ValueDirective() = delete;
-			ValueDirective(const ASTNode *size_, const ASTNode *expression_);
+			ValueDirective(const ASTNode *size_, ASTNode *expression_);
 			DirectiveType getType() const override { return DirectiveType::Value; }
 	};
 
@@ -71,5 +71,15 @@ namespace Wasmc {
 		FillDirective() = delete;
 		FillDirective(long count_, long value_);
 		DirectiveType getType() const override { return DirectiveType::Fill; }
+	};
+
+	struct DataDirective: Directive {
+		DataDirective() = default;
+		DirectiveType getType() const override { return DirectiveType::Data; }
+	};
+
+	struct CodeDirective: Directive {
+		CodeDirective() = default;
+		DirectiveType getType() const override { return DirectiveType::Code; }
 	};
 }

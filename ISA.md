@@ -10,21 +10,23 @@
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
+				<li><a href="#prog-code">Code Section</a></li>
+				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
 				<li><a href="#prog-debug">Debug Data Section</a></li>
-				<li><a href="#prog-text">Text Section</a>
-					<ol>
-						<li><a href="#dir-type"><code>%type</code></a></li>
-						<li><a href="#dir-size"><code>%size</code></a></li>
-						<li><a href="#dir-string"><code>%string</code></a></li>
-						<li><a href="#dir-stringz"><code>%stringz</code></a></li>
-						<li>
-							<a href="#dir-value"><code>%8b, %4b, %2b, %1b</code></a>
-						</li>
-						<li><a href="#dir-align"><code>%align</code></a></li>
-						<li><a href="#dir-fill"><code>%fill</code></a></li>
-					</ol>
+			</ol>
+		</li>
+		<li><a href="#directives">Directives</a>
+			<ol>
+				<li><a href="#dir-type"><code>%type</code></a></li>
+				<li><a href="#dir-size"><code>%size</code></a></li>
+				<li><a href="#dir-string"><code>%string</code></a></li>
+				<li><a href="#dir-stringz"><code>%stringz</code></a></li>
+				<li>
+					<a href="#dir-value"><code>%8b, %4b, %2b, %1b</code></a>
 				</li>
+				<li><a href="#dir-align"><code>%align</code></a></li>
+				<li><a href="#dir-fill"><code>%fill</code></a></li>
 			</ol>
 		</li>
 		<li><a href="#rings">Rings</a></li>
@@ -303,6 +305,12 @@ name: "Example"
 version: "4"
 </pre>
 
+## <a name="prog-code"></a>Code Section
+The code section consists of executable code. This is the only section of the code that the program counter is expected to point to. Code is represented using the syntax described by entries in the <a href="#operations">Operations</a> section.
+
+## <a name="prog-data"></a>Data Section
+The data section contains read/write data. Data is added using directives.
+
 ## <a name="prog-symtab"></a>Symbol Table Section
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The third is the length of what the symbol points to (for functions, this will generally be eight times the number of instructions in the function). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
@@ -339,14 +347,15 @@ The assembly syntax for type `3` entries defines a template. Multiple type `3` e
 // ...
 </pre>
 
-## <a name="prog-text"></a>Text Section
-The code section consists of executable code and other data. This is the only section of the code that the program counter is expected to point to. Code is represented using the syntax described by entries in the <a href="#operations">Operations</a> section. Data values are specified with directives.
+# <a name="directives"></a>Directives
 
-### <a name="dir-type"></a><code>%type</code>
+Directives are instructions to the assembler. They control the assembly process.
+
+## <a name="dir-type"></a><code>%type</code>
 <!-- TODO: explain whether it's necessary to specify the type, and if so, why -->
 Tells the assembler the type of a symbol. The type can be either `object` (for data) or `function` (for code).
 
-#### Example
+### Example
 <pre>
 %type data_value object
 %type strprint function
@@ -359,10 +368,10 @@ Tells the assembler the type of a symbol. The type can be either `object` (for d
 	: $rt
 </pre>
 
-### <a name="dir-size"></a><code>%size</code>
+## <a name="dir-size"></a><code>%size</code>
 Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter.
 
-#### Example
+### Example
 <pre>
 @some_8b
 %8b 42
@@ -381,50 +390,51 @@ Tells the assembler the size (in bytes) of a symbol. The value supports expressi
 %size function_two .-function_two
 </pre>
 
-### <a name="dir-string"></a><code>%string</code>
+## <a name="dir-string"></a><code>%string</code>
 Emits a string (*not* terminated with a null byte).
 
-#### Example
+### Example
 <pre>
 @some_string
 %string "Hello, world!\n"
 </pre>
 
-### <a name="dir-stringz"></a><code>%stringz</code>
+## <a name="dir-stringz"></a><code>%stringz</code>
 Emits a string (terminated with a null byte).
 
-#### Example
+### Example
 <pre>
 @some_string
 %stringz "Hello, world!\n"
 </pre>
 
-### <a name="dir-value"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
-Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). For `%4b` and `%8b`, values can be numeric constants, names of symbols or the sum of the name of a symbol and a numeric constant as the offset. For `%1b` and `%2b`, only numeric constants are supported.
+## <a name="dir-value"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
+Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). The values can be expressions (see [`%size`](#dir-size)).
 
-#### Example
+### Example
 <pre>
 %8b some_function+32 // 4 instructions past the start of some_function
 %8b some_label-10
+%8b .
 %4b data_value // Valid if data_value is within the first 4 GiB
 %2b 65535
 %1b 255
 </pre>
 
-### <a name="dir-align"></a><code>%align</code>
+## <a name="dir-align"></a><code>%align</code>
 Inserts zero until the location counter reaches a given alignment (in bytes).
 
-#### Example
+### Example
 <pre>
 %align 65536
 @p0
 // ...
 </pre>
 
-### <a name="dir-fill"></a><code>%fill</code>
+## <a name="dir-fill"></a><code>%fill</code>
 Adds a given number of bytes with a given value. The number of bytes is the first operand and the value is the second operand.
 
-#### Example
+### Example
 <pre>
 @ten_ones
 %fill 10 0x01

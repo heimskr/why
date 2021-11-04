@@ -69,6 +69,8 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "%fill"						{ WASMRTOKEN(DIR_FILL) }
 "%function"					{ WASMRTOKEN(FUNCTION) }
 "%object"					{ WASMRTOKEN(OBJECT) }
+"%data"						{ WASMRTOKEN(DATA) }
+"%code"						{ WASMRTOKEN(CODE) }
 
 "version"					{ WASMRTOKEN(VERSION) }
 "memset"					{ WASMRTOKEN(MEMSET) }

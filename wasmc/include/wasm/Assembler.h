@@ -8,6 +8,7 @@
 #include "parser/Parser.h"
 #include "util/Util.h"
 #include "wasm/Debug.h"
+#include "wasm/Section.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
@@ -55,43 +56,13 @@ namespace Wasmc {
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			bool verbose = false;
 
-			std::vector<uint8_t> bytes = std::vector<uint8_t>(32, 0);
-			size_t counter = 0;
+			Section meta {40}, data, code;
 
-			template <typename T>
-			T * extend(size_t count) {
-				T *out = reinterpret_cast<T *>(bytes.data() + bytes.size());
-				size_t new_capacity, new_size = bytes.size() + count * sizeof(T);
-				for (new_capacity = 1; new_capacity < new_size; new_capacity <<= 1);
-				bytes.reserve(new_capacity);
-				bytes.resize(bytes.size() + count * sizeof(T), 0);
-				return out;
-			}
-
-			template <typename T>
-			void append(T item) {
-				*extend<T>(1) = item;
-				counter += sizeof(T);
-			}
-
-			template <typename T>
-			void append(std::initializer_list<T> list) {
-				T *pointer = extend<T>(list.size());
-				for (const T &item: list)
-					*pointer++ = item;
-				counter += sizeof(T) * list.size();
-			}
-
-			void append(const std::string &string);
-
-			size_t alignUp(size_t alignment);
-
-			void clear();
-
-			Long & metaOffsetText()    { return *(Long *) &bytes[ 0]; }
-			Long & metaOffsetSymbols() { return *(Long *) &bytes[ 8]; }
-			Long & metaOffsetDebug()   { return *(Long *) &bytes[16]; }
-			Long & metaOffsetEnd()     { return *(Long *) &bytes[24]; }
+			Long & metaOffsetCode()    { return *(Long *) &meta[ 0]; }
+			Long & metaOffsetData()    { return *(Long *) &meta[ 8]; }
+			Long & metaOffsetSymbols() { return *(Long *) &meta[16]; }
+			Long & metaOffsetDebug()   { return *(Long *) &meta[24]; }
+			Long & metaOffsetEnd()     { return *(Long *) &meta[32]; }
 
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 

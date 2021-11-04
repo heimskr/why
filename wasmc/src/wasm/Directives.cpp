@@ -28,15 +28,11 @@ namespace Wasmc {
 		}
 	}
 
-	SizeDirective::SizeDirective(const std::string *symbol_, const ASTNode *expression_):
+	SizeDirective::SizeDirective(const std::string *symbol_, ASTNode *expression_):
 		Directive(WASM_SIZEDIR), symbol(symbol_), expression(expression_) {}
 
-	SizeDirective::SizeDirective(const ASTNode *symbol_, const ASTNode *expression_):
+	SizeDirective::SizeDirective(const ASTNode *symbol_, ASTNode *expression_):
 		SizeDirective(symbol_->lexerInfo, expression_) {}
-
-	SizeDirective::~SizeDirective() {
-		delete expression;
-	}
 
 	StringDirective::StringDirective(const std::string *string_, bool null_terminate):
 		Directive(WASM_STRINGDIR), string(string_), nullTerminate(null_terminate) {}
@@ -56,7 +52,7 @@ namespace Wasmc {
 		}
 	}
 
-	ValueDirective::ValueDirective(const ASTNode *size_, const ASTNode *expression_):
+	ValueDirective::ValueDirective(const ASTNode *size_, ASTNode *expression_):
 	Directive(WASM_VALUEDIR), size(getSize(size_)), expression(expression_) {
 		delete size_;
 	}

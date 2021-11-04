@@ -158,6 +158,8 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_DIR_FILL "%fill"
 %token WASMTOK_FUNCTION "%function"
 %token WASMTOK_OBJECT "%object"
+%token WASMTOK_DATA "%data"
+%token WASMTOK_CODE "%code"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -207,7 +209,7 @@ text_section: "#text" "\n" { D($2); };
             | text_section endop { D($2); };
 intbang: "!" number { $$ = $1->adopt($2); };
 
-directive: dir_type | dir_size | dir_string | dir_value | dir_align | dir_fill;
+directive: dir_type | dir_size | dir_string | dir_value | dir_align | dir_fill | dir_data | dir_code;
 
 dir_type: "%type" ident          symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); }
         | "%type" WASMTOK_STRING symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); };
@@ -237,6 +239,10 @@ value_size: "%8b" | "%4b" | "%2b" | "%1b";
 dir_align: "%align" number { $$ = (new AlignDirective($2->atoi()))->locate($1); D($1, $2); };
 
 dir_fill: "%fill" number number { $$ = (new FillDirective($2->atoi(), $3->atoi()))->locate($1); D($1, $2, $3); };
+
+dir_data: "%data" { $$ = (new DataDirective)->locate($1); D($1); };
+
+dir_code: "%code" { $$ = (new CodeDirective)->locate($1); D($1); };
 
 endop: "\n" | ";";
 // newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };

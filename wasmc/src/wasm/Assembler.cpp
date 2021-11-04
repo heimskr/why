@@ -64,28 +64,6 @@ namespace Wasmc {
 		return stringify(assembled);
 	}
 
-	void Assembler::append(const std::string &string) {
-		char *pointer = extend<char>(string.size());
-		for (char ch: string)
-			*pointer++ = ch;
-		counter += string.size();
-	}
-
-	size_t Assembler::alignUp(size_t alignment) {
-		if (counter % alignment != 0) {
-			size_t to_add = alignment - (counter % alignment);
-			extend<char>(to_add);
-			counter += to_add;
-		}
-
-		return counter;
-	}
-
-	void Assembler::clear() {
-		bytes.clear();
-		counter = 0;
-	}
-
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
 		std::stringstream ss;
 		bool first = true;
