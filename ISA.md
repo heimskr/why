@@ -11,9 +11,19 @@
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
-				<li><a href="#prog-code">Code Section</a></li>
-				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-debug">Debug Data Section</a></li>
+				<li><a href="#prog-text">Text Section</a>
+					<ol>
+						<li><a href="#dir-type"><code>%type</code></a></li>
+						<li><a href="#dir-string"><code>%string</code></a></li>
+						<li><a href="#dir-stringz"><code>%stringz</code></a></li>
+						<li>
+							<a href="#dir-constant"><code>%8b</code>,
+								<code>%4b</code>, <code>%2b</code>, <code>%1b</code>
+							</a>
+						</li>
+					</ol>
+				</li>
 			</ol>
 		</li>
 		<li><a href="#rings">Rings</a></li>
@@ -270,18 +280,17 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into five sections: metadata, symbol table, code, data and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
+Programs are divided into four sections: metadata, symbol table, debug data and text. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C. The <a href="#prog-text">text section</a> consists of executable code and other data.
 
 ## <a name="prog-meta"></a>Metadata Section
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
 
 * `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x08`: Address of the beginning of the [code section](#prog-code).
-* `0x10`: Address of the beginning of the [data section](#prog-data).
-* `0x18`: Address of the beginning of the [debug data section](#prog-debug).
-* `0x20`: Total size of the program.
-* `0x28`–`0x30`: ORCID of the author (represented in ASCII without hyphens).
-* `0x38`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x08`: Address of the beginning of the [debug data section](#prog-debug).
+* `0x10`: Address of the beginning of the [text section](#prog-text).
+* `0x18`: Total size of the program.
+* `0x20`–`0x28`: ORCID of the author (represented in ASCII without hyphens).
+* `0x30`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembly syntax
@@ -295,22 +304,6 @@ version: "4"
 
 ## <a name="prog-symtab"></a>Symbol Table Section
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc++/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc%2B%2B/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
-
-## <a name="prog-code"></a>Code Section
-The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
-
-## <a name="prog-data"></a>Data Section
-The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
-
-### Assembly syntax
-Variables and their values are declared with JSON-like markup:
-
-<pre>
-#data
-some_string: "this is an example."
-some_number: 42
-some_gap: (16) // Expands to 16 empty bytes
-</pre>
 
 ## <a name="prog-debug"></a>Debug Data Section
 The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
@@ -344,6 +337,57 @@ The assembly syntax for type `3` entries defines a template. Multiple type `3` e
 	$t5 & -1  -> $t5 !3
 // ...
 </pre>
+
+## <a name="prog-text"></a>Text Section
+The code section consists of executable code and other data. This is the only section of the code that the program counter is expected to point to. Code is represented using the syntax described by entries in the <a href="#operations">Operations</a> section. Data values are specified with directives.
+
+### <a name="dir-type"></a><code>%type</code>
+<!-- TODO: explain whether it's necessary to specify the type, and if so, why -->
+Tells the assembler the type of a symbol. The type can be either `object` (for data) or `function` (for code).
+
+#### Example
+<pre>
+%type data_value object
+%type strprint function
+
+@data_value
+%8b 42
+
+@strprint
+	// ...
+	: $rt
+</pre>
+
+### <a name="dir-string"></a><code>%string</code>
+Emits a string (*not* terminated with a null byte).
+
+#### Example
+<pre>
+@some_string
+%string "Hello, world!\n"
+</pre>
+
+### <a name="dir-stringz"></a><code>%stringz</code>
+Emits a string (terminated with a null byte).
+
+#### Example
+<pre>
+@some_string
+%stringz "Hello, world!\n"
+</pre>
+
+### <a name="dir-constant"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
+Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). For `%4b` and `%8b`, values can be numeric constants, names of symbols or the sum of the name of a symbol and a numeric constant as the offset. For `%1b` and `%2b`, only numeric constants are supported.
+
+#### Example
+<pre>
+%8b some_function+32 // 4 instructions past the start of some_function
+%8b some_label-10
+%4b data_value // Valid if data_value is within the first 4 GiB
+%2b 65535
+%1b 255
+</pre>
+
 
 # <a name="rings"></a>Rings
 WhySA has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
