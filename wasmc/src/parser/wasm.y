@@ -168,7 +168,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE WASM_RESTNODE
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
-%token WASM_STRINGDIR
+%token WASM_STRINGDIR WASM_VALUEDIR
 
 %start start
 
@@ -227,8 +227,16 @@ factor: "(" expression ")" { $$ = $2; D($1, $3); }
 dir_size: "%size" ident          expression { $$ = new SizeDirective($2, $3); D($1); }
         | "%size" WASMTOK_STRING expression { $$ = new SizeDirective($2, $3); D($1); };
 
-dir_string: "%string" WASMTOK_STRING;
-dir_value: "%8b";
+dir_string: "%string"  WASMTOK_STRING { $$ = new StringDirective($2, false); D($1); }
+          | "%stringz" WASMTOK_STRING { $$ = new StringDirective($2,  true); D($1); };
+
+dir_value: value_size value_base "+" number { $$ = new ValueDirective($1, $2,  $4->atoi()); D($3, $4); }
+         | value_size value_base "-" number { $$ = new ValueDirective($1, $2, -$4->atoi()); D($3, $4); }
+         | value_size value_base { $$ = new ValueDirective($1, $2, 0); }
+         | value_size number { $$ = new ValueDirective($1, $2->atoi()); D($2); };
+value_size: "%8b" | "%4b" | "%2b" | "%1b";
+value_base: ident | WASMTOK_STRING | ".";
+
 dir_align: "%align";
 dir_fill: "%fill";
 

@@ -37,4 +37,19 @@ namespace Wasmc {
 		StringDirective(const std::string *, bool);
 		StringDirective(const ASTNode *, bool);
 	};
+
+	class ValueDirective: public Directive {
+		private:
+			static uint8_t getSize(const ASTNode *);
+
+		public:
+			uint8_t size;
+			const std::string *base = nullptr;
+			long offset = 0;
+			long value = 0;
+
+			ValueDirective() = delete;
+			ValueDirective(const ASTNode *size_, const ASTNode *base_, long offset_);
+			ValueDirective(const ASTNode *size_, long value_);
+	};
 }

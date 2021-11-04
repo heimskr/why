@@ -42,7 +42,30 @@ namespace Wasmc {
 		Directive(WASM_STRINGDIR), string(string_), nullTerminate(null_terminate) {}
 
 	StringDirective::StringDirective(const ASTNode *string_, bool null_terminate):
-	StringDirective(string_->lexerInfo, null_terminate) {
+	StringDirective(string_->extracted(), null_terminate) {
 		delete string_;
+	}
+
+	uint8_t ValueDirective::getSize(const ASTNode *node) {
+		switch (node->symbol) {
+			case WASMTOK_DIR_8B: return 8;
+			case WASMTOK_DIR_4B: return 4;
+			case WASMTOK_DIR_2B: return 2;
+			case WASMTOK_DIR_1B: return 1;
+			default: throw std::invalid_argument("Invalid input to ValueDirective::getSize: " + node->debugExtra());
+		}
+	}
+
+	ValueDirective::ValueDirective(const ASTNode *size_, const ASTNode *base_, long offset_):
+	Directive(WASM_VALUEDIR), size(getSize(size_)), base(base_->lexerInfo), offset(offset_) {
+		delete size_;
+		if (base_->symbol == WASMTOK_STRING)
+			base = base_->extracted();
+		delete base_;
+	}
+
+	ValueDirective::ValueDirective(const ASTNode *size_, long value_):
+	Directive(WASM_VALUEDIR), size(getSize(size_)), value(value_) {
+		delete size_;
 	}
 }
