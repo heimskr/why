@@ -57,7 +57,7 @@ namespace Wasmc {
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			bool verbose = false;
 
-			Section meta {40}, data, code;
+			Section meta {"Meta", 40}, data {"Data"}, code {"Code"};
 
 			Section *currentSection = &code;
 

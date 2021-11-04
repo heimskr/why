@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "wasm/Section.h"
 
 namespace Wasmc {
@@ -7,6 +9,12 @@ namespace Wasmc {
 
 	const Section::ValueType & Section::operator[](size_t index) const {
 		return bytes[index];
+	}
+
+	Section & Section::operator+=(const std::string *label) {
+		labels.try_emplace(counter, label);
+		std::cerr << name << ": adding " << (label? *label : "nullptr") << " @ " << counter << '\n';
+		return *this;
 	}
 
 	void Section::append(const std::string &string) {

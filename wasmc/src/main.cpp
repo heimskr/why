@@ -140,7 +140,7 @@ int assemble(int argc, char **argv) {
 	parser.done();
 
 	std::ofstream outfile(argv[2]);
-	if (!outfile.is_open())
+	if (!outfile)
 		throw std::runtime_error("Couldn't open file for writing");
 #ifdef CATCH_ASSEMBLE
 	try {
@@ -154,9 +154,9 @@ int assemble(int argc, char **argv) {
 	}
 #endif
 
-	outfile.close();
 	Wasmc::success() << "Assembled \e[1m" << argv[1] << "\e[22m and saved the results to \e[1m" << argv[2]
 		<< "\e[22m.\n";
 
+	outfile.close();
 	return 0;
 }

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -11,21 +12,24 @@ namespace Wasmc {
 		using ValueType = uint8_t;
 
 		std::vector<ValueType> bytes;
+		std::map<size_t, const std::string *> labels;
 		size_t counter = 0;
+		std::string name;
 
-		Section(size_t count = 0): bytes(count, 0) {}
+		Section(const std::string &name_, size_t count = 0): bytes(count, 0), name(name_) {}
 
 		ValueType & operator[](size_t);
 		const ValueType & operator[](size_t) const;
+		Section & operator+=(const std::string *label);
 
 		template <typename T>
 		T * extend(size_t count) {
-			T *out = reinterpret_cast<T *>(bytes.data() + bytes.size());
+			const size_t old_size = bytes.size();
 			size_t new_capacity, new_size = bytes.size() + count * sizeof(T);
 			for (new_capacity = 1; new_capacity < new_size; new_capacity <<= 1);
 			bytes.reserve(new_capacity);
-			bytes.resize(bytes.size() + count * sizeof(T), 0);
-			return out;
+			bytes.resize(new_size, 0);
+			return reinterpret_cast<T *>(bytes.data() + old_size);
 		}
 
 		template <typename T>

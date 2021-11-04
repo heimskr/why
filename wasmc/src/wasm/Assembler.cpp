@@ -10,6 +10,7 @@
 #include "parser/Lexer.h"
 #include "parser/StringSet.h"
 #include "wasm/Assembler.h"
+#include "wasm/Directives.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
 #include "wasm/Why.h"
@@ -70,7 +71,22 @@ namespace Wasmc {
 			throw std::runtime_error("textNode is null in Assembler::processText");
 
 		for (ASTNode *node: *textNode) {
-			node->debug();
+			switch (node->symbol) {
+				case WASM_DATADIR:
+					currentSection = &data;
+					break;
+				case WASM_CODEDIR:
+					currentSection = &code;
+					break;
+				case WASM_LABEL:
+					*currentSection += dynamic_cast<WASMLabelNode *>(node)->label;
+					break;
+				case WASM_STRINGDIR:
+					currentSection->append(*dynamic_cast<StringDirective *>(node)->string);
+					break;
+				default:
+					node->debug();
+			}
 		}
 	}
 
