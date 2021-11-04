@@ -285,17 +285,20 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into four sections: metadata, text, symbol table and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-text">text section</a> consists of executable code and other data. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
+Programs are divided into five sections: metadata, code, data, symbol table and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> consists of read/write data. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
+
+Note that the code section and data section are combined into the `#text` section in assembly. Code and data sections can be switched between using the [`%code`](#dir-code) and [`%data`](#dir-data) directives.
 
 ## <a name="prog-meta"></a>Metadata Section
-The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
+The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the code section and is therefore equivalent to the size of the metadata section.
 
-* `0x00`: Address of the beginning of the [text section](#prog-text).
-* `0x08`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x10`: Address of the beginning of the [debug data section](#prog-debug).
-* `0x18`: Total size of the program.
-* `0x20`–`0x28`: ORCID of the author (represented in ASCII without hyphens).
-* `0x30`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x00`: Address of the beginning of the [code section](#prog-code).
+* `0x08`: Address of the beginning of the [data section](#prog-data).
+* `0x10`: Address of the beginning of the [symbol table](#prog-symtab).
+* `0x18`: Address of the beginning of the [debug data section](#prog-debug).
+* `0x20`: Total size of the program.
+* `0x28`–`0x30`: ORCID of the author (represented in ASCII without hyphens).
+* `0x38`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembly syntax
