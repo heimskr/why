@@ -18,10 +18,12 @@
 						<li><a href="#dir-string"><code>%string</code></a></li>
 						<li><a href="#dir-stringz"><code>%stringz</code></a></li>
 						<li>
-							<a href="#dir-constant"><code>%8b</code>,
-								<code>%4b</code>, <code>%2b</code>, <code>%1b</code>
+							<a href="#dir-constant">
+								<code>%8b, %4b, %2b, %1b</code>
 							</a>
 						</li>
+						<li><a href="#dir-align"><code>%align</code></a></li>
+						<li><a href="#dir-fill"><code>%fill</code></a></li>
 					</ol>
 				</li>
 			</ol>
@@ -235,7 +237,7 @@
 
 # <a name="intro"></a>Introduction
 
-The VM emulates WhySA, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, and memory addressability is also 64 bits.
+The VM emulates Why, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, and memory addressability is also 64 bits.
 
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
@@ -388,9 +390,27 @@ Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so
 %1b 255
 </pre>
 
+### <a name="dir-align"></a><code>%align</code>
+Inserts zero until the location counter reaches a given alignment (in bytes).
+
+#### Example
+<pre>
+%align 65536
+@p0
+// ...
+</pre>
+
+### <a name="dir-fill"></a><code>%fill</code>
+Adds a given number of bytes with a given value. The number of bytes is the first operand and the value is the second operand.
+
+#### Example
+<pre>
+@ten_ones
+%fill 10 0x01
+</pre>
 
 # <a name="rings"></a>Rings
-WhySA has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
+Why has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
 
 # <a name="interrupts"></a>Interrupts
 Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, `$e0` is set to the program counter right before the interrupt was raised and `$e1` is set to the current <a href="#rings">ring</a> at the time the interrupt occurred. Interrupt handlers are expected to deal with properly resuming normal program execution after finishing up. The VM stores an address to a table containing pointers to interrupt handlers. The table is 32 words long.
