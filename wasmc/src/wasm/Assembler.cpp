@@ -122,6 +122,11 @@ namespace Wasmc {
 					currentSection->alignUp(directive->alignment);
 					break;
 				}
+				case WASM_FILLDIR: {
+					auto *directive = dynamic_cast<FillDirective *>(node);
+					currentSection->extend<uint8_t>(directive->count, uint8_t(directive->value));
+					break;
+				}
 				default: {
 					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
 						// Because we can't yet convert the instruction to a Long (probably),

@@ -35,12 +35,12 @@ namespace Wasmc {
 		Section & operator+=(const std::pair<size_t, std::shared_ptr<Expression>> &);
 
 		template <typename T>
-		T * extend(size_t count) {
+		T * extend(size_t count, uint8_t value = 0) {
 			const size_t old_size = bytes.size();
 			size_t new_capacity, new_size = bytes.size() + count * sizeof(T);
 			for (new_capacity = 1; new_capacity < new_size; new_capacity <<= 1);
 			bytes.reserve(new_capacity);
-			bytes.resize(new_size, 0);
+			bytes.resize(new_size, value);
 			return reinterpret_cast<T *>(bytes.data() + old_size);
 		}
 
