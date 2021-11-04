@@ -12,8 +12,15 @@ namespace Wasmc {
 	}
 
 	Section & Section::operator+=(const std::string *label) {
+		if (!label)
+			throw std::invalid_argument("Can't add a null label");
+
 		labels.try_emplace(counter, label);
-		std::cerr << name << ": adding " << (label? *label : "nullptr") << " @ " << counter << '\n';
+
+		if (allLabels)
+			allLabels->insert(label);
+
+		std::cerr << name << ": adding " << *label << " @ " << counter << '\n';
 		return *this;
 	}
 

@@ -5,13 +5,19 @@
 
 namespace Wasmc {
 	class ASTNode;
+	struct Section;
 
-	class Expression {
+	class Expression: public ASTNode {
 		private:
 			static void findLabels(const ASTNode *, std::set<const std::string *> &);
 
 		public:
+			Section *section = nullptr;
+			size_t counter = -1;
+
 			Expression() = delete;
-			static std::set<const std::string *> findLabels(const ASTNode *);
+			Expression(ASTNode *);
+
+			std::set<const std::string *> findLabels();
 	};
 }

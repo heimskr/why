@@ -11,6 +11,7 @@
 #include "parser/Parser.h"
 #include "parser/Values.h"
 #include "wasm/Directives.h"
+#include "wasm/Expression.h"
 #include "wasm/Nodes.h"
 
 // Disable PVS-Studio warnings about branches that do the same thing.
@@ -170,7 +171,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE WASM_RESTNODE
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
-%token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR
+%token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR WASM_EXPRESSION
 
 %start start
 
@@ -227,13 +228,13 @@ term: term "*" factor { $$ = $2->adopt({$1, $3}); }
 factor: "(" expression ")" { $$ = $2; D($1, $3); }
       | ident | WASMTOK_STRING | ".";
 
-dir_size: "%size" ident          expression { $$ = (new SizeDirective($2, $3))->locate($1); D($1); }
-        | "%size" WASMTOK_STRING expression { $$ = (new SizeDirective($2, $3))->locate($1); D($1); };
+dir_size: "%size" ident          expression { $$ = (new SizeDirective($2, new Expression($3)))->locate($1); D($1); }
+        | "%size" WASMTOK_STRING expression { $$ = (new SizeDirective($2, new Expression($3)))->locate($1); D($1); };
 
 dir_string: "%string"  WASMTOK_STRING { $$ = (new StringDirective($2, false))->locate($1); D($1); }
           | "%stringz" WASMTOK_STRING { $$ = (new StringDirective($2,  true))->locate($1); D($1); };
 
-dir_value: value_size expression { $$ = (new ValueDirective($1, $2))->locate($1); };
+dir_value: value_size expression { $$ = (new ValueDirective($1, new Expression($2)))->locate($1); };
 value_size: "%8b" | "%4b" | "%2b" | "%1b";
 
 dir_align: "%align" number { $$ = (new AlignDirective($2->atoi()))->locate($1); D($1, $2); };

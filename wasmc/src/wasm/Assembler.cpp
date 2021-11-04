@@ -89,6 +89,18 @@ namespace Wasmc {
 						currentSection->append(*directive->string);
 					break;
 				}
+				case WASM_TYPEDIR: {
+					auto *directive = dynamic_cast<TypeDirective *>(node);
+					symbolTypes[directive->symbolName] = directive->type;
+					break;
+				}
+				case WASM_SIZEDIR: {
+					auto *directive = dynamic_cast<SizeDirective *>(node);
+					directive->expression->counter = currentSection->counter;
+					directive->expression->section = currentSection;
+					symbolSizes[directive->symbolName] = directive->expression;
+					break;
+				}
 				default:
 					node->debug();
 			}

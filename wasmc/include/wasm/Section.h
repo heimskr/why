@@ -5,7 +5,10 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
+
+#include "wasm/Types.h"
 
 namespace Wasmc {
 	struct Section {
@@ -13,10 +16,13 @@ namespace Wasmc {
 
 		std::vector<ValueType> bytes;
 		std::map<size_t, const std::string *> labels;
+		std::unordered_set<const std::string *> *allLabels = nullptr;
 		size_t counter = 0;
 		std::string name;
 
-		Section(const std::string &name_, size_t count = 0): bytes(count, 0), name(name_) {}
+		Section(const std::string &name_, std::unordered_set<const std::string *> *all_labels = nullptr,
+		size_t count = 0):
+			bytes(count, 0), allLabels(all_labels), name(name_) {}
 
 		ValueType & operator[](size_t);
 		const ValueType & operator[](size_t) const;

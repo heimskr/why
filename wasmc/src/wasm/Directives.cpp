@@ -3,19 +3,20 @@
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
+#include "wasm/Expression.h"
 
 namespace Wasmc {
 	Directive::Directive(int symbol_): ASTNode(wasmParser, symbol_) {}
 
-	TypeDirective::TypeDirective(const std::string *symbol_, SymbolType type_):
-		Directive(WASM_TYPEDIR), symbol(symbol_), type(type_) {}
+	TypeDirective::TypeDirective(const std::string *symbol_name, SymbolType type_):
+		Directive(WASM_TYPEDIR), symbolName(symbol_name), type(type_) {}
 
-	TypeDirective::TypeDirective(const std::string &symbol_, SymbolType type_):
-		TypeDirective(StringSet::intern(symbol_), type_) {}
+	TypeDirective::TypeDirective(const std::string &symbol_name, SymbolType type_):
+		TypeDirective(StringSet::intern(symbol_name), type_) {}
 
-	TypeDirective::TypeDirective(const ASTNode *symbol_, const ASTNode *type_): Directive(WASM_TYPEDIR) {
-		symbol = symbol_->symbol == WASMTOK_STRING? symbol_->extracted() : symbol_->lexerInfo;
-		delete symbol_;
+	TypeDirective::TypeDirective(const ASTNode *symbol_name, const ASTNode *type_): Directive(WASM_TYPEDIR) {
+		symbolName = symbol_name->symbol == WASMTOK_STRING? symbol_name->extracted() : symbol_name->lexerInfo;
+		delete symbol_name;
 
 		const int type_symbol = type_->symbol;
 		delete type_;
@@ -28,11 +29,11 @@ namespace Wasmc {
 		}
 	}
 
-	SizeDirective::SizeDirective(const std::string *symbol_, ASTNode *expression_):
-		Directive(WASM_SIZEDIR), symbol(symbol_), expression(expression_) {}
+	SizeDirective::SizeDirective(const std::string *symbol_name, Expression *expression_):
+		Directive(WASM_SIZEDIR), symbolName(symbol_name), expression(expression_) {}
 
-	SizeDirective::SizeDirective(const ASTNode *symbol_, ASTNode *expression_):
-		SizeDirective(symbol_->lexerInfo, expression_) {}
+	SizeDirective::SizeDirective(const ASTNode *symbol_name, Expression *expression_):
+		SizeDirective(symbol_name->lexerInfo, expression_) {}
 
 	StringDirective::StringDirective(const std::string *string_, bool null_terminate):
 		Directive(WASM_STRINGDIR), string(string_), nullTerminate(null_terminate) {}
@@ -52,7 +53,7 @@ namespace Wasmc {
 		}
 	}
 
-	ValueDirective::ValueDirective(const ASTNode *size_, ASTNode *expression_):
+	ValueDirective::ValueDirective(const ASTNode *size_, Expression *expression_):
 	Directive(WASM_VALUEDIR), size(getSize(size_)), expression(expression_) {
 		delete size_;
 	}

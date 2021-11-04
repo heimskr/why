@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -9,6 +10,7 @@
 #include "parser/Parser.h"
 #include "util/Util.h"
 #include "wasm/Debug.h"
+#include "wasm/Expression.h"
 #include "wasm/Section.h"
 #include "wasm/Types.h"
 
@@ -54,10 +56,11 @@ namespace Wasmc {
 			std::map<uint32_t, const std::string *> hashes;
 			/** Maps labels to types (unknown, function, object). */
 			std::map<const std::string *, SymbolType> symbolTypes;
+			std::map<const std::string *, std::shared_ptr<Expression>> symbolSizes;
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			bool verbose = false;
 
-			Section meta {"Meta", 40}, data {"Data"}, code {"Code"};
+			Section meta {"Meta", &allLabels, 40}, data {"Data", &allLabels}, code {"Code", &allLabels};
 
 			Section *currentSection = &code;
 

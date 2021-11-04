@@ -1,8 +1,14 @@
 #include "parser/ASTNode.h"
 #include "parser/Lexer.h"
+#include "parser/Parser.h"
 #include "wasm/Expression.h"
 
 namespace Wasmc {
+	Expression::Expression(ASTNode *node): ASTNode(wasmParser, WASM_EXPRESSION) {
+		symbol = node->symbol;
+		absorb(node);
+	}
+
 	void Expression::findLabels(const ASTNode *node, std::set<const std::string *> &set) {
 		switch (node->symbol) {
 			case WASMTOK_PLUS:
@@ -32,9 +38,9 @@ namespace Wasmc {
 		}
 	}
 
-	std::set<const std::string *> Expression::findLabels(const ASTNode *node) {
+	std::set<const std::string *> Expression::findLabels() {
 		std::set<const std::string *> out;
-		findLabels(node, out);
+		findLabels(this, out);
 		return out;
 	}
 }

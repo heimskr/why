@@ -8,6 +8,7 @@
 
 namespace Wasmc {
 	enum class DirectiveType {Type, Size, String, Value, Align, Fill, Data, Code};
+	class Expression;
 
 	struct Directive: ASTNode {
 		Directive(int symbol_);
@@ -15,22 +16,22 @@ namespace Wasmc {
 	};
 
 	struct TypeDirective: Directive {
-		const std::string *symbol;
+		const std::string *symbolName;
 		SymbolType type;
 		TypeDirective() = delete;
 		TypeDirective(const std::string *, SymbolType);
 		TypeDirective(const std::string &, SymbolType);
-		TypeDirective(const ASTNode *symbol_, const ASTNode *type_);
+		TypeDirective(const ASTNode *symbol_name, const ASTNode *type_);
 		DirectiveType getType() const override { return DirectiveType::Type; }
 	};
 
 	struct SizeDirective: Directive {
-		const std::string *symbol;
-		std::shared_ptr<ASTNode> expression;
+		const std::string *symbolName;
+		std::shared_ptr<Expression> expression;
 
 		SizeDirective() = delete;
-		SizeDirective(const std::string *, ASTNode *expression_);
-		SizeDirective(const ASTNode *symbol_, ASTNode *expression_);
+		SizeDirective(const std::string *, Expression *expression_);
+		SizeDirective(const ASTNode *symbol_name, Expression *expression_);
 		DirectiveType getType() const override { return DirectiveType::Size; }
 	};
 
@@ -50,10 +51,10 @@ namespace Wasmc {
 
 		public:
 			uint8_t size;
-			std::shared_ptr<ASTNode> expression;
+			std::shared_ptr<Expression> expression;
 
 			ValueDirective() = delete;
-			ValueDirective(const ASTNode *size_, ASTNode *expression_);
+			ValueDirective(const ASTNode *size_, Expression *expression_);
 			DirectiveType getType() const override { return DirectiveType::Value; }
 	};
 
