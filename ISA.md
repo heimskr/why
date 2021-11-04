@@ -18,6 +18,8 @@
 		</li>
 		<li><a href="#directives">Directives</a>
 			<ol>
+				<li><a href="#dir-code"><code>%code</code></a></li>
+				<li><a href="#dir-data"><code>%data</code></a></li>
 				<li><a href="#dir-type"><code>%type</code></a></li>
 				<li><a href="#dir-size"><code>%size</code></a></li>
 				<li><a href="#dir-string"><code>%string</code></a></li>
