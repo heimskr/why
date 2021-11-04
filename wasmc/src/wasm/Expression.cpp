@@ -30,7 +30,8 @@ namespace Wasmc {
 				set.insert(node->extracted());
 				break;
 			case WASMTOK_DOT:
-				// "." isn't a true symbol.
+			case WASMTOK_NUMBER:
+				// "." isn't a true symbol and numeric constants aren't labels.
 				break;
 			default:
 				node->debug();

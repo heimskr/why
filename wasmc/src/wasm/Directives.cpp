@@ -53,9 +53,9 @@ namespace Wasmc {
 		}
 	}
 
-	ValueDirective::ValueDirective(const ASTNode *size_, Expression *expression_):
-	Directive(WASM_VALUEDIR), size(getSize(size_)), expression(expression_) {
-		delete size_;
+	ValueDirective::ValueDirective(const ASTNode *value_size, Expression *expression_):
+	Directive(WASM_VALUEDIR), valueSize(getSize(value_size)), expression(expression_) {
+		delete value_size;
 	}
 
 	AlignDirective::AlignDirective(long alignment_): Directive(WASM_ALIGNDIR), alignment(alignment_) {}

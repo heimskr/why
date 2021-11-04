@@ -50,11 +50,11 @@ namespace Wasmc {
 			static uint8_t getSize(const ASTNode *);
 
 		public:
-			uint8_t size;
+			uint8_t valueSize;
 			std::shared_ptr<Expression> expression;
 
 			ValueDirective() = delete;
-			ValueDirective(const ASTNode *size_, Expression *expression_);
+			ValueDirective(const ASTNode *value_size, Expression *expression_);
 			DirectiveType getType() const override { return DirectiveType::Value; }
 	};
 

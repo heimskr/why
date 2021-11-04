@@ -18,6 +18,8 @@ orcid: "0000-0001-7405-6654"
 
 @main
 	&message -> $a0
+%4b 0
+%align 8
 	:: strprint
 	<halt>
 

@@ -112,6 +112,11 @@ namespace Wasmc {
 					symbolSizes[directive->symbolName] = directive->expression;
 					break;
 				}
+				case WASM_VALUEDIR: {
+					auto *directive = dynamic_cast<ValueDirective *>(node);
+					*currentSection += {directive->valueSize, directive->expression};
+					break;
+				}
 				default: {
 					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
 						// Because we can't yet convert the instruction to a Long (probably),

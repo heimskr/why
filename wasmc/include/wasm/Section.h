@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -11,12 +12,16 @@
 #include "wasm/Types.h"
 
 namespace Wasmc {
+	class Expression;
+
 	struct Section {
 		using ValueType = uint8_t;
 
 		std::vector<ValueType> bytes;
 		std::map<size_t, const std::string *> labels;
 		std::unordered_set<const std::string *> *allLabels = nullptr;
+		/** Maps a counter to a pair of a value size and an expression. */
+		std::map<size_t, std::pair<size_t, std::shared_ptr<Expression>>> values;
 		size_t counter = 0;
 		std::string name;
 
@@ -27,6 +32,7 @@ namespace Wasmc {
 		ValueType & operator[](size_t);
 		const ValueType & operator[](size_t) const;
 		Section & operator+=(const std::string *label);
+		Section & operator+=(const std::pair<size_t, std::shared_ptr<Expression>> &);
 
 		template <typename T>
 		T * extend(size_t count) {

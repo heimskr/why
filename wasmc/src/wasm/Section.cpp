@@ -24,6 +24,11 @@ namespace Wasmc {
 		return *this;
 	}
 
+	Section & Section::operator+=(const std::pair<size_t, std::shared_ptr<Expression>> &pair) {
+		values.try_emplace(counter, pair);
+		return *this;
+	}
+
 	size_t Section::alignUp(size_t alignment) {
 		if (counter % alignment != 0) {
 			size_t to_add = alignment - (counter % alignment);
