@@ -15,6 +15,7 @@
 				<li><a href="#prog-text">Text Section</a>
 					<ol>
 						<li><a href="#dir-type"><code>%type</code></a></li>
+						<li><a href="#dir-size"><code>%size</code></a></li>
 						<li><a href="#dir-string"><code>%string</code></a></li>
 						<li><a href="#dir-stringz"><code>%stringz</code></a></li>
 						<li>
@@ -358,6 +359,28 @@ Tells the assembler the type of a symbol. The type can be either `object` (for d
 @strprint
 	// ...
 	: $rt
+</pre>
+
+### <a name="dir-size"></a><code>%size</code>
+Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter.
+
+#### Example
+<pre>
+@some_8b
+%8b 42
+
+%size some_8b 8
+
+@function_one
+	// ...
+	: $rt
+
+@function_two
+	// ...
+	: $ rt
+
+%size function_one function_two-function_one
+%size function_two .-function_two
 </pre>
 
 ### <a name="dir-string"></a><code>%string</code>
