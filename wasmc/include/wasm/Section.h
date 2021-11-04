@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -46,5 +47,7 @@ namespace Wasmc {
 		size_t alignUp(size_t alignment);
 
 		void clear();
+
+		static std::vector<ValueType> combine(std::initializer_list<std::reference_wrapper<Section>>);
 	};
 }

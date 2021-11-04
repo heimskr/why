@@ -30,4 +30,11 @@ namespace Wasmc {
 		bytes.clear();
 		counter = 0;
 	}
+
+	std::vector<Section::ValueType> Section::combine(std::initializer_list<std::reference_wrapper<Section>> list) {
+		std::vector<Section::ValueType> out;
+		for (Section &section: list)
+			out.insert(out.end(), section.bytes.begin(), section.bytes.end());
+		return out;
+	}
 }
