@@ -22,7 +22,6 @@ namespace Wasmc {
 
 	std::string Assembler::assemble(bool can_warn) {
 		wasmParser.errorCount = 0;
-		// meta.resize(4, 0);
 		validateSectionCounts();
 		findAllLabels();
 		processMetadata();
@@ -74,7 +73,7 @@ namespace Wasmc {
 		// 	std::cerr << '\n';
 		// }
 		// return stringify(assembled);
-		return "";
+		return stringify(concatenated);
 	}
 
 	void Assembler::processText() {
@@ -114,8 +113,11 @@ namespace Wasmc {
 				}
 				case WASM_VALUEDIR: {
 					auto *directive = dynamic_cast<ValueDirective *>(node);
+					directive->expression->checkLabelCount(1);
+					auto labels = directive->expression->findLabels();
+					valueExpressionLabels.insert(labels.begin(), labels.end());
 					*currentSection += {directive->valueSize, directive->expression};
-					currentSection->counter += directive->valueSize;
+					*currentSection += directive->valueSize;
 					break;
 				}
 				case WASM_ALIGNDIR:
@@ -124,7 +126,7 @@ namespace Wasmc {
 				case WASM_FILLDIR: {
 					auto *directive = dynamic_cast<FillDirective *>(node);
 					currentSection->extend<uint8_t>(directive->count, uint8_t(directive->value));
-					currentSection->counter += directive->count;
+					*currentSection += directive->count;
 					break;
 				}
 				default: {
@@ -142,16 +144,13 @@ namespace Wasmc {
 		data.alignUp(8);
 	}
 
-	std::string Assembler::stringify(const std::vector<Long> &longs) {
+	std::string Assembler::stringify(const std::vector<uint8_t> &bytes) {
 		std::stringstream ss;
-		bool first = true;
-		for (Long piece: longs) {
-			if (first)
-				first = false;
-			else
-				ss << "\n";
-			for (int i = 0; i < 8; ++i)
-				ss << std::hex << std::right << std::setw(2) << std::setfill('0') << ((piece >> (8 * i)) & 0xff);
+		size_t count = 0;
+		for (uint8_t byte: bytes) {
+			ss << std::hex << std::right << std::setw(2) << std::setfill('0') << int(byte);
+			if (++count % 8 == 0)
+				ss << '\n';
 		}
 		return ss.str();
 	}
@@ -371,7 +370,7 @@ namespace Wasmc {
 		// 		}
 		// 	}
 
-		// 	out.push_back(length | (static_cast<Long>(type) << 16) | (static_cast<Long>(encodeSymbol(label)) << 32));
+		// 	out.push_back(length | (Long(type) << 16) | (Long(encodeSymbol(label)) << 32));
 		// 	out.push_back(skeleton? 0 : offsets.at(label));
 		// 	for (const Long piece: Util::getLongs(*label))
 		// 		out.push_back(piece);

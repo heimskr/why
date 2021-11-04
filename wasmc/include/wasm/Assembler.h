@@ -59,6 +59,8 @@ namespace Wasmc {
 			std::map<const std::string *, std::shared_ptr<Expression>> symbolSizes;
 			/** Maps code section counters to instruction nodes. */
 			std::map<size_t, WASMInstructionNode *> instructionMap;
+			/** A set of all labels found in value directive expressions. */
+			std::unordered_set<const std::string *> valueExpressionLabels;
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			std::vector<uint8_t> concatenated;
 
@@ -77,7 +79,7 @@ namespace Wasmc {
 
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 
-			static std::string stringify(const std::vector<Long> &);
+			static std::string stringify(const std::vector<uint8_t> &);
 
 			Long compileInstruction(const WASMInstructionNode &);
 

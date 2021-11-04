@@ -220,7 +220,8 @@ namespace Wasmc {
 
 		repointerize(combined_symbols, linked);
 
-		return Assembler::stringify(linked);
+		// return Assembler::stringify(linked);
+		return Assembler::stringify({});
 	}
 
 	void Linker::depointerize(const SymbolTable &table, std::vector<Long> &data, Long data_offset) {
@@ -277,31 +278,31 @@ namespace Wasmc {
 	}
 
 	void Linker::desymbolize(std::vector<Long> &longs, const Offsets &offsets, const SymbolTable &table) {
-		const size_t longs_size = longs.size();
-		for (size_t i = 0; i < longs_size; ++i) {
-			const std::unique_ptr<AnyBase> parsed = std::unique_ptr<AnyBase>(BinaryParser::parse(longs[i]));
-			if (parsed->flags == static_cast<uint16_t>(LinkerFlags::KnownSymbol)) {
-				if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
-					throw std::runtime_error("Found an instruction not of type I or J with KnownSymbol set at " +
-						Util::toHex(i * 8 + offsets.code));
-				const uint32_t immediate = static_cast<AnyImmediate *>(parsed.get())->immediate;
-				const std::string name = findSymbolFromAddress(immediate, table, offsets.end);
-				if (name.empty() || table.count(name) == 0)
-					throw std::runtime_error("Couldn't find a symbol corresponding to " + Util::toHex(immediate)
-						+ " while desymbolizing.");
+		// const size_t longs_size = longs.size();
+		// for (size_t i = 0; i < longs_size; ++i) {
+		// 	const std::unique_ptr<AnyBase> parsed = std::unique_ptr<AnyBase>(BinaryParser::parse(longs[i]));
+		// 	if (parsed->flags == static_cast<uint16_t>(LinkerFlags::KnownSymbol)) {
+		// 		if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
+		// 			throw std::runtime_error("Found an instruction not of type I or J with KnownSymbol set at " +
+		// 				Util::toHex(i * 8 + offsets.code));
+		// 		const uint32_t immediate = static_cast<AnyImmediate *>(parsed.get())->immediate;
+		// 		const std::string name = findSymbolFromAddress(immediate, table, offsets.end);
+		// 		if (name.empty() || table.count(name) == 0)
+		// 			throw std::runtime_error("Couldn't find a symbol corresponding to " + Util::toHex(immediate)
+		// 				+ " while desymbolizing.");
 
-				const uint32_t id = table.at(name).id;
-				if (parsed->type == AnyBase::Type::I) {
-					const auto *itype = static_cast<AnyI *>(parsed.get());
-					longs[i] = Assembler::compileI(itype->opcode, itype->rs, itype->rd, id,
-						static_cast<uint8_t>(LinkerFlags::SymbolID), itype->condition);
-				} else {
-					const auto *jtype = static_cast<AnyJ *>(parsed.get());
-					longs[i] = Assembler::compileJ(jtype->opcode, jtype->rs, id, jtype->link,
-						static_cast<uint8_t>(LinkerFlags::SymbolID), jtype->condition);
-				}
-			}
-		}
+		// 		const uint32_t id = table.at(name).id;
+		// 		if (parsed->type == AnyBase::Type::I) {
+		// 			const auto *itype = static_cast<AnyI *>(parsed.get());
+		// 			longs[i] = Assembler::compileI(itype->opcode, itype->rs, itype->rd, id,
+		// 				static_cast<uint8_t>(LinkerFlags::SymbolID), itype->condition);
+		// 		} else {
+		// 			const auto *jtype = static_cast<AnyJ *>(parsed.get());
+		// 			longs[i] = Assembler::compileJ(jtype->opcode, jtype->rs, id, jtype->link,
+		// 				static_cast<uint8_t>(LinkerFlags::SymbolID), jtype->condition);
+		// 		}
+		// 	}
+		// }
 	}
 
 	std::string Linker::findSymbolFromAddress(Long address, const SymbolTable &table, Long end_offset) {
@@ -402,47 +403,47 @@ namespace Wasmc {
 	}
 
 	void Linker::resymbolize(std::vector<Long> &instructions, const SymbolTable &table) {
-		size_t offset = 0;
-		for (Long &instruction: instructions) {
-			const AnyBase *parsed = BinaryParser::parse(instruction);
-			const LinkerFlags flags = static_cast<LinkerFlags>(parsed->flags);
-			if (flags == LinkerFlags::SymbolID || flags == LinkerFlags::UnknownSymbol) {
-				if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
-					throw std::runtime_error("Found an instruction not of type I or J with "
-						+ std::string(flags == LinkerFlags::UnknownSymbol? "UnknownSymbol" : "SymbolID") + " set at "
-						"offset " + std::to_string(offset));
+		// size_t offset = 0;
+		// for (Long &instruction: instructions) {
+		// 	const AnyBase *parsed = BinaryParser::parse(instruction);
+		// 	const LinkerFlags flags = static_cast<LinkerFlags>(parsed->flags);
+		// 	if (flags == LinkerFlags::SymbolID || flags == LinkerFlags::UnknownSymbol) {
+		// 		if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
+		// 			throw std::runtime_error("Found an instruction not of type I or J with "
+		// 				+ std::string(flags == LinkerFlags::UnknownSymbol? "UnknownSymbol" : "SymbolID") + " set at "
+		// 				"offset " + std::to_string(offset));
 
-				const size_t immediate = dynamic_cast<const AnyImmediate &>(*parsed).immediate;
-				const std::string name = findSymbolFromID(immediate, table);
+		// 		const size_t immediate = dynamic_cast<const AnyImmediate &>(*parsed).immediate;
+		// 		const std::string name = findSymbolFromID(immediate, table);
 
-				if (name.empty() || table.count(name) == 0) {
-					// Unknown labels in included binaries are okay if they're resolved later.
-					// For example, B could reference symbols defined in C without including C,
-					// but if A includes B and C, then the symbols will be resolved in the compiled
-					// output for A.
-					if (flags == LinkerFlags::UnknownSymbol)
-						continue;
-					throw std::runtime_error("Couldn't find symbol for immediate " + Util::toHex(immediate));
-				}
+		// 		if (name.empty() || table.count(name) == 0) {
+		// 			// Unknown labels in included binaries are okay if they're resolved later.
+		// 			// For example, B could reference symbols defined in C without including C,
+		// 			// but if A includes B and C, then the symbols will be resolved in the compiled
+		// 			// output for A.
+		// 			if (flags == LinkerFlags::UnknownSymbol)
+		// 				continue;
+		// 			throw std::runtime_error("Couldn't find symbol for immediate " + Util::toHex(immediate));
+		// 		}
 
-				Long address = table.at(name).address;
-				if (0xffffffff < address)
-					warn() << "Truncating address of label \e[1m" << name << "\e[22m from \e[1m" << Util::toHex(address)
-					       << "\e[22m to \e[1m" << Util::toHex(address & 0xffffffff) << "\e[22m.\n";
+		// 		Long address = table.at(name).address;
+		// 		if (0xffffffff < address)
+		// 			warn() << "Truncating address of label \e[1m" << name << "\e[22m from \e[1m" << Util::toHex(address)
+		// 			       << "\e[22m to \e[1m" << Util::toHex(address & 0xffffffff) << "\e[22m.\n";
 
-				if (parsed->type == AnyBase::Type::I) {
-					const AnyI *itype = static_cast<const AnyI *>(parsed);
-					instruction = Assembler::compileI(itype->opcode, itype->rs, itype->rd,
-						static_cast<uint32_t>(address), static_cast<uint8_t>(LinkerFlags::KnownSymbol),
-						itype->condition);
-				} else {
-					const AnyJ *jtype = static_cast<const AnyJ *>(parsed);
-					instruction = Assembler::compileJ(jtype->opcode, jtype->rs, static_cast<uint32_t>(address),
-						jtype->link, static_cast<uint8_t>(LinkerFlags::KnownSymbol), jtype->condition);
-				}
-			}
+		// 		if (parsed->type == AnyBase::Type::I) {
+		// 			const AnyI *itype = static_cast<const AnyI *>(parsed);
+		// 			instruction = Assembler::compileI(itype->opcode, itype->rs, itype->rd,
+		// 				static_cast<uint32_t>(address), static_cast<uint8_t>(LinkerFlags::KnownSymbol),
+		// 				itype->condition);
+		// 		} else {
+		// 			const AnyJ *jtype = static_cast<const AnyJ *>(parsed);
+		// 			instruction = Assembler::compileJ(jtype->opcode, jtype->rs, static_cast<uint32_t>(address),
+		// 				jtype->link, static_cast<uint8_t>(LinkerFlags::KnownSymbol), jtype->condition);
+		// 		}
+		// 	}
 
-			offset += 8;
-		}
+		// 	offset += 8;
+		// }
 	}
 }

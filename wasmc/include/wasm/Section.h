@@ -33,6 +33,7 @@ namespace Wasmc {
 		const ValueType & operator[](size_t) const;
 		Section & operator+=(const std::string *label);
 		Section & operator+=(const std::pair<size_t, std::shared_ptr<Expression>> &);
+		Section & operator+=(size_t);
 
 		template <typename T>
 		T * extend(size_t count, uint8_t value = 0) {
@@ -47,7 +48,7 @@ namespace Wasmc {
 		template <typename T>
 		void append(T item) {
 			*extend<T>(1) = item;
-			counter += sizeof(T);
+			*this += sizeof(T);
 		}
 
 		template <typename T, template <typename...> typename C>
@@ -55,14 +56,14 @@ namespace Wasmc {
 			T *pointer = extend<T>(container.size());
 			for (const T &item: container)
 				*pointer++ = item;
-			counter += sizeof(T) * container.size();
+			*this += sizeof(T) * container.size();
 		}
 
 		void append(const std::string &string) {
 			char *pointer = extend<char>(string.size());
 			for (char ch: string)
 				*pointer++ = ch;
-			counter += string.size();
+			*this += string.size();
 		}
 
 		size_t alignUp(size_t alignment);

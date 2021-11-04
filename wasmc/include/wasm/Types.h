@@ -10,7 +10,7 @@ namespace Wasmc {
 
 	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
 	enum class SymbolType {Unknown, Other, Function, Object};
-	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol, SymbolID};
+	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol};
 
 	struct Offsets {
 		Long symbolTable = 0, code = 0, data = 0, debug = 0, end = 0;

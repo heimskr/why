@@ -226,7 +226,13 @@ term: term "*" factor { $$ = $2->adopt({$1, $3}); }
     | factor;
 
 factor: "(" expression ")" { $$ = $2; D($1, $3); }
-      | ident | WASMTOK_STRING | number | ".";
+      | ident_or_string | number | ".";
+
+ident_or_string: ident | WASMTOK_STRING;
+
+// basic_expression: ident_or_string "-" ident_or_string { $$ = $2->adopt({$1, $3}); }
+//                 | ident_or_string "-" number          { $$ = $2->adopt({$1, $3}); }
+//                 | ident_or_string "+" number          { $$ = $2->adopt({$1, $3}); };
 
 dir_size: "%size" ident          expression { $$ = (new SizeDirective($2, new Expression($3)))->locate($1); D($1); }
         | "%size" WASMTOK_STRING expression { $$ = (new SizeDirective($2, new Expression($3)))->locate($1); D($1); };

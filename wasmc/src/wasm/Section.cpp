@@ -20,12 +20,17 @@ namespace Wasmc {
 		if (allLabels)
 			allLabels->insert(label);
 
-		std::cerr << name << ": adding " << *label << " @ " << counter << '\n';
 		return *this;
 	}
 
 	Section & Section::operator+=(const std::pair<size_t, std::shared_ptr<Expression>> &pair) {
 		values.try_emplace(counter, pair);
+		extend<char>(pair.first);
+		return *this;
+	}
+
+	Section & Section::operator+=(size_t offset) {
+		counter += offset;
 		return *this;
 	}
 
@@ -33,7 +38,7 @@ namespace Wasmc {
 		if (counter % alignment != 0) {
 			size_t to_add = alignment - (counter % alignment);
 			extend<char>(to_add);
-			counter += to_add;
+			*this += to_add;
 		}
 
 		return counter;
