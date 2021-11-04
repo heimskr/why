@@ -44,15 +44,20 @@ namespace Wasmc {
 			counter += sizeof(T);
 		}
 
-		template <typename T>
-		void append(std::initializer_list<T> list) {
-			T *pointer = extend<T>(list.size());
-			for (const T &item: list)
+		template <typename T, template <typename...> typename C>
+		void appendAll(const C<T> &container) {
+			T *pointer = extend<T>(container.size());
+			for (const T &item: container)
 				*pointer++ = item;
-			counter += sizeof(T) * list.size();
+			counter += sizeof(T) * container.size();
 		}
 
-		void append(const std::string &string);
+		void append(const std::string &string) {
+			char *pointer = extend<char>(string.size());
+			for (char ch: string)
+				*pointer++ = ch;
+			counter += string.size();
+		}
 
 		size_t alignUp(size_t alignment);
 

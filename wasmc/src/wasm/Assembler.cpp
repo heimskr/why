@@ -29,6 +29,17 @@ namespace Wasmc {
 
 		processText();
 
+		metaOffsetData() = metaOffsetCode() + code.size();
+		metaOffsetSymbols() = metaOffsetData() + data.size();
+
+		symbolTable = createSymbolTable(allLabels, true);
+		symbols.appendAll(symbolTable);
+
+		concatenated = Section::combine({meta, code, data, symbols});
+
+
+
+
 		// symbolTable = createSymbolTable(allLabels, true);
 		// for (Long piece: symbolTable)
 		// 	append(piece);
@@ -70,7 +81,7 @@ namespace Wasmc {
 		if (!textNode)
 			throw std::runtime_error("textNode is null in Assembler::processText");
 
-		for (ASTNode *node: *textNode) {
+		for (ASTNode *node: *textNode)
 			switch (node->symbol) {
 				case WASM_DATADIR:
 					currentSection = &data;
@@ -101,10 +112,19 @@ namespace Wasmc {
 					symbolSizes[directive->symbolName] = directive->expression;
 					break;
 				}
-				default:
-					node->debug();
+				default: {
+					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
+						// Because we can't yet convert the instruction to a Long (probably),
+						// we stash it in a map and append a zero.
+						instructionMap[currentSection->counter] = instruction;
+						currentSection->append<Long>(0);
+					} else
+						node->debug();
+				}
 			}
-		}
+
+		code.alignUp(8);
+		data.alignUp(8);
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -403,7 +423,7 @@ namespace Wasmc {
 			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(orcid_longs.size()));
 
 		meta.clear();
-		meta.append<Long>({0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
+		meta.appendAll(std::initializer_list<Long> {0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
 
 		std::string nva = name;
 		nva += '\0';

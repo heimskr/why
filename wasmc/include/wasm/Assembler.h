@@ -57,10 +57,15 @@ namespace Wasmc {
 			/** Maps labels to types (unknown, function, object). */
 			std::map<const std::string *, SymbolType> symbolTypes;
 			std::map<const std::string *, std::shared_ptr<Expression>> symbolSizes;
+			/** Maps code section counters to instruction nodes. */
+			std::map<size_t, WASMInstructionNode *> instructionMap;
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
+			std::vector<uint8_t> concatenated;
+
 			bool verbose = false;
 
-			Section meta {"Meta", &allLabels, 40}, data {"Data", &allLabels}, code {"Code", &allLabels};
+			Section meta {"Meta", &allLabels, 40}, code {"Code", &allLabels}, data {"Data", &allLabels};
+			Section symbols {"Symbols", &allLabels};
 
 			Section *currentSection = &code;
 
