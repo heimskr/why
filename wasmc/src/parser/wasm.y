@@ -200,9 +200,10 @@ debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") 
           | number number number number number { if (*$1->lexerInfo != "3") wasmerror("Invalid debug line type (expected 3)"); $$ = $1->adopt({$2, $3, $4, $5}); };
 
 text_section: "#text" "\n" { D($2); };
-            | text_section statement endop { $$ = $1->adopt($2); D($3); }
-            | text_section statement intbang endop { $$ = $1->adopt(dynamic_cast<WASMInstructionNode *>($2)->absorbIntbang($3)); D($4); }
+            | text_section operation endop { $$ = $1->adopt($2); D($3); }
+            | text_section operation intbang endop { $$ = $1->adopt(dynamic_cast<WASMInstructionNode *>($2)->absorbIntbang($3)); D($4); }
             | text_section directive endop { $$ = $1->adopt($2); D($3); }
+            | text_section label { $$ = $1->adopt($2); }
             | text_section endop { D($2); };
 intbang: "!" number { $$ = $1->adopt($2); };
 
@@ -237,12 +238,9 @@ dir_align: "%align" number { $$ = (new AlignDirective($2->atoi()))->locate($1); 
 
 dir_fill: "%fill" number number { $$ = (new FillDirective($2->atoi(), $3->atoi()))->locate($1); D($1, $2, $3); };
 
-statement: operation
-         | label _newlines statement { $$ = dynamic_cast<WASMInstructionNode *>($3)->absorbLabel($1); D($2); };
-
 endop: "\n" | ";";
-newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
-_newlines: newlines | { $$ = nullptr; };
+// newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
+// _newlines: newlines | { $$ = nullptr; };
 
 operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel

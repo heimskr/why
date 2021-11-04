@@ -46,24 +46,48 @@ namespace Wasmc {
 
 			const ASTNode *root;
 			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
-			std::vector<Long> meta, data, code, symbolTable, debugData, assembled;
+			std::vector<Long> meta, text, symbolTable, debugData, assembled;
 			std::unordered_set<const std::string *> allLabels, unknownSymbols;
-			std::unordered_map<const std::string *, const std::string *> dataVariables;
 			std::unordered_map<uint32_t, const std::string *> hashes;
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
-			size_t dataLength = 0;
 			bool verbose = false;
-			/** Used in naming anonymous pointers (i.e., pointer members of structs and arrays). */
-			const std::string id;
-			size_t anonymousPointerCount = 0;
+			std::vector<uint8_t> bytes = std::vector<uint8_t>(32, 0);
+			size_t counter = 0;
+
+			template <typename T>
+			T * extend(size_t count) {
+				T *out = reinterpret_cast<T *>(bytes.data() + bytes.size());
+				size_t new_capacity, new_size = bytes.size() + count * sizeof(T);
+				for (new_capacity = 1; new_capacity < new_size; new_capacity <<= 1);
+				bytes.reserve(new_capacity);
+				bytes.resize(bytes.size() + count * sizeof(T), 0);
+				return out;
+			}
+
+			template <typename T>
+			void append(T item) {
+				*extend<T>(1) = item;
+				counter += sizeof(T);
+			}
+
+			template <typename T>
+			void append(std::initializer_list<T> list) {
+				T *pointer = extend<T>(list.size());
+				for (const T &item: list)
+					*pointer++ = item;
+				counter += sizeof(T) * list.size();
+			}
+
+			void append(const std::string &string);
+
+			size_t alignUp(size_t alignment);
 
 			const std::vector<Long> & getAssembled() const { return assembled; }
 
-			Long & metaOffsetSymbols() { return meta.at(0); }
-			Long & metaOffsetCode()    { return meta.at(1); }
-			Long & metaOffsetData()    { return meta.at(2); }
-			Long & metaOffsetDebug()   { return meta.at(3); }
-			Long & metaOffsetEnd()     { return meta.at(4); }
+			Long & metaOffsetSymbols() { return *(Long *) &bytes[ 0]; }
+			Long & metaOffsetDebug()   { return *(Long *) &bytes[ 8]; }
+			Long & metaOffsetText()    { return *(Long *) &bytes[16]; }
+			Long & metaOffsetEnd()     { return *(Long *) &bytes[24]; }
 
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 

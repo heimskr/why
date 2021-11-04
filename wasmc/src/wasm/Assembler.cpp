@@ -17,17 +17,17 @@
 namespace Wasmc {
 	size_t Assembler::assemblerCount = 0;
 
-	Assembler::Assembler(const ASTNode *root_): root(root_), id(std::to_string(assemblerCount++)) {}
+	Assembler::Assembler(const ASTNode *root_): root(root_) {}
 
 	std::string Assembler::assemble(bool can_warn) {
 		wasmParser.errorCount = 0;
-		meta.resize(5, 0);
+		meta.resize(4, 0);
 		validateSectionCounts();
 		findAllLabels();
 		processMetadata();
 		processData(allLabels);
 		symbolTable = createSymbolTable(allLabels, true);
-		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
+		metaOffsetDebug() = metaOffsetSymbols() + symbolTable.size() * 8;
 
 		auto expanded = expandCode();
 		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
@@ -58,6 +58,19 @@ namespace Wasmc {
 			std::cerr << '\n';
 		}
 		return stringify(assembled);
+	}
+
+	void Assembler::append(const std::string &string) {
+		char *pointer = extend<char>(string.size());
+		for (char ch: string)
+			*pointer++ = ch;
+		counter += string.size();
+	}
+
+	size_t Assembler::alignUp(size_t alignment) {
+		if (counter % alignment != 0)
+			extend<char>(alignment - (counter % alignment));
+		return counter;
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -208,15 +221,15 @@ namespace Wasmc {
 			addCode(*statement);
 	}
 
-	void Assembler::reprocessData() {
-		for (const auto &[key, ref]: dataVariables)
-			data.at(dataOffsets.at(key) / 8) = offsets.count(ref) == 0? encodeSymbol(ref) : offsets.at(ref);
-	}
+	// void Assembler::reprocessData() {
+	// 	for (const auto &[key, ref]: dataVariables)
+	// 		data.at(dataOffsets.at(key) / 8) = offsets.count(ref) == 0? encodeSymbol(ref) : offsets.at(ref);
+	// }
 
-	void Assembler::setDataOffsets() {
-		for (const auto &[name, offset]: dataOffsets)
-			offsets[name] = offset + metaOffsetData();
-	}
+	// void Assembler::setDataOffsets() {
+	// 	for (const auto &[name, offset]: dataOffsets)
+	// 		offsets[name] = offset + metaOffsetData();
+	// }
 
 	void Assembler::validateSectionCounts() {
 		bool meta_found = false, include_found = false, debug_found = false, text_found = false;
@@ -255,28 +268,14 @@ namespace Wasmc {
 	void Assembler::findAllLabels() {
 		allLabels.clear();
 
-		// if (dataNode) {
-		// 	for (const ASTNode *node: *dataNode) {
-		// 		if (node->symbol == WASMTOK_IDENT)
-		// 			allLabels.insert(node->lexerInfo);
-		// 		else if (node->symbol == WASMTOK_STRING)
-		// 			allLabels.insert(StringSet::intern(node->unquote()));
-		// 		else
-		// 			throw std::runtime_error("Unexpected symbol found in data section at "
-		// 				+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-		// 	}
-		// }
-
-		// if (codeNode) {
-		// 	for (const ASTNode *node: *codeNode) {
-		// 		const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
-		// 		if (!instruction)
-		// 			throw std::runtime_error("Unexpected symbol found in code section at "
-		// 				+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-		// 		for (const std::string *label: instruction->labels)
-		// 			allLabels.insert(label);
-		// 	}
-		// }
+		if (textNode)
+			for (const ASTNode *node: *textNode)
+				if (node->symbol == WASM_LABEL) {
+					auto *label_node = dynamic_cast<const WASMLabelNode *>(node);
+					if (!label_node)
+						throw std::runtime_error("label_node is null in Assembler::findAllLabels");
+					allLabels.insert(label_node->label);
+				}
 	}
 
 	std::vector<Long> Assembler::createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton) {
@@ -364,7 +363,10 @@ namespace Wasmc {
 		const auto longs = Util::getLongs(orcid);
 		if (longs.size() != 2)
 			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(longs.size()));
-		meta = {0, 0, 0, 0, 0, longs[0], longs[1]};
+
+		bytes.clear();
+
+		append<Long>({0, 0, 0, 0, longs[0], longs[1]});
 
 		std::string nva = name;
 		nva.push_back('\0');
@@ -373,8 +375,7 @@ namespace Wasmc {
 		nva.insert(nva.end(), author.begin(), author.end());
 		nva.push_back('\0');
 
-		for (const Long piece: Util::getLongs(nva))
-			meta.push_back(piece);
+		append(nva);
 
 		metaOffsetSymbols() = meta.size() * 8;
 	}
@@ -417,11 +418,11 @@ namespace Wasmc {
 	                                                  std::unordered_set<const std::string *> &labels) {
 		const ASTNode *child = node->front();
 		static_assert(sizeof(Long) == sizeof(double));
-		std::vector<uint8_t> bytes;
+		std::vector<uint8_t> to_add;
 
 		auto add = [&](Long value) {
 			for (int i = 0; i < 8; ++i) {
-				bytes.push_back((value >> (8 * i)) & 0xff);
+				to_add.push_back((value >> (8 * i)) & 0xff);
 				++data_length;
 			}
 		};
@@ -445,14 +446,14 @@ namespace Wasmc {
 					break;
 				case WASMTOK_STRING: {
 					const std::string str = current->unquote() + '\0';
-					bytes.insert(bytes.end(), str.cbegin(), str.cend());
+					to_add.insert(to_add.end(), str.cbegin(), str.cend());
 					data_length += str.size();
 					break;
 				}
 				case WASMTOK_LPAR: {
 					const long count = current->front()->atoi();
 					for (long i = 0; i < count; ++i) {
-						bytes.push_back(0);
+						to_add.push_back(0);
 						++data_length;
 					}
 					break;
@@ -460,7 +461,7 @@ namespace Wasmc {
 				case WASMTOK_AND:
 					// Pointers have to be 8-padded?
 					while (data_length % 8) {
-						bytes.push_back(0);
+						to_add.push_back(0);
 						++data_length;
 					}
 					if (processed == 0) { // i.e., if we're not a struct/array member
@@ -495,7 +496,7 @@ namespace Wasmc {
 			++processed;
 		}
 
-		return bytes;
+		return to_add;
 	}
 
 	Statements Assembler::expandCode() {
@@ -831,21 +832,21 @@ namespace Wasmc {
 			if (0xffffff < location->functionIndex)
 				throw std::runtime_error("Function index too large: " + std::to_string(location->functionIndex));
 
-			std::vector<uint8_t> bytes {static_cast<uint8_t>(location->getType())};
+			std::vector<uint8_t> to_add {static_cast<uint8_t>(location->getType())};
 
 			auto add = [&](size_t n, size_t byte_count) {
 				for (size_t j = 0; j < byte_count; ++j)
-					bytes.push_back((n >> (8 * j)) & 0xff);
+					to_add.push_back((n >> (8 * j)) & 0xff);
 			};
 
 			add(location->fileIndex, 3);
 			add(location->line, 4);
 			add(location->column, 3);
-			bytes.push_back(count & 0xff);
+			to_add.push_back(count & 0xff);
 			add(location->functionIndex, 4);
 			add(address, 8);
 
-			for (const Long piece: Util::getLongs(bytes))
+			for (const Long piece: Util::getLongs(to_add))
 				out.push_back(piece);
 			i += count - 1;
 		}
