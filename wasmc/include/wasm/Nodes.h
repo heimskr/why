@@ -35,11 +35,6 @@ namespace Wasmc {
 		HasImmediate(const Immediate &imm_): imm(imm_) {}
 	};
 
-	struct HasSecondImmediate {
-		Immediate imm2;
-		HasSecondImmediate(const Immediate &imm2_): imm2(imm2_) {}
-	};
-
 	struct HasRS {
 		const std::string *rs;
 		HasRS(const ASTNode *node): HasRS(node? node->lexerInfo : nullptr) {}

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "parser/ASTNode.h"
+#include "wasm/Types.h"
 
 namespace Wasmc {
 	enum class DirectiveType {Type, Size, String, Value, Align, Fill};
@@ -13,12 +14,11 @@ namespace Wasmc {
 	};
 
 	struct TypeDirective: Directive {
-		enum class Type {Function, Object};
 		const std::string *symbol;
-		Type type;
+		SymbolType type;
 		TypeDirective() = delete;
-		TypeDirective(const std::string *, Type);
-		TypeDirective(const std::string &, Type);
+		TypeDirective(const std::string *, SymbolType);
+		TypeDirective(const std::string &, SymbolType);
 		TypeDirective(const ASTNode *symbol_, const ASTNode *type_);
 		DirectiveType getType() const override { return DirectiveType::Type; }
 	};

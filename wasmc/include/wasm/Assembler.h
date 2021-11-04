@@ -46,11 +46,15 @@ namespace Wasmc {
 
 			const ASTNode *root;
 			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
-			std::vector<Long> meta, text, symbolTable, debugData, assembled;
+			// std::vector<Long> meta, text, symbolTable, debugData, assembled;
+			std::vector<Long> symbolTable;
 			std::unordered_set<const std::string *> allLabels, unknownSymbols;
-			std::unordered_map<uint32_t, const std::string *> hashes;
+			std::map<uint32_t, const std::string *> hashes;
+			/** Maps labels to types (unknown, function, object). */
+			std::map<const std::string *, SymbolType> symbolTypes;
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 			bool verbose = false;
+
 			std::vector<uint8_t> bytes = std::vector<uint8_t>(32, 0);
 			size_t counter = 0;
 
@@ -82,11 +86,11 @@ namespace Wasmc {
 
 			size_t alignUp(size_t alignment);
 
-			const std::vector<Long> & getAssembled() const { return assembled; }
+			void clear();
 
-			Long & metaOffsetSymbols() { return *(Long *) &bytes[ 0]; }
-			Long & metaOffsetDebug()   { return *(Long *) &bytes[ 8]; }
-			Long & metaOffsetText()    { return *(Long *) &bytes[16]; }
+			Long & metaOffsetText()    { return *(Long *) &bytes[ 0]; }
+			Long & metaOffsetSymbols() { return *(Long *) &bytes[ 8]; }
+			Long & metaOffsetDebug()   { return *(Long *) &bytes[16]; }
 			Long & metaOffsetEnd()     { return *(Long *) &bytes[24]; }
 
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
@@ -126,14 +130,11 @@ namespace Wasmc {
 
 			static uint32_t encodeSymbol(const std::string &);
 
+			/** Clears the output bytes, resets the counter to 0, adds the metadata section and sets the symbol table
+			 *  offset. */
 			void processMetadata();
 
-			void processData(std::unordered_set<const std::string *> &labels);
-
-			std::vector<uint8_t> convertDataPieces(size_t data_length, const ASTNode *,
-				std::unordered_set<const std::string *> &);
-
-			Statements expandCode();
+			Statements expandText();
 
 			WASMInstructionNode * flipSigns(WASMInstructionNode *) const;
 

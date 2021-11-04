@@ -21,17 +21,21 @@ namespace Wasmc {
 
 	std::string Assembler::assemble(bool can_warn) {
 		wasmParser.errorCount = 0;
-		meta.resize(4, 0);
+		// meta.resize(4, 0);
 		validateSectionCounts();
 		findAllLabels();
 		processMetadata();
-		processData(allLabels);
-		symbolTable = createSymbolTable(allLabels, true);
-		metaOffsetDebug() = metaOffsetSymbols() + symbolTable.size() * 8;
 
-		auto expanded = expandCode();
-		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
-		metaOffsetDebug() = metaOffsetData() + dataLength;
+		processData(allLabels);
+
+		symbolTable = createSymbolTable(allLabels, true);
+		for (Long piece: symbolTable)
+			append(piece);
+
+		metaOffsetText() = alignUp(8);
+
+		auto expanded = expandText();
+		metaOffsetDebug() = alignUp(8);
 
 		debugData = createDebugData(debugNode, expanded);
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
@@ -68,9 +72,18 @@ namespace Wasmc {
 	}
 
 	size_t Assembler::alignUp(size_t alignment) {
-		if (counter % alignment != 0)
-			extend<char>(alignment - (counter % alignment));
+		if (counter % alignment != 0) {
+			size_t to_add = alignment - (counter % alignment);
+			extend<char>(to_add);
+			counter += to_add;
+		}
+
 		return counter;
+	}
+
+	void Assembler::clear() {
+		bytes.clear();
+		counter = 0;
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -275,6 +288,9 @@ namespace Wasmc {
 					if (!label_node)
 						throw std::runtime_error("label_node is null in Assembler::findAllLabels");
 					allLabels.insert(label_node->label);
+				} else if (auto *imm_node = dynamic_cast<const HasImmediate *>(node)) {
+					if (std::holds_alternative<const std::string *>(imm_node->imm))
+						allLabels.insert(std::get<const std::string *>(imm_node->imm));
 				}
 	}
 
@@ -360,148 +376,26 @@ namespace Wasmc {
 		if (orcid.size() != 16)
 			throw std::runtime_error("Invalid ORCID length");
 
-		const auto longs = Util::getLongs(orcid);
-		if (longs.size() != 2)
-			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(longs.size()));
+		const auto orcid_longs = Util::getLongs(orcid);
+		if (orcid_longs.size() != 2)
+			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(orcid_longs.size()));
 
-		bytes.clear();
-
-		append<Long>({0, 0, 0, 0, longs[0], longs[1]});
+		clear();
+		append<Long>({0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
 
 		std::string nva = name;
-		nva.push_back('\0');
+		nva += '\0';
 		nva.insert(nva.end(), version.begin(), version.end());
-		nva.push_back('\0');
+		nva += '\0';
 		nva.insert(nva.end(), author.begin(), author.end());
-		nva.push_back('\0');
+		nva += '\0';
 
 		append(nva);
 
-		metaOffsetSymbols() = meta.size() * 8;
+		metaOffsetText() = alignUp(8);
 	}
 
-	void Assembler::processData(std::unordered_set<const std::string *> &labels) {
-		// if (!dataNode)
-		// 	return;
-
-		data.clear();
-		dataOffsets.clear();
-		dataLength = 0;
-
-		// for (ASTNode *node: *dataNode) {
-		// 	const std::string *ident = node->lexerInfo;
-		// 	if (ident->front() == '"')
-		// 		ident = StringSet::intern(node->unquote());
-		// 	if (ident->front() != '%') {
-		// 		if (verbose)
-		// 			std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
-		// 		dataOffsets.emplace(ident, dataLength);
-		// 	}
-
-		// 	std::vector<uint8_t> pieces = convertDataPieces(dataLength, node, labels);
-
-		// 	int padding = (8 - (pieces.size() % 8)) % 8;
-		// 	while (padding--)
-		// 		pieces.push_back(0);
-
-		// 	for (size_t i = 0; i < pieces.size(); i += 8) {
-		// 		data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
-		// 			(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
-		// 			(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
-		// 	}
-
-		// 	dataLength += pieces.size();
-		// }
-	}
-
-	std::vector<uint8_t> Assembler::convertDataPieces(size_t data_length, const ASTNode *node,
-	                                                  std::unordered_set<const std::string *> &labels) {
-		const ASTNode *child = node->front();
-		static_assert(sizeof(Long) == sizeof(double));
-		std::vector<uint8_t> to_add;
-
-		auto add = [&](Long value) {
-			for (int i = 0; i < 8; ++i) {
-				to_add.push_back((value >> (8 * i)) & 0xff);
-				++data_length;
-			}
-		};
-
-		std::deque<const ASTNode *> stack {child};
-		size_t processed = 0;
-		while (!stack.empty()) {
-			const ASTNode *current = stack.front();
-			stack.pop_front();
-			switch (current->symbol) {
-				case WASMTOK_FLOAT: {
-					double parsed = Util::parseDouble(current->lexerInfo);
-					add(*reinterpret_cast<Long *>(&parsed));
-					break;
-				}
-				case WASMTOK_NUMBER:
-					add(static_cast<Long>(current->atoi()));
-					break;
-				case WASMTOK_INT_TYPE:
-					add(static_cast<Long>(current->front()->atoi()));
-					break;
-				case WASMTOK_STRING: {
-					const std::string str = current->unquote() + '\0';
-					to_add.insert(to_add.end(), str.cbegin(), str.cend());
-					data_length += str.size();
-					break;
-				}
-				case WASMTOK_LPAR: {
-					const long count = current->front()->atoi();
-					for (long i = 0; i < count; ++i) {
-						to_add.push_back(0);
-						++data_length;
-					}
-					break;
-				}
-				case WASMTOK_AND:
-					// Pointers have to be 8-padded?
-					while (data_length % 8) {
-						to_add.push_back(0);
-						++data_length;
-					}
-					if (processed == 0) { // i.e., if we're not a struct/array member
-						dataVariables[node->lexerInfo] = current->front()->lexerInfo;
-					} else {
-						// "asm" here stands for "array/struct member."
-						const std::string *new_label = StringSet::intern("_asm_" + id + "_" +
-							std::to_string(anonymousPointerCount++));
-						labels.insert(new_label);
-						dataVariables[new_label] = current->front()->lexerInfo;
-						dataOffsets.emplace(new_label, data_length);
-					}
-					add(0);
-					break;
-				case WASMTOK_LCURLY:
-					if (!current->empty())
-						for (const ASTNode *structvalue: *current->front())
-							stack.push_back(structvalue);
-					break;
-				case WASM_ARRAYTYPE:
-					if (!current->empty() && 2 < current->size())
-						for (const ASTNode *arrayvalue: *current->at(2))
-							stack.push_back(arrayvalue);
-					break;
-				default:
-					current->debug();
-					throw std::runtime_error("Unexpected symbol (" + std::to_string(current->symbol) + ") found in data"
-						" section at " + std::string(current->location) + ": " +
-						std::string(wasmParser.getName(current->symbol)));
-			}
-
-			++processed;
-		}
-
-		return to_add;
-	}
-
-	Statements Assembler::expandCode() {
-		// Known bug: locations for statement nodes are inaccurate.
-
+	Statements Assembler::expandText() {
 		if (!textNode)
 			return {};
 

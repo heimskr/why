@@ -7,10 +7,10 @@
 namespace Wasmc {
 	Directive::Directive(int symbol_): ASTNode(wasmParser, symbol_) {}
 
-	TypeDirective::TypeDirective(const std::string *symbol_, Type type_):
+	TypeDirective::TypeDirective(const std::string *symbol_, SymbolType type_):
 		Directive(WASM_TYPEDIR), symbol(symbol_), type(type_) {}
 
-	TypeDirective::TypeDirective(const std::string &symbol_, Type type_):
+	TypeDirective::TypeDirective(const std::string &symbol_, SymbolType type_):
 		TypeDirective(StringSet::intern(symbol_), type_) {}
 
 	TypeDirective::TypeDirective(const ASTNode *symbol_, const ASTNode *type_): Directive(WASM_TYPEDIR) {
@@ -21,8 +21,8 @@ namespace Wasmc {
 		delete type_;
 
 		switch (type_symbol) {
-			case WASMTOK_FUNCTION: type = Type::Function; break;
-			case WASMTOK_OBJECT:   type = Type::Object;   break;
+			case WASMTOK_FUNCTION: type = SymbolType::Function; break;
+			case WASMTOK_OBJECT:   type = SymbolType::Object;   break;
 			default: throw std::runtime_error("Invalid TypeDirective type symbol: " +
 				std::string(wasmParser.getName(type_symbol)));
 		}

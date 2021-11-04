@@ -281,14 +281,14 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into four sections: metadata, symbol table, debug data and text. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C. The <a href="#prog-text">text section</a> consists of executable code and other data.
+Programs are divided into four sections: metadata, text, symbol table and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-text">text section</a> consists of executable code and other data. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
 
 ## <a name="prog-meta"></a>Metadata Section
 The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
 
-* `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x08`: Address of the beginning of the [debug data section](#prog-debug).
-* `0x10`: Address of the beginning of the [text section](#prog-text).
+* `0x00`: Address of the beginning of the [text section](#prog-text).
+* `0x08`: Address of the beginning of the [symbol table](#prog-symtab).
+* `0x10`: Address of the beginning of the [debug data section](#prog-debug).
 * `0x18`: Total size of the program.
 * `0x20`–`0x28`: ORCID of the author (represented in ASCII without hyphens).
 * `0x30`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).

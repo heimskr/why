@@ -402,8 +402,9 @@ _immediate: "&" ident { $$ = $2; D($1); }
           | character
           | WASMTOK_STRING;
 
-ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io"
-     | "version" | "author" | "orcid" | "name" | printop | WASMTOK_IDENT;
+ident: ident_option { $1->symbol = WASMTOK_IDENT; } | WASMTOK_IDENT;
+ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io"
+     | "version" | "author" | "orcid" | "name" | printop;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
