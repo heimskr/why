@@ -435,6 +435,7 @@ namespace Wasmc {
 		WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_);
 		WASMInstructionNode * copy() const override { return (new WASMJeqNode(addr, link, rs, rt))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jeq; }
+		size_t expandedSize() const override;
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -674,6 +675,7 @@ namespace Wasmc {
 		WASMPseudoPrintNode(const Immediate &imm_);
 		WASMInstructionNode * copy() const override { return (new WASMPseudoPrintNode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::PseudoPrint; }
+		size_t expandedSize() const override;
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -685,6 +687,7 @@ namespace Wasmc {
 		WASMStringPrintNode(const std::string *string_);
 		WASMInstructionNode * copy() const override { return (new WASMStringPrintNode(string))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::StringPrint; }
+		size_t expandedSize() const override;
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -707,6 +710,7 @@ namespace Wasmc {
 		Funct getFunct() const override { return FUNCTS.at("io"); }
 		WASMInstructionNode * copy() const override { return (new WASMIONode(ident))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::IO; }
+		size_t expandedSize() const override { return ident? 2 : 1; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

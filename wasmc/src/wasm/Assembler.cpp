@@ -134,7 +134,9 @@ namespace Wasmc {
 						// Because we can't yet convert the instruction to a Long (probably),
 						// we stash it in a map and append a zero.
 						instructionMap[currentSection->counter] = instruction;
-						currentSection->append<Long>(0);
+						const size_t count = instruction->expandedSize();
+						for (size_t i = 0; i < count; ++i)
+							currentSection->append<Long>(0);
 					} else
 						node->debug();
 				}
