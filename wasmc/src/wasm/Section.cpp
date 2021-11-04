@@ -31,8 +31,16 @@ namespace Wasmc {
 		counter = 0;
 	}
 
+	size_t Section::size() const {
+		return bytes.size();
+	}
+
 	std::vector<Section::ValueType> Section::combine(std::initializer_list<std::reference_wrapper<Section>> list) {
 		std::vector<Section::ValueType> out;
+		size_t to_reserve = 0;
+		for (const Section &section: list)
+			to_reserve += section.size();
+		out.reserve(to_reserve);
 		for (Section &section: list)
 			out.insert(out.end(), section.bytes.begin(), section.bytes.end());
 		return out;

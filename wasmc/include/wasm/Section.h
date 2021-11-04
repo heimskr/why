@@ -48,6 +48,8 @@ namespace Wasmc {
 
 		void clear();
 
+		size_t size() const;
+
 		static std::vector<ValueType> combine(std::initializer_list<std::reference_wrapper<Section>>);
 	};
 }
