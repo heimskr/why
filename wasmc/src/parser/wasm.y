@@ -167,7 +167,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE WASM_LUINODE
 %token WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT
 %token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE WASM_RESTNODE
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
@@ -255,24 +255,15 @@ endop: "\n" | ";";
 // newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
 // _newlines: newlines | { $$ = nullptr; };
 
-operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
-         | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
-         | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
-         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | call     | op_jeq   | op_sprint | op_inc   | op_dec  | op_cs   | op_ls    | op_ss
-         | op_di   | op_ei;
+operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
+         | op_li   | op_si    | op_ms    | op_lni    | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
+         | op_j    | op_jc    | op_jr    | op_jrc    | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
+         | op_time | op_timei | op_ext   | op_ringi  | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
+         | op_qmem | op_ret   | op_jeq   | op_sprint | op_inc    | op_dec   | op_cs   | op_ls   | op_ss    | op_di
+         | op_ei;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
-
-call: ident "(" args ")" { $$ = new WASMCallNode($1, $3); D($2, $4); }
-    | ident "(" ")"      { $$ = new WASMCallNode($1); D($2, $3); };
-args: args "," arg { $$ = $1->adopt($3); D($2); }
-    | arg { $$ = (new AN(wasmParser, WASM_ARGS))->adopt($1, true); };
-arg: "&" ident { $$ = $1->adopt($2); }
-   | "*" ident { $$ = $1->adopt($2); }
-   | number
-   | reg;
 
 op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }

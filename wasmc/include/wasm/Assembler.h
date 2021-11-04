@@ -30,7 +30,7 @@ namespace Wasmc {
 		friend class Linker;
 
 		public:
-			/** Takes ownership of the ASTNode argument. It's recommended to call srand() beforehand. */
+			/** Takes ownership of the ASTNode argument. */
 			Assembler(const ASTNode *);
 
 			~Assembler() { delete root; }
@@ -143,11 +143,6 @@ namespace Wasmc {
 			void addIO(Statements &, const WASMInstructionNode *);
 
 			void addStringPrint(Statements &, const WASMInstructionNode *);
-
-			void addCall(Statements &, const WASMInstructionNode *);
-
-			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push,
-			              int bang = -1);
 
 			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
 	};

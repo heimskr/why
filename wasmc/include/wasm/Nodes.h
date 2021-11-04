@@ -16,8 +16,8 @@ namespace Wasmc {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, Call, StringPrint, Jeq, JeqI, Cs, Ls, Ss, IO,
-		Rest, Interrupts,
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, StringPrint, Jeq, JeqI, Cs, Ls, Ss, IO, Rest,
+		Interrupts,
 	};
 
 	Condition getCondition(const std::string &);
@@ -107,6 +107,9 @@ namespace Wasmc {
 		WASMInstructionNode * setInSubroutine(bool);
 		WASMInstructionNode * setBang(int);
 		virtual WASMInstructionNode * copy() const = 0;
+		/** Returns the number of instructions the instruction expands to. Will always be 1 except for certain
+		 *  pseudoinstructions. */
+		virtual size_t expandedSize() const { return 1; }
 		WASMNodeType nodeType() const override { return WASMNodeType::Statement; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -127,6 +130,7 @@ namespace Wasmc {
 		WASMLabelNode(const std::string *);
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Label; }
+		size_t expandedSize() const override { return 0; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -681,19 +685,6 @@ namespace Wasmc {
 		WASMStringPrintNode(const std::string *string_);
 		WASMInstructionNode * copy() const override { return (new WASMStringPrintNode(string))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::StringPrint; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
-	// Pseudoinstruction; not handled by Assembler::compileInstruction
-	struct WASMCallNode: WASMInstructionNode {
-		const std::string *function;
-		Args args;
-
-		WASMCallNode(ASTNode *function_, ASTNode *args_ = nullptr);
-		WASMCallNode(const std::string *function_, const Args &args_);
-		WASMInstructionNode * copy() const override { return (new WASMCallNode(function, args))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Call; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

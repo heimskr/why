@@ -35,6 +35,8 @@ namespace Wasmc {
 		Section & operator+=(const std::pair<size_t, std::shared_ptr<Expression>> &);
 		Section & operator+=(size_t);
 
+		Section & go(size_t);
+
 		template <typename T>
 		T * extend(size_t count, uint8_t value = 0) {
 			const size_t old_size = bytes.size();

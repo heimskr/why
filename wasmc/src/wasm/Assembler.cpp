@@ -21,7 +21,7 @@ namespace Wasmc {
 
 	Assembler::Assembler(const ASTNode *root_): root(root_) {}
 
-	std::string Assembler::assemble(bool can_warn) {
+	std::string Assembler::assemble(bool /* can_warn */) {
 		wasmParser.errorCount = 0;
 		validateSectionCounts();
 		findAllLabels();
@@ -474,10 +474,6 @@ namespace Wasmc {
 			}
 
 			switch (instruction->nodeType()) {
-				case WASMNodeType::Call:
-					addCall(expanded, instruction);
-					break;
-
 				case WASMNodeType::PseudoPrint:
 					addPseudoPrint(expanded, instruction);
 					break;
@@ -622,68 +618,6 @@ namespace Wasmc {
 			}
 
 			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(print->bang));
-		}
-	}
-
-	void Assembler::addCall(Statements &expanded, const WASMInstructionNode *instruction) {
-		const auto *call = dynamic_cast<const WASMCallNode *>(instruction);
-		const Args &args = call->args;
-
-		if (Why::argumentCount < args.size())
-			throw std::runtime_error("Too many arguments given in subroutine call (given "
-				+ std::to_string(args.size()) + ", maximum is " + std::to_string(Why::argumentCount) + ")");
-
-		std::vector<int> current_values;
-
-		if (instruction->inSubroutine)
-			current_values.push_back(Why::returnAddressOffset);
-
-		for (size_t i = 0; i < args.size(); ++i)
-			current_values.push_back(Why::argumentOffset + i);
-
-		if (!current_values.empty())
-			addStack(expanded, current_values, instruction->labels, true, call->bang);
-
-		for (size_t i = 0; i < args.size(); ++i) {
-			const std::string *reg = registerArray[Why::argumentOffset + i];
-			Arg &arg = args[i];
-			switch (arg.getType()) {
-				case Arg::Type::Address:
-					expanded.emplace_back(new WASMSetNode(dynamic_cast<AddressArg &>(arg).ident, reg));
-					break;
-				case Arg::Type::Value:
-					expanded.emplace_back(new WASMLiNode(dynamic_cast<ValueArg &>(arg).ident, reg, false));
-					break;
-				case Arg::Type::Number:
-					expanded.emplace_back(new WASMSetNode(dynamic_cast<NumberArg &>(arg).value, reg));
-					break;
-				case Arg::Type::Register:
-					expanded.emplace_back(new WASMMvNode(
-						registerArray[dynamic_cast<RegisterArg &>(arg).reg], reg));
-					break;
-				default:
-					throw std::runtime_error("Invalid Arg type");
-			}
-			expanded.back()->setBang(call->bang);
-		}
-
-		expanded.emplace_back((new WASMJNode(call->function, true))->setBang(call->bang));
-
-		std::reverse(current_values.begin(), current_values.end());
-		addStack(expanded, current_values, {}, false, call->bang);
-	}
-
-	void Assembler::addStack(Statements &expanded, const std::vector<int> &regs, const Strings &labels, bool is_push,
-	                         int bang) {
-		bool first = true;
-		for (const int reg: regs) {
-			auto node = std::make_shared<WASMStackNode>(registerArray[reg], is_push);
-			if (first)
-				node->labels = labels;
-			else
-				first = false;
-			node->setBang(bang);
-			expanded.push_back(node);
 		}
 	}
 

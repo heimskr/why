@@ -1128,42 +1128,6 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "<p \"" + *string + "\">";
 	}
 
-	WASMCallNode::WASMCallNode(ASTNode *function_, ASTNode *args_):
-		WASMInstructionNode(WASM_CALLNODE), function(function_->lexerInfo), args(args_) {}
-
-	WASMCallNode::WASMCallNode(const std::string *function_, const Args &args_):
-		WASMInstructionNode(WASM_CALLNODE), function(function_), args(args_) {}
-
-	std::string WASMCallNode::debugExtra() const {
-		std::stringstream ss;
-		ss << bold(*function) << dim("(");
-		bool first = true;
-		for (const auto &arg: args) {
-			if (first)
-				first = false;
-			else
-				ss << dim(", ");
-			ss << std::string(*arg);
-		}
-		ss << dim(")");
-		return WASMInstructionNode::debugExtra() + ss.str();
-	}
-
-	WASMCallNode::operator std::string() const {
-		std::stringstream ss;
-		ss << *function << "(";
-		bool first = true;
-		for (const auto &arg: args) {
-			if (first)
-				first = false;
-			else
-				ss << ", ";
-			ss << std::string(*arg);
-		}
-		ss << ")";
-		return ss.str();
-	}
-
 	WASMRestNode::WASMRestNode(): WASMInstructionNode(WASM_RESTNODE) {}
 
 	std::string WASMRestNode::debugExtra() const {

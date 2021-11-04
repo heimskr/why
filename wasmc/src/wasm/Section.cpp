@@ -34,6 +34,11 @@ namespace Wasmc {
 		return *this;
 	}
 
+	Section & Section::go(size_t new_counter) {
+		counter = new_counter;
+		return *this;
+	}
+
 	size_t Section::alignUp(size_t alignment) {
 		if (counter % alignment != 0) {
 			size_t to_add = alignment - (counter % alignment);
