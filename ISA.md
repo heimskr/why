@@ -13,6 +13,7 @@
 				<li><a href="#prog-code">Code Section</a></li>
 				<li><a href="#prog-data">Data Section</a></li>
 				<li><a href="#prog-symtab">Symbol Table</a></li>
+				<li><a href="#prog-reloc">Relocation Data Section</a></li>
 				<li><a href="#prog-debug">Debug Data Section</a></li>
 			</ol>
 		</li>
@@ -49,6 +50,8 @@
 				<li><a href="#format-r">R-Type Instructions</a></li>
 				<li><a href="#format-i">I-Type Instructions</a></li>
 				<li><a href="#format-j">J-Type Instructions</a></li>
+				<li><a href="#linkerflags">Linker Flags</a></li>
+				<li><a href="#condbits">Condition Bits</a></li>
 			</ol>
 		</li>
 		<li><a href="#operations">Operations</a>
@@ -319,6 +322,11 @@ The data section contains read/write data. Data is added using directives.
 ## <a name="prog-symtab"></a>Symbol Table Section
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The third is the length of what the symbol points to (for functions, this will generally be eight times the number of instructions in the function). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
+## <a name="prog-reloc"></a>Relocation Data Section
+Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
+
+The first word of a relocation data entry is the index of the symbol in the symbol table. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the instruction relative to the start of the code section.
+
 ## <a name="prog-debug"></a>Debug Data Section
 The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
 
@@ -380,7 +388,15 @@ Tells the assembler the type of a symbol. The type can be either `object` (for d
 </pre>
 
 ## <a name="dir-size"></a><code>%size</code>
-Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter.
+Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter. An expression is valid if any of the following is true:
+
+* None of its children contain any label references or `.` (that is, all leaves are numeric)
+* It's the difference of two labels
+* It's the difference of `.` and a label
+* It's the difference of a label and a number
+* It's the sum of a label and a number
+
+These restrictions are in place because relocation data supports constant offsets only. All other information has to be known at compile time.
 
 ### Example
 <pre>
@@ -507,6 +523,11 @@ J-type instructions point the program counter to a given address under certain c
 | Purpose | Opcode     | rs        | Link | Unused    | Conditions | Linker flags | Address   |
 
 If the link bit is set, the current value of the program counter will be stored in `$rt`, the return address register.
+
+## <a name="linkerflags"></a>Linker Flags
+Before the relocation overhaul, linker flags were used to give the linker clues about relocation. There were four possible values. Back then, as now, linker flag values other than `0` are valid for I-type and J-type instructions only.
+
+Now, the linker flags have three possible values. `0` indicates that the immediate value of the instruction isn't affected by relocation, whereas `1` indicates that the symbol needs to be relocated at link time. `2` is the same as `1`, but indicates that the current immediate value is invalid because the symbol is currently unknown. Executing an instruction whose linker flag is `2` will cause an error. Other values are invalid.
 
 ## <a name="condbits"></a>Condition Bits
 For operations that support conditions, the condition bits indicate what combination of [ALU flags](#reg-st)
