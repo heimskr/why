@@ -208,8 +208,8 @@ intbang: "!" number { $$ = $1->adopt($2); };
 
 directive: dir_type | dir_size | dir_string | dir_value | dir_align | dir_fill;
 
-dir_type: "%type" ident          symbol_type { $$ = new TypeDirective($2, $3); D($1); }
-        | "%type" WASMTOK_STRING symbol_type { $$ = new TypeDirective($2, $3); D($1); };
+dir_type: "%type" ident          symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); }
+        | "%type" WASMTOK_STRING symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); };
 symbol_type: "%object" | "%function";
 
 expression: expression "+" term { $$ = $2->adopt({$1, $3}); }
@@ -224,18 +224,18 @@ term: term "*" factor { $$ = $2->adopt({$1, $3}); }
 factor: "(" expression ")" { $$ = $2; D($1, $3); }
       | ident | WASMTOK_STRING | ".";
 
-dir_size: "%size" ident          expression { $$ = new SizeDirective($2, $3); D($1); }
-        | "%size" WASMTOK_STRING expression { $$ = new SizeDirective($2, $3); D($1); };
+dir_size: "%size" ident          expression { $$ = (new SizeDirective($2, $3))->locate($1); D($1); }
+        | "%size" WASMTOK_STRING expression { $$ = (new SizeDirective($2, $3))->locate($1); D($1); };
 
-dir_string: "%string"  WASMTOK_STRING { $$ = new StringDirective($2, false); D($1); }
-          | "%stringz" WASMTOK_STRING { $$ = new StringDirective($2,  true); D($1); };
+dir_string: "%string"  WASMTOK_STRING { $$ = (new StringDirective($2, false))->locate($1); D($1); }
+          | "%stringz" WASMTOK_STRING { $$ = (new StringDirective($2,  true))->locate($1); D($1); };
 
-dir_value: value_size expression { $$ = new ValueDirective($1, $2); };
+dir_value: value_size expression { $$ = (new ValueDirective($1, $2))->locate($1); };
 value_size: "%8b" | "%4b" | "%2b" | "%1b";
 
-dir_align: "%align" number { $$ = new AlignDirective($2->atoi()); D($1, $2); };
+dir_align: "%align" number { $$ = (new AlignDirective($2->atoi()))->locate($1); D($1, $2); };
 
-dir_fill: "%fill" number number { $$ = new FillDirective($2->atoi(), $3->atoi()); D($1, $2, $3); };
+dir_fill: "%fill" number number { $$ = (new FillDirective($2->atoi(), $3->atoi()))->locate($1); D($1, $2, $3); };
 
 statement: operation
          | label _newlines statement { $$ = dynamic_cast<WASMInstructionNode *>($3)->absorbLabel($1); D($2); };
