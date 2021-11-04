@@ -19,9 +19,7 @@
 						<li><a href="#dir-string"><code>%string</code></a></li>
 						<li><a href="#dir-stringz"><code>%stringz</code></a></li>
 						<li>
-							<a href="#dir-constant">
-								<code>%8b, %4b, %2b, %1b</code>
-							</a>
+							<a href="#dir-value"><code>%8b, %4b, %2b, %1b</code></a>
 						</li>
 						<li><a href="#dir-align"><code>%align</code></a></li>
 						<li><a href="#dir-fill"><code>%fill</code></a></li>
@@ -401,7 +399,7 @@ Emits a string (terminated with a null byte).
 %stringz "Hello, world!\n"
 </pre>
 
-### <a name="dir-constant"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
+### <a name="dir-value"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
 Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). For `%4b` and `%8b`, values can be numeric constants, names of symbols or the sum of the name of a symbol and a numeric constant as the offset. For `%1b` and `%2b`, only numeric constants are supported.
 
 #### Example

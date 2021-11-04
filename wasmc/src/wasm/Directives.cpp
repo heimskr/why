@@ -56,16 +56,8 @@ namespace Wasmc {
 		}
 	}
 
-	ValueDirective::ValueDirective(const ASTNode *size_, const ASTNode *base_, long offset_):
-	Directive(WASM_VALUEDIR), size(getSize(size_)), base(base_->lexerInfo), offset(offset_) {
-		delete size_;
-		if (base_->symbol == WASMTOK_STRING)
-			base = base_->extracted();
-		delete base_;
-	}
-
-	ValueDirective::ValueDirective(const ASTNode *size_, long value_):
-	Directive(WASM_VALUEDIR), size(getSize(size_)), value(value_) {
+	ValueDirective::ValueDirective(const ASTNode *size_, const ASTNode *expression_):
+	Directive(WASM_VALUEDIR), size(getSize(size_)), expression(expression_) {
 		delete size_;
 	}
 }

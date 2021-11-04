@@ -44,12 +44,9 @@ namespace Wasmc {
 
 		public:
 			uint8_t size;
-			const std::string *base = nullptr;
-			long offset = 0;
-			long value = 0;
+			const ASTNode *expression; // will be deleted when ValueDirective is destroyed
 
 			ValueDirective() = delete;
-			ValueDirective(const ASTNode *size_, const ASTNode *base_, long offset_);
-			ValueDirective(const ASTNode *size_, long value_);
+			ValueDirective(const ASTNode *size_, const ASTNode *expression_);
 	};
 }
