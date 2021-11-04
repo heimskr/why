@@ -81,9 +81,14 @@ namespace Wasmc {
 				case WASM_LABEL:
 					*currentSection += dynamic_cast<WASMLabelNode *>(node)->label;
 					break;
-				case WASM_STRINGDIR:
-					currentSection->append(*dynamic_cast<StringDirective *>(node)->string);
+				case WASM_STRINGDIR: {
+					auto *directive = dynamic_cast<StringDirective *>(node);
+					if (directive->nullTerminate)
+						currentSection->append(*directive->string + '\0');
+					else
+						currentSection->append(*directive->string);
 					break;
+				}
 				default:
 					node->debug();
 			}
