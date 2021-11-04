@@ -59,10 +59,10 @@ namespace Wasmc {
 	};
 
 	struct AlignDirective: Directive {
-		long alignment;
+		size_t alignment;
 
 		AlignDirective() = delete;
-		AlignDirective(long);
+		AlignDirective(size_t);
 		DirectiveType getType() const override { return DirectiveType::Align; }
 	};
 

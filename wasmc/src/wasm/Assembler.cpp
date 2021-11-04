@@ -117,6 +117,11 @@ namespace Wasmc {
 					*currentSection += {directive->valueSize, directive->expression};
 					break;
 				}
+				case WASM_ALIGNDIR: {
+					auto *directive = dynamic_cast<AlignDirective *>(node);
+					currentSection->alignUp(directive->alignment);
+					break;
+				}
 				default: {
 					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
 						// Because we can't yet convert the instruction to a Long (probably),
