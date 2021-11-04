@@ -19,13 +19,13 @@ namespace Wasmc {
 
 		std::vector<ValueType> bytes;
 		std::map<size_t, const std::string *> labels;
-		std::unordered_set<const std::string *> *allLabels = nullptr;
+		StringPtrSet *allLabels = nullptr;
 		/** Maps a counter to a pair of a value size and an expression. */
 		std::map<size_t, std::pair<size_t, std::shared_ptr<Expression>>> values;
 		size_t counter = 0;
 		std::string name;
 
-		Section(const std::string &name_, std::unordered_set<const std::string *> *all_labels = nullptr,
+		Section(const std::string &name_, StringPtrSet *all_labels = nullptr,
 		size_t count = 0):
 			bytes(count, 0), allLabels(all_labels), name(name_) {}
 
@@ -42,7 +42,7 @@ namespace Wasmc {
 			for (new_capacity = 1; new_capacity < new_size; new_capacity <<= 1);
 			bytes.reserve(new_capacity);
 			bytes.resize(new_size, value);
-			return reinterpret_cast<T *>(bytes.data() + old_size);
+			return reinterpret_cast<T *>(&bytes[old_size]);
 		}
 
 		template <typename T>
@@ -64,6 +64,25 @@ namespace Wasmc {
 			for (char ch: string)
 				*pointer++ = ch;
 			*this += string.size();
+		}
+
+		template <typename T>
+		void insert(size_t offset, const T &item) {
+			if (size() < offset + sizeof(T))
+				throw std::out_of_range("Can't insert " + std::to_string(sizeof(T)) + " bytes into a Section of size " +
+					std::to_string(size()) + " at offset " + std::to_string(offset));
+			*reinterpret_cast<T *>(&bytes[offset]) = item;
+		}
+
+		template <typename T, template <typename...> typename C>
+		void insertAll(size_t offset, const C<T> &container) {
+			if (size() < offset + container.size() * sizeof(T))
+				throw std::out_of_range("Can't insert " + std::to_string(container.size()) + " * " +
+					std::to_string(sizeof(T)) + " bytes into a Section of size " + std::to_string(size()) +
+					" at offset " + std::to_string(offset));
+			T *pointer = reinterpret_cast<T *>(&bytes[offset]);
+			for (const T &item: container)
+				*pointer++ = item;
 		}
 
 		size_t alignUp(size_t alignment);

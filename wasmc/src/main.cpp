@@ -1,3 +1,5 @@
+// Let's hope you aren't trying to run this on a big-endian architecture.
+
 #include <cstdlib>
 #include <cstring>
 #include <fstream>

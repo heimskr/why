@@ -49,19 +49,27 @@ namespace Wasmc {
 			static size_t assemblerCount;
 
 			const ASTNode *root;
-			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
-			// std::vector<Long> meta, text, symbolTable, debugData, assembled;
-			std::vector<Long> symbolTable;
-			std::unordered_set<const std::string *> allLabels, unknownSymbols;
+
+			StringPtrMap<Long> offsets, dataOffsets;
+
+			StringPtrSet allLabels, unknownSymbols;
+
 			std::map<uint32_t, const std::string *> hashes;
+
 			/** Maps labels to types (unknown, function, object). */
-			std::map<const std::string *, SymbolType> symbolTypes;
-			std::map<const std::string *, std::shared_ptr<Expression>> symbolSizes;
+			StringPtrMap<SymbolType> symbolTypes;
+
+			/** Maps labels to expressions representing their sizes. */
+			StringPtrMap<std::shared_ptr<Expression>> symbolSizes;
+
 			/** Maps code section counters to instruction nodes. */
 			std::map<size_t, WASMInstructionNode *> instructionMap;
+
 			/** A set of all labels found in value directive expressions. */
-			std::unordered_set<const std::string *> valueExpressionLabels;
+			StringPtrSet valueExpressionLabels;
+
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
+
 			std::vector<uint8_t> concatenated;
 
 			bool verbose = false;
@@ -110,7 +118,8 @@ namespace Wasmc {
 
 			void findAllLabels();
 
-			std::vector<Long> createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton);
+			/** Clears the symbols section and fills it with a symbol table with addresses and types left blank. */
+			void createSymbolTableSkeleton(StringPtrSet labels);
 
 			uint32_t encodeSymbol(const std::string *);
 

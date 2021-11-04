@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
+#include <set>
 
 #include "parser/Enums.h"
 #include "wasm/Instructions.h"
@@ -11,6 +13,27 @@ namespace Wasmc {
 	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
 	enum class SymbolType {Unknown, Other, Function, Object};
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol};
+	enum class RelocationType: unsigned {Full = 0, Invalid, Lower4, Upper4};
+
+	struct StringPtrCompare {
+		bool operator()(const std::string *left, const std::string *right) const {
+			return *left < *right;
+		}
+	};
+
+	using StringPtrSet = std::set<const std::string *, StringPtrCompare>;
+
+	template <typename T>
+	using StringPtrMap = std::map<const std::string *, T, StringPtrCompare>;
+
+	struct RelocationData {
+		RelocationType type: 2;
+		size_t symbolIndex: 62;
+		long offset: 64;
+		long sectionOffset: 64;
+		RelocationData(RelocationType type_, size_t symbol_index, long offset_, long section_offset):
+			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset) {}
+	} __attribute__((packed));
 
 	struct Offsets {
 		Long symbolTable = 0, code = 0, data = 0, debug = 0, end = 0;

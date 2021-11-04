@@ -13,6 +13,7 @@
 #include "wasm/Directives.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
+#include "wasm/SymbolTable.h"
 #include "wasm/Why.h"
 
 namespace Wasmc {
@@ -31,8 +32,7 @@ namespace Wasmc {
 		metaOffsetData() = metaOffsetCode() + code.size();
 		metaOffsetSymbols() = metaOffsetData() + data.size();
 
-		symbolTable = createSymbolTable(allLabels, true);
-		symbols.appendAll(symbolTable);
+		createSymbolTableSkeleton(allLabels);
 
 		concatenated = Section::combine({meta, code, data, symbols});
 
@@ -350,39 +350,38 @@ namespace Wasmc {
 		}
 	}
 
-	std::vector<Long> Assembler::createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton) {
+	void Assembler::createSymbolTableSkeleton(StringPtrSet labels) {
 		labels.insert(StringSet::intern(".end"));
-		std::vector<Long> out;
+		symbols.clear();
 
-		// for (const std::string *label: labels) {
-		// 	const size_t length = Util::updiv(label->size(), 8ul);
-		// 	if (0xffff < length)
-		// 		throw std::runtime_error("Symbol length too long: " + std::to_string(length));
-		// 	SymbolEnum type = SymbolEnum::Unknown;
-		// 	if (!skeleton && dataVariables.count(label)) {
-		// 		const std::string *ptr = dataVariables.at(label);
-		// 		type = offsets.count(ptr)? SymbolEnum::KnownPointer : SymbolEnum::UnknownPointer;
-		// 		if (!offsets.count(ptr) && !unknownSymbols.count(ptr)) {
-		// 			const size_t index = (offsets.at(label) - metaOffsetData()) / 8;
-		// 			if (data.size() < index)
-		// 				data.resize(index, 0);
-		// 			data[index] = encodeSymbol(ptr);
-		// 		}
-		// 	}
-
-		// 	out.push_back(length | (Long(type) << 16) | (Long(encodeSymbol(label)) << 32));
-		// 	out.push_back(skeleton? 0 : offsets.at(label));
-		// 	for (const Long piece: Util::getLongs(*label))
-		// 		out.push_back(piece);
-		// }
-
-		return out;
+		for (const std::string *label: labels) {
+			const size_t length = Util::updiv(label->size(), 8ul);
+			if (0xffff < length)
+				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
+			SymbolEnum type = SymbolEnum::Unknown;
+			if (symbolTypes.count(label) != 0) {
+				SymbolType specified_type = symbolTypes.at(label);
+				switch (specified_type) {
+					case SymbolType::Function:
+						type = SymbolEnum::Code;
+						break;
+					case SymbolType::Object:
+						type = SymbolEnum::Data;
+						break;
+					case SymbolType::Unknown:
+						break;
+					default:
+						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
+							std::to_string(unsigned(specified_type)));
+				}
+			}
+			symbols.appendAll(SymbolTableEntry(encodeSymbol(label), 0, type).encode(*label));
+		}
 	}
 
 	uint32_t Assembler::encodeSymbol(const std::string *name) {
 		std::vector<uint8_t> hash_vec(picosha2::k_digest_size);
 		picosha2::hash256(name->begin(), name->end(), hash_vec.begin(), hash_vec.end());
-		// TODO: verify
 		const uint32_t hash = hash_vec[4] | (hash_vec[5] << 8) | (hash_vec[6] << 16) | (hash_vec[7] << 24);
 		if (hashes.count(hash) != 0 && hashes.at(hash) != name)
 			throw std::runtime_error("\"" + *name + "\" and \"" + *hashes.at(hash) + "\" have the same hash!");
@@ -393,7 +392,6 @@ namespace Wasmc {
 	uint32_t Assembler::encodeSymbol(const std::string &name) {
 		std::vector<uint8_t> hash_vec(picosha2::k_digest_size);
 		picosha2::hash256(name.begin(), name.end(), hash_vec.begin(), hash_vec.end());
-		// TODO: verify
 		return hash_vec[4] | (hash_vec[5] << 8) | (hash_vec[6] << 16) | (hash_vec[7] << 24);
 	}
 
