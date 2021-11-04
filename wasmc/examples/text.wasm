@@ -18,10 +18,12 @@ orcid: "0000-0001-7405-6654"
 
 @main
 	&message -> $a0
-	// Insert two nops
+	// Insert some nops
 	%4b 0
 	%align 8
-	%fill 8 0
+	%fill 10 0
+	%1b 0
+	%align 8
 	:: strprint
 	<halt>
 

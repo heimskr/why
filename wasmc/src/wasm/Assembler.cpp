@@ -115,16 +115,16 @@ namespace Wasmc {
 				case WASM_VALUEDIR: {
 					auto *directive = dynamic_cast<ValueDirective *>(node);
 					*currentSection += {directive->valueSize, directive->expression};
+					currentSection->counter += directive->valueSize;
 					break;
 				}
-				case WASM_ALIGNDIR: {
-					auto *directive = dynamic_cast<AlignDirective *>(node);
-					currentSection->alignUp(directive->alignment);
+				case WASM_ALIGNDIR:
+					currentSection->alignUp(dynamic_cast<AlignDirective *>(node)->alignment);
 					break;
-				}
 				case WASM_FILLDIR: {
 					auto *directive = dynamic_cast<FillDirective *>(node);
 					currentSection->extend<uint8_t>(directive->count, uint8_t(directive->value));
+					currentSection->counter += directive->count;
 					break;
 				}
 				default: {
