@@ -168,7 +168,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE WASM_RESTNODE
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
-%token WASM_STRINGDIR WASM_VALUEDIR
+%token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR
 
 %start start
 
@@ -233,8 +233,9 @@ dir_string: "%string"  WASMTOK_STRING { $$ = new StringDirective($2, false); D($
 dir_value: value_size expression { $$ = new ValueDirective($1, $2); };
 value_size: "%8b" | "%4b" | "%2b" | "%1b";
 
-dir_align: "%align";
-dir_fill: "%fill";
+dir_align: "%align" number { $$ = new AlignDirective($2->atoi()); D($1, $2); };
+
+dir_fill: "%fill" number number { $$ = new FillDirective($2->atoi(), $3->atoi()); D($1, $2, $3); };
 
 statement: operation
          | label _newlines statement { $$ = dynamic_cast<WASMInstructionNode *>($3)->absorbLabel($1); D($2); };

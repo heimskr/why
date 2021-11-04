@@ -49,4 +49,18 @@ namespace Wasmc {
 			ValueDirective() = delete;
 			ValueDirective(const ASTNode *size_, const ASTNode *expression_);
 	};
+
+	struct AlignDirective: Directive {
+		long alignment;
+
+		AlignDirective() = delete;
+		AlignDirective(long);
+	};
+
+	struct FillDirective: Directive {
+		long count, value;
+
+		FillDirective() = delete;
+		FillDirective(long count_, long value_);
+	};
 }
