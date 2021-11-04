@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -58,6 +59,8 @@ namespace Wasmc {
 
 			Section meta {40}, data, code;
 
+			Section *currentSection = &code;
+
 			Long & metaOffsetCode()    { return *(Long *) &meta[ 0]; }
 			Long & metaOffsetData()    { return *(Long *) &meta[ 8]; }
 			Long & metaOffsetSymbols() { return *(Long *) &meta[16]; }
@@ -81,6 +84,8 @@ namespace Wasmc {
 			/** Replaces all label references in a given vector of expanded instructions with the corresponding memory
 			 *  addresses. Mutates the input vector. */
 			Statements & expandLabels(Statements &);
+
+			void processText();
 
 			/** Compiles a vector of expanded code into the main code vector. */
 			void processCode(const Statements &);

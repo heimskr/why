@@ -74,12 +74,12 @@ namespace Wasmc {
 	};
 
 	struct DataDirective: Directive {
-		DataDirective() = default;
+		DataDirective();
 		DirectiveType getType() const override { return DirectiveType::Data; }
 	};
 
 	struct CodeDirective: Directive {
-		CodeDirective() = default;
+		CodeDirective();
 		DirectiveType getType() const override { return DirectiveType::Code; }
 	};
 }

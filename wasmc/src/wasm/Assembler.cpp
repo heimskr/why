@@ -26,42 +26,52 @@ namespace Wasmc {
 		findAllLabels();
 		processMetadata();
 
-		processData(allLabels);
+		processText();
 
-		symbolTable = createSymbolTable(allLabels, true);
-		for (Long piece: symbolTable)
-			append(piece);
+		// symbolTable = createSymbolTable(allLabels, true);
+		// for (Long piece: symbolTable)
+		// 	append(piece);
 
-		metaOffsetText() = alignUp(8);
+		// metaOffsetText() = alignUp(8);
 
-		auto expanded = expandText();
-		metaOffsetDebug() = alignUp(8);
+		// auto expanded = expandText();
+		// metaOffsetDebug() = alignUp(8);
 
-		debugData = createDebugData(debugNode, expanded);
-		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
+		// debugData = createDebugData(debugNode, expanded);
+		// offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
 
-		setDataOffsets();
-		reprocessData();
-		processCode(expandLabels(expanded));
-		symbolTable = createSymbolTable(allLabels, false);
+		// setDataOffsets();
+		// reprocessData();
+		// processCode(expandLabels(expanded));
+		// symbolTable = createSymbolTable(allLabels, false);
 
-		assembled.clear();
-		for (const auto &longs: {meta, symbolTable, code, data, debugData})
-			assembled.insert(assembled.end(), longs.begin(), longs.end());
+		// assembled.clear();
+		// for (const auto &longs: {meta, symbolTable, code, data, debugData})
+		// 	assembled.insert(assembled.end(), longs.begin(), longs.end());
 
-		if (can_warn && 0 < unknownSymbols.size()) {
-			std::cerr << " \e[1;33m?\e[22;39m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s") << ": ";
-			bool first = true;
-			for (const std::string *symbol: unknownSymbols) {
-				if (first)
-					first = false;
-				else
-					std::cerr << ", ";
-				std::cerr << "\e[1m" << *symbol << "\e[22m";
-			}
-			std::cerr << '\n';
+		// if (can_warn && 0 < unknownSymbols.size()) {
+		// 	std::cerr << " \e[1;33m?\e[22;39m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s") << ": ";
+		// 	bool first = true;
+		// 	for (const std::string *symbol: unknownSymbols) {
+		// 		if (first)
+		// 			first = false;
+		// 		else
+		// 			std::cerr << ", ";
+		// 		std::cerr << "\e[1m" << *symbol << "\e[22m";
+		// 	}
+		// 	std::cerr << '\n';
+		// }
+		// return stringify(assembled);
+		return "";
+	}
+
+	void Assembler::processText() {
+		if (!textNode)
+			throw std::runtime_error("textNode is null in Assembler::processText");
+
+		for (ASTNode *node: *textNode) {
+			node->debug();
 		}
-		return stringify(assembled);
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -176,9 +186,9 @@ namespace Wasmc {
 			| (static_cast<uint64_t>(opcode) << 52);
 	}
 
-	void Assembler::addCode(const WASMInstructionNode &node) {
-		code.push_back(compileInstruction(node));
-	}
+	// void Assembler::addCode(const WASMInstructionNode &node) {
+	// 	code.push_back(compileInstruction(node));
+	// }
 
 	Statements & Assembler::expandLabels(Statements &statements) {
 		// In the second pass, we replace label references with the corresponding
@@ -207,10 +217,10 @@ namespace Wasmc {
 		return statements;
 	}
 
-	void Assembler::processCode(const Statements &statements) {
-		for (const auto &statement: statements)
-			addCode(*statement);
-	}
+	// void Assembler::processCode(const Statements &statements) {
+	// 	for (const auto &statement: statements)
+	// 		addCode(*statement);
+	// }
 
 	// void Assembler::reprocessData() {
 	// 	for (const auto &[key, ref]: dataVariables)
@@ -259,7 +269,7 @@ namespace Wasmc {
 	void Assembler::findAllLabels() {
 		allLabels.clear();
 
-		if (textNode)
+		if (textNode) {
 			for (const ASTNode *node: *textNode)
 				if (node->symbol == WASM_LABEL) {
 					auto *label_node = dynamic_cast<const WASMLabelNode *>(node);
@@ -270,33 +280,34 @@ namespace Wasmc {
 					if (std::holds_alternative<const std::string *>(imm_node->imm))
 						allLabels.insert(std::get<const std::string *>(imm_node->imm));
 				}
+		}
 	}
 
 	std::vector<Long> Assembler::createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton) {
 		labels.insert(StringSet::intern(".end"));
 		std::vector<Long> out;
 
-		for (const std::string *label: labels) {
-			const size_t length = Util::updiv(label->size(), 8ul);
-			if (0xffff < length)
-				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
-			SymbolEnum type = SymbolEnum::Unknown;
-			if (!skeleton && dataVariables.count(label)) {
-				const std::string *ptr = dataVariables.at(label);
-				type = offsets.count(ptr)? SymbolEnum::KnownPointer : SymbolEnum::UnknownPointer;
-				if (!offsets.count(ptr) && !unknownSymbols.count(ptr)) {
-					const size_t index = (offsets.at(label) - metaOffsetData()) / 8;
-					if (data.size() < index)
-						data.resize(index, 0);
-					data[index] = encodeSymbol(ptr);
-				}
-			}
+		// for (const std::string *label: labels) {
+		// 	const size_t length = Util::updiv(label->size(), 8ul);
+		// 	if (0xffff < length)
+		// 		throw std::runtime_error("Symbol length too long: " + std::to_string(length));
+		// 	SymbolEnum type = SymbolEnum::Unknown;
+		// 	if (!skeleton && dataVariables.count(label)) {
+		// 		const std::string *ptr = dataVariables.at(label);
+		// 		type = offsets.count(ptr)? SymbolEnum::KnownPointer : SymbolEnum::UnknownPointer;
+		// 		if (!offsets.count(ptr) && !unknownSymbols.count(ptr)) {
+		// 			const size_t index = (offsets.at(label) - metaOffsetData()) / 8;
+		// 			if (data.size() < index)
+		// 				data.resize(index, 0);
+		// 			data[index] = encodeSymbol(ptr);
+		// 		}
+		// 	}
 
-			out.push_back(length | (static_cast<Long>(type) << 16) | (static_cast<Long>(encodeSymbol(label)) << 32));
-			out.push_back(skeleton? 0 : offsets.at(label));
-			for (const Long piece: Util::getLongs(*label))
-				out.push_back(piece);
-		}
+		// 	out.push_back(length | (static_cast<Long>(type) << 16) | (static_cast<Long>(encodeSymbol(label)) << 32));
+		// 	out.push_back(skeleton? 0 : offsets.at(label));
+		// 	for (const Long piece: Util::getLongs(*label))
+		// 		out.push_back(piece);
+		// }
 
 		return out;
 	}
@@ -358,8 +369,8 @@ namespace Wasmc {
 		if (orcid_longs.size() != 2)
 			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(orcid_longs.size()));
 
-		clear();
-		append<Long>({0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
+		meta.clear();
+		meta.append<Long>({0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
 
 		std::string nva = name;
 		nva += '\0';
@@ -368,9 +379,9 @@ namespace Wasmc {
 		nva.insert(nva.end(), author.begin(), author.end());
 		nva += '\0';
 
-		append(nva);
+		meta.append(nva);
 
-		metaOffsetText() = alignUp(8);
+		metaOffsetCode() = meta.alignUp(8);
 	}
 
 	Statements Assembler::expandText() {

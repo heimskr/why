@@ -60,4 +60,8 @@ namespace Wasmc {
 	AlignDirective::AlignDirective(long alignment_): Directive(WASM_ALIGNDIR), alignment(alignment_) {}
 
 	FillDirective::FillDirective(long count_, long value_): Directive(WASM_FILLDIR), count(count_), value(value_) {}
+
+	DataDirective::DataDirective(): Directive(WASM_DATADIR) {}
+
+	CodeDirective::CodeDirective(): Directive(WASM_CODEDIR) {}
 }

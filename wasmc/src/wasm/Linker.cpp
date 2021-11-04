@@ -71,7 +71,7 @@ namespace Wasmc {
 			wasmParser.done();
 			Assembler assembler(root);
 			assembler.assemble();
-			mainUnit = std::move(assembler.getAssembled());
+			// mainUnit = std::move(assembler.getAssembled());
 			for (const ASTNode *node: *root)
 				if (node->symbol == WASMTOK_INCLUDE_HEADER)
 					for (const ASTNode *sub: *node->front())
@@ -130,9 +130,9 @@ namespace Wasmc {
 
 			for (auto &[symbol, entry]: subtable) {
 				const SymbolType type = getSymbolType(subparser.offsets, subtable, symbol);
-				if (type == SymbolType::Code)
+				if (type == SymbolType::Function)
 					entry.address += extra_symbol_length + extra_code_length + meta_difference - 24;
-				else if (type == SymbolType::Data)
+				else if (type == SymbolType::Object)
 					entry.address += extra_symbol_length + extra_code_length + extra_data_length + meta_difference - 24;
 				else if (symbol != ".end")
 					throw std::runtime_error("Encountered symbol \"" + symbol + "\" of unknown type");
@@ -141,9 +141,9 @@ namespace Wasmc {
 
 			for (auto &[symbol, entry]: combined_symbols) {
 				const SymbolType type = symbol_types.at(symbol);
-				if (type == SymbolType::Code)
+				if (type == SymbolType::Function)
 					entry.address += subtable_length * 8;
-				else if (type == SymbolType::Data || symbol == ".end") // TODO: is `symbol == ".end"` correct?
+				else if (type == SymbolType::Object || symbol == ".end") // TODO: is `symbol == ".end"` correct?
 					entry.address += subtable_length * 8 + subcode_length;
 			}
 
@@ -270,9 +270,9 @@ namespace Wasmc {
 	SymbolType Linker::getSymbolType(const Offsets &offsets, const SymbolTable &table, const std::string &symbol) {
 		const auto address = table.at(symbol).address;
 		if (offsets.code <= address && address < offsets.data)
-			return SymbolType::Code;
+			return SymbolType::Function;
 		if (offsets.data <= address && address < offsets.debug)
-			return SymbolType::Data;
+			return SymbolType::Object;
 		return SymbolType::Other;
 	}
 
