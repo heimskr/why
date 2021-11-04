@@ -67,8 +67,8 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "%8b"						{ WASMRTOKEN(DIR_8B) }
 "%align"					{ WASMRTOKEN(DIR_ALIGN) }
 "%fill"						{ WASMRTOKEN(DIR_FILL) }
-"%function"					{ WASMRTOKEN(FUNCTION) }
-"%object"					{ WASMRTOKEN(OBJECT) }
+"function"					{ WASMRTOKEN(FUNCTION) }
+"object"					{ WASMRTOKEN(OBJECT) }
 "%data"						{ WASMRTOKEN(DATA) }
 "%code"						{ WASMRTOKEN(CODE) }
 

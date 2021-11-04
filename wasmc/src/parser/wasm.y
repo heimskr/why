@@ -156,8 +156,8 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_DIR_8B "%8b"
 %token WASMTOK_DIR_ALIGN "%align"
 %token WASMTOK_DIR_FILL "%fill"
-%token WASMTOK_FUNCTION "%function"
-%token WASMTOK_OBJECT "%object"
+%token WASMTOK_FUNCTION "function"
+%token WASMTOK_OBJECT "object"
 %token WASMTOK_DATA "%data"
 %token WASMTOK_CODE "%code"
 
@@ -213,7 +213,7 @@ directive: dir_type | dir_size | dir_string | dir_value | dir_align | dir_fill |
 
 dir_type: "%type" ident          symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); }
         | "%type" WASMTOK_STRING symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); };
-symbol_type: "%object" | "%function";
+symbol_type: "object" | "function";
 
 expression: expression "+" term { $$ = $2->adopt({$1, $3}); }
           | expression "-" term { $$ = $2->adopt({$1, $3}); }
@@ -409,7 +409,7 @@ _immediate: "&" ident { $$ = $2; D($1); }
           | WASMTOK_STRING;
 
 ident: ident_option { $1->symbol = WASMTOK_IDENT; } | WASMTOK_IDENT;
-ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io"
+ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | "object" | "function"
      | "version" | "author" | "orcid" | "name" | printop;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
