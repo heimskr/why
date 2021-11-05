@@ -656,8 +656,10 @@ namespace WVM {
 			symbolsOffset = getWord(16, Endianness::Little);
 		if (debugOffset == -1)
 			debugOffset = getWord(24, Endianness::Little);
+		if (relocationOffset == -1)
+			relocationOffset = getWord(32, Endianness::Little);
 		if (endOffset == -1)
-			endOffset = getWord(32, Endianness::Little);
+			endOffset = getWord(40, Endianness::Little);
 		registers[Why::globalAreaPointerOffset] = endOffset;
 		sp() = memorySize;
 		onRegisterChange(Why::globalAreaPointerOffset);

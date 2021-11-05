@@ -93,11 +93,18 @@ namespace Wasmc {
 
 			Section *currentSection = &code;
 
-			Long & metaOffsetCode()    { return *(Long *) &meta[ 0]; }
-			Long & metaOffsetData()    { return *(Long *) &meta[ 8]; }
-			Long & metaOffsetSymbols() { return *(Long *) &meta[16]; }
-			Long & metaOffsetDebug()   { return *(Long *) &meta[24]; }
-			Long & metaOffsetEnd()     { return *(Long *) &meta[32]; }
+			Long & metaOffsetCode()       { return *(Long *) &meta[ 0]; }
+			Long & metaOffsetData()       { return *(Long *) &meta[ 8]; }
+			Long & metaOffsetSymbols()    { return *(Long *) &meta[16]; }
+			Long & metaOffsetDebug()      { return *(Long *) &meta[24]; }
+			Long & metaOffsetRelocation() { return *(Long *) &meta[32]; }
+			Long & metaOffsetEnd()        { return *(Long *) &meta[40]; }
+			const Long & metaOffsetCode()       const { return *(Long *) &meta[ 0]; }
+			const Long & metaOffsetData()       const { return *(Long *) &meta[ 8]; }
+			const Long & metaOffsetSymbols()    const { return *(Long *) &meta[16]; }
+			const Long & metaOffsetDebug()      const { return *(Long *) &meta[24]; }
+			const Long & metaOffsetRelocation() const { return *(Long *) &meta[32]; }
+			const Long & metaOffsetEnd()        const { return *(Long *) &meta[40]; }
 
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 
@@ -121,6 +128,8 @@ namespace Wasmc {
 			void processRelocation();
 
 			void relocateCode();
+
+			size_t getOffset(Section &) const;
 
 			void evaluateExpressions();
 

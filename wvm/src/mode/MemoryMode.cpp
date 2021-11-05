@@ -168,7 +168,7 @@ namespace WVM::Mode {
 
 			for (Word address = min, i = 0; address < max + 128 * 8; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
-				    || address == vm.debugOffset || address == vm.endOffset) {
+				    || address == vm.debugOffset || address == vm.relocationOffset || address == vm.endOffset) {
 					*textbox += "\e[2m" + hyphens + "\e[22m";
 				}
 
@@ -221,7 +221,7 @@ namespace WVM::Mode {
 
 		ss << hex << "  ";
 
-		if (address < 40) {
+		if (address < 48) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
 		} else if (address < vm.codeOffset || (vm.dataOffset <= address && address < vm.symbolsOffset) ||
 		           vm.debugOffset <= address) {

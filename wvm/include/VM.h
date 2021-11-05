@@ -76,11 +76,12 @@ namespace WVM {
 			std::map<Word, DebugData> debugMap;
 			std::map<int, const std::string *> debugFiles, debugFunctions;
 			std::vector<Drive> drives;
-			Word    codeOffset = -1;
-			Word    dataOffset = -1;
-			Word symbolsOffset = -1;
-			Word   debugOffset = -1;
-			Word     endOffset = -1;
+			Word       codeOffset = -1;
+			Word       dataOffset = -1;
+			Word    symbolsOffset = -1;
+			Word      debugOffset = -1;
+			Word relocationOffset = -1;
+			Word        endOffset = -1;
 			Word p0 = 0;
 			std::atomic_bool paused = false;
 			bool strict = false;

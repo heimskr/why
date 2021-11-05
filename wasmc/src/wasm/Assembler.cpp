@@ -125,7 +125,8 @@ namespace Wasmc {
 					const std::string *label = dynamic_cast<WASMLabelNode *>(node)->label;
 					*currentSection += label;
 					symbolTypes.emplace(label, currentSection == &data? SymbolType::Object : SymbolType::Instruction);
-					std::cerr << "Setting symbolTypes[" << *label << "] to " << int(symbolTypes[label]) << "\n";
+					std::cerr << "Setting symbolTypes[" << *label << "] to " << int(symbolTypes[label]) << " at "
+					          << currentSection->counter << "\n";
 					offsets.emplace(label, currentSection->counter);
 					break;
 				}
@@ -348,6 +349,7 @@ namespace Wasmc {
 	}
 
 	void Assembler::processRelocation() {
+		std::cerr << "Unknown (" << unknownSymbols.size() << "):"; for (const auto *label: unknownSymbols) std::cerr << " " << *label; std::cerr << "\n";
 		for (const auto &[offset, statement]: instructionMap) {
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
 				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
@@ -355,6 +357,8 @@ namespace Wasmc {
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
 					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
+					if (relocationMap.count(statement) != 0)
+						relocationMap.erase(statement);
 					relocationMap.emplace(statement, relocation_data);
 				}
 			}
@@ -367,6 +371,8 @@ namespace Wasmc {
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
 					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
+					if (relocationMap.count(statement.get()) != 0)
+						relocationMap.erase(statement.get());
 					relocationMap.emplace(statement.get(), relocation_data);
 				}
 			}
@@ -382,22 +388,46 @@ namespace Wasmc {
 			size_t index = reloc.symbolIndex;
 			if (index == -1ul && reloc.label && symbolTableIndices.count(reloc.label) != 0)
 				index = symbolTableIndices.at(reloc.label);
-			const long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
+			long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
+			if (reloc.section)
+				address += getOffset(*reloc.section);
+			else
+				warn() << "Relocation for node (" << node->debugExtra() << ") is missing a section.\n";
+			address += reloc.sectionOffset + reloc.offset;
+			std::cerr << (reloc.label? *reloc.label : "nullptr") << " [i" << index << ", o" << reloc.offset << "]: ";
 			switch (reloc.type) {
 				case RelocationType::Full:
-					reloc.section->insert(reloc.sectionOffset, Long(address + reloc.offset));
+					std::cerr << Long(address) << "\n";
+					reloc.section->insert(reloc.sectionOffset, Long(address));
 					break;
 				case RelocationType::Upper4:
-					reloc.section->insert(reloc.sectionOffset, uint32_t((address + reloc.offset) >> 32));
+					std::cerr << uint32_t(address >> 32) << "\n";
+					reloc.section->insert(reloc.sectionOffset, uint32_t(address >> 32));
 					break;
 				case RelocationType::Lower4:
-					reloc.section->insert(reloc.sectionOffset, uint32_t((address + reloc.offset) &
-						0xffffffff));
+					std::cerr << uint32_t(address & 0xffffffff) << "\n";
+					reloc.section->insert(reloc.sectionOffset, uint32_t(address & 0xffffffff));
 					break;
 				default:
 					throw std::runtime_error("Invalid relocation type: " + std::to_string(int(reloc.type)));
 			}
 		}
+	}
+
+	size_t Assembler::getOffset(Section &section) const {
+		if (&section == &meta)
+			return 0;
+		if (&section == &code)
+			return metaOffsetCode();
+		if (&section == &data)
+			return metaOffsetData();
+		if (&section == &symbols)
+			return metaOffsetSymbols();
+		if (&section == &debug)
+			return metaOffsetDebug();
+		if (&section == &relocation)
+			return metaOffsetRelocation();
+		throw std::runtime_error("Invalid section: " + Util::toHex(&section));
 	}
 
 	// void Assembler::reprocessData() {

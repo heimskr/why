@@ -299,9 +299,10 @@ The metadata section is a block of data at the beginning of the program that con
 * `0x08`: Address of the beginning of the [data section](#prog-data).
 * `0x10`: Address of the beginning of the [symbol table](#prog-symtab).
 * `0x18`: Address of the beginning of the [debug data section](#prog-debug).
-* `0x20`: Total size of the program.
-* `0x28`–`0x30`: ORCID of the author (represented in ASCII without hyphens).
-* `0x38`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x20`: Address of the beginning of the [relocation data section](#prog-reloc).
+* `0x28`: Total size of the program.
+* `0x30`–`0x38`: ORCID of the author (represented in ASCII without hyphens).
+* `0x40`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembly syntax
