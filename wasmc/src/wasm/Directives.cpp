@@ -40,7 +40,7 @@ namespace Wasmc {
 		Directive(WASM_STRINGDIR), string(string_), nullTerminate(null_terminate) {}
 
 	StringDirective::StringDirective(const ASTNode *string_, bool null_terminate):
-	StringDirective(string_->extracted(), null_terminate) {
+	StringDirective(StringSet::intern(string_->unquote()), null_terminate) {
 		delete string_;
 	}
 
