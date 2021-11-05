@@ -26,70 +26,22 @@ namespace Wasmc {
 		validateSectionCounts();
 		findAllLabels();
 		processMetadata();
-
 		processText();
-
 		metaOffsetData() = metaOffsetCode() + code.size();
 		metaOffsetSymbols() = metaOffsetData() + data.size();
-
 		createSymbolTableSkeleton(allLabels);
-
 		processRelocation();
-
 		evaluateExpressions();
-
-		for (const auto &[label, index]: symbolTableIndices) {
-			std::cerr << "sTI: " << *label << " -> " << index << " : " << symbolTableEntries[index].id << "\n";
-		}
-
-		for (const auto &[instruction, reloc]: relocationMap) {
-			std::cerr << "rM: (T:" << int(reloc.type) << ", SI:" << reloc.symbolIndex << " [";
-			if (0 <= reloc.symbolIndex)
-				std::cerr << int(symbolTableEntries.at(reloc.symbolIndex).type) << " id="
-				          << symbolTableEntries.at(reloc.symbolIndex).id;
-			else
-				std::cerr << "-1!";
-			std::cerr << "], O:" << reloc.offset << ", SO:" << reloc.sectionOffset << ") -> "
-			          << instruction->debugExtra() << '\n';
-		}
-
-		size_t i = 0;
-		for (const auto &entry: symbolTableEntries) {
-			std::cerr << i++ << ": " << entry.id << ", t=" << int(entry.type) << "\n";
-		}
-
 		expandLabels();
-
 		expandCode();
-
 		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
 		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
-
 		encodeRelocation();
-
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
-
 		updateSymbolTable(allLabels);
-
 		relocateCode();
-
 		createDebugData(debugNode);
-
 		concatenated = Section::combine({meta, code, data, symbols, debug});
-
-
-
-
-
-
-		// setDataOffsets();
-		// reprocessData();
-		// processCode(expandLabels(expanded));
-		// symbolTable = createSymbolTable(allLabels, false);
-
-		// assembled.clear();
-		// for (const auto &longs: {meta, symbolTable, code, data, debugData})
-		// 	assembled.insert(assembled.end(), longs.begin(), longs.end());
 
 		if (can_warn && 0 < unknownSymbols.size()) {
 			std::cerr << "\e[2m[\e[22;1;33m?\e[22;39;2m]\e[22m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s")
@@ -104,6 +56,7 @@ namespace Wasmc {
 			}
 			std::cerr << '\n';
 		}
+
 		return stringify(concatenated);
 	}
 
@@ -123,8 +76,6 @@ namespace Wasmc {
 					const std::string *label = dynamic_cast<WASMLabelNode *>(node)->label;
 					*currentSection += label;
 					symbolTypes.emplace(label, currentSection == &data? SymbolType::Object : SymbolType::Instruction);
-					std::cerr << "Setting symbolTypes[" << *label << "] to " << int(symbolTypes[label]) << " at "
-					          << currentSection->counter << "\n";
 					offsets.emplace(label, currentSection->counter);
 					break;
 				}
@@ -145,7 +96,7 @@ namespace Wasmc {
 					auto *directive = dynamic_cast<SizeDirective *>(node);
 					directive->expression->setCounter(*currentSection);
 					if (directive->expression->validate() == Expression::ValidationResult::Invalid) {
-						std::cerr << std::string(*directive->expression) << '\n';
+						error() << std::string(*directive->expression) << '\n';
 						throw std::runtime_error("Invalid expression");
 					}
 					symbolSizeExpressions[directive->symbolName] = directive->expression;
@@ -159,7 +110,7 @@ namespace Wasmc {
 					const std::string *label;
 					switch (directive->expression->validate(&label)) {
 						case Expression::ValidationResult::Invalid:
-							std::cerr << std::string(*directive->expression) << '\n';
+							error() << std::string(*directive->expression) << '\n';
 							throw std::runtime_error("Invalid expression");
 						case Expression::ValidationResult::LabelNumberDifference:
 						case Expression::ValidationResult::LabelNumberSum:
@@ -407,26 +358,18 @@ namespace Wasmc {
 			if (index == -1ul && reloc.label && symbolTableIndices.count(reloc.label) != 0)
 				index = symbolTableIndices.at(reloc.label);
 			long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
-			if (!reloc.label)
-				warn() << "Reloc has no label\n";
 			Section *definition_section = getSection(reloc.label);
-			if (definition_section) {
+			if (definition_section)
 				address += getOffset(*definition_section);
-				std::cerr << "Augmenting address by " << getOffset(*definition_section) << " for " << *reloc.label << "\n";
-			}
 			address += reloc.offset;
-			std::cerr << (reloc.label? *reloc.label : "nullptr") << " [i" << index << ", o" << reloc.offset << ", s" << reloc.sectionOffset << ", a" << address << ", sec" << reloc.section->name << "]: ";
 			switch (reloc.type) {
 				case RelocationType::Full:
-					std::cerr << Long(address) << "\n";
 					reloc.section->insert(reloc.sectionOffset, Long(address));
 					break;
 				case RelocationType::Upper4:
-					std::cerr << uint32_t(address >> 32) << "\n";
 					reloc.section->insert(reloc.sectionOffset, uint32_t(address >> 32));
 					break;
 				case RelocationType::Lower4:
-					std::cerr << uint32_t(address & 0xffffffff) << "\n";
 					reloc.section->insert(reloc.sectionOffset, uint32_t(address & 0xffffffff));
 					break;
 				default:
@@ -450,16 +393,6 @@ namespace Wasmc {
 			return metaOffsetRelocation();
 		throw std::runtime_error("Invalid section: " + Util::toHex(&section));
 	}
-
-	// void Assembler::reprocessData() {
-	// 	for (const auto &[key, ref]: dataVariables)
-	// 		data.at(dataOffsets.at(key) / 8) = offsets.count(ref) == 0? encodeSymbol(ref) : offsets.at(ref);
-	// }
-
-	// void Assembler::setDataOffsets() {
-	// 	for (const auto &[name, offset]: dataOffsets)
-	// 		offsets[name] = offset + metaOffsetData();
-	// }
 
 	void Assembler::validateSectionCounts() {
 		bool meta_found = false, include_found = false, debug_found = false, text_found = false;
@@ -574,12 +507,8 @@ namespace Wasmc {
 			}
 
 			Long address = 0;
-			if (offsets.count(label) != 0) {
+			if (offsets.count(label) != 0)
 				address = offsets.at(label);
-				std::cerr << "Found offset " << address << " for " << *label << "\n";
-			} else {
-				std::cerr << "Couldn't find an offset for " << *label << "\n";
-			}
 
 			SymbolTableEntry entry(encodeSymbol(label), address, type);
 			symbols.appendAll(entry.encode(*label));
