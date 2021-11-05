@@ -706,7 +706,7 @@ namespace WVM {
 		try {
 #endif
 			int index = 0;
-			for (Word i = debugOffset; i < endOffset;) {
+			for (Word i = debugOffset; i < relocationOffset;) {
 				Word word = getWord(i, Endianness::Little);
 				const uint8_t type = word & 0xff;
 				if (type == 1 || type == 2) {
