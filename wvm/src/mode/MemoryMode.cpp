@@ -223,7 +223,8 @@ namespace WVM::Mode {
 
 		if (address < 40) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
-		} else if (address < vm.symbolsOffset || vm.dataOffset <= address) {
+		} else if (address < vm.codeOffset || (vm.dataOffset <= address && address < vm.symbolsOffset) ||
+		           vm.debugOffset <= address) {
 			for (int i = 0; i < 8; ++i) {
 				char ch = static_cast<char>(vm.getByte(address + i));
 				if (ch < 32)
@@ -231,7 +232,7 @@ namespace WVM::Mode {
 				else
 					ss << ch;
 			}
-		} else if (address < vm.codeOffset) {
+		} else if (vm.symbolsOffset <= address && address < vm.debugOffset) {
 			if (symbolTableEdges.count(address) == 1) {
 				const UHWord hash = word >> 32;
 				ss << std::hex << "\e[2m" << hash << "\e[22m" << std::dec;
@@ -243,6 +244,8 @@ namespace WVM::Mode {
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
 			ss << Unparser::stringify(word, &vm);
+		} else {
+			ss << "?";
 		}
 
 		ss << "\e[49m";

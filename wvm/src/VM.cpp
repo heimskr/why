@@ -648,12 +648,12 @@ namespace WVM {
 	}
 
 	void VM::init() {
-		if (symbolsOffset == -1)
-			symbolsOffset = getWord(0, Endianness::Little);
 		if (codeOffset == -1)
-			codeOffset = programCounter = getWord(8, Endianness::Little);
+			codeOffset = programCounter = getWord(0, Endianness::Little);
 		if (dataOffset == -1)
-			dataOffset = getWord(16, Endianness::Little);
+			dataOffset = getWord(8, Endianness::Little);
+		if (symbolsOffset == -1)
+			symbolsOffset = getWord(16, Endianness::Little);
 		if (debugOffset == -1)
 			debugOffset = getWord(24, Endianness::Little);
 		if (endOffset == -1)
