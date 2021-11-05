@@ -65,6 +65,8 @@ namespace Wasmc {
 		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
 		metaOffsetEnd() = metaOffsetDebug() + debug.size();
 
+		updateSymbolTable(allLabels);
+
 		relocateCode();
 
 		concatenated = Section::combine({meta, code, data, symbols, debug});
@@ -356,6 +358,11 @@ namespace Wasmc {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
+					std::cerr << offset << " :: " << statement->debugExtra() << "\n";
+					// const size_t section_offset = offsets.count(label) != 0? offsets.at(label) : -1ul;
+					// Section *section = getSection(label);
+					// if (!section)
+					// 	throw std::runtime_error("Couldn't find section for " + (label? *label : "null label"));
 					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
 					if (relocationMap.count(statement) != 0)
 						relocationMap.erase(statement);
@@ -370,12 +377,31 @@ namespace Wasmc {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
+					// const size_t section_offset = offsets.count(label) != 0? offsets.at(label) : -1ul;
+					// Section *section = getSection(label);
+					// if (!section)
+					// 	throw std::runtime_error("Couldn't find section for " + (label? *label : "null label"));
 					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
 					if (relocationMap.count(statement.get()) != 0)
 						relocationMap.erase(statement.get());
 					relocationMap.emplace(statement.get(), relocation_data);
 				}
 			}
+		}
+	}
+
+	Section * Assembler::getSection(const std::string *label) {
+		if (!label || symbolTypes.count(label) == 0)
+			return nullptr;
+		switch (symbolTypes.at(label)) {
+			case SymbolType::Function:
+			case SymbolType::Instruction:
+				return &code;
+			case SymbolType::Object:
+				return &data;
+			default:
+				warn() << "Unhandled SymbolType: " << int(symbolTypes.at(label)) << '\n';
+				return nullptr;
 		}
 	}
 
@@ -389,12 +415,15 @@ namespace Wasmc {
 			if (index == -1ul && reloc.label && symbolTableIndices.count(reloc.label) != 0)
 				index = symbolTableIndices.at(reloc.label);
 			long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
-			if (reloc.section)
-				address += getOffset(*reloc.section);
-			else
-				warn() << "Relocation for node (" << node->debugExtra() << ") is missing a section.\n";
-			address += reloc.sectionOffset + reloc.offset;
-			std::cerr << (reloc.label? *reloc.label : "nullptr") << " [i" << index << ", o" << reloc.offset << "]: ";
+			if (!reloc.label)
+				warn() << "Reloc has no label\n";
+			Section *definition_section = getSection(reloc.label);
+			if (definition_section) {
+				address += getOffset(*definition_section);
+				std::cerr << "Augmenting address by " << getOffset(*definition_section) << " for " << *reloc.label << "\n";
+			}
+			address += reloc.offset;
+			std::cerr << (reloc.label? *reloc.label : "nullptr") << " [i" << index << ", o" << reloc.offset << ", s" << reloc.sectionOffset << ", a" << address << ", sec" << reloc.section->name << "]: ";
 			switch (reloc.type) {
 				case RelocationType::Full:
 					std::cerr << Long(address) << "\n";
@@ -519,6 +548,51 @@ namespace Wasmc {
 			}
 			SymbolTableEntry entry(encodeSymbol(label), 0, type);
 			symbols.appendAll(entry.encode(*label));
+			symbolTableIndices.emplace(label, symbolTableEntries.size());
+			symbolTableEntries.push_back(entry);
+		}
+	}
+
+	void Assembler::updateSymbolTable(StringPtrSet labels) {
+		labels.insert(StringSet::intern(".end"));
+		symbols.clear();
+		symbolTableEntries.clear();
+
+		for (const std::string *label: labels) {
+			const size_t length = Util::updiv(label->size(), 8ul);
+			if (0xffff < length)
+				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
+			SymbolEnum type = SymbolEnum::Unknown;
+			if (symbolTypes.count(label) != 0) {
+				SymbolType specified_type = symbolTypes.at(label);
+				switch (specified_type) {
+					case SymbolType::Function:
+					case SymbolType::Instruction:
+						type = SymbolEnum::Code;
+						break;
+					case SymbolType::Object:
+						type = SymbolEnum::Data;
+						break;
+					case SymbolType::Unknown:
+						break;
+					default:
+						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
+							std::to_string(unsigned(specified_type)));
+				}
+			}
+
+			Long address = 0;
+			if (offsets.count(label) != 0) {
+				address = offsets.at(label);
+				std::cerr << "Found offset " << address << " for " << *label << "\n";
+			} else {
+				std::cerr << "Couldn't find an offset for " << *label << "\n";
+			}
+
+			SymbolTableEntry entry(encodeSymbol(label), address, type);
+			symbols.appendAll(entry.encode(*label));
+			if (symbolTableIndices.count(label) != 0)
+				symbolTableIndices.erase(label);
 			symbolTableIndices.emplace(label, symbolTableEntries.size());
 			symbolTableEntries.push_back(entry);
 		}

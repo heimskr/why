@@ -34,6 +34,7 @@ namespace Wasmc {
 		ssize_t symbolIndex: 62;
 		long offset: 64;
 		long sectionOffset: 64;
+		/** The section in which the relocation will occur, not the section in which the label is defined. */
 		Section *section;
 		const std::string *label;
 		std::vector<Long> encode() const;
