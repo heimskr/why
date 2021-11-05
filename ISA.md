@@ -390,7 +390,7 @@ Tells the assembler the type of a symbol. The type can be either `object` (for d
 ## <a name="dir-size"></a><code>%size</code>
 Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter. An expression is valid if any of the following is true:
 
-* None of its children contain any label references or `.` (that is, all leaves are numeric)
+* None of its children contain any label references (that is, all leaves are numeric or `.`)
 * It's the difference of two labels
 * It's the difference of `.` and a label
 * It's the difference of a label and a number

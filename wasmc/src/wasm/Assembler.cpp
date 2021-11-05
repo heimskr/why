@@ -60,6 +60,8 @@ namespace Wasmc {
 
 		expandLabels();
 
+		expandCode();
+
 
 
 		concatenated = Section::combine({meta, code, data, symbols});
@@ -306,13 +308,7 @@ namespace Wasmc {
 			| (static_cast<uint64_t>(opcode) << 52);
 	}
 
-	// void Assembler::addCode(const WASMInstructionNode &node) {
-	// 	code.push_back(compileInstruction(node));
-	// }
-
 	void Assembler::expandLabels() {
-		// In the second pass, we replace label references with the corresponding
-		// addresses now that we know the address of all the labels.
 		for (auto &[offset, statement]: instructionMap) {
 			statement->labels.clear();
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
@@ -437,7 +433,6 @@ namespace Wasmc {
 				}
 			}
 			SymbolTableEntry entry(encodeSymbol(label), 0, type);
-			std::cerr << *label << " -> " << entry.id << "\n";
 			symbols.appendAll(entry.encode(*label));
 			symbolTableIndices.emplace(label, symbolTableEntries.size());
 			symbolTableEntries.push_back(entry);
@@ -514,58 +509,34 @@ namespace Wasmc {
 		metaOffsetCode() = meta.alignUp(8);
 	}
 
-	Statements Assembler::expandText() {
-		if (!textNode)
-			return {};
-
-		Statements expanded;
-		expanded.reserve(textNode->size());
-
-		for (const ASTNode *node: *textNode) {
-			const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
-			if (!instruction) {
-				node->debug();
-				throw std::runtime_error("Unexpected symbol found in code section at " + std::string(node->location)
-					+ ": " + std::string(wasmParser.getName(node->symbol)));
-			}
-
-			for (const std::string *label: instruction->labels) {
-				if (offsets.count(label) != 0)
-					throw std::runtime_error("Label " + *label + " redefined at " + std::string(node->location));
-				offsets[label] = metaOffsetCode() + expanded.size() * 8;
-				if (verbose)
-					std::cerr << "Assigning " << offsets[label] << " to " << *label << " based on an expanded length "
-					             "equal to " << expanded.size() << "\n";
-			}
-
+	void Assembler::expandCode() {
+		for (auto &[offset, instruction]: instructionMap) {
 			switch (instruction->nodeType()) {
 				case WASMNodeType::PseudoPrint:
-					addPseudoPrint(expanded, instruction);
+					addPseudoPrint(offset, instruction);
 					break;
 
 				case WASMNodeType::IO:
-					addIO(expanded, instruction);
+					addIO(offset, instruction);
 					break;
 
 				case WASMNodeType::StringPrint:
-					addStringPrint(expanded, instruction);
+					addStringPrint(offset, instruction);
 					break;
 
 				case WASMNodeType::Mv:
-					addMove(expanded, instruction);
+					addMove(offset, instruction);
 					break;
 
 				case WASMNodeType::Jeq:
-					addJeq(expanded, instruction);
+					addJeq(offset, instruction);
 					break;
 
 				default:
-					expanded.emplace_back(flipSigns(instruction->copy()));
+					code.insert(offset, compileInstruction(*flipSigns(instruction)));
 					break;
 			}
 		}
-
-		return expanded;
 	}
 
 	WASMInstructionNode * Assembler::flipSigns(WASMInstructionNode *node) const {
@@ -584,7 +555,7 @@ namespace Wasmc {
 		return node;
 	}
 
-	void Assembler::addJeq(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addJeq(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *jeq = dynamic_cast<const WASMJeqNode *>(instruction);
 		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
 		const int bang = instruction->bang;
@@ -593,66 +564,103 @@ namespace Wasmc {
 			if (std::holds_alternative<Register>(jeq->rt)) {
 				// RHS is a register
 				// rs == rt -> $m7
-				expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+				code.insert(offset, compileInstruction(*seq));
+				extraInstructions.emplace(offset, std::move(seq));
+				offset += 8;
 			} else {
-				addJeqImmediateRHS(expanded, jeq, m7);
+				addJeqImmediateRHS(offset, jeq, m7);
 				// rs == $m7 -> $m7
-				expanded.emplace_back(makeSeq(jeq->rs, m7, m7, bang));
+				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, m7, m7, bang));
+				code.insert(offset, compileInstruction(*seq));
+				extraInstructions.emplace(offset, std::move(seq));
+				offset += 8;
 			}
 			// : rd if $m7
-			expanded.emplace_back(new WASMJrcNode(jeq->link, m7, std::get<Register>(jeq->addr)));
+			auto jrc = std::make_unique<WASMJrcNode>(jeq->link, m7, std::get<Register>(jeq->addr));
+			code.insert(offset, compileInstruction(*jrc));
+			extraInstructions.emplace(offset, std::move(jrc));
+			offset += 8;
 		} else if (std::holds_alternative<Register>(jeq->rt)) {
 			// Address is an immediate, RHS is a register
 			// rs == rt -> $m7
-			expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+			auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+			code.insert(offset, compileInstruction(*seq));
+			extraInstructions.emplace(offset, std::move(seq));
+			offset += 8;
 			// : addr if $m7
-			expanded.emplace_back((new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7))->setBang(bang));
+			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
+			jc->setBang(bang);
+			code.insert(offset, compileInstruction(*jc));
+			extraInstructions.emplace(offset, std::move(jc));
+			offset += 8;
 		} else {
 			// Address is an immediate, RHS is an immediate
-			addJeqImmediateRHS(expanded, jeq, m7);
+			addJeqImmediateRHS(offset, jeq, m7);
 			// : addr if $m7
-			expanded.emplace_back((new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7))->setBang(bang));
+			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
+			jc->setBang(bang);
+			code.insert(offset, compileInstruction(*jc));
+			extraInstructions.emplace(offset, std::move(jc));
+			offset += 8;
 		}
 	}
 
-	void Assembler::addJeqImmediateRHS(Statements &expanded, const WASMJeqNode *jeq, const std::string *m7) {
+	void Assembler::addJeqImmediateRHS(size_t &offset, const WASMJeqNode *jeq, const std::string *m7) {
 		const Immediate &rhs = std::get<Immediate>(jeq->rt);
+		std::unique_ptr<WASMInstructionNode> new_node;
 		if (std::holds_alternative<const std::string *>(rhs)) {
 			// RHS is a label
 			// [label] -> $m7
-			expanded.emplace_back(new WASMLiNode(rhs, m7, false));
+			new_node = std::make_unique<WASMLiNode>(rhs, m7, false);
 		} else if (std::holds_alternative<int>(rhs)) {
 			// RHS is a number
 			// imm -> $m7
-			expanded.emplace_back(new WASMSetNode(rhs, m7));
+			new_node = std::make_unique<WASMSetNode>(rhs, m7);
 		} else {
 			jeq->debug();
 			throw std::runtime_error("Invalid right hand side in jeq instruction");
 		}
-		expanded.back()->setBang(jeq->bang);
+
+		new_node->setBang(jeq->bang);
+		code.insert(offset, compileInstruction(*new_node));
+		extraInstructions.emplace(offset, std::move(new_node));
+		offset += 8;
 	}
 
-	void Assembler::addMove(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addMove(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *move = dynamic_cast<const WASMMvNode *>(instruction);
-		expanded.emplace_back((new RNode(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
-			WASMTOK_OR, false))->setBang(instruction->bang));
+
+		auto rnode = std::make_unique<RNode>(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
+			WASMTOK_OR, false);
+		code.insert(offset, compileInstruction(*rnode));
+		extraInstructions.emplace(offset, std::move(rnode));
 	}
 
-	void Assembler::addPseudoPrint(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addPseudoPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
 		if (std::holds_alternative<char>(print->imm)) {
 			const std::string *m7 = registerArray[Why::assemblerOffset + 7];
-			expanded.emplace_back((new WASMSetNode(print->imm, m7))->setBang(instruction->bang));
-			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(instruction->bang));
+
+			auto set = std::make_unique<WASMSetNode>(print->imm, m7);
+			set->setBang(instruction->bang);
+			code.insert(offset, compileInstruction(*set));
+			extraInstructions.emplace(offset, std::move(set));
+			offset += 8;
+
+			auto new_print = std::make_unique<WASMPrintNode>(m7, PrintType::Char);
+			new_print->setBang(instruction->bang);
+			code.insert(offset, compileInstruction(*new_print));
+			extraInstructions.emplace(offset, std::move(new_print));
 		} else
 			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
 	}
 
-	void Assembler::addIO(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addIO(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *io = dynamic_cast<const WASMIONode *>(instruction);
 
 		if (!io->ident) {
-			expanded.emplace_back(io->copy());
+			code.insert(offset, compileInstruction(*io));
 			return;
 		}
 
@@ -660,11 +668,19 @@ namespace Wasmc {
 			throw std::runtime_error("Unknown IO ident: \"" + *io->ident + "\"");
 
 		const std::string *a0 = registerArray[Why::argumentOffset];
-		expanded.emplace_back((new WASMSetNode(Why::ioIDs.at(*io->ident), a0))->setBang(instruction->bang));
-		expanded.emplace_back((new WASMIONode(nullptr))->setBang(instruction->bang));
+		auto set = std::make_unique<WASMSetNode>(Why::ioIDs.at(*io->ident), a0);
+		set->setBang(instruction->bang);
+		code.insert(offset, compileInstruction(*set));
+		extraInstructions.emplace(offset, std::move(set));
+		offset += 8;
+
+		auto new_io = std::make_unique<WASMIONode>(nullptr);
+		new_io->setBang(instruction->bang);
+		code.insert(offset, compileInstruction(*new_io));
+		extraInstructions.emplace(offset, std::move(new_io));
 	}
 
-	void Assembler::addStringPrint(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addStringPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMStringPrintNode *>(instruction);
 		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
 		const std::string &str = *print->string;
@@ -674,15 +690,22 @@ namespace Wasmc {
 		bool first = true;
 		for (char ch: str) {
 			if (ch != last_char) {
-				auto *set = (new WASMSetNode(ch, m7))->setBang(print->bang);
+				auto set = std::make_unique<WASMSetNode>(ch, m7);
+				set->setBang(print->bang);
 				if (first)
 					set->labels = print->labels;
 				first = false;
-				expanded.emplace_back(set);
+				code.insert(offset, compileInstruction(*set));
+				extraInstructions.emplace(offset, std::move(set));
+				offset += 8;
 				last_char = ch;
 			}
 
-			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(print->bang));
+			auto new_print = std::make_unique<WASMPrintNode>(m7, PrintType::Char);
+			new_print->setBang(print->bang);
+			code.insert(offset, compileInstruction(*new_print));
+			extraInstructions.emplace(offset, std::move(new_print));
+			offset += 8;
 		}
 	}
 

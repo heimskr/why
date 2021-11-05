@@ -14,8 +14,8 @@ orcid: "0000-0001-7405-6654"
 %type message object
 %size message .-message
 
-@main_ptr
-%8b 4 + (main - main) + (2*2*2+(3-3))
+@probably_four
+%8b 4 + (main - main) + (2*2*2+(3-3)) / .
 
 %code
 

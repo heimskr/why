@@ -28,6 +28,7 @@ namespace Wasmc {
 		public:
 			Section *section = nullptr;
 			size_t counter = -1;
+			ValidationResult lastValidation = ValidationResult::Invalid;
 
 			Expression() = delete;
 			Expression(ASTNode *);
@@ -40,7 +41,7 @@ namespace Wasmc {
 			/** Throws an exception if the number of label references is greater than the argument. */
 			void checkLabelCount(size_t) const;
 			/** Ensures that the expression fits the standard expression constraints. */
-			ValidationResult validate() const;
+			ValidationResult validate();
 
 			long evaluate(const Assembler &) const;
 

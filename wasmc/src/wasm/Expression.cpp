@@ -247,15 +247,15 @@ namespace Wasmc {
 
 		switch (node->symbol) {
 			case WASMTOK_PLUS:
-				return "((" + toString(node->at(0)) + ") + (" + toString(node->at(1)) + "))";
+				return "(" + toString(node->at(0)) + " + " + toString(node->at(1)) + ")";
 			case WASMTOK_MINUS:
-				return "((" + toString(node->at(0)) + ") - (" + toString(node->at(1)) + "))";
+				return "(" + toString(node->at(0)) + " - " + toString(node->at(1)) + ")";
 			case WASMTOK_ASTERISK:
-				return "((" + toString(node->at(0)) + ") * (" + toString(node->at(1)) + "))";
+				return "(" + toString(node->at(0)) + " * " + toString(node->at(1)) + ")";
 			case WASMTOK_SLASH:
-				return "((" + toString(node->at(0)) + ") / (" + toString(node->at(1)) + "))";
+				return "(" + toString(node->at(0)) + " / " + toString(node->at(1)) + ")";
 			case WASMTOK_PERCENT:
-				return "((" + toString(node->at(0)) + ") % (" + toString(node->at(1)) + "))";
+				return "(" + toString(node->at(0)) + " % " + toString(node->at(1)) + ")";
 			case WASMTOK_IDENT:
 				return *node->lexerInfo;
 			case WASMTOK_NUMBER:
@@ -287,8 +287,8 @@ namespace Wasmc {
 		}
 	}
 
-	Expression::ValidationResult Expression::validate() const {
-		return validate(this);
+	Expression::ValidationResult Expression::validate() {
+		return lastValidation = validate(this);
 	}
 
 	long Expression::evaluate(const Assembler &assembler) const {

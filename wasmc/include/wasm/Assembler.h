@@ -11,14 +11,13 @@
 #include "util/Util.h"
 #include "wasm/Debug.h"
 #include "wasm/Expression.h"
+#include "wasm/Nodes.h"
 #include "wasm/Section.h"
 #include "wasm/SymbolTable.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
 	class ASTNode;
-	struct WASMInstructionNode;
-	struct WASMJeqNode;
 
 	struct RType;
 	struct IType;
@@ -75,6 +74,8 @@ namespace Wasmc {
 
 			/** Maps code section counters to instruction nodes. */
 			std::map<size_t, WASMInstructionNode *> instructionMap;
+
+			std::map<size_t, std::unique_ptr<WASMInstructionNode>> extraInstructions;
 
 			/** A set of all labels found in value directive expressions. */
 			StringPtrSet valueExpressionLabels;
@@ -142,20 +143,20 @@ namespace Wasmc {
 			 *  offset. */
 			void processMetadata();
 
-			Statements expandText();
+			void expandCode();
 
 			WASMInstructionNode * flipSigns(WASMInstructionNode *) const;
 
-			void addJeq(Statements &, const WASMInstructionNode *);
-			void addJeqImmediateRHS(Statements &, const WASMJeqNode *, const std::string *m7);
+			void addJeq(size_t offset, const WASMInstructionNode *);
+			void addJeqImmediateRHS(size_t &offset, const WASMJeqNode *, const std::string *m7);
 
-			void addMove(Statements &, const WASMInstructionNode *);
+			void addMove(size_t offset, const WASMInstructionNode *);
 
-			void addPseudoPrint(Statements &, const WASMInstructionNode *);
+			void addPseudoPrint(size_t offset, const WASMInstructionNode *);
 
-			void addIO(Statements &, const WASMInstructionNode *);
+			void addIO(size_t offset, const WASMInstructionNode *);
 
-			void addStringPrint(Statements &, const WASMInstructionNode *);
+			void addStringPrint(size_t offset, const WASMInstructionNode *);
 
 			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
 	};
