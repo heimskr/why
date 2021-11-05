@@ -21,7 +21,7 @@ namespace Wasmc {
 
 	Assembler::Assembler(const ASTNode *root_): root(root_) {}
 
-	std::string Assembler::assemble(bool /* can_warn */) {
+	std::string Assembler::assemble(bool can_warn) {
 		wasmParser.errorCount = 0;
 		validateSectionCounts();
 		findAllLabels();
@@ -63,28 +63,24 @@ namespace Wasmc {
 		expandCode();
 
 		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
-		metaOffsetEnd() = metaOffsetDebug() + debug.size();
+		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
+
+		encodeRelocation();
+
+		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
 
 		updateSymbolTable(allLabels);
 
 		relocateCode();
+
+		createDebugData(debugNode);
 
 		concatenated = Section::combine({meta, code, data, symbols, debug});
 
 
 
 
-		// symbolTable = createSymbolTable(allLabels, true);
-		// for (Long piece: symbolTable)
-		// 	append(piece);
 
-		// metaOffsetText() = alignUp(8);
-
-		// auto expanded = expandText();
-		// metaOffsetDebug() = alignUp(8);
-
-		// debugData = createDebugData(debugNode, expanded);
-		// offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
 
 		// setDataOffsets();
 		// reprocessData();
@@ -95,19 +91,19 @@ namespace Wasmc {
 		// for (const auto &longs: {meta, symbolTable, code, data, debugData})
 		// 	assembled.insert(assembled.end(), longs.begin(), longs.end());
 
-		// if (can_warn && 0 < unknownSymbols.size()) {
-		// 	std::cerr << " \e[1;33m?\e[22;39m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s") << ": ";
-		// 	bool first = true;
-		// 	for (const std::string *symbol: unknownSymbols) {
-		// 		if (first)
-		// 			first = false;
-		// 		else
-		// 			std::cerr << ", ";
-		// 		std::cerr << "\e[1m" << *symbol << "\e[22m";
-		// 	}
-		// 	std::cerr << '\n';
-		// }
-		// return stringify(assembled);
+		if (can_warn && 0 < unknownSymbols.size()) {
+			std::cerr << "\e[2m[\e[22;1;33m?\e[22;39;2m]\e[22m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s")
+			          << ": ";
+			bool first = true;
+			for (const std::string *symbol: unknownSymbols) {
+				if (first)
+					first = false;
+				else
+					std::cerr << ", ";
+				std::cerr << "\e[1m" << *symbol << "\e[22m";
+			}
+			std::cerr << '\n';
+		}
 		return stringify(concatenated);
 	}
 
@@ -351,18 +347,12 @@ namespace Wasmc {
 	}
 
 	void Assembler::processRelocation() {
-		std::cerr << "Unknown (" << unknownSymbols.size() << "):"; for (const auto *label: unknownSymbols) std::cerr << " " << *label; std::cerr << "\n";
 		for (const auto &[offset, statement]: instructionMap) {
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
 				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
-					std::cerr << offset << " :: " << statement->debugExtra() << "\n";
-					// const size_t section_offset = offsets.count(label) != 0? offsets.at(label) : -1ul;
-					// Section *section = getSection(label);
-					// if (!section)
-					// 	throw std::runtime_error("Couldn't find section for " + (label? *label : "null label"));
 					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
 					if (relocationMap.count(statement) != 0)
 						relocationMap.erase(statement);
@@ -377,10 +367,6 @@ namespace Wasmc {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
-					// const size_t section_offset = offsets.count(label) != 0? offsets.at(label) : -1ul;
-					// Section *section = getSection(label);
-					// if (!section)
-					// 	throw std::runtime_error("Couldn't find section for " + (label? *label : "null label"));
 					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
 					if (relocationMap.count(statement.get()) != 0)
 						relocationMap.erase(statement.get());
@@ -388,6 +374,12 @@ namespace Wasmc {
 				}
 			}
 		}
+	}
+
+	void Assembler::encodeRelocation() {
+		relocation.clear();
+		for (const auto &[node, reloc]: relocationMap)
+			relocation.appendAll(reloc.encode());
 	}
 
 	Section * Assembler::getSection(const std::string *label) {
@@ -654,7 +646,7 @@ namespace Wasmc {
 			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(orcid_longs.size()));
 
 		meta.clear();
-		meta.appendAll(std::initializer_list<Long> {0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
+		meta.appendAll(std::initializer_list<Long> {0, 0, 0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
 
 		std::string nva = name;
 		nva += '\0';
@@ -868,12 +860,12 @@ namespace Wasmc {
 		}
 	}
 
-	std::vector<Long> Assembler::createDebugData(const ASTNode *node, const Statements &expanded) {
-		std::vector<Long> out;
+	void Assembler::createDebugData(const ASTNode *node) {
 		debugEntries.clear();
+		debug.clear();
 
 		if (!node)
-			return out;
+			return;
 
 		debugEntries.reserve(node->size());
 
@@ -899,8 +891,7 @@ namespace Wasmc {
 					};
 					for (char ch: unquoted)
 						encoded.push_back(static_cast<uint8_t>(ch));
-					for (const Long piece: Util::getLongs(encoded))
-						out.push_back(piece);
+					debug.appendAll(Util::getLongs(encoded));
 					if (type == 1)
 						debugEntries.emplace_back(new DebugFilename(unquoted));
 					else
@@ -918,14 +909,16 @@ namespace Wasmc {
 			}
 		}
 
-		const size_t expanded_size = expanded.size();
 		const size_t debug_size = debugEntries.size();
-		for (size_t i = 0; i < expanded_size; ++i) {
-			const auto &instruction = expanded[i];
+		std::unordered_set<Long> exclude;
+
+		auto process = [this, debug_size, &exclude](size_t offset, const WASMInstructionNode *instruction) {
+			if (exclude.count(offset) != 0)
+				return;
 			const int bang = instruction->bang;
 			if (bang == -1)
-				continue;
-			if (bang < 0 || debug_size <= static_cast<size_t>(bang)) {
+				return;
+			if (bang < 0 || debug_size <= size_t(bang)) {
 				instruction->debug();
 				throw std::runtime_error("Debug intbang out of bounds: " + std::to_string(bang));
 			}
@@ -938,13 +931,22 @@ namespace Wasmc {
 				instruction->debug();
 				throw std::runtime_error("DebugLocation cast failed");
 			}
-			const size_t address = metaOffsetCode() + 8 * i;
+			const size_t address = metaOffsetCode() + offset;
 			size_t count = 1;
-			for (size_t j = i + 1; j < expanded_size; ++j)
-				if (bang == expanded[j]->bang)
+			for (size_t j = address + 8; j < code.size(); j += 8) {
+				int subbang;
+				if (instructionMap.count(j) != 0) {
+					subbang = instructionMap.at(j)->bang;
+				} else if (extraInstructions.count(j) != 0) {
+					subbang = extraInstructions.at(j)->bang;
+				} else
+					throw std::runtime_error("Couldn't find instruction at offset " + std::to_string(j));
+				if (bang == subbang)
 					++count;
 				else
 					break;
+				exclude.insert(j);
+			}
 
 			if (0xff < count)
 				throw std::runtime_error("Instruction count too high: " + std::to_string(count));
@@ -962,7 +964,6 @@ namespace Wasmc {
 				throw std::runtime_error("Function index too large: " + std::to_string(location->functionIndex));
 
 			std::vector<uint8_t> to_add {static_cast<uint8_t>(location->getType())};
-
 			auto add = [&](size_t n, size_t byte_count) {
 				for (size_t j = 0; j < byte_count; ++j)
 					to_add.push_back((n >> (8 * j)) & 0xff);
@@ -975,11 +976,19 @@ namespace Wasmc {
 			add(location->functionIndex, 4);
 			add(address, 8);
 
-			for (const Long piece: Util::getLongs(to_add))
-				out.push_back(piece);
-			i += count - 1;
-		}
+			while (to_add.size() % 8)
+				to_add.push_back(0);
 
-		return out;
+			debug.appendAll(to_add);
+			exclude.insert(offset);
+		};
+
+		for (const auto &[offset, instruction]: instructionMap)
+			process(offset, instruction);
+
+		for (const auto &[offset, instruction]: extraInstructions)
+			process(offset, instruction.get());
+
+		debug.alignUp(8);
 	}
 }

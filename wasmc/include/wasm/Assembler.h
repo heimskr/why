@@ -127,6 +127,8 @@ namespace Wasmc {
 
 			void processRelocation();
 
+			void encodeRelocation();
+
 			Section * getSection(const std::string *);
 
 			void relocateCode();
@@ -173,7 +175,7 @@ namespace Wasmc {
 
 			void addStringPrint(size_t offset, const WASMInstructionNode *);
 
-			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
+			void createDebugData(const ASTNode *);
 	};
 
 }
