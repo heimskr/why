@@ -140,7 +140,7 @@ namespace Wasmc {
 				case WASM_SIZEDIR: {
 					auto *directive = dynamic_cast<SizeDirective *>(node);
 					directive->expression->setCounter(*currentSection);
-					if (!directive->expression->validate()) {
+					if (directive->expression->validate() == Expression::ValidationResult::Invalid) {
 						std::cerr << std::string(*directive->expression) << '\n';
 						throw std::runtime_error("Invalid expression");
 					}
@@ -151,7 +151,7 @@ namespace Wasmc {
 					auto *directive = dynamic_cast<ValueDirective *>(node);
 					auto labels = directive->expression->findLabels();
 					directive->expression->setCounter(*currentSection);
-					if (!directive->expression->validate()) {
+					if (directive->expression->validate() == Expression::ValidationResult::Invalid) {
 						std::cerr << std::string(*directive->expression) << '\n';
 						throw std::runtime_error("Invalid expression");
 					}

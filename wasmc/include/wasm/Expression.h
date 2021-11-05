@@ -9,22 +9,23 @@ namespace Wasmc {
 	struct Section;
 
 	class Expression: public ASTNode {
+		public:
+			enum class ValidationResult {
+				Invalid, Pure, DoubleLabelDifference, DotLabelDifference, LabelNumberDifference, LabelNumberSum, Label
+			};
+
 		private:
 			static void findLabels(const ASTNode *, std::set<const std::string *> &);
 			static size_t labelCount(const ASTNode *);
+			static bool resultIsNumeric(const ASTNode *);
 			static ValidationResult validate(const ASTNode *);
-			static bool fullyNumeric(const ASTNode *);
+			static bool fullyNumeric(const ASTNode *, bool dot_okay = true);
 			static bool isSymbol(const ASTNode *);
 			static bool hasDot(const ASTNode *);
 			static long evaluate(const ASTNode *, const Assembler &, size_t counter);
 			static std::string toString(const ASTNode *);
 
 		public:
-			enum class ValidationResult {
-				Invalid, Pure, DoubleLabelDifference, DotLabelDifference, LabelNumberDifference, LabelNumberSum,
-				DotNumberSum, DotNumberDifference, LabelDotDifference, DotNumberMDM
-			};
-
 			Section *section = nullptr;
 			size_t counter = -1;
 

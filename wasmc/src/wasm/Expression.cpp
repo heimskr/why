@@ -77,6 +77,16 @@ namespace Wasmc {
 		}
 	}
 
+	bool Expression::resultIsNumeric(const ASTNode *node) {
+		switch (validate(node)) {
+			case ValidationResult::DoubleLabelDifference:
+			case ValidationResult::Pure:
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	Expression::ValidationResult Expression::validate(const ASTNode *node) {
 		if (!node)
 			throw std::invalid_argument("Node is null in Expression::validate");
@@ -89,31 +99,25 @@ namespace Wasmc {
 
 		switch (node->symbol) {
 			case WASMTOK_PLUS: {
-				const bool right_numeric = fullyNumeric(right), left_numeric = fullyNumeric(left);
-				if (left_numeric && right_numeric)
+				const bool right_numeric = fullyNumeric(right, true), left_numeric = fullyNumeric(left, true);
+				if ((left_numeric && right_numeric) || (resultIsNumeric(left) && resultIsNumeric(right)))
 					return ValidationResult::Pure;
 				if ((isSymbol(left) && right_numeric) || (left_numeric && isSymbol(right)))
 					return ValidationResult::LabelNumberSum;
-				if ((left_numeric && right->symbol == WASMTOK_DOT) || (left->symbol == WASMTOK_DOT && right_numeric))
-					return ValidationResult::DotNumberSum;
 				return ValidationResult::Invalid;
 			}
 			case WASMTOK_MINUS: {
-				const bool right_numeric = fullyNumeric(right), left_numeric = fullyNumeric(left);
-				if (left_numeric && right_numeric)
+				const bool right_numeric = fullyNumeric(right, true), left_numeric = fullyNumeric(left, true);
+				if ((left_numeric && right_numeric) || (resultIsNumeric(left) && resultIsNumeric(right)))
 					return ValidationResult::Pure;
 				if (isSymbol(left)) {
-					if (right_numeric)
+					if ((resultIsNumeric(left) && resultIsNumeric(right)))
 						return ValidationResult::LabelNumberDifference;
-					if (right->symbol == WASMTOK_DOT)
-						return ValidationResult::LabelDotDifference;
 					if (isSymbol(right))
 						return ValidationResult::DoubleLabelDifference;
 					return ValidationResult::Invalid;
 				}
 				if (left->symbol == WASMTOK_DOT) {
-					if (right_numeric)
-						return ValidationResult::DotNumberDifference;
 					if (isSymbol(right))
 						return ValidationResult::DotLabelDifference;
 					return ValidationResult::Invalid;
@@ -123,30 +127,29 @@ namespace Wasmc {
 			case WASMTOK_ASTERISK:
 			case WASMTOK_SLASH:
 			case WASMTOK_PERCENT: {
-				const bool right_numeric = fullyNumeric(right), left_numeric = fullyNumeric(left);
-				if (left_numeric && right_numeric)
+				const bool right_numeric = fullyNumeric(right, true), left_numeric = fullyNumeric(left, true);
+				if ((left_numeric && right_numeric) || (resultIsNumeric(left) && resultIsNumeric(right)))
 					return ValidationResult::Pure;
-				if ((left_numeric && right->symbol == WASMTOK_DOT) || (left->symbol == WASMTOK_DOT && right_numeric))
-					return ValidationResult::DotNumberMDM;
 				return ValidationResult::Invalid;
 			}
 			case WASMTOK_IDENT:
 			case WASMTOK_STRING:
+				return ValidationResult::Label;
 			case WASMTOK_DOT:
 			case WASMTOK_NUMBER:
-				return true;
+				return ValidationResult::Pure;
 			default:
 				node->debug();
 				throw std::runtime_error("Unexpected node in Expression::validate");
 		}
 	}
 
-	bool Expression::fullyNumeric(const ASTNode *node) {
+	bool Expression::fullyNumeric(const ASTNode *node, bool dot_okay) {
 		if (!node)
 			throw std::invalid_argument("Node is null in Expression::fullyNumeric");
 
 		for (const ASTNode *child: *node)
-			if (!fullyNumeric(child))
+			if (!fullyNumeric(child, dot_okay))
 				return false;
 
 		switch (node->symbol) {
@@ -159,8 +162,9 @@ namespace Wasmc {
 				return true;
 			case WASMTOK_IDENT:
 			case WASMTOK_STRING:
-			case WASMTOK_DOT:
 				return false;
+			case WASMTOK_DOT:
+				return dot_okay;
 			case WASMTOK_NUMBER:
 				return true;
 			default:
@@ -243,15 +247,15 @@ namespace Wasmc {
 
 		switch (node->symbol) {
 			case WASMTOK_PLUS:
-				return toString(node->at(0)) + " + " + toString(node->at(1));
+				return "((" + toString(node->at(0)) + ") + (" + toString(node->at(1)) + "))";
 			case WASMTOK_MINUS:
-				return toString(node->at(0)) + " - " + toString(node->at(1));
+				return "((" + toString(node->at(0)) + ") - (" + toString(node->at(1)) + "))";
 			case WASMTOK_ASTERISK:
-				return toString(node->at(0)) + " * " + toString(node->at(1));
+				return "((" + toString(node->at(0)) + ") * (" + toString(node->at(1)) + "))";
 			case WASMTOK_SLASH:
-				return toString(node->at(0)) + " / " + toString(node->at(1));
+				return "((" + toString(node->at(0)) + ") / (" + toString(node->at(1)) + "))";
 			case WASMTOK_PERCENT:
-				return toString(node->at(0)) + " % " + toString(node->at(1));
+				return "((" + toString(node->at(0)) + ") % (" + toString(node->at(1)) + "))";
 			case WASMTOK_IDENT:
 				return *node->lexerInfo;
 			case WASMTOK_NUMBER:
