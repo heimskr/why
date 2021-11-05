@@ -89,7 +89,7 @@ namespace Wasmc {
 			bool verbose = false;
 
 			Section meta {"Meta", &allLabels, 40}, code {"Code", &allLabels}, data {"Data", &allLabels};
-			Section symbols {"Symbols", &allLabels}, relocation {"Relocation", &allLabels};
+			Section symbols {"Symbols", &allLabels}, relocation {"Relocation", &allLabels}, debug {"Debug", &allLabels};
 
 			Section *currentSection = &code;
 
@@ -119,6 +119,8 @@ namespace Wasmc {
 			void processText();
 
 			void processRelocation();
+
+			void relocateCode();
 
 			void evaluateExpressions();
 

@@ -2,6 +2,11 @@
 #include "wasm/Types.h"
 
 namespace Wasmc {
+	std::vector<Long> RelocationData::encode() const {
+		const Long *ptr = reinterpret_cast<const Long *>(this);
+		return {ptr[0], ptr[1], ptr[2]};
+	}
+
 	bool RelocationData::operator==(const RelocationData &other) const {
 		return type == other.type && symbolIndex == other.symbolIndex && offset == other.offset &&
 			sectionOffset == other.sectionOffset;

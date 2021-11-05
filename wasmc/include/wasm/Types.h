@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <set>
+#include <vector>
 
 #include "parser/Enums.h"
 #include "util/Hash.h"
@@ -10,6 +11,7 @@
 
 namespace Wasmc {
 	using Long = uint64_t;
+	struct Section;
 
 	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Data, Code};
 	enum class SymbolType {Unknown, Other, Function, Object, Instruction};
@@ -32,8 +34,11 @@ namespace Wasmc {
 		ssize_t symbolIndex: 62;
 		long offset: 64;
 		long sectionOffset: 64;
-		RelocationData(RelocationType type_, size_t symbol_index, long offset_, long section_offset):
-			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset) {}
+		Section *section;
+		std::vector<Long> encode() const;
+		RelocationData(RelocationType type_, size_t symbol_index, long offset_, long section_offset,
+		Section *section_ = nullptr):
+			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset), section(section_) {}
 		bool operator==(const RelocationData &other) const;
 	} __attribute__((packed));
 

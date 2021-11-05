@@ -62,9 +62,12 @@ namespace Wasmc {
 
 		expandCode();
 
+		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
+		metaOffsetEnd() = metaOffsetDebug() + debug.size();
 
+		relocateCode();
 
-		concatenated = Section::combine({meta, code, data, symbols});
+		concatenated = Section::combine({meta, code, data, symbols, debug});
 
 
 
@@ -160,7 +163,7 @@ namespace Wasmc {
 					valueExpressionLabels.insert(labels.begin(), labels.end());
 					*currentSection += {directive->valueSize, directive->expression};
 					relocationMap.try_emplace(directive, directive->valueSize == 4?
-						RelocationType::Lower4 : RelocationType::Full, -1, 0, currentSection->counter);
+						RelocationType::Lower4 : RelocationType::Full, -1, 0, currentSection->counter, currentSection);
 					*currentSection += directive->valueSize;
 					break;
 				}
@@ -332,16 +335,37 @@ namespace Wasmc {
 	}
 
 	void Assembler::processRelocation() {
-		for (const auto [offset, statement]: instructionMap) {
+		for (const auto &[offset, statement]: instructionMap) {
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
 				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
-					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset);
+					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code);
 					relocationMap.emplace(statement, relocation_data);
 				}
 			}
+		}
+
+		for (const auto &[offset, statement]: extraInstructions) {
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement.get())) {
+				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
+					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
+						RelocationType::Upper4 : RelocationType::Lower4;
+					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code);
+					relocationMap.emplace(statement.get(), relocation_data);
+				}
+			}
+		}
+	}
+
+	void Assembler::relocateCode() {
+		processRelocation();
+
+		for (const auto &[node, reloc]: relocationMap) {
+			if (!reloc.section)
+				throw std::runtime_error("Relocation is missing a section");
 		}
 	}
 

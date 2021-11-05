@@ -106,6 +106,7 @@ namespace Wasmc {
 		for (ASTNode *child: to_absorb->children)
 			adopt(child);
 		to_absorb->children.clear();
+		lexerInfo = to_absorb->lexerInfo;
 		delete to_absorb;
 		return this;
 	}
