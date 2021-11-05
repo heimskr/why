@@ -2,6 +2,11 @@
 #include "wasm/Types.h"
 
 namespace Wasmc {
+	bool RelocationData::operator==(const RelocationData &other) const {
+		return type == other.type && symbolIndex == other.symbolIndex && offset == other.offset &&
+			sectionOffset == other.sectionOffset;
+	}
+
 	Long AnyR::encode() const {
 		return Assembler::compileR(opcode, rs, rt, rd, function, flags, condition);
 	}

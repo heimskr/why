@@ -34,6 +34,34 @@ namespace Wasmc {
 
 		createSymbolTableSkeleton(allLabels);
 
+		processRelocation();
+
+		evaluateExpressions();
+
+		for (const auto &[label, index]: symbolTableIndices) {
+			std::cerr << "sTI: " << *label << " -> " << index << " : " << symbolTableEntries[index].id << "\n";
+		}
+
+		for (const auto &[instruction, reloc]: relocationMap) {
+			std::cerr << "rM: (T:" << int(reloc.type) << ", SI:" << reloc.symbolIndex << " [";
+			if (0 <= reloc.symbolIndex)
+				std::cerr << int(symbolTableEntries.at(reloc.symbolIndex).type) << " id="
+				          << symbolTableEntries.at(reloc.symbolIndex).id;
+			else
+				std::cerr << "-1!";
+			std::cerr << "], O:" << reloc.offset << ", SO:" << reloc.sectionOffset << ") -> "
+			          << instruction->debugExtra() << '\n';
+		}
+
+		size_t i = 0;
+		for (const auto &entry: symbolTableEntries) {
+			std::cerr << i++ << ": " << entry.id << ", t=" << int(entry.type) << "\n";
+		}
+
+		expandLabels();
+
+
+
 		concatenated = Section::combine({meta, code, data, symbols});
 
 
@@ -88,9 +116,14 @@ namespace Wasmc {
 				case WASM_CODEDIR:
 					currentSection = &code;
 					break;
-				case WASM_LABEL:
-					*currentSection += dynamic_cast<WASMLabelNode *>(node)->label;
+				case WASM_LABEL: {
+					const std::string *label = dynamic_cast<WASMLabelNode *>(node)->label;
+					*currentSection += label;
+					symbolTypes.emplace(label, currentSection == &data? SymbolType::Object : SymbolType::Instruction);
+					std::cerr << "Setting symbolTypes[" << *label << "] to " << int(symbolTypes[label]) << "\n";
+					offsets.emplace(label, currentSection->counter);
 					break;
+				}
 				case WASM_STRINGDIR: {
 					auto *directive = dynamic_cast<StringDirective *>(node);
 					if (directive->nullTerminate)
@@ -106,17 +139,18 @@ namespace Wasmc {
 				}
 				case WASM_SIZEDIR: {
 					auto *directive = dynamic_cast<SizeDirective *>(node);
-					directive->expression->counter = currentSection->counter;
-					directive->expression->section = currentSection;
-					symbolSizes[directive->symbolName] = directive->expression;
+					directive->expression->setCounter(*currentSection);
+					symbolSizeExpressions[directive->symbolName] = directive->expression;
 					break;
 				}
 				case WASM_VALUEDIR: {
 					auto *directive = dynamic_cast<ValueDirective *>(node);
-					directive->expression->checkLabelCount(1);
 					auto labels = directive->expression->findLabels();
+					directive->expression->setCounter(*currentSection);
 					valueExpressionLabels.insert(labels.begin(), labels.end());
 					*currentSection += {directive->valueSize, directive->expression};
+					relocationMap.try_emplace(directive, directive->valueSize == 4?
+						RelocationType::Lower4 : RelocationType::Full, -1, 0, currentSection->counter);
 					*currentSection += directive->valueSize;
 					break;
 				}
@@ -132,7 +166,7 @@ namespace Wasmc {
 				default: {
 					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
 						// Because we can't yet convert the instruction to a Long (probably),
-						// we stash it in a map and append a zero.
+						// we stash it in a map and append one or more zeros.
 						instructionMap[currentSection->counter] = instruction;
 						const size_t count = instruction->expandedSize();
 						for (size_t i = 0; i < count; ++i)
@@ -144,6 +178,15 @@ namespace Wasmc {
 
 		code.alignUp(8);
 		data.alignUp(8);
+	}
+
+	void Assembler::evaluateExpressions() {
+		for (auto &[label, expression]: symbolSizeExpressions)
+			symbolSizes.emplace(label, expression->evaluate(*this));
+
+		for (auto &[node, reloc]: relocationMap)
+			if (const auto *directive = dynamic_cast<const ValueDirective *>(node))
+				reloc.offset = directive->expression->evaluate(*this);
 	}
 
 	std::string Assembler::stringify(const std::vector<uint8_t> &bytes) {
@@ -259,12 +302,12 @@ namespace Wasmc {
 	// 	code.push_back(compileInstruction(node));
 	// }
 
-	Statements & Assembler::expandLabels(Statements &statements) {
+	void Assembler::expandLabels() {
 		// In the second pass, we replace label references with the corresponding
 		// addresses now that we know the address of all the labels.
-		for (auto &statement: statements) {
+		for (auto &[offset, statement]: instructionMap) {
 			statement->labels.clear();
-			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement.get())) {
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
 				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					if (offsets.count(label) == 0) {
@@ -282,14 +325,21 @@ namespace Wasmc {
 				}
 			}
 		}
-
-		return statements;
 	}
 
-	// void Assembler::processCode(const Statements &statements) {
-	// 	for (const auto &statement: statements)
-	// 		addCode(*statement);
-	// }
+	void Assembler::processRelocation() {
+		for (const auto [offset, statement]: instructionMap) {
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
+				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
+					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
+						RelocationType::Upper4 : RelocationType::Lower4;
+					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset);
+					relocationMap.emplace(statement, relocation_data);
+				}
+			}
+		}
+	}
 
 	// void Assembler::reprocessData() {
 	// 	for (const auto &[key, ref]: dataVariables)
@@ -365,6 +415,7 @@ namespace Wasmc {
 				SymbolType specified_type = symbolTypes.at(label);
 				switch (specified_type) {
 					case SymbolType::Function:
+					case SymbolType::Instruction:
 						type = SymbolEnum::Code;
 						break;
 					case SymbolType::Object:
@@ -377,7 +428,11 @@ namespace Wasmc {
 							std::to_string(unsigned(specified_type)));
 				}
 			}
-			symbols.appendAll(SymbolTableEntry(encodeSymbol(label), 0, type).encode(*label));
+			SymbolTableEntry entry(encodeSymbol(label), 0, type);
+			std::cerr << *label << " -> " << entry.id << "\n";
+			symbols.appendAll(entry.encode(*label));
+			symbolTableIndices.emplace(label, symbolTableEntries.size());
+			symbolTableEntries.push_back(entry);
 		}
 	}
 

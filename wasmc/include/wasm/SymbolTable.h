@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "util/Hash.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
@@ -16,4 +17,9 @@ namespace Wasmc {
 	};
 
 	using SymbolTable = std::unordered_map<std::string, SymbolTableEntry>;
+}
+
+namespace std {
+	template <>
+	class hash<Wasmc::SymbolTableEntry>: public Wasmc::Util::Hash<Wasmc::SymbolTableEntry> {};
 }

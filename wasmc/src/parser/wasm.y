@@ -161,6 +161,7 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_OBJECT "object"
 %token WASMTOK_DATA "%data"
 %token WASMTOK_CODE "%code"
+%token WASMTOK_INSTRUCTION "instruction"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -214,7 +215,7 @@ directive: dir_type | dir_size | dir_string | dir_value | dir_align | dir_fill |
 
 dir_type: "%type" ident          symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); }
         | "%type" WASMTOK_STRING symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); };
-symbol_type: "object" | "function";
+symbol_type: "object" | "function" | "instruction";
 
 expression: expression "+" term { $$ = $2->adopt({$1, $3}); }
           | expression "-" term { $$ = $2->adopt({$1, $3}); }
@@ -407,13 +408,13 @@ _immediate: "&" ident { $$ = $2; D($1); }
           | WASMTOK_STRING;
 
 ident: ident_option { $1->symbol = WASMTOK_IDENT; } | WASMTOK_IDENT;
-ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | "object" | "function"
+ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | symbol_type
      | "version" | "author" | "orcid" | "name" | printop;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
 reg: WASMTOK_REG;
-number: WASMTOK_NUMBER;
+number: WASMTOK_NUMBER | "-" WASMTOK_NUMBER { $$ = $2; $$->lexerInfo = StringSet::intern("-" + *$$->lexerInfo); D($1); };
 character: WASMTOK_CHAR;
 string: WASMTOK_STRING;
 either: reg | immediate;

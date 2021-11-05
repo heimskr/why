@@ -5,13 +5,14 @@
 #include <set>
 
 #include "parser/Enums.h"
+#include "util/Hash.h"
 #include "wasm/Instructions.h"
 
 namespace Wasmc {
 	using Long = uint64_t;
 
-	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Code, Data};
-	enum class SymbolType {Unknown, Other, Function, Object};
+	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Data, Code};
+	enum class SymbolType {Unknown, Other, Function, Object, Instruction};
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol};
 	enum class RelocationType: unsigned {Full = 0, Invalid, Lower4, Upper4};
 
@@ -28,11 +29,12 @@ namespace Wasmc {
 
 	struct RelocationData {
 		RelocationType type: 2;
-		size_t symbolIndex: 62;
+		ssize_t symbolIndex: 62;
 		long offset: 64;
 		long sectionOffset: 64;
 		RelocationData(RelocationType type_, size_t symbol_index, long offset_, long section_offset):
 			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset) {}
+		bool operator==(const RelocationData &other) const;
 	} __attribute__((packed));
 
 	struct Offsets {
@@ -88,4 +90,9 @@ namespace Wasmc {
 			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, Type::J), link(link_) {}
 		Long encode() const override;
 	};
+}
+
+namespace std {
+	template <>
+	class hash<Wasmc::RelocationData>: public Wasmc::Util::Hash<Wasmc::RelocationData> {};
 }

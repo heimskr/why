@@ -2,6 +2,7 @@
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
 #include "util/Util.h"
+#include "wasm/Assembler.h"
 #include "wasm/Expression.h"
 
 namespace Wasmc {
@@ -10,9 +11,16 @@ namespace Wasmc {
 		absorb(node);
 	}
 
+	Expression & Expression::setCounter(Section &section_) {
+		section = &section_;
+		counter = section_.counter;
+		return *this;
+	}
+
 	void Expression::findLabels(const ASTNode *node, std::set<const std::string *> &set) {
 		if (!node)
-			throw std::runtime_error("Node is null in Expression::findLabels");
+			throw std::invalid_argument("Node is null in Expression::findLabels");
+
 		switch (node->symbol) {
 			case WASMTOK_PLUS:
 			case WASMTOK_MINUS:
@@ -44,7 +52,8 @@ namespace Wasmc {
 
 	size_t Expression::labelCount(const ASTNode *node) {
 		if (!node)
-			throw std::runtime_error("Node is null in Expression::labelCount");
+			throw std::invalid_argument("Node is null in Expression::labelCount");
+
 		switch (node->symbol) {
 			case WASMTOK_PLUS:
 			case WASMTOK_MINUS:
@@ -69,6 +78,9 @@ namespace Wasmc {
 	}
 
 	bool Expression::validate(const ASTNode *node) {
+		if (!node)
+			throw std::invalid_argument("Node is null in Expression::validate");
+
 		for (const ASTNode *child: *node)
 			if (!validate(child))
 				return false;
@@ -100,6 +112,9 @@ namespace Wasmc {
 	}
 
 	bool Expression::fullyNumeric(const ASTNode *node) {
+		if (!node)
+			throw std::invalid_argument("Node is null in Expression::fullyNumeric");
+
 		for (const ASTNode *child: *node)
 			if (!fullyNumeric(child))
 				return false;
@@ -128,6 +143,99 @@ namespace Wasmc {
 		return node && (node->symbol == WASMTOK_IDENT || node->symbol == WASMTOK_STRING);
 	}
 
+	bool Expression::hasDot(const ASTNode *node) {
+		if (!node)
+			throw std::invalid_argument("Node is null in Expression::hasDot");
+
+		switch (node->symbol) {
+			case WASMTOK_PLUS:
+			case WASMTOK_MINUS:
+			case WASMTOK_ASTERISK:
+			case WASMTOK_SLASH:
+			case WASMTOK_PERCENT:
+				return hasDot(node->at(0)) || hasDot(node->at(1));
+			case WASMTOK_IDENT:
+			case WASMTOK_STRING:
+			case WASMTOK_NUMBER:
+				return false;
+			case WASMTOK_DOT:
+				return true;
+			default:
+				node->debug();
+				throw std::runtime_error("Unexpected node in Expression::hasDot");
+		}
+	}
+
+	long Expression::evaluate(const ASTNode *node, const Assembler &assembler, size_t counter) {
+		if (!node)
+			throw std::invalid_argument("Node is null in Expression::evaluate");
+
+		switch (node->symbol) {
+			case WASMTOK_PLUS:
+				return evaluate(node->at(0), assembler, counter) + evaluate(node->at(1), assembler, counter);
+			case WASMTOK_MINUS:
+				return evaluate(node->at(0), assembler, counter) - evaluate(node->at(1), assembler, counter);
+			case WASMTOK_ASTERISK:
+				return evaluate(node->at(0), assembler, counter) * evaluate(node->at(1), assembler, counter);
+			case WASMTOK_SLASH: {
+				const size_t divisor = evaluate(node->at(1), assembler, counter);
+				if (divisor == 0) {
+					node->debug();
+					throw std::invalid_argument("Division by zero in Expression::evaluate");
+				}
+				return evaluate(node->at(0), assembler, counter) / divisor;
+			}
+			case WASMTOK_PERCENT: {
+				const size_t divisor = evaluate(node->at(1), assembler, counter);
+				if (divisor == 0) {
+					node->debug();
+					throw std::invalid_argument("Modulo by zero in Expression::evaluate");
+				}
+				return evaluate(node->at(0), assembler, counter) % divisor;
+			}
+			case WASMTOK_IDENT:
+				return assembler.offsets.at(node->lexerInfo);
+			case WASMTOK_STRING:
+				return assembler.offsets.at(node->extracted());
+			case WASMTOK_NUMBER:
+				return node->atoi();
+			case WASMTOK_DOT:
+				return long(counter);
+			default:
+				node->debug();
+				throw std::runtime_error("Unexpected node in Expression::evaluate");
+		}
+	}
+
+	std::string Expression::toString(const ASTNode *node) {
+		if (!node)
+			throw std::invalid_argument("Node is null in Expression::toString");
+
+		switch (node->symbol) {
+			case WASMTOK_PLUS:
+				return toString(node->at(0)) + " + " + toString(node->at(1));
+			case WASMTOK_MINUS:
+				return toString(node->at(0)) + " - " + toString(node->at(1));
+			case WASMTOK_ASTERISK:
+				return toString(node->at(0)) + " * " + toString(node->at(1));
+			case WASMTOK_SLASH:
+				return toString(node->at(0)) + " / " + toString(node->at(1));
+			case WASMTOK_PERCENT:
+				return toString(node->at(0)) + " % " + toString(node->at(1));
+			case WASMTOK_IDENT:
+				return *node->lexerInfo;
+			case WASMTOK_NUMBER:
+				return std::to_string(node->atoi());
+			case WASMTOK_STRING:
+				return node->extractName();
+			case WASMTOK_DOT:
+				return ".";
+			default:
+				node->debug();
+				throw std::runtime_error("Unexpected node in Expression::toString");
+		}
+	}
+
 	std::set<const std::string *> Expression::findLabels() const {
 		std::set<const std::string *> out;
 		findLabels(this, out);
@@ -147,5 +255,15 @@ namespace Wasmc {
 
 	bool Expression::validate() const {
 		return validate(this);
+	}
+
+	long Expression::evaluate(const Assembler &assembler) const {
+		if (hasDot(this) && counter == -1ul)
+			throw std::runtime_error("Can't evaluate Expression: contains dot but counter is undefined");
+		return evaluate(this, assembler, counter);
+	}
+
+	Expression::operator std::string() const {
+		return toString(this);
 	}
 }

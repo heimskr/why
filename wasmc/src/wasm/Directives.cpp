@@ -22,8 +22,9 @@ namespace Wasmc {
 		delete type_;
 
 		switch (type_symbol) {
-			case WASMTOK_FUNCTION: type = SymbolType::Function; break;
-			case WASMTOK_OBJECT:   type = SymbolType::Object;   break;
+			case WASMTOK_FUNCTION:    type = SymbolType::Function;    break;
+			case WASMTOK_INSTRUCTION: type = SymbolType::Instruction; break;
+			case WASMTOK_OBJECT:      type = SymbolType::Object;      break;
 			default: throw std::runtime_error("Invalid TypeDirective type symbol: " +
 				std::string(wasmParser.getName(type_symbol)));
 		}
@@ -56,6 +57,10 @@ namespace Wasmc {
 	ValueDirective::ValueDirective(const ASTNode *value_size, Expression *expression_):
 	Directive(WASM_VALUEDIR), valueSize(getSize(value_size)), expression(expression_) {
 		delete value_size;
+	}
+
+	std::string ValueDirective::debugExtra() const {
+		return "%" + std::to_string(valueSize) + "b " + std::string(*expression);
 	}
 
 	AlignDirective::AlignDirective(size_t alignment_): Directive(WASM_ALIGNDIR), alignment(alignment_) {}

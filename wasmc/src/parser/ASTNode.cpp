@@ -94,6 +94,8 @@ namespace Wasmc {
 		if (!to_absorb)
 			return this;
 
+		locate(to_absorb);
+
 		for (auto iter = children.begin(), end = children.end(); iter != end; ++iter) {
 			if (*iter == to_absorb) {
 				children.erase(iter);
@@ -191,7 +193,7 @@ namespace Wasmc {
 	}
 
 	std::string ASTNode::debugExtra() const {
-		return "";
+		return "[" + std::string(getName()) + ":" + *lexerInfo + "]";
 	}
 
 	std::string ASTNode::style() const {

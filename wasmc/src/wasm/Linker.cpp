@@ -130,7 +130,7 @@ namespace Wasmc {
 
 			for (auto &[symbol, entry]: subtable) {
 				const SymbolType type = getSymbolType(subparser.offsets, subtable, symbol);
-				if (type == SymbolType::Function)
+				if (type == SymbolType::Function || type == SymbolType::Instruction)
 					entry.address += extra_symbol_length + extra_code_length + meta_difference - 24;
 				else if (type == SymbolType::Object)
 					entry.address += extra_symbol_length + extra_code_length + extra_data_length + meta_difference - 24;
@@ -141,7 +141,7 @@ namespace Wasmc {
 
 			for (auto &[symbol, entry]: combined_symbols) {
 				const SymbolType type = symbol_types.at(symbol);
-				if (type == SymbolType::Function)
+				if (type == SymbolType::Function || type == SymbolType::Instruction)
 					entry.address += subtable_length * 8;
 				else if (type == SymbolType::Object || symbol == ".end") // TODO: is `symbol == ".end"` correct?
 					entry.address += subtable_length * 8 + subcode_length;
@@ -271,7 +271,7 @@ namespace Wasmc {
 	SymbolType Linker::getSymbolType(const Offsets &offsets, const SymbolTable &table, const std::string &symbol) {
 		const auto address = table.at(symbol).address;
 		if (offsets.code <= address && address < offsets.data)
-			return SymbolType::Function;
+			return SymbolType::Instruction;
 		if (offsets.data <= address && address < offsets.debug)
 			return SymbolType::Object;
 		return SymbolType::Other;

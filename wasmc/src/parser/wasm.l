@@ -20,14 +20,12 @@
 %option noyywrap
 %option warn
 
-WASM_LETTER             [A-Za-z_]
-WASM_DIGIT              [0-9]
-WASM_DECIMAL            (-?{WASM_DIGIT}+)
-WASM_HEXADECIMAL        ([\-+]?0x[a-fA-F0-9]+)
+WASM_DECIMAL            ([0-9]+)
+WASM_HEXADECIMAL        (0x[a-fA-F0-9]+)
 WASM_FLOAT              ([\-+]?((([0-9]*"."[0-9]+|[0-9]+"."[0-9]*)([eE][\-+]?[0-9]+)?)|([0-9]+[eE][\-+]?[0-9]+)))
 WASM_CHAR               ('([^'\\\n]|("\\""\\"?[nratb])|\$[()])')
 WASM_NUMBER             ({WASM_DECIMAL}|{WASM_HEXADECIMAL})
-WASM_IDENT              ([-a-zA-Z._][-a-zA-Z._0-9]*)
+WASM_IDENT              ([a-zA-Z._][a-zA-Z._0-9]*)
 WASM_STRING             (\"([^\\"\n]|\\([\\'"nt]|x[0-9a-fA-F][0-9a-fA-F]))*\")
 WASM_SGCOMMENT          ("//"[^\n]*)
 WASM_MLCOMMENT          ("/*"([^*]|"*"[^/])*"*/")
@@ -69,6 +67,7 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "%fill"						{ WASMRTOKEN(DIR_FILL) }
 "function"					{ WASMRTOKEN(FUNCTION) }
 "object"					{ WASMRTOKEN(OBJECT) }
+"instruction"				{ WASMRTOKEN(INSTRUCTION) }
 "%data"						{ WASMRTOKEN(DATA) }
 "%code"						{ WASMRTOKEN(CODE) }
 

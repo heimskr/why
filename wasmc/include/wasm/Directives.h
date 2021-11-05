@@ -56,6 +56,7 @@ namespace Wasmc {
 			ValueDirective() = delete;
 			ValueDirective(const ASTNode *value_size, Expression *expression_);
 			DirectiveType getType() const override { return DirectiveType::Value; }
+			std::string debugExtra() const override;
 	};
 
 	struct AlignDirective: Directive {
