@@ -140,6 +140,10 @@ namespace Wasmc {
 				case WASM_SIZEDIR: {
 					auto *directive = dynamic_cast<SizeDirective *>(node);
 					directive->expression->setCounter(*currentSection);
+					if (!directive->expression->validate()) {
+						std::cerr << std::string(*directive->expression) << '\n';
+						throw std::runtime_error("Invalid expression");
+					}
 					symbolSizeExpressions[directive->symbolName] = directive->expression;
 					break;
 				}
@@ -147,6 +151,10 @@ namespace Wasmc {
 					auto *directive = dynamic_cast<ValueDirective *>(node);
 					auto labels = directive->expression->findLabels();
 					directive->expression->setCounter(*currentSection);
+					if (!directive->expression->validate()) {
+						std::cerr << std::string(*directive->expression) << '\n';
+						throw std::runtime_error("Invalid expression");
+					}
 					valueExpressionLabels.insert(labels.begin(), labels.end());
 					*currentSection += {directive->valueSize, directive->expression};
 					relocationMap.try_emplace(directive, directive->valueSize == 4?

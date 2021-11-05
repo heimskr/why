@@ -15,7 +15,7 @@ orcid: "0000-0001-7405-6654"
 %size message .-message
 
 @main_ptr
-%8b main + 2*2*2+(3-3)
+%8b main - main + 2*2*2+(3-3)
 
 %code
 

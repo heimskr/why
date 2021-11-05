@@ -77,29 +77,59 @@ namespace Wasmc {
 		}
 	}
 
-	bool Expression::validate(const ASTNode *node) {
+	Expression::ValidationResult Expression::validate(const ASTNode *node) {
 		if (!node)
 			throw std::invalid_argument("Node is null in Expression::validate");
 
 		for (const ASTNode *child: *node)
-			if (!validate(child))
-				return false;
+			if (validate(child) == ValidationResult::Invalid)
+				return ValidationResult::Invalid;
+
+		const ASTNode *left = node->empty()? nullptr : node->at(0), *right = node->size() < 2? nullptr : node->at(1);
 
 		switch (node->symbol) {
-			case WASMTOK_PLUS:
-				return fullyNumeric(node->at(0)) || fullyNumeric(node->at(1));
-			case WASMTOK_MINUS:
-				if (fullyNumeric(node->at(0)) && fullyNumeric(node->at(1)))
-					return true;
-				if (isSymbol(node->at(0)) || node->at(0)->symbol == WASMTOK_DOT)
-					return fullyNumeric(node->at(1)) || isSymbol(node->at(1));
-				warn() << "Returning false by default for expression " << node->debugExtra() << "\n";
-				return false;
+			case WASMTOK_PLUS: {
+				const bool right_numeric = fullyNumeric(right), left_numeric = fullyNumeric(left);
+				if (left_numeric && right_numeric)
+					return ValidationResult::Pure;
+				if ((isSymbol(left) && right_numeric) || (left_numeric && isSymbol(right)))
+					return ValidationResult::LabelNumberSum;
+				if ((left_numeric && right->symbol == WASMTOK_DOT) || (left->symbol == WASMTOK_DOT && right_numeric))
+					return ValidationResult::DotNumberSum;
+				return ValidationResult::Invalid;
+			}
+			case WASMTOK_MINUS: {
+				const bool right_numeric = fullyNumeric(right), left_numeric = fullyNumeric(left);
+				if (left_numeric && right_numeric)
+					return ValidationResult::Pure;
+				if (isSymbol(left)) {
+					if (right_numeric)
+						return ValidationResult::LabelNumberDifference;
+					if (right->symbol == WASMTOK_DOT)
+						return ValidationResult::LabelDotDifference;
+					if (isSymbol(right))
+						return ValidationResult::DoubleLabelDifference;
+					return ValidationResult::Invalid;
+				}
+				if (left->symbol == WASMTOK_DOT) {
+					if (right_numeric)
+						return ValidationResult::DotNumberDifference;
+					if (isSymbol(right))
+						return ValidationResult::DotLabelDifference;
+					return ValidationResult::Invalid;
+				}
+				return ValidationResult::Invalid;
+			}
 			case WASMTOK_ASTERISK:
 			case WASMTOK_SLASH:
-			case WASMTOK_PERCENT:
-				// Multiplication, division and modulo are valid for numeric constants only.
-				return fullyNumeric(node->at(0)) && fullyNumeric(node->at(1));
+			case WASMTOK_PERCENT: {
+				const bool right_numeric = fullyNumeric(right), left_numeric = fullyNumeric(left);
+				if (left_numeric && right_numeric)
+					return ValidationResult::Pure;
+				if ((left_numeric && right->symbol == WASMTOK_DOT) || (left->symbol == WASMTOK_DOT && right_numeric))
+					return ValidationResult::DotNumberMDM;
+				return ValidationResult::Invalid;
+			}
 			case WASMTOK_IDENT:
 			case WASMTOK_STRING:
 			case WASMTOK_DOT:
@@ -253,7 +283,7 @@ namespace Wasmc {
 		}
 	}
 
-	bool Expression::validate() const {
+	Expression::ValidationResult Expression::validate() const {
 		return validate(this);
 	}
 
