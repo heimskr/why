@@ -156,14 +156,27 @@ namespace Wasmc {
 					auto *directive = dynamic_cast<ValueDirective *>(node);
 					auto labels = directive->expression->findLabels();
 					directive->expression->setCounter(*currentSection);
-					if (directive->expression->validate() == Expression::ValidationResult::Invalid) {
-						std::cerr << std::string(*directive->expression) << '\n';
-						throw std::runtime_error("Invalid expression");
+					long index = -1;
+					const std::string *label;
+					switch (directive->expression->validate(&label)) {
+						case Expression::ValidationResult::Invalid:
+							std::cerr << std::string(*directive->expression) << '\n';
+							throw std::runtime_error("Invalid expression");
+						case Expression::ValidationResult::LabelNumberDifference:
+						case Expression::ValidationResult::LabelNumberSum:
+							// If it's a relocation based on a label, try to find the index of the label in the symbol
+							// table. If it's not present, that's fine; we can try to find it later.
+							if (symbolTableIndices.count(label) != 0)
+								index = symbolTableIndices.at(label);
+							break;
+						default:
+							break;
 					}
 					valueExpressionLabels.insert(labels.begin(), labels.end());
 					*currentSection += {directive->valueSize, directive->expression};
 					relocationMap.try_emplace(directive, directive->valueSize == 4?
-						RelocationType::Lower4 : RelocationType::Full, -1, 0, currentSection->counter, currentSection);
+						RelocationType::Lower4 : RelocationType::Full, index, 0, currentSection->counter,
+						currentSection, label);
 					*currentSection += directive->valueSize;
 					break;
 				}
@@ -341,7 +354,7 @@ namespace Wasmc {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
-					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code);
+					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
 					relocationMap.emplace(statement, relocation_data);
 				}
 			}
@@ -353,7 +366,7 @@ namespace Wasmc {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
-					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code);
+					RelocationData relocation_data(type, symbolTableIndices.at(label), 0, offset, &code, label);
 					relocationMap.emplace(statement.get(), relocation_data);
 				}
 			}
@@ -366,6 +379,24 @@ namespace Wasmc {
 		for (const auto &[node, reloc]: relocationMap) {
 			if (!reloc.section)
 				throw std::runtime_error("Relocation is missing a section");
+			size_t index = reloc.symbolIndex;
+			if (index == -1ul && reloc.label && symbolTableIndices.count(reloc.label) != 0)
+				index = symbolTableIndices.at(reloc.label);
+			const long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
+			switch (reloc.type) {
+				case RelocationType::Full:
+					reloc.section->insert(reloc.sectionOffset, Long(address + reloc.offset));
+					break;
+				case RelocationType::Upper4:
+					reloc.section->insert(reloc.sectionOffset, uint32_t((address + reloc.offset) >> 32));
+					break;
+				case RelocationType::Lower4:
+					reloc.section->insert(reloc.sectionOffset, uint32_t((address + reloc.offset) &
+						0xffffffff));
+					break;
+				default:
+					throw std::runtime_error("Invalid relocation type: " + std::to_string(int(reloc.type)));
+			}
 		}
 	}
 

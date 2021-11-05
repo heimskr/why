@@ -35,10 +35,12 @@ namespace Wasmc {
 		long offset: 64;
 		long sectionOffset: 64;
 		Section *section;
+		const std::string *label;
 		std::vector<Long> encode() const;
 		RelocationData(RelocationType type_, size_t symbol_index, long offset_, long section_offset,
-		Section *section_ = nullptr):
-			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset), section(section_) {}
+		Section *section_ = nullptr, const std::string *label_ = nullptr):
+			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset), section(section_),
+			label(label_) {}
 		bool operator==(const RelocationData &other) const;
 	} __attribute__((packed));
 

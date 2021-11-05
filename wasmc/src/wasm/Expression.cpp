@@ -87,9 +87,15 @@ namespace Wasmc {
 		}
 	}
 
-	Expression::ValidationResult Expression::validate(const ASTNode *node) {
+	Expression::ValidationResult Expression::validate(const ASTNode *node, const std::string **label1out,
+	const std::string **label2out) {
 		if (!node)
 			throw std::invalid_argument("Node is null in Expression::validate");
+
+		if (label1out)
+			*label1out = nullptr;
+		if (label2out)
+			*label2out = nullptr;
 
 		for (const ASTNode *child: *node)
 			if (validate(child) == ValidationResult::Invalid)
@@ -102,8 +108,16 @@ namespace Wasmc {
 				const bool right_numeric = fullyNumeric(right, true), left_numeric = fullyNumeric(left, true);
 				if ((left_numeric && right_numeric) || (resultIsNumeric(left) && resultIsNumeric(right)))
 					return ValidationResult::Pure;
-				if ((isSymbol(left) && right_numeric) || (left_numeric && isSymbol(right)))
+				if (isSymbol(left) && right_numeric) {
+					if (label1out)
+						*label1out = getSymbol(left);
 					return ValidationResult::LabelNumberSum;
+				}
+				if (left_numeric && isSymbol(right)) {
+					if (label1out)
+						*label1out = getSymbol(right);
+					return ValidationResult::LabelNumberSum;
+				}
 				return ValidationResult::Invalid;
 			}
 			case WASMTOK_MINUS: {
@@ -111,15 +125,26 @@ namespace Wasmc {
 				if ((left_numeric && right_numeric) || (resultIsNumeric(left) && resultIsNumeric(right)))
 					return ValidationResult::Pure;
 				if (isSymbol(left)) {
-					if ((resultIsNumeric(left) && resultIsNumeric(right)))
+					if (resultIsNumeric(right)) {
+						if (label1out)
+							*label1out = getSymbol(left);
 						return ValidationResult::LabelNumberDifference;
-					if (isSymbol(right))
+					}
+					if (isSymbol(right)) {
+						if (label1out)
+							*label1out = getSymbol(left);
+						if (label2out)
+							*label2out = getSymbol(right);
 						return ValidationResult::DoubleLabelDifference;
+					}
 					return ValidationResult::Invalid;
 				}
 				if (left->symbol == WASMTOK_DOT) {
-					if (isSymbol(right))
+					if (isSymbol(right)) {
+						if (label1out)
+							*label1out = getSymbol(right);
 						return ValidationResult::DotLabelDifference;
+					}
 					return ValidationResult::Invalid;
 				}
 				return ValidationResult::Invalid;
@@ -134,6 +159,8 @@ namespace Wasmc {
 			}
 			case WASMTOK_IDENT:
 			case WASMTOK_STRING:
+				if (label1out)
+					*label1out = getSymbol(node);
 				return ValidationResult::Label;
 			case WASMTOK_DOT:
 			case WASMTOK_NUMBER:
@@ -175,6 +202,17 @@ namespace Wasmc {
 
 	bool Expression::isSymbol(const ASTNode *node) {
 		return node && (node->symbol == WASMTOK_IDENT || node->symbol == WASMTOK_STRING);
+	}
+
+	const std::string * Expression::getSymbol(const ASTNode *node) {
+		if (node) {
+			if (node->symbol == WASMTOK_IDENT)
+				return node->lexerInfo;
+			if (node->symbol == WASMTOK_STRING)
+				return node->extracted();
+		}
+
+		return nullptr;
 	}
 
 	bool Expression::hasDot(const ASTNode *node) {
@@ -287,8 +325,8 @@ namespace Wasmc {
 		}
 	}
 
-	Expression::ValidationResult Expression::validate() {
-		return lastValidation = validate(this);
+	Expression::ValidationResult Expression::validate(const std::string **label1out, const std::string **label2out) {
+		return lastValidation = validate(this, label1out, label2out);
 	}
 
 	long Expression::evaluate(const Assembler &assembler) const {
