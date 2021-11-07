@@ -688,13 +688,14 @@ namespace WVM {
 	void VM::loadSymbols() {
 		symbolTable.clear();
 		for (Word i = symbolsOffset; i < debugOffset && size_t(i + 16) < memorySize;) {
-			const HWord length = getQuarterword(i, Endianness::Little);
+			const QWord length = getQuarterword(i, Endianness::Little);
+			const QWord type = getQuarterword(i + 2, Endianness::Little);
 			const HWord hash = getHalfword(i + 4, Endianness::Little);
 			const Word location = getWord(i + 8, Endianness::Little);
 			if (memorySize <= size_t(i + 16 + length * 8))
 				break;
 			const std::string name = getString(i + 16, length * 8);
-			symbolTable.emplace(name, Symbol(hash, location));
+			symbolTable.emplace(name, Symbol(hash, location, SymbolEnum(type)));
 			symbolsByPosition.emplace(location, name);
 			i += 16 + length * 8;
 		}

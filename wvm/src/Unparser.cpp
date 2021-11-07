@@ -178,12 +178,9 @@ namespace WVM::Unparser {
 	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, const VM *vm) {
 		std::string coloredImm;
 		if (vm && flags == int(Flags::KnownSymbol)) {
-			for (const std::pair<std::string, Symbol> pair: vm->symbolTable) {
-				if (pair.second.location == immediate) {
-					coloredImm = immColor + pair.first + "\e[39m";
-					break;
-				}
-			}
+			const std::string symbol = getSymbol(immediate, *vm);
+			if (!symbol.empty())
+				coloredImm = immColor + symbol + "\e[39m";
 		}
 		if (coloredImm.empty())
 			coloredImm = colorNum(immediate);
@@ -246,12 +243,9 @@ namespace WVM::Unparser {
 	const VM *vm) {
 		std::string coloredAddress;
 		if (vm && flags == static_cast<int>(Flags::KnownSymbol)) {
-			for (const std::pair<const std::string, Symbol> &pair: vm->symbolTable) {
-				if (pair.second.location == address) {
-					coloredAddress = immColor + pair.first + "\e[39m";
-					break;
-				}
-			}
+			const std::string symbol = getSymbol(address, *vm);
+			if (!symbol.empty())
+				coloredAddress = immColor + symbol + "\e[39m";
 		}
 		if (coloredAddress.empty())
 			coloredAddress = colorNum(address);
@@ -316,5 +310,24 @@ namespace WVM::Unparser {
 
 	std::string colorOper(const std::string &oper) {
 		return "\e[1m" + oper + "\e[22m";
+	}
+
+	std::string getSymbol(Word location, const VM &vm) {
+		for (const auto &[name, symbol]: vm.symbolTable) {
+			Word address = symbol.location;
+			switch (symbol.type) {
+				case SymbolEnum::Data:
+					address += vm.dataOffset;
+					break;
+				case SymbolEnum::Code:
+					address += vm.codeOffset;
+					break;
+				default:
+					break;
+			}
+			if (location == address)
+				return name;
+		}
+		return {};
 	}
 }
