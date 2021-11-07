@@ -25,9 +25,7 @@
 				<li><a href="#dir-size"><code>%size</code></a></li>
 				<li><a href="#dir-string"><code>%string</code></a></li>
 				<li><a href="#dir-stringz"><code>%stringz</code></a></li>
-				<li>
-					<a href="#dir-value"><code>%8b, %4b, %2b, %1b</code></a>
-				</li>
+				<li><a href="#dir-value"><code>%8b, %4b, %2b, %1b</code></a></li>
 				<li><a href="#dir-align"><code>%align</code></a></li>
 				<li><a href="#dir-fill"><code>%fill</code></a></li>
 			</ol>
@@ -323,11 +321,6 @@ The data section contains read/write data. Data is added using directives.
 ## <a name="prog-symtab"></a>Symbol Table Section
 The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise the symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second word represents the symbol's offset (its position relative to the start of the section containing it). The third word is the length of what the symbol points to (for functions, this will generally be eight times the number of instructions in the function). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
-## <a name="prog-reloc"></a>Relocation Data Section
-Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
-
-The upper 62 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table, while the lowest two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` is invalid. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the value relative to the start of the code section.
-
 ## <a name="prog-debug"></a>Debug Data Section
 The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
 
@@ -340,6 +333,11 @@ An entry with type `2` declares a function name. It uses the same format as a ty
 An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2` entry. The final eight bytes indicate the address of an instruction.
 
 The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3` instruction, two type `3` entries would be generated for the template with index 2.
+
+## <a name="prog-reloc"></a>Relocation Data Section
+Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
+
+The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table, while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` is invalid. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the value relative to the start of the code section.
 
 ### Assembly syntax
 <pre>

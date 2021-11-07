@@ -29,20 +29,25 @@ namespace Wasmc {
 	template <typename T>
 	using StringPtrMap = std::map<const std::string *, T, StringPtrCompare>;
 
-	struct RelocationData {
-		RelocationType type: 2;
-		ssize_t symbolIndex: 62;
-		long offset: 64;
-		long sectionOffset: 64;
-		/** The section in which the relocation will occur, not the section in which the label is defined. */
-		Section *section;
-		const std::string *label;
-		std::vector<Long> encode() const;
-		RelocationData(RelocationType type_, size_t symbol_index, long offset_, long section_offset,
-		Section *section_ = nullptr, const std::string *label_ = nullptr):
-			type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset), section(section_),
-			label(label_) {}
-		bool operator==(const RelocationData &other) const;
+	class RelocationData {
+		private:
+			RelocationData() = default;
+
+		public:
+			bool isData: 1;
+			RelocationType type: 2;
+			ssize_t symbolIndex: 61;
+			long offset: 64;
+			long sectionOffset: 64;
+			/** The section in which the relocation will occur, not the section in which the label is defined. */
+			Section *section = nullptr;
+			const std::string *label = nullptr;
+			std::vector<Long> encode() const;
+			RelocationData(bool is_data, RelocationType type_, size_t symbol_index, long offset_, long section_offset,
+			Section *section_ = nullptr, const std::string *label_ = nullptr):
+				isData(is_data), type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset),
+				section(section_), label(label_) {}
+			bool operator==(const RelocationData &other) const;
 	} __attribute__((packed));
 
 	struct Offsets {
