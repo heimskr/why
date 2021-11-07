@@ -131,7 +131,7 @@ namespace Wasmc {
 
 			Section * getSection(const std::string *);
 
-			void relocateCode();
+			void applyRelocation();
 
 			size_t getOffset(Section &) const;
 

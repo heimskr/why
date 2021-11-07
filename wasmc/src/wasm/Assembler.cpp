@@ -39,11 +39,9 @@ namespace Wasmc {
 		encodeRelocation();
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
 		updateSymbolTable(allLabels);
-		relocateCode();
+		applyRelocation();
 		createDebugData(debugNode);
 		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
-
-		std::cerr << "relocation|" << relocation.size() << "|\n";
 
 		if (can_warn && 0 < unknownSymbols.size()) {
 			std::cerr << "\e[2m[\e[22;1;33m?\e[22;39;2m]\e[22m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s")
@@ -358,7 +356,7 @@ namespace Wasmc {
 		}
 	}
 
-	void Assembler::relocateCode() {
+	void Assembler::applyRelocation() {
 		processRelocation();
 
 		for (const auto &[node, reloc]: relocationMap) {
@@ -516,11 +514,7 @@ namespace Wasmc {
 				}
 			}
 
-			Long address = 0;
-			if (offsets.count(label) != 0)
-				address = offsets.at(label);
-
-			SymbolTableEntry entry(encodeSymbol(label), address, type);
+			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);
 			symbols.appendAll(entry.encode(*label));
 			if (symbolTableIndices.count(label) != 0)
 				symbolTableIndices.erase(label);
