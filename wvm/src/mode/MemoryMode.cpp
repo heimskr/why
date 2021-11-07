@@ -263,9 +263,9 @@ namespace WVM::Mode {
 	void MemoryMode::makeSymbolTableEdges() {
 		symbolTableEdges.clear();
 		symbolTableEdges.insert(vm.symbolsOffset);
-		for (Word i = vm.symbolsOffset; i < vm.codeOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
+		for (Word i = vm.symbolsOffset; i < vm.debugOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
 			i += 16 + 8 * vm.getQuarterword(i, Endianness::Little);
-			if (i < vm.codeOffset)
+			if (i < vm.debugOffset)
 				symbolTableEdges.insert(i);
 		}
 	}

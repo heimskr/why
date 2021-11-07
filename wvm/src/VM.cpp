@@ -687,7 +687,7 @@ namespace WVM {
 
 	void VM::loadSymbols() {
 		symbolTable.clear();
-		for (Word i = symbolsOffset; i < codeOffset && size_t(i + 16) < memorySize;) {
+		for (Word i = symbolsOffset; i < debugOffset && size_t(i + 16) < memorySize;) {
 			const HWord length = getQuarterword(i, Endianness::Little);
 			const HWord hash = getHalfword(i + 4, Endianness::Little);
 			const Word location = getWord(i + 8, Endianness::Little);

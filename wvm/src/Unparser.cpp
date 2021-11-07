@@ -177,7 +177,7 @@ namespace WVM::Unparser {
 
 	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, const VM *vm) {
 		std::string coloredImm;
-		if (vm && flags == static_cast<int>(Flags::KnownSymbol)) {
+		if (vm && flags == int(Flags::KnownSymbol)) {
 			for (const std::pair<std::string, Symbol> pair: vm->symbolTable) {
 				if (pair.second.location == immediate) {
 					coloredImm = immColor + pair.first + "\e[39m";
