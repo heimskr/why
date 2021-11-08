@@ -36,8 +36,11 @@ namespace Wasmc {
 		public:
 			bool isData: 1;
 			RelocationType type: 2;
+			/** The index in the symbol table of the symbol to use for the relocation. */
 			ssize_t symbolIndex: 61;
+			/** The offset to apply to the symbol's address. */
 			long offset: 64;
+			/** The offset of the value to relocate within its section. */
 			long sectionOffset: 64;
 			/** The section in which the relocation will occur, not the section in which the label is defined. */
 			Section *section = nullptr;
@@ -51,10 +54,10 @@ namespace Wasmc {
 	} __attribute__((packed));
 
 	struct Offsets {
-		Long symbolTable = 0, code = 0, data = 0, debug = 0, end = 0;
+		Long code = 0, data = 0, symbolTable = 0, debug = 0, relocation = 0, end = 0;
 		Offsets() = default;
-		Offsets(Long symbol_table, Long code_, Long data_, Long debug_, Long end_):
-			symbolTable(symbol_table), code(code_), data(data_), debug(debug_), end(end_) {}
+		Offsets(Long code_, Long data_, Long symbol_table, Long debug_, Long relocation_, Long end_):
+			code(code_), data(data_), symbolTable(symbol_table), debug(debug_), relocation(relocation_), end(end_) {}
 	};
 
 	struct AnyBase {

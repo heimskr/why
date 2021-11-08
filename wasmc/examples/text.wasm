@@ -1,7 +1,7 @@
 #meta
 name: "Text Section Test"
 author: "Kai Tamkun"
-version: "1.0"
+version: "1.1"
 orcid: "0000-0001-7405-6654"
 
 #text
@@ -20,6 +20,8 @@ orcid: "0000-0001-7405-6654"
 %8b probably_four-message
 %4b .-probably_four
 %8b probably_four - 1
+@from_text2
+%8b text2_data + 4
 
 %code
 
@@ -32,6 +34,9 @@ orcid: "0000-0001-7405-6654"
 	%1b 0
 	%align 8
 	:: strprint
+	[from_text2] -> $t0
+	<prx $t0>
+	:: text2_code
 	<halt>
 
 %type main function

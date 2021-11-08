@@ -49,11 +49,13 @@ int main(int argc, char **argv) {
 		const Long parsed = Util::parseUlong(combined);
 		Long highest = 0;
 		std::string highest_name, highest_original;
-		for (const auto &[name, symbol]: parser->symbols)
+		for (const auto &[name, index]: parser->symbolIndices) {
+			const auto &symbol = parser->symbols.at(index);
 			if (symbol.address <= parsed && highest < symbol.address) {
 				highest = symbol.address;
 				highest_original = highest_name = name;
 			}
+		}
 		if (highest == 0) {
 			std::cout << "No symbol found for address " << parsed << ".\n";
 		} else {

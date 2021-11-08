@@ -11,11 +11,13 @@
 namespace Wasmc {
 	class BinaryParser {
 		public:
-			std::vector<Long> raw, rawMeta, rawSymbols, rawCode, rawData, rawDebugData;
+			std::vector<Long> raw, rawMeta, rawCode, rawData, rawSymbols, rawDebugData, rawRelocation;
 			std::string name, version, author, orcid;
-			SymbolTable symbols;
+			std::vector<SymbolTableEntry> symbols;
+			std::map<std::string, size_t> symbolIndices;
 			std::vector<std::unique_ptr<AnyBase>> code;
 			std::vector<std::shared_ptr<DebugEntry>> debugData;
+			std::vector<RelocationData> relocationData;
 			Offsets offsets;
 
 			BinaryParser() = delete;
@@ -39,18 +41,21 @@ namespace Wasmc {
 			Long getCodeLength() const;
 			Long getDataLength() const;
 			Long getDebugLength() const;
+			Long getRelocationLength() const;
 
 			Long getMetaOffset() const;
-			Long getSymbolTableOffset() const;
 			Long getCodeOffset() const;
 			Long getDataOffset() const;
+			Long getSymbolTableOffset() const;
 			Long getDebugOffset() const;
+			Long getRelocationOffset() const;
 			Long getEndOffset() const;
 
 		private:
 			std::vector<Long> slice(size_t begin, size_t end);
-			SymbolTable getSymbols() const;
+			void extractSymbols();
 			std::vector<std::shared_ptr<DebugEntry>> getDebugData() const;
+			std::vector<RelocationData> getRelocationData() const;
 
 			static std::string toString(Long);
 	};

@@ -34,9 +34,10 @@ namespace Wasmc {
 
 			static void repointerize(const SymbolTable &, std::vector<Long> &combined);
 
-			static std::unordered_map<std::string, SymbolType> collectSymbolTypes(const Offsets &, const SymbolTable &);
+			static std::unordered_map<std::string, SymbolType>
+			collectSymbolTypes(const Offsets &, const std::vector<SymbolTableEntry> &);
 
-			static SymbolType getSymbolType(const Offsets &, const SymbolTable &, const std::string &symbol);
+			static SymbolType getSymbolType(const Offsets &, Long);
 
 			static void desymbolize(std::vector<Long> &, const Offsets &, const SymbolTable &);
 
@@ -46,11 +47,12 @@ namespace Wasmc {
 
 			static size_t countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &);
 
-			static void detectSymbolCollisions(const SymbolTable &, const SymbolTable &);
+			static void
+			detectSymbolCollisions(const std::map<std::string, size_t> &, const std::map<std::string, size_t> &);
 
 			static std::vector<Long> encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &);
 
-			static std::vector<Long> encodeSymbolTable(const SymbolTable &);
+			static std::vector<Long> encodeSymbolTable(const std::vector<SymbolTableEntry> &);
 
 			static void resymbolize(std::vector<Long> &, const SymbolTable &);
 	};

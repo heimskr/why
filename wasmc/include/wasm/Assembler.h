@@ -52,6 +52,8 @@ namespace Wasmc {
 
 			static Long compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition);
 
+			static uint32_t encodeSymbol(const std::string &);
+
 		private:
 			static size_t assemblerCount;
 
@@ -153,8 +155,6 @@ namespace Wasmc {
 			void updateSymbolTable(StringPtrSet labels);
 
 			uint32_t encodeSymbol(const std::string *);
-
-			static uint32_t encodeSymbol(const std::string &);
 
 			/** Clears the output bytes, resets the counter to 0, adds the metadata section and sets the symbol table
 			 *  offset. */

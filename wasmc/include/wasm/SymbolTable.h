@@ -1,7 +1,7 @@
 #pragma once
 
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "util/Hash.h"
@@ -12,11 +12,15 @@ namespace Wasmc {
 		uint32_t id;
 		Long address;
 		SymbolEnum type;
-		SymbolTableEntry(uint32_t id_, Long address_, SymbolEnum type_): id(id_), address(address_), type(type_) {}
+		std::string label;
+		SymbolTableEntry(uint32_t id_, Long address_, SymbolEnum type_);
+		SymbolTableEntry(const std::string &label_, Long address_, SymbolEnum type_);
+		SymbolTableEntry(uint32_t id_, const std::string &label_, Long address_, SymbolEnum type_);
 		std::vector<Long> encode(const std::string &name) const;
+		std::vector<Long> encode() const;
 	};
 
-	using SymbolTable = std::unordered_map<std::string, SymbolTableEntry>;
+	using SymbolTable = std::map<std::string, SymbolTableEntry>;
 }
 
 namespace std {

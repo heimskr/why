@@ -24,7 +24,10 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
-	std::map<std::string, SymbolTableEntry> ordered(parser->symbols.cbegin(), parser->symbols.cend());
+	std::map<std::string, SymbolTableEntry> ordered;
+	
+	for (auto &[name, index]: parser->symbolIndices)
+		ordered.emplace(name, parser->symbols.at(index));
 
 	for (const auto &[name, entry]: ordered) {
 		if (!any) {

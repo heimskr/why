@@ -89,84 +89,105 @@ namespace Wasmc {
 
 		// Step 2
 		const size_t meta_length = main_parser.getMetaLength();
-		const SymbolTable &main_symbols = main_parser.symbols;
-		SymbolTable combined_symbols = main_symbols;
+		const std::vector<SymbolTableEntry> &main_symbols = main_parser.symbols;
+		std::vector<SymbolTableEntry> combined_symbols = main_symbols;
+		std::map<std::string, size_t> combined_symbol_indices = main_parser.symbolIndices;
 		std::vector<Long> combined_code = main_parser.rawCode;
 		std::vector<Long> combined_data = main_parser.rawData;
-		depointerize(combined_symbols, combined_data, main_parser.offsets.data);
+		// depointerize(combined_symbols, combined_data, main_parser.offsets.data);
 		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
+		std::vector<RelocationData> combined_relocation = main_parser.relocationData;
 		std::unordered_map<std::string, SymbolType> symbol_types =
 			collectSymbolTypes(main_parser.offsets, combined_symbols);
 		const size_t symbol_table_length = main_parser.rawSymbols.size();
 
-		desymbolize(combined_code, main_parser.offsets, main_symbols);
+		// desymbolize(combined_code, main_parser.offsets, main_symbols);
 
+		// Step 3
 		size_t extra_symbol_length = symbol_table_length * 8;
 		size_t extra_code_length = main_parser.getCodeLength();
 		size_t extra_data_length = main_parser.getDataLength();
 		size_t extra_debug_length = countStringTypes(combined_debug);
+		size_t extra_relocation_length = main_parser.getRelocationLength();
 
+		// Step 4
 		for (const std::vector<Long> &unit: subunits) {
+			// Open the included binary
 			BinaryParser subparser(unit);
 			subparser.parse();
 
 			std::vector<Long> &subcode = subparser.rawCode;
 			std::vector<Long> &subdata = subparser.rawData;
-			SymbolTable &subtable = subparser.symbols;
-			depointerize(subtable, subdata, subparser.offsets.data);
+			std::vector<SymbolTableEntry> &subtable = subparser.symbols;
+			std::map<std::string, size_t> &subindices = subparser.symbolIndices;
+			std::vector<RelocationData> &subrelocation = subparser.relocationData;
+			// depointerize(subtable, subdata, subparser.offsets.data);
 			const size_t subcode_length = subparser.getCodeLength();
 			const size_t subdata_length = subparser.getDataLength();
 			size_t subtable_length = subparser.rawSymbols.size();
+			const size_t subrelocation_length = subparser.getRelocationLength();
 			std::vector<std::shared_ptr<Wasmc::DebugEntry>> &subdebug = subparser.debugData;
-			if (subtable.count(".end") != 0) {
-				subtable.erase(".end");
+			if (subindices.count(".end") != 0) {
+				subtable.erase(subtable.begin() + subindices.at(".end"));
+				subindices.erase(".end");
 				subtable_length -= 3;
 			}
 
-			detectSymbolCollisions(combined_symbols, subtable);
+			detectSymbolCollisions(combined_symbol_indices, subindices);
 
-			const size_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
+			const ssize_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
 
-			desymbolize(subcode, subparser.offsets, subtable);
+			// desymbolize(subcode, subparser.offsets, subtable);
 
-			for (auto &[symbol, entry]: subtable) {
-				const SymbolType type = getSymbolType(subparser.offsets, subtable, symbol);
+			for (auto &[symbol, index]: subindices) {
+				auto &entry = subtable.at(index);
+				const SymbolType type = getSymbolType(subparser.offsets, entry.address);
 				if (type == SymbolType::Function || type == SymbolType::Instruction)
-					entry.address += extra_symbol_length + extra_code_length + meta_difference - 24;
+					// For each code symbol in the included symbol table, increase its address
+					entry.address += meta_difference + extra_code_length;
 				else if (type == SymbolType::Object)
-					entry.address += extra_symbol_length + extra_code_length + extra_data_length + meta_difference - 24;
+					// For each data symbol in the included symbol table, increase its address
+					entry.address += meta_difference + extra_code_length + extra_data_length;
 				else if (symbol != ".end")
 					throw std::runtime_error("Encountered symbol \"" + symbol + "\" of unknown type");
 				symbol_types[symbol] = type;
 			}
 
-			for (auto &[symbol, entry]: combined_symbols) {
-				const SymbolType type = symbol_types.at(symbol);
-				if (type == SymbolType::Function || type == SymbolType::Instruction)
-					entry.address += subtable_length * 8;
-				else if (type == SymbolType::Object || symbol == ".end") // TODO: is `symbol == ".end"` correct?
-					entry.address += subtable_length * 8 + subcode_length;
+			for (auto &[symbol, index]: combined_symbol_indices) {
+				auto &entry = combined_symbols.at(index);
+				if (symbol_types.at(symbol) == SymbolType::Object)
+					entry.address += subcode_length;
 			}
 
-			for (auto &entry: combined_debug)
-				if (entry->getType() == DebugEntry::Type::Location) {
-					DebugLocation *location = static_cast<DebugLocation *>(entry.get());
-					if (location->address)
-						location->address += subtable_length * 8;
-				}
+			// for (auto &entry: combined_debug)
+			// 	if (entry->getType() == DebugEntry::Type::Location) {
+			// 		DebugLocation *location = static_cast<DebugLocation *>(entry.get());
+			// 		if (location->address)
+			// 			location->address += subtable_length * 8;
+			// 	}
 
 			for (auto &entry: subdebug)
 				if (entry->getType() == DebugEntry::Type::Location) {
 					DebugLocation *location = static_cast<DebugLocation *>(entry.get());
 					if (location->address)
-						location->address += extra_symbol_length + extra_code_length + meta_difference - 24;
+						location->address += meta_difference + extra_code_length;
 					location->fileIndex += extra_debug_length;
 					location->functionIndex += extra_debug_length;
 				}
 
+			for (auto &entry: subrelocation) {
+				if (entry.isData)
+					entry.sectionOffset += extra_data_length;
+				else
+					entry.sectionOffset += extra_code_length;
+				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
+				combined_relocation.emplace_back(std::move(entry));
+			}
+
 			extra_symbol_length += subtable_length * 8;
 			extra_code_length += subcode_length;
 			extra_data_length += subdata_length;
+			extra_relocation_length += subrelocation_length;
 
 			std::vector<std::shared_ptr<DebugEntry>> types1and2;
 			Util::filter(subdebug, types1and2, [](const std::shared_ptr<DebugEntry> &entry) {
@@ -176,11 +197,14 @@ namespace Wasmc {
 
 			extra_debug_length += types1and2.size();
 
-			for (const auto &[key, value]: subtable)
-				if (combined_symbols.count(key) == 0)
-					combined_symbols.try_emplace(key, value);
-				else
-					combined_symbols.at(key) = value;
+			for (const auto &[key, index]: subindices) {
+				const auto &entry = subtable.at(index);
+				if (combined_symbol_indices.count(key) == 0) {
+					combined_symbol_indices.try_emplace(key, combined_symbols.size());
+					combined_symbols.emplace_back(entry);
+				} else
+					combined_symbols.at(combined_symbol_indices.at(key)) = entry;
+			}
 
 			for (const Long piece: subcode)
 				combined_code.push_back(piece);
@@ -196,33 +220,48 @@ namespace Wasmc {
 					combined_debug.push_back(entry);
 		}
 
-		if (combined_symbols.count(".end") == 0)
-			combined_symbols.try_emplace(".end", Assembler::encodeSymbol(".end"), 0, SymbolEnum::Unknown);
+		if (combined_symbol_indices.count(".end") == 0) {
+			combined_symbol_indices.try_emplace(".end", combined_symbols.size());
+			combined_symbols.emplace_back(".end", 0, SymbolEnum::Unknown);
+		}
+
+		for (auto &entry: combined_relocation) {
+			entry.symbolIndex = combined_symbol_indices.at(*entry.label);
+			// TODO!: apply relocation
+			if (entry.isData) {
+				
+			} else {
+
+			}
+		}
+
 
 		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
-		combined_symbols.at(".end").address = 8 * (main_parser.rawMeta.size()
+		combined_symbols.at(combined_symbol_indices.at(".end")).address = 8 * (main_parser.rawMeta.size()
 			+ encodeSymbolTable(combined_symbols).size() + combined_code.size() + combined_data.size()
 			+ encoded_debug.size());
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
 		const size_t code_offset = (encoded_combined_symbols.size() - symbol_table_length) * 8;
+		const std::vector<Long> encoded_relocation; // TODO!
 
-		resymbolize(combined_code, combined_symbols);
+		// resymbolize(combined_code, combined_symbols);
 
 		std::vector<Long> &meta = main_parser.rawMeta;
-		meta.at(1) += code_offset;
-		meta.at(2) = meta.at(1) + combined_code.size() * 8;
-		meta.at(3) = meta.at(2) + combined_data.size() * 8;
+		meta.at(1) = meta.at(0) + combined_code.size() * 8;
+		meta.at(2) = meta.at(1) + combined_data.size() * 8;
+		meta.at(3) = meta.at(2) + encoded_combined_symbols.size() * 8;
 		meta.at(4) = meta.at(3) + encoded_debug.size() * 8;
+		meta.at(5) = meta.at(4) + encoded_relocation.size() * 8;
 
 		linked.clear();
-		for (const auto &longs: {meta, encoded_combined_symbols, combined_code, combined_data, encoded_debug})
+		for (const auto &longs: {meta, combined_code, combined_data, encoded_combined_symbols, encoded_debug,
+		                         encoded_relocation})
 			for (const Long piece: longs)
 				linked.push_back(piece);
 
-		repointerize(combined_symbols, linked);
+		// repointerize(combined_symbols, linked);
 
-		// return Assembler::stringify(linked);
-		return Assembler::stringify({});
+		return Assembler::stringify(linked);
 	}
 
 	void Linker::depointerize(const SymbolTable &table, std::vector<Long> &data, Long data_offset) {
@@ -262,15 +301,14 @@ namespace Wasmc {
 	}
 
 	std::unordered_map<std::string, SymbolType>
-	Linker::collectSymbolTypes(const Offsets &offsets, const SymbolTable &table) {
+	Linker::collectSymbolTypes(const Offsets &offsets, const std::vector<SymbolTableEntry> &table) {
 		std::unordered_map<std::string, SymbolType> out;
-		for (const auto &[key, value]: table)
-			out[key] = getSymbolType(offsets, table, key);
+		for (const SymbolTableEntry &entry: table)
+			out[entry.label] = getSymbolType(offsets, entry.address);
 		return out;
 	}
 
-	SymbolType Linker::getSymbolType(const Offsets &offsets, const SymbolTable &table, const std::string &symbol) {
-		const auto address = table.at(symbol).address;
+	SymbolType Linker::getSymbolType(const Offsets &offsets, Long address) {
 		if (offsets.code <= address && address < offsets.data)
 			return SymbolType::Instruction;
 		if (offsets.data <= address && address < offsets.debug)
@@ -330,7 +368,8 @@ namespace Wasmc {
 		return out;
 	}
 
-	void Linker::detectSymbolCollisions(const SymbolTable &one, const SymbolTable &two) {
+	void
+	Linker::detectSymbolCollisions(const std::map<std::string, size_t> &one, const std::map<std::string, size_t> &two) {
 		for (const auto &[key, value]: one)
 			if (key != ".end" && two.count(key) != 0)
 				throw std::runtime_error("Encountered a symbol collision: \"" + key + "\"");
@@ -389,14 +428,16 @@ namespace Wasmc {
 		return out;
 	}
 
-	std::vector<Long> Linker::encodeSymbolTable(const SymbolTable &table) {
+	std::vector<Long> Linker::encodeSymbolTable(const std::vector<SymbolTableEntry> &table) {
 		std::vector<Long> out;
 
-		for (const auto &[symbol, entry]: table) {
-			out.push_back((static_cast<uint64_t>(Assembler::encodeSymbol(symbol)) << 32)
-				| (Util::updiv(symbol.size(), size_t(8)) & 0xffff) | (size_t(entry.type) << 16));
+		for (const auto &entry: table) {
+			if (entry.label.empty())
+				throw std::runtime_error("Symbol table entry is missing a label in Linker::encodeSymbolTable");
+			out.push_back((static_cast<uint64_t>(entry.id) << 32)
+				| (Util::updiv(entry.label.size(), size_t(8)) & 0xffff) | (size_t(entry.type) << 16));
 			out.push_back(entry.address);
-			for (const Long piece: Util::getLongs(symbol))
+			for (const Long piece: Util::getLongs(entry.label))
 				out.push_back(piece);
 		}
 
