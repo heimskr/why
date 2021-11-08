@@ -183,7 +183,7 @@ namespace Wasmc {
 		symbols.clear();
 		symbolIndices.clear();
 
-		const size_t end = getCodeOffset() / 8;
+		const size_t end = getDebugOffset() / 8;
 
 		for (size_t i = getSymbolTableOffset() / 8, j = 0; i < end && j < MAX_SYMBOLS; ++j) {
 			const uint32_t id = raw[i] >> 32;
@@ -211,6 +211,8 @@ namespace Wasmc {
 				}
 			}
 
+			std::cerr << "extractSymbols: " << symbol_name << ".type[" << int(type) << "]\n";
+
 			symbolIndices.try_emplace(symbol_name, symbols.size());
 			symbols.emplace_back(id, symbol_name, address, type);
 			i += 2 + length;
@@ -220,7 +222,8 @@ namespace Wasmc {
 	std::vector<std::shared_ptr<DebugEntry>> BinaryParser::getDebugData() const {
 		std::vector<std::shared_ptr<DebugEntry>> out;
 
-		const size_t start = offsets.debug / 8, end = offsets.end / 8;
+		const size_t start = offsets.debug / 8, end = offsets.relocation / 8;
+		std::cerr << "BinaryParser::getDebugData(): start[" << start << "], end[" << end << "]\n";
 		Long piece;
 		const auto get = [&piece](unsigned char index) -> size_t {
 			return (piece >> (8 * index)) & 0xff;
@@ -270,6 +273,7 @@ namespace Wasmc {
 			data.symbolIndex = rawRelocation[i] >> 3;
 			data.offset = rawRelocation[i + 1];
 			data.sectionOffset = rawRelocation[i + 2];
+			std::cerr << "data.symbolIndex[" << data.symbolIndex << "], symbols.size[" << symbols.size() << "]\n";
 			out.emplace_back(data);
 		}
 

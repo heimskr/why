@@ -266,9 +266,17 @@ namespace Wasmc {
 				return evaluate(node->at(0), assembler, counter) % divisor;
 			}
 			case WASMTOK_IDENT:
-				return assembler.offsets.at(node->lexerInfo);
+				try {
+					return assembler.offsets.at(node->lexerInfo);
+				} catch (const std::out_of_range &) {
+					throw SymbolNotFound(*node->lexerInfo);
+				}
 			case WASMTOK_STRING:
-				return assembler.offsets.at(node->extracted());
+				try {
+					return assembler.offsets.at(node->extracted());
+				} catch (const std::out_of_range &) {
+					throw SymbolNotFound(*node->extracted());
+				}
 			case WASMTOK_NUMBER:
 				return node->atoi();
 			case WASMTOK_DOT:

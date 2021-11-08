@@ -128,12 +128,16 @@ namespace Wasmc {
 			const size_t subrelocation_length = subparser.getRelocationLength();
 			std::vector<std::shared_ptr<Wasmc::DebugEntry>> &subdebug = subparser.debugData;
 			if (subindices.count(".end") != 0) {
+				const size_t end_index = subindices.at(".end");
 				subtable.erase(subtable.begin() + subindices.at(".end"));
 				subindices.erase(".end");
+				for (auto &[key, index]: subindices)
+					if (end_index <= index)
+						--index;
 				subtable_length -= 3;
 			}
 
-			detectSymbolCollisions(combined_symbol_indices, subindices);
+			detectSymbolCollisions(combined_symbol_indices, subindices, combined_symbols, subtable);
 
 			const ssize_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
 
@@ -148,8 +152,6 @@ namespace Wasmc {
 				else if (type == SymbolType::Object)
 					// For each data symbol in the included symbol table, increase its address
 					entry.address += meta_difference + extra_code_length + extra_data_length;
-				else if (symbol != ".end")
-					throw std::runtime_error("Encountered symbol \"" + symbol + "\" of unknown type");
 				symbol_types[symbol] = type;
 			}
 
@@ -368,11 +370,27 @@ namespace Wasmc {
 		return out;
 	}
 
-	void
-	Linker::detectSymbolCollisions(const std::map<std::string, size_t> &one, const std::map<std::string, size_t> &two) {
-		for (const auto &[key, value]: one)
-			if (key != ".end" && two.count(key) != 0)
+	void Linker::detectSymbolCollisions(const std::map<std::string, size_t> &one_indices,
+	                                    const std::map<std::string, size_t> &two_indices,
+	                                    const std::vector<SymbolTableEntry> &one_table,
+	                                    const std::vector<SymbolTableEntry> &two_table) {
+		for (const auto &[key, value]: one_indices) {
+			if (key != ".end" && two_indices.count(key) != 0) {
+				const auto &first = one_table.at(value);
+				const auto &second = two_table.at(two_indices.at(key));
+				if (first.type == SymbolEnum::Unknown || second.type == SymbolEnum::Unknown) {
+					// Not a collision if one of the symbol tables includes it only for relocation purposes.
+					continue;
+				}
+				std::cerr << "key[" << key << "], type1[" << int(first.type) << "], type2[" << int(second.type) << ":" << second.label << "]\n";
+				std::cerr << "Second {\n";
+				for (const auto &[key2, index2]: two_indices) {
+					std::cerr << "\t" << key2 << " => " << int(two_table.at(index2).type) << "\n";
+				}
+				std::cerr << "}\n";
 				throw std::runtime_error("Encountered a symbol collision: \"" + key + "\"");
+			}
+		}
 	}
 
 	std::vector<Long> Linker::encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &debug) {

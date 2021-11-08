@@ -170,7 +170,11 @@ namespace Wasmc {
 
 		for (auto &[node, reloc]: relocationMap)
 			if (const auto *directive = dynamic_cast<const ValueDirective *>(node))
-				reloc.offset = directive->expression->evaluate(*this);
+				try {
+					reloc.offset = directive->expression->evaluate(*this);
+				} catch (const SymbolNotFound &err) {
+					unknownSymbols.insert(StringSet::intern(err.symbol));
+				}
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -515,6 +519,11 @@ namespace Wasmc {
 						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
 							std::to_string(unsigned(specified_type)));
 				}
+			}
+
+			if (unknownSymbols.count(label) != 0) {
+				std::cerr << "Setting type of " << *label << " to UnknownPointer\n";
+				type = SymbolEnum::Unknown;
 			}
 
 			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);

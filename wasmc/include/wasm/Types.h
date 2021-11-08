@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 #include "parser/Enums.h"
@@ -17,6 +18,12 @@ namespace Wasmc {
 	enum class SymbolType {Unknown, Other, Function, Object, Instruction};
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol};
 	enum class RelocationType: unsigned {Full = 0, Invalid, Lower4, Upper4};
+
+	struct SymbolNotFound: std::runtime_error {
+		const std::string symbol;
+		SymbolNotFound(const std::string &symbol_):
+			std::runtime_error("Symbol not found: \"" + symbol_ + "\""), symbol(symbol_) {}
+	};
 
 	struct StringPtrCompare {
 		bool operator()(const std::string *left, const std::string *right) const {
