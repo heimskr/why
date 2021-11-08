@@ -173,13 +173,16 @@ namespace Wasmc {
 				reloc.offset = directive->expression->evaluate(*this);
 	}
 
-	std::string Assembler::stringify(const std::vector<uint8_t> &bytes) {
+	std::string Assembler::stringify(const std::vector<Long> &longs) {
 		std::stringstream ss;
-		size_t count = 0;
-		for (uint8_t byte: bytes) {
-			ss << std::hex << std::right << std::setw(2) << std::setfill('0') << int(byte);
-			if (++count % 8 == 0)
-				ss << '\n';
+		bool first = true;
+		for (Long piece: longs) {
+			if (first)
+				first = false;
+			else
+				ss << "\n";
+			for (int i = 0; i < 8; ++i)
+				ss << std::hex << std::right << std::setw(2) << std::setfill('0') << ((piece >> (8 * i)) & 0xff);
 		}
 		return ss.str();
 	}

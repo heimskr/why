@@ -58,14 +58,26 @@ namespace Wasmc {
 		return bytes.size();
 	}
 
-	std::vector<Section::ValueType> Section::combine(std::initializer_list<std::reference_wrapper<Section>> list) {
-		std::vector<Section::ValueType> out;
+	std::vector<Long> Section::combine(std::initializer_list<std::reference_wrapper<Section>> list) {
+		std::vector<Long> out;
 		size_t to_reserve = 0;
-		for (const Section &section: list)
-			to_reserve += section.size();
+		for (Section &section: list) {
+			if (section.size() % 8 != 0)
+				throw std::invalid_argument("Section " + section.name + " has a size not divisible by eight: " +
+					std::to_string(section.size()));
+			to_reserve += section.size() / 8;
+		}
 		out.reserve(to_reserve);
 		for (Section &section: list)
-			out.insert(out.end(), section.bytes.begin(), section.bytes.end());
+			for (size_t i = 0, size = section.size(); i < size; i += 8)
+				out.push_back(Long(section.bytes[i])
+					| (Long(section.bytes[i + 1]) << 8)
+					| (Long(section.bytes[i + 2]) << 16)
+					| (Long(section.bytes[i + 3]) << 24)
+					| (Long(section.bytes[i + 4]) << 32)
+					| (Long(section.bytes[i + 5]) << 40)
+					| (Long(section.bytes[i + 6]) << 48)
+					| (Long(section.bytes[i + 7]) << 56));
 		return out;
 	}
 }

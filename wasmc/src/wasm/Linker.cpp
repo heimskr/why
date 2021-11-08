@@ -71,7 +71,7 @@ namespace Wasmc {
 			wasmParser.done();
 			Assembler assembler(root);
 			assembler.assemble();
-			// mainUnit = std::move(assembler.getAssembled());
+			mainUnit = std::move(assembler.concatenated);
 			for (const ASTNode *node: *root)
 				if (node->symbol == WASMTOK_INCLUDE_HEADER)
 					for (const ASTNode *sub: *node->front())
@@ -83,11 +83,12 @@ namespace Wasmc {
 		if (mainUnit.empty())
 			throw std::runtime_error("Can't link before any files are added");
 
+		// Step 1
 		BinaryParser main_parser(mainUnit);
 		main_parser.parse();
 
+		// Step 2
 		const size_t meta_length = main_parser.getMetaLength();
-
 		const SymbolTable &main_symbols = main_parser.symbols;
 		SymbolTable combined_symbols = main_symbols;
 		std::vector<Long> combined_code = main_parser.rawCode;

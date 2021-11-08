@@ -84,7 +84,7 @@ namespace Wasmc {
 
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
 
-			std::vector<uint8_t> concatenated;
+			std::vector<Long> concatenated;
 
 			bool verbose = false;
 
@@ -108,7 +108,7 @@ namespace Wasmc {
 
 			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 
-			static std::string stringify(const std::vector<uint8_t> &);
+			static std::string stringify(const std::vector<Long> &);
 
 			Long compileInstruction(const WASMInstructionNode &);
 

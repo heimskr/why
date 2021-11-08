@@ -95,6 +95,7 @@ namespace Wasmc {
 
 		size_t size() const;
 
-		static std::vector<ValueType> combine(std::initializer_list<std::reference_wrapper<Section>>);
+		/** Ensures each Section's size is divisible by eight and combines them into a vector of Longs. */
+		static std::vector<Long> combine(std::initializer_list<std::reference_wrapper<Section>>);
 	};
 }
