@@ -23,3 +23,5 @@ orcid: "0000-0001-7405-6654"
 	:: strprint
 	] $rt
 	: $rt
+
+%type strprint function

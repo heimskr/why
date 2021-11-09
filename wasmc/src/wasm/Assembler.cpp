@@ -180,7 +180,23 @@ namespace Wasmc {
 					const std::string *label1 = nullptr, *label2 = nullptr;
 					directive->expression->validate(&label1, &label2);
 					if (label1 && !label2) {
-						SymbolTableEntry entry(*label1, 0, SymbolEnum::UnknownPointer);
+						if (symbolTypes.count(label1) == 0)
+							throw std::runtime_error("Symbol type needs to be explicitly defined for unknown symbol "
+								 + *label1);
+						SymbolEnum symbol_enum = SymbolEnum::Unknown;
+						switch (symbolTypes.at(label1)) {
+							case SymbolType::Function:
+							case SymbolType::Instruction:
+								symbol_enum = SymbolEnum::UnknownCode;
+								break;
+							case SymbolType::Object:
+								symbol_enum = SymbolEnum::UnknownData;
+								break;
+							default:
+								throw std::runtime_error("Explicitly defined type for " + *label1 + " must be function,"
+									" instruction or object");
+						}
+						SymbolTableEntry entry(*label1, 0, symbol_enum);
 						reloc.symbolIndex = symbolTableEntries.size();
 						symbolTableIndices.emplace(label1, symbolTableEntries.size());
 						symbolTableEntries.emplace_back(entry);
@@ -502,9 +518,6 @@ namespace Wasmc {
 					case SymbolType::Object:
 						type = SymbolEnum::Data;
 						break;
-					case SymbolType::Unknown:
-						type = SymbolEnum::UnknownPointer;
-						break;
 					default:
 						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
 							std::to_string(unsigned(specified_type)));
@@ -538,17 +551,11 @@ namespace Wasmc {
 					case SymbolType::Object:
 						type = SymbolEnum::Data;
 						break;
-					case SymbolType::Unknown:
-						type = SymbolEnum::UnknownPointer;
-						break;
 					default:
 						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
 							std::to_string(unsigned(specified_type)));
 				}
 			}
-
-			if (unknownSymbols.count(label) != 0)
-				type = SymbolEnum::UnknownPointer;
 
 			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);
 			symbols.appendAll(entry.encode(*label));
