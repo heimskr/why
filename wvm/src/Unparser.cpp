@@ -175,9 +175,9 @@ namespace WVM::Unparser {
 			+ Why::coloredRegister(rt) + " -> " + Why::coloredRegister(rd) + ", Funct[" + std::to_string(funct) + "]";
 	}
 
-	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, const VM *vm) {
+	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int, HWord immediate, const VM *vm) {
 		std::string coloredImm;
-		if (vm && flags == int(Flags::KnownSymbol)) {
+		if (vm) {
 			const std::string symbol = getSymbol(immediate, *vm);
 			if (!symbol.empty())
 				coloredImm = immColor + symbol + "\e[39m";
@@ -239,10 +239,9 @@ namespace WVM::Unparser {
 		return "I: Opcode[" + std::to_string(opcode) + "], " + color(rs) + " " + coloredImm + " -> " + color(rd);
 	}
 
-	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, int flags, HWord address,
-	const VM *vm) {
+	std::string stringifyJType(int opcode, int rs, bool link, Conditions conditions, int, HWord address, const VM *vm) {
 		std::string coloredAddress;
-		if (vm && flags == static_cast<int>(Flags::KnownSymbol)) {
+		if (vm) {
 			const std::string symbol = getSymbol(address, *vm);
 			if (!symbol.empty())
 				coloredAddress = immColor + symbol + "\e[39m";
