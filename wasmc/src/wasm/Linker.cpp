@@ -214,12 +214,17 @@ namespace Wasmc {
 			extra_debug_length += types1and2.size();
 
 			for (const auto &[key, index]: subindices) {
-				const auto &entry = subtable.at(index);
+				auto &entry = subtable.at(index);
 				if (combined_symbol_indices.count(key) == 0) {
 					combined_symbol_indices.try_emplace(key, combined_symbols.size());
 					combined_symbols.emplace_back(entry);
-				} else
-					combined_symbols.at(combined_symbol_indices.at(key)) = entry;
+				} else {
+					auto &existing = combined_symbols.at(combined_symbol_indices.at(key));
+					if (entry.type == SymbolEnum::UnknownPointer)
+						entry.type = existing.type;
+					else
+						existing = entry;
+				}
 			}
 
 			for (const Long piece: subcode)
@@ -295,8 +300,23 @@ namespace Wasmc {
 			}
 
 			const SymbolTableEntry &symbol = symbols.at(entry.symbolIndex);
-			const long new_value = (entry.isData? data_offset : code_offset) + symbol.address + entry.offset;
+			long new_value = symbol.address + entry.offset;
+			switch (symbol.type) {
+				case SymbolEnum::Code: new_value += code_offset; break;
+				case SymbolEnum::Data: new_value += data_offset; break;
+				case SymbolEnum::UnknownPointer:
+					// There's not really any reason to apply a relocation if the symbol is still unknown.
+					continue;
+				default:
+					throw std::runtime_error("Unhandled SymbolEnum encountered in Linker::applyRelocation: " +
+						std::to_string(int(symbol.type)));
+			}
 			auto &longs = entry.isData? data : code;
+			// const long address =
+			std::cerr << "Applying \e[32m" << *entry.label << "\e[39m: \e[1mnew_value\e[22m[\e[31m" << new_value
+			          << "\e[39m], \e[1moffset\e[22m[\e[33m" << entry.offset << "\e[39m] \e[35m@" << entry.sectionOffset
+			          << "\e[39m in \e[1m" << (entry.isData? "data" : "code") << "\e[22m, symbol.address["
+			          << symbol.address << "], symbol.type[" << int(symbol.type) << "]\n";
 			if (entry.sectionOffset % 8) {
 				// Pain.
 				Long &first = longs[entry.sectionOffset / 8], &second = longs[entry.sectionOffset / 8 + 1];
@@ -329,7 +349,8 @@ namespace Wasmc {
 					auto adjusted = Util::getLongs(bytes);
 					assert(adjusted.size() == 1);
 					value = adjusted.front();
-				}
+				} else
+					throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
 			}
 		}
 	}
