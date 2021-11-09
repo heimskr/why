@@ -131,6 +131,8 @@ namespace Wasmc {
 
 			void encodeRelocation();
 
+			void encodeSymbolTable();
+
 			Section * getSection(const std::string *);
 
 			void applyRelocation();
@@ -151,8 +153,6 @@ namespace Wasmc {
 
 			/** Clears the symbols section and fills it with a symbol table with addresses and types left blank. */
 			void createSymbolTableSkeleton(StringPtrSet labels);
-
-			void updateSymbolTable(StringPtrSet labels);
 
 			uint32_t encodeSymbol(const std::string *);
 

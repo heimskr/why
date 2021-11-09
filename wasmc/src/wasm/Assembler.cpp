@@ -39,7 +39,7 @@ namespace Wasmc {
 		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
 		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
-		updateSymbolTable(allLabels);
+		encodeSymbolTable();
 		applyRelocation();
 		encodeRelocation();
 		code.applyValues(*this);
@@ -180,23 +180,7 @@ namespace Wasmc {
 					const std::string *label1 = nullptr, *label2 = nullptr;
 					directive->expression->validate(&label1, &label2);
 					if (label1 && !label2) {
-						// if (symbolTypes.count(label1) == 0)
-						// 	throw std::runtime_error("Symbol type needs to be explicitly defined for unknown symbol "
-						// 		 + *label1);
-						SymbolEnum symbol_enum = SymbolEnum::Unknown;
-						// switch (symbolTypes.at(label1)) {
-						// 	case SymbolType::Function:
-						// 	case SymbolType::Instruction:
-						// 		symbol_enum = SymbolEnum::UnknownCode;
-						// 		break;
-						// 	case SymbolType::Object:
-						// 		symbol_enum = SymbolEnum::UnknownData;
-						// 		break;
-						// 	default:
-						// 		throw std::runtime_error("Explicitly defined type for " + *label1 + " must be function,"
-						// 			" instruction or object");
-						// }
-						SymbolTableEntry entry(*label1, 0, symbol_enum);
+						SymbolTableEntry entry(*label1, 0, SymbolEnum::Unknown);
 						reloc.symbolIndex = symbolTableEntries.size();
 						symbolTableIndices.emplace(label1, symbolTableEntries.size());
 						symbolTableEntries.emplace_back(entry);
@@ -524,8 +508,8 @@ namespace Wasmc {
 							std::to_string(unsigned(specified_type)));
 				}
 			}
-			SymbolTableEntry entry(encodeSymbol(label), 0, type);
-			symbols.appendAll(entry.encode(*label));
+			SymbolTableEntry entry(*label, 0, type);
+			symbols.appendAll(entry.encode());
 			symbolTableIndices.emplace(label, symbolTableEntries.size());
 			symbolTableEntries.push_back(entry);
 		}
@@ -533,46 +517,20 @@ namespace Wasmc {
 		symbols.alignUp(8);
 	}
 
-	void Assembler::updateSymbolTable(StringPtrSet labels) {
-		labels.insert(StringSet::intern(".end"));
+	void Assembler::encodeSymbolTable() {
 		symbols.clear();
-		symbolTableEntries.clear();
-		symbolTableIndices.clear();
-
-		for (const std::string *label: labels) {
-			const size_t length = Util::updiv(label->size(), 8ul);
-			if (0xffff < length)
-				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
-			SymbolEnum type = SymbolEnum::Unknown;
-			const bool unknown = unknownSymbols.count(label) != 0;
-			if (symbolTypes.count(label) != 0) {
-				SymbolType specified_type = symbolTypes.at(label);
-				switch (specified_type) {
-					case SymbolType::Function:
-					case SymbolType::Instruction:
-						type = unknown? SymbolEnum::UnknownCode : SymbolEnum::Code;
-						break;
-					case SymbolType::Object:
-						type = unknown? SymbolEnum::UnknownData : SymbolEnum::Data;
-						break;
-					default:
-						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
-							std::to_string(unsigned(specified_type)));
-				}
+		for (const auto &entry: symbolTableEntries) {
+			if (entry.label.empty()) {
+				error() << "address[" << entry.address << "], id[" << entry.id << "], type[" << int(entry.type)
+				        << "]\n";
+				if (hashes.count(entry.id) == 0)
+					std::cerr << "    Hash not found.\n";
+				else
+					std::cerr << "    Hash found: \"" << *hashes.at(entry.id) << "\"\n";
+				throw std::runtime_error("Label in symbol table entry is empty");
 			}
-
-			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);
-			symbols.appendAll(entry.encode(*label));
-			const size_t new_index = symbolTableEntries.size();
-			if (symbolTableIndices.count(label) != 0) {
-				warn() << "symbolTableIndices already contains an entry for " << *label << ": "
-				       << symbolTableIndices.at(label) << "\n";
-				symbolTableIndices.erase(label);
-			}
-			symbolTableIndices.emplace(label, new_index);
-			symbolTableEntries.push_back(entry);
+			symbols.appendAll(entry.encode());
 		}
-
 		symbols.alignUp(8);
 	}
 
