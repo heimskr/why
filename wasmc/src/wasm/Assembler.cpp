@@ -34,16 +34,18 @@ namespace Wasmc {
 		evaluateExpressions();
 		expandLabels();
 		expandCode();
-		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
-		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		encodeRelocation();
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
 		updateSymbolTable(allLabels);
 		applyRelocation();
 		encodeRelocation();
 		createDebugData(debugNode);
+		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
+		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		code.applyValues(*this);
 		data.applyValues(*this);
+		std::cerr << "debug.size() == " << debug.size() << "\n";
+		std::cerr << "relocation.size() == " << relocation.size() << "\n";
 		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
 
 		if (can_warn && 0 < unknownSymbols.size()) {
@@ -350,6 +352,10 @@ namespace Wasmc {
 					RelocationData relocation_data(false, type, symbolTableIndices.at(label), 0, offset, &code, label);
 					if (relocationMap.count(statement) != 0)
 						relocationMap.erase(statement);
+					std::cerr << "Adding " << std::string(relocation_data) << "\n";
+					std::vector<Long> longs = relocation_data.encode();
+					assert(longs.size() == 3);
+					std::cerr << "    = " << std::string(RelocationData(longs[0], longs[1], longs[2])) << "\n";
 					relocationMap.emplace(statement, relocation_data);
 				}
 			}
@@ -374,6 +380,7 @@ namespace Wasmc {
 		relocation.clear();
 		for (const auto &[node, reloc]: relocationMap)
 			relocation.appendAll(reloc.encode());
+		relocation.alignUp(8);
 	}
 
 	Section * Assembler::getSection(const std::string *label) {
@@ -528,6 +535,8 @@ namespace Wasmc {
 			symbolTableIndices.emplace(label, symbolTableEntries.size());
 			symbolTableEntries.push_back(entry);
 		}
+
+		symbols.alignUp(8);
 	}
 
 	void Assembler::updateSymbolTable(StringPtrSet labels) {
@@ -569,6 +578,8 @@ namespace Wasmc {
 			symbolTableIndices.emplace(label, new_index);
 			symbolTableEntries.push_back(entry);
 		}
+
+		symbols.alignUp(8);
 	}
 
 	uint32_t Assembler::encodeSymbol(const std::string *name) {

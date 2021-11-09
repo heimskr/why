@@ -1,4 +1,4 @@
-#include <bit>
+#include <cassert>
 
 #include "wasm/Assembler.h"
 #include "wasm/Types.h"
@@ -8,18 +8,23 @@ namespace Wasmc {
 		return type == SymbolEnum::Unknown || type == SymbolEnum::UnknownCode || type == SymbolEnum::UnknownData;
 	}
 
+	RelocationData::RelocationData(Long first, Long second, Long third):
+		isData((first & 1) == 1), type(RelocationType((first >> 1) & 3)), symbolIndex(first >> 3), offset(second),
+		sectionOffset(third) {}
+
 	std::vector<Long> RelocationData::encode() const {
-		// I'm a terrible person.
-		if (std::endian::native != std::endian::little)
-			throw std::logic_error("I'm incredibly sorry, but relocation encoding isn't yet supported on big-endian "
-				"machines because I'm awfully lazy.");
-		const Long *ptr = reinterpret_cast<const Long *>(this);
-		return {ptr[0], ptr[1], ptr[2]};
+		return {Long(isData? 1 : 0) | ((Long(type) & 3) << 2) | (symbolIndex << 3), Long(offset), Long(sectionOffset)};
 	}
 
 	bool RelocationData::operator==(const RelocationData &other) const {
 		return type == other.type && symbolIndex == other.symbolIndex && offset == other.offset &&
 			sectionOffset == other.sectionOffset;
+	}
+
+	RelocationData::operator std::string() const {
+		return "(" + std::string(isData? "data" : "code") + ": symbolIndex[" + std::to_string(symbolIndex) +
+			"], offset[" + std::to_string(offset) + "], sectionOffset[" + std::to_string(sectionOffset) + "], label[" +
+			(label? *label : "nullptr") + "], section[" + (section? section->name : "nullptr") + "])";
 	}
 
 	Long AnyR::encode() const {

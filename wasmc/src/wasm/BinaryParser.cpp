@@ -264,13 +264,16 @@ namespace Wasmc {
 		std::vector<RelocationData> out;
 
 		for (size_t i = 0, size = rawRelocation.size(); i < size; i += 3) {
-			RelocationData data(false, RelocationType::Invalid, 0, 0, 0);
-			data.isData = (rawRelocation[i] & 1) == 1;
-			data.type = RelocationType((rawRelocation[i] >> 1) & 3);
-			data.symbolIndex = rawRelocation[i] >> 3;
-			data.offset = rawRelocation[i + 1];
-			data.sectionOffset = rawRelocation[i + 2];
-			out.emplace_back(data);
+			std::cerr << Util::toHex(rawRelocation[i]) << " " << Util::toHex(rawRelocation[i + 1]) << " " << Util::toHex(rawRelocation[i + 2]) << "\n";
+			out.emplace_back(rawRelocation[i], rawRelocation[i + 1], rawRelocation[i + 2]);
+			// std::cerr << "((" << i << ")): " << std::string(out.back()) << "\n";
+			// RelocationData data(false, RelocationType::Invalid, 0, 0, 0);
+			// data.isData = (rawRelocation[i] & 1) == 1;
+			// data.type = RelocationType((rawRelocation[i] >> 1) & 3);
+			// data.symbolIndex = rawRelocation[i] >> 3;
+			// data.offset = rawRelocation[i + 1];
+			// data.sectionOffset = rawRelocation[i + 2];
+			// out.emplace_back(data);
 		}
 
 		return out;

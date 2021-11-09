@@ -55,11 +55,13 @@ namespace Wasmc {
 			Section *section = nullptr;
 			const std::string *label = nullptr;
 			std::vector<Long> encode() const;
+			RelocationData(Long, Long, Long);
 			RelocationData(bool is_data, RelocationType type_, size_t symbol_index, long offset_, long section_offset,
 			Section *section_ = nullptr, const std::string *label_ = nullptr):
 				isData(is_data), type(type_), symbolIndex(symbol_index), offset(offset_), sectionOffset(section_offset),
 				section(section_), label(label_) {}
 			bool operator==(const RelocationData &other) const;
+			operator std::string() const;
 	} __attribute__((packed));
 
 	struct Offsets {

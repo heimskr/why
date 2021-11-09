@@ -99,6 +99,11 @@ namespace Wasmc {
 		std::vector<RelocationData> combined_relocation = main_parser.relocationData;
 		const size_t symbol_table_length = main_parser.rawSymbols.size();
 
+		// std::cerr << "Initial relocation data:\n";
+		// size_t i_ = 0;
+		// for (const auto &reloc: combined_relocation)
+		// 	std::cerr << i_++ << ": " << std::string(reloc) << "\n";
+
 		// Step 3
 		size_t extra_symbol_length = symbol_table_length * 8;
 		size_t extra_code_length = main_parser.getCodeLength();
@@ -108,6 +113,7 @@ namespace Wasmc {
 
 		// Step 4
 		for (const std::vector<Long> &unit: subunits) {
+			std::cerr << std::string(32, '=') << '\n';
 			BinaryParser subparser(unit);
 			subparser.parse();
 
@@ -162,6 +168,7 @@ namespace Wasmc {
 			for (auto &entry: subrelocation) {
 				entry.sectionOffset += entry.isData? extra_data_length : extra_code_length;
 				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
+				std::cerr << "Adding " << std::string(entry) << "\n";
 				combined_relocation.emplace_back(std::move(entry));
 			}
 
@@ -240,10 +247,14 @@ namespace Wasmc {
 	                             const std::map<std::string, size_t> &symbol_indices,
 	                             std::vector<Long> &data, std::vector<Long> &code,
 	                             Long data_offset, Long code_offset) {
+		size_t i = 0;
 		for (auto &entry: relocation) {
+			std::cerr << "(" << i++ << ")\n";
 			if (!entry.label) {
-				if (entry.symbolIndex != -1)
+				if (entry.symbolIndex != -1) {
+					std::cerr << "entry.symbolIndex[" << entry.symbolIndex << "]\n";
 					entry.label = StringSet::intern(symbols.at(entry.symbolIndex).label);
+				}
 			} else
 				entry.symbolIndex = symbol_indices.at(*entry.label);
 
