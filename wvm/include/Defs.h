@@ -1,7 +1,6 @@
-#ifndef WVM_DEFS_H_
-#define WVM_DEFS_H_
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace WVM {
 	using   Word =  int64_t;
@@ -39,5 +38,3 @@ namespace WVM {
 
 	class VM;
 }
-
-#endif

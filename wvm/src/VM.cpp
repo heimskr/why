@@ -648,16 +648,18 @@ namespace WVM {
 	}
 
 	void VM::init() {
-		if (symbolsOffset == -1)
-			symbolsOffset = getWord(0, Endianness::Little);
 		if (codeOffset == -1)
-			codeOffset = programCounter = getWord(8, Endianness::Little);
+			codeOffset = programCounter = getWord(0, Endianness::Little);
 		if (dataOffset == -1)
-			dataOffset = getWord(16, Endianness::Little);
+			dataOffset = getWord(8, Endianness::Little);
+		if (symbolsOffset == -1)
+			symbolsOffset = getWord(16, Endianness::Little);
 		if (debugOffset == -1)
 			debugOffset = getWord(24, Endianness::Little);
+		if (relocationOffset == -1)
+			relocationOffset = getWord(32, Endianness::Little);
 		if (endOffset == -1)
-			endOffset = getWord(32, Endianness::Little);
+			endOffset = getWord(40, Endianness::Little);
 		registers[Why::globalAreaPointerOffset] = endOffset;
 		sp() = memorySize;
 		onRegisterChange(Why::globalAreaPointerOffset);
@@ -685,14 +687,15 @@ namespace WVM {
 
 	void VM::loadSymbols() {
 		symbolTable.clear();
-		for (Word i = symbolsOffset; i < codeOffset && size_t(i + 16) < memorySize;) {
-			const HWord length = getQuarterword(i, Endianness::Little);
+		for (Word i = symbolsOffset; i < debugOffset && size_t(i + 16) < memorySize;) {
+			const QWord length = getQuarterword(i, Endianness::Little);
+			const QWord type = getQuarterword(i + 2, Endianness::Little);
 			const HWord hash = getHalfword(i + 4, Endianness::Little);
 			const Word location = getWord(i + 8, Endianness::Little);
 			if (memorySize <= size_t(i + 16 + length * 8))
 				break;
 			const std::string name = getString(i + 16, length * 8);
-			symbolTable.emplace(name, Symbol(hash, location));
+			symbolTable.emplace(name, Symbol(hash, location, SymbolEnum(type)));
 			symbolsByPosition.emplace(location, name);
 			i += 16 + length * 8;
 		}
@@ -704,7 +707,7 @@ namespace WVM {
 		try {
 #endif
 			int index = 0;
-			for (Word i = debugOffset; i < endOffset;) {
+			for (Word i = debugOffset; i < relocationOffset;) {
 				Word word = getWord(i, Endianness::Little);
 				const uint8_t type = word & 0xff;
 				if (type == 1 || type == 2) {

@@ -10,6 +10,8 @@
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
 #include "parser/Values.h"
+#include "wasm/Directives.h"
+#include "wasm/Expression.h"
 #include "wasm/Nodes.h"
 
 // Disable PVS-Studio warnings about branches that do the same thing.
@@ -130,9 +132,8 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_FLOAT
 %token WASMTOK_META_HEADER "#meta"
 %token WASMTOK_INCLUDE_HEADER "#include"
-%token WASMTOK_DATA_HEADER "#data"
 %token WASMTOK_DEBUG_HEADER "#debug"
-%token WASMTOK_CODE_HEADER "#code"
+%token WASMTOK_TEXT_HEADER "#text"
 %token WASMTOK_VERSION "version"
 %token WASMTOK_AUTHOR "author"
 %token WASMTOK_ORCID "orcid"
@@ -146,16 +147,32 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_DI "%di"
 %token WASMTOK_EI "%ei"
 %token WASMTOK_INT_TYPE
+%token WASMTOK_DIR_TYPE "%type"
+%token WASMTOK_DIR_SIZE "%size"
+%token WASMTOK_DIR_STRING "%string"
+%token WASMTOK_DIR_STRINGZ "%stringz"
+%token WASMTOK_DIR_1B "%1b"
+%token WASMTOK_DIR_2B "%2b"
+%token WASMTOK_DIR_4B "%4b"
+%token WASMTOK_DIR_8B "%8b"
+%token WASMTOK_DIR_ALIGN "%align"
+%token WASMTOK_DIR_FILL "%fill"
+%token WASMTOK_FUNCTION "function"
+%token WASMTOK_OBJECT "object"
+%token WASMTOK_DATA "%data"
+%token WASMTOK_CODE "%code"
+%token WASMTOK_INSTRUCTION "instruction"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE WASM_LUINODE
 %token WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT WASM_CALLNODE
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_INCLUDES WASM_STATEMENT
 %token WASM_ARGS WASM_STRINGPRINTNODE WASM_JEQNODE WASM_CSNODE WASM_LSNODE WASM_SSNODE WASM_SIZEDSTACKNODE WASM_RESTNODE
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
-%token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE
+%token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
+%token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR WASM_EXPRESSION
 
 %start start
 
@@ -166,7 +183,7 @@ start: program;
 program: program section { $$ = $1->adopt($2); }
        | { $$ = Wasmc::wasmParser.root; };
 
-section: meta_section | include_section | data_section | debug_section | code_section;
+section: meta_section | include_section | debug_section | text_section;
 
 meta_section: "#meta" "\n" { D($2); }
             | meta_section meta_key meta_separator WASMTOK_STRING { $$ = $1->adopt($2->adopt($4)); D($3); }
@@ -180,77 +197,74 @@ includes: includes endop string { $$ = $1->adopt($3); D($2); }
         | includes "\n" { D($2); }
         | string { $$ = (new AN(Wasmc::wasmParser, WASM_INCLUDES))->adopt($1, true); };
 
-data_section: "#data" "\n" { D($2); }
-            | data_section data_def "\n" { $$ = $1->adopt($2); D($3); }
-            | data_section "\n" { D($2); };
-data_def: data_key WASMTOK_FLOAT { $$ = $1->adopt($2); }
-        | data_key number { $$ = $1->adopt($2); }
-        | data_key string { $$ = $1->adopt($2); }
-        | data_key "(" number ")" { $$ = $1->adopt($2->adopt($3)); D($4); }
-        | data_key "&" ident { $$ = $1->adopt($2->adopt($3)); }
-        | data_key structvalue { $$ = $1->adopt($2); }
-        | data_key arrayvalue  { $$ = $1->adopt($2); };
-data_key: ident _data_sep { D($2); }
-        | WASMTOK_STRING _data_sep { D($2); };
-_data_sep: ":" | { $$ = nullptr; };
-
-value: arrayvalue | structvalue | ptrvalue | intvalue;
-intvalue: inttype number { $$ = $1->adopt($2); };
-arrayvalue: arraytype "[" "]" { D($2, $3); }
-          | arraytype "[" aggregatelist "]" { $$ = $1->adopt($3); D($2, $4); };
-structvalue: "{" _newlines aggregatelist _newlines "}" { $$ = $1->adopt($3); D($2, $4, $5); };
-ptrvalue: "&" ident { $$ = $1->adopt($2); };
-
-aggregatelist: aggregatelist "," _newlines value { $$ = $1->adopt($4); D($2, $3); }
-             | value { $$ = (new AN(wasmParser, WASM_AGGREGATELIST))->adopt($1, true); }
-
-type: arraytype | structtype | ptrtype | inttype | functiontype;
-arraytype: "(" number "#" type ")" { $1->adopt({$2, $4})->symbol = WASM_ARRAYTYPE; D($3, $5); };
-structtype: "{" _typelist "}" { $1->adopt($2)->symbol = WASM_STRUCTTYPE; D($3); };
-ptrtype: type "*" { $2->adopt($1)->symbol = WASM_POINTERTYPE; $$ = $2; };
-inttype: WASMTOK_INT_TYPE;
-functiontype: WASMTOK_FUNCTION_TYPE;
-typelist: typelist "," type { $$ = $1->adopt($3); D($2); }
-        | type { $$ = new AN(wasmParser, WASM_TYPELIST); };
-_typelist: typelist | { $$ = nullptr; };
-
 debug_section: "#debug" "\n" { D($2); }
              | debug_section debug_line "\n" { $$ = $1->adopt($2); D($3); }
              | debug_section "\n" { D($2); };
 debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") wasmerror("Invalid debug line type (expected 1 or 2)"); $$ = $1->adopt($2); }
           | number number number number number { if (*$1->lexerInfo != "3") wasmerror("Invalid debug line type (expected 3)"); $$ = $1->adopt({$2, $3, $4, $5}); };
 
-code_section: "#code" "\n" { D($2); };
-            | code_section statement { $$ = $1->adopt($2); }
-            | code_section statement intbang { $$ = $1->adopt(dynamic_cast<WASMInstructionNode *>($2)->absorbIntbang($3)); }
-            | code_section endop { D($2); };
+text_section: "#text" "\n" { D($2); };
+            | text_section operation endop { $$ = $1->adopt($2); D($3); }
+            | text_section operation intbang endop { $$ = $1->adopt(dynamic_cast<WASMInstructionNode *>($2)->absorbIntbang($3)); D($4); }
+            | text_section directive endop { $$ = $1->adopt($2); D($3); }
+            | text_section label { $$ = $1->adopt($2); }
+            | text_section endop { D($2); };
 intbang: "!" number { $$ = $1->adopt($2); };
 
-statement: operation
-         | label _newlines statement { $$ = dynamic_cast<WASMInstructionNode *>($3)->absorbLabel($1); D($2); };
+directive: dir_type | dir_size | dir_string | dir_value | dir_align | dir_fill | dir_data | dir_code;
+
+dir_type: "%type" ident          symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); }
+        | "%type" WASMTOK_STRING symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); };
+symbol_type: "object" | "function" | "instruction";
+
+expression: expression "+" term { $$ = $2->adopt({$1, $3}); }
+          | expression "-" term { $$ = $2->adopt({$1, $3}); }
+          | term;
+
+term: term "*" factor { $$ = $2->adopt({$1, $3}); }
+    | term "/" factor { $$ = $2->adopt({$1, $3}); }
+    | term "%" factor { $$ = $2->adopt({$1, $3}); }
+    | factor;
+
+factor: "(" expression ")" { $$ = $2; D($1, $3); }
+      | ident_or_string | number | ".";
+
+ident_or_string: ident | WASMTOK_STRING;
+
+// basic_expression: ident_or_string "-" ident_or_string { $$ = $2->adopt({$1, $3}); }
+//                 | ident_or_string "-" number          { $$ = $2->adopt({$1, $3}); }
+//                 | ident_or_string "+" number          { $$ = $2->adopt({$1, $3}); };
+
+dir_size: "%size" ident          expression { $$ = (new SizeDirective($2, new Expression($3)))->locate($1); D($1); }
+        | "%size" WASMTOK_STRING expression { $$ = (new SizeDirective($2, new Expression($3)))->locate($1); D($1); };
+
+dir_string: "%string"  WASMTOK_STRING { $$ = (new StringDirective($2, false))->locate($1); D($1); }
+          | "%stringz" WASMTOK_STRING { $$ = (new StringDirective($2,  true))->locate($1); D($1); };
+
+dir_value: value_size expression { $$ = (new ValueDirective($1, new Expression($2)))->locate($1); };
+value_size: "%8b" | "%4b" | "%2b" | "%1b";
+
+dir_align: "%align" number { $$ = (new AlignDirective($2->atoi()))->locate($1); D($1, $2); };
+
+dir_fill: "%fill" number number { $$ = (new FillDirective($2->atoi(), $3->atoi()))->locate($1); D($1, $2, $3); };
+
+dir_data: "%data" { $$ = (new DataDirective)->locate($1); D($1); };
+
+dir_code: "%code" { $$ = (new CodeDirective)->locate($1); D($1); };
 
 endop: "\n" | ";";
-newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
-_newlines: newlines | { $$ = nullptr; };
+// newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
+// _newlines: newlines | { $$ = nullptr; };
 
-operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
-         | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
-         | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
-         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | call     | op_jeq   | op_sprint | op_inc   | op_dec  | op_cs   | op_ls    | op_ss
-         | op_di   | op_ei;
+operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
+         | op_li   | op_si    | op_ms    | op_lni    | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
+         | op_j    | op_jc    | op_jr    | op_jrc    | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
+         | op_time | op_timei | op_ext   | op_ringi  | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
+         | op_qmem | op_ret   | op_jeq   | op_sprint | op_inc    | op_dec   | op_cs   | op_ls   | op_ss    | op_di
+         | op_ei;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
-
-call: ident "(" args ")" { $$ = new WASMCallNode($1, $3); D($2, $4); }
-    | ident "(" ")"      { $$ = new WASMCallNode($1); D($2, $3); };
-args: args "," arg { $$ = $1->adopt($3); D($2); }
-    | arg { $$ = (new AN(wasmParser, WASM_ARGS))->adopt($1, true); };
-arg: "&" ident { $$ = $1->adopt($2); }
-   | "*" ident { $$ = $1->adopt($2); }
-   | number
-   | reg;
 
 op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
@@ -393,13 +407,14 @@ _immediate: "&" ident { $$ = $2; D($1); }
           | character
           | WASMTOK_STRING;
 
-ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io"
-     | "version" | "author" | "orcid" | "name" | printop | WASMTOK_IDENT;
+ident: ident_option { $1->symbol = WASMTOK_IDENT; } | WASMTOK_IDENT;
+ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | symbol_type
+     | "version" | "author" | "orcid" | "name" | printop;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
 reg: WASMTOK_REG;
-number: WASMTOK_NUMBER;
+number: WASMTOK_NUMBER | "-" WASMTOK_NUMBER { $$ = $2; $$->lexerInfo = StringSet::intern("-" + *$$->lexerInfo); D($1); };
 character: WASMTOK_CHAR;
 string: WASMTOK_STRING;
 either: reg | immediate;

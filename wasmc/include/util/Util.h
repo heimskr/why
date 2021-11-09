@@ -45,6 +45,8 @@ namespace Wasmc::Util {
 	std::string toHex(const void *);
 	std::string toHex(size_t, int pad);
 
+	std::vector<uint8_t> getBytes(Long);
+
 	template <typename T>
 	std::string hex(T n) {
 		std::stringstream ss;

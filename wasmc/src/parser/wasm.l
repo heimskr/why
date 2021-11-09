@@ -20,23 +20,20 @@
 %option noyywrap
 %option warn
 
-WASM_LETTER             [A-Za-z_]
-WASM_DIGIT              [0-9]
-WASM_DECIMAL            ([\-+]?{WASM_DIGIT}+)
-WASM_HEXADECIMAL        ([\-+]?0x[a-fA-F0-9]+)
+WASM_DECIMAL            ([0-9]+)
+WASM_HEXADECIMAL        (0x[a-fA-F0-9]+)
 WASM_FLOAT              ([\-+]?((([0-9]*"."[0-9]+|[0-9]+"."[0-9]*)([eE][\-+]?[0-9]+)?)|([0-9]+[eE][\-+]?[0-9]+)))
 WASM_CHAR               ('([^'\\\n]|("\\""\\"?[nratb])|\$[()])')
 WASM_NUMBER             ({WASM_DECIMAL}|{WASM_HEXADECIMAL})
-WASM_IDENT              ([-a-zA-Z._][-a-zA-Z._0-9]*)
+WASM_IDENT              ([a-zA-Z._][a-zA-Z._0-9]*)
 WASM_STRING             (\"([^\\"\n]|\\([\\'"nt]|x[0-9a-fA-F][0-9a-fA-F]))*\")
 WASM_SGCOMMENT          ("//"[^\n]*)
 WASM_MLCOMMENT          ("/*"([^*]|"*"[^/])*"*/")
 WASM_REG                ("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
 WASM_META_HEADER        ("#meta"|"#m")
 WASM_INCLUDE_HEADER     ("#includes"|"#include")
-WASM_DATA_HEADER        ("#data"|"#d")
 WASM_DEBUG_HEADER       ("#debug"|"#dbg")
-WASM_CODE_HEADER        ("#code"|"#c")
+WASM_TEXT_HEADER        ("#text"|"#t")
 WASM_INT_TYPE           ("#i"[0-9]+)
 
 %%
@@ -55,9 +52,24 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 
 {WASM_META_HEADER}			{ WASMRTOKEN(META_HEADER) }
 {WASM_INCLUDE_HEADER}		{ WASMRTOKEN(INCLUDE_HEADER) }
-{WASM_DATA_HEADER}			{ WASMRTOKEN(DATA_HEADER) }
 {WASM_DEBUG_HEADER}			{ WASMRTOKEN(DEBUG_HEADER) }
-{WASM_CODE_HEADER}			{ WASMRTOKEN(CODE_HEADER) }
+{WASM_TEXT_HEADER}			{ WASMRTOKEN(TEXT_HEADER) }
+
+"%type"						{ WASMRTOKEN(DIR_TYPE) }
+"%size"						{ WASMRTOKEN(DIR_SIZE) }
+"%string"					{ WASMRTOKEN(DIR_STRING) }
+"%stringz"					{ WASMRTOKEN(DIR_STRINGZ) }
+"%1b"						{ WASMRTOKEN(DIR_1B) }
+"%2b"						{ WASMRTOKEN(DIR_2B) }
+"%4b"						{ WASMRTOKEN(DIR_4B) }
+"%8b"						{ WASMRTOKEN(DIR_8B) }
+"%align"					{ WASMRTOKEN(DIR_ALIGN) }
+"%fill"						{ WASMRTOKEN(DIR_FILL) }
+"function"					{ WASMRTOKEN(FUNCTION) }
+"object"					{ WASMRTOKEN(OBJECT) }
+"instruction"				{ WASMRTOKEN(INSTRUCTION) }
+"%data"						{ WASMRTOKEN(DATA) }
+"%code"						{ WASMRTOKEN(CODE) }
 
 "version"					{ WASMRTOKEN(VERSION) }
 "memset"					{ WASMRTOKEN(MEMSET) }

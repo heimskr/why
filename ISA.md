@@ -10,10 +10,24 @@
 		<li><a href="#prog">Programs</a>
 			<ol>
 				<li><a href="#prog-meta">Metadata Section</a></li>
-				<li><a href="#prog-symtab">Symbol Table</a></li>
 				<li><a href="#prog-code">Code Section</a></li>
 				<li><a href="#prog-data">Data Section</a></li>
+				<li><a href="#prog-symtab">Symbol Table</a></li>
+				<li><a href="#prog-reloc">Relocation Data Section</a></li>
 				<li><a href="#prog-debug">Debug Data Section</a></li>
+			</ol>
+		</li>
+		<li><a href="#directives">Directives</a>
+			<ol>
+				<li><a href="#dir-code"><code>%code</code></a></li>
+				<li><a href="#dir-data"><code>%data</code></a></li>
+				<li><a href="#dir-type"><code>%type</code></a></li>
+				<li><a href="#dir-size"><code>%size</code></a></li>
+				<li><a href="#dir-string"><code>%string</code></a></li>
+				<li><a href="#dir-stringz"><code>%stringz</code></a></li>
+				<li><a href="#dir-value"><code>%8b, %4b, %2b, %1b</code></a></li>
+				<li><a href="#dir-align"><code>%align</code></a></li>
+				<li><a href="#dir-fill"><code>%fill</code></a></li>
 			</ol>
 		</li>
 		<li><a href="#rings">Rings</a></li>
@@ -34,6 +48,8 @@
 				<li><a href="#format-r">R-Type Instructions</a></li>
 				<li><a href="#format-i">I-Type Instructions</a></li>
 				<li><a href="#format-j">J-Type Instructions</a></li>
+				<li><a href="#linkerflags">Linker Flags</a></li>
+				<li><a href="#condbits">Condition Bits</a></li>
 			</ol>
 		</li>
 		<li><a href="#operations">Operations</a>
@@ -225,7 +241,7 @@
 
 # <a name="intro"></a>Introduction
 
-The VM emulates WhySA, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, and memory addressability is also 64 bits.
+The VM emulates Why, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, and memory addressability is also 64 bits.
 
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
@@ -270,18 +286,21 @@ These status numbers are used in conditional branches, but they can also be acce
 
 # <a name="prog"></a>Programs
 
-Programs are divided into five sections: metadata, symbol table, code, data and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> contains data, unsurprisingly. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
+Programs are divided into five sections: metadata, code, data, symbol table and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> consists of read/write data. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
+
+Note that the code section and data section are combined into the `#text` section in assembly. Code and data sections can be switched between using the [`%code`](#dir-code) and [`%data`](#dir-data) directives.
 
 ## <a name="prog-meta"></a>Metadata Section
-The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the symbol table, and is therefore equivalent to the size of the metadata section.
+The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the code section and is therefore equivalent to the size of the metadata section.
 
-* `0x00`: Address of the beginning of the [symbol table](#prog-symtab).
-* `0x08`: Address of the beginning of the [code section](#prog-code).
-* `0x10`: Address of the beginning of the [data section](#prog-data).
+* `0x00`: Address of the beginning of the [code section](#prog-code).
+* `0x08`: Address of the beginning of the [data section](#prog-data).
+* `0x10`: Address of the beginning of the [symbol table](#prog-symtab).
 * `0x18`: Address of the beginning of the [debug data section](#prog-debug).
-* `0x20`: Total size of the program.
-* `0x28`–`0x30`: ORCID of the author (represented in ASCII without hyphens).
-* `0x38`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
+* `0x20`: Address of the beginning of the [relocation data section](#prog-reloc).
+* `0x28`: Total size of the program.
+* `0x30`–`0x38`: ORCID of the author (represented in ASCII without hyphens).
+* `0x40`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
 	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembly syntax
@@ -293,24 +312,14 @@ name: "Example"
 version: "4"
 </pre>
 
-## <a name="prog-symtab"></a>Symbol Table Section
-The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc++/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc%2B%2B/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second is the symbol's offset (its position relative to the start of the code section). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
-
 ## <a name="prog-code"></a>Code Section
-The code section consists of executable code. This is the only section of the code that the program counter is expected to point to.
+The code section consists of executable code. This is the only section of the code that the program counter is expected to point to. Code is represented using the syntax described by entries in the <a href="#operations">Operations</a> section.
 
 ## <a name="prog-data"></a>Data Section
-The data section contains non-code program data. Execution is not expected to occur in the data section, but there is no error checking to prevent it.
+The data section contains read/write data. Data is added using directives.
 
-### Assembly syntax
-Variables and their values are declared with JSON-like markup:
-
-<pre>
-#data
-some_string: "this is an example."
-some_number: 42
-some_gap: (16) // Expands to 16 empty bytes
-</pre>
+## <a name="prog-symtab"></a>Symbol Table Section
+The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise the symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second word represents the symbol's offset (its position relative to the start of the section containing it). The third word is the length of what the symbol points to (for functions, this will generally be eight times the number of instructions in the function). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
 
 ## <a name="prog-debug"></a>Debug Data Section
 The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
@@ -324,6 +333,11 @@ An entry with type `2` declares a function name. It uses the same format as a ty
 An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2` entry. The final eight bytes indicate the address of an instruction.
 
 The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3` instruction, two type `3` entries would be generated for the template with index 2.
+
+## <a name="prog-reloc"></a>Relocation Data Section
+Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
+
+The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table, while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` is invalid. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the value relative to the start of the code section.
 
 ### Assembly syntax
 <pre>
@@ -345,8 +359,115 @@ The assembly syntax for type `3` entries defines a template. Multiple type `3` e
 // ...
 </pre>
 
+# <a name="directives"></a>Directives
+
+Directives are instructions to the assembler. They control the assembly process.
+
+## <a name="dir-code"></a><code>%code</code>
+Switches the current section to the code section. After using this, anything emitted using `%8b`, `%string` and other such directives will be placed in the code section. (Note that inserting 8-byte values directly in the code section is discouraged and that inserting strings is absolutely pointless.)
+
+## <a name="dir-data"></a><code>%data</code>
+Switches the current section to the data section. After using this, anything emitted using `%8b`, `%string` and other such directives will be placed in the data section. (Note that putting instructions in the data section causes unspecified behavior.)
+
+## <a name="dir-type"></a><code>%type</code>
+<!-- TODO: explain whether it's necessary to specify the type, and if so, why -->
+Tells the assembler the type of a symbol. The type can be either `object` (for data) or `function` (for code).
+
+### Example
+<pre>
+%type data_value object
+%type strprint function
+
+@data_value
+%8b 42
+
+@strprint
+	// ...
+	: $rt
+</pre>
+
+## <a name="dir-size"></a><code>%size</code>
+Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter. An expression is valid if any of the following is true:
+
+* None of its children contain any label references (that is, all leaves are numeric or `.`)
+* It's the difference of two labels
+* It's the difference of `.` and a label
+* It's the difference of a label and a number
+* It's the sum of a label and a number
+
+These restrictions are in place because relocation data supports constant offsets only. All other information has to be known at compile time.
+
+### Example
+<pre>
+@some_8b
+%8b 42
+
+%size some_8b 8
+
+@function_one
+	// ...
+	: $rt
+
+@function_two
+	// ...
+	: $ rt
+
+%size function_one function_two-function_one
+%size function_two .-function_two
+</pre>
+
+## <a name="dir-string"></a><code>%string</code>
+Emits a string (*not* terminated with a null byte).
+
+### Example
+<pre>
+@some_string
+%string "Hello, world!\n"
+</pre>
+
+## <a name="dir-stringz"></a><code>%stringz</code>
+Emits a string (terminated with a null byte).
+
+### Example
+<pre>
+@some_string
+%stringz "Hello, world!\n"
+</pre>
+
+## <a name="dir-value"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
+Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). The values can be expressions (see [`%size`](#dir-size)).
+
+### Example
+<pre>
+%8b some_function+32 // 4 instructions past the start of some_function
+%8b some_label-10
+%8b .
+%4b data_value // Valid if data_value is within the first 4 GiB
+%2b 65535
+%1b 255
+</pre>
+
+## <a name="dir-align"></a><code>%align</code>
+Inserts zero until the location counter reaches a given alignment (in bytes).
+
+### Example
+<pre>
+%align 65536
+@p0
+// ...
+</pre>
+
+## <a name="dir-fill"></a><code>%fill</code>
+Adds a given number of bytes with a given value. The number of bytes is the first operand and the value is the second operand.
+
+### Example
+<pre>
+@ten_ones
+%fill 10 0x01
+</pre>
+
 # <a name="rings"></a>Rings
-WhySA has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
+Why has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
 
 # <a name="interrupts"></a>Interrupts
 Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, `$e0` is set to the program counter right before the interrupt was raised and `$e1` is set to the current <a href="#rings">ring</a> at the time the interrupt occurred. Interrupt handlers are expected to deal with properly resuming normal program execution after finishing up. The VM stores an address to a table containing pointers to interrupt handlers. The table is 32 words long.
@@ -401,6 +522,11 @@ J-type instructions point the program counter to a given address under certain c
 | Purpose | Opcode     | rs        | Link | Unused    | Conditions | Linker flags | Address   |
 
 If the link bit is set, the current value of the program counter will be stored in `$rt`, the return address register.
+
+## <a name="linkerflags"></a>Linker Flags
+Before the relocation overhaul, linker flags were used to give the linker clues about relocation. There were four possible values. Back then, as now, linker flag values other than `0` are valid for I-type and J-type instructions only.
+
+Now, the linker flags have three possible values. `0` indicates that the immediate value of the instruction isn't affected by relocation, whereas `1` indicates that the symbol needs to be relocated at link time. `2` is the same as `1`, but indicates that the current immediate value is invalid because the symbol is currently unknown. Executing an instruction whose linker flag is `2` will cause an error. Other values are invalid.
 
 ## <a name="condbits"></a>Condition Bits
 For operations that support conditions, the condition bits indicate what combination of [ALU flags](#reg-st)

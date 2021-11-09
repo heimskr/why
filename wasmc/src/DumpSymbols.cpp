@@ -24,7 +24,10 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
-	std::map<std::string, SymbolTableEntry> ordered(parser->symbols.cbegin(), parser->symbols.cend());
+	std::map<std::string, SymbolTableEntry> ordered;
+	
+	for (auto &[name, index]: parser->symbolIndices)
+		ordered.emplace(name, parser->symbols.at(index));
 
 	for (const auto &[name, entry]: ordered) {
 		if (!any) {
@@ -56,8 +59,8 @@ int main(int argc, char **argv) {
 		switch (entry.type) {
 			case SymbolEnum::Code: std::cout << "code"; break;
 			case SymbolEnum::Data: std::cout << "data"; break;
-			case SymbolEnum::KnownPointer: std::cout << "knownptr"; break;
-			case SymbolEnum::UnknownPointer: std::cout << "unknownptr"; break;
+			case SymbolEnum::UnknownCode: std::cout << "unknowncode"; break;
+			case SymbolEnum::UnknownData: std::cout << "unknowndata"; break;
 			case SymbolEnum::Unknown: std::cout << "unknown"; break;
 			default: std::cout << static_cast<int>(entry.type); break;
 		}

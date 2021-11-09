@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -8,12 +10,14 @@
 #include "parser/Parser.h"
 #include "util/Util.h"
 #include "wasm/Debug.h"
+#include "wasm/Expression.h"
+#include "wasm/Nodes.h"
+#include "wasm/Section.h"
+#include "wasm/SymbolTable.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
 	class ASTNode;
-	struct WASMInstructionNode;
-	struct WASMJeqNode;
 
 	struct RType;
 	struct IType;
@@ -26,7 +30,14 @@ namespace Wasmc {
 		friend class Linker;
 
 		public:
-			/** Takes ownership of the ASTNode argument. It's recommended to call srand() beforehand. */
+			StringPtrMap<size_t> offsets;
+
+			void debugOffsets() {
+				for (const auto &[label, offset]: offsets)
+					std::cerr << *label << " -> " << offset << '\n';
+			}
+
+			/** Takes ownership of the ASTNode argument. */
 			Assembler(const ASTNode *);
 
 			~Assembler() { delete root; }
@@ -41,32 +52,63 @@ namespace Wasmc {
 
 			static Long compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition);
 
+			static uint32_t encodeSymbol(const std::string &);
+
 		private:
 			static size_t assemblerCount;
 
 			const ASTNode *root;
-			std::unordered_map<const std::string *, Long> offsets, dataOffsets;
-			std::vector<Long> meta, data, code, symbolTable, debugData, assembled;
-			std::unordered_set<const std::string *> allLabels, unknownSymbols;
-			std::unordered_map<const std::string *, const std::string *> dataVariables;
-			std::unordered_map<uint32_t, const std::string *> hashes;
+
+			StringPtrSet allLabels, unknownSymbols;
+
+			std::map<uint32_t, const std::string *> hashes;
+
+			/** Maps labels to types (unknown, function, object). */
+			StringPtrMap<SymbolType> symbolTypes;
+
+			/** Maps labels to expressions representing their sizes. */
+			StringPtrMap<std::shared_ptr<Expression>> symbolSizeExpressions;
+
+			StringPtrMap<long> symbolSizes;
+
+			std::vector<SymbolTableEntry> symbolTableEntries;
+			StringPtrMap<size_t> symbolTableIndices;
+
+			/** Maps code section counters to instruction nodes. */
+			std::map<size_t, WASMInstructionNode *> instructionMap;
+
+			std::map<size_t, std::unique_ptr<WASMInstructionNode>> extraInstructions;
+
+			/** A set of all labels found in value directive expressions. */
+			StringPtrSet valueExpressionLabels;
+
+			std::map<const ASTNode *, RelocationData> relocationMap;
+
 			std::vector<std::unique_ptr<DebugEntry>> debugEntries;
-			size_t dataLength = 0;
+
+			std::vector<Long> concatenated;
+
 			bool verbose = false;
-			/** Used in naming anonymous pointers (i.e., pointer members of structs and arrays). */
-			const std::string id;
-			size_t anonymousPointerCount = 0;
 
-			const std::vector<Long> & getAssembled() const { return assembled; }
+			Section meta {"Meta", &allLabels, 40}, code {"Code", &allLabels}, data {"Data", &allLabels};
+			Section symbols {"Symbols", &allLabels}, relocation {"Relocation", &allLabels}, debug {"Debug", &allLabels};
 
-			Long & metaOffsetSymbols() { return meta.at(0); }
-			Long & metaOffsetCode()    { return meta.at(1); }
-			Long & metaOffsetData()    { return meta.at(2); }
-			Long & metaOffsetDebug()   { return meta.at(3); }
-			Long & metaOffsetEnd()     { return meta.at(4); }
+			Section *currentSection = &code;
 
-			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *dataNode = nullptr, *debugNode = nullptr,
-			              *codeNode = nullptr;
+			Long & metaOffsetCode()       { return *(Long *) &meta[ 0]; }
+			Long & metaOffsetData()       { return *(Long *) &meta[ 8]; }
+			Long & metaOffsetSymbols()    { return *(Long *) &meta[16]; }
+			Long & metaOffsetDebug()      { return *(Long *) &meta[24]; }
+			Long & metaOffsetRelocation() { return *(Long *) &meta[32]; }
+			Long & metaOffsetEnd()        { return *(Long *) &meta[40]; }
+			const Long & metaOffsetCode()       const { return *(Long *) &meta[ 0]; }
+			const Long & metaOffsetData()       const { return *(Long *) &meta[ 8]; }
+			const Long & metaOffsetSymbols()    const { return *(Long *) &meta[16]; }
+			const Long & metaOffsetDebug()      const { return *(Long *) &meta[24]; }
+			const Long & metaOffsetRelocation() const { return *(Long *) &meta[32]; }
+			const Long & metaOffsetEnd()        const { return *(Long *) &meta[40]; }
+
+			const ASTNode *metaNode = nullptr, *includeNode = nullptr, *debugNode = nullptr, *textNode = nullptr;
 
 			static std::string stringify(const std::vector<Long> &);
 
@@ -80,12 +122,22 @@ namespace Wasmc {
 
 			void addCode(const WASMInstructionNode &);
 
-			/** Replaces all label references in a given vector of expanded instructions with the corresponding memory
-			 *  addresses. Mutates the input vector. */
-			Statements & expandLabels(Statements &);
+			/** Replaces all label references in the instruction map with the corresponding memory addresses. */
+			void expandLabels();
 
-			/** Compiles a vector of expanded code into the main code vector. */
-			void processCode(const Statements &);
+			void processText();
+
+			void processRelocation();
+
+			void encodeRelocation();
+
+			Section * getSection(const std::string *);
+
+			void applyRelocation();
+
+			size_t getOffset(Section &) const;
+
+			void evaluateExpressions();
 
 			/** Replaces variable reference placeholders in the data section with the proper values of the pointers. */
 			void reprocessData();
@@ -97,40 +149,33 @@ namespace Wasmc {
 
 			void findAllLabels();
 
-			std::vector<Long> createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton);
+			/** Clears the symbols section and fills it with a symbol table with addresses and types left blank. */
+			void createSymbolTableSkeleton(StringPtrSet labels);
+
+			void updateSymbolTable(StringPtrSet labels);
 
 			uint32_t encodeSymbol(const std::string *);
 
-			static uint32_t encodeSymbol(const std::string &);
-
+			/** Clears the output bytes, resets the counter to 0, adds the metadata section and sets the symbol table
+			 *  offset. */
 			void processMetadata();
 
-			void processData(std::unordered_set<const std::string *> &labels);
-
-			std::vector<uint8_t> convertDataPieces(size_t data_length, const ASTNode *,
-				std::unordered_set<const std::string *> &);
-
-			Statements expandCode();
+			void expandCode();
 
 			WASMInstructionNode * flipSigns(WASMInstructionNode *) const;
 
-			void addJeq(Statements &, const WASMInstructionNode *);
-			void addJeqImmediateRHS(Statements &, const WASMJeqNode *, const std::string *m7);
+			void addJeq(size_t offset, const WASMInstructionNode *);
+			void addJeqImmediateRHS(size_t &offset, const WASMJeqNode *, const std::string *m7);
 
-			void addMove(Statements &, const WASMInstructionNode *);
+			void addMove(size_t offset, const WASMInstructionNode *);
 
-			void addPseudoPrint(Statements &, const WASMInstructionNode *);
+			void addPseudoPrint(size_t offset, const WASMInstructionNode *);
 
-			void addIO(Statements &, const WASMInstructionNode *);
+			void addIO(size_t offset, const WASMInstructionNode *);
 
-			void addStringPrint(Statements &, const WASMInstructionNode *);
+			void addStringPrint(size_t offset, const WASMInstructionNode *);
 
-			void addCall(Statements &, const WASMInstructionNode *);
-
-			void addStack(Statements &, const std::vector<int> &regs, const Strings &labels, bool is_push,
-			              int bang = -1);
-
-			std::vector<Long> createDebugData(const ASTNode *, const Statements &);
+			void createDebugData(const ASTNode *);
 	};
 
 }

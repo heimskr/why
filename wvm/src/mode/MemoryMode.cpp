@@ -168,7 +168,7 @@ namespace WVM::Mode {
 
 			for (Word address = min, i = 0; address < max + 128 * 8; address += 8, ++i) {
 				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
-				    || address == vm.debugOffset || address == vm.endOffset) {
+				    || address == vm.debugOffset || address == vm.relocationOffset || address == vm.endOffset) {
 					*textbox += "\e[2m" + hyphens + "\e[22m";
 				}
 
@@ -221,9 +221,10 @@ namespace WVM::Mode {
 
 		ss << hex << "  ";
 
-		if (address < 40) {
+		if (address < 48) {
 			ss << "\e[38;5;26m" << word << "\e[39m";
-		} else if (address < vm.symbolsOffset || vm.dataOffset <= address) {
+		} else if (address < vm.codeOffset || (vm.dataOffset <= address && address < vm.symbolsOffset) ||
+		           vm.debugOffset <= address) {
 			for (int i = 0; i < 8; ++i) {
 				char ch = static_cast<char>(vm.getByte(address + i));
 				if (ch < 32)
@@ -231,7 +232,7 @@ namespace WVM::Mode {
 				else
 					ss << ch;
 			}
-		} else if (address < vm.codeOffset) {
+		} else if (vm.symbolsOffset <= address && address < vm.debugOffset) {
 			if (symbolTableEdges.count(address) == 1) {
 				const UHWord hash = word >> 32;
 				ss << std::hex << "\e[2m" << hash << "\e[22m" << std::dec;
@@ -243,6 +244,8 @@ namespace WVM::Mode {
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
 			ss << Unparser::stringify(word, &vm);
+		} else {
+			ss << "?";
 		}
 
 		ss << "\e[49m";
@@ -260,9 +263,9 @@ namespace WVM::Mode {
 	void MemoryMode::makeSymbolTableEdges() {
 		symbolTableEdges.clear();
 		symbolTableEdges.insert(vm.symbolsOffset);
-		for (Word i = vm.symbolsOffset; i < vm.codeOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
+		for (Word i = vm.symbolsOffset; i < vm.debugOffset && static_cast<size_t>(i + 4) < vm.getMemorySize();) {
 			i += 16 + 8 * vm.getQuarterword(i, Endianness::Little);
-			if (i < vm.codeOffset)
+			if (i < vm.debugOffset)
 				symbolTableEdges.insert(i);
 		}
 	}

@@ -10,43 +10,45 @@
 #include "parser/Lexer.h"
 #include "parser/StringSet.h"
 #include "wasm/Assembler.h"
+#include "wasm/Directives.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
+#include "wasm/SymbolTable.h"
 #include "wasm/Why.h"
 
 namespace Wasmc {
 	size_t Assembler::assemblerCount = 0;
 
-	Assembler::Assembler(const ASTNode *root_): root(root_), id(std::to_string(assemblerCount++)) {}
+	Assembler::Assembler(const ASTNode *root_): root(root_) {}
 
 	std::string Assembler::assemble(bool can_warn) {
 		wasmParser.errorCount = 0;
-		meta.resize(5, 0);
 		validateSectionCounts();
 		findAllLabels();
 		processMetadata();
-		processData(allLabels);
-		symbolTable = createSymbolTable(allLabels, true);
-		metaOffsetCode() = metaOffsetSymbols() + symbolTable.size() * 8;
-
-		auto expanded = expandCode();
-		metaOffsetData() = metaOffsetCode() + expanded.size() * 8;
-		metaOffsetDebug() = metaOffsetData() + dataLength;
-
-		debugData = createDebugData(debugNode, expanded);
-		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetDebug() + debugData.size() * 8;
-
-		setDataOffsets();
-		reprocessData();
-		processCode(expandLabels(expanded));
-		symbolTable = createSymbolTable(allLabels, false);
-
-		assembled.clear();
-		for (const auto &longs: {meta, symbolTable, code, data, debugData})
-			assembled.insert(assembled.end(), longs.begin(), longs.end());
+		processText();
+		metaOffsetData() = metaOffsetCode() + code.size();
+		metaOffsetSymbols() = metaOffsetData() + data.size();
+		createSymbolTableSkeleton(allLabels);
+		processRelocation();
+		evaluateExpressions();
+		expandLabels();
+		expandCode();
+		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
+		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
+		encodeRelocation();
+		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
+		updateSymbolTable(allLabels);
+		applyRelocation();
+		encodeRelocation();
+		createDebugData(debugNode);
+		code.applyValues(*this);
+		data.applyValues(*this);
+		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
 
 		if (can_warn && 0 < unknownSymbols.size()) {
-			std::cerr << " \e[1;33m?\e[22;39m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s") << ": ";
+			std::cerr << "\e[2m[\e[22;1;33m?\e[22;39;2m]\e[22m Unknown symbol" << (unknownSymbols.size() == 1? "" : "s")
+			          << ": ";
 			bool first = true;
 			for (const std::string *symbol: unknownSymbols) {
 				if (first)
@@ -57,7 +59,150 @@ namespace Wasmc {
 			}
 			std::cerr << '\n';
 		}
-		return stringify(assembled);
+
+		return stringify(concatenated);
+	}
+
+	void Assembler::processText() {
+		if (!textNode)
+			throw std::runtime_error("textNode is null in Assembler::processText");
+
+		for (ASTNode *node: *textNode)
+			switch (node->symbol) {
+				case WASM_DATADIR:
+					currentSection = &data;
+					break;
+				case WASM_CODEDIR:
+					currentSection = &code;
+					break;
+				case WASM_LABEL: {
+					const std::string *label = dynamic_cast<WASMLabelNode *>(node)->label;
+					*currentSection += label;
+					symbolTypes.emplace(label, currentSection == &data? SymbolType::Object : SymbolType::Instruction);
+					offsets.emplace(label, currentSection->counter);
+					break;
+				}
+				case WASM_STRINGDIR: {
+					auto *directive = dynamic_cast<StringDirective *>(node);
+					if (directive->nullTerminate)
+						currentSection->append(*directive->string + '\0');
+					else
+						currentSection->append(*directive->string);
+					break;
+				}
+				case WASM_TYPEDIR: {
+					auto *directive = dynamic_cast<TypeDirective *>(node);
+					symbolTypes[directive->symbolName] = directive->type;
+					break;
+				}
+				case WASM_SIZEDIR: {
+					auto *directive = dynamic_cast<SizeDirective *>(node);
+					directive->expression->setCounter(*currentSection);
+					if (directive->expression->validate() == Expression::ValidationResult::Invalid) {
+						error() << std::string(*directive->expression) << '\n';
+						throw std::runtime_error("Invalid expression");
+					}
+					symbolSizeExpressions[directive->symbolName] = directive->expression;
+					break;
+				}
+				case WASM_VALUEDIR: {
+					auto *directive = dynamic_cast<ValueDirective *>(node);
+					auto labels = directive->expression->findLabels();
+					directive->expression->setCounter(*currentSection);
+					long index = -1;
+					const std::string *label;
+					const auto validation = directive->expression->validate(&label);
+					switch (validation) {
+						case Expression::ValidationResult::Invalid:
+							error() << std::string(*directive->expression) << '\n';
+							throw std::runtime_error("Invalid expression");
+						case Expression::ValidationResult::LabelNumberDifference:
+						case Expression::ValidationResult::LabelNumberSum:
+							// If it's a relocation based on a label, try to find the index of the label in the symbol
+							// table. If it's not present, that's fine; we can try to find it later.
+							if (symbolTableIndices.count(label) != 0)
+								index = symbolTableIndices.at(label);
+							break;
+						case Expression::ValidationResult::DotLabelDifference:
+						case Expression::ValidationResult::DoubleLabelDifference:
+							// We don't want to insert relocation data for what evaluates to a constant, so we clear
+							// label's value.
+							label = nullptr;
+							break;
+						default:
+							break;
+					}
+					valueExpressionLabels.insert(labels.begin(), labels.end());
+					*currentSection += {directive->valueSize, directive->expression};
+					if (label)
+						relocationMap.try_emplace(directive, currentSection == &data, directive->valueSize == 4?
+							RelocationType::Lower4 : RelocationType::Full, index, 0, currentSection->counter,
+							currentSection, label);
+					*currentSection += directive->valueSize;
+					break;
+				}
+				case WASM_ALIGNDIR:
+					currentSection->alignUp(dynamic_cast<AlignDirective *>(node)->alignment);
+					break;
+				case WASM_FILLDIR: {
+					auto *directive = dynamic_cast<FillDirective *>(node);
+					currentSection->extend<uint8_t>(directive->count, uint8_t(directive->value));
+					*currentSection += directive->count;
+					break;
+				}
+				default: {
+					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
+						// Because we can't yet convert the instruction to a Long (probably),
+						// we stash it in a map and append one or more zeros.
+						instructionMap[currentSection->counter] = instruction;
+						const size_t count = instruction->expandedSize();
+						for (size_t i = 0; i < count; ++i)
+							currentSection->append<Long>(0);
+					} else
+						node->debug();
+				}
+			}
+
+		code.alignUp(8);
+		data.alignUp(8);
+	}
+
+	void Assembler::evaluateExpressions() {
+		for (auto &[label, expression]: symbolSizeExpressions)
+			symbolSizes.emplace(label, expression->evaluate(*this, true));
+
+		for (auto &[node, reloc]: relocationMap)
+			if (const auto *directive = dynamic_cast<const ValueDirective *>(node))
+				try {
+					reloc.offset = directive->expression->evaluate(*this, false);
+				} catch (const SymbolNotFound &err) {
+					unknownSymbols.insert(StringSet::intern(err.symbol));
+					const std::string *label1 = nullptr, *label2 = nullptr;
+					directive->expression->validate(&label1, &label2);
+					if (label1 && !label2) {
+						if (symbolTypes.count(label1) == 0)
+							throw std::runtime_error("Symbol type needs to be explicitly defined for unknown symbol "
+								 + *label1);
+						SymbolEnum symbol_enum = SymbolEnum::Unknown;
+						switch (symbolTypes.at(label1)) {
+							case SymbolType::Function:
+							case SymbolType::Instruction:
+								symbol_enum = SymbolEnum::UnknownCode;
+								break;
+							case SymbolType::Object:
+								symbol_enum = SymbolEnum::UnknownData;
+								break;
+							default:
+								throw std::runtime_error("Explicitly defined type for " + *label1 + " must be function,"
+									" instruction or object");
+						}
+						SymbolTableEntry entry(*label1, 0, symbol_enum);
+						reloc.symbolIndex = symbolTableEntries.size();
+						symbolTableIndices.emplace(label1, symbolTableEntries.size());
+						symbolTableEntries.emplace_back(entry);
+					}
+					reloc.offset = directive->expression->evaluate(*this, true);
+				}
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -172,16 +317,10 @@ namespace Wasmc {
 			| (static_cast<uint64_t>(opcode) << 52);
 	}
 
-	void Assembler::addCode(const WASMInstructionNode &node) {
-		code.push_back(compileInstruction(node));
-	}
-
-	Statements & Assembler::expandLabels(Statements &statements) {
-		// In the second pass, we replace label references with the corresponding
-		// addresses now that we know the address of all the labels.
-		for (auto &statement: statements) {
+	void Assembler::expandLabels() {
+		for (auto &[offset, statement]: instructionMap) {
 			statement->labels.clear();
-			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement.get())) {
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
 				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
 					const std::string *label = std::get<const std::string *>(has_immediate->imm);
 					if (offsets.count(label) == 0) {
@@ -199,27 +338,112 @@ namespace Wasmc {
 				}
 			}
 		}
-
-		return statements;
 	}
 
-	void Assembler::processCode(const Statements &statements) {
-		for (const auto &statement: statements)
-			addCode(*statement);
+	void Assembler::processRelocation() {
+		for (const auto &[offset, statement]: instructionMap) {
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
+				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
+					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
+						RelocationType::Upper4 : RelocationType::Lower4;
+					RelocationData relocation_data(false, type, symbolTableIndices.at(label), 0, offset, &code, label);
+					if (relocationMap.count(statement) != 0)
+						relocationMap.erase(statement);
+					relocationMap.emplace(statement, relocation_data);
+				}
+			}
+		}
+
+		for (const auto &[offset, statement]: extraInstructions) {
+			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement.get())) {
+				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
+					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
+						RelocationType::Upper4 : RelocationType::Lower4;
+					RelocationData relocation_data(false, type, symbolTableIndices.at(label), 0, offset, &code, label);
+					if (relocationMap.count(statement.get()) != 0)
+						relocationMap.erase(statement.get());
+					relocationMap.emplace(statement.get(), relocation_data);
+				}
+			}
+		}
 	}
 
-	void Assembler::reprocessData() {
-		for (const auto &[key, ref]: dataVariables)
-			data.at(dataOffsets.at(key) / 8) = offsets.count(ref) == 0? encodeSymbol(ref) : offsets.at(ref);
+	void Assembler::encodeRelocation() {
+		relocation.clear();
+		for (const auto &[node, reloc]: relocationMap)
+			relocation.appendAll(reloc.encode());
 	}
 
-	void Assembler::setDataOffsets() {
-		for (const auto &[name, offset]: dataOffsets)
-			offsets[name] = offset + metaOffsetData();
+	Section * Assembler::getSection(const std::string *label) {
+		if (!label || symbolTypes.count(label) == 0)
+			return nullptr;
+		switch (symbolTypes.at(label)) {
+			case SymbolType::Function:
+			case SymbolType::Instruction:
+				return &code;
+			case SymbolType::Object:
+				return &data;
+			default:
+				warn() << "Unhandled SymbolType: " << int(symbolTypes.at(label)) << '\n';
+				return nullptr;
+		}
+	}
+
+	void Assembler::applyRelocation() {
+		processRelocation();
+
+		for (auto &[node, reloc]: relocationMap) {
+			if (!reloc.section)
+				throw std::runtime_error("Relocation is missing a section");
+			size_t index = reloc.symbolIndex;
+			if (reloc.label && symbolTableIndices.count(reloc.label) != 0)
+				index = symbolTableIndices.at(reloc.label);
+			else
+				warn() << "Using stale symbolIndex: " << index << "\n";
+			SymbolTableEntry &entry = symbolTableEntries.at(index);
+			long address = index == -1ul? 0 : long(entry.address);
+			if (reloc.symbolIndex == -1)
+				reloc.symbolIndex = index;
+			Section *definition_section = getSection(reloc.label);
+			if (definition_section)
+				address += getOffset(*definition_section);
+			address += reloc.offset;
+			switch (reloc.type) {
+				case RelocationType::Full:
+					reloc.section->insert(reloc.sectionOffset, Long(address));
+					break;
+				case RelocationType::Upper4:
+					reloc.section->insert(reloc.sectionOffset, uint32_t(address >> 32));
+					break;
+				case RelocationType::Lower4:
+					reloc.section->insert(reloc.sectionOffset, uint32_t(address & 0xffffffff));
+					break;
+				default:
+					throw std::runtime_error("Invalid relocation type: " + std::to_string(int(reloc.type)));
+			}
+		}
+	}
+
+	size_t Assembler::getOffset(Section &section) const {
+		if (&section == &meta)
+			return 0;
+		if (&section == &code)
+			return metaOffsetCode();
+		if (&section == &data)
+			return metaOffsetData();
+		if (&section == &symbols)
+			return metaOffsetSymbols();
+		if (&section == &debug)
+			return metaOffsetDebug();
+		if (&section == &relocation)
+			return metaOffsetRelocation();
+		throw std::runtime_error("Invalid section: " + Util::toHex(&section));
 	}
 
 	void Assembler::validateSectionCounts() {
-		bool meta_found = false, include_found = false, data_found = false, debug_found = false, code_found = false;
+		bool meta_found = false, include_found = false, debug_found = false, text_found = false;
 		for (const ASTNode *node: *root)
 			switch (node->symbol) {
 				case WASMTOK_META_HEADER:
@@ -234,23 +458,17 @@ namespace Wasmc {
 					include_found = true;
 					includeNode = node;
 					break;
-				case WASMTOK_DATA_HEADER:
-					if (data_found)
-						throw std::runtime_error("Multiple data sections detected");
-					data_found = true;
-					dataNode = node;
-					break;
 				case WASMTOK_DEBUG_HEADER:
 					if (debug_found)
 						throw std::runtime_error("Multiple debug sections detected");
 					debug_found = true;
 					debugNode = node;
 					break;
-				case WASMTOK_CODE_HEADER:
-					if (code_found)
-						throw std::runtime_error("Multiple code sections detected");
-					code_found = true;
-					codeNode = node;
+				case WASMTOK_TEXT_HEADER:
+					if (text_found)
+						throw std::runtime_error("Multiple text sections detected");
+					text_found = true;
+					textNode = node;
 					break;
 				default:
 					throw std::runtime_error("Unexpected symbol found at root level: "
@@ -261,63 +479,101 @@ namespace Wasmc {
 	void Assembler::findAllLabels() {
 		allLabels.clear();
 
-		if (dataNode) {
-			for (const ASTNode *node: *dataNode) {
-				if (node->symbol == WASMTOK_IDENT)
-					allLabels.insert(node->lexerInfo);
-				else if (node->symbol == WASMTOK_STRING)
-					allLabels.insert(StringSet::intern(node->unquote()));
-				else
-					throw std::runtime_error("Unexpected symbol found in data section at "
-						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-			}
-		}
-
-		if (codeNode) {
-			for (const ASTNode *node: *codeNode) {
-				const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
-				if (!instruction)
-					throw std::runtime_error("Unexpected symbol found in code section at "
-						+ std::string(node->location) + ": " + std::string(wasmParser.getName(node->symbol)));
-				for (const std::string *label: instruction->labels)
-					allLabels.insert(label);
-			}
+		if (textNode) {
+			for (const ASTNode *node: *textNode)
+				if (node->symbol == WASM_LABEL) {
+					const auto *label_node = dynamic_cast<const WASMLabelNode *>(node);
+					if (!label_node)
+						throw std::runtime_error("label_node is null in Assembler::findAllLabels");
+					allLabels.insert(label_node->label);
+				} else if (node->symbol == WASM_VALUEDIR) {
+					const auto *directive = dynamic_cast<const ValueDirective *>(node);
+					const auto found = directive->expression->findLabels();
+					allLabels.insert(found.cbegin(), found.cend());
+				} else if (auto *imm_node = dynamic_cast<const HasImmediate *>(node)) {
+					if (std::holds_alternative<const std::string *>(imm_node->imm))
+						allLabels.insert(std::get<const std::string *>(imm_node->imm));
+				}
 		}
 	}
 
-	std::vector<Long> Assembler::createSymbolTable(std::unordered_set<const std::string *> labels, bool skeleton) {
+	void Assembler::createSymbolTableSkeleton(StringPtrSet labels) {
 		labels.insert(StringSet::intern(".end"));
-		std::vector<Long> out;
+		symbols.clear();
+		symbolTableEntries.clear();
+		symbolTableIndices.clear();
 
 		for (const std::string *label: labels) {
 			const size_t length = Util::updiv(label->size(), 8ul);
 			if (0xffff < length)
 				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
 			SymbolEnum type = SymbolEnum::Unknown;
-			if (!skeleton && dataVariables.count(label)) {
-				const std::string *ptr = dataVariables.at(label);
-				type = offsets.count(ptr)? SymbolEnum::KnownPointer : SymbolEnum::UnknownPointer;
-				if (!offsets.count(ptr) && !unknownSymbols.count(ptr)) {
-					const size_t index = (offsets.at(label) - metaOffsetData()) / 8;
-					if (data.size() < index)
-						data.resize(index, 0);
-					data[index] = encodeSymbol(ptr);
+			if (symbolTypes.count(label) != 0) {
+				SymbolType specified_type = symbolTypes.at(label);
+				switch (specified_type) {
+					case SymbolType::Function:
+					case SymbolType::Instruction:
+						type = SymbolEnum::Code;
+						break;
+					case SymbolType::Object:
+						type = SymbolEnum::Data;
+						break;
+					default:
+						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
+							std::to_string(unsigned(specified_type)));
+				}
+			}
+			SymbolTableEntry entry(encodeSymbol(label), 0, type);
+			symbols.appendAll(entry.encode(*label));
+			symbolTableIndices.emplace(label, symbolTableEntries.size());
+			symbolTableEntries.push_back(entry);
+		}
+	}
+
+	void Assembler::updateSymbolTable(StringPtrSet labels) {
+		labels.insert(StringSet::intern(".end"));
+		symbols.clear();
+		symbolTableEntries.clear();
+		symbolTableIndices.clear();
+
+		for (const std::string *label: labels) {
+			const size_t length = Util::updiv(label->size(), 8ul);
+			if (0xffff < length)
+				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
+			SymbolEnum type = SymbolEnum::Unknown;
+			const bool unknown = unknownSymbols.count(label) != 0;
+			if (symbolTypes.count(label) != 0) {
+				SymbolType specified_type = symbolTypes.at(label);
+				switch (specified_type) {
+					case SymbolType::Function:
+					case SymbolType::Instruction:
+						type = unknown? SymbolEnum::UnknownCode : SymbolEnum::Code;
+						break;
+					case SymbolType::Object:
+						type = unknown? SymbolEnum::UnknownData : SymbolEnum::Data;
+						break;
+					default:
+						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
+							std::to_string(unsigned(specified_type)));
 				}
 			}
 
-			out.push_back(length | (static_cast<Long>(type) << 16) | (static_cast<Long>(encodeSymbol(label)) << 32));
-			out.push_back(skeleton? 0 : offsets.at(label));
-			for (const Long piece: Util::getLongs(*label))
-				out.push_back(piece);
+			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);
+			symbols.appendAll(entry.encode(*label));
+			const size_t new_index = symbolTableEntries.size();
+			if (symbolTableIndices.count(label) != 0) {
+				warn() << "symbolTableIndices already contains an entry for " << *label << ": "
+				       << symbolTableIndices.at(label) << "\n";
+				symbolTableIndices.erase(label);
+			}
+			symbolTableIndices.emplace(label, new_index);
+			symbolTableEntries.push_back(entry);
 		}
-
-		return out;
 	}
 
 	uint32_t Assembler::encodeSymbol(const std::string *name) {
 		std::vector<uint8_t> hash_vec(picosha2::k_digest_size);
 		picosha2::hash256(name->begin(), name->end(), hash_vec.begin(), hash_vec.end());
-		// TODO: verify
 		const uint32_t hash = hash_vec[4] | (hash_vec[5] << 8) | (hash_vec[6] << 16) | (hash_vec[7] << 24);
 		if (hashes.count(hash) != 0 && hashes.at(hash) != name)
 			throw std::runtime_error("\"" + *name + "\" and \"" + *hashes.at(hash) + "\" have the same hash!");
@@ -328,7 +584,6 @@ namespace Wasmc {
 	uint32_t Assembler::encodeSymbol(const std::string &name) {
 		std::vector<uint8_t> hash_vec(picosha2::k_digest_size);
 		picosha2::hash256(name.begin(), name.end(), hash_vec.begin(), hash_vec.end());
-		// TODO: verify
 		return hash_vec[4] | (hash_vec[5] << 8) | (hash_vec[6] << 16) | (hash_vec[7] << 24);
 	}
 
@@ -367,201 +622,53 @@ namespace Wasmc {
 		if (orcid.size() != 16)
 			throw std::runtime_error("Invalid ORCID length");
 
-		const auto longs = Util::getLongs(orcid);
-		if (longs.size() != 2)
-			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(longs.size()));
-		meta = {0, 0, 0, 0, 0, longs[0], longs[1]};
+		const auto orcid_longs = Util::getLongs(orcid);
+		if (orcid_longs.size() != 2)
+			throw std::runtime_error("ORCID longs count expected to be 2, not " + std::to_string(orcid_longs.size()));
+
+		meta.clear();
+		meta.appendAll(std::initializer_list<Long> {0, 0, 0, 0, 0, 0, orcid_longs[0], orcid_longs[1]});
 
 		std::string nva = name;
-		nva.push_back('\0');
+		nva += '\0';
 		nva.insert(nva.end(), version.begin(), version.end());
-		nva.push_back('\0');
+		nva += '\0';
 		nva.insert(nva.end(), author.begin(), author.end());
-		nva.push_back('\0');
+		nva += '\0';
 
-		for (const Long piece: Util::getLongs(nva))
-			meta.push_back(piece);
+		meta.append(nva);
 
-		metaOffsetSymbols() = meta.size() * 8;
+		metaOffsetCode() = meta.alignUp(8);
 	}
 
-	void Assembler::processData(std::unordered_set<const std::string *> &labels) {
-		if (!dataNode)
-			return;
-
-		data.clear();
-		dataOffsets.clear();
-		dataLength = 0;
-
-		for (ASTNode *node: *dataNode) {
-			const std::string *ident = node->lexerInfo;
-			if (ident->front() == '"')
-				ident = StringSet::intern(node->unquote());
-			if (ident->front() != '%') {
-				if (verbose)
-					std::cerr << "Assigning " << dataLength << " to " << *ident << "\n";
-				dataOffsets.emplace(ident, dataLength);
-			}
-
-			std::vector<uint8_t> pieces = convertDataPieces(dataLength, node, labels);
-
-			int padding = (8 - (pieces.size() % 8)) % 8;
-			while (padding--)
-				pieces.push_back(0);
-
-			for (size_t i = 0; i < pieces.size(); i += 8) {
-				data.push_back(Long(pieces[i])   | (Long(pieces[i + 1]) <<  8l) | (Long(pieces[i + 2]) << 16l) |
-					(Long(pieces[i + 3]) << 24l) | (Long(pieces[i + 4]) << 32l) | (Long(pieces[i + 5]) << 40l) |
-					(Long(pieces[i + 6]) << 48l) | (Long(pieces[i + 7]) << 56l));
-			}
-
-			dataLength += pieces.size();
-		}
-	}
-
-	std::vector<uint8_t> Assembler::convertDataPieces(size_t data_length, const ASTNode *node,
-	                                                  std::unordered_set<const std::string *> &labels) {
-		const ASTNode *child = node->front();
-		static_assert(sizeof(Long) == sizeof(double));
-		std::vector<uint8_t> bytes;
-
-		auto add = [&](Long value) {
-			for (int i = 0; i < 8; ++i) {
-				bytes.push_back((value >> (8 * i)) & 0xff);
-				++data_length;
-			}
-		};
-
-		std::deque<const ASTNode *> stack {child};
-		size_t processed = 0;
-		while (!stack.empty()) {
-			const ASTNode *current = stack.front();
-			stack.pop_front();
-			switch (current->symbol) {
-				case WASMTOK_FLOAT: {
-					double parsed = Util::parseDouble(current->lexerInfo);
-					add(*reinterpret_cast<Long *>(&parsed));
-					break;
-				}
-				case WASMTOK_NUMBER:
-					add(static_cast<Long>(current->atoi()));
-					break;
-				case WASMTOK_INT_TYPE:
-					add(static_cast<Long>(current->front()->atoi()));
-					break;
-				case WASMTOK_STRING: {
-					const std::string str = current->unquote() + '\0';
-					bytes.insert(bytes.end(), str.cbegin(), str.cend());
-					data_length += str.size();
-					break;
-				}
-				case WASMTOK_LPAR: {
-					const long count = current->front()->atoi();
-					for (long i = 0; i < count; ++i) {
-						bytes.push_back(0);
-						++data_length;
-					}
-					break;
-				}
-				case WASMTOK_AND:
-					// Pointers have to be 8-padded?
-					while (data_length % 8) {
-						bytes.push_back(0);
-						++data_length;
-					}
-					if (processed == 0) { // i.e., if we're not a struct/array member
-						dataVariables[node->lexerInfo] = current->front()->lexerInfo;
-					} else {
-						// "asm" here stands for "array/struct member."
-						const std::string *new_label = StringSet::intern("_asm_" + id + "_" +
-							std::to_string(anonymousPointerCount++));
-						labels.insert(new_label);
-						dataVariables[new_label] = current->front()->lexerInfo;
-						dataOffsets.emplace(new_label, data_length);
-					}
-					add(0);
-					break;
-				case WASMTOK_LCURLY:
-					if (!current->empty())
-						for (const ASTNode *structvalue: *current->front())
-							stack.push_back(structvalue);
-					break;
-				case WASM_ARRAYTYPE:
-					if (!current->empty() && 2 < current->size())
-						for (const ASTNode *arrayvalue: *current->at(2))
-							stack.push_back(arrayvalue);
-					break;
-				default:
-					current->debug();
-					throw std::runtime_error("Unexpected symbol (" + std::to_string(current->symbol) + ") found in data"
-						" section at " + std::string(current->location) + ": " +
-						std::string(wasmParser.getName(current->symbol)));
-			}
-
-			++processed;
-		}
-
-		return bytes;
-	}
-
-	Statements Assembler::expandCode() {
-		// Known bug: locations for statement nodes are inaccurate.
-
-		if (!codeNode)
-			return {};
-
-		Statements expanded;
-		expanded.reserve(codeNode->size());
-
-		for (const ASTNode *node: *codeNode) {
-			const auto *instruction = dynamic_cast<const WASMInstructionNode *>(node);
-			if (!instruction) {
-				node->debug();
-				throw std::runtime_error("Unexpected symbol found in code section at " + std::string(node->location)
-					+ ": " + std::string(wasmParser.getName(node->symbol)));
-			}
-
-			for (const std::string *label: instruction->labels) {
-				if (offsets.count(label) != 0)
-					throw std::runtime_error("Label " + *label + " redefined at " + std::string(node->location));
-				offsets[label] = metaOffsetCode() + expanded.size() * 8;
-				if (verbose)
-					std::cerr << "Assigning " << offsets[label] << " to " << *label << " based on an expanded length "
-					             "equal to " << expanded.size() << "\n";
-			}
-
+	void Assembler::expandCode() {
+		for (auto &[offset, instruction]: instructionMap) {
 			switch (instruction->nodeType()) {
-				case WASMNodeType::Call:
-					addCall(expanded, instruction);
-					break;
-
 				case WASMNodeType::PseudoPrint:
-					addPseudoPrint(expanded, instruction);
+					addPseudoPrint(offset, instruction);
 					break;
 
 				case WASMNodeType::IO:
-					addIO(expanded, instruction);
+					addIO(offset, instruction);
 					break;
 
 				case WASMNodeType::StringPrint:
-					addStringPrint(expanded, instruction);
+					addStringPrint(offset, instruction);
 					break;
 
 				case WASMNodeType::Mv:
-					addMove(expanded, instruction);
+					addMove(offset, instruction);
 					break;
 
 				case WASMNodeType::Jeq:
-					addJeq(expanded, instruction);
+					addJeq(offset, instruction);
 					break;
 
 				default:
-					expanded.emplace_back(flipSigns(instruction->copy()));
+					code.insert(offset, compileInstruction(*flipSigns(instruction)));
 					break;
 			}
 		}
-
-		return expanded;
 	}
 
 	WASMInstructionNode * Assembler::flipSigns(WASMInstructionNode *node) const {
@@ -580,7 +687,7 @@ namespace Wasmc {
 		return node;
 	}
 
-	void Assembler::addJeq(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addJeq(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *jeq = dynamic_cast<const WASMJeqNode *>(instruction);
 		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
 		const int bang = instruction->bang;
@@ -589,66 +696,103 @@ namespace Wasmc {
 			if (std::holds_alternative<Register>(jeq->rt)) {
 				// RHS is a register
 				// rs == rt -> $m7
-				expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+				code.insert(offset, compileInstruction(*seq));
+				extraInstructions.emplace(offset, std::move(seq));
+				offset += 8;
 			} else {
-				addJeqImmediateRHS(expanded, jeq, m7);
+				addJeqImmediateRHS(offset, jeq, m7);
 				// rs == $m7 -> $m7
-				expanded.emplace_back(makeSeq(jeq->rs, m7, m7, bang));
+				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, m7, m7, bang));
+				code.insert(offset, compileInstruction(*seq));
+				extraInstructions.emplace(offset, std::move(seq));
+				offset += 8;
 			}
 			// : rd if $m7
-			expanded.emplace_back(new WASMJrcNode(jeq->link, m7, std::get<Register>(jeq->addr)));
+			auto jrc = std::make_unique<WASMJrcNode>(jeq->link, m7, std::get<Register>(jeq->addr));
+			code.insert(offset, compileInstruction(*jrc));
+			extraInstructions.emplace(offset, std::move(jrc));
+			offset += 8;
 		} else if (std::holds_alternative<Register>(jeq->rt)) {
 			// Address is an immediate, RHS is a register
 			// rs == rt -> $m7
-			expanded.emplace_back(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+			auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+			code.insert(offset, compileInstruction(*seq));
+			extraInstructions.emplace(offset, std::move(seq));
+			offset += 8;
 			// : addr if $m7
-			expanded.emplace_back((new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7))->setBang(bang));
+			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
+			jc->setBang(bang);
+			code.insert(offset, compileInstruction(*jc));
+			extraInstructions.emplace(offset, std::move(jc));
+			offset += 8;
 		} else {
 			// Address is an immediate, RHS is an immediate
-			addJeqImmediateRHS(expanded, jeq, m7);
+			addJeqImmediateRHS(offset, jeq, m7);
 			// : addr if $m7
-			expanded.emplace_back((new WASMJcNode(std::get<Immediate>(jeq->addr), jeq->link, m7))->setBang(bang));
+			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
+			jc->setBang(bang);
+			code.insert(offset, compileInstruction(*jc));
+			extraInstructions.emplace(offset, std::move(jc));
+			offset += 8;
 		}
 	}
 
-	void Assembler::addJeqImmediateRHS(Statements &expanded, const WASMJeqNode *jeq, const std::string *m7) {
+	void Assembler::addJeqImmediateRHS(size_t &offset, const WASMJeqNode *jeq, const std::string *m7) {
 		const Immediate &rhs = std::get<Immediate>(jeq->rt);
+		std::unique_ptr<WASMInstructionNode> new_node;
 		if (std::holds_alternative<const std::string *>(rhs)) {
 			// RHS is a label
 			// [label] -> $m7
-			expanded.emplace_back(new WASMLiNode(rhs, m7, false));
+			new_node = std::make_unique<WASMLiNode>(rhs, m7, false);
 		} else if (std::holds_alternative<int>(rhs)) {
 			// RHS is a number
 			// imm -> $m7
-			expanded.emplace_back(new WASMSetNode(rhs, m7));
+			new_node = std::make_unique<WASMSetNode>(rhs, m7);
 		} else {
 			jeq->debug();
 			throw std::runtime_error("Invalid right hand side in jeq instruction");
 		}
-		expanded.back()->setBang(jeq->bang);
+
+		new_node->setBang(jeq->bang);
+		code.insert(offset, compileInstruction(*new_node));
+		extraInstructions.emplace(offset, std::move(new_node));
+		offset += 8;
 	}
 
-	void Assembler::addMove(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addMove(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *move = dynamic_cast<const WASMMvNode *>(instruction);
-		expanded.emplace_back((new RNode(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
-			WASMTOK_OR, false))->setBang(instruction->bang));
+
+		auto rnode = std::make_unique<RNode>(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
+			WASMTOK_OR, false);
+		code.insert(offset, compileInstruction(*rnode));
+		extraInstructions.emplace(offset, std::move(rnode));
 	}
 
-	void Assembler::addPseudoPrint(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addPseudoPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
 		if (std::holds_alternative<char>(print->imm)) {
 			const std::string *m7 = registerArray[Why::assemblerOffset + 7];
-			expanded.emplace_back((new WASMSetNode(print->imm, m7))->setBang(instruction->bang));
-			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(instruction->bang));
+
+			auto set = std::make_unique<WASMSetNode>(print->imm, m7);
+			set->setBang(instruction->bang);
+			code.insert(offset, compileInstruction(*set));
+			extraInstructions.emplace(offset, std::move(set));
+			offset += 8;
+
+			auto new_print = std::make_unique<WASMPrintNode>(m7, PrintType::Char);
+			new_print->setBang(instruction->bang);
+			code.insert(offset, compileInstruction(*new_print));
+			extraInstructions.emplace(offset, std::move(new_print));
 		} else
 			throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
 	}
 
-	void Assembler::addIO(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addIO(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *io = dynamic_cast<const WASMIONode *>(instruction);
 
 		if (!io->ident) {
-			expanded.emplace_back(io->copy());
+			code.insert(offset, compileInstruction(*io));
 			return;
 		}
 
@@ -656,11 +800,19 @@ namespace Wasmc {
 			throw std::runtime_error("Unknown IO ident: \"" + *io->ident + "\"");
 
 		const std::string *a0 = registerArray[Why::argumentOffset];
-		expanded.emplace_back((new WASMSetNode(Why::ioIDs.at(*io->ident), a0))->setBang(instruction->bang));
-		expanded.emplace_back((new WASMIONode(nullptr))->setBang(instruction->bang));
+		auto set = std::make_unique<WASMSetNode>(Why::ioIDs.at(*io->ident), a0);
+		set->setBang(instruction->bang);
+		code.insert(offset, compileInstruction(*set));
+		extraInstructions.emplace(offset, std::move(set));
+		offset += 8;
+
+		auto new_io = std::make_unique<WASMIONode>(nullptr);
+		new_io->setBang(instruction->bang);
+		code.insert(offset, compileInstruction(*new_io));
+		extraInstructions.emplace(offset, std::move(new_io));
 	}
 
-	void Assembler::addStringPrint(Statements &expanded, const WASMInstructionNode *instruction) {
+	void Assembler::addStringPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMStringPrintNode *>(instruction);
 		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
 		const std::string &str = *print->string;
@@ -670,86 +822,31 @@ namespace Wasmc {
 		bool first = true;
 		for (char ch: str) {
 			if (ch != last_char) {
-				auto *set = (new WASMSetNode(ch, m7))->setBang(print->bang);
+				auto set = std::make_unique<WASMSetNode>(ch, m7);
+				set->setBang(print->bang);
 				if (first)
 					set->labels = print->labels;
 				first = false;
-				expanded.emplace_back(set);
+				code.insert(offset, compileInstruction(*set));
+				extraInstructions.emplace(offset, std::move(set));
+				offset += 8;
 				last_char = ch;
 			}
 
-			expanded.emplace_back((new WASMPrintNode(m7, PrintType::Char))->setBang(print->bang));
+			auto new_print = std::make_unique<WASMPrintNode>(m7, PrintType::Char);
+			new_print->setBang(print->bang);
+			code.insert(offset, compileInstruction(*new_print));
+			extraInstructions.emplace(offset, std::move(new_print));
+			offset += 8;
 		}
 	}
 
-	void Assembler::addCall(Statements &expanded, const WASMInstructionNode *instruction) {
-		const auto *call = dynamic_cast<const WASMCallNode *>(instruction);
-		const Args &args = call->args;
-
-		if (Why::argumentCount < args.size())
-			throw std::runtime_error("Too many arguments given in subroutine call (given "
-				+ std::to_string(args.size()) + ", maximum is " + std::to_string(Why::argumentCount) + ")");
-
-		std::vector<int> current_values;
-
-		if (instruction->inSubroutine)
-			current_values.push_back(Why::returnAddressOffset);
-
-		for (size_t i = 0; i < args.size(); ++i)
-			current_values.push_back(Why::argumentOffset + i);
-
-		if (!current_values.empty())
-			addStack(expanded, current_values, instruction->labels, true, call->bang);
-
-		for (size_t i = 0; i < args.size(); ++i) {
-			const std::string *reg = registerArray[Why::argumentOffset + i];
-			Arg &arg = args[i];
-			switch (arg.getType()) {
-				case Arg::Type::Address:
-					expanded.emplace_back(new WASMSetNode(dynamic_cast<AddressArg &>(arg).ident, reg));
-					break;
-				case Arg::Type::Value:
-					expanded.emplace_back(new WASMLiNode(dynamic_cast<ValueArg &>(arg).ident, reg, false));
-					break;
-				case Arg::Type::Number:
-					expanded.emplace_back(new WASMSetNode(dynamic_cast<NumberArg &>(arg).value, reg));
-					break;
-				case Arg::Type::Register:
-					expanded.emplace_back(new WASMMvNode(
-						registerArray[dynamic_cast<RegisterArg &>(arg).reg], reg));
-					break;
-				default:
-					throw std::runtime_error("Invalid Arg type");
-			}
-			expanded.back()->setBang(call->bang);
-		}
-
-		expanded.emplace_back((new WASMJNode(call->function, true))->setBang(call->bang));
-
-		std::reverse(current_values.begin(), current_values.end());
-		addStack(expanded, current_values, {}, false, call->bang);
-	}
-
-	void Assembler::addStack(Statements &expanded, const std::vector<int> &regs, const Strings &labels, bool is_push,
-	                         int bang) {
-		bool first = true;
-		for (const int reg: regs) {
-			auto node = std::make_shared<WASMStackNode>(registerArray[reg], is_push);
-			if (first)
-				node->labels = labels;
-			else
-				first = false;
-			node->setBang(bang);
-			expanded.push_back(node);
-		}
-	}
-
-	std::vector<Long> Assembler::createDebugData(const ASTNode *node, const Statements &expanded) {
-		std::vector<Long> out;
+	void Assembler::createDebugData(const ASTNode *node) {
 		debugEntries.clear();
+		debug.clear();
 
 		if (!node)
-			return out;
+			return;
 
 		debugEntries.reserve(node->size());
 
@@ -775,8 +872,7 @@ namespace Wasmc {
 					};
 					for (char ch: unquoted)
 						encoded.push_back(static_cast<uint8_t>(ch));
-					for (const Long piece: Util::getLongs(encoded))
-						out.push_back(piece);
+					debug.appendAll(Util::getLongs(encoded));
 					if (type == 1)
 						debugEntries.emplace_back(new DebugFilename(unquoted));
 					else
@@ -794,14 +890,16 @@ namespace Wasmc {
 			}
 		}
 
-		const size_t expanded_size = expanded.size();
 		const size_t debug_size = debugEntries.size();
-		for (size_t i = 0; i < expanded_size; ++i) {
-			const auto &instruction = expanded[i];
+		std::unordered_set<Long> exclude;
+
+		auto process = [this, debug_size, &exclude](size_t offset, const WASMInstructionNode *instruction) {
+			if (exclude.count(offset) != 0)
+				return;
 			const int bang = instruction->bang;
 			if (bang == -1)
-				continue;
-			if (bang < 0 || debug_size <= static_cast<size_t>(bang)) {
+				return;
+			if (bang < 0 || debug_size <= size_t(bang)) {
 				instruction->debug();
 				throw std::runtime_error("Debug intbang out of bounds: " + std::to_string(bang));
 			}
@@ -814,13 +912,22 @@ namespace Wasmc {
 				instruction->debug();
 				throw std::runtime_error("DebugLocation cast failed");
 			}
-			const size_t address = metaOffsetCode() + 8 * i;
+			const size_t address = metaOffsetCode() + offset;
 			size_t count = 1;
-			for (size_t j = i + 1; j < expanded_size; ++j)
-				if (bang == expanded[j]->bang)
+			for (size_t j = address + 8; j < code.size(); j += 8) {
+				int subbang;
+				if (instructionMap.count(j) != 0) {
+					subbang = instructionMap.at(j)->bang;
+				} else if (extraInstructions.count(j) != 0) {
+					subbang = extraInstructions.at(j)->bang;
+				} else
+					throw std::runtime_error("Couldn't find instruction at offset " + std::to_string(j));
+				if (bang == subbang)
 					++count;
 				else
 					break;
+				exclude.insert(j);
+			}
 
 			if (0xff < count)
 				throw std::runtime_error("Instruction count too high: " + std::to_string(count));
@@ -837,25 +944,32 @@ namespace Wasmc {
 			if (0xffffff < location->functionIndex)
 				throw std::runtime_error("Function index too large: " + std::to_string(location->functionIndex));
 
-			std::vector<uint8_t> bytes {static_cast<uint8_t>(location->getType())};
-
+			std::vector<uint8_t> to_add {static_cast<uint8_t>(location->getType())};
 			auto add = [&](size_t n, size_t byte_count) {
 				for (size_t j = 0; j < byte_count; ++j)
-					bytes.push_back((n >> (8 * j)) & 0xff);
+					to_add.push_back((n >> (8 * j)) & 0xff);
 			};
 
 			add(location->fileIndex, 3);
 			add(location->line, 4);
 			add(location->column, 3);
-			bytes.push_back(count & 0xff);
+			to_add.push_back(count & 0xff);
 			add(location->functionIndex, 4);
 			add(address, 8);
 
-			for (const Long piece: Util::getLongs(bytes))
-				out.push_back(piece);
-			i += count - 1;
-		}
+			while (to_add.size() % 8)
+				to_add.push_back(0);
 
-		return out;
+			debug.appendAll(to_add);
+			exclude.insert(offset);
+		};
+
+		for (const auto &[offset, instruction]: instructionMap)
+			process(offset, instruction);
+
+		for (const auto &[offset, instruction]: extraInstructions)
+			process(offset, instruction.get());
+
+		debug.alignUp(8);
 	}
 }

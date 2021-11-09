@@ -705,6 +705,10 @@ namespace Wasmc {
 	WASMJeqNode::WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_):
 		WASMInstructionNode(WASM_JEQNODE), link(link_), addr(addr_), rt(rt_), rs(rs_) {}
 
+	size_t WASMJeqNode::expandedSize() const {
+		return !std::holds_alternative<Register>(addr) || std::holds_alternative<Register>(rt)? 2 : 3;
+	}
+
 	std::string WASMJeqNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim(link? "::" : ":") + " " + colorize(addr) + red(" if ")
 			+ cyan(*rs) + " == " + colorize(rt);
@@ -1104,6 +1108,12 @@ namespace Wasmc {
 	WASMPseudoPrintNode::WASMPseudoPrintNode(const Immediate &imm_):
 		WASMInstructionNode(WASM_PSEUDOPRINTNODE), HasImmediate(imm_) {}
 
+	size_t WASMPseudoPrintNode::expandedSize() const {
+		if (std::holds_alternative<char>(imm))
+			return 2;
+		throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
+	}
+
 	std::string WASMPseudoPrintNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "<" + blue("p") + " " + colorize(imm) + ">";
 	}
@@ -1120,48 +1130,26 @@ namespace Wasmc {
 	WASMStringPrintNode::WASMStringPrintNode(const std::string *string_):
 		WASMInstructionNode(WASM_STRINGPRINTNODE), string(string_) {}
 
+	size_t WASMStringPrintNode::expandedSize() const {
+		size_t out = 0;
+		char last_char = string->front() - 1;
+		for (char ch: *string) {
+			if (ch != last_char) {
+				++out;
+				last_char = ch;
+			}
+
+			++out;
+		}
+		return out;
+	}
+
 	std::string WASMStringPrintNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + "<" + blue("p") + " \"" + *string + "\">";
 	}
 
 	WASMStringPrintNode::operator std::string() const {
 		return WASMInstructionNode::operator std::string() + "<p \"" + *string + "\">";
-	}
-
-	WASMCallNode::WASMCallNode(ASTNode *function_, ASTNode *args_):
-		WASMInstructionNode(WASM_CALLNODE), function(function_->lexerInfo), args(args_) {}
-
-	WASMCallNode::WASMCallNode(const std::string *function_, const Args &args_):
-		WASMInstructionNode(WASM_CALLNODE), function(function_), args(args_) {}
-
-	std::string WASMCallNode::debugExtra() const {
-		std::stringstream ss;
-		ss << bold(*function) << dim("(");
-		bool first = true;
-		for (const auto &arg: args) {
-			if (first)
-				first = false;
-			else
-				ss << dim(", ");
-			ss << std::string(*arg);
-		}
-		ss << dim(")");
-		return WASMInstructionNode::debugExtra() + ss.str();
-	}
-
-	WASMCallNode::operator std::string() const {
-		std::stringstream ss;
-		ss << *function << "(";
-		bool first = true;
-		for (const auto &arg: args) {
-			if (first)
-				first = false;
-			else
-				ss << ", ";
-			ss << std::string(*arg);
-		}
-		ss << ")";
-		return ss.str();
 	}
 
 	WASMRestNode::WASMRestNode(): WASMInstructionNode(WASM_RESTNODE) {}

@@ -15,7 +15,7 @@
 		{"include": "#block"},
 		{"include": "#subroutine"},
 
-		{"match": "#(m(eta)?|i(ncludes?)?|c(ode)?|d(ata|ebug|bg)?)",
+		{"match": "#(m(eta)?|i(ncludes?)?|t(ext)?|c(ode)?|d(ata|ebug|bg)?)",
 		 "name": "variable.other.enummember.wasm"},
 
 		{"begin": "/\\*",

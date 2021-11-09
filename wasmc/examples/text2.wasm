@@ -1,0 +1,27 @@
+#meta
+name: "Text Section Test 2"
+author: "Kai Tamkun"
+version: "1.0"
+orcid: "0000-0001-7405-6654"
+
+#text
+
+%data
+
+@text2_data
+%4b 0x0df00dd0
+%8b 0x0123456789abcdef
+
+@text2_string
+%stringz "Goodbye, World!\n"
+
+%code
+
+@text2_code
+	[ $rt
+	&text2_string -> $a0
+	:: strprint
+	] $rt
+	: $rt
+
+%type strprint function

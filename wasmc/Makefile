@@ -16,12 +16,13 @@ CLOC_OPTIONS    := --exclude-dir=.vscode,PicoSHA2,tools --not-match-f='^(yy|wasm
 BISON_OPTIONS   := --color=always
 SOURCES         := $(filter-out src/DebugSearch.cpp src/DumpSymbols.cpp src/main.cpp,$(shell find src/**/*.cpp src/*.cpp))
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
-TESTFILE        ?= ../wasm/examples/ops.wasm
-OUTFILE         ?= ../wasm/compiled/ops.why
+TESTFILE        ?= examples/text.wasm
+OUTFILE         ?= compiled/text.why
 # TESTARGS        ?= $(TESTFILE) $(OUTFILE)
 # TESTARGS        ?= -l ../wasm/compiled/debug.why ../wasm/examples/debug.wasm
 # TESTARGS        ?= -l ../wasm/compiled/a.why ../wasm/examples/a.wasm
-TESTARGS        ?= --test
+TESTARGS        ?= -l compiled/text_linked.why compiled/text.why compiled/text2.why
+# TESTARGS        ?= --test
 
 .PHONY: all counter test clean count countbf
 

@@ -28,17 +28,11 @@ namespace Wasmc {
 			std::vector<std::vector<Long>> subunits;
 			std::vector<Long> linked;
 
-			/** Replaces pointers inside all pointer variables of a symbol table
-			 *  with the encoded names of the symbols they point to. */
-			static void depointerize(const SymbolTable &, std::vector<Long> &data, Long data_offset);
-
-			static void repointerize(const SymbolTable &, std::vector<Long> &combined);
-
-			static std::unordered_map<std::string, SymbolType> collectSymbolTypes(const Offsets &, const SymbolTable &);
-
-			static SymbolType getSymbolType(const Offsets &, const SymbolTable &, const std::string &symbol);
-
-			static void desymbolize(std::vector<Long> &, const Offsets &, const SymbolTable &);
+			void applyRelocation(std::vector<RelocationData> &relocation,
+			                     const std::vector<SymbolTableEntry> &symbols,
+			                     const std::map<std::string, size_t> &symbol_indices,
+			                     std::vector<Long> &data, std::vector<Long> &code,
+			                     Long data_offset, Long code_offset);
 
 			static std::string findSymbolFromAddress(Long address, const SymbolTable &, Long end_offset);
 
@@ -46,12 +40,14 @@ namespace Wasmc {
 
 			static size_t countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &);
 
-			static void detectSymbolCollisions(const SymbolTable &, const SymbolTable &);
+			static void
+			detectSymbolCollisions(const std::map<std::string, size_t> &, const std::map<std::string, size_t> &,
+	                               const std::vector<SymbolTableEntry> &, const std::vector<SymbolTableEntry> &);
 
 			static std::vector<Long> encodeDebugData(const std::vector<std::shared_ptr<Wasmc::DebugEntry>> &);
 
-			static std::vector<Long> encodeSymbolTable(const SymbolTable &);
+			static std::vector<Long> encodeSymbolTable(const std::vector<SymbolTableEntry> &);
 
-			static void resymbolize(std::vector<Long> &, const SymbolTable &);
+			static std::vector<Long> encodeRelocationData(const std::vector<RelocationData> &);
 	};
 }

@@ -1,5 +1,4 @@
-#ifndef WVM_UNPARSER_H_
-#define WVM_UNPARSER_H_
+#pragma once
 
 #include <string>
 
@@ -25,9 +24,9 @@ namespace WVM::Unparser {
 	std::string colorNum(int reg);
 	std::string colorOper(const std::string &oper);
 
+	std::string getSymbol(Word location, const VM &);
+
 	constexpr const char *immColor = "\e[38;5;164m";
 	constexpr const char *into = " \e[2m->\e[22m ";
 	constexpr const char *left = "[", *right = "]";
 }
-
-#endif

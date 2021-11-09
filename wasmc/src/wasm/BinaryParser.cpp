@@ -65,10 +65,13 @@ namespace Wasmc {
 	}
 
 	void BinaryParser::parse() {
-		offsets = {getSymbolTableOffset(), getCodeOffset(), getDataOffset(), getDebugOffset(), getEndOffset()};
-		rawMeta = slice(0, offsets.symbolTable / 8);
+		offsets = {
+			getCodeOffset(), getDataOffset(), getSymbolTableOffset(), getDebugOffset(), getRelocationOffset(),
+			getEndOffset()
+		};
+		rawMeta = slice(0, offsets.code / 8);
 
-		const std::vector<Long> nva_longs = slice(7, offsets.symbolTable / 8);
+		const std::vector<Long> nva_longs = slice(7, offsets.code / 8);
 		std::string nva_string;
 		nva_string.reserve(8 * nva_longs.size());
 		for (const Long piece: nva_longs)
@@ -89,17 +92,20 @@ namespace Wasmc {
 		version = nva_string.substr(first + 1, second - first - 1);
 		author = nva_string.substr(second + 1, third - second - 1);
 
-		rawSymbols = slice(offsets.symbolTable / 8, offsets.code / 8);
-		symbols = getSymbols();
+		rawSymbols = slice(offsets.symbolTable / 8, offsets.debug / 8);
+		extractSymbols();
 
 		rawCode = slice(offsets.code / 8, offsets.data / 8);
 		for (const Long instruction: rawCode)
 			code.emplace_back(parse(instruction));
 
-		rawData = slice(offsets.data / 8, offsets.debug / 8);
-		rawDebugData = slice(offsets.debug / 8, offsets.end / 8);
+		rawData = slice(offsets.data / 8, offsets.symbolTable / 8);
 
+		rawDebugData = slice(offsets.debug / 8, offsets.relocation / 8);
 		debugData = getDebugData();
+
+		rawRelocation = slice(offsets.relocation / 8, offsets.end / 8);
+		relocationData = getRelocationData();
 	}
 
 	decltype(BinaryParser::debugData) BinaryParser::copyDebugData() const {
@@ -114,34 +120,38 @@ namespace Wasmc {
 	}
 
 	Long BinaryParser::getSymbolTableLength() const {
-		return raw[1] - raw[0];
+		return getDebugOffset() - getSymbolTableOffset();
 	}
 
 	Long BinaryParser::getCodeLength() const {
-		return raw[2] - raw[1];
+		return getDataOffset() - getCodeOffset();
 	}
 
 	Long BinaryParser::getDataLength() const {
-		return raw[3] - raw[2];
+		return getSymbolTableOffset() - getDataOffset();
 	}
 
 	Long BinaryParser::getDebugLength() const {
-		return raw[4] - raw[3];
+		return getRelocationOffset() - getDebugOffset();
+	}
+
+	Long BinaryParser::getRelocationLength() const {
+		return getEndOffset() - getRelocationOffset();
 	}
 
 	Long BinaryParser::getMetaOffset() const {
 		return 0;
 	}
 
-	Long BinaryParser::getSymbolTableOffset() const {
+	Long BinaryParser::getCodeOffset() const {
 		return raw[0];
 	}
 
-	Long BinaryParser::getCodeOffset() const {
+	Long BinaryParser::getDataOffset() const {
 		return raw[1];
 	}
 
-	Long BinaryParser::getDataOffset() const {
+	Long BinaryParser::getSymbolTableOffset() const {
 		return raw[2];
 	}
 
@@ -149,8 +159,12 @@ namespace Wasmc {
 		return raw[3];
 	}
 
-	Long BinaryParser::getEndOffset() const {
+	Long BinaryParser::getRelocationOffset() const {
 		return raw[4];
+	}
+
+	Long BinaryParser::getEndOffset() const {
+		return raw[5];
 	}
 
 	std::vector<Long> BinaryParser::slice(size_t begin, size_t end) {
@@ -165,10 +179,11 @@ namespace Wasmc {
 		return out;
 	}
 
-	SymbolTable BinaryParser::getSymbols() const {
-		SymbolTable out;
+	void BinaryParser::extractSymbols() {
+		symbols.clear();
+		symbolIndices.clear();
 
-		const size_t end = getCodeOffset() / 8;
+		const size_t end = getDebugOffset() / 8;
 
 		for (size_t i = getSymbolTableOffset() / 8, j = 0; i < end && j < MAX_SYMBOLS; ++j) {
 			const uint32_t id = raw[i] >> 32;
@@ -196,17 +211,16 @@ namespace Wasmc {
 				}
 			}
 
-			out.try_emplace(symbol_name, id, address, type);
+			symbolIndices.try_emplace(symbol_name, symbols.size());
+			symbols.emplace_back(id, symbol_name, address, type);
 			i += 2 + length;
 		}
-
-		return out;
 	}
 
 	std::vector<std::shared_ptr<DebugEntry>> BinaryParser::getDebugData() const {
 		std::vector<std::shared_ptr<DebugEntry>> out;
 
-		const size_t start = offsets.debug / 8, end = offsets.end / 8;
+		const size_t start = offsets.debug / 8, end = offsets.relocation / 8;
 		Long piece;
 		const auto get = [&piece](unsigned char index) -> size_t {
 			return (piece >> (8 * index)) & 0xff;
@@ -241,6 +255,22 @@ namespace Wasmc {
 				throw std::runtime_error("Invalid debug data entry type (" + std::to_string(type) + ") at line "
 					+ std::to_string(i + 1) + " of " + std::to_string(raw.size()) + " in " + name);
 			}
+		}
+
+		return out;
+	}
+
+	std::vector<RelocationData> BinaryParser::getRelocationData() const {
+		std::vector<RelocationData> out;
+
+		for (size_t i = 0, size = rawRelocation.size(); i < size; i += 3) {
+			RelocationData data(false, RelocationType::Invalid, 0, 0, 0);
+			data.isData = (rawRelocation[i] & 1) == 1;
+			data.type = RelocationType((rawRelocation[i] >> 1) & 3);
+			data.symbolIndex = rawRelocation[i] >> 3;
+			data.offset = rawRelocation[i + 1];
+			data.sectionOffset = rawRelocation[i + 2];
+			out.emplace_back(data);
 		}
 
 		return out;
