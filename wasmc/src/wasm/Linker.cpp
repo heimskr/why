@@ -99,11 +99,6 @@ namespace Wasmc {
 		std::vector<RelocationData> combined_relocation = main_parser.relocationData;
 		const size_t symbol_table_length = main_parser.rawSymbols.size();
 
-		// std::cerr << "Initial relocation data:\n";
-		// size_t i_ = 0;
-		// for (const auto &reloc: combined_relocation)
-		// 	std::cerr << i_++ << ": " << std::string(reloc) << "\n";
-
 		// Step 3
 		size_t extra_symbol_length = symbol_table_length * 8;
 		size_t extra_code_length = main_parser.getCodeLength();
@@ -246,13 +241,6 @@ namespace Wasmc {
 	                             std::vector<Long> &data, std::vector<Long> &code,
 	                             Long data_offset, Long code_offset) {
 		for (auto &entry: relocation) {
-			if (entry.sectionOffset < 1000) {
-				std::cerr << std::string(entry);
-				if (entry.symbolIndex < symbols.size())
-					std::cerr << " " << symbols.at(entry.symbolIndex).label;
-				std::cerr << "\n";
-			}
-
 			if (!entry.label) {
 				if (entry.symbolIndex != -1)
 					entry.label = StringSet::intern(symbols.at(entry.symbolIndex).label);
@@ -302,8 +290,6 @@ namespace Wasmc {
 			} else {
 				Long &value = longs[entry.sectionOffset / 8];
 				if (entry.type == RelocationType::Full) {
-					if (entry.sectionOffset < 1000)
-						std::cerr << Util::toHex(value, 16) << " -> " << Util::toHex(new_value, 16) << " @ " << entry.sectionOffset << "\n";
 					value = new_value;
 				} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
 					auto bytes = Util::getBytes(value);

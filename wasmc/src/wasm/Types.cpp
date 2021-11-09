@@ -13,7 +13,7 @@ namespace Wasmc {
 		sectionOffset(third) {}
 
 	std::vector<Long> RelocationData::encode() const {
-		return {Long(isData? 1 : 0) | ((Long(type) & 3) << 2) | (symbolIndex << 3), Long(offset), Long(sectionOffset)};
+		return {Long(isData? 1 : 0) | ((Long(type) & 3) << 1) | (symbolIndex << 3), Long(offset), Long(sectionOffset)};
 	}
 
 	bool RelocationData::operator==(const RelocationData &other) const {
