@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
 		switch (entry.type) {
 			case SymbolEnum::Code: std::cout << "code"; break;
 			case SymbolEnum::Data: std::cout << "data"; break;
-			case SymbolEnum::KnownPointer: std::cout << "knownptr"; break;
-			case SymbolEnum::UnknownPointer: std::cout << "unknownptr"; break;
+			case SymbolEnum::UnknownCode: std::cout << "unknowncode break;
+			case SymbolEnum::UnknownData: std::cout << "unknowndata"; break;
 			case SymbolEnum::Unknown: std::cout << "unknown"; break;
 			default: std::cout << static_cast<int>(entry.type); break;
 		}

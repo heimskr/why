@@ -65,7 +65,6 @@ namespace Wasmc {
 	}
 
 	void BinaryParser::parse() {
-		std::cerr << std::string(32, '=') << '\n';
 		offsets = {
 			getCodeOffset(), getDataOffset(), getSymbolTableOffset(), getDebugOffset(), getRelocationOffset(),
 			getEndOffset()

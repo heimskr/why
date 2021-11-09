@@ -14,7 +14,7 @@ namespace Wasmc {
 	using Long = uint64_t;
 	struct Section;
 
-	enum class SymbolEnum: unsigned {Unknown = 0, KnownPointer, UnknownPointer, Data, Code};
+	enum class SymbolEnum: unsigned {Unknown = 0, UnknownData, UnknownCode, Data, Code};
 	enum class SymbolType {Unknown, Other, Function, Object, Instruction};
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol};
 	enum class RelocationType: unsigned {Full = 0, Invalid, Lower4, Upper4};

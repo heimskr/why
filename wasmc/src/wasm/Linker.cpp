@@ -161,6 +161,8 @@ namespace Wasmc {
 				else if (type == SymbolType::Object)
 					// For each data symbol in the included symbol table, increase its address
 					entry.address += meta_difference + extra_code_length + extra_data_length;
+				std::cerr << "entry.type(" << symbol << ") == " << int(entry.type) << "\n";
+
 				symbol_types[symbol] = type;
 			}
 
@@ -191,12 +193,12 @@ namespace Wasmc {
 					entry.sectionOffset += extra_data_length;
 				else
 					entry.sectionOffset += extra_code_length;
-				std::cerr << "symbolIndex[" << entry.symbolIndex << "], subtable.size[" << subtable.size() << "]\n";
+				// std::cerr << "symbolIndex[" << entry.symbolIndex << "], subtable.size[" << subtable.size() << "]\n";
 				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
-				info() << "entry.label set to " << (entry.label? "\"" + *entry.label + "\"" : "nullptr") << "\n";
-				info() << "Adding from subrelocation: symbol index: " << entry.symbolIndex << "\n"
-				       << "    offset[" << entry.offset << "], sectionOffset[" << entry.sectionOffset << "], type["
-				       << int(entry.type) << "]\n";
+				// info() << "entry.label set to " << (entry.label? "\"" + *entry.label + "\"" : "nullptr") << "\n";
+				// info() << "Adding from subrelocation: symbol index: " << entry.symbolIndex << "\n"
+				//        << "    offset[" << entry.offset << "], sectionOffset[" << entry.sectionOffset << "], type["
+				//        << int(entry.type) << "]\n";
 				combined_relocation.emplace_back(std::move(entry));
 			}
 
@@ -331,16 +333,20 @@ namespace Wasmc {
 				second = adjusted[1];
 			} else {
 				Long &value = longs[entry.sectionOffset / 8];
+				std::cerr << "    Old: " << Util::toHex(value, 16) << "\n";
 				if (entry.type == RelocationType::Full) {
+					std::cerr << "    Full: " << Util::toHex(new_value, 16) << "\n";
 					value = new_value;
 				} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
 					auto bytes = Util::getBytes(value);
 					if (entry.type == RelocationType::Lower4) {
+						std::cerr << "    Lower4: " << Util::toHex(uint32_t(new_value), 8) << "\n";
 						bytes[0] = uint8_t(new_value);
 						bytes[1] = uint8_t(new_value >>  8);
 						bytes[2] = uint8_t(new_value >> 16);
 						bytes[3] = uint8_t(new_value >> 24);
 					} else {
+						std::cerr << "    Upper4: " << Util::toHex(uint32_t(new_value >> 32), 8) << "\n";
 						bytes[0] = uint8_t(new_value >> 32);
 						bytes[1] = uint8_t(new_value >> 40);
 						bytes[2] = uint8_t(new_value >> 48);
@@ -351,6 +357,7 @@ namespace Wasmc {
 					value = adjusted.front();
 				} else
 					throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
+				std::cerr << "    New: " << Util::toHex(value, 16) << "\n";
 			}
 		}
 	}
@@ -364,10 +371,17 @@ namespace Wasmc {
 	}
 
 	SymbolType Linker::getSymbolType(const Offsets &offsets, Long address) {
-		if (offsets.code <= address && address < offsets.data)
+		// std::cerr << "getSymbolType({code: " << offsets.code << ", data: " << offsets.data << ", symbols: "
+		//           << offsets.symbolTable << "}, " << address << "): ";
+		if (offsets.code <= address && address < offsets.data) {
+			// std::cerr << "Instruction\n";
 			return SymbolType::Instruction;
-		if (offsets.data <= address && address < offsets.debug)
+		}
+		if (offsets.data <= address && address < offsets.symbolTable) {
+			// std::cerr << "Object\n";
 			return SymbolType::Object;
+		}
+		// std::cerr << "Other\n";
 		return SymbolType::Other;
 	}
 
