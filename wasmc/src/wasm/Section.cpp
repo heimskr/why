@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "wasm/Expression.h"
 #include "wasm/Section.h"
 
 namespace Wasmc {
@@ -36,6 +37,23 @@ namespace Wasmc {
 
 	Section & Section::go(size_t new_counter) {
 		counter = new_counter;
+		return *this;
+	}
+
+	Section & Section::applyValues(const Assembler &assembler) {
+		for (const auto &[position, pair]: values) {
+			const auto &value_size = pair.first;
+			const auto &expression = pair.second;
+			long value = expression->evaluate(assembler, true);
+			switch (value_size) {
+				case 8: insert(position, value); break;
+				case 4: insert(position, uint32_t(value)); break;
+				case 2: insert(position, uint16_t(value)); break;
+				case 1: insert(position, uint8_t(value)); break;
+				default: throw std::invalid_argument("Encountered unhandled value size in Section::applyValues: "
+					+ std::to_string(value_size));
+			}
+		}
 		return *this;
 	}
 

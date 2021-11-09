@@ -65,13 +65,14 @@ namespace Wasmc {
 	}
 
 	void BinaryParser::parse() {
+		std::cerr << std::string(32, '=') << '\n';
 		offsets = {
 			getCodeOffset(), getDataOffset(), getSymbolTableOffset(), getDebugOffset(), getRelocationOffset(),
 			getEndOffset()
 		};
-		rawMeta = slice(0, offsets.symbolTable / 8);
+		rawMeta = slice(0, offsets.code / 8);
 
-		const std::vector<Long> nva_longs = slice(7, offsets.symbolTable / 8);
+		const std::vector<Long> nva_longs = slice(7, offsets.code / 8);
 		std::string nva_string;
 		nva_string.reserve(8 * nva_longs.size());
 		for (const Long piece: nva_longs)
@@ -99,7 +100,7 @@ namespace Wasmc {
 		for (const Long instruction: rawCode)
 			code.emplace_back(parse(instruction));
 
-		rawData = slice(offsets.data / 8, offsets.debug / 8);
+		rawData = slice(offsets.data / 8, offsets.symbolTable / 8);
 
 		rawDebugData = slice(offsets.debug / 8, offsets.relocation / 8);
 		debugData = getDebugData();
@@ -211,8 +212,6 @@ namespace Wasmc {
 				}
 			}
 
-			std::cerr << "extractSymbols: " << symbol_name << ".type[" << int(type) << "]\n";
-
 			symbolIndices.try_emplace(symbol_name, symbols.size());
 			symbols.emplace_back(id, symbol_name, address, type);
 			i += 2 + length;
@@ -223,7 +222,6 @@ namespace Wasmc {
 		std::vector<std::shared_ptr<DebugEntry>> out;
 
 		const size_t start = offsets.debug / 8, end = offsets.relocation / 8;
-		std::cerr << "BinaryParser::getDebugData(): start[" << start << "], end[" << end << "]\n";
 		Long piece;
 		const auto get = [&piece](unsigned char index) -> size_t {
 			return (piece >> (8 * index)) & 0xff;
@@ -273,7 +271,6 @@ namespace Wasmc {
 			data.symbolIndex = rawRelocation[i] >> 3;
 			data.offset = rawRelocation[i + 1];
 			data.sectionOffset = rawRelocation[i + 2];
-			std::cerr << "data.symbolIndex[" << data.symbolIndex << "], symbols.size[" << symbols.size() << "]\n";
 			out.emplace_back(data);
 		}
 

@@ -37,6 +37,8 @@ namespace Wasmc {
 
 		Section & go(size_t);
 
+		Section & applyValues(const Assembler &);
+
 		template <typename T>
 		T * extend(size_t count, uint8_t value = 0) {
 			const size_t old_size = bytes.size();
@@ -74,7 +76,6 @@ namespace Wasmc {
 				throw std::out_of_range("Can't insert " + std::to_string(sizeof(T)) + " bytes into a Section of size " +
 					std::to_string(size()) + " at offset " + std::to_string(offset));
 			*reinterpret_cast<T *>(&bytes[offset]) = item;
-			// counter += sizeof(T);
 		}
 
 		template <typename T, template <typename...> typename C>
@@ -86,7 +87,6 @@ namespace Wasmc {
 			T *pointer = reinterpret_cast<T *>(&bytes[offset]);
 			for (const T &item: container)
 				*pointer++ = item;
-			// counter += container.size() * sizeof(T);
 		}
 
 		size_t alignUp(size_t alignment);

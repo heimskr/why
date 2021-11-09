@@ -42,6 +42,8 @@ namespace Wasmc {
 		applyRelocation();
 		encodeRelocation();
 		createDebugData(debugNode);
+		code.applyValues(*this);
+		data.applyValues(*this);
 		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
 
 		if (can_warn && 0 < unknownSymbols.size()) {

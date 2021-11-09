@@ -3,6 +3,8 @@
 #include <string>
 #include <set>
 
+#include "parser/ASTNode.h"
+
 namespace Wasmc {
 	class Assembler;
 	class ASTNode;

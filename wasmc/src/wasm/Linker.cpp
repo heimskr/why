@@ -47,7 +47,7 @@ namespace Wasmc {
 			while (std::getline(stream, line))
 				longs.push_back(Util::swapEndian(Util::parseUlong(line, 16)));
 			if (firstDone)
-				subunits.push_back(longs);
+				subunits.push_back(std::move(longs));
 			else
 				mainUnit = std::move(longs);
 			firstDone = true;
@@ -108,13 +108,6 @@ namespace Wasmc {
 		size_t extra_debug_length = countStringTypes(combined_debug);
 		size_t extra_relocation_length = main_parser.getRelocationLength();
 
-		info() << "Original relocation data:\n";
-		for (auto &entry: combined_relocation) {
-			std::cerr << "    symbolIndex[" << entry.symbolIndex << "], offset[" << entry.offset << "], sectionOffset["
-			          << entry.sectionOffset << "], type[" << int(entry.type) << "], label[" << (entry.label?
-					     *entry.label : "nullptr") << "]\n";
-		}
-
 		// Step 4
 		for (const std::vector<Long> &unit: subunits) {
 			// Open the included binary
@@ -122,13 +115,23 @@ namespace Wasmc {
 			subparser.parse();
 
 			std::vector<Long> &subcode = subparser.rawCode;
+
+			// std::cerr << std::string(32, '=') << '\n';
+			// for (const Long l: subcode)
+			// 	std::cerr << "Code: " << Util::toHex(l, 16) << '\n';
+
+
 			std::vector<Long> &subdata = subparser.rawData;
+			// for (const Long l: subdata)
+			// 	std::cerr << "Data: " << Util::toHex(l, 16) << '\n';
 			std::vector<SymbolTableEntry> &subtable = subparser.symbols;
 			std::map<std::string, size_t> &subindices = subparser.symbolIndices;
 			std::vector<RelocationData> &subrelocation = subparser.relocationData;
 			// depointerize(subtable, subdata, subparser.offsets.data);
 			const size_t subcode_length = subparser.getCodeLength();
+			std::cerr << "subcode length: " << subcode_length << "\n";
 			const size_t subdata_length = subparser.getDataLength();
+			std::cerr << "subdata length: " << subdata_length << "\n";
 			size_t subtable_length = subparser.rawSymbols.size();
 			const size_t subrelocation_length = subparser.getRelocationLength();
 			std::vector<std::shared_ptr<Wasmc::DebugEntry>> &subdebug = subparser.debugData;
@@ -245,6 +248,11 @@ namespace Wasmc {
 			+ encoded_debug.size());
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
 
+		info() << "Combined code size: " << combined_code.size() << " longs\n";
+		info() << "Combined data size: " << combined_data.size() << " longs\n";
+		info() << "Encoded symbols size: " << encoded_combined_symbols.size() << " longs\n";
+		info() << "Encoded debug size: " << encoded_debug.size() << " longs\n";
+
 		// resymbolize(combined_code, combined_symbols);
 
 		std::vector<Long> &meta = main_parser.rawMeta;
@@ -256,6 +264,8 @@ namespace Wasmc {
 		applyRelocation(combined_relocation, combined_symbols, combined_symbol_indices, combined_data, combined_code,
 		                meta.at(1), meta.at(0));
 		const std::vector<Long> encoded_relocation = encodeRelocationData(combined_relocation);
+
+		info() << "Encoded relocation size: " << encoded_relocation.size() << " longs\n";
 
 		meta.at(5) = meta.at(4) + encoded_relocation.size() * 8;
 

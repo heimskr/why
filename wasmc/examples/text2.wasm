@@ -9,7 +9,7 @@ orcid: "0000-0001-7405-6654"
 %data
 
 @text2_data
-%4b 0xd00df00d
+%4b 0x0df00dd0
 %8b 0x0123456789abcdef
 
 @text2_string
