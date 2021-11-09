@@ -178,7 +178,7 @@ namespace Wasmc {
 					const std::string *label1 = nullptr, *label2 = nullptr;
 					directive->expression->validate(&label1, &label2);
 					if (label1 && !label2) {
-						SymbolTableEntry entry(*label1, 0, SymbolEnum::Unknown);
+						SymbolTableEntry entry(*label1, 0, SymbolEnum::UnknownPointer);
 						reloc.symbolIndex = symbolTableEntries.size();
 						symbolTableIndices.emplace(label1, symbolTableEntries.size());
 						symbolTableEntries.emplace_back(entry);
@@ -376,7 +376,7 @@ namespace Wasmc {
 	void Assembler::applyRelocation() {
 		processRelocation();
 
-		for (const auto &[node, reloc]: relocationMap) {
+		for (auto &[node, reloc]: relocationMap) {
 			if (!reloc.section)
 				throw std::runtime_error("Relocation is missing a section");
 			size_t index = reloc.symbolIndex;
@@ -384,7 +384,10 @@ namespace Wasmc {
 				index = symbolTableIndices.at(reloc.label);
 			else
 				warn() << "Using stale symbolIndex: " << index << "\n";
-			long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
+			SymbolTableEntry &entry = symbolTableEntries.at(index);
+			long address = index == -1ul? 0 : long(entry.address);
+			if (reloc.symbolIndex == -1)
+				reloc.symbolIndex = index;
 			Section *definition_section = getSection(reloc.label);
 			if (definition_section)
 				address += getOffset(*definition_section);
@@ -498,6 +501,7 @@ namespace Wasmc {
 						type = SymbolEnum::Data;
 						break;
 					case SymbolType::Unknown:
+						type = SymbolEnum::UnknownPointer;
 						break;
 					default:
 						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
@@ -533,6 +537,7 @@ namespace Wasmc {
 						type = SymbolEnum::Data;
 						break;
 					case SymbolType::Unknown:
+						type = SymbolEnum::UnknownPointer;
 						break;
 					default:
 						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
@@ -541,7 +546,7 @@ namespace Wasmc {
 			}
 
 			if (unknownSymbols.count(label) != 0)
-				type = SymbolEnum::Unknown;
+				type = SymbolEnum::UnknownPointer;
 
 			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);
 			symbols.appendAll(entry.encode(*label));
