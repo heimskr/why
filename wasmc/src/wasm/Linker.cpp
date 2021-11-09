@@ -152,26 +152,33 @@ namespace Wasmc {
 
 			const ssize_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
 
+			std::cerr << "meta_difference[" << meta_difference << "]\n";
+
 			for (auto &[symbol, index]: subindices) {
 				auto &entry = subtable.at(index);
-				const SymbolType type = getSymbolType(subparser.offsets, entry.address);
-				if (type == SymbolType::Function || type == SymbolType::Instruction)
+				// const SymbolType type = getSymbolType(subparser.offsets, entry.address);
+				// if (type == SymbolType::Function || type == SymbolType::Instruction)
+				if (entry.type == SymbolEnum::Code) {
 					// For each code symbol in the included symbol table, increase its address
-					entry.address += meta_difference + extra_code_length;
-				else if (type == SymbolType::Object)
+					std::cerr << "Adding to " << symbol << ": " << (extra_code_length) << "\n";
+					entry.address += extra_code_length;
+				} else if (entry.type == SymbolEnum::Data) {
 					// For each data symbol in the included symbol table, increase its address
-					entry.address += meta_difference + extra_code_length + extra_data_length;
+					std::cerr << "Adding to " << symbol << ": " << (extra_data_length) << "\n";
+					// entry.address += extra_code_length + extra_data_length;
+					entry.address += extra_data_length;
+				}
 				std::cerr << "entry.type(" << symbol << ") == " << int(entry.type) << "\n";
 
-				symbol_types[symbol] = type;
+				// symbol_types[symbol] = type;
 			}
 
-			for (auto &[symbol, index]: combined_symbol_indices) {
-				auto &entry = combined_symbols.at(index);
-				// if (entry.type == SymbolEnum::UnknownData || entry.type == SymbolEnum::Data)
-				if (symbol_types.at(symbol) == SymbolType::Object)
-					entry.address += subcode_length;
-			}
+			// for (auto &[symbol, index]: combined_symbol_indices) {
+			// 	auto &entry = combined_symbols.at(index);
+			// 	if (entry.type == SymbolEnum::UnknownData || entry.type == SymbolEnum::Data)
+			// 	if (symbol_types.at(symbol) == SymbolType::Object)
+			// 		entry.address += subcode_length;
+			// }
 
 			// for (auto &entry: combined_debug)
 			// 	if (entry->getType() == DebugEntry::Type::Location) {
@@ -203,7 +210,6 @@ namespace Wasmc {
 				combined_relocation.emplace_back(std::move(entry));
 			}
 
-
 			std::vector<std::shared_ptr<DebugEntry>> types1and2;
 			Util::filter(subdebug, types1and2, [](const std::shared_ptr<DebugEntry> &entry) {
 				const auto type = entry->getType();
@@ -228,9 +234,10 @@ namespace Wasmc {
 					if (existing_unknown && !entry_unknown) {
 						std::cerr << "Found override for " << key << ". Extra code length: " << extra_code_length << ", subcode length: " << subcode_length << "\n";
 						std::cerr << "Existing type: " << int(existing.type) << ", entry type: " << int(entry.type) << "\n";
-						entry.address += extra_code_length;
-						if (entry.type == SymbolEnum::Data)
-							entry.address += extra_data_length;
+						std::cerr << "Existing address: " << int(existing.address) << ", entry address: " << int(entry.address) << "\n";
+						// entry.address += extra_code_length;
+						// if (entry.type == SymbolEnum::Data)
+						// 	entry.address += extra_data_length;
 						existing = entry;
 					} else if (!existing_unknown && entry_unknown) {
 						std::cerr << "Found known unknown: " << key << "\n";
@@ -244,12 +251,8 @@ namespace Wasmc {
 			extra_data_length += subdata_length;
 			extra_relocation_length += subrelocation_length;
 
-			for (const Long piece: subcode)
-				combined_code.push_back(piece);
-
-			for (const Long piece: subdata)
-				combined_data.push_back(piece);
-
+			combined_code.insert(combined_code.end(), subcode.cbegin(), subcode.cend());
+			combined_data.insert(combined_data.end(), subdata.cbegin(), subdata.cend());
 			combined_debug.insert(combined_debug.begin() + extra_debug_length + 1,
 				types1and2.begin(), types1and2.end());
 
@@ -262,7 +265,6 @@ namespace Wasmc {
 			combined_symbol_indices.try_emplace(".end", combined_symbols.size());
 			combined_symbols.emplace_back(".end", 0, SymbolEnum::Unknown);
 		}
-
 
 		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
 		combined_symbols.at(combined_symbol_indices.at(".end")).address = 8 * (main_parser.rawMeta.size()
