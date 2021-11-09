@@ -35,17 +35,15 @@ namespace Wasmc {
 		expandLabels();
 		expandCode();
 		encodeRelocation();
+		createDebugData(debugNode);
+		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
+		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
 		updateSymbolTable(allLabels);
 		applyRelocation();
 		encodeRelocation();
-		createDebugData(debugNode);
-		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
-		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		code.applyValues(*this);
 		data.applyValues(*this);
-		std::cerr << "debug.size() == " << debug.size() << "\n";
-		std::cerr << "relocation.size() == " << relocation.size() << "\n";
 		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
 
 		if (can_warn && 0 < unknownSymbols.size()) {
@@ -352,10 +350,6 @@ namespace Wasmc {
 					RelocationData relocation_data(false, type, symbolTableIndices.at(label), 0, offset, &code, label);
 					if (relocationMap.count(statement) != 0)
 						relocationMap.erase(statement);
-					std::cerr << "Adding " << std::string(relocation_data) << "\n";
-					std::vector<Long> longs = relocation_data.encode();
-					assert(longs.size() == 3);
-					std::cerr << "    = " << std::string(RelocationData(longs[0], longs[1], longs[2])) << "\n";
 					relocationMap.emplace(statement, relocation_data);
 				}
 			}
