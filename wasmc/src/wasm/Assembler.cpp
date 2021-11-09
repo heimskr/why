@@ -36,6 +36,7 @@ namespace Wasmc {
 		expandCode();
 		encodeRelocation();
 		createDebugData(debugNode);
+		encodeSymbolTable();
 		metaOffsetDebug() = metaOffsetSymbols() + symbols.size();
 		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
