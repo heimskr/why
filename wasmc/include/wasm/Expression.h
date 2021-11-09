@@ -24,7 +24,7 @@ namespace Wasmc {
 			static bool isSymbol(const ASTNode *);
 			static const std::string * getSymbol(const ASTNode *node);
 			static bool hasDot(const ASTNode *);
-			static long evaluate(const ASTNode *, const Assembler &, size_t counter);
+			static long evaluate(const ASTNode *, const Assembler &, size_t counter, bool ignore_unknown);
 			static std::string toString(const ASTNode *);
 
 		public:
@@ -45,7 +45,7 @@ namespace Wasmc {
 			/** Ensures that the expression fits the standard expression constraints. */
 			ValidationResult validate(const std::string ** = nullptr, const std::string ** = nullptr);
 
-			long evaluate(const Assembler &) const;
+			long evaluate(const Assembler &, bool ignore_unknown) const;
 
 			operator std::string() const;
 	};
