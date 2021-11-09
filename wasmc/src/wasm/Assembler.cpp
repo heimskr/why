@@ -520,7 +520,7 @@ namespace Wasmc {
 
 	void Assembler::encodeSymbolTable() {
 		symbols.clear();
-		for (const auto &entry: symbolTableEntries) {
+		for (auto &entry: symbolTableEntries) {
 			if (entry.label.empty()) {
 				error() << "address[" << entry.address << "], id[" << entry.id << "], type[" << int(entry.type)
 				        << "]\n";
@@ -530,6 +530,8 @@ namespace Wasmc {
 					std::cerr << "    Hash found: \"" << *hashes.at(entry.id) << "\"\n";
 				throw std::runtime_error("Label in symbol table entry is empty");
 			}
+			if (entry.address == 0 && offsets.count(StringSet::intern(entry.label)) != 0)
+				entry.address = offsets.at(StringSet::intern(entry.label));
 			symbols.appendAll(entry.encode());
 		}
 		symbols.alignUp(8);

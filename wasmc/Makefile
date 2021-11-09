@@ -14,7 +14,7 @@ WASMBISONSRC    := src/parser/wasm.y
 
 CLOC_OPTIONS    := --exclude-dir=.vscode,PicoSHA2,tools --not-match-f='^(yy|wasm)(lex|parse)|pico|strnat'
 BISON_OPTIONS   := --color=always
-SOURCES         := $(filter-out src/DebugSearch.cpp src/DumpSymbols.cpp src/main.cpp,$(shell find src/**/*.cpp src/*.cpp))
+SOURCES         := $(filter-out src/DebugSearch.cpp src/DumpSymbols.cpp src/DumpRelocation.cpp src/main.cpp,$(shell find src/**/*.cpp src/*.cpp))
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= examples/text.wasm
 OUTFILE         ?= compiled/text.why
@@ -26,7 +26,7 @@ TESTARGS        ?= -l compiled/text_linked.why compiled/text.why compiled/text2.
 
 .PHONY: all counter test clean count countbf
 
-all: $(OUTPUT) ds++ syms
+all: $(OUTPUT) ds++ syms reloc
 
 $(OUTPUT): $(OBJECTS) src/main.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
@@ -35,6 +35,9 @@ ds++: $(OBJECTS) src/DebugSearch.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
 syms: $(OBJECTS) src/DumpSymbols.o
+	$(COMPILER) -o $@ $^ $(LDFLAGS)
+
+reloc: $(OBJECTS) src/DumpRelocation.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
 $(WASMLEXCPP): $(WASMFLEXSRC) $(WASMPARSEHDR)

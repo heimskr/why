@@ -246,6 +246,13 @@ namespace Wasmc {
 	                             std::vector<Long> &data, std::vector<Long> &code,
 	                             Long data_offset, Long code_offset) {
 		for (auto &entry: relocation) {
+			if (entry.sectionOffset < 1000) {
+				std::cerr << std::string(entry);
+				if (entry.symbolIndex < symbols.size())
+					std::cerr << " " << symbols.at(entry.symbolIndex).label;
+				std::cerr << "\n";
+			}
+
 			if (!entry.label) {
 				if (entry.symbolIndex != -1)
 					entry.label = StringSet::intern(symbols.at(entry.symbolIndex).label);
@@ -273,13 +280,21 @@ namespace Wasmc {
 			}
 			auto &longs = entry.isData? data : code;
 			if (entry.sectionOffset % 8) {
-				// Pain.
 				Long &first = longs[entry.sectionOffset / 8], &second = longs[entry.sectionOffset / 8 + 1];
 				auto bytes = Util::getBytes(first), second_bytes = Util::getBytes(second);
 				bytes.reserve(16);
 				bytes.insert(bytes.end(), second_bytes.cbegin(), second_bytes.cend());
-				for (int i = 0; i < 8; ++i)
-					bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
+				if (entry.type == RelocationType::Full)
+					for (int i = 0; i < 8; ++i)
+						bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
+				else if (entry.type == RelocationType::Lower4)
+					for (int i = 0; i < 4; ++i)
+						bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
+				else if (entry.type == RelocationType::Upper4)
+					for (int i = 0; i < 4; ++i)
+						bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (32 + (8 * i)));
+				else
+					throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
 				auto adjusted = Util::getLongs(bytes);
 				assert(adjusted.size() == 2);
 				first = adjusted[0];
@@ -287,6 +302,8 @@ namespace Wasmc {
 			} else {
 				Long &value = longs[entry.sectionOffset / 8];
 				if (entry.type == RelocationType::Full) {
+					if (entry.sectionOffset < 1000)
+						std::cerr << Util::toHex(value, 16) << " -> " << Util::toHex(new_value, 16) << " @ " << entry.sectionOffset << "\n";
 					value = new_value;
 				} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
 					auto bytes = Util::getBytes(value);
