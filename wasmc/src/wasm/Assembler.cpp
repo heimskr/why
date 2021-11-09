@@ -40,6 +40,7 @@ namespace Wasmc {
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
 		updateSymbolTable(allLabels);
 		applyRelocation();
+		encodeRelocation();
 		createDebugData(debugNode);
 		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
 
@@ -175,9 +176,10 @@ namespace Wasmc {
 				} catch (const SymbolNotFound &err) {
 					unknownSymbols.insert(StringSet::intern(err.symbol));
 					const std::string *label1 = nullptr, *label2 = nullptr;
-					auto type = directive->expression->validate(&label1, &label2);
+					directive->expression->validate(&label1, &label2);
 					if (label1 && !label2) {
 						SymbolTableEntry entry(*label1, 0, SymbolEnum::Unknown);
+						reloc.symbolIndex = symbolTableEntries.size();
 						symbolTableIndices.emplace(label1, symbolTableEntries.size());
 						symbolTableEntries.emplace_back(entry);
 					}
@@ -378,8 +380,10 @@ namespace Wasmc {
 			if (!reloc.section)
 				throw std::runtime_error("Relocation is missing a section");
 			size_t index = reloc.symbolIndex;
-			if (index == -1ul && reloc.label && symbolTableIndices.count(reloc.label) != 0)
+			if (reloc.label && symbolTableIndices.count(reloc.label) != 0)
 				index = symbolTableIndices.at(reloc.label);
+			else
+				warn() << "Using stale symbolIndex: " << index << "\n";
 			long address = index == -1ul? 0 : long(symbolTableEntries.at(index).address);
 			Section *definition_section = getSection(reloc.label);
 			if (definition_section)
@@ -457,10 +461,14 @@ namespace Wasmc {
 		if (textNode) {
 			for (const ASTNode *node: *textNode)
 				if (node->symbol == WASM_LABEL) {
-					auto *label_node = dynamic_cast<const WASMLabelNode *>(node);
+					const auto *label_node = dynamic_cast<const WASMLabelNode *>(node);
 					if (!label_node)
 						throw std::runtime_error("label_node is null in Assembler::findAllLabels");
 					allLabels.insert(label_node->label);
+				} else if (node->symbol == WASM_VALUEDIR) {
+					const auto *directive = dynamic_cast<const ValueDirective *>(node);
+					const auto found = directive->expression->findLabels();
+					allLabels.insert(found.cbegin(), found.cend());
 				} else if (auto *imm_node = dynamic_cast<const HasImmediate *>(node)) {
 					if (std::holds_alternative<const std::string *>(imm_node->imm))
 						allLabels.insert(std::get<const std::string *>(imm_node->imm));
@@ -532,16 +540,18 @@ namespace Wasmc {
 				}
 			}
 
-			if (unknownSymbols.count(label) != 0) {
-				std::cerr << "Setting type of " << *label << " to UnknownPointer\n";
+			if (unknownSymbols.count(label) != 0)
 				type = SymbolEnum::Unknown;
-			}
 
 			SymbolTableEntry entry(encodeSymbol(label), offsets.count(label) == 0? 0 : offsets.at(label), type);
 			symbols.appendAll(entry.encode(*label));
-			if (symbolTableIndices.count(label) != 0)
+			const size_t new_index = symbolTableEntries.size();
+			if (symbolTableIndices.count(label) != 0) {
+				warn() << "symbolTableIndices already contains an entry for " << *label << ": "
+				       << symbolTableIndices.at(label) << "\n";
 				symbolTableIndices.erase(label);
-			symbolTableIndices.emplace(label, symbolTableEntries.size());
+			}
+			symbolTableIndices.emplace(label, new_index);
 			symbolTableEntries.push_back(entry);
 		}
 	}
