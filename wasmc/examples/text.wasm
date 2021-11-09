@@ -53,5 +53,5 @@ orcid: "0000-0001-7405-6654"
 %type strprint function
 %size main strprint-main
 %size strprint .-strprint
-// %type text2_code function
+%type text2_code function
 %type text2_data object

@@ -168,6 +168,7 @@ namespace Wasmc {
 
 			for (auto &[symbol, index]: combined_symbol_indices) {
 				auto &entry = combined_symbols.at(index);
+				// if (entry.type == SymbolEnum::UnknownData || entry.type == SymbolEnum::Data)
 				if (symbol_types.at(symbol) == SymbolType::Object)
 					entry.address += subcode_length;
 			}
@@ -202,10 +203,6 @@ namespace Wasmc {
 				combined_relocation.emplace_back(std::move(entry));
 			}
 
-			extra_symbol_length += subtable_length * 8;
-			extra_code_length += subcode_length;
-			extra_data_length += subdata_length;
-			extra_relocation_length += subrelocation_length;
 
 			std::vector<std::shared_ptr<DebugEntry>> types1and2;
 			Util::filter(subdebug, types1and2, [](const std::shared_ptr<DebugEntry> &entry) {
@@ -222,12 +219,30 @@ namespace Wasmc {
 					combined_symbols.emplace_back(entry);
 				} else {
 					auto &existing = combined_symbols.at(combined_symbol_indices.at(key));
-					if (entry.type == SymbolEnum::UnknownPointer)
-						entry.type = existing.type;
-					else
+
+					const bool entry_unknown =
+						entry.type == SymbolEnum::UnknownData || entry.type == SymbolEnum::UnknownCode;
+					const bool existing_unknown =
+						existing.type == SymbolEnum::UnknownData || existing.type == SymbolEnum::UnknownCode;
+
+					if (existing_unknown && !entry_unknown) {
+						std::cerr << "Found override for " << key << ". Extra code length: " << extra_code_length << ", subcode length: " << subcode_length << "\n";
+						std::cerr << "Existing type: " << int(existing.type) << ", entry type: " << int(entry.type) << "\n";
+						entry.address += extra_code_length;
+						if (entry.type == SymbolEnum::Data)
+							entry.address += extra_data_length;
 						existing = entry;
+					} else if (!existing_unknown && entry_unknown) {
+						std::cerr << "Found known unknown: " << key << "\n";
+						entry = existing;
+					}
 				}
 			}
+
+			extra_symbol_length += subtable_length * 8;
+			extra_code_length += subcode_length;
+			extra_data_length += subdata_length;
+			extra_relocation_length += subrelocation_length;
 
 			for (const Long piece: subcode)
 				combined_code.push_back(piece);
@@ -306,7 +321,8 @@ namespace Wasmc {
 			switch (symbol.type) {
 				case SymbolEnum::Code: new_value += code_offset; break;
 				case SymbolEnum::Data: new_value += data_offset; break;
-				case SymbolEnum::UnknownPointer:
+				case SymbolEnum::UnknownData:
+				case SymbolEnum::UnknownCode:
 					// There's not really any reason to apply a relocation if the symbol is still unknown.
 					continue;
 				default:
@@ -417,7 +433,9 @@ namespace Wasmc {
 			if (key != ".end" && two_indices.count(key) != 0) {
 				const auto &first = one_table.at(value);
 				const auto &second = two_table.at(two_indices.at(key));
-				if (first.type == SymbolEnum::UnknownPointer || second.type == SymbolEnum::UnknownPointer) {
+				bool first_unknown  = first.type  == SymbolEnum::UnknownData || first.type  == SymbolEnum::UnknownCode;
+				bool second_unknown = second.type == SymbolEnum::UnknownData || second.type == SymbolEnum::UnknownCode;
+				if (first_unknown || second_unknown) {
 					// Not a collision if one of the symbol tables includes it only for relocation purposes.
 					continue;
 				}

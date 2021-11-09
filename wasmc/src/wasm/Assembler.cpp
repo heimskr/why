@@ -541,15 +541,16 @@ namespace Wasmc {
 			if (0xffff < length)
 				throw std::runtime_error("Symbol length too long: " + std::to_string(length));
 			SymbolEnum type = SymbolEnum::Unknown;
+			const bool unknown = unknownSymbols.count(label) != 0;
 			if (symbolTypes.count(label) != 0) {
 				SymbolType specified_type = symbolTypes.at(label);
 				switch (specified_type) {
 					case SymbolType::Function:
 					case SymbolType::Instruction:
-						type = SymbolEnum::Code;
+						type = unknown? SymbolEnum::UnknownCode : SymbolEnum::Code;
 						break;
 					case SymbolType::Object:
-						type = SymbolEnum::Data;
+						type = unknown? SymbolEnum::UnknownData : SymbolEnum::Data;
 						break;
 					default:
 						throw std::runtime_error("Invalid symbol type for " + *label + ": " +
