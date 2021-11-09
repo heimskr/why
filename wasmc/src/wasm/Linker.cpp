@@ -97,8 +97,6 @@ namespace Wasmc {
 		std::vector<Long> combined_data = main_parser.rawData;
 		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
 		std::vector<RelocationData> combined_relocation = main_parser.relocationData;
-		std::unordered_map<std::string, SymbolType> symbol_types =
-			collectSymbolTypes(main_parser.offsets, combined_symbols);
 		const size_t symbol_table_length = main_parser.rawSymbols.size();
 
 		// Step 3
@@ -110,31 +108,21 @@ namespace Wasmc {
 
 		// Step 4
 		for (const std::vector<Long> &unit: subunits) {
-			// Open the included binary
 			BinaryParser subparser(unit);
 			subparser.parse();
 
 			std::vector<Long> &subcode = subparser.rawCode;
-
-			// std::cerr << std::string(32, '=') << '\n';
-			// for (const Long l: subcode)
-			// 	std::cerr << "Code: " << Util::toHex(l, 16) << '\n';
-
-
 			std::vector<Long> &subdata = subparser.rawData;
-			// for (const Long l: subdata)
-			// 	std::cerr << "Data: " << Util::toHex(l, 16) << '\n';
 			std::vector<SymbolTableEntry> &subtable = subparser.symbols;
 			std::map<std::string, size_t> &subindices = subparser.symbolIndices;
 			std::vector<RelocationData> &subrelocation = subparser.relocationData;
-			// depointerize(subtable, subdata, subparser.offsets.data);
+			std::vector<std::shared_ptr<Wasmc::DebugEntry>> &subdebug = subparser.debugData;
+
 			const size_t subcode_length = subparser.getCodeLength();
-			std::cerr << "subcode length: " << subcode_length << "\n";
 			const size_t subdata_length = subparser.getDataLength();
-			std::cerr << "subdata length: " << subdata_length << "\n";
 			size_t subtable_length = subparser.rawSymbols.size();
 			const size_t subrelocation_length = subparser.getRelocationLength();
-			std::vector<std::shared_ptr<Wasmc::DebugEntry>> &subdebug = subparser.debugData;
+
 			if (subindices.count(".end") != 0) {
 				const size_t end_index = subindices.at(".end");
 				subtable.erase(subtable.begin() + subindices.at(".end"));
@@ -152,40 +140,15 @@ namespace Wasmc {
 
 			const ssize_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
 
-			std::cerr << "meta_difference[" << meta_difference << "]\n";
-
 			for (auto &[symbol, index]: subindices) {
 				auto &entry = subtable.at(index);
-				// const SymbolType type = getSymbolType(subparser.offsets, entry.address);
-				// if (type == SymbolType::Function || type == SymbolType::Instruction)
-				if (entry.type == SymbolEnum::Code) {
+				if (entry.type == SymbolEnum::Code)
 					// For each code symbol in the included symbol table, increase its address
-					std::cerr << "Adding to " << symbol << ": " << (extra_code_length) << "\n";
 					entry.address += extra_code_length;
-				} else if (entry.type == SymbolEnum::Data) {
+				else if (entry.type == SymbolEnum::Data)
 					// For each data symbol in the included symbol table, increase its address
-					std::cerr << "Adding to " << symbol << ": " << (extra_data_length) << "\n";
-					// entry.address += extra_code_length + extra_data_length;
 					entry.address += extra_data_length;
-				}
-				std::cerr << "entry.type(" << symbol << ") == " << int(entry.type) << "\n";
-
-				// symbol_types[symbol] = type;
 			}
-
-			// for (auto &[symbol, index]: combined_symbol_indices) {
-			// 	auto &entry = combined_symbols.at(index);
-			// 	if (entry.type == SymbolEnum::UnknownData || entry.type == SymbolEnum::Data)
-			// 	if (symbol_types.at(symbol) == SymbolType::Object)
-			// 		entry.address += subcode_length;
-			// }
-
-			// for (auto &entry: combined_debug)
-			// 	if (entry->getType() == DebugEntry::Type::Location) {
-			// 		DebugLocation *location = static_cast<DebugLocation *>(entry.get());
-			// 		if (location->address)
-			// 			location->address += subtable_length * 8;
-			// 	}
 
 			for (auto &entry: subdebug)
 				if (entry->getType() == DebugEntry::Type::Location) {
@@ -197,16 +160,8 @@ namespace Wasmc {
 				}
 
 			for (auto &entry: subrelocation) {
-				if (entry.isData)
-					entry.sectionOffset += extra_data_length;
-				else
-					entry.sectionOffset += extra_code_length;
-				// std::cerr << "symbolIndex[" << entry.symbolIndex << "], subtable.size[" << subtable.size() << "]\n";
+				entry.sectionOffset += entry.isData? extra_data_length : extra_code_length;
 				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
-				// info() << "entry.label set to " << (entry.label? "\"" + *entry.label + "\"" : "nullptr") << "\n";
-				// info() << "Adding from subrelocation: symbol index: " << entry.symbolIndex << "\n"
-				//        << "    offset[" << entry.offset << "], sectionOffset[" << entry.sectionOffset << "], type["
-				//        << int(entry.type) << "]\n";
 				combined_relocation.emplace_back(std::move(entry));
 			}
 
@@ -231,18 +186,10 @@ namespace Wasmc {
 					const bool existing_unknown =
 						existing.type == SymbolEnum::UnknownData || existing.type == SymbolEnum::UnknownCode;
 
-					if (existing_unknown && !entry_unknown) {
-						std::cerr << "Found override for " << key << ". Extra code length: " << extra_code_length << ", subcode length: " << subcode_length << "\n";
-						std::cerr << "Existing type: " << int(existing.type) << ", entry type: " << int(entry.type) << "\n";
-						std::cerr << "Existing address: " << int(existing.address) << ", entry address: " << int(entry.address) << "\n";
-						// entry.address += extra_code_length;
-						// if (entry.type == SymbolEnum::Data)
-						// 	entry.address += extra_data_length;
+					if (existing_unknown && !entry_unknown)
 						existing = entry;
-					} else if (!existing_unknown && entry_unknown) {
-						std::cerr << "Found known unknown: " << key << "\n";
+					else if (!existing_unknown && entry_unknown)
 						entry = existing;
-					}
 				}
 			}
 
@@ -272,13 +219,6 @@ namespace Wasmc {
 			+ encoded_debug.size());
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
 
-		info() << "Combined code size: " << combined_code.size() << " longs\n";
-		info() << "Combined data size: " << combined_data.size() << " longs\n";
-		info() << "Encoded symbols size: " << encoded_combined_symbols.size() << " longs\n";
-		info() << "Encoded debug size: " << encoded_debug.size() << " longs\n";
-
-		// resymbolize(combined_code, combined_symbols);
-
 		std::vector<Long> &meta = main_parser.rawMeta;
 		meta.at(1) = meta.at(0) + combined_code.size() * 8;
 		meta.at(2) = meta.at(1) + combined_data.size() * 8;
@@ -288,8 +228,6 @@ namespace Wasmc {
 		applyRelocation(combined_relocation, combined_symbols, combined_symbol_indices, combined_data, combined_code,
 		                meta.at(1), meta.at(0));
 		const std::vector<Long> encoded_relocation = encodeRelocationData(combined_relocation);
-
-		info() << "Encoded relocation size: " << encoded_relocation.size() << " longs\n";
 
 		meta.at(5) = meta.at(4) + encoded_relocation.size() * 8;
 
@@ -332,11 +270,6 @@ namespace Wasmc {
 						std::to_string(int(symbol.type)));
 			}
 			auto &longs = entry.isData? data : code;
-			// const long address =
-			std::cerr << "Applying \e[32m" << *entry.label << "\e[39m: \e[1mnew_value\e[22m[\e[31m" << new_value
-			          << "\e[39m], \e[1moffset\e[22m[\e[33m" << entry.offset << "\e[39m] \e[35m@" << entry.sectionOffset
-			          << "\e[39m in \e[1m" << (entry.isData? "data" : "code") << "\e[22m, symbol.address["
-			          << symbol.address << "], symbol.type[" << int(symbol.type) << "]\n";
 			if (entry.sectionOffset % 8) {
 				// Pain.
 				Long &first = longs[entry.sectionOffset / 8], &second = longs[entry.sectionOffset / 8 + 1];
@@ -351,20 +284,16 @@ namespace Wasmc {
 				second = adjusted[1];
 			} else {
 				Long &value = longs[entry.sectionOffset / 8];
-				std::cerr << "    Old: " << Util::toHex(value, 16) << "\n";
 				if (entry.type == RelocationType::Full) {
-					std::cerr << "    Full: " << Util::toHex(new_value, 16) << "\n";
 					value = new_value;
 				} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
 					auto bytes = Util::getBytes(value);
 					if (entry.type == RelocationType::Lower4) {
-						std::cerr << "    Lower4: " << Util::toHex(uint32_t(new_value), 8) << "\n";
 						bytes[0] = uint8_t(new_value);
 						bytes[1] = uint8_t(new_value >>  8);
 						bytes[2] = uint8_t(new_value >> 16);
 						bytes[3] = uint8_t(new_value >> 24);
 					} else {
-						std::cerr << "    Upper4: " << Util::toHex(uint32_t(new_value >> 32), 8) << "\n";
 						bytes[0] = uint8_t(new_value >> 32);
 						bytes[1] = uint8_t(new_value >> 40);
 						bytes[2] = uint8_t(new_value >> 48);
@@ -375,32 +304,8 @@ namespace Wasmc {
 					value = adjusted.front();
 				} else
 					throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
-				std::cerr << "    New: " << Util::toHex(value, 16) << "\n";
 			}
 		}
-	}
-
-	std::unordered_map<std::string, SymbolType>
-	Linker::collectSymbolTypes(const Offsets &offsets, const std::vector<SymbolTableEntry> &table) {
-		std::unordered_map<std::string, SymbolType> out;
-		for (const SymbolTableEntry &entry: table)
-			out[entry.label] = getSymbolType(offsets, entry.address);
-		return out;
-	}
-
-	SymbolType Linker::getSymbolType(const Offsets &offsets, Long address) {
-		// std::cerr << "getSymbolType({code: " << offsets.code << ", data: " << offsets.data << ", symbols: "
-		//           << offsets.symbolTable << "}, " << address << "): ";
-		if (offsets.code <= address && address < offsets.data) {
-			// std::cerr << "Instruction\n";
-			return SymbolType::Instruction;
-		}
-		if (offsets.data <= address && address < offsets.symbolTable) {
-			// std::cerr << "Object\n";
-			return SymbolType::Object;
-		}
-		// std::cerr << "Other\n";
-		return SymbolType::Other;
 	}
 
 	std::string Linker::findSymbolFromAddress(Long address, const SymbolTable &table, Long end_offset) {
