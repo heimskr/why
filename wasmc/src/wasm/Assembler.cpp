@@ -166,14 +166,22 @@ namespace Wasmc {
 
 	void Assembler::evaluateExpressions() {
 		for (auto &[label, expression]: symbolSizeExpressions)
-			symbolSizes.emplace(label, expression->evaluate(*this));
+			symbolSizes.emplace(label, expression->evaluate(*this, true));
 
 		for (auto &[node, reloc]: relocationMap)
 			if (const auto *directive = dynamic_cast<const ValueDirective *>(node))
 				try {
-					reloc.offset = directive->expression->evaluate(*this);
+					reloc.offset = directive->expression->evaluate(*this, false);
 				} catch (const SymbolNotFound &err) {
 					unknownSymbols.insert(StringSet::intern(err.symbol));
+					const std::string *label1 = nullptr, *label2 = nullptr;
+					auto type = directive->expression->validate(&label1, &label2);
+					if (label1 && !label2) {
+						SymbolTableEntry entry(*label1, 0, SymbolEnum::Unknown);
+						symbolTableIndices.emplace(label1, symbolTableEntries.size());
+						symbolTableEntries.emplace_back(entry);
+					}
+					reloc.offset = directive->expression->evaluate(*this, true);
 				}
 	}
 
@@ -463,6 +471,8 @@ namespace Wasmc {
 	void Assembler::createSymbolTableSkeleton(StringPtrSet labels) {
 		labels.insert(StringSet::intern(".end"));
 		symbols.clear();
+		symbolTableEntries.clear();
+		symbolTableIndices.clear();
 
 		for (const std::string *label: labels) {
 			const size_t length = Util::updiv(label->size(), 8ul);
@@ -497,6 +507,7 @@ namespace Wasmc {
 		labels.insert(StringSet::intern(".end"));
 		symbols.clear();
 		symbolTableEntries.clear();
+		symbolTableIndices.clear();
 
 		for (const std::string *label: labels) {
 			const size_t length = Util::updiv(label->size(), 8ul);
