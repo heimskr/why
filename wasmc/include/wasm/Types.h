@@ -19,6 +19,8 @@ namespace Wasmc {
 	enum class LinkerFlags: unsigned {Ignore = 0, KnownSymbol, UnknownSymbol};
 	enum class RelocationType: unsigned {Full = 0, Invalid, Lower4, Upper4};
 
+	bool isUnknown(SymbolEnum);
+
 	struct SymbolNotFound: std::runtime_error {
 		const std::string symbol;
 		SymbolNotFound(const std::string &symbol_):

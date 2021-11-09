@@ -4,6 +4,10 @@
 #include "wasm/Types.h"
 
 namespace Wasmc {
+	bool isUnknown(SymbolEnum type) {
+		return type == SymbolEnum::Unknown || type == SymbolEnum::UnknownCode || type == SymbolEnum::UnknownData;
+	}
+
 	std::vector<Long> RelocationData::encode() const {
 		// I'm a terrible person.
 		if (std::endian::native != std::endian::little)

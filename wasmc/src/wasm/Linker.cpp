@@ -180,12 +180,8 @@ namespace Wasmc {
 					combined_symbols.emplace_back(entry);
 				} else {
 					auto &existing = combined_symbols.at(combined_symbol_indices.at(key));
-
-					const bool entry_unknown =
-						entry.type == SymbolEnum::UnknownData || entry.type == SymbolEnum::UnknownCode;
-					const bool existing_unknown =
-						existing.type == SymbolEnum::UnknownData || existing.type == SymbolEnum::UnknownCode;
-
+					const bool entry_unknown = isUnknown(entry.type);
+					const bool existing_unknown = isUnknown(existing.type);
 					if (existing_unknown && !entry_unknown)
 						existing = entry;
 					else if (!existing_unknown && entry_unknown)
@@ -263,6 +259,7 @@ namespace Wasmc {
 				case SymbolEnum::Data: new_value += data_offset; break;
 				case SymbolEnum::UnknownData:
 				case SymbolEnum::UnknownCode:
+				case SymbolEnum::Unknown:
 					// There's not really any reason to apply a relocation if the symbol is still unknown.
 					continue;
 				default:
@@ -340,8 +337,8 @@ namespace Wasmc {
 			if (key != ".end" && two_indices.count(key) != 0) {
 				const auto &first = one_table.at(value);
 				const auto &second = two_table.at(two_indices.at(key));
-				bool first_unknown  = first.type  == SymbolEnum::UnknownData || first.type  == SymbolEnum::UnknownCode;
-				bool second_unknown = second.type == SymbolEnum::UnknownData || second.type == SymbolEnum::UnknownCode;
+				const bool first_unknown = isUnknown(first.type);
+				const bool second_unknown = isUnknown(second.type);
 				if (first_unknown || second_unknown) {
 					// Not a collision if one of the symbol tables includes it only for relocation purposes.
 					continue;
