@@ -1,3 +1,4 @@
+#include <cassert>
 #include <fstream>
 #include <optional>
 
@@ -94,14 +95,11 @@ namespace Wasmc {
 		std::map<std::string, size_t> combined_symbol_indices = main_parser.symbolIndices;
 		std::vector<Long> combined_code = main_parser.rawCode;
 		std::vector<Long> combined_data = main_parser.rawData;
-		// depointerize(combined_symbols, combined_data, main_parser.offsets.data);
 		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
 		std::vector<RelocationData> combined_relocation = main_parser.relocationData;
 		std::unordered_map<std::string, SymbolType> symbol_types =
 			collectSymbolTypes(main_parser.offsets, combined_symbols);
 		const size_t symbol_table_length = main_parser.rawSymbols.size();
-
-		// desymbolize(combined_code, main_parser.offsets, main_symbols);
 
 		// Step 3
 		size_t extra_symbol_length = symbol_table_length * 8;
@@ -109,6 +107,13 @@ namespace Wasmc {
 		size_t extra_data_length = main_parser.getDataLength();
 		size_t extra_debug_length = countStringTypes(combined_debug);
 		size_t extra_relocation_length = main_parser.getRelocationLength();
+
+		info() << "Original relocation data:\n";
+		for (auto &entry: combined_relocation) {
+			std::cerr << "    symbolIndex[" << entry.symbolIndex << "], offset[" << entry.offset << "], sectionOffset["
+			          << entry.sectionOffset << "], type[" << int(entry.type) << "], label[" << (entry.label?
+					     *entry.label : "nullptr") << "]\n";
+		}
 
 		// Step 4
 		for (const std::vector<Long> &unit: subunits) {
@@ -134,14 +139,15 @@ namespace Wasmc {
 				for (auto &[key, index]: subindices)
 					if (end_index <= index)
 						--index;
+				for (auto &entry: subrelocation)
+					if (ssize_t(end_index) <= entry.symbolIndex)
+						--entry.symbolIndex;
 				subtable_length -= 3;
 			}
 
 			detectSymbolCollisions(combined_symbol_indices, subindices, combined_symbols, subtable);
 
 			const ssize_t meta_difference = meta_length - subparser.getMetaLength(); // in bytes!
-
-			// desymbolize(subcode, subparser.offsets, subtable);
 
 			for (auto &[symbol, index]: subindices) {
 				auto &entry = subtable.at(index);
@@ -182,7 +188,12 @@ namespace Wasmc {
 					entry.sectionOffset += extra_data_length;
 				else
 					entry.sectionOffset += extra_code_length;
+				std::cerr << "symbolIndex[" << entry.symbolIndex << "], subtable.size[" << subtable.size() << "]\n";
 				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
+				info() << "entry.label set to " << (entry.label? "\"" + *entry.label + "\"" : "nullptr") << "\n";
+				info() << "Adding from subrelocation: symbol index: " << entry.symbolIndex << "\n"
+				       << "    offset[" << entry.offset << "], sectionOffset[" << entry.sectionOffset << "], type["
+				       << int(entry.type) << "]\n";
 				combined_relocation.emplace_back(std::move(entry));
 			}
 
@@ -227,24 +238,12 @@ namespace Wasmc {
 			combined_symbols.emplace_back(".end", 0, SymbolEnum::Unknown);
 		}
 
-		for (auto &entry: combined_relocation) {
-			entry.symbolIndex = combined_symbol_indices.at(*entry.label);
-			// TODO!: apply relocation
-			if (entry.isData) {
-				
-			} else {
-
-			}
-		}
-
 
 		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
 		combined_symbols.at(combined_symbol_indices.at(".end")).address = 8 * (main_parser.rawMeta.size()
 			+ encodeSymbolTable(combined_symbols).size() + combined_code.size() + combined_data.size()
 			+ encoded_debug.size());
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
-		const size_t code_offset = (encoded_combined_symbols.size() - symbol_table_length) * 8;
-		const std::vector<Long> encoded_relocation; // TODO!
 
 		// resymbolize(combined_code, combined_symbols);
 
@@ -253,51 +252,74 @@ namespace Wasmc {
 		meta.at(2) = meta.at(1) + combined_data.size() * 8;
 		meta.at(3) = meta.at(2) + encoded_combined_symbols.size() * 8;
 		meta.at(4) = meta.at(3) + encoded_debug.size() * 8;
+
+		applyRelocation(combined_relocation, combined_symbols, combined_symbol_indices, combined_data, combined_code,
+		                meta.at(1), meta.at(0));
+		const std::vector<Long> encoded_relocation = encodeRelocationData(combined_relocation);
+
 		meta.at(5) = meta.at(4) + encoded_relocation.size() * 8;
 
 		linked.clear();
 		for (const auto &longs: {meta, combined_code, combined_data, encoded_combined_symbols, encoded_debug,
 		                         encoded_relocation})
-			for (const Long piece: longs)
-				linked.push_back(piece);
-
-		// repointerize(combined_symbols, linked);
+			linked.insert(linked.end(), longs.cbegin(), longs.cend());
 
 		return Assembler::stringify(linked);
 	}
 
-	void Linker::depointerize(const SymbolTable &table, std::vector<Long> &data, Long data_offset) {
-		for (const auto &[key, value]: table) {
-			const Long address = value.address;
-			const SymbolEnum type = value.type;
-			const Long index = (address - data_offset) / 8;
-			if (type == SymbolEnum::KnownPointer) {
-				const Long current_value = data.at(index);
-				std::optional<SymbolTableEntry> match;
-				for (const auto &pair: table)
-					if (pair.second.address == current_value) {
-						match = pair.second;
-						break;
-					}
-				if (!match.has_value())
-					throw std::runtime_error("Found no matches for " + Util::toHex(current_value) + " from key \"" + key
-						+ "\"");
-				data[index] = match->id;
-			}
-		}
-	}
+	void Linker::applyRelocation(std::vector<RelocationData> &relocation,
+	                             const std::vector<SymbolTableEntry> &symbols,
+	                             const std::map<std::string, size_t> &symbol_indices,
+	                             std::vector<Long> &data, std::vector<Long> &code,
+	                             Long data_offset, Long code_offset) {
+		for (auto &entry: relocation) {
+			if (!entry.label) {
+				if (entry.symbolIndex != -1)
+					entry.label = StringSet::intern(symbols.at(entry.symbolIndex).label);
+			} else
+				entry.symbolIndex = symbol_indices.at(*entry.label);
 
-	void Linker::repointerize(const SymbolTable &table, std::vector<Long> &combined) {
-		for (const auto &[key, value]: table) {
-			const auto address = value.address;
-			const auto type = value.type;
-			if (type == SymbolEnum::KnownPointer || type == SymbolEnum::UnknownPointer) {
-				const auto index = address / 8;
-				const std::string ptr = findSymbolFromID(combined[index] & 0xffffffff, table);
-				if (table.count(ptr) != 0)
-					combined[index] = table.at(ptr).address;
-				else
-					warn() << "Couldn't find pointer for \e[1m" << key << "\e[22m.\n";
+			if (entry.symbolIndex == -1) {
+				warn() << "Can't find symbol entry for label " << (entry.label? *entry.label : "nullptr") << ".\n";
+				continue;
+			}
+
+			const SymbolTableEntry &symbol = symbols.at(entry.symbolIndex);
+			const long new_value = (entry.isData? data_offset : code_offset) + symbol.address + entry.offset;
+			auto &longs = entry.isData? data : code;
+			if (entry.sectionOffset % 8) {
+				// Pain.
+				Long &first = longs[entry.sectionOffset / 8], &second = longs[entry.sectionOffset / 8 + 1];
+				auto bytes = Util::getBytes(first), second_bytes = Util::getBytes(second);
+				bytes.reserve(16);
+				bytes.insert(bytes.end(), second_bytes.cbegin(), second_bytes.cend());
+				for (int i = 0; i < 8; ++i)
+					bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
+				auto adjusted = Util::getLongs(bytes);
+				assert(adjusted.size() == 2);
+				first = adjusted[0];
+				second = adjusted[1];
+			} else {
+				Long &value = longs[entry.sectionOffset / 8];
+				if (entry.type == RelocationType::Full) {
+					value = new_value;
+				} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
+					auto bytes = Util::getBytes(value);
+					if (entry.type == RelocationType::Lower4) {
+						bytes[0] = uint8_t(new_value);
+						bytes[1] = uint8_t(new_value >>  8);
+						bytes[2] = uint8_t(new_value >> 16);
+						bytes[3] = uint8_t(new_value >> 24);
+					} else {
+						bytes[0] = uint8_t(new_value >> 32);
+						bytes[1] = uint8_t(new_value >> 40);
+						bytes[2] = uint8_t(new_value >> 48);
+						bytes[3] = uint8_t(new_value >> 56);
+					}
+					auto adjusted = Util::getLongs(bytes);
+					assert(adjusted.size() == 1);
+					value = adjusted.front();
+				}
 			}
 		}
 	}
@@ -316,34 +338,6 @@ namespace Wasmc {
 		if (offsets.data <= address && address < offsets.debug)
 			return SymbolType::Object;
 		return SymbolType::Other;
-	}
-
-	void Linker::desymbolize(std::vector<Long> &longs, const Offsets &offsets, const SymbolTable &table) {
-		// const size_t longs_size = longs.size();
-		// for (size_t i = 0; i < longs_size; ++i) {
-		// 	const std::unique_ptr<AnyBase> parsed = std::unique_ptr<AnyBase>(BinaryParser::parse(longs[i]));
-		// 	if (parsed->flags == static_cast<uint16_t>(LinkerFlags::KnownSymbol)) {
-		// 		if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
-		// 			throw std::runtime_error("Found an instruction not of type I or J with KnownSymbol set at " +
-		// 				Util::toHex(i * 8 + offsets.code));
-		// 		const uint32_t immediate = static_cast<AnyImmediate *>(parsed.get())->immediate;
-		// 		const std::string name = findSymbolFromAddress(immediate, table, offsets.end);
-		// 		if (name.empty() || table.count(name) == 0)
-		// 			throw std::runtime_error("Couldn't find a symbol corresponding to " + Util::toHex(immediate)
-		// 				+ " while desymbolizing.");
-
-		// 		const uint32_t id = table.at(name).id;
-		// 		if (parsed->type == AnyBase::Type::I) {
-		// 			const auto *itype = static_cast<AnyI *>(parsed.get());
-		// 			longs[i] = Assembler::compileI(itype->opcode, itype->rs, itype->rd, id,
-		// 				static_cast<uint8_t>(LinkerFlags::SymbolID), itype->condition);
-		// 		} else {
-		// 			const auto *jtype = static_cast<AnyJ *>(parsed.get());
-		// 			longs[i] = Assembler::compileJ(jtype->opcode, jtype->rs, id, jtype->link,
-		// 				static_cast<uint8_t>(LinkerFlags::SymbolID), jtype->condition);
-		// 		}
-		// 	}
-		// }
 	}
 
 	std::string Linker::findSymbolFromAddress(Long address, const SymbolTable &table, Long end_offset) {
@@ -378,7 +372,7 @@ namespace Wasmc {
 			if (key != ".end" && two_indices.count(key) != 0) {
 				const auto &first = one_table.at(value);
 				const auto &second = two_table.at(two_indices.at(key));
-				if (first.type == SymbolEnum::Unknown || second.type == SymbolEnum::Unknown) {
+				if (first.type == SymbolEnum::UnknownPointer || second.type == SymbolEnum::UnknownPointer) {
 					// Not a collision if one of the symbol tables includes it only for relocation purposes.
 					continue;
 				}
@@ -462,48 +456,14 @@ namespace Wasmc {
 		return out;
 	}
 
-	void Linker::resymbolize(std::vector<Long> &instructions, const SymbolTable &table) {
-		// size_t offset = 0;
-		// for (Long &instruction: instructions) {
-		// 	const AnyBase *parsed = BinaryParser::parse(instruction);
-		// 	const LinkerFlags flags = static_cast<LinkerFlags>(parsed->flags);
-		// 	if (flags == LinkerFlags::SymbolID || flags == LinkerFlags::UnknownSymbol) {
-		// 		if (parsed->type != AnyBase::Type::I && parsed->type != AnyBase::Type::J)
-		// 			throw std::runtime_error("Found an instruction not of type I or J with "
-		// 				+ std::string(flags == LinkerFlags::UnknownSymbol? "UnknownSymbol" : "SymbolID") + " set at "
-		// 				"offset " + std::to_string(offset));
+	std::vector<Long> Linker::encodeRelocationData(const std::vector<RelocationData> &relocation) {
+		std::vector<Long> out;
 
-		// 		const size_t immediate = dynamic_cast<const AnyImmediate &>(*parsed).immediate;
-		// 		const std::string name = findSymbolFromID(immediate, table);
+		for (const auto &entry: relocation) {
+			auto encoded = entry.encode();
+			out.insert(out.end(), encoded.cbegin(), encoded.cend());
+		}
 
-		// 		if (name.empty() || table.count(name) == 0) {
-		// 			// Unknown labels in included binaries are okay if they're resolved later.
-		// 			// For example, B could reference symbols defined in C without including C,
-		// 			// but if A includes B and C, then the symbols will be resolved in the compiled
-		// 			// output for A.
-		// 			if (flags == LinkerFlags::UnknownSymbol)
-		// 				continue;
-		// 			throw std::runtime_error("Couldn't find symbol for immediate " + Util::toHex(immediate));
-		// 		}
-
-		// 		Long address = table.at(name).address;
-		// 		if (0xffffffff < address)
-		// 			warn() << "Truncating address of label \e[1m" << name << "\e[22m from \e[1m" << Util::toHex(address)
-		// 			       << "\e[22m to \e[1m" << Util::toHex(address & 0xffffffff) << "\e[22m.\n";
-
-		// 		if (parsed->type == AnyBase::Type::I) {
-		// 			const AnyI *itype = static_cast<const AnyI *>(parsed);
-		// 			instruction = Assembler::compileI(itype->opcode, itype->rs, itype->rd,
-		// 				static_cast<uint32_t>(address), static_cast<uint8_t>(LinkerFlags::KnownSymbol),
-		// 				itype->condition);
-		// 		} else {
-		// 			const AnyJ *jtype = static_cast<const AnyJ *>(parsed);
-		// 			instruction = Assembler::compileJ(jtype->opcode, jtype->rs, static_cast<uint32_t>(address),
-		// 				jtype->link, static_cast<uint8_t>(LinkerFlags::KnownSymbol), jtype->condition);
-		// 		}
-		// 	}
-
-		// 	offset += 8;
-		// }
+		return out;
 	}
 }

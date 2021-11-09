@@ -1,8 +1,14 @@
+#include <bit>
+
 #include "wasm/Assembler.h"
 #include "wasm/Types.h"
 
 namespace Wasmc {
 	std::vector<Long> RelocationData::encode() const {
+		// I'm a terrible person.
+		if (std::endian::native != std::endian::little)
+			throw std::logic_error("I'm incredibly sorry, but relocation encoding isn't yet supported on big-endian "
+				"machines because I'm awfully lazy.");
 		const Long *ptr = reinterpret_cast<const Long *>(this);
 		return {ptr[0], ptr[1], ptr[2]};
 	}

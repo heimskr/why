@@ -173,6 +173,13 @@ namespace Wasmc::Util {
 		return ss.str();
 	}
 
+	std::vector<uint8_t> getBytes(Long n) {
+		return {
+			uint8_t(n >>  0), uint8_t(n >>  8), uint8_t(n >> 16), uint8_t(n >> 24),
+			uint8_t(n >> 32), uint8_t(n >> 40), uint8_t(n >> 48), uint8_t(n >> 56),
+		};
+	}
+
 	uint64_t swapEndian(uint64_t n) {
 		return __builtin_bswap64(n);
 	}
