@@ -171,8 +171,6 @@ namespace Wasmc {
 				return type == DebugEntry::Type::Filename || type == DebugEntry::Type::Function;
 			});
 
-			extra_debug_length += types1and2.size();
-
 			for (const auto &[key, index]: subindices) {
 				auto &entry = subtable.at(index);
 				if (combined_symbol_indices.count(key) == 0) {
@@ -196,8 +194,15 @@ namespace Wasmc {
 
 			combined_code.insert(combined_code.end(), subcode.cbegin(), subcode.cend());
 			combined_data.insert(combined_data.end(), subdata.cbegin(), subdata.cend());
-			combined_debug.insert(combined_debug.begin() + extra_debug_length + 1,
-				types1and2.begin(), types1and2.end());
+
+			if (combined_debug.size() < extra_debug_length)
+				throw std::runtime_error("Cannot insert into debug data: combined_debug.size() is " +
+					std::to_string(combined_debug.size()) + " and extra_debug_length is " +
+					std::to_string(extra_debug_length));
+
+			combined_debug.insert(combined_debug.begin() + extra_debug_length, types1and2.begin(), types1and2.end());
+
+			extra_debug_length += types1and2.size();
 
 			for (const std::shared_ptr<DebugEntry> &entry: subdebug)
 				if (entry->getType() == DebugEntry::Type::Location)
