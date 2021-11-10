@@ -38,7 +38,7 @@ namespace Wasmc {
 
 			static std::string findSymbolFromID(uint32_t id, const SymbolTable &);
 
-			static size_t countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &);
+			static size_t countStringTypes(const std::vector<std::shared_ptr<DebugEntry>> &);
 
 			static void
 			detectSymbolCollisions(const std::map<std::string, size_t> &, const std::map<std::string, size_t> &,

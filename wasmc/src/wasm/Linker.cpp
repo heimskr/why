@@ -327,7 +327,7 @@ namespace Wasmc {
 		return "";
 	}
 
-	size_t Linker::countStringTypes(std::vector<std::shared_ptr<DebugEntry>> &entries) {
+	size_t Linker::countStringTypes(const std::vector<std::shared_ptr<DebugEntry>> &entries) {
 		size_t out = 0;
 		for (const std::shared_ptr<DebugEntry> &entry: entries) {
 			const DebugEntry::Type type = entry->getType();
