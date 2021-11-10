@@ -28,6 +28,7 @@ namespace WVM::Mode {
 				encoded |= 1ul << 34;
 			*buffer << ":Keybrd " << Util::toHex(encoded) << "\n";
 		};
+		std::cerr << "\e[2J\e[H";
 		terminal.startInput();
 		terminal.join();
 		networkThread.join();
