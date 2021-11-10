@@ -4,7 +4,8 @@ OPTIMIZATION	?= -Ofast -march=native
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 # TESTFILE		?= ~/src/thurisaz/Thurisaz.why
-TESTFILE		?= ../wasmc/compiled/text_linked.why
+# TESTFILE		?= ../wasmc/compiled/text_linked.why
+TESTFILE		?= ~/csmith/1.full.why
 
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(Tests?|Test_.+)\.cpp$$/!p')
 OBJECTS_WVM		:= $(patsubst src/%.cpp,build/%.o, $(SOURCES_WVM))

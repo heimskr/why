@@ -78,7 +78,7 @@ namespace WVM::Mode {
 					"] = \e[22m" + split[1] + " /" + split[3];
 		} else if (verb == "Quit") {
 			stop();
-			std::terminate();
+			std::exit(0);
 		} else if (verb == "Strict") {
 			*textbox += "Strict mode \e[1m" + split[0] + "\e[22m.";
 		} else if (verb == "Log") {

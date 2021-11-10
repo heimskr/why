@@ -60,7 +60,7 @@ namespace WVM::Mode {
 
 		if (verb == "Quit") {
 			stop();
-			std::terminate();
+			std::exit(0);
 		}
 	}
 }

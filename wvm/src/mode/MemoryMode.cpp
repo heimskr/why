@@ -427,7 +427,7 @@ namespace WVM::Mode {
 			vm.endOffset = end;
 		} else if (verb == "Quit") {
 			stop();
-			std::terminate();
+			std::exit(0);
 		}
 	}
 
