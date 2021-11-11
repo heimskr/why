@@ -15,4 +15,13 @@ $t0 << 2 -> $t1
 sext32 $t1 -> $t2
 <prd $t2>
 <prc '\n'>
+
+0x1fffffff -> $t0
+$t0 << 2 -> $t1
+<prd $t1>
+<prc '\n'>
+sext32 $t1 -> $t2
+<prd $t2>
+<prc '\n'>
+
 <halt>
