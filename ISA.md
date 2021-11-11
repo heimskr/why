@@ -67,6 +67,7 @@
 						<li><a href="#op-div">Divide</a> (<code>div</code>)</li>
 						<li><a href="#op-divu">Divide Unsigned</a> (<code>divu</code>)</li>
 						<li><a href="#op-modu">Modulo Unsigned</a> (<code>modu</code>)</li>
+						<li><a href="#op-sext32">Sign Extend 32 to 64</a> (<code>sext32</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-r">Logic (R-Types)</a>
@@ -635,6 +636,13 @@ Divides the value in `rs` by the value in `rt` (treating both as unsigned values
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001100`
 
 Computes the unsigned `rt`-modulo of `rs` and stores the result in `rd`.
+
+### <a name="op-sext32"></a>Sign Extend 32 to 64 (`sext32`)
+> `sext32 $rs -> $rd`  
+> `000000000001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001101`
+
+If bit 31 (zero-indexed) of `rs` is 1, this instruction copies `rs` into `rd` and sets all upper 32 bits of `rd` to 1.
+Otherwise, it just copies `rs` into `rd`.
 
 ## <a name="ops-logic-r"></a>Logic (R-Types)
 

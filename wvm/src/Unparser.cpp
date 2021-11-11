@@ -42,16 +42,18 @@ namespace WVM::Unparser {
 			case OP_RMATH: {
 				std::string oper, suffix;
 				switch (funct) {
-					case FN_ADD:   oper = "+"; break;
-					case FN_SUB:   oper = "-"; break;
-					case FN_MULT:  return color(rs) + " " + colorOper("*") + " " + color(rd);
-					case FN_MULTU: return color(rs) + " " + colorOper("*") + " " + color(rd) + " /u";
-					case FN_SLL:   oper = "<<"; break;
-					case FN_SRL:   oper = ">>>"; break;
-					case FN_SRA:   oper = ">>"; break;
-					case FN_MOD:   oper = "%"; break;
-					case FN_DIV:   oper = "/"; break;
-					case FN_DIVU:  oper = "/"; suffix = "/u"; break;
+					case FN_ADD:    oper = "+"; break;
+					case FN_SUB:    oper = "-"; break;
+					case FN_MULT:   return color(rs) + " " + colorOper("*") + " " + color(rd);
+					case FN_MULTU:  return color(rs) + " " + colorOper("*") + " " + color(rd) + " /u";
+					case FN_SLL:    oper = "<<"; break;
+					case FN_SRL:    oper = ">>>"; break;
+					case FN_SRA:    oper = ">>"; break;
+					case FN_MOD:    oper = "%"; break;
+					case FN_DIV:    oper = "/"; break;
+					case FN_DIVU:   oper = "/"; suffix = "/u"; break;
+					case FN_MODU:   oper = "%"; suffix = "/u"; break;
+					case FN_SEXT32: return "\e[1msext32\e[22m " + color(rs) + into + color(rd);
 				}
 				return rAltOp(rs, rt, rd, oper, suffix);
 			}
@@ -62,7 +64,7 @@ namespace WVM::Unparser {
 					case FN_NAND:  oper = "~&";  break;
 					case FN_NOR:   oper = "~|";  break;
 					case FN_NOT:
-						return "\e[1m~\2[22m" + color(rs) + into + color(rd);
+						return "\e[1m~\e[22m" + color(rs) + into + color(rd);
 					case FN_OR:
 						if (rs == Why::zeroOffset)
 							return color(rt) + into + color(rd);

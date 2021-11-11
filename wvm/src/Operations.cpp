@@ -67,17 +67,18 @@ namespace WVM::Operations {
 		switch (opcode) {
 			case OP_RMATH:
 				switch (funct) {
-					case FN_ADD:     addOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SUB:     subOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MULT:   multOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MULTU: multuOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SLL:     sllOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SRL:     srlOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SRA:     sraOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MOD:     modOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_DIV:     divOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_DIVU:   divuOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MODU:   moduOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_ADD:       addOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SUB:       subOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MULT:     multOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MULTU:   multuOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SLL:       sllOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SRL:       srlOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SRA:       sraOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MOD:       modOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_DIV:       divOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_DIVU:     divuOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_MODU:     moduOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SEXT32: sext32Op(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RLOGIC:
@@ -331,6 +332,14 @@ namespace WVM::Operations {
 			setReg(vm, rd, static_cast<UWord>(rs) % static_cast<UWord>(rt));
 			vm.increment();
 		}
+	}
+
+	void sext32Op(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		if ((rs & 0x80000000) != 0)
+			setReg(vm, rd, 0xffffffff00000000ul | rs);
+		else
+			setReg(vm, rd, rs);
+		vm.increment();
 	}
 
 	void andOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {

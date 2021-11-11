@@ -162,6 +162,7 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_DATA "%data"
 %token WASMTOK_CODE "%code"
 %token WASMTOK_INSTRUCTION "instruction"
+%token WASMTOK_SEXT32 "sext32"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -269,7 +270,8 @@ label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
 op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "!" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
+    | "!" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
+    | "sext32" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
 basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
 logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
 shorthandable_r: logical | shorthandable_i;
@@ -408,8 +410,8 @@ _immediate: "&" ident { $$ = $2; D($1); }
           | WASMTOK_STRING;
 
 ident: ident_option { $1->symbol = WASMTOK_IDENT; } | WASMTOK_IDENT;
-ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | symbol_type
-     | "version" | "author" | "orcid" | "name" | printop;
+ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | symbol_type | "version" | "author"
+            | "orcid" | "name" | "sext32" | printop;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

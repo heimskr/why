@@ -127,11 +127,12 @@ namespace Wasmc {
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
 	WASMInstructionNode(WASM_RNODE), RType(rs_, rt_, rd_), HasOper(oper_), HasUnsigned(!!unsigned_) {
+		locate(oper_);
 		if (rs_ != rd_)
 			delete rs_;
-		delete oper_;
 		if (oper_ != rt_)
 			delete rt_;
+		delete oper_;
 		delete rd_;
 		if (unsigned_)
 			delete unsigned_;

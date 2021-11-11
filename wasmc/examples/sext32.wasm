@@ -1,0 +1,18 @@
+#meta
+name: "Sext32 Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1.0"
+
+#text
+
+%code
+
+0x3fffffff -> $t0
+$t0 << 2 -> $t1
+<prd $t1>
+<prc '\n'>
+sext32 $t1 -> $t2
+<prd $t2>
+<prc '\n'>
+<halt>
