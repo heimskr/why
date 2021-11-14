@@ -71,6 +71,8 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "%data"						{ WASMRTOKEN(DATA) }
 "%code"						{ WASMRTOKEN(CODE) }
 "sext32"					{ WASMRTOKEN(SEXT32) }
+"sext16"					{ WASMRTOKEN(SEXT16) }
+"sext8"						{ WASMRTOKEN(SEXT8) }
 
 "version"					{ WASMRTOKEN(VERSION) }
 "memset"					{ WASMRTOKEN(MEMSET) }

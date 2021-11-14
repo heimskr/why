@@ -163,6 +163,8 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_CODE "%code"
 %token WASMTOK_INSTRUCTION "instruction"
 %token WASMTOK_SEXT32 "sext32"
+%token WASMTOK_SEXT16 "sext16"
+%token WASMTOK_SEXT8 "sext8"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -271,7 +273,9 @@ op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $
     | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
     | "!" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "sext32" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
+    | "sext32" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
+    | "sext16" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
+    | "sext8"  reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
 basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
 logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
 shorthandable_r: logical | shorthandable_i;

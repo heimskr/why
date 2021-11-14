@@ -29,6 +29,9 @@ namespace Wasmc {
 	constexpr Opcode OP_MOD    = 0b000000000001;
 	constexpr Opcode OP_DIV    = 0b000000000001;
 	constexpr Opcode OP_DIVU   = 0b000000000001;
+	constexpr Opcode OP_SEXT32 = 0b000000000001;
+	constexpr Opcode OP_SEXT16 = 0b000000000001;
+	constexpr Opcode OP_SEXT8  = 0b000000000001;
 	constexpr Opcode OP_AND    = 0b000000000010;
 	constexpr Opcode OP_NAND   = 0b000000000010;
 	constexpr Opcode OP_NOR    = 0b000000000010;
