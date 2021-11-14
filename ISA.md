@@ -68,6 +68,8 @@
 						<li><a href="#op-divu">Divide Unsigned</a> (<code>divu</code>)</li>
 						<li><a href="#op-modu">Modulo Unsigned</a> (<code>modu</code>)</li>
 						<li><a href="#op-sext32">Sign Extend 32 to 64</a> (<code>sext32</code>)</li>
+						<li><a href="#op-sext16">Sign Extend 16 to 64</a> (<code>sext16</code>)</li>
+						<li><a href="#op-sext8">Sign Extend 8 to 64</a> (<code>sext8</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-logic-r">Logic (R-Types)</a>
@@ -642,7 +644,21 @@ Computes the unsigned `rt`-modulo of `rs` and stores the result in `rd`.
 > `000000000001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001101`
 
 If bit 31 (zero-indexed) of `rs` is 1, this instruction copies `rs` into `rd` and sets all upper 32 bits of `rd` to 1.
-Otherwise, it just copies `rs` into `rd`.
+Otherwise, it just copies `rs` into `rd` with the upper 32 bits set to zero.
+
+### <a name="op-sext16"></a>Sign Extend 16 to 64 (`sext16`)
+> `sext16 $rs -> $rd`  
+> `000000000001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001110`
+
+If bit 15 (zero-indexed) of `rs` is 1, this instruction copies `rs` into `rd` and sets all upper 48 bits of `rd` to 1.
+Otherwise, it just copies `rs` into `rd` with the upper 48 bits set to zero.
+
+### <a name="op-sext8"></a>Sign Extend 8 to 64 (`sext8`)
+> `sext8 $rs -> $rd`  
+> `000000000001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001111`
+
+If bit 7 (zero-indexed) of `rs` is 1, this instruction copies `rs` into `rd` and sets all upper 56 bits of `rd` to 1.
+Otherwise, it just copies `rs` into `rd` with the upper 56 bits set to zero.
 
 ## <a name="ops-logic-r"></a>Logic (R-Types)
 
