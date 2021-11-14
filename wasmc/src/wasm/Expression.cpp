@@ -238,37 +238,42 @@ namespace Wasmc {
 		}
 	}
 
-	long Expression::evaluate(const ASTNode *node, const Assembler &assembler, size_t counter, bool ignore_unknown) {
+	long Expression::evaluate(const ASTNode *node, const Assembler &assembler, size_t counter, bool ignore_unknown,
+	                          const std::string *exclude) {
 		if (!node)
 			throw std::invalid_argument("Node is null in Expression::evaluate");
 
 		switch (node->symbol) {
 			case WASMTOK_PLUS:
-				return evaluate(node->at(0), assembler, counter, ignore_unknown)
-				     + evaluate(node->at(1), assembler, counter, ignore_unknown);
+				return evaluate(node->at(0), assembler, counter, ignore_unknown, exclude)
+				     + evaluate(node->at(1), assembler, counter, ignore_unknown, exclude);
 			case WASMTOK_MINUS:
-				return evaluate(node->at(0), assembler, counter, ignore_unknown)
-				     - evaluate(node->at(1), assembler, counter, ignore_unknown);
+				return evaluate(node->at(0), assembler, counter, ignore_unknown, exclude)
+				     - evaluate(node->at(1), assembler, counter, ignore_unknown, exclude);
 			case WASMTOK_ASTERISK:
-				return evaluate(node->at(0), assembler, counter, ignore_unknown)
-				     * evaluate(node->at(1), assembler, counter, ignore_unknown);
+				return evaluate(node->at(0), assembler, counter, ignore_unknown, exclude)
+				     * evaluate(node->at(1), assembler, counter, ignore_unknown, exclude);
 			case WASMTOK_SLASH: {
-				const size_t divisor = evaluate(node->at(1), assembler, counter, ignore_unknown);
+				const size_t divisor = evaluate(node->at(1), assembler, counter, ignore_unknown, exclude);
 				if (divisor == 0) {
 					node->debug();
 					throw std::invalid_argument("Division by zero in Expression::evaluate");
 				}
-				return evaluate(node->at(0), assembler, counter, ignore_unknown) / divisor;
+				return evaluate(node->at(0), assembler, counter, ignore_unknown, exclude) / divisor;
 			}
 			case WASMTOK_PERCENT: {
-				const size_t divisor = evaluate(node->at(1), assembler, counter, ignore_unknown);
+				const size_t divisor = evaluate(node->at(1), assembler, counter, ignore_unknown, exclude);
 				if (divisor == 0) {
 					node->debug();
 					throw std::invalid_argument("Modulo by zero in Expression::evaluate");
 				}
-				return evaluate(node->at(0), assembler, counter, ignore_unknown) % divisor;
+				return evaluate(node->at(0), assembler, counter, ignore_unknown, exclude) % divisor;
 			}
 			case WASMTOK_IDENT:
+				if (exclude && node->lexerInfo == exclude) {
+					std::cerr << "Excluding " << *exclude << '\n';
+					return 0;
+				}
 				try {
 					return assembler.offsets.at(node->lexerInfo);
 				} catch (const std::out_of_range &) {
@@ -276,14 +281,18 @@ namespace Wasmc {
 						return 0;
 					throw SymbolNotFound(*node->lexerInfo);
 				}
-			case WASMTOK_STRING:
+			case WASMTOK_STRING: {
+				const std::string *extracted = node->extracted();
+				if (exclude && extracted == exclude)
+					return 0;
 				try {
-					return assembler.offsets.at(node->extracted());
+					return assembler.offsets.at(extracted);
 				} catch (const std::out_of_range &) {
 					if (ignore_unknown)
 						return 0;
-					throw SymbolNotFound(*node->extracted());
+					throw SymbolNotFound(*extracted);
 				}
+			}
 			case WASMTOK_NUMBER:
 				return node->atoi();
 			case WASMTOK_DOT:
@@ -344,10 +353,10 @@ namespace Wasmc {
 		return lastValidation = validate(this, label1out, label2out);
 	}
 
-	long Expression::evaluate(const Assembler &assembler, bool ignore_unknown) const {
+	long Expression::evaluate(const Assembler &assembler, bool ignore_unknown, const std::string *exclude) const {
 		if (hasDot(this) && counter == -1ul)
 			throw std::runtime_error("Can't evaluate Expression: contains dot but counter is undefined");
-		return evaluate(this, assembler, counter, ignore_unknown);
+		return evaluate(this, assembler, counter, ignore_unknown, exclude);
 	}
 
 	Expression::operator std::string() const {

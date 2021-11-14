@@ -173,9 +173,17 @@ namespace Wasmc {
 			symbolSizes.emplace(label, expression->evaluate(*this, true));
 
 		for (auto &[node, reloc]: relocationMap)
-			if (const auto *directive = dynamic_cast<const ValueDirective *>(node))
+			if (const auto *directive = dynamic_cast<const ValueDirective *>(node)) {
+				const std::string *exclude = nullptr;
+				auto result = directive->expression->validate(&exclude);
+				const bool ignore_exclude = result != Expression::ValidationResult::LabelNumberSum
+				                         && result != Expression::ValidationResult::LabelNumberDifference
+				                         && result != Expression::ValidationResult::Label;
+				if (ignore_exclude)
+					exclude = nullptr;
+				std::cerr << "Expression: " << std::string(*directive->expression) << ", exclude = " << (exclude? *exclude : "\e[2mnullptr\e[22m") << '\n';
 				try {
-					reloc.offset = directive->expression->evaluate(*this, false);
+					reloc.offset = directive->expression->evaluate(*this, false, exclude);
 				} catch (const SymbolNotFound &err) {
 					unknownSymbols.insert(StringSet::intern(err.symbol));
 					const std::string *label1 = nullptr, *label2 = nullptr;
@@ -186,8 +194,11 @@ namespace Wasmc {
 						symbolTableIndices.emplace(label1, symbolTableEntries.size());
 						symbolTableEntries.emplace_back(entry);
 					}
-					reloc.offset = directive->expression->evaluate(*this, true);
+					reloc.offset = directive->expression->evaluate(*this, true, exclude);
 				}
+				if (exclude && *exclude == "g_685")
+					std::cerr << "reloc.offset for g_685 is now " << reloc.offset << '\n';
+			}
 	}
 
 	std::string Assembler::stringify(const std::vector<Long> &longs) {
@@ -393,9 +404,16 @@ namespace Wasmc {
 			if (reloc.symbolIndex == -1)
 				reloc.symbolIndex = index;
 			Section *definition_section = getSection(reloc.label);
-			if (definition_section)
+			if (definition_section) {
+				std::cerr << *reloc.label << ": definition_section -> address += " << getOffset(*definition_section) << " -> ";
 				address += getOffset(*definition_section);
+				std::cerr << "address = " << address << '\n';
+				std::cerr << "    " << reloc.section->name << " offset + reloc.sectionOffset = " << getOffset(*reloc.section) << " + " << reloc.sectionOffset << " = " << (getOffset(*reloc.section) + reloc.sectionOffset) << '\n';
+				std::cerr << "    reloc.type = " << int(reloc.type) << '\n';
+			} else
+				std::cerr << *reloc.label << ": !definition_section -> address remains " << address << '\n';
 			address += reloc.offset;
+			std::cerr << *reloc.label << ": final address is " << address << " (offset = " << reloc.offset << ")\n";
 			switch (reloc.type) {
 				case RelocationType::Full:
 					reloc.section->insert(reloc.sectionOffset, Long(address));

@@ -12,7 +12,9 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	const bool any = argc == 2;
+	bool base = argc == 3 && strcmp(argv[2], "--base") == 0; // Whether to not add offsets of relevant sections
+	const bool any = argc == 2 || base;
+	base |= argc == 4 && strcmp(argv[3], "--base") == 0;
 
 	using namespace Wasmc;
 	std::unique_ptr<BinaryParser> parser;
@@ -41,6 +43,23 @@ int main(int argc, char **argv) {
 				continue;
 		}
 
+		long section;
+		if (base)
+			section = 0;
+		else
+			switch (entry.type) {
+				case SymbolEnum::Code:
+				case SymbolEnum::UnknownCode:
+					section = parser->getCodeOffset();
+					break;
+				case SymbolEnum::Data:
+				case SymbolEnum::UnknownData:
+					section = parser->getDataOffset();
+					break;
+				default:
+					section = 0;
+			}
+
 		std::cerr << "\e[1m";
 		std::cout << name;
 		std::cerr << "\e[22m";
@@ -48,7 +67,7 @@ int main(int argc, char **argv) {
 		std::cerr << "\e[2m";
 		std::cout << "addr ";
 		std::cerr << "\e[22m";
-		std::cout << entry.address << "\n\t  ";
+		std::cout << (entry.address + section) << "\n\t  ";
 		std::cerr << "\e[2m";
 		std::cout << "id ";
 		std::cerr << "\e[22m";

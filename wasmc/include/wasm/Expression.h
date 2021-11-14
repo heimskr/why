@@ -26,7 +26,8 @@ namespace Wasmc {
 			static bool isSymbol(const ASTNode *);
 			static const std::string * getSymbol(const ASTNode *node);
 			static bool hasDot(const ASTNode *);
-			static long evaluate(const ASTNode *, const Assembler &, size_t counter, bool ignore_unknown);
+			static long evaluate(const ASTNode *, const Assembler &, size_t counter, bool ignore_unknown,
+			                     const std::string *exclude);
 			static std::string toString(const ASTNode *);
 
 		public:
@@ -47,7 +48,10 @@ namespace Wasmc {
 			/** Ensures that the expression fits the standard expression constraints. */
 			ValidationResult validate(const std::string ** = nullptr, const std::string ** = nullptr);
 
-			long evaluate(const Assembler &, bool ignore_unknown) const;
+			/** Evaluates the expression to a numeric value. If ignore_unknown is true, unknown labels will be treated
+			 *  as having an offset of zero. If false, unknown labels will cause a SymbolNotFound exception. If exclude
+			 *  isn't null, that label's offset won't be included in the output. */
+			long evaluate(const Assembler &, bool ignore_unknown, const std::string *exclude = nullptr) const;
 
 			operator std::string() const;
 	};
