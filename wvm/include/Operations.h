@@ -34,6 +34,8 @@ namespace WVM::Operations {
 	void divuOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 1   R 11
 	void moduOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 1   R 12
 	void sext32Op(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);        // 1   R 13
+	void sext16Op(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);        // 1   R 14
+	void sext8Op(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);         // 1   R 15
 
 	void andOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);           // 2   R 0
 	void nandOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 2   R 1
@@ -185,6 +187,10 @@ namespace WVM::Operations {
 #define FN_MODU 12
 #define OP_SEXT32 OP_RMATH
 #define FN_SEXT32 13
+#define OP_SEXT16 OP_RMATH
+#define FN_SEXT16 14
+#define OP_SEXT8 OP_RMATH
+#define FN_SEXT8 15
 
 #define OP_AND OP_RLOGIC
 #define FN_AND 0

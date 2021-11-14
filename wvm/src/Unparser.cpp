@@ -54,6 +54,8 @@ namespace WVM::Unparser {
 					case FN_DIVU:   oper = "/"; suffix = "/u"; break;
 					case FN_MODU:   oper = "%"; suffix = "/u"; break;
 					case FN_SEXT32: return "\e[1msext32\e[22m " + color(rs) + into + color(rd);
+					case FN_SEXT16: return "\e[1msext16\e[22m " + color(rs) + into + color(rd);
+					case FN_SEXT8:  return "\e[1msext8\e[22m "  + color(rs) + into + color(rd);
 				}
 				return rAltOp(rs, rt, rd, oper, suffix);
 			}

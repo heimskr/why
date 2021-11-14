@@ -79,6 +79,8 @@ namespace WVM::Operations {
 					case FN_DIVU:     divuOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_MODU:     moduOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SEXT32: sext32Op(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SEXT16: sext16Op(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SEXT8:   sext8Op(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RLOGIC:
@@ -338,7 +340,23 @@ namespace WVM::Operations {
 		if ((rs & 0x80000000) != 0)
 			setReg(vm, rd, 0xffffffff00000000ul | rs);
 		else
-			setReg(vm, rd, rs);
+			setReg(vm, rd, 0x00000000fffffffful & rs);
+		vm.increment();
+	}
+
+	void sext16Op(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		if ((rs & 0x8000) != 0)
+			setReg(vm, rd, 0xffffffffffff0000ul | rs);
+		else
+			setReg(vm, rd, 0x000000000000fffful & rs);
+		vm.increment();
+	}
+
+	void sext8Op(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		if ((rs & 0x80) != 0)
+			setReg(vm, rd, 0xffffffffffffff00ul | rs);
+		else
+			setReg(vm, rd, 0x00000000000000fful & rs);
 		vm.increment();
 	}
 
@@ -1081,7 +1099,7 @@ namespace WVM::Operations {
 	void prOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		std::stringstream ss;
 		ss << Why::coloredRegister(vm.registerID(rs)) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
-		   << rs;
+		   << rs << " / " << std::hex << rs;
 		// vm.onPrint(ss.str() + "\n");
 		// DBG(ss.str());
 		std::cerr << ss.str() << '\n';
