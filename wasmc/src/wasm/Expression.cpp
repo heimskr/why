@@ -270,10 +270,8 @@ namespace Wasmc {
 				return evaluate(node->at(0), assembler, counter, ignore_unknown, exclude) % divisor;
 			}
 			case WASMTOK_IDENT:
-				if (exclude && node->lexerInfo == exclude) {
-					std::cerr << "Excluding " << *exclude << '\n';
+				if (exclude && node->lexerInfo == exclude)
 					return 0;
-				}
 				try {
 					return assembler.offsets.at(node->lexerInfo);
 				} catch (const std::out_of_range &) {

@@ -41,10 +41,10 @@ namespace Wasmc {
 		metaOffsetRelocation() = metaOffsetDebug() + debug.size();
 		offsets[StringSet::intern(".end")] = metaOffsetEnd() = metaOffsetRelocation() + relocation.size();
 		encodeSymbolTable();
-		applyRelocation();
-		encodeRelocation();
 		code.applyValues(*this);
 		data.applyValues(*this);
+		applyRelocation();
+		encodeRelocation();
 		concatenated = Section::combine({meta, code, data, symbols, debug, relocation});
 
 		if (can_warn && 0 < unknownSymbols.size()) {
@@ -181,7 +181,6 @@ namespace Wasmc {
 				                         && result != Expression::ValidationResult::Label;
 				if (ignore_exclude)
 					exclude = nullptr;
-				std::cerr << "Expression: " << std::string(*directive->expression) << ", exclude = " << (exclude? *exclude : "\e[2mnullptr\e[22m") << '\n';
 				try {
 					reloc.offset = directive->expression->evaluate(*this, false, exclude);
 				} catch (const SymbolNotFound &err) {
@@ -196,8 +195,6 @@ namespace Wasmc {
 					}
 					reloc.offset = directive->expression->evaluate(*this, true, exclude);
 				}
-				if (exclude && *exclude == "g_685")
-					std::cerr << "reloc.offset for g_685 is now " << reloc.offset << '\n';
 			}
 	}
 
@@ -404,16 +401,9 @@ namespace Wasmc {
 			if (reloc.symbolIndex == -1)
 				reloc.symbolIndex = index;
 			Section *definition_section = getSection(reloc.label);
-			if (definition_section) {
-				std::cerr << *reloc.label << ": definition_section -> address += " << getOffset(*definition_section) << " -> ";
+			if (definition_section)
 				address += getOffset(*definition_section);
-				std::cerr << "address = " << address << '\n';
-				std::cerr << "    " << reloc.section->name << " offset + reloc.sectionOffset = " << getOffset(*reloc.section) << " + " << reloc.sectionOffset << " = " << (getOffset(*reloc.section) + reloc.sectionOffset) << '\n';
-				std::cerr << "    reloc.type = " << int(reloc.type) << '\n';
-			} else
-				std::cerr << *reloc.label << ": !definition_section -> address remains " << address << '\n';
 			address += reloc.offset;
-			std::cerr << *reloc.label << ": final address is " << address << " (offset = " << reloc.offset << ")\n";
 			switch (reloc.type) {
 				case RelocationType::Full:
 					reloc.section->insert(reloc.sectionOffset, Long(address));
