@@ -228,6 +228,9 @@ namespace WVM::Unparser {
 			case OP_DIVUI:  return iAltOp(rs, rd, coloredImm, "/") + " /u";
 			case OP_DIVII:  return iAltOpInv(rs, rd, coloredImm, "/");
 			case OP_DIVUII: return iAltOpInv(rs, rd, coloredImm, "/") + " /u";
+			case OP_SLLII:  return iAltOpInv(rs, rd, coloredImm, "<<");
+			case OP_SRLII:  return iAltOpInv(rs, rd, coloredImm, ">>>");
+			case OP_SRAII:  return iAltOpInv(rs, rd, coloredImm, ">>");
 			case OP_INT: {
 				const std::string base = "\e[36mint\e[39m ";
 				switch (immediate) {

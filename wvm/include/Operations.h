@@ -67,6 +67,9 @@ namespace WVM::Operations {
 	void diviiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 54  I
 	void divuiiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate); // 55  I
 	void moduiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 67  I
+	void slliiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 62  I
+	void srliiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 63  I
+	void sraiiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 64  I
 
 	void andiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 6   I
 	void nandiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 7   I
@@ -348,6 +351,9 @@ namespace WVM::Operations {
 #define OP_SSPOP 58
 #define OP_SGEUI 59
 #define OP_SGUI 60
+#define OP_SLLII 62
+#define OP_SRLII 63
+#define OP_SRAII 64
 
 #define OP_PAGE  61
 #define FN_PGOFF 0

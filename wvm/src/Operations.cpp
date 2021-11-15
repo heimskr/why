@@ -26,7 +26,7 @@ namespace WVM::Operations {
 		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII,
 		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI,
 		OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT,
-		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI, OP_MODUI,
+		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI, OP_MODUI, OP_SLLII, OP_SRLII, OP_SRAII,
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
@@ -180,61 +180,64 @@ namespace WVM::Operations {
 
 	void executeIType(int opcode, VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
 		switch (opcode) {
-			case OP_ADDI:     addiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SUBI:     subiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_MULTI:   multiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_MULTUI: multuiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SLLI:     slliOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SRLI:     srliOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SRAI:     sraiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_MODI:     modiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_DIVI:     diviOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_DIVUI:   divuiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_MODUI:   moduiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_DIVII:   diviiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_DIVUII: divuiiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_ANDI:     andiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_NANDI:   nandiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_NORI:     noriOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_ORI:       oriOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_XNORI:   xnoriOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_XORI:     xoriOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_LUI:       luiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SLI:       sliOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SLEI:     sleiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SEQI:     seqiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SLUI:     sluiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SLEUI:   sleuiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SGI:       sgiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SGEI:     sgeiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SGEUI:   sgeuiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SGUI:     sguiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_LI:         liOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SI:         siOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SET:       setOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_LBI:       lbiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SBI:       sbiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_LNI:       lniOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_LBNI:     lbniOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_INT:       intOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_RIT:       ritOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_TIMEI:   timeiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_RINGI:   ringiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_CMPI:     cmpiOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SSPUSH: sspushOp(vm, rs, rd, conditions, flags, immediate); return;
-			case OP_SSPOP:   sspopOp(vm, rs, rd, conditions, flags, immediate); return;
+			case OP_ADDI:     addiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SUBI:     subiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_MULTI:   multiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_MULTUI: multuiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SLLI:     slliOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SRLI:     srliOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SRAI:     sraiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_MODI:     modiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_DIVI:     diviOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_DIVUI:   divuiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_MODUI:   moduiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_DIVII:   diviiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_DIVUII: divuiiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_ANDI:     andiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_NANDI:   nandiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_NORI:     noriOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_ORI:       oriOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_XNORI:   xnoriOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_XORI:     xoriOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_LUI:       luiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SLI:       sliOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SLEI:     sleiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SEQI:     seqiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SLUI:     sluiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SLEUI:   sleuiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SGI:       sgiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SGEI:     sgeiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SGEUI:   sgeuiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SGUI:     sguiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_LI:         liOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SI:         siOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SET:       setOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_LBI:       lbiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SBI:       sbiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_LNI:       lniOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_LBNI:     lbniOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_INT:       intOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_RIT:       ritOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_TIMEI:   timeiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_RINGI:   ringiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_CMPI:     cmpiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SSPUSH: sspushOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SSPOP:   sspopOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SLLII:   slliiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SRLII:   srliiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SRAII:   sraiiOp(vm, rs, rd, conditions, flags, immediate); break;
+			default:
+				throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
 		}
-
-		throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
 	}
 
 	void executeJType(int opcode, VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
 		switch (opcode) {
-			case OP_J:   jOp(vm, rs, link, conditions, flags, address); return;
-			case OP_JC: jcOp(vm, rs, link, conditions, flags, address); return;
+			case OP_J:   jOp(vm, rs, link, conditions, flags, address); break;
+			case OP_JC: jcOp(vm, rs, link, conditions, flags, address); break;
+			default:
+				throw std::runtime_error("Unknown J-type: " + std::to_string(opcode));
 		}
-
-		throw std::runtime_error("Unknown J-type: " + std::to_string(opcode));
 	}
 
 	void decodeRType(UWord instr, int &rs, int &rt, int &rd, Conditions &conds, int &flags, int &funct) {
@@ -466,12 +469,12 @@ namespace WVM::Operations {
 	}
 
 	void srliOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
-		setReg(vm, rd, static_cast<UWord>(rs) >> static_cast<UWord>(immediate));
+		setReg(vm, rd, UWord(rs) >> UWord(immediate));
 		vm.increment();
 	}
 
 	void sraiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
-		setReg(vm, rd, rs >> immediate);
+		setReg(vm, rd, Word(rs) >> Word(immediate));
 		vm.increment();
 	}
 
@@ -492,6 +495,21 @@ namespace WVM::Operations {
 
 	void moduiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
 		setReg(vm, rd, static_cast<UWord>(rs) % static_cast<UWord>(immediate));
+		vm.increment();
+	}
+
+	void slliiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		setReg(vm, rd, immediate << rs);
+		vm.increment();
+	}
+
+	void srliiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		setReg(vm, rd, UWord(immediate) >> UWord(rs));
+		vm.increment();
+	}
+
+	void sraiiOp(VM &vm, Word &rs, Word &rd, Conditions, int, HWord immediate) {
+		setReg(vm, rd, Word(immediate) >> Word(rs));
 		vm.increment();
 	}
 
