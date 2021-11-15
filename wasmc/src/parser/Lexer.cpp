@@ -2,6 +2,7 @@
 
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
+#include "util/Util.h"
 
 namespace Wasmc {
 	Lexer wasmLexer(wasmParser, wasmleng, wasmlval);
@@ -61,7 +62,7 @@ void wasmerror(const std::string &message) {
 }
 
 void wasmerror(const std::string &message, const Wasmc::ASTLocation &location) {
-	std::cerr << Wasmc::wasmParser.getBuffer() << "\n";
+	std::cerr << Wasmc::Util::split(Wasmc::wasmParser.getBuffer(), "\n", false).at(location.line) << "\n";
 	std::cerr << "\e[31mWASM error at \e[1m" << location << "\e[22m: " << message << "\e[0m\n";
 	++Wasmc::wasmParser.errorCount;
 	Wasmc::wasmLexer.errors.push_back({message, location});
