@@ -17,7 +17,7 @@ namespace Wasmc {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, StringPrint, Jeq, JeqI, Cs, Ls, Ss, IO, Rest,
-		Interrupts,
+		Interrupts, Inverse,
 	};
 
 	Condition getCondition(const std::string &);
@@ -725,6 +725,24 @@ namespace Wasmc {
 		WASMNodeType nodeType() const override { return WASMNodeType::Interrupts; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+	};
+
+	/** Covers a number of inverse immediate instructions (sllii, srlii, sraii). */
+	class WASMInverseNode: public WASMInstructionNode, public IType {
+		private:
+			std::string getOper() const;
+
+		public:
+			enum class Type {Sllii, Srlii, Sraii};
+			Type type;
+
+			WASMInverseNode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, Type);
+			WASMInverseNode(const Immediate &imm_, const std::string *rs_, const std::string *rd_, Type);
+			Opcode getOpcode() const override;
+			WASMInstructionNode * copy() const override { return (new WASMInverseNode(imm, rs, rd, type))->absorb(*this); }
+			WASMNodeType nodeType() const override { return WASMNodeType::Inverse; }
+			std::string debugExtra() const override;
+			operator std::string() const override;
 	};
 
 	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang = -1);

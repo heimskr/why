@@ -1184,6 +1184,39 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + (enable? "%ei" : "%di");
 	}
 
+	WASMInverseNode::WASMInverseNode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, Type type_):
+		WASMInstructionNode(WASM_INVERSENODE), IType(rs_, rd_, imm_), type(type_) {}
+
+	WASMInverseNode::WASMInverseNode(const Immediate &imm_, const std::string *rs_, const std::string *rd_, Type type_):
+		WASMInstructionNode(WASM_INVERSENODE), IType(rs_, rd_, imm_), type(type_) {}
+
+	std::string WASMInverseNode::getOper() const {
+		switch (type) {
+			case Type::Sllii: return "<<";
+			case Type::Srlii: return ">>>";
+			case Type::Sraii: return ">>";
+			default: throw std::runtime_error("Invalid WASMInverseNode::Type: " + std::to_string(int(type)));
+		}
+	}
+
+	Opcode WASMInverseNode::getOpcode() const {
+		switch (type) {
+			case Type::Sllii: return OPCODES.at("sllii");
+			case Type::Srlii: return OPCODES.at("srlii");
+			case Type::Sraii: return OPCODES.at("sraii");
+			default: throw std::runtime_error("Invalid WASMInverseNode::Type: " + std::to_string(int(type)));
+		}
+	}
+
+	std::string WASMInverseNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + colorize(imm) + " " + dim(getOper()) + " " + cyan(*rs) + dim(" -> ")
+			+ cyan(*rd);
+	}
+
+	WASMInverseNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + toString(imm) + " " + getOper() + " " + *rs + " -> " + *rd;
+	}
+
 	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang) {
 		static const auto deq = StringSet::intern("==");
 		RNode *out = new RNode(rs, deq, rt, rd, WASMTOK_DEQ, false);
