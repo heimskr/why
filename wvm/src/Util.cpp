@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdlib>
 #include <iomanip>
 #include <sstream>
@@ -65,5 +66,10 @@ namespace WVM::Util {
 
 	uint64_t swapEndian(uint64_t n) {
 		return __builtin_bswap64(n);
+	}
+
+	size_t nanotime() {
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
+			.count();
 	}
 }

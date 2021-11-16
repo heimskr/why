@@ -38,7 +38,7 @@ namespace WVM::Net {
 			std::function<void(int, int)> onEnd; // (int client, int descriptor)
 			bool lineMode = false;
 
-			Server(uint16_t port_, bool line_mode = true, size_t chunk_size = 512);
+			Server(uint16_t port_, bool line_mode = true, size_t chunk_size = 1);
 			~Server();
 
 			int getPort() const { return port; }

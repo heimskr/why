@@ -17,6 +17,8 @@ namespace WVM {
 
 		uint64_t swapEndian(uint64_t n);
 
+		size_t nanotime();
+
 		template <typename T>
 		inline T upalign(T num, long alignment) {
 			return num + ((alignment - (num % alignment)) % alignment);

@@ -422,10 +422,24 @@ namespace WVM {
 	}
 
 	bool VM::intKeybrd(UWord key) {
-		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, key);
-		registers[Why::exceptionOffset + 2] = key;
-		onRegisterChange(Why::exceptionOffset + 2);
-		return interrupt(InterruptType::Keybrd, true);
+		// For maximum safety, I could lock the VM before reading hardwareInterruptsEnabled, but the chance of a race
+		// condition if I don't do it is small enough that it shouldn't matter.
+		static size_t stamp = Util::nanotime();
+
+		const size_t now = Util::nanotime();
+		const double diff = double(now - stamp) / 1e3;
+		stamp = now;
+
+		if (hardwareInterruptsEnabled) {
+			auto lock = lockVM();
+			bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, key);
+			registers[Why::exceptionOffset + 2] = key;
+			onRegisterChange(Why::exceptionOffset + 2);
+			return interrupt(InterruptType::Keybrd, true);
+		}
+
+		std::cerr << "Skipping keyboard input (" << diff << " μs)\n";
+		return false;
 	}
 
 	void VM::start() {
@@ -513,7 +527,6 @@ namespace WVM {
 		if (undoPointer == 0)
 			return false;
 
-		DBG("size == " << undoStack.size() << ", pointer == " << undoPointer << " (access index: " << (undoPointer - 1) << ")");
 		const std::vector<std::unique_ptr<Change>> &changes = undoStack.at(--undoPointer);
 		for (auto iter = changes.rbegin(), rend = changes.rend(); iter != rend; ++iter)
 			(*iter)->undo(*this, strict);
@@ -525,7 +538,6 @@ namespace WVM {
 		if (undoPointer == undoStack.size())
 			return false;
 
-		DBG("size == " << undoStack.size() << ", pointer == " << undoPointer << " (access index: " << undoPointer << ")");
 		for (std::unique_ptr<Change> &change: undoStack.at(undoPointer++))
 			change->apply(*this, strict);
 

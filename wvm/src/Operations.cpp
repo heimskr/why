@@ -680,10 +680,14 @@ namespace WVM::Operations {
 		if (rs) {
 			bool success;
 			const Word translated = vm.translateAddress(rd, &success);
-			if (!success)
+			if (!success) {
 				vm.intPfault();
-			else
-				vm.jump(translated, false, vm.registerID(rd) == Why::returnAddressOffset);
+			} else {
+				const auto reg_id = vm.registerID(rd);
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+					vm.hardwareInterruptsEnabled = true;
+				vm.jump(translated, false, reg_id == Why::returnAddressOffset);
+			}
 		} else vm.increment();
 	}
 
