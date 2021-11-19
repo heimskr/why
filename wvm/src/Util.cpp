@@ -33,12 +33,22 @@ namespace WVM::Util {
 
 	bool parseUL(const std::string &str, uint64_t &out, int base) {
 		char *endptr;
+		if (str.substr(0, 2) == "0x") {
+			const std::string hex = str.substr(2);
+			out = strtoull(hex.c_str(), &endptr, 16);
+			return static_cast<unsigned long>(endptr - hex.c_str()) == hex.size();
+		}
 		out = strtoull(str.c_str(), &endptr, base);
 		return static_cast<unsigned long>(endptr - str.c_str()) == str.size();
 	}
 
 	bool parseLong(const std::string &str, int64_t &out, int base) {
 		char *endptr;
+		if (str.substr(0, 2) == "0x") {
+			const std::string hex = str.substr(2);
+			out = strtoll(hex.c_str(), &endptr, 16);
+			return static_cast<unsigned long>(endptr - hex.c_str()) == hex.size();
+		}
 		out = strtoll(str.c_str(), &endptr, base);
 		return static_cast<unsigned long>(endptr - str.c_str()) == str.size();
 	}
