@@ -119,11 +119,11 @@ namespace WVM::Mode {
 		terminal.watchSize();
 		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
 		send(":Reg " + std::to_string(Why::stackPointerOffset));
+		alive = false;
 		autotickReady = true;
 		autotickMutex.unlock();
 		autotickVariable.notify_all();
 		terminal.join();
-		alive = false;
 		networkThread.join();
 		autotickMutex.lock();
 		autotickThread.join();
