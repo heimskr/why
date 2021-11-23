@@ -453,6 +453,7 @@ namespace WVM {
 	bool VM::play(size_t microdelay) {
 		if (playing.exchange(true))
 			return false;
+		paused = false;
 		start();
 		playThread = std::thread([this](size_t microdelay) {
 			if (playing && active && !paused) {
