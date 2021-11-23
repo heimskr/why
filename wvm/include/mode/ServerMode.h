@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+#include <deque>
 #include <mutex>
 #include <set>
 
@@ -18,10 +20,17 @@ namespace WVM::Mode {
 			bool logMemoryWrites = false, logRegisters = false;
 			std::recursive_mutex subscriberMutex;
 
+			std::atomic_bool readingKeys = true;
+			std::thread keyThread;
+			std::mutex keyMutex;
+			std::deque<UWord> keys;
+			std::unique_lock<std::mutex> lockKeys() { return std::unique_lock(keyMutex); }
+
 			void setFastForward(bool);
 			void broadcast(const std::string &);
 			void sendMemory(int);
 			bool tick();
+
 
 		public:
 			static ServerMode *instance;

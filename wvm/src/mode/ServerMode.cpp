@@ -36,7 +36,22 @@ namespace WVM::Mode {
 		initVM();
 		signal(SIGINT, sigint_handler);
 		server.onEnd = [this](int client, int) { cleanupClient(client); };
+		keyThread = std::thread([this] {
+			while (readingKeys) {
+				{
+					auto lock = lockKeys();
+					if (!keys.empty()) {
+						const UWord key = keys.front();
+						keys.pop_front();
+						vm.intKeybrd(key);
+					}
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
+		});
 		server.run();
+		readingKeys = false;
+		keyThread.join();
 	}
 
 	void ServerMode::initVM() {
@@ -148,6 +163,7 @@ namespace WVM::Mode {
 	}
 
 	void ServerMode::stop() {
+		readingKeys = false;
 		auto lock = lockSubscribers();
 		for (int client: server.getClients()) {
 			cleanupClient(client);
@@ -544,7 +560,8 @@ namespace WVM::Mode {
 				invalid();
 				return;
 			}
-			vm.intKeybrd(key);
+			auto lock = lockKeys();
+			keys.push_back(key);
 		} else if (verb == "Dump") {
 			Word address, length;
 			if ((size != 3 && size != 4) || !Util::parseLong(split[1], address) || !Util::parseLong(split[2], length)) {
