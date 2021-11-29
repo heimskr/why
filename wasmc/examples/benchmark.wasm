@@ -1,0 +1,32 @@
+#meta
+name: "Benchmark"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+// Run with "tick 9999999999" or some other high number
+
+#text
+
+%data
+
+@interrupts
+%8b 0
+%8b 0
+%8b timer
+%8b 0
+%8b 0
+%8b 0
+%8b 0
+%8b 0
+
+%code
+
+%rit interrupts
+%time 1000000
+
+@spin
+: spin
+
+@timer
+<halt>
