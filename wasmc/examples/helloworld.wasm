@@ -1,0 +1,33 @@
+#meta
+name: "Hello World"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#text
+
+%data
+
+@str
+%stringz "Hello, World!\n"
+
+%code
+
+:: main
+0x646f6e65 -> $a0
+%int 0
+<halt>
+
+@strprint
+	[$a0] -> $s0 /b
+	: _strprint_print if $s0
+	: $rt
+	@_strprint_print
+	<prc $s0>
+	$a0++
+	: strprint
+
+@main
+	&str -> $a0
+	:: strprint
+	: $rt
