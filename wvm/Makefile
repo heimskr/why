@@ -4,8 +4,8 @@ OPTIMIZATION	?= -Ofast -march=native
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 TESTFILE		?= ~/src/thurisaz/Thurisaz.why
-# TESTFILE		?= ../wasmc/compiled/text_linked.why
-# TESTFILE		?= ~/csmith/5.full.why
+# TESTFILE		?= ../wasmc/compiled/benchmark.why
+# TESTFILE		?= ~/csmith/7.full.why
 
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(Tests?|Test_.+)\.cpp$$/!p')
 OBJECTS_WVM		:= $(patsubst src/%.cpp,build/%.o, $(SOURCES_WVM))
@@ -42,7 +42,7 @@ disk.img:
 	dd if=/dev/zero of=disk.img bs=1024 count=10240
 
 servertest: $(OUT)
-	./$(OUT) server $(TESTFILE) disk.img
+	./$(OUT) server $(TESTFILE) disk.img disk.1.img
 
 consoletest: $(OUT)
 	./$(OUT) console 127.0.0.1 `cat .port`

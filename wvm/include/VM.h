@@ -136,7 +136,7 @@ namespace WVM {
 			bool checkRing(Ring);
 			bool intProtec();
 			bool intPfault();
-			bool intBwrite();
+			bool intBwrite(Word);
 			bool intTimer();
 			bool intKeybrd(UWord);
 			void start();

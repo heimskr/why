@@ -413,7 +413,11 @@ namespace WVM {
 		return interrupt(InterruptType::Pfault, true);
 	}
 
-	bool VM::intBwrite() {
+	bool VM::intBwrite(Word address) {
+		auto lock = lockVM();
+		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, address);
+		registers[Why::exceptionOffset + 2] = address;
+		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Bwrite, true);
 	}
 
