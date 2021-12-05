@@ -165,6 +165,7 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_SEXT32 "sext32"
 %token WASMTOK_SEXT16 "sext16"
 %token WASMTOK_SEXT8 "sext8"
+%token WASMTOK_TRANSLATE "translate"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -176,7 +177,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
 %token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR WASM_EXPRESSION
-%token WASM_INVERSENODE
+%token WASM_INVERSENODE WASM_TRANSNODE
 
 %start start
 
@@ -265,7 +266,7 @@ operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c     | op
          | op_j    | op_jc    | op_jr    | op_jrc    | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi  | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
          | op_qmem | op_ret   | op_jeq   | op_sprint | op_inc    | op_dec   | op_cs   | op_ls   | op_ss    | op_di
-         | op_ei   | op_inv;
+         | op_ei   | op_inv   | op_trans;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
@@ -332,6 +333,8 @@ op_cs: "[" reg "]" "->" "[" reg "]" "/s" { $$ = new WASMCsNode($2, $6); D($1, $3
 op_ls: "[" reg "]" "->" reg "/s" { $$ = new WASMLsNode($2, $5); D($1, $3, $4, $6); };
 
 op_ss: reg "->" "[" reg "]" "/s" { $$ = new WASMSsNode($1, $4); D($2, $3, $5, $6); };
+
+op_trans: "translate" reg "->" reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
 
 op_cmp: reg "~" reg { $$ = new WASMCmpNode($1, $3); D($2); };
 

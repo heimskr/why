@@ -1223,4 +1223,21 @@ namespace Wasmc {
 		out->setBang(bang);
 		return out;
 	}
+
+	WASMTransNode::WASMTransNode(const ASTNode *rs_, const ASTNode *rd_):
+	WASMTransNode(rs_->lexerInfo, rd_->lexerInfo) {
+		delete rs_;
+		delete rd_;
+	}
+
+	WASMTransNode::WASMTransNode(const std::string *rs_, const std::string *rd_):
+		WASMInstructionNode(WASM_TRANSNODE), RType(rs_, nullptr, rd_) {}
+
+	std::string WASMTransNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + "translate " + cyan(*rs) + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMTransNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "translate " + *rs + " -> " + *rd;
+	}
 }

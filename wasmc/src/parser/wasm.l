@@ -74,14 +74,15 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "sext16"					{ WASMRTOKEN(SEXT16) }
 "sext8"						{ WASMRTOKEN(SEXT8) }
 
+"translate"					{ WASMRTOKEN(TRANSLATE) }
 "version"					{ WASMRTOKEN(VERSION) }
 "memset"					{ WASMRTOKEN(MEMSET) }
 "author"					{ WASMRTOKEN(AUTHOR) }
+"%setpt"					{ WASMRTOKEN(SETPT) }
 "orcid"						{ WASMRTOKEN(ORCID) }
 "print"						{ WASMRTOKEN(PRINT) }
 "sleep"						{ WASMRTOKEN(SLEEP) }
 "rest"						{ WASMRTOKEN(REST) }
-"%setpt"					{ WASMRTOKEN(SETPT) }
 "name"						{ WASMRTOKEN(NAME) }
 "%time"						{ WASMRTOKEN(TIME) }
 "%ring"						{ WASMRTOKEN(RING) }

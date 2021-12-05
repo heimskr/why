@@ -16,6 +16,7 @@ namespace Wasmc {
 		0b000000111101, // Paging
 		0b000001000001, // Query
 		0b000001000010, // Disable/Enable Interrupts
+		0b000001000100, // Translate Address
 	};
 
 	std::unordered_set<Opcode> ITYPES {
@@ -196,6 +197,7 @@ namespace Wasmc {
 		{"ei",     0b000001000010},
 		{"di",     0b000001000010},
 		{"modui",  0b000001000011},
+		{"trans",  0b000001000100},
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {
@@ -278,6 +280,7 @@ namespace Wasmc {
 		{"pgoff",  0b000000000000},
 		{"qm",     0b000000000000},
 		{"di",     0b000000000000},
+		{"trans",  0b000000000000},
 		{"jrc",    0b000000000001},
 		{"l",      0b000000000001},
 		{"nand",   0b000000000001},

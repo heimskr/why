@@ -745,5 +745,15 @@ namespace Wasmc {
 			operator std::string() const override;
 	};
 
+	struct WASMTransNode: WASMInstructionNode, RType {
+		WASMTransNode(const ASTNode *rs_, const ASTNode *rd_);
+		WASMTransNode(const std::string *rs_, const std::string *rd_);
+		Opcode getOpcode() const override { return OPCODES.at("trans"); }
+		Funct getFunct() const override { return FUNCTS.at("trans"); }
+		WASMInstructionNode * copy() const override { return new WASMTransNode(rs, rd); }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
 	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang = -1);
 }
