@@ -19,7 +19,8 @@
 #include "VMError.h"
 #include "Why.h"
 
-// #define DEBUG_VIRTMEM
+#define DEBUG_VIRTMEM
+// #define DEBUG_VIRTMEM_EXTRA
 #define CATCH_DEBUG
 #define CATCH_OPEN
 // #define CATCH_TICK
@@ -61,6 +62,8 @@ namespace WVM {
 				*success = true;
 			return virtual_address;
 		}
+
+		lastVirtual = virtual_address;
 
 		if (!p0) {
 #ifdef DEBUG_VIRTMEM
@@ -139,9 +142,11 @@ namespace WVM {
 			*meta_out = lastMeta;
 
 #ifdef DEBUG_VIRTMEM
+#ifdef DEBUG_VIRTMEM_EXTRA
 		info() << "virtmem(" << programCounter << "): " << virtual_address << " -> "
 		       << (p5_entry.getStart() + pieces.pageOffset) << " = " << p5_entry.getStart() << " + "
 		       << pieces.pageOffset << "\n";
+#endif
 #endif
 
 		return p5_entry.getStart() + pieces.pageOffset;
@@ -410,6 +415,10 @@ namespace WVM {
 	}
 
 	bool VM::intPfault() {
+		auto lock = lockVM();
+		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, lastVirtual);
+		registers[Why::exceptionOffset + 2] = lastVirtual;
+		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Pfault, true);
 	}
 

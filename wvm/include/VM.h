@@ -41,6 +41,7 @@ namespace WVM {
 			std::vector<std::unique_ptr<Change>> changeBuffer;
 			size_t undoPointer = 0;
 			PageMeta lastMeta;
+			Word lastVirtual = 0;
 			std::recursive_mutex mutex;
 			std::atomic<size_t> timerThreadID = 0;
 			std::thread timerThread;
