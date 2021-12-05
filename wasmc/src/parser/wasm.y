@@ -424,7 +424,7 @@ _immediate: "&" ident { $$ = $2; D($1); }
 
 ident: ident_option { $1->symbol = WASMTOK_IDENT; } | WASMTOK_IDENT;
 ident_option: "memset" | "lui" | "if" | "halt" | "on" | "off" | "sleep" | "io" | symbol_type | "version" | "author"
-            | "orcid" | "name" | "sext32" | printop;
+            | "orcid" | "name" | "sext32" | printop | "translate";
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
