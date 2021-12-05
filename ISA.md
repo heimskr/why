@@ -164,21 +164,22 @@
 				</li>
 				<li><a href="#ops-mem-r">Memory (R-Types)</a>
 					<ol>
-						<li><a href="#op-c">Copy</a>            (<code>c</code>)</li>
-						<li><a href="#op-l">Load</a>            (<code>l</code>)</li>
-						<li><a href="#op-s">Store</a>           (<code>s</code>)</li>
-						<li><a href="#op-cb">Copy Byte</a>      (<code>cb</code>)</li>
-						<li><a href="#op-lb">Load Byte</a>      (<code>lb</code>)</li>
-						<li><a href="#op-sb">Store Byte</a>     (<code>sb</code>)</li>
-						<li><a href="#op-ch">Copy Halfword</a>  (<code>ch</code>)</li>
-						<li><a href="#op-lh">Load Halfword</a>  (<code>lh</code>)</li>
-						<li><a href="#op-sh">Store Halfword</a> (<code>sh</code>)</li>
-						<li><a href="#op-cs">Copy Short</a>     (<code>cs</code>)</li>
-						<li><a href="#op-ls">Load Short</a>     (<code>ls</code>)</li>
-						<li><a href="#op-ss">Store Short</a>    (<code>ss</code>)</li>
-						<li><a href="#op-spush">Stack Push</a>  (<code>spush</code>)</li>
-						<li><a href="#op-spop">Stack Pop</a>    (<code>spop</code>)</li>
-						<li><a href="#op-ms">Memset</a>         (<code>ms</code>)</li>
+						<li><a href="#op-c">Copy</a>                  (<code>c</code>)</li>
+						<li><a href="#op-l">Load</a>                  (<code>l</code>)</li>
+						<li><a href="#op-s">Store</a>                 (<code>s</code>)</li>
+						<li><a href="#op-cb">Copy Byte</a>            (<code>cb</code>)</li>
+						<li><a href="#op-lb">Load Byte</a>            (<code>lb</code>)</li>
+						<li><a href="#op-sb">Store Byte</a>           (<code>sb</code>)</li>
+						<li><a href="#op-ch">Copy Halfword</a>        (<code>ch</code>)</li>
+						<li><a href="#op-lh">Load Halfword</a>        (<code>lh</code>)</li>
+						<li><a href="#op-sh">Store Halfword</a>       (<code>sh</code>)</li>
+						<li><a href="#op-cs">Copy Short</a>           (<code>cs</code>)</li>
+						<li><a href="#op-ls">Load Short</a>           (<code>ls</code>)</li>
+						<li><a href="#op-ss">Store Short</a>          (<code>ss</code>)</li>
+						<li><a href="#op-spush">Stack Push</a>        (<code>spush</code>)</li>
+						<li><a href="#op-spop">Stack Pop</a>          (<code>spop</code>)</li>
+						<li><a href="#op-ms">Memset</a>               (<code>ms</code>)</li>
+						<li><a href="#op-trans">Translate Address</a> (<code>trans</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
@@ -1131,6 +1132,14 @@ See also: <a href="#op-pop">pop pseudoinstruction</a>
 > `000000010010` `ttttttt` `ddddddd` `sssssss` `0000000000000` `......` `000000001011`
 
 Sets `rs` bytes to `rt` starting at address `rd`. The value in `rt` will be truncated to 8 bits.
+
+### <a name="op-trans"></a>Translate Address (`trans`)
+> `translate $rs -> $rd`  
+> `000001000100` `0000000` `ddddddd` `sssssss` `0000000000000` `......` `000000000000`
+
+Translates the virtual address stored in `rs` and stores the resulting physical address in `rd`.  
+If paging is disabled, this instruction simply copies `rs` into `rd`.  
+A page fault will occur if paging is enabled and the virtual address has no corresponding physical address.
 
 ## <a name="ops-mem-i"></a>Memory (I-Types)
 
