@@ -661,9 +661,13 @@ namespace WVM::Mode {
 			std::cerr << "Execution failed: " << err.what() << "\n";
 			std::cerr << "Offending address: " << pc << "\n";
 			try {
+				Word last = vm.programCounter;
 				for (int i = 0; i < 16; ++i) {
 					vm.undo();
-					std::cerr << "Previous address: " << vm.programCounter << "\n";
+					if (last != vm.programCounter) {
+						std::cerr << "Previous address: " << vm.programCounter << "\n";
+						last = vm.programCounter;
+					}
 				}
 			} catch (std::exception &undo_err) {
 				std::cerr << "Couldn't rewind.\n";
