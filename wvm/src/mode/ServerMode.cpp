@@ -334,8 +334,15 @@ namespace WVM::Mode {
 				return;
 			}
 
-			for (Word address = vm.programCounter, i = 0; i < count; ++i, address += 8)
-				std::cout << address << ": " << Unparser::stringify(vm.getInstruction(address), &vm) << '\n';
+			for (Word address = vm.programCounter, i = 0; i < count; ++i, address += 8) {
+				bool success = false;
+				Word translated = vm.translateAddress(address, &success);
+				if (!success) {
+					std::cout << "Couldn't translate " << address << ".\n";
+					break;
+				}
+				std::cout << address << ": " << Unparser::stringify(vm.getInstruction(translated), &vm) << '\n';
+			}
 		} else if (verb == "Symbols") {
 			for (const auto &[name, symbol]: vm.symbolTable)
 				std::cout << "\e[1m" << name << "\e[22m: " << symbol.location << " \e[22;2m[" << std::hex << symbol.hash
