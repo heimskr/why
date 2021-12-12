@@ -406,7 +406,8 @@ op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 op_page: "%page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
        | "%page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
-op_setpt: "%setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
+op_setpt: "%setpt" reg         { $$ = new WASMSetptRNode($2); D($1); }
+        | ":" "%setpt" reg reg { $$ = new WASMSetptRNode($3, $4); D($1, $2); };
 
 op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 

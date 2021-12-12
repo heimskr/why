@@ -624,11 +624,11 @@ namespace Wasmc {
 	};
 
 	struct WASMSetptRNode: WASMInstructionNode, RType {
-		WASMSetptRNode(ASTNode *rs_);
-		WASMSetptRNode(const std::string *rs_);
+		WASMSetptRNode(ASTNode *rs_, ASTNode *rt_ = nullptr);
+		WASMSetptRNode(const std::string *rs_, const std::string *rt_ = nullptr);
 		Opcode getOpcode() const override { return OPCODES.at("setpt"); }
 		Funct getFunct() const override { return FUNCTS.at("setpt"); }
-		WASMInstructionNode * copy() const override { return (new WASMSetptRNode(rs))->absorb(*this); }
+		WASMInstructionNode * copy() const override { return (new WASMSetptRNode(rs, rt))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::SetptR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

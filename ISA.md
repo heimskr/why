@@ -1270,9 +1270,11 @@ Enables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other t
 
 ### <a name="op-setpt"></a>Set Page Table (`setpt`)
 > `%setpt $rs`  
+> `: %setpt $rs $rt`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
 
 Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
+If `rt` is specified (i.e., if it's any register other than `$0`), it will be jumped to.
 
 ### <a name="op-svpg"></a>Save Paging (`svpg`)
 > `%page -> $rd`  

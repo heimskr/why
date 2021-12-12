@@ -15,7 +15,7 @@ version: "1"
 
 :: main
 0x646f6e65 -> $a0
-%int 0
+%int 1
 <halt>
 
 @strprint

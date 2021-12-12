@@ -1032,19 +1032,25 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%page " + std::string(on? "on" : "off");
 	}
 
-	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_): WASMInstructionNode(WASM_SETPTRNODE), RType(rs_, nullptr, nullptr) {
+	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_, ASTNode *rt_):
+	WASMInstructionNode(WASM_SETPTRNODE), RType(rs_, rt_, nullptr) {
 		delete rs_;
+		delete rt_;
 	}
 
-	WASMSetptRNode::WASMSetptRNode(const std::string *rs_):
-		WASMInstructionNode(WASM_SETPTRNODE), RType(rs_, nullptr, nullptr) {}
+	WASMSetptRNode::WASMSetptRNode(const std::string *rs_, const std::string *rt_):
+		WASMInstructionNode(WASM_SETPTRNODE), RType(rs_, rt_, nullptr) {}
 
 	std::string WASMSetptRNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + blue("%setpt") + " " + cyan(*rs);
+		if (!rt)
+			return WASMInstructionNode::debugExtra() + blue("%setpt") + " " + cyan(*rs);
+		return WASMInstructionNode::debugExtra() + dim(":") + " " + blue("%setpt") + " " + cyan(*rs) + " " + cyan(*rt);
 	}
 
 	WASMSetptRNode::operator std::string() const {
-		return WASMInstructionNode::operator std::string() + "%setpt " + *rs;
+		if (!rt)
+			return WASMInstructionNode::operator std::string() + "%setpt " + *rs;
+		return WASMInstructionNode::operator std::string() + ": %setpt " + *rs + " " + *rd;
 	}
 
 	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_): WASMMvNode(rs_->lexerInfo, rd_->lexerInfo) {
