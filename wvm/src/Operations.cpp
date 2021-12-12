@@ -19,7 +19,7 @@
 namespace WVM::Operations {
 	std::set<int> RSet {
 		OP_RMATH, OP_AND, OP_RLOGIC, OP_RCOMP, OP_RJUMP, OP_RMEM, OP_TIME, OP_RING, OP_SEL, OP_PAGE, OP_QUERY, OP_REXT,
-		OP_INTERRUPTS,
+		OP_INTERRUPTS, OP_TRANS,
 	};
 
 	std::set<int> ISet {
@@ -173,6 +173,7 @@ namespace WVM::Operations {
 					case FN_EI: eiOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
+			case OP_TRANS: transOp(vm, rs, rt, rd, conditions, flags); return;
 		}
 
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
@@ -662,32 +663,20 @@ namespace WVM::Operations {
 
 	void jrOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
 		if (vm.checkConditions(conditions)) {
-			bool success;
-			const Word translated = vm.translateAddress(rd, &success);
-			if (!success) {
-				vm.intPfault();
-			} else {
-				const auto reg_id = vm.registerID(rd);
-				// Reenable interrupts if jumping to $e0.
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
-					vm.hardwareInterruptsEnabled = true;
-				vm.jump(translated, false, reg_id == Why::returnAddressOffset);
-			}
+			const auto reg_id = vm.registerID(rd);
+			// Reenable interrupts if jumping to $e0.
+			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+				vm.hardwareInterruptsEnabled = true;
+			vm.jump(rd, false, reg_id == Why::returnAddressOffset);
 		} else vm.increment();
 	}
 
 	void jrcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
 		if (rs) {
-			bool success;
-			const Word translated = vm.translateAddress(rd, &success);
-			if (!success) {
-				vm.intPfault();
-			} else {
-				const auto reg_id = vm.registerID(rd);
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
-					vm.hardwareInterruptsEnabled = true;
-				vm.jump(translated, false, reg_id == Why::returnAddressOffset);
-			}
+			const auto reg_id = vm.registerID(rd);
+			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+				vm.hardwareInterruptsEnabled = true;
+			vm.jump(rd, false, reg_id == Why::returnAddressOffset);
 		} else vm.increment();
 	}
 
@@ -992,6 +981,22 @@ namespace WVM::Operations {
 			vm.intBwrite(translated);
 	}
 
+	void transOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
+		if (vm.pagingOn) {
+			bool success;
+			const Word translated = vm.translateAddress(rs, &success);
+			if (!success) {
+				vm.intPfault();
+			} else {
+				setReg(vm, rd, translated, false);
+				vm.increment();
+			}
+		} else {
+			setReg(vm, rd, rs, false);
+			vm.increment();
+		}
+	}
+
 	void liOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
 		bool success;
 		const Word translated = vm.translateAddress(immediate, &success);
@@ -1072,8 +1077,7 @@ namespace WVM::Operations {
 	}
 
 	void intOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
-		if (vm.interrupt(immediate, false))
-			vm.increment();
+		vm.interrupt(immediate, false);
 	}
 
 	void ritOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {
@@ -1440,13 +1444,16 @@ namespace WVM::Operations {
 			vm.intProtec();
 	}
 
-	void setptOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
+	void setptOp(VM &vm, Word &rs, Word &rt, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.recordChange<P0Change>(vm.p0, rs);
 			vm.p0 = rs;
 			std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
 			vm.onP0Change(rs);
-			vm.increment();
+			if (rt != 0)
+				vm.jump(rt, false);
+			else
+				vm.increment();
 		} else
 			vm.intProtec();
 	}

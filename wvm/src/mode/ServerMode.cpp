@@ -323,9 +323,19 @@ namespace WVM::Mode {
 
 			server.send(client, ":Register " + std::to_string(reg) + " " + std::to_string(vm.registers[reg]));
 		} else if (verb == "PrintOps") {
-			for (Word i = vm.codeOffset; i < vm.dataOffset; i += 8)
-				std::cout << "\e[2m[" << std::setw(5) << i << "]\e[22m "
-				          << Unparser::stringify(vm.getInstruction(i), &vm) << "\n";
+			if (size != 2) {
+				invalid();
+				return;
+			}
+
+			Word count;
+			if (!Util::parseLong(split[1], count)) {
+				invalid();
+				return;
+			}
+
+			for (Word address = vm.programCounter, i = 0; i < count; ++i, address += 8)
+				std::cout << address << ": " << Unparser::stringify(vm.getInstruction(address), &vm) << '\n';
 		} else if (verb == "Symbols") {
 			for (const auto &[name, symbol]: vm.symbolTable)
 				std::cout << "\e[1m" << name << "\e[22m: " << symbol.location << " \e[22;2m[" << std::hex << symbol.hash

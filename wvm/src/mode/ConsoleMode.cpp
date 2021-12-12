@@ -261,6 +261,12 @@ namespace WVM::Mode {
 				*socket << ":Dump " << split[0] << " " << split[1] << " " << split[2] << "\n";
 			else
 				badInput();
+		} else if (first == "po" || first == "ops") {
+			UWord count = 1;
+			if (1 < size || (size == 1 && !Util::parseUL(split[0], count)))
+				badInput();
+			else
+				*socket << ":PrintOps " << count << "\n";
 		} else if (first == "stack" || first == "stacktrace" || first == "trace") {
 			*socket << ":Stacktrace\n";
 		} else if (text.front() == ':') {

@@ -122,6 +122,7 @@ namespace WVM::Operations {
 	void csOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 12
 	void lsOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 13
 	void ssOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 18  R 14
+	void transOp(VM &, Word &rs, Word &, Word &rd, Conditions, int flags);           // 68  R 0
 
 	void liOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 19  I
 	void siOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 20  I
@@ -370,6 +371,7 @@ namespace WVM::Operations {
 #define FN_EI 1
 
 #define OP_MODUI 67
+#define OP_TRANS 68
 
 #define INTERRUPT_MAX	3
 

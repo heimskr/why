@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <csignal>
 #include <cstring>
 #include <chrono>
 #include <fstream>
@@ -126,14 +127,21 @@ namespace WVM {
 			return 0;
 		}
 
-		P5Entry p5_entry = getWord(p4_entry.getNext() + pieces.p5Offset * sizeof(P04Entry));
+		P5Entry p5_entry = getWord(p4_entry.getNext() + pieces.p5Offset * sizeof(P5Entry));
 
 		if (success)
 			*success = p5_entry.present;
 
 #ifdef DEBUG_VIRTMEM
-		if (!p5_entry.present)
-			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p5.present " << p5_entry << "\n";
+		if (!p5_entry.present) {
+			warn() << "virtmem(" << programCounter << ":" << virtual_address << "): !p5[" << pieces.p5Offset
+			       << "].present " << p5_entry << "\n";
+			for (int i = 0; i < 256; ++i) {
+				P5Entry p5e_ = getWord(p4_entry.getNext() + i * sizeof(P5Entry));
+				if (p5e_.pageStart != 0)
+					std::cerr << i << ": " << p5e_ << '\n';
+			}
+		}
 #endif
 
 		lastMeta = p5_entry;
@@ -560,7 +568,17 @@ namespace WVM {
 
 	bool VM::tick() {
 		auto lock = lockVM();
-		UWord instruction = getWord(programCounter, Endianness::Big);
+		bool success = false;
+		Word translated = translateAddress(programCounter, &success);
+		if (!success) {
+			std::cerr << "Failed to translate " << programCounter << "\n";
+			// intPfault();
+			recordChange<HaltChange>();
+			stop();
+			return false;
+		}
+
+		UWord instruction = getWord(translated, Endianness::Big);
 #ifdef CATCH_TICK
 		try {
 #endif

@@ -20,7 +20,7 @@ namespace WVM {
 			} else {
 				const Word ring = Word(vm.ring);
 				vm.bufferChange<RegisterChange>(vm, REG_E + 0, vm.programCounter);
-				vm.recordChange<RegisterChange>(vm, REG_E + 1, ring);
+				vm.bufferChange<RegisterChange>(vm, REG_E + 1, ring);
 				vm.registers[REG_E + 0] = vm.programCounter;
 				vm.registers[REG_E + 1] = ring;
 				vm.onRegisterChange(REG_E + 0);
