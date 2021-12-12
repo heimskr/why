@@ -4,12 +4,17 @@ name: "Prime Sieve"
 author: "Vadim"
 version: "1.1"
 
-#data
+#text
 
-upper_bound: 97 // Exclusive. Actual number of bytes in sieve is this / 8
-max_size: 4000000000
+%data
 
-#code
+@upper_bound
+%8b 97 // Exclusive. Actual number of bytes in sieve is this / 8
+
+@max_size
+%8b 4000000000
+
+%code
 
 [upper_bound] -> $a0
 ::main
@@ -163,7 +168,7 @@ max_size: 4000000000
 		$t15 + $lo -> $t1
 		[$t1] -> $t1 /h
 		<prd $t1>
-		<prc '\n'>	
+		<prc '\n'>
 
 		$t0 += 1
 		$t0 < $t16 -> $t1
