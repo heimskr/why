@@ -640,25 +640,17 @@ namespace WVM::Operations {
 	}
 
 	void jOp(VM &vm, Word &, bool link, Conditions conditions, int, HWord address) {
-		if (vm.checkConditions(conditions)) {
-			bool success;
-			const Word translated = vm.translateAddress(address, &success);
-			if (!success)
-				vm.intPfault();
-			else
-				vm.jump(translated, link);
-		} else vm.increment();
+		if (vm.checkConditions(conditions))
+			vm.jump(address, link);
+		else
+			vm.increment();
 	}
 
 	void jcOp(VM &vm, Word &rs, bool link, Conditions, int, HWord address) {
-		if (rs != 0) {
-			bool success;
-			const Word translated = vm.translateAddress(address, &success);
-			if (!success)
-				vm.intPfault();
-			else
-				vm.jump(translated, link);
-		} else vm.increment();
+		if (rs != 0)
+			vm.jump(address, link);
+		else
+			vm.increment();
 	}
 
 	void jrOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
@@ -668,7 +660,8 @@ namespace WVM::Operations {
 			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
 				vm.hardwareInterruptsEnabled = true;
 			vm.jump(rd, false, reg_id == Why::returnAddressOffset);
-		} else vm.increment();
+		} else
+			vm.increment();
 	}
 
 	void jrcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
@@ -677,18 +670,15 @@ namespace WVM::Operations {
 			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
 				vm.hardwareInterruptsEnabled = true;
 			vm.jump(rd, false, reg_id == Why::returnAddressOffset);
-		} else vm.increment();
+		} else
+			vm.increment();
 	}
 
 	void jrlOp(VM &vm, Word &, Word &, Word &rd, Conditions conditions, int) {
-		if (vm.checkConditions(conditions)) {
-			bool success;
-			const Word translated = vm.translateAddress(rd, &success);
-			if (!success)
-				vm.intPfault();
-			else
-				vm.jump(translated, true);
-		} else vm.increment();
+		if (vm.checkConditions(conditions))
+			vm.jump(rd, true);
+		else
+			vm.increment();
 	}
 
 	void jrlcOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
@@ -699,7 +689,8 @@ namespace WVM::Operations {
 				vm.intPfault();
 			else
 				vm.jump(translated, true);
-		} else vm.increment();
+		} else
+			vm.increment();
 	}
 
 	void cOp(VM &vm, Word &rs, Word &, Word &rd, Conditions, int) {
