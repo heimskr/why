@@ -755,5 +755,15 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
+	struct WASMPageStackNode: WASMInstructionNode, RType {
+		bool isPush;
+		WASMPageStackNode(bool is_push);
+		Opcode getOpcode() const override { return OPCODES.at("ppush"); }
+		Funct getFunct() const override { return FUNCTS.at(isPush? "ppush" : "ppop"); }
+		WASMInstructionNode * copy() const override { return new WASMPageStackNode(isPush); }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
 	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang = -1);
 }

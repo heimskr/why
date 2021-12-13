@@ -19,6 +19,7 @@ namespace Wasmc {
 	extern std::unordered_map<int, Funct> TOKEN_FUNCTS;
 
 	constexpr Opcode OP_NOP    = 0b000000000000;
+	constexpr Opcode OP_RMATH  = 0b000000000001;
 	constexpr Opcode OP_ADD    = 0b000000000001;
 	constexpr Opcode OP_SLL    = 0b000000000001;
 	constexpr Opcode OP_SRL    = 0b000000000001;
@@ -32,6 +33,8 @@ namespace Wasmc {
 	constexpr Opcode OP_SEXT32 = 0b000000000001;
 	constexpr Opcode OP_SEXT16 = 0b000000000001;
 	constexpr Opcode OP_SEXT8  = 0b000000000001;
+	constexpr Opcode OP_MODU   = 0b000000000001;
+	constexpr Opcode OP_RLOGIC = 0b000000000010;
 	constexpr Opcode OP_AND    = 0b000000000010;
 	constexpr Opcode OP_NAND   = 0b000000000010;
 	constexpr Opcode OP_NOR    = 0b000000000010;
@@ -56,6 +59,7 @@ namespace Wasmc {
 	constexpr Opcode OP_XNORI  = 0b000000001010;
 	constexpr Opcode OP_XORI   = 0b000000001011;
 	constexpr Opcode OP_LUI    = 0b000000001101;
+	constexpr Opcode OP_RCOMP  = 0b000000001110;
 	constexpr Opcode OP_SL     = 0b000000001110;
 	constexpr Opcode OP_SLE    = 0b000000001110;
 	constexpr Opcode OP_SEQ    = 0b000000001110;
@@ -64,19 +68,24 @@ namespace Wasmc {
 	constexpr Opcode OP_CMP    = 0b000000001110;
 	constexpr Opcode OP_J      = 0b000000001111;
 	constexpr Opcode OP_JC     = 0b000000010000;
+	constexpr Opcode OP_RJUMP  = 0b000000010001;
 	constexpr Opcode OP_JR     = 0b000000010001;
 	constexpr Opcode OP_JRC    = 0b000000010001;
 	constexpr Opcode OP_JRL    = 0b000000010001;
 	constexpr Opcode OP_JRLC   = 0b000000010001;
+	constexpr Opcode OP_RMEM   = 0b000000010010;
 	constexpr Opcode OP_C      = 0b000000010010;
 	constexpr Opcode OP_CB     = 0b000000010010;
 	constexpr Opcode OP_CH     = 0b000000010010;
+	constexpr Opcode OP_CS     = 0b000000010010;
 	constexpr Opcode OP_L      = 0b000000010010;
 	constexpr Opcode OP_LB     = 0b000000010010;
 	constexpr Opcode OP_LH     = 0b000000010010;
+	constexpr Opcode OP_LS     = 0b000000010010;
 	constexpr Opcode OP_S      = 0b000000010010;
 	constexpr Opcode OP_SB     = 0b000000010010;
 	constexpr Opcode OP_SH     = 0b000000010010;
+	constexpr Opcode OP_SS     = 0b000000010010;
 	constexpr Opcode OP_SPUSH  = 0b000000010010;
 	constexpr Opcode OP_SPOP   = 0b000000010010;
 	constexpr Opcode OP_MS     = 0b000000010010;
@@ -124,6 +133,8 @@ namespace Wasmc {
 	constexpr Opcode OP_PGOFF  = 0b000000111101;
 	constexpr Opcode OP_SETPT  = 0b000000111101;
 	constexpr Opcode OP_SVPG   = 0b000000111101;
+	constexpr Opcode OP_PPUSH  = 0b000000111101;
+	constexpr Opcode OP_PPOP   = 0b000000111101;
 	constexpr Opcode OP_SLLII  = 0b000000111110;
 	constexpr Opcode OP_SRLII  = 0b000000111111;
 	constexpr Opcode OP_SRAII  = 0b000001000000;

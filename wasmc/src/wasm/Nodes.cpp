@@ -1246,4 +1246,15 @@ namespace Wasmc {
 	WASMTransNode::operator std::string() const {
 		return WASMInstructionNode::operator std::string() + "translate " + *rs + " -> " + *rd;
 	}
+
+	WASMPageStackNode::WASMPageStackNode(bool is_push):
+		WASMInstructionNode(WASM_PAGESTACKNODE), isPush(is_push) {}
+
+	std::string WASMPageStackNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim(isPush? "[" : "]") + " " + blue("%page");
+	}
+
+	WASMPageStackNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + (isPush? "[" : "]") + " %page";
+	}
 }

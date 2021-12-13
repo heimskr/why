@@ -213,6 +213,8 @@
 						<li><a href="#op-qm">Query Memory</a> (<code>qm</code>)</li>
 						<li><a href="#op-di">Disable Interrupts</a> (<code>di</code>)</li>
 						<li><a href="#op-ei">Enable Interrupts</a> (<code>ei</code>)</li>
+						<li><a href="#op-ppush">Push Paging</a> (<code>ppush</code>)</li>
+						<li><a href="#op-ppop">Pop Paging</a> (<code>ppop</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-pseudo">Pseudoinstructions</a>
@@ -1299,6 +1301,18 @@ Disables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 > `000001000010` `.......` `.......` `.......` `0000000000000` `......` `000000000001`
 
 Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
+
+### <a name="op-ppush"></a>Push Paging (`ppush`)
+> `[ %page`  
+> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000100`
+
+Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of the stack will be removed before the current paging state is pushed.
+
+### <a name="op-ppop"></a>Pop Paging (`ppop`)
+> `] %page`  
+> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000101`
+
+Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of the accessible memory. Does nothing if the stack is empty.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 

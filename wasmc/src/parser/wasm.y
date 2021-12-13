@@ -177,7 +177,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
 %token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR WASM_EXPRESSION
-%token WASM_INVERSENODE WASM_TRANSNODE
+%token WASM_INVERSENODE WASM_TRANSNODE WASM_PAGESTACKNODE
 
 %start start
 
@@ -266,7 +266,7 @@ operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c     | op
          | op_j    | op_jc    | op_jr    | op_jrc    | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi  | op_sspush | op_sspop | op_ring | op_page | op_setpt | op_svpg
          | op_qmem | op_ret   | op_jeq   | op_sprint | op_inc    | op_dec   | op_cs   | op_ls   | op_ss    | op_di
-         | op_ei   | op_inv   | op_trans;
+         | op_ei   | op_inv   | op_trans | op_ppush  | op_ppop;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
@@ -410,6 +410,10 @@ op_setpt: "%setpt" reg         { $$ = new WASMSetptRNode($2); D($1); }
         | ":" "%setpt" reg reg { $$ = new WASMSetptRNode($3, $4); D($1, $2); };
 
 op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
+
+op_ppush: "[" "%page" { $$ = new WASMPageStackNode(true); D($1, $2); };
+
+op_ppop: "]" "%page" { $$ = new WASMPageStackNode(false); D($1, $2); };
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
