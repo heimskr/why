@@ -1,0 +1,35 @@
+#meta
+name: "Stack Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#text
+
+%code
+
+64 -> $t0
+0 -> $t1
+[ $t0
+] $t1
+<print $t1>
+
+:: exhaust
+
+0 -> $a0 // terminate process
+%int 1
+<halt>
+
+@exhaust
+	0xffffffe0 -> $sp
+	lui: 0xffffffff -> $sp
+
+	@loop
+	[ $0
+	[ $0
+	[ $0
+	[ $0
+	$sp % 65536 -> $t0
+	: loop if $t0
+	<print $sp>
+	: loop

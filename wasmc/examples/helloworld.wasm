@@ -14,7 +14,7 @@ version: "1"
 %code
 
 :: main
-0 -> $a0
+0 -> $a0 // terminate process
 %int 1
 <halt>
 
