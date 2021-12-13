@@ -401,6 +401,10 @@ namespace WVM {
 			// Disable hardware interrupts if jumping to one.
 			if (in_map.canDisable)
 				hardwareInterruptsEnabled = false;
+			pagingStack.emplace_back(*this);
+			pagingOn = false;
+			// TODO: Add an instruction to set a "kernel P0" that's stored in a separate field in the VM and set p0 to
+			// its value here.
 			in_map(*this, force);
 			wakeRest();
 			return true;
