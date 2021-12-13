@@ -1306,13 +1306,13 @@ Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 > `[ %page`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000100`
 
-Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of the stack will be removed before the current paging state is pushed.
+Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of the stack will be removed before the current paging state is pushed. Requires ring zero.
 
 ### <a name="op-ppop"></a>Pop Paging (`ppop`)
 > `] %page`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000101`
 
-Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of the accessible memory. Does nothing if the stack is empty.
+Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of the accessible memory. Does nothing if the stack is empty. Requires ring zero.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
