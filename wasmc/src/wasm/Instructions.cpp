@@ -189,6 +189,8 @@ namespace Wasmc {
 		{"pgoff",  OP_PGOFF },
 		{"setpt",  OP_SETPT },
 		{"svpg",   OP_SVPG  },
+		{"ppush",  OP_PPUSH },
+		{"ppop",   OP_PPOP  },
 		{"sllii",  OP_SLLII },
 		{"srlii",  OP_SRLII },
 		{"sraii",  OP_SRAII },
