@@ -1443,9 +1443,13 @@ namespace WVM::Operations {
 			vm.p0 = rs;
 			std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
 			vm.onP0Change(rs);
-			if (rt != 0)
+			if (rt != 0) {
+				const auto reg_id = vm.registerID(rt);
+				// Reenable interrupts if jumping to $e0.
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+					vm.hardwareInterruptsEnabled = true;
 				vm.jump(rt, false);
-			else
+			} else
 				vm.increment();
 		} else
 			vm.intProtec();
@@ -1464,7 +1468,7 @@ namespace WVM::Operations {
 			vm.intProtec();
 	}
 
-	void ppopOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+	void ppopOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
 			if (!vm.pagingStack.empty()) {
 				const auto &back = vm.pagingStack.back();
@@ -1474,7 +1478,14 @@ namespace WVM::Operations {
 				vm.p0 = back.p0;
 				vm.pagingStack.pop_back();
 			}
-			vm.increment();
+			if (rs != 0) {
+				const auto reg_id = vm.registerID(rs);
+				// Reenable interrupts if jumping to $e0.
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+					vm.hardwareInterruptsEnabled = true;
+				vm.jump(rs, false);
+			} else
+				vm.increment();
 		} else
 			vm.intProtec();
 	}
