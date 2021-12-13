@@ -160,6 +160,8 @@ namespace WVM::Operations {
 					case FN_PGON:   pgonOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SETPT: setptOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SVPG:   svpgOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_PPUSH: ppushOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_PPOP:   ppopOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_QUERY:
@@ -1415,7 +1417,7 @@ namespace WVM::Operations {
 
 	void pgoffOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
-			vm.recordChange<PagingChange>(vm.pagingOn, false);
+			vm.bufferChange<PagingChange>(vm.pagingOn, false);
 			vm.pagingOn = false;
 			std::cerr << "Paging disabled (PC: " << vm.programCounter << ").\n";
 			vm.onPagingChange(false);
@@ -1426,7 +1428,7 @@ namespace WVM::Operations {
 
 	void pgonOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
-			vm.recordChange<PagingChange>(vm.pagingOn, true);
+			vm.bufferChange<PagingChange>(vm.pagingOn, true);
 			vm.pagingOn = true;
 			std::cerr << "Paging enabled (PC: " << vm.programCounter << ").\n";
 			vm.onPagingChange(true);
@@ -1437,7 +1439,7 @@ namespace WVM::Operations {
 
 	void setptOp(VM &vm, Word &rs, Word &rt, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
-			vm.recordChange<P0Change>(vm.p0, rs);
+			vm.bufferChange<P0Change>(vm.p0, rs);
 			vm.p0 = rs;
 			std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
 			vm.onP0Change(rs);
@@ -1452,6 +1454,29 @@ namespace WVM::Operations {
 	void svpgOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
 		setReg(vm, rd, vm.pagingOn? 1 : 0, false);
 		vm.increment();
+	}
+
+	void ppushOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			vm.pagingStack.emplace_back(vm);
+			vm.increment();
+		} else
+			vm.intProtec();
+	}
+
+	void ppopOp(VM &vm, Word &, Word &, Word &, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			if (!vm.pagingStack.empty()) {
+				const auto &back = vm.pagingStack.back();
+				vm.bufferChange<PagingChange>(vm.pagingOn, back.enabled);
+				vm.bufferChange<P0Change>(vm.p0, back.p0);
+				vm.pagingOn = back.enabled;
+				vm.p0 = back.p0;
+				vm.pagingStack.pop_back();
+			}
+			vm.increment();
+		} else
+			vm.intProtec();
 	}
 
 	void qmOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {

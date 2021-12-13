@@ -155,6 +155,8 @@ namespace WVM::Operations {
 	void pgonOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 1
 	void setptOp(VM &, Word &rs, Word &, Word &, Conditions, int flags);             // 61  R 2
 	void svpgOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);              // 61  R 3
+	void ppushOp(VM &, Word &, Word &, Word &, Conditions, int flags);               // 61  R 4
+	void ppopOp(VM &, Word &, Word &, Word &, Conditions, int flags);                // 61  R 5
 	void qmOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);                // 65  R 0
 	void diOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);                // 66  R 0
 	void eiOp(VM &, Word &, Word &, Word &rd, Conditions, int flags);                // 66  R 1
@@ -361,6 +363,8 @@ namespace WVM::Operations {
 #define FN_PGON  1
 #define FN_SETPT 2
 #define FN_SVPG  3
+#define FN_PPUSH 4
+#define FN_PPOP  5
 
 #define OP_QUERY 65
 #define OP_QM OP_QUERY

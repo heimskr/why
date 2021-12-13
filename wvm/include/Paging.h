@@ -5,6 +5,8 @@
 #include "Defs.h"
 
 namespace WVM {
+	class VM;
+
 	struct __attribute__((packed)) Address {
 		UWord p0Offset: 8;
 		UWord p1Offset: 8;
@@ -52,6 +54,13 @@ namespace WVM {
 
 		PageMeta() = default;
 		PageMeta(const P5Entry &);
+	};
+
+	struct PagingState {
+		bool enabled;
+		Word p0;
+		PagingState(bool enabled_, Word p0_): enabled(enabled_), p0(p0_) {}
+		PagingState(const VM &);
 	};
 
 	std::ostream & operator<<(std::ostream &, const P04Entry &);

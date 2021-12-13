@@ -92,6 +92,7 @@ namespace WVM {
 			bool hardwareInterruptsEnabled = true;
 			bool logJumps = false;
 			std::list<const std::string *> jumpStack;
+			std::vector<PagingState> pagingStack;
 
 			std::function<void(unsigned char)> onRegisterChange = [](unsigned char) {};
 			std::function<void(Ring, Ring)> onRingChange = [](Ring, Ring) {};

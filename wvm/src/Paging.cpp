@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include "Paging.h"
+#include "VM.h"
 
 namespace WVM {
 	Address::Address(Word in):
@@ -53,6 +54,8 @@ namespace WVM {
 		user(p5.user),
 		accessed(p5.accessed),
 		modified(p5.modified) {}
+
+	PagingState::PagingState(const VM &vm): enabled(vm.pagingOn), p0(vm.p0) {}
 
 	std::ostream & operator<<(std::ostream &os, const P04Entry &p04entry) {
 		return os << std::string(p04entry);
