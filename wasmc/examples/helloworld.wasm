@@ -14,20 +14,22 @@ version: "1"
 %code
 
 :: main
-0x646f6e65 -> $a0
+0 -> $a0
 %int 1
 <halt>
 
 @strprint
-	[$a0] -> $s0 /b
-	: _strprint_print if $s0
+	[$a0] -> $t0 /b
+	: _strprint_print if $t0
 	: $rt
 	@_strprint_print
-	<prc $s0>
+	<prc $t0>
 	$a0++
 	: strprint
 
 @main
 	&str -> $a0
+	$rt -> $s0
 	:: strprint
+	$s0 -> $rt
 	: $rt
