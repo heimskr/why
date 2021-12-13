@@ -1273,7 +1273,7 @@ Enables virtual memory. Raises [`PROTEC`](#int-protec) if used in a ring other t
 ### <a name="op-setpt"></a>Set Page Table (`setpt`)
 > `%setpt $rs`  
 > `: %setpt $rs $rt`  
-> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000010`
+> `000000111101` `ttttttt` `sssssss` `.......` `0000000000000` `......` `000000000010`
 
 Sets the address of [`P0`](#paging). Raises [`PROTEC`](#int-protec) if used in a ring other than ring zero.
 If `rt` is specified (i.e., if it's any register other than `$0`), it will be jumped to.
@@ -1304,15 +1304,16 @@ Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 
 ### <a name="op-ppush"></a>Push Paging (`ppush`)
 > `[ %page`  
+> `[ %page`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000100`
 
 Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of the stack will be removed before the current paging state is pushed. Requires ring zero.
 
 ### <a name="op-ppop"></a>Pop Paging (`ppop`)
-> `] %page`  
-> `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000101`
+> `: ] %page $rs`  
+> `000000111101` `.......` `sssssss` `.......` `0000000000000` `......` `000000000101`
 
-Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of the accessible memory. Does nothing if the stack is empty. Requires ring zero.
+Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of the accessible memory. Does nothing if the stack is empty. If `rs` is specified (i.e., if it's any register other than `$0`), it will be jumped to, even if the paging stack was empty. Requires ring zero.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 

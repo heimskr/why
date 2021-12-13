@@ -1247,14 +1247,23 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "translate " + *rs + " -> " + *rd;
 	}
 
-	WASMPageStackNode::WASMPageStackNode(bool is_push):
-		WASMInstructionNode(WASM_PAGESTACKNODE), isPush(is_push) {}
+	WASMPageStackNode::WASMPageStackNode(bool is_push, const ASTNode *rs_):
+	WASMInstructionNode(WASM_PAGESTACKNODE), RType(rs_? rs_->lexerInfo : nullptr, nullptr, nullptr), isPush(is_push) {
+		delete rs_;
+	}
+
+	WASMPageStackNode::WASMPageStackNode(bool is_push, const std::string *rs_):
+		WASMInstructionNode(WASM_PAGESTACKNODE), RType(rs_, nullptr, nullptr), isPush(is_push) {}
 
 	std::string WASMPageStackNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + dim(isPush? "[" : "]") + " " + blue("%page");
+		if (!rs)
+			return WASMInstructionNode::debugExtra() + dim(isPush? "[" : "]") + " " + blue("%page");
+		return WASMInstructionNode::debugExtra() + dim(isPush? ": [" : ": ]") + " " + blue("%page") + " " + cyan(*rs);
 	}
 
 	WASMPageStackNode::operator std::string() const {
-		return WASMInstructionNode::operator std::string() + (isPush? "[" : "]") + " %page";
+		if (!rs)
+			return WASMInstructionNode::operator std::string() + (isPush? "[" : "]") + " %page";
+		return WASMInstructionNode::operator std::string() + (isPush? ": [" : ": ]") + " %page " + *rs;
 	}
 }

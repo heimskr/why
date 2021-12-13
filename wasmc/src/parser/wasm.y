@@ -413,7 +413,8 @@ op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 
 op_ppush: "[" "%page" { $$ = new WASMPageStackNode(true); D($1, $2); };
 
-op_ppop: "]" "%page" { $$ = new WASMPageStackNode(false); D($1, $2); };
+op_ppop:     "]" "%page"     { $$ = new WASMPageStackNode(false);     D($1, $2);     }
+       | ":" "]" "%page" reg { $$ = new WASMPageStackNode(false, $4); D($1, $2, $3); };
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
