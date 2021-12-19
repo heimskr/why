@@ -936,6 +936,21 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%ring " + *rs;
 	}
 
+	WASMSvringNode::WASMSvringNode(ASTNode *rd_): WASMInstructionNode(WASM_SVRINGNODE), RType(nullptr, nullptr, rd_) {
+		delete rd_;
+	}
+
+	WASMSvringNode::WASMSvringNode(const std::string *rd_):
+		WASMInstructionNode(WASM_SVRINGNODE), RType(nullptr, nullptr, rd_) {}
+
+	std::string WASMSvringNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + blue("%ring") + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMSvringNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "%ring -> " + *rd;
+	}
+
 	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):
 	WASMInstructionNode(WASM_PRINTNODE), RType(rs_, nullptr, nullptr) {
 		delete rs_;

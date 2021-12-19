@@ -1252,6 +1252,12 @@ Sets the hardware timer to the number stored in `imm` (in microseconds), canceli
 
 Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
+### <a name="op-svring"></a>Save Ring (`svring`)
+> `%ring -> $rd`  
+> `000000110010` `.......` `.......` `ddddddd` `0000000000000` `......` `000000000001`
+
+Stores the current <a href="#rings">protection ring</a> in `rd`.
+
 ### <a name="op-ringi"></a>Change Ring Immediate (`ringi`)
 > `%ring imm`  
 > `000000110011` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
@@ -1310,6 +1316,7 @@ Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of the stack will be removed before the current paging state is pushed. Requires ring zero.
 
 ### <a name="op-ppop"></a>Pop Paging (`ppop`)
+> `] %page`  
 > `: ] %page $rs`  
 > `000000111101` `.......` `sssssss` `.......` `0000000000000` `......` `000000000101`
 
