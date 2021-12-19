@@ -205,6 +205,7 @@
 						<li><a href="#op-time">Set Timer</a> (<code>time</code>)</li>
 						<li><a href="#op-timei">Set Timer Immediate</a> (<code>timei</code>)</li>
 						<li><a href="#op-ring">Change Ring</a> (<code>ring</code>)</li>
+						<li><a href="#op-svring">Save Ring</a> (<code>svring</code>)</li>
 						<li><a href="#op-ringi">Change Ring Immediate</a> (<code>ringi</code>)</li>
 						<li><a href="#op-pgoff">Disable Paging</a> (<code>pgoff</code>)</li>
 						<li><a href="#op-pgon">Enable Paging</a> (<code>pgon</code>)</li>
