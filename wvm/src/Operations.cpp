@@ -152,7 +152,12 @@ namespace WVM::Operations {
 				}
 				break;
 			case OP_TIME: timeOp(vm, rs, rt, rd, conditions, flags); return;
-			case OP_RING: ringOp(vm, rs, rt, rd, conditions, flags); return;
+			case OP_RING:
+				switch (funct) {
+					case FN_RING:     ringOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SVRING: svringOp(vm, rs, rt, rd, conditions, flags); return;
+				}
+				break;
 			case OP_SEL:   selOp(vm, rs, rt, rd, conditions, flags); return;
 			case OP_PAGE:
 				switch (funct) {
@@ -1108,6 +1113,11 @@ namespace WVM::Operations {
 	void ringOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		if (vm.changeRing(static_cast<Ring>(rs)))
 			vm.increment();
+	}
+
+	void svringOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
+		setReg(vm, rd, Word(vm.ring), false);
+		vm.increment();
 	}
 
 	void ringiOp(VM &vm, Word &, Word &, Conditions, int, HWord immediate) {

@@ -447,14 +447,14 @@ namespace WVM {
 	}
 
 	bool VM::intKeybrd(UWord key) {
-		// For maximum safety, I could lock the VM before reading hardwareInterruptsEnabled, but the chance of a race
-		// condition if I don't do it is small enough that it shouldn't matter.
 		static size_t stamp = Util::nanotime();
 
 		const size_t now = Util::nanotime();
 		const double diff = double(now - stamp) / 1e3;
 		stamp = now;
 
+		// For maximum safety, I could lock the VM before reading hardwareInterruptsEnabled, but the chance of a race
+		// condition if I don't do it is small enough that it shouldn't matter.
 		if (hardwareInterruptsEnabled) {
 			auto lock = lockVM();
 			bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, key);

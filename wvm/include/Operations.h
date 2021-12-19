@@ -137,6 +137,7 @@ namespace WVM::Operations {
 	void timeOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 48  R
 	void timeiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 49  I
 	void ringOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 50  R
+	void svringOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);          // 50  R
 	void ringiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);  // 51  I
 
 	void prOp(VM &, Word &rs, Word &rt, Word &rd, Conditions, int flags);            // 31 ?R 1
@@ -344,6 +345,8 @@ namespace WVM::Operations {
 #define OP_TIME 48
 #define OP_TIMEI 49
 #define OP_RING 50
+#define FN_RING 0
+#define FN_SVRING 1
 #define OP_RINGI 51
 #define OP_DIVI 52
 #define OP_DIVUI 53
