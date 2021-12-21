@@ -204,6 +204,7 @@
 						<li><a href="#op-rit">Register Interrupt Table</a> (<code>rit</code>)</li>
 						<li><a href="#op-time">Set Timer</a> (<code>time</code>)</li>
 						<li><a href="#op-timei">Set Timer Immediate</a> (<code>timei</code>)</li>
+						<li><a href="#op-svtime">Save Timer</a> (<code>svtime</code>)</li>
 						<li><a href="#op-ring">Change Ring</a> (<code>ring</code>)</li>
 						<li><a href="#op-svring">Save Ring</a> (<code>svring</code>)</li>
 						<li><a href="#op-ringi">Change Ring Immediate</a> (<code>ringi</code>)</li>
@@ -1246,6 +1247,12 @@ Sets the hardware timer to the number stored in `rs` (in microseconds), cancelin
 > `000000110001` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Sets the hardware timer to the number stored in `imm` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+
+### <a name="op-svtime"></a>Save Timer (`svtime`)
+> `%time -> $rd`  
+> `000000110000` `.......` `sssssss` `.......` `0000000000000` `......` `000000000001`
+
+Saves the number of microseconds until the hardware timer expires in `rd`. If no hardware timer is active, this instruction sets `rd` to 0.
 
 ### <a name="op-ring"></a>Change Ring (`ring`)
 > `%ring $rs`  

@@ -17,7 +17,7 @@ namespace Wasmc {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, StringPrint, Jeq, JeqI, Cs, Ls, Ss, IO, Rest,
-		Interrupts, Inverse, Svring,
+		Interrupts, Inverse, Svring, Svtime,
 	};
 
 	Condition getCondition(const std::string &);
@@ -552,6 +552,17 @@ namespace Wasmc {
 		Funct getFunct() const override { return FUNCTS.at("time"); }
 		WASMInstructionNode * copy() const override { return (new WASMTimeRNode(rs))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeR; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMSvtimeNode: WASMInstructionNode, RType {
+		WASMSvtimeNode(ASTNode *rd_);
+		WASMSvtimeNode(const std::string *rd_);
+		Opcode getOpcode() const override { return OPCODES.at("time"); }
+		Funct getFunct() const override { return FUNCTS.at("svtime"); }
+		WASMInstructionNode * copy() const override { return (new WASMSvtimeNode(rd))->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Svtime; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

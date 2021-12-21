@@ -951,6 +951,21 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + "%ring -> " + *rd;
 	}
 
+	WASMSvtimeNode::WASMSvtimeNode(ASTNode *rd_): WASMInstructionNode(WASM_SVTIMENODE), RType(nullptr, nullptr, rd_) {
+		delete rd_;
+	}
+
+	WASMSvtimeNode::WASMSvtimeNode(const std::string *rd_):
+		WASMInstructionNode(WASM_SVTIMENODE), RType(nullptr, nullptr, rd_) {}
+
+	std::string WASMSvtimeNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + blue("%time") + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMSvtimeNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "%time -> " + *rd;
+	}
+
 	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):
 	WASMInstructionNode(WASM_PRINTNODE), RType(rs_, nullptr, nullptr) {
 		delete rs_;
