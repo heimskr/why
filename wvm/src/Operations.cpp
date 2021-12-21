@@ -151,7 +151,12 @@ namespace WVM::Operations {
 					case FN_IO:       ioOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
-			case OP_TIME: timeOp(vm, rs, rt, rd, conditions, flags); return;
+			case OP_TIME:
+				switch (funct) {
+					case FN_TIME:     timeOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_SVTIME: svtimeOp(vm, rs, rt, rd, conditions, flags); return;
+				}
+				break;
 			case OP_RING:
 				switch (funct) {
 					case FN_RING:     ringOp(vm, rs, rt, rd, conditions, flags); return;
@@ -1097,6 +1102,14 @@ namespace WVM::Operations {
 	void timeOp(VM &vm, Word &rs, Word &, Word &, Conditions, int) {
 		if (vm.checkRing(Ring::Zero)) {
 			vm.setTimer(static_cast<UWord>(rs));
+			vm.increment();
+		} else
+			vm.intProtec();
+	}
+
+	void svtimeOp(VM &vm, Word &, Word &, Word &rd, Conditions, int) {
+		if (vm.checkRing(Ring::Zero)) {
+			setReg(vm, rd, vm.timerTicks);
 			vm.increment();
 		} else
 			vm.intProtec();

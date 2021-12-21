@@ -484,7 +484,7 @@ Interrupts can be triggered by software or by the VM itself. Whenever an interru
 The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
 
 ## <a name="int-timer"></a>2: `TIMER`
-The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. Usable by ring zero only. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own mechanisms to expose timer functionality to lower-privileged code. This interrupt causes a switch to kernel mode and sets `$e2` to the number of milliseconds the timer waited for.
+The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. Usable by ring zero only. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own mechanisms to expose timer functionality to lower-privileged code. This interrupt causes a switch to kernel mode.
 
 ## <a name="int-protec"></a>3: `PROTEC`
 The `PROTEC` interrupt is a hardware-triggered interrupt caused when a called instruction attempts to do something not possible within the current <a href="#rings">ring</a>. This causes a switch to kernel mode.

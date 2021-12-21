@@ -614,16 +614,25 @@ namespace WVM {
 	}
 
 	void VM::setTimer(UWord microseconds) {
-		timerThread = std::thread([this](UWord microseconds, size_t id) {
-			timerStart = getMilliseconds();
-			std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
-			if (timerThreadID == id && active) {
-				auto lock = lockVM();
-				bufferChange<RegisterChange>(*this, REG_E + 2, microseconds);
-				intTimer();
-			}
-		}, microseconds, ++timerThreadID);
-		timerThread.detach();
+		timerTicks = microseconds;
+		if (!timerActive) {
+			timerActive = true;
+			timerThread = std::thread([this] {
+				while (timerActive) {
+					if (0 < timerTicks && --timerTicks == 0) {
+						if (active) {
+							auto lock = lockVM();
+							intTimer();
+						}
+
+						timerActive = false;
+						return;
+					}
+					std::this_thread::sleep_for(std::chrono::microseconds(1));
+				}
+			});
+			timerThread.detach();
+		}
 	}
 
 	void VM::addBreakpoint(Word breakpoint) {
