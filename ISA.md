@@ -342,11 +342,6 @@ An entry with type `3` references a line on a source file defined by a type `1` 
 
 The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3` instruction, two type `3` entries would be generated for the template with index 2.
 
-## <a name="prog-reloc"></a>Relocation Data Section
-Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
-
-The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table, while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` is invalid. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the value relative to the start of the code section.
-
 ### Assembly syntax
 <pre>
 #debug
@@ -366,6 +361,11 @@ The upper 61 bits of the first word of a relocation data entry represent the ind
 	$t5 & -1  -> $t5 !3
 // ...
 </pre>
+
+## <a name="prog-reloc"></a>Relocation Data Section
+Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
+
+The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table, while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` is invalid. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the value relative to the start of the code section.
 
 # <a name="directives"></a>Directives
 
