@@ -1,0 +1,52 @@
+#meta
+name: "Badfib"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+
+#text
+%code
+
+// Compiled from c--.  Doesn't work because c-- doesn't save registers yet.
+
+10 -> $a0
+:: badfib
+<prd $r0>
+<prc '\n'>
+<halt>
+
+@badfib
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	$a0 -> $t2
+	2 -> $t3
+	$t2 < $t3 -> $m0
+	!$m0 -> $m0
+	: .badfib.0e if $m0
+	1 -> $r0
+	: .badfib.e
+	: .badfib.0end
+	@.badfib.0e
+	[ $a0
+	$a0 -> $t10
+	2 -> $t11
+	$t10 - $t11 -> $a0
+	:: badfib
+	] $a0
+	$r0 -> $t6
+	[ $a0
+	$a0 -> $t16
+	1 -> $t0
+	$t16 - $t0 -> $a0
+	:: badfib
+	] $a0
+	$r0 -> $t7
+	$t6 + $t7 -> $r0
+	: .badfib.e
+	@.badfib.0end
+	@.badfib.e
+	] $fp
+	] $rt
+	: $rt

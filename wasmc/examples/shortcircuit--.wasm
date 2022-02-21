@@ -1,0 +1,274 @@
+#meta
+name: "Short-Circuiting Test"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1.2"
+
+#text
+
+%data
+
+@.str0
+	%stringz "false\n"
+
+@.str3
+	%stringz "false && true\n"
+
+@.str6
+	%stringz "false && true || true\n"
+
+@.str4
+	%stringz "false || true\n"
+
+@.str7
+	%stringz "true\n"
+
+@.str1
+	%stringz "true && false\n"
+
+@.str5
+	%stringz "true && false || true\n"
+
+@.str2
+	%stringz "true || false\n"
+
+%code
+
+:: .init
+:: main
+<halt>
+
+@.c
+	<prc $a0>
+	: $rt
+
+@.ptr
+	<prc '0'>
+	<prc 'x'>
+	<prx $a0>
+	: $rt
+
+@.s
+	[$a0] -> $mf /b
+	: _strprint_print if $mf
+	: $rt
+	@_strprint_print
+	<prc $mf>
+	$a0++
+	: .s
+
+@.s16
+	sext16 $a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@.s32
+	sext32 $a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@.s64
+	<prd $a0>
+	: $rt
+
+@.s8
+	sext8 $a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@.u16
+	<prd $a0>
+	: $rt
+
+@.u32
+	<prd $a0>
+	: $rt
+
+@.u64
+	<prd $a0>
+	: $rt
+
+@.u8
+	<prd $a0>
+	: $rt
+
+@.bool
+	!$a0 -> $a0
+	!$a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@.init
+	: $rt
+
+@false_
+	[ $rt
+	[ $fp
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	[ $a0
+	.str0 -> $a0
+	:: .s
+	] $a0
+	20 -> $t0
+	10 -> $t1
+	$t0 < $t1 -> $r0
+	: .false_.e
+	@.false_.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $fp
+	] $rt
+	: $rt
+
+@main
+	[ $rt
+	[ $fp
+	$sp -> $fp
+	[ $a0
+	.str1 -> $a0
+	:: .s
+	] $a0
+	[ $a0
+	:: true_
+	$r0 -> $a0
+	: .main.1s if $a0
+	: .main.1e
+	@.main.1s
+	:: false_
+	$r0 -> $a0
+	@.main.1e
+	:: .bool
+	] $a0
+	[ $a0
+	10 -> $a0
+	:: .c
+	] $a0
+	[ $a0
+	.str2 -> $a0
+	:: .s
+	] $a0
+	[ $a0
+	:: true_
+	$r0 -> $a0
+	: .main.2s if $a0
+	:: false_
+	$r0 -> $a0
+	@.main.2s
+	:: .bool
+	] $a0
+	[ $a0
+	10 -> $a0
+	:: .c
+	] $a0
+	[ $a0
+	.str3 -> $a0
+	:: .s
+	] $a0
+	[ $a0
+	:: false_
+	$r0 -> $a0
+	: .main.3s if $a0
+	: .main.3e
+	@.main.3s
+	:: true_
+	$r0 -> $a0
+	@.main.3e
+	:: .bool
+	] $a0
+	[ $a0
+	10 -> $a0
+	:: .c
+	] $a0
+	[ $a0
+	.str4 -> $a0
+	:: .s
+	] $a0
+	[ $a0
+	:: false_
+	$r0 -> $a0
+	: .main.4s if $a0
+	:: true_
+	$r0 -> $a0
+	@.main.4s
+	:: .bool
+	] $a0
+	[ $a0
+	10 -> $a0
+	:: .c
+	] $a0
+	[ $a0
+	.str5 -> $a0
+	:: .s
+	] $a0
+	[ $a0
+	:: true_
+	$r0 -> $a0
+	: .main.6s if $a0
+	: .main.6e
+	@.main.6s
+	:: false_
+	$r0 -> $a0
+	@.main.6e
+	: .main.5s if $a0
+	:: true_
+	$r0 -> $a0
+	@.main.5s
+	:: .bool
+	] $a0
+	[ $a0
+	10 -> $a0
+	:: .c
+	] $a0
+	[ $a0
+	.str6 -> $a0
+	:: .s
+	] $a0
+	[ $a0
+	:: false_
+	$r0 -> $a0
+	: .main.8s if $a0
+	: .main.8e
+	@.main.8s
+	:: true_
+	$r0 -> $a0
+	@.main.8e
+	: .main.7s if $a0
+	:: true_
+	$r0 -> $a0
+	@.main.7s
+	:: .bool
+	] $a0
+	[ $a0
+	10 -> $a0
+	:: .c
+	] $a0
+	@.main.e
+	$fp -> $sp
+	] $fp
+	] $rt
+	: $rt
+
+@true_
+	[ $rt
+	[ $fp
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	[ $a0
+	.str7 -> $a0
+	:: .s
+	] $a0
+	10 -> $t0
+	20 -> $t1
+	$t0 < $t1 -> $r0
+	: .true_.e
+	@.true_.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $fp
+	] $rt
+	: $rt

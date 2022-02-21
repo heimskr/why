@@ -2,6 +2,7 @@
 #include "parser/ASTNode.h"
 #include "parser/Lexer.h"
 #include "util/Color.h"
+#include "util/Util.h"
 #include "wasm/Nodes.h"
 
 namespace Wasmc {
@@ -70,6 +71,8 @@ namespace Wasmc {
 				case 'a': return '\a';
 				case 't': return '\t';
 				case 'b': return '\b';
+				case '\'': return '\'';
+				case 'x': return char(Util::parseUlong(middle.substr(pos + 1, 2), 16));
 				default:  throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
 			}
 		}

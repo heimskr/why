@@ -18,6 +18,15 @@ version: "1.1"
 
 [upper_bound] -> $a0
 ::main
+
+// If we're running in Thurisaz, $k1 won't be zero.
+$k1 == 0 -> $t0
+: die if $t0
+
+0 -> $a0 // terminate process
+%int 1
+
+@die
 <halt>
 
 // Note: g register tells me where it is safe

@@ -23,7 +23,7 @@
 WASM_DECIMAL            ([0-9]+)
 WASM_HEXADECIMAL        (0x[a-fA-F0-9]+)
 WASM_FLOAT              ([\-+]?((([0-9]*"."[0-9]+|[0-9]+"."[0-9]*)([eE][\-+]?[0-9]+)?)|([0-9]+[eE][\-+]?[0-9]+)))
-WASM_CHAR               ('([^'\\\n]|("\\""\\"?[nratb])|\$[()])')
+WASM_CHAR               ('([^'\\\n]|("\\""\\"?[nratb'])|\$[()]|"\\"x[0-9a-fA-F][0-9a-fA-F])')
 WASM_NUMBER             ({WASM_DECIMAL}|{WASM_HEXADECIMAL})
 WASM_IDENT              ([a-zA-Z._][a-zA-Z._0-9]*)
 WASM_STRING             (\"([^\\"\n]|\\([\\'"nt]|x[0-9a-fA-F][0-9a-fA-F]))*\")
