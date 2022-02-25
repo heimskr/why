@@ -2,7 +2,7 @@
 name: "Why ISA Tests"
 author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
-version: "2.0"
+version: "4.2"
 
 #text
 
@@ -17,26 +17,44 @@ version: "2.0"
 @timeup
 	%fill 8 0
 
-@you_pressed
+@timer_ptr
 	%fill 8 0
 
-@delay_str
+@fnptr
 	%fill 8 0
 
-@pressed_a
-	%fill 8 0
+@.str3
+	%stringz "[0m\n"
+
+@.str1
+	%stringz "[32m"
+
+@.str10
+	%stringz "$g = "
+
+@.str8
+	%stringz "20 -> "
 
 @.str2
+	%stringz ": "
+
+@.str7
 	%stringz "Delay: "
 
 @.str0
 	%stringz "Time's up\n"
 
-@.str1
+@.str9
 	%stringz "You pressed '"
 
-@.str3
+@.str6
 	%stringz "You pressed 'a' :)\n"
+
+@.str4
+	%stringz "hacked =)\n"
+
+@.str5
+	%stringz "not hacked =(\n"
 
 %code
 
@@ -44,61 +62,61 @@ version: "2.0"
 :: main
 <halt>
 
-@.c
+@`c
 	<prc $a0>
 	: $rt
 
-@.ptr
+@`ptr
 	<prc '0'>
 	<prc 'x'>
 	<prx $a0>
 	: $rt
 
-@.s
+@`s
 	[$a0] -> $mf /b
 	: _strprint_print if $mf
 	: $rt
 	@_strprint_print
 	<prc $mf>
 	$a0++
-	: .s
+	: `s
 
-@.s16
+@`s16
 	sext16 $a0 -> $a0
 	<prd $a0>
 	: $rt
 
-@.s32
+@`s32
 	sext32 $a0 -> $a0
 	<prd $a0>
 	: $rt
 
-@.s64
+@`s64
 	<prd $a0>
 	: $rt
 
-@.s8
+@`s8
 	sext8 $a0 -> $a0
 	<prd $a0>
 	: $rt
 
-@.u16
+@`u16
 	<prd $a0>
 	: $rt
 
-@.u32
+@`u32
 	<prd $a0>
 	: $rt
 
-@.u64
+@`u64
 	<prd $a0>
 	: $rt
 
-@.u8
+@`u8
 	<prd $a0>
 	: $rt
 
-@.bool
+@`bool
 	!$a0 -> $a0
 	!$a0 -> $a0
 	<prd $a0>
@@ -107,87 +125,374 @@ version: "2.0"
 @.init
 	.str0 -> $t0
 	$t0 -> [timeup]
-	.str1 -> $t1
-	$t1 -> [you_pressed]
-	.str2 -> $t2
-	$t2 -> [delay_str]
-	.str3 -> $t3
-	$t3 -> [pressed_a]
+	int_timer -> $t1
+	$t1 -> [timer_ptr]
+	add5 -> $t2
+	$t2 -> [fnptr]
+	: $rt
+
+@add5
+	[ $rt
+	[ $fp
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 8 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t1
+	$t0 -> [$t1]
+	// Load argument n
+	$t0 -> $t2
+	5 -> $t3
+	$t2 + $t3 -> $r0
+	: .add5.e
+	@.add5.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $fp
+	] $rt
+	: $rt
+
+@double
+	[ $rt
+	[ $fp
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 8 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t1
+	$t0 -> [$t1]
+	// Load argument n
+	$t0 -> $t2
+	1 -> $r0
+	$t2 << $r0 -> $r0
+	: .double.e
+	@.double.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $fp
+	] $rt
+	: $rt
+
+@hack
+	[ $rt
+	[ $fp
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 17 -> $sp
+	add5 -> $t0
+	$fp - 8 -> $m0
+	$t0 -> [$m0]
+	// Load variable what
+	$fp - 8 -> $a0
+	[$a0] -> $a0
+	:: `ptr
+	10 -> $a0
+	:: `c
+	0 -> $t1
+	$fp - 9 -> $m0
+	$t1 -> [$m0] /b
+	0 -> $t3
+	$fp - 17 -> $m0
+	$t3 -> [$m0]
+	@.hack.1f.s
+	// Load variable i
+	$fp - 17 -> $t4
+	[$t4] -> $t4
+	1000 -> $t5
+	$t4 < $t5 -> $t2
+	!$t2 -> $t2
+	: .hack.1f.e if $t2
+	// Load variable what
+	$fp - 8 -> $ta
+	[$ta] -> $ta
+	// Get variable lvalue for what
+	$fp - 8 -> $t9
+	// Prefix operator++
+	[$t9] -> $t7
+	$t7 + 4 -> $t7
+	$t7 -> [$t9]
+	[$t7] -> $t7 /h
+	5 -> $t8
+	$t7 == $t8 -> $t6
+	!$t6 -> $t6
+	: .hack.2if.end if $t6
+	.str1 -> $a0
+	:: `s
+	@.hack.2if.end
+	// Load variable what
+	$fp - 8 -> $a0
+	[$a0] -> $a0
+	:: `s64
+	.str2 -> $a0
+	:: `s
+	// Load variable what
+	$fp - 8 -> $t0
+	[$t0] -> $t0
+	[$t0] -> $t0 /h
+	<prx $t0>
+	.str3 -> $a0
+	:: `s
+	// Load variable what
+	$fp - 8 -> $t2
+	[$t2] -> $t2
+	[$t2] -> $t2 /h
+	5 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .hack.3if.end if $t1
+	42 -> $t5
+	// Load variable what
+	$fp - 8 -> $t4
+	[$t4] -> $t4
+	$t5 -> [$t4] /h
+	.str4 -> $a0
+	:: `s
+	1 -> $t6
+	$fp - 9 -> $t7
+	$t6 -> [$t7] /b
+	add5 -> $t8
+	$t8 -> [fnptr]
+	: .hack.1f.e
+	@.hack.3if.end
+	@.hack.1f.n
+	// Load variable i
+	$fp - 17 -> $t2
+	[$t2] -> $t2
+	// Get variable lvalue for i
+	$fp - 17 -> $t1
+	// Prefix operator++
+	[$t1] -> $t0
+	$t0 + 1 -> $t0
+	$t0 -> [$t1]
+	: .hack.1f.s
+	@.hack.1f.e
+	// Load variable hacked
+	$fp - 9 -> $t0
+	[$t0] -> $t0 /b
+	!$t0 -> $t0
+	!$t0 -> $t0
+	: .hack.4if.end if $t0
+	.str5 -> $a0
+	:: `s
+	@.hack.4if.end
+	@.hack.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $fp
+	] $rt
 	: $rt
 
 @int_keybrd
-	[ $t0
-	[ $t1
-	[ $t2
-	[ $t3
-	[ $a0
 	[ $rt
-	$e2 == 97 -> $t0
-	: _key_a if $t0
-	$e2 == 61 -> $t0
-	: _key_eq if $t0
-	$e2 == 45 -> $t0
-	: _key_min if $t0
-	$e2 == 10 -> $t0
-	: _key_enter if $t0
-	[you_pressed] -> $a0
-	:: .s
-	<prc $e2>
-	<prc '\x27'>
-	<prc '\x0a'>
-	: _keybrd_end
-	@_key_a
-	[pressed_a] -> $a0
-	:: .s
-	: _keybrd_end
-	@_key_eq
-	[delay] -> $t0
-	[ $lo
-	[ $hi
-	$t0 * 11
-	$lo / 10 -> $t0
-	] $hi
-	] $lo
-	$t0 -> [delay]
-	[delay_str] -> $a0
-	:: .s
-	[delay] -> $t0
-	<prd $t0>
-	<prc '\x0a'>
-	: _keybrd_end
-	@_key_min
-	[delay] -> $t0
-	[ $lo
-	[ $hi
-	$t0 * 10
-	$lo / 11 -> $t0
-	] $hi
-	] $lo
-	$t0 -> [delay]
-	[delay_str] -> $a0
-	:: .s
-	[delay] -> $t0
-	<prd $t0>
-	<prc '\x0a'>
-	: _keybrd_end
-	@_key_enter
-	[delay] -> $t0
-	%time $t0
-	@_keybrd_end
-	] $rt
+	[ $a0
+	$e2 -> $a0
+	:: int_keybrd_
 	] $a0
-	] $t3
-	] $t2
-	] $t1
-	] $t0
+	] $rt
 	: ] %page $e0
+
+@int_keybrd_
+	[ $rt
+	[ $fp
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 9 -> $sp
+	$a0 -> $t0
+	$fp - 1 -> $t1
+	$t0 -> [$t1]
+	// Load argument key
+	$t0 -> $t3
+	97 -> $t4
+	$t3 == $t4 -> $t2
+	!$t2 -> $t2
+	: .int_keybrd_.1if.else if $t2
+	.str6 -> $a0
+	:: `s
+	: .int_keybrd_.1if.end
+	@.int_keybrd_.1if.else
+	// Load argument key
+	$t0 -> $t2
+	61 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .int_keybrd_.2if.else if $t1
+	[delay] -> $t6
+	11 -> $t7
+	$t6 * $t7
+	$lo -> $t5
+	10 -> $t4
+	$t5 / $t4 -> $t4
+	$t4 -> [delay]
+	.str7 -> $a0
+	:: `s
+	[delay] -> $a0
+	:: `s64
+	10 -> $a0
+	:: `c
+	: .int_keybrd_.2if.end
+	@.int_keybrd_.2if.else
+	// Load argument key
+	$t0 -> $t2
+	45 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .int_keybrd_.3if.else if $t1
+	[delay] -> $t6
+	10 -> $t7
+	$t6 * $t7
+	$lo -> $t5
+	11 -> $t4
+	$t5 / $t4 -> $t4
+	$t4 -> [delay]
+	.str7 -> $a0
+	:: `s
+	[delay] -> $a0
+	:: `s64
+	10 -> $a0
+	:: `c
+	: .int_keybrd_.3if.end
+	@.int_keybrd_.3if.else
+	// Load argument key
+	$t0 -> $t2
+	10 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .int_keybrd_.4if.else if $t1
+	[delay] -> $t4
+	%time $t4
+	: .int_keybrd_.4if.end
+	@.int_keybrd_.4if.else
+	// Load argument key
+	$t0 -> $t2
+	32 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .int_keybrd_.5if.else if $t1
+	[fnptr] -> $a0
+	:: swap
+	$r0 -> $t4
+	$t4 -> [fnptr]
+	: .int_keybrd_.5if.end
+	@.int_keybrd_.5if.else
+	// Load argument key
+	$t0 -> $t2
+	42 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .int_keybrd_.6if.else if $t1
+	.str8 -> $a0
+	:: `s
+	[fnptr] -> $t7
+	1 -> $t5
+	$t7 << $t5 -> $t5
+	8 -> $t6
+	$t5 + $t6 -> $t4
+	$fp - 9 -> $m0
+	$t4 -> [$m0]
+	20 -> $a0
+	// Load variable hacked_ptr
+	$fp - 9 -> $ta
+	[$ta] -> $ta
+	8 -> $tb
+	$ta - $tb -> $t9
+	2 -> $t8
+	$t9 / $t8 -> $t8
+	:: $t8
+	$r0 -> $a0
+	:: `s64
+	10 -> $a0
+	:: `c
+	: .int_keybrd_.6if.end
+	@.int_keybrd_.6if.else
+	// Load argument key
+	$t0 -> $t2
+	104 -> $t3
+	$t2 == $t3 -> $t1
+	!$t1 -> $t1
+	: .int_keybrd_.7if.else if $t1
+	:: hack
+	: .int_keybrd_.7if.end
+	@.int_keybrd_.7if.else
+	.str9 -> $a0
+	:: `s
+	// Load argument key
+	$t0 -> $a0
+	:: `c
+	39 -> $a0
+	:: `c
+	10 -> $a0
+	:: `c
+	@.int_keybrd_.7if.end
+	@.int_keybrd_.6if.end
+	@.int_keybrd_.5if.end
+	@.int_keybrd_.4if.end
+	@.int_keybrd_.3if.end
+	@.int_keybrd_.2if.end
+	@.int_keybrd_.1if.end
+	@.int_keybrd_.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $fp
+	] $rt
+	: $rt
 
 @int_timer
 	[ $rt
 	[ $a0
-	timeup -> $a0
-	[$a0] -> $a0
-	:: .s
+	[timeup] -> $a0
+	:: `s
 	[delay] -> $a0
 	%time $a0
 	] $a0
@@ -197,6 +502,7 @@ version: "2.0"
 @main
 	[ $rt
 	[ $fp
+	[ $t6
 	[ $t5
 	[ $t4
 	[ $t3
@@ -204,24 +510,35 @@ version: "2.0"
 	[ $t1
 	[ $t0
 	$sp -> $fp
-	int_timer -> $t1
-	table -> $t0
-	$t0 + 16 -> $t0
-	$t1 -> [$t0]
+	$sp - 8 -> $sp
+	$g -> $t5
+	// Get variable lvalue for g
+	$fp - 8 -> $t0
+	$t5 -> [$t0]
+	.str10 -> $a0
+	:: `s
+	// Load variable g
+	$fp - 8 -> $a0
+	[$a0] -> $a0
+	:: `s64
+	10 -> $a0
+	:: `c
+	[timer_ptr] -> $t1
+	table -> $t6
+	$t6 + 16 -> $t6
+	$t1 -> [$t6]
 	int_keybrd -> $t3
 	table -> $t2
 	$t2 + 56 -> $t2
 	$t3 -> [$t2]
 	%rit table
-	[delay] -> $t4
-	%time $t4
-	@.main.1s
-	1 -> $t5
-	!$t5 -> $t5
-	: .main.1e if $t5
+	@.main.1w.s
+	1 -> $t4
+	!$t4 -> $t4
+	: .main.1w.e if $t4
 	<rest>
-	: .main.1s
-	@.main.1e
+	: .main.1w.s
+	@.main.1w.e
 	@.main.e
 	$fp -> $sp
 	] $t0
@@ -230,6 +547,42 @@ version: "2.0"
 	] $t3
 	] $t4
 	] $t5
+	] $t6
+	] $fp
+	] $rt
+	: $rt
+
+@swap
+	[ $rt
+	[ $fp
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 8 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t4
+	$t0 -> [$t4]
+	// Load argument f
+	$t0 -> $t2
+	double -> $t1
+	$t2 == $t1 -> $t3
+	!$t3 -> $t3
+	: .swap.1if.end if $t3
+	add5 -> $r0
+	: .swap.e
+	@.swap.1if.end
+	double -> $r0
+	: .swap.e
+	@.swap.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
 	] $fp
 	] $rt
 	: $rt

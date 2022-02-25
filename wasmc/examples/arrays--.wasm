@@ -2,7 +2,7 @@
 name: "Arrays"
 author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
-version: "2.0"
+version: "3.0"
 
 #text
 
@@ -29,61 +29,61 @@ version: "2.0"
 :: main
 <halt>
 
-@.c
+@`c
 	<prc $a0>
 	: $rt
 
-@.ptr
+@`ptr
 	<prc '0'>
 	<prc 'x'>
 	<prx $a0>
 	: $rt
 
-@.s
+@`s
 	[$a0] -> $mf /b
 	: _strprint_print if $mf
 	: $rt
 	@_strprint_print
 	<prc $mf>
 	$a0++
-	: .s
+	: `s
 
-@.s16
+@`s16
 	sext16 $a0 -> $a0
 	<prd $a0>
 	: $rt
 
-@.s32
+@`s32
 	sext32 $a0 -> $a0
 	<prd $a0>
 	: $rt
 
-@.s64
+@`s64
 	<prd $a0>
 	: $rt
 
-@.s8
+@`s8
 	sext8 $a0 -> $a0
 	<prd $a0>
 	: $rt
 
-@.u16
+@`u16
 	<prd $a0>
 	: $rt
 
-@.u32
+@`u32
 	<prd $a0>
 	: $rt
 
-@.u64
+@`u64
 	<prd $a0>
 	: $rt
 
-@.u8
+@`u8
 	<prd $a0>
 	: $rt
 
-@.bool
+@`bool
 	!$a0 -> $a0
 	!$a0 -> $a0
 	<prd $a0>
@@ -95,21 +95,6 @@ version: "2.0"
 @main
 	[ $rt
 	[ $fp
-	[ $s7
-	[ $s6
-	[ $s5
-	[ $s4
-	[ $s3
-	[ $s2
-	[ $s1
-	[ $s0
-	[ $t16
-	[ $t15
-	[ $t14
-	[ $t13
-	[ $t12
-	[ $t11
-	[ $t10
 	[ $tf
 	[ $te
 	[ $td
@@ -128,256 +113,130 @@ version: "2.0"
 	[ $t0
 	$sp -> $fp
 	$sp - 248 -> $sp
-	-1 -> $t0
+	array -> $t0
+	0 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	10 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	3210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	43210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	543210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	6543210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	76543210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	876543210 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	1286608618 -> $t1
+	lui: 2 -> $t1
+	$t1 -> [$t0]
+	$t0 + 8 -> $t0
+	10 -> $t3
 	$fp - 8 -> $m0
-	$t0 -> [$m0]
-	0 -> $t2
-	array -> $t1
-	// Load variable c
+	$t3 -> [$m0]
+	@.main.1f.s
+	0 -> $t4
+	// Load variable i
 	$fp - 8 -> $t5
 	[$t5] -> $t5
-	// Get variable lvalue for c
-	$fp - 8 -> $t4
-	// Prefix operator++
-	[$t4] -> $t3
-	$t3 + 1 -> $t3
-	$t3 -> [$t4]
-	$t3 * 8
-	$lo -> $t3
-	$t1 + $t3 -> $t1
-	$t2 -> [$t1]
-	10 -> $t7
-	array -> $t6
-	// Load variable c
-	$fp - 8 -> $ta
-	[$ta] -> $ta
-	// Get variable lvalue for c
-	$fp - 8 -> $t9
-	// Prefix operator++
-	[$t9] -> $t8
-	$t8 + 1 -> $t8
-	$t8 -> [$t9]
-	$t8 * 8
-	$lo -> $t8
-	$t6 + $t8 -> $t6
-	$t7 -> [$t6]
-	210 -> $tc
-	array -> $tb
-	// Load variable c
-	$fp - 8 -> $tf
-	[$tf] -> $tf
-	// Get variable lvalue for c
-	$fp - 8 -> $te
-	// Prefix operator++
-	[$te] -> $td
-	$td + 1 -> $td
-	$td -> [$te]
-	$td * 8
-	$lo -> $td
-	$tb + $td -> $tb
-	$tc -> [$tb]
-	3210 -> $t11
-	array -> $t10
-	// Load variable c
-	$fp - 8 -> $t14
-	[$t14] -> $t14
-	// Get variable lvalue for c
-	$fp - 8 -> $t13
-	// Prefix operator++
-	[$t13] -> $t12
-	$t12 + 1 -> $t12
-	$t12 -> [$t13]
-	$t12 * 8
-	$lo -> $t12
-	$t10 + $t12 -> $t10
-	$t11 -> [$t10]
-	43210 -> $t16
-	array -> $t15
-	// Load variable c
-	$fp - 8 -> $s2
-	[$s2] -> $s2
-	// Get variable lvalue for c
-	$fp - 8 -> $s1
-	// Prefix operator++
-	[$s1] -> $s0
-	$s0 + 1 -> $s0
-	$s0 -> [$s1]
-	$s0 * 8
-	$lo -> $s0
-	$t15 + $s0 -> $t15
-	$t16 -> [$t15]
-	543210 -> $s4
-	array -> $s3
-	// Load variable c
-	$fp - 8 -> $s7
-	[$s7] -> $s7
-	// Get variable lvalue for c
-	$fp - 8 -> $s6
-	// Prefix operator++
-	[$s6] -> $s5
-	$s5 + 1 -> $s5
-	$s5 -> [$s6]
-	$s5 * 8
-	$lo -> $s5
-	$s3 + $s5 -> $s3
-	$s4 -> [$s3]
-	6543210 -> $t1
-	array -> $t0
-	// Load variable c
-	$fp - 8 -> $t4
-	[$t4] -> $t4
-	// Get variable lvalue for c
-	$fp - 8 -> $t3
-	// Prefix operator++
-	[$t3] -> $t2
-	$t2 + 1 -> $t2
-	$t2 -> [$t3]
-	$t2 * 8
-	$lo -> $t2
-	$t0 + $t2 -> $t0
-	$t1 -> [$t0]
-	76543210 -> $t6
-	array -> $t5
-	// Load variable c
-	$fp - 8 -> $t9
-	[$t9] -> $t9
-	// Get variable lvalue for c
-	$fp - 8 -> $t8
-	// Prefix operator++
-	[$t8] -> $t7
-	$t7 + 1 -> $t7
-	$t7 -> [$t8]
-	$t7 * 8
-	$lo -> $t7
-	$t5 + $t7 -> $t5
-	$t6 -> [$t5]
-	876543210 -> $tb
-	array -> $ta
-	// Load variable c
-	$fp - 8 -> $te
-	[$te] -> $te
-	// Get variable lvalue for c
-	$fp - 8 -> $td
-	// Prefix operator++
-	[$td] -> $tc
-	$tc + 1 -> $tc
-	$tc -> [$td]
-	$tc * 8
-	$lo -> $tc
-	$ta + $tc -> $ta
-	$tb -> [$ta]
-	1286608618 -> $t10
-	lui: 2 -> $t10
-	array -> $tf
-	// Load variable c
-	$fp - 8 -> $t13
-	[$t13] -> $t13
-	// Get variable lvalue for c
-	$fp - 8 -> $t12
-	// Prefix operator++
-	[$t12] -> $t11
-	$t11 + 1 -> $t11
-	$t11 -> [$t12]
-	$t11 * 8
-	$lo -> $t11
-	$tf + $t11 -> $tf
-	$t10 -> [$tf]
-	10 -> $t15
-	$fp - 16 -> $m0
-	$t15 -> [$m0]
-	@.main.2s
-	0 -> $t16
-	// Load variable i
-	$fp - 16 -> $s0
-	[$s0] -> $s0
-	$t16 < $s0 -> $t14
-	!$t14 -> $t14
-	: .main.2e if $t14
-	[ $a0
+	$t4 < $t5 -> $t2
+	!$t2 -> $t2
+	: .main.1f.e if $t2
 	array -> $a0
 	// Load variable i
-	$fp - 16 -> $s2
-	[$s2] -> $s2
-	1 -> $s5
-	$s2 - $s5 -> $s1
-	$s1 * 8
-	$lo -> $s1
-	$a0 + $s1 -> $a0
+	$fp - 8 -> $t7
+	[$t7] -> $t7
+	1 -> $t8
+	$t7 - $t8 -> $t6
+	$t6 * 8
+	$lo -> $t6
+	$a0 + $t6 -> $a0
 	[$a0] -> $a0
-	:: .s64
-	] $a0
-	[ $a0
+	:: `s64
 	10 -> $a0
-	:: .c
-	] $a0
-	@.main.2n
+	:: `c
+	@.main.1f.n
 	// Load variable i
-	$fp - 16 -> $t2
+	$fp - 8 -> $t2
 	[$t2] -> $t2
 	// Get variable lvalue for i
-	$fp - 16 -> $t1
+	$fp - 8 -> $t1
 	// Prefix operator--
 	[$t1] -> $t0
 	$t0 - 1 -> $t0
 	$t0 -> [$t1]
-	: .main.2s
-	@.main.2e
+	: .main.1f.s
+	@.main.1f.e
 	0 -> $t0
-	$fp - 8 -> $t1
-	$t0 -> [$t1]
-	0 -> $t2
+	$fp - 16 -> $m0
+	$t0 -> [$m0]
+	0 -> $t1
 	$fp - 224 -> $m0
-	$t2 -> [$m0]
-	@.main.4s
+	$t1 -> [$m0]
+	@.main.2f.s
 	// Load variable row
 	$fp - 224 -> $t1
 	[$t1] -> $t1
 	5 -> $t2
 	$t1 < $t2 -> $t0
 	!$t0 -> $t0
-	: .main.4e if $t0
+	: .main.2f.e if $t0
 	0 -> $t4
 	$fp - 232 -> $m0
 	$t4 -> [$m0]
-	@.main.6s
+	@.main.3f.s
 	// Load variable col
 	$fp - 232 -> $t5
 	[$t5] -> $t5
 	5 -> $t6
 	$t5 < $t6 -> $t3
 	!$t3 -> $t3
-	: .main.6e if $t3
-	// Load variable c
-	$fp - 8 -> $td
-	[$td] -> $td
-	// Get variable lvalue for c
-	$fp - 8 -> $tc
-	// Prefix operator++
-	[$tc] -> $tb
-	$tb + 1 -> $tb
-	$tb -> [$tc]
-	// Get variable lvalue for c
-	$fp - 8 -> $ta
-	// Postfix operator++
-	[$ta] -> $t8
-	$t8 + 1 -> $t9
-	$t9 -> [$ta]
+	: .main.3f.e if $t3
 	// Get variable lvalue for multidim
 	$fp - 216 -> $t7
 	// Load variable row
-	$fp - 224 -> $te
-	[$te] -> $te
-	$te * 40
-	$lo -> $te
-	$t7 + $te -> $t7
+	$fp - 224 -> $t9
+	[$t9] -> $t9
+	$t9 * 40
+	$lo -> $t9
+	$t7 + $t9 -> $t7
 	// Load variable col
-	$fp - 232 -> $tf
+	$fp - 232 -> $ta
+	[$ta] -> $ta
+	$ta * 8
+	$lo -> $ta
+	$t7 + $ta -> $t7
+	// Load variable c
+	$fp - 16 -> $tf
 	[$tf] -> $tf
-	$tf * 8
-	$lo -> $tf
-	$t7 + $tf -> $t7
+	// Get variable lvalue for c
+	$fp - 16 -> $te
+	// Prefix operator++
+	[$te] -> $td
+	$td + 1 -> $td
+	$td -> [$te]
+	// Get variable lvalue for c
+	$fp - 16 -> $tc
+	// Postfix operator++
+	[$tc] -> $t8
+	$t8 + 1 -> $tb
+	$tb -> [$tc]
 	$t8 -> [$t7]
-	@.main.6n
+	@.main.3f.n
 	// Load variable col
 	$fp - 232 -> $t2
 	[$t2] -> $t2
@@ -387,9 +246,9 @@ version: "2.0"
 	[$t1] -> $t0
 	$t0 + 1 -> $t0
 	$t0 -> [$t1]
-	: .main.6s
-	@.main.6e
-	@.main.4n
+	: .main.3f.s
+	@.main.3f.e
+	@.main.2f.n
 	// Load variable row
 	$fp - 224 -> $t2
 	[$t2] -> $t2
@@ -399,55 +258,44 @@ version: "2.0"
 	[$t1] -> $t0
 	$t0 + 1 -> $t0
 	$t0 -> [$t1]
-	: .main.4s
-	@.main.4e
+	: .main.2f.s
+	@.main.2f.e
 	0 -> $t0
 	$fp - 240 -> $m0
 	$t0 -> [$m0]
-	@.main.8s
+	@.main.4f.s
 	// Load variable row
 	$fp - 240 -> $t1
 	[$t1] -> $t1
 	5 -> $t2
 	$t1 < $t2 -> $t0
 	!$t0 -> $t0
-	: .main.8e if $t0
+	: .main.4f.e if $t0
 	0 -> $t4
 	$fp - 248 -> $m0
 	$t4 -> [$m0]
-	@.main.10s
+	@.main.5f.s
 	// Load variable col
 	$fp - 248 -> $t5
 	[$t5] -> $t5
 	5 -> $t6
 	$t5 < $t6 -> $t3
 	!$t3 -> $t3
-	: .main.10e if $t3
-	[ $a0
+	: .main.5f.e if $t3
 	.str0 -> $a0
-	:: .s
-	] $a0
-	[ $a0
+	:: `s
 	// Load variable row
 	$fp - 240 -> $a0
 	[$a0] -> $a0
-	:: .u64
-	] $a0
-	[ $a0
+	:: `u64
 	.str1 -> $a0
-	:: .s
-	] $a0
-	[ $a0
+	:: `s
 	// Load variable col
 	$fp - 248 -> $a0
 	[$a0] -> $a0
-	:: .u64
-	] $a0
-	[ $a0
+	:: `u64
 	.str2 -> $a0
-	:: .s
-	] $a0
-	[ $a0
+	:: `s
 	// Get variable lvalue for multidim
 	$fp - 216 -> $a0
 	// Load variable row
@@ -463,13 +311,10 @@ version: "2.0"
 	$lo -> $t8
 	$a0 + $t8 -> $a0
 	[$a0] -> $a0
-	:: .s64
-	] $a0
-	[ $a0
+	:: `s64
 	10 -> $a0
-	:: .c
-	] $a0
-	@.main.10n
+	:: `c
+	@.main.5f.n
 	// Load variable col
 	$fp - 248 -> $t2
 	[$t2] -> $t2
@@ -479,9 +324,9 @@ version: "2.0"
 	[$t1] -> $t0
 	$t0 + 1 -> $t0
 	$t0 -> [$t1]
-	: .main.10s
-	@.main.10e
-	@.main.8n
+	: .main.5f.s
+	@.main.5f.e
+	@.main.4f.n
 	// Load variable row
 	$fp - 240 -> $t2
 	[$t2] -> $t2
@@ -491,8 +336,8 @@ version: "2.0"
 	[$t1] -> $t0
 	$t0 + 1 -> $t0
 	$t0 -> [$t1]
-	: .main.8s
-	@.main.8e
+	: .main.4f.s
+	@.main.4f.e
 	@.main.e
 	$fp -> $sp
 	] $t0
@@ -511,21 +356,6 @@ version: "2.0"
 	] $td
 	] $te
 	] $tf
-	] $t10
-	] $t11
-	] $t12
-	] $t13
-	] $t14
-	] $t15
-	] $t16
-	] $s0
-	] $s1
-	] $s2
-	] $s3
-	] $s4
-	] $s5
-	] $s6
-	] $s7
 	] $fp
 	] $rt
 	: $rt

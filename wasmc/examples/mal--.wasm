@@ -1,0 +1,1419 @@
+#meta
+name: "Mal"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1.1"
+
+#text
+
+%data
+
+@MEMORY_ALIGN
+	%8b 32
+
+@allocated
+	%8b 0
+
+@base
+	%8b 0
+
+@highestAllocated
+	%8b 0
+
+@start
+	%8b 0
+
+@high
+	%8b 0
+
+@end
+	%8b 0
+
+@.str1
+	%stringz " bytes: out of memory\n"
+
+@.str3
+	%stringz " through 0x"
+
+@.str0
+	%stringz "Can't allocate "
+
+@.str2
+	%stringz "Invalid heap bounds: 0x"
+
+%code
+
+:: .init
+:: main
+<halt>
+
+@`c
+	<prc $a0>
+	: $rt
+
+@`ptr
+	<prc '0'>
+	<prc 'x'>
+	<prx $a0>
+	: $rt
+
+@`s
+	[$a0] -> $mf /b
+	: _strprint_print if $mf
+	: $rt
+	@_strprint_print
+	<prc $mf>
+	$a0++
+	: `s
+
+@`s16
+	sext16 $a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@`s32
+	sext32 $a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@`s64
+	<prd $a0>
+	: $rt
+
+@`s8
+	sext8 $a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@`u16
+	<prd $a0>
+	: $rt
+
+@`u32
+	<prd $a0>
+	: $rt
+
+@`u64
+	<prd $a0>
+	: $rt
+
+@`u8
+	<prd $a0>
+	: $rt
+
+@`bool
+	!$a0 -> $a0
+	!$a0 -> $a0
+	<prd $a0>
+	: $rt
+
+@.init
+	: $rt
+
+@allocate
+	[ $rt
+	[ $fp
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 32 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t2
+	$t0 -> [$t2]
+	$a1 -> $t1
+	$fp - 16 -> $t2
+	$t1 -> [$t2]
+	0 -> $t3
+	$fp - 24 -> $m0
+	$t3 -> [$m0]
+	[base] -> $t4
+	!$t4 -> $t4
+	!$t4 -> $t4
+	: .allocate.1if.else if $t4
+	0 -> $a0
+	// Load argument size
+	$t0 -> $a1
+	// Load argument alignment
+	$t1 -> $a2
+	:: requestSpace
+	$r0 -> $t5
+	$fp - 24 -> $t6
+	$t5 -> [$t6]
+	// Load variable block
+	$fp - 24 -> $t7
+	[$t7] -> $t7
+	!$t7 -> $t7
+	!$t7 -> $t7
+	: .allocate.2if.end if $t7
+	0 -> $r0
+	: .allocate.e
+	@.allocate.2if.end
+	// Load variable block
+	$fp - 24 -> $t0
+	[$t0] -> $t0
+	$t0 -> [base]
+	: .allocate.1if.end
+	@.allocate.1if.else
+	[base] -> $t2
+	$fp - 32 -> $m0
+	$t2 -> [$m0]
+	// Get variable lvalue for last
+	$fp - 32 -> $a0
+	// Load argument size
+	$t0 -> $a1
+	:: findFreeBlock
+	$r0 -> $t3
+	$fp - 24 -> $t4
+	$t3 -> [$t4]
+	// Load variable block
+	$fp - 24 -> $t5
+	[$t5] -> $t5
+	!$t5 -> $t5
+	!$t5 -> $t5
+	: .allocate.3if.else if $t5
+	// Load variable last
+	$fp - 32 -> $a0
+	[$a0] -> $a0
+	// Load argument size
+	$t0 -> $a1
+	// Load argument alignment
+	$t1 -> $a2
+	:: requestSpace
+	$r0 -> $t6
+	$fp - 24 -> $t7
+	$t6 -> [$t7]
+	// Load variable block
+	$fp - 24 -> $t8
+	[$t8] -> $t8
+	!$t8 -> $t8
+	!$t8 -> $t8
+	: .allocate.4if.end if $t8
+	0 -> $r0
+	: .allocate.e
+	@.allocate.4if.end
+	: .allocate.3if.end
+	@.allocate.3if.else
+	// Load variable block
+	$fp - 24 -> $a0
+	[$a0] -> $a0
+	// Load argument size
+	$t0 -> $a1
+	:: split
+	0 -> $t2
+	// Load variable block
+	$fp - 24 -> $t1
+	[$t1] -> $t1
+	$t1 + 16 -> $t1
+	$t2 -> [$t1] /b
+	@.allocate.3if.end
+	@.allocate.1if.end
+	[allocated] -> $t3
+	// Load variable block
+	$fp - 24 -> $t4
+	[$t4] -> $t4
+	[$t4] -> $t4
+	$t3 + $t4 -> $t1
+	17 -> $t2
+	$t1 + $t2 -> $t0
+	$t0 -> [allocated]
+	// Load variable block
+	$fp - 24 -> $t5
+	[$t5] -> $t5
+	17 -> $t6
+	$t5 + $t6 -> $r0
+	: .allocate.e
+	@.allocate.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $fp
+	] $rt
+	: $rt
+
+@calloc
+	[ $rt
+	[ $fp
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 24 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t4
+	$t0 -> [$t4]
+	$a1 -> $t1
+	$fp - 16 -> $t4
+	$t1 -> [$t4]
+	// Load argument count
+	$t0 -> $t3
+	// Load argument size
+	$t1 -> $t2
+	$t3 * $t2
+	$lo -> $a0
+	:: malloc
+	$r0 -> $t6
+	$fp - 24 -> $m0
+	$t6 -> [$m0]
+	// Load variable chunk
+	$fp - 24 -> $t5
+	[$t5] -> $t5
+	!$t5 -> $t5
+	: .calloc.1if.end if $t5
+	// Load variable chunk
+	$fp - 24 -> $a0
+	[$a0] -> $a0
+	0 -> $a1
+	$a1 & 255 -> $a1
+	// Load argument count
+	$t0 -> $t7
+	// Load argument size
+	$t1 -> $t8
+	$t7 * $t8
+	$lo -> $a2
+	:: memset
+	@.calloc.1if.end
+	// Load variable chunk
+	$fp - 24 -> $r0
+	[$r0] -> $r0
+	: .calloc.e
+	@.calloc.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $fp
+	] $rt
+	: $rt
+
+@checked_malloc
+	[ $rt
+	[ $fp
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 16 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t1
+	$t0 -> [$t1]
+	// Load argument size
+	$t0 -> $a0
+	:: malloc
+	$r0 -> $t2
+	$fp - 16 -> $m0
+	$t2 -> [$m0]
+	// Load variable out
+	$fp - 16 -> $t3
+	[$t3] -> $t3
+	!$t3 -> $t3
+	!$t3 -> $t3
+	: .checked_malloc.1if.end if $t3
+	.str0 -> $a0
+	:: `s
+	// Load argument size
+	$t0 -> $a0
+	:: `u64
+	.str1 -> $a0
+	:: `s
+	<halt>
+	@.checked_malloc.1if.end
+	// Load variable out
+	$fp - 16 -> $r0
+	[$r0] -> $r0
+	: .checked_malloc.e
+	@.checked_malloc.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $fp
+	] $rt
+	: $rt
+
+@findFreeBlock
+	[ $rt
+	[ $fp
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 24 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t2
+	$t0 -> [$t2]
+	$a1 -> $t1
+	$fp - 16 -> $t2
+	$t1 -> [$t2]
+	[base] -> $t3
+	$fp - 24 -> $m0
+	$t3 -> [$m0]
+	@.findFreeBlock.1w.s
+	// Load variable current
+	$fp - 24 -> $t4
+	[$t4] -> $t4
+	: .findFreeBlock.2land.s if $t4
+	: .findFreeBlock.2land.e
+	@.findFreeBlock.2land.s
+	// Load variable current
+	$fp - 24 -> $t4
+	[$t4] -> $t4
+	$t4 + 16 -> $t4
+	[$t4] -> $t4 /b
+	: .findFreeBlock.3land.s if $t4
+	: .findFreeBlock.3land.e
+	@.findFreeBlock.3land.s
+	// Load argument size
+	$t1 -> $t0
+	// Load variable current
+	$fp - 24 -> $t2
+	[$t2] -> $t2
+	[$t2] -> $t2
+	$t0 <= $t2 -> $t4
+	@.findFreeBlock.3land.e
+	!$t4 -> $t4
+	@.findFreeBlock.2land.e
+	!$t4 -> $t4
+	: .findFreeBlock.1w.e if $t4
+	// Load variable current
+	$fp - 24 -> $t2
+	[$t2] -> $t2
+	// Load argument last
+	$t0 -> $t1
+	$t2 -> [$t1]
+	// Load variable current
+	$fp - 24 -> $t3
+	[$t3] -> $t3
+	$t3 + 8 -> $t3
+	[$t3] -> $t3
+	$fp - 24 -> $t5
+	$t3 -> [$t5]
+	: .findFreeBlock.1w.s
+	@.findFreeBlock.1w.e
+	// Load variable current
+	$fp - 24 -> $r0
+	[$r0] -> $r0
+	: .findFreeBlock.e
+	@.findFreeBlock.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $fp
+	] $rt
+	: $rt
+
+@free
+	[ $rt
+	[ $fp
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 16 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t4
+	$t0 -> [$t4]
+	// Load argument ptr
+	$t0 -> $t2
+	0 -> $t1
+	$t2 == $t1 -> $t3
+	!$t3 -> $t3
+	: .free.1if.end if $t3
+	: .free.e
+	@.free.1if.end
+	// Load argument ptr
+	$t0 -> $a0
+	:: getBlock
+	$r0 -> $t1
+	$fp - 16 -> $m0
+	$t1 -> [$m0]
+	1 -> $t3
+	// Load variable block_ptr
+	$fp - 16 -> $t2
+	[$t2] -> $t2
+	$t2 + 16 -> $t2
+	$t3 -> [$t2] /b
+	[allocated] -> $t7
+	// Load variable block_ptr
+	$fp - 16 -> $t8
+	[$t8] -> $t8
+	[$t8] -> $t8
+	$t7 - $t8 -> $t5
+	17 -> $t6
+	$t5 + $t6 -> $t4
+	$t4 -> [allocated]
+	:: merge
+	@.free.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $fp
+	] $rt
+	: $rt
+
+@getBlock
+	[ $rt
+	[ $fp
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 8 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t3
+	$t0 -> [$t3]
+	// Load argument ptr
+	$t0 -> $t2
+	17 -> $t1
+	$t2 - $t1 -> $r0
+	: .getBlock.e
+	@.getBlock.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $fp
+	] $rt
+	: $rt
+
+@getUnallocated
+	[ $rt
+	[ $fp
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	[high] -> $t2
+	[start] -> $t3
+	$t2 - $t3 -> $t1
+	[allocated] -> $t0
+	$t1 - $t0 -> $r0
+	: .getUnallocated.e
+	@.getUnallocated.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $fp
+	] $rt
+	: $rt
+
+@main
+	[ $rt
+	[ $fp
+	[ $t10
+	[ $tf
+	[ $te
+	[ $td
+	[ $tc
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 56 -> $sp
+	$g -> $t4
+	// Get variable lvalue for g
+	$fp - 8 -> $t3
+	$t4 -> [$t3]
+	? mem -> $t0
+	// Get variable lvalue for mem
+	$fp - 16 -> $t2
+	$t0 -> [$t2]
+	// Load variable g
+	$fp - 8 -> $a0
+	[$a0] -> $a0
+	// Load variable mem
+	$fp - 16 -> $a1
+	[$a1] -> $a1
+	:: setBounds
+	8 -> $a0
+	:: malloc
+	$r0 -> $t1
+	$fp - 24 -> $m0
+	$t1 -> [$m0]
+	4 -> $a0
+	:: malloc
+	$r0 -> $t5
+	$fp - 32 -> $m0
+	$t5 -> [$m0]
+	2 -> $a0
+	:: malloc
+	$r0 -> $t6
+	$fp - 40 -> $m0
+	$t6 -> [$m0]
+	1 -> $a0
+	:: malloc
+	$r0 -> $t7
+	$fp - 48 -> $m0
+	$t7 -> [$m0]
+	// Load variable one
+	$fp - 24 -> $a0
+	[$a0] -> $a0
+	:: free
+	8 -> $a0
+	:: malloc
+	$r0 -> $t8
+	$fp - 56 -> $m0
+	$t8 -> [$m0]
+	// Load variable one
+	$fp - 24 -> $a0
+	[$a0] -> $a0
+	:: `u64
+	10 -> $a0
+	:: `c
+	40 -> $a0
+	:: `c
+	// Load variable two
+	$fp - 32 -> $t9
+	[$t9] -> $t9
+	// Load variable one
+	$fp - 24 -> $ta
+	[$ta] -> $ta
+	$t9 - $ta -> $a0
+	:: `s64
+	41 -> $a0
+	:: `c
+	10 -> $a0
+	:: `c
+	// Load variable two
+	$fp - 32 -> $a0
+	[$a0] -> $a0
+	:: `u64
+	10 -> $a0
+	:: `c
+	40 -> $a0
+	:: `c
+	// Load variable three
+	$fp - 40 -> $tb
+	[$tb] -> $tb
+	// Load variable two
+	$fp - 32 -> $tc
+	[$tc] -> $tc
+	$tb - $tc -> $a0
+	:: `s64
+	41 -> $a0
+	:: `c
+	10 -> $a0
+	:: `c
+	// Load variable three
+	$fp - 40 -> $a0
+	[$a0] -> $a0
+	:: `u64
+	10 -> $a0
+	:: `c
+	40 -> $a0
+	:: `c
+	// Load variable four
+	$fp - 48 -> $td
+	[$td] -> $td
+	// Load variable three
+	$fp - 40 -> $te
+	[$te] -> $te
+	$td - $te -> $a0
+	:: `s64
+	41 -> $a0
+	:: `c
+	10 -> $a0
+	:: `c
+	// Load variable four
+	$fp - 48 -> $a0
+	[$a0] -> $a0
+	:: `u64
+	10 -> $a0
+	:: `c
+	40 -> $a0
+	:: `c
+	// Load variable five
+	$fp - 56 -> $tf
+	[$tf] -> $tf
+	// Load variable four
+	$fp - 48 -> $t10
+	[$t10] -> $t10
+	$tf - $t10 -> $a0
+	:: `s64
+	41 -> $a0
+	:: `c
+	10 -> $a0
+	:: `c
+	// Load variable five
+	$fp - 56 -> $a0
+	[$a0] -> $a0
+	:: `u64
+	10 -> $a0
+	:: `c
+	@.main.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $tc
+	] $td
+	] $te
+	] $tf
+	] $t10
+	] $fp
+	] $rt
+	: $rt
+
+@malloc
+	[ $rt
+	[ $fp
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 8 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t1
+	$t0 -> [$t1]
+	// Load argument size
+	$t0 -> $a0
+	[MEMORY_ALIGN] -> $a1
+	:: allocate
+	$r0 -> $r0
+	: .malloc.e
+	@.malloc.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $fp
+	] $rt
+	: $rt
+
+@memset
+	[ $rt
+	[ $fp
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 17 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t3
+	$t0 -> [$t3]
+	$a1 -> $t1
+	$fp - 9 -> $t3
+	$t1 -> [$t3]
+	$a2 -> $t2
+	$fp - 17 -> $t3
+	$t2 -> [$t3]
+	// Load argument len
+	$t2 -> $t5
+	// Load argument c
+	$t1 -> $t6
+	// Load argument ptr
+	$t0 -> $t4
+	memset $t5 x $t6 -> $t4
+	// Load argument ptr
+	$t0 -> $r0
+	: .memset.e
+	@.memset.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $fp
+	] $rt
+	: $rt
+
+@merge
+	[ $rt
+	[ $fp
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 16 -> $sp
+	0 -> $t1
+	$fp - 8 -> $m0
+	$t1 -> [$m0]
+	[base] -> $t2
+	$fp - 16 -> $m0
+	$t2 -> [$m0]
+	@.merge.1w.s
+	// Load variable current
+	$fp - 16 -> $t0
+	[$t0] -> $t0
+	: .merge.2land.s if $t0
+	: .merge.2land.e
+	@.merge.2land.s
+	// Load variable current
+	$fp - 16 -> $t0
+	[$t0] -> $t0
+	$t0 + 8 -> $t0
+	[$t0] -> $t0
+	@.merge.2land.e
+	!$t0 -> $t0
+	: .merge.1w.e if $t0
+	// Load variable current
+	$fp - 16 -> $t1
+	[$t1] -> $t1
+	$t1 + 16 -> $t1
+	[$t1] -> $t1 /b
+	: .merge.4land.s if $t1
+	: .merge.4land.e
+	@.merge.4land.s
+	// Load variable current
+	$fp - 16 -> $t1
+	[$t1] -> $t1
+	$t1 + 8 -> $t1
+	[$t1] -> $t1
+	$t1 + 16 -> $t1
+	[$t1] -> $t1 /b
+	@.merge.4land.e
+	!$t1 -> $t1
+	: .merge.3if.else if $t1
+	// Load variable current
+	$fp - 16 -> $t6
+	[$t6] -> $t6
+	[$t6] -> $t6
+	17 -> $t7
+	$t6 + $t7 -> $t4
+	// Load variable current
+	$fp - 16 -> $t5
+	[$t5] -> $t5
+	$t5 + 8 -> $t5
+	[$t5] -> $t5
+	[$t5] -> $t5
+	$t4 + $t5 -> $t3
+	// Load variable current
+	$fp - 16 -> $t2
+	[$t2] -> $t2
+	$t3 -> [$t2]
+	// Load variable current
+	$fp - 16 -> $t8
+	[$t8] -> $t8
+	$t8 + 8 -> $t8
+	[$t8] -> $t8
+	$t8 + 8 -> $t8
+	[$t8] -> $t8
+	// Load variable current
+	$fp - 16 -> $t0
+	[$t0] -> $t0
+	$t0 + 8 -> $t0
+	$t8 -> [$t0]
+	// Load variable count
+	$fp - 8 -> $tb
+	[$tb] -> $tb
+	// Get variable lvalue for count
+	$fp - 8 -> $ta
+	// Prefix operator++
+	[$ta] -> $t9
+	$t9 + 1 -> $t9
+	$t9 -> [$ta]
+	: .merge.3if.end
+	@.merge.3if.else
+	// Load variable current
+	$fp - 16 -> $t0
+	[$t0] -> $t0
+	$t0 + 8 -> $t0
+	[$t0] -> $t0
+	$fp - 16 -> $t1
+	$t0 -> [$t1]
+	@.merge.3if.end
+	: .merge.1w.s
+	@.merge.1w.e
+	// Load variable count
+	$fp - 8 -> $r0
+	[$r0] -> $r0
+	: .merge.e
+	@.merge.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $fp
+	] $rt
+	: $rt
+
+@realign
+	[ $rt
+	[ $fp
+	[ $tc
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 24 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t5
+	$t0 -> [$t5]
+	$a1 -> $t1
+	$fp - 16 -> $t5
+	$t1 -> [$t5]
+	// Load argument alignment
+	$t1 -> $t3
+	0 -> $t2
+	$t3 == $t2 -> $t4
+	!$t4 -> $t4
+	: .realign.1if.end if $t4
+	// Load argument val
+	$t0 -> $r0
+	: .realign.e
+	@.realign.1if.end
+	// Load argument val
+	$t0 -> $t3
+	17 -> $t2
+	$t3 + $t2 -> $t4
+	// Load argument alignment
+	$t1 -> $t5
+	$t4 % $t5 -> $t5 /u
+	$fp - 24 -> $m0
+	$t5 -> [$m0]
+	// Load variable offset
+	$fp - 24 -> $t6
+	[$t6] -> $t6
+	!$t6 -> $t6
+	: .realign.2if.end if $t6
+	// Load argument val
+	$t0 -> $ta
+	// Load argument alignment
+	$t1 -> $tb
+	$ta + $tb -> $t8
+	// Load variable offset
+	$fp - 24 -> $t9
+	[$t9] -> $t9
+	$t8 - $t9 -> $t7
+	$fp - 8 -> $tc
+	$t7 -> [$tc]
+	@.realign.2if.end
+	// Load argument val
+	$t0 -> $r0
+	: .realign.e
+	@.realign.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $tc
+	] $fp
+	] $rt
+	: $rt
+
+@requestSpace
+	[ $rt
+	[ $fp
+	[ $t14
+	[ $t13
+	[ $t12
+	[ $t11
+	[ $t10
+	[ $tf
+	[ $te
+	[ $td
+	[ $tc
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 32 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t3
+	$t0 -> [$t3]
+	$a1 -> $t1
+	$fp - 16 -> $t3
+	$t1 -> [$t3]
+	$a2 -> $t2
+	$fp - 24 -> $t3
+	$t2 -> [$t3]
+	[end] -> $a0
+	// Load argument alignment
+	$t2 -> $a1
+	:: realign
+	$r0 -> $t4
+	$fp - 32 -> $m0
+	$t4 -> [$m0]
+	// Load argument last
+	$t0 -> $t5
+	!$t5 -> $t5
+	: .requestSpace.1if.end if $t5
+	// Load variable block
+	$fp - 32 -> $t7
+	[$t7] -> $t7
+	// Load argument last
+	$t0 -> $t6
+	$t6 + 8 -> $t6
+	$t7 -> [$t6]
+	@.requestSpace.1if.end
+	// Load argument size
+	$t1 -> $t9
+	// Load variable block
+	$fp - 32 -> $t8
+	[$t8] -> $t8
+	$t9 -> [$t8]
+	0 -> $tb
+	// Load variable block
+	$fp - 32 -> $ta
+	[$ta] -> $ta
+	$ta + 8 -> $ta
+	$tb -> [$ta]
+	0 -> $td
+	// Load variable block
+	$fp - 32 -> $tc
+	[$tc] -> $tc
+	$tc + 16 -> $tc
+	$td -> [$tc] /b
+	// Load variable block
+	$fp - 32 -> $t13
+	[$t13] -> $t13
+	// Load variable block
+	$fp - 32 -> $t14
+	[$t14] -> $t14
+	[$t14] -> $t14
+	$t13 + $t14 -> $t11
+	17 -> $t12
+	$t11 + $t12 -> $tf
+	1 -> $t10
+	$tf + $t10 -> $te
+	$te -> [end]
+	// Load variable block
+	$fp - 32 -> $r0
+	[$r0] -> $r0
+	: .requestSpace.e
+	@.requestSpace.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $tc
+	] $td
+	] $te
+	] $tf
+	] $t10
+	] $t11
+	] $t12
+	] $t13
+	] $t14
+	] $fp
+	] $rt
+	: $rt
+
+@setBounds
+	[ $rt
+	[ $fp
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 16 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t2
+	$t0 -> [$t2]
+	$a1 -> $t1
+	$fp - 16 -> $t2
+	$t1 -> [$t2]
+	// Load argument new_high
+	$t1 -> $t3
+	// Load argument new_start
+	$t0 -> $t4
+	$t3 <= $t4 -> $t8
+	!$t8 -> $t8
+	: .setBounds.1if.end if $t8
+	.str2 -> $a0
+	:: `s
+	// Load argument new_start
+	$t0 -> $t7
+	<prx $t7>
+	.str3 -> $a0
+	:: `s
+	// Load argument new_high
+	$t1 -> $t6
+	<prx $t6>
+	10 -> $a0
+	:: `c
+	<halt>
+	@.setBounds.1if.end
+	// Load argument new_start
+	$t0 -> $a0
+	[MEMORY_ALIGN] -> $a1
+	:: realign
+	$r0 -> $t5
+	$t5 -> [start]
+	[start] -> $tb
+	$tb -> [highestAllocated]
+	// Load argument new_high
+	$t1 -> $t9
+	$t9 -> [high]
+	// Load argument new_start
+	$t0 -> $ta
+	$ta -> [end]
+	@.setBounds.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $fp
+	] $rt
+	: $rt
+
+@split
+	[ $rt
+	[ $fp
+	[ $sa
+	[ $s9
+	[ $s8
+	[ $s7
+	[ $s6
+	[ $s5
+	[ $s4
+	[ $s3
+	[ $s2
+	[ $s1
+	[ $s0
+	[ $t16
+	[ $t15
+	[ $t14
+	[ $t13
+	[ $t12
+	[ $t11
+	[ $t10
+	[ $tf
+	[ $te
+	[ $td
+	[ $tc
+	[ $tb
+	[ $ta
+	[ $t9
+	[ $t8
+	[ $t7
+	[ $t6
+	[ $t5
+	[ $t4
+	[ $t3
+	[ $t2
+	[ $t1
+	[ $t0
+	$sp -> $fp
+	$sp - 40 -> $sp
+	$a0 -> $t0
+	$fp - 8 -> $t2
+	$t0 -> [$t2]
+	$a1 -> $t1
+	$fp - 16 -> $t2
+	$t1 -> [$t2]
+	// Load argument block
+	$t0 -> $t4
+	[$t4] -> $t4
+	// Load argument size
+	$t1 -> $t6
+	17 -> $t7
+	$t6 + $t7 -> $t3
+	$t3 < $t4 -> $t5
+	!$t5 -> $t5
+	: .split.1if.end if $t5
+	// Load argument block
+	$t0 -> $td
+	// Load argument size
+	$t1 -> $te
+	$td + $te -> $tb
+	17 -> $tc
+	$tb + $tc -> $t9
+	1 -> $ta
+	$t9 + $ta -> $a0
+	[MEMORY_ALIGN] -> $a1
+	:: realign
+	$r0 -> $t8
+	$fp - 24 -> $m0
+	$t8 -> [$m0]
+	// Load argument block
+	$t0 -> $tf
+	$tf + 8 -> $tf
+	[$tf] -> $tf
+	!$tf -> $tf
+	: .split.2if.else if $tf
+	// Load argument block
+	$t0 -> $t13
+	$t13 + 8 -> $t13
+	[$t13] -> $t13
+	// Load variable new_block
+	$fp - 24 -> $t14
+	[$t14] -> $t14
+	$t13 - $t14 -> $t11
+	17 -> $t12
+	$t11 - $t12 -> $t10
+	$fp - 32 -> $m0
+	$t10 -> [$m0]
+	// Load variable new_size
+	$fp - 32 -> $t16
+	[$t16] -> $t16
+	0 -> $s0
+	$s0 < $t16 -> $t15
+	!$t15 -> $t15
+	: .split.3if.end if $t15
+	// Load variable new_size
+	$fp - 32 -> $s2
+	[$s2] -> $s2
+	// Load variable new_block
+	$fp - 24 -> $s1
+	[$s1] -> $s1
+	$s2 -> [$s1]
+	1 -> $s4
+	// Load variable new_block
+	$fp - 24 -> $s3
+	[$s3] -> $s3
+	$s3 + 16 -> $s3
+	$s4 -> [$s3] /b
+	// Load argument block
+	$t0 -> $s6
+	$s6 + 8 -> $s6
+	[$s6] -> $s6
+	// Load variable new_block
+	$fp - 24 -> $s5
+	[$s5] -> $s5
+	$s5 + 8 -> $s5
+	$s6 -> [$s5]
+	// Load variable new_block
+	$fp - 24 -> $s8
+	[$s8] -> $s8
+	// Load argument block
+	$t0 -> $s7
+	$s7 + 8 -> $s7
+	$s8 -> [$s7]
+	// Load argument size
+	$t1 -> $sa
+	// Load argument block
+	$t0 -> $s9
+	$sa -> [$s9]
+	@.split.3if.end
+	: .split.2if.end
+	@.split.2if.else
+	// Load argument block
+	$t0 -> $t5
+	// Load argument block
+	$t0 -> $t6
+	[$t6] -> $t6
+	$t5 + $t6 -> $t3
+	// Load variable new_block
+	$fp - 24 -> $t4
+	[$t4] -> $t4
+	$t3 - $t4 -> $t2
+	$fp - 40 -> $m0
+	$t2 -> [$m0]
+	// Load variable new_size
+	$fp - 40 -> $t8
+	[$t8] -> $t8
+	0 -> $t9
+	$t9 < $t8 -> $t7
+	!$t7 -> $t7
+	: .split.4if.end if $t7
+	// Load variable new_size
+	$fp - 40 -> $tb
+	[$tb] -> $tb
+	// Load variable new_block
+	$fp - 24 -> $ta
+	[$ta] -> $ta
+	$tb -> [$ta]
+	1 -> $td
+	// Load variable new_block
+	$fp - 24 -> $tc
+	[$tc] -> $tc
+	$tc + 16 -> $tc
+	$td -> [$tc] /b
+	0 -> $tf
+	// Load variable new_block
+	$fp - 24 -> $te
+	[$te] -> $te
+	$te + 8 -> $te
+	$tf -> [$te]
+	// Load argument size
+	$t1 -> $t11
+	// Load argument block
+	$t0 -> $t10
+	$t11 -> [$t10]
+	// Load variable new_block
+	$fp - 24 -> $t13
+	[$t13] -> $t13
+	// Load argument block
+	$t0 -> $t12
+	$t12 + 8 -> $t12
+	$t13 -> [$t12]
+	@.split.4if.end
+	@.split.2if.end
+	@.split.1if.end
+	@.split.e
+	$fp -> $sp
+	] $t0
+	] $t1
+	] $t2
+	] $t3
+	] $t4
+	] $t5
+	] $t6
+	] $t7
+	] $t8
+	] $t9
+	] $ta
+	] $tb
+	] $tc
+	] $td
+	] $te
+	] $tf
+	] $t10
+	] $t11
+	] $t12
+	] $t13
+	] $t14
+	] $t15
+	] $t16
+	] $s0
+	] $s1
+	] $s2
+	] $s3
+	] $s4
+	] $s5
+	] $s6
+	] $s7
+	] $s8
+	] $s9
+	] $sa
+	] $fp
+	] $rt
+	: $rt
