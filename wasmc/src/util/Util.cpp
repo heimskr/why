@@ -107,7 +107,10 @@ namespace Wasmc::Util {
 				switch (str[++i]) {
 					case 'n':  out << '\n'; break;
 					case 'r':  out << '\r'; break;
+					case 'a':  out << '\a'; break;
 					case 't':  out << '\t'; break;
+					case 'b':  out << '\b'; break;
+					case 'e':  out << '\e'; break;
 					case '\\': out << '\\'; break;
 					case '"':  out << '"';  break;
 					case 'x': {
