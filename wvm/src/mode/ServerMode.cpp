@@ -56,10 +56,10 @@ namespace WVM::Mode {
 
 	void ServerMode::initVM() {
 		vm.onUpdateMemory = [this](Word pc, Word address, Word unadjusted, Size size) {
-			if (memorySubscribers.empty())
-				return;
 			if (logMemoryWrites)
 				DBG("[" << unadjusted << "] <- " << vm.get(unadjusted, size));
+			if (memorySubscribers.empty())
+				return;
 			writtenAddresses.insert(address);
 			std::string message = ":MemoryWord " + std::to_string(address) + " " +
 				std::to_string(static_cast<Word>(vm.getWord(address))) + " " + std::to_string(pc) + " ";

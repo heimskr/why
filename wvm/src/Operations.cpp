@@ -279,6 +279,8 @@ namespace WVM::Operations {
 	}
 
 	void setReg(VM &vm, Word &rd, Word value, bool update_flags = true) {
+		if (vm.registerID(rd) == Why::zeroOffset)
+			std::cerr << "Set register $0 at " << vm.programCounter << "!\n";
 		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), value);
 		if (update_flags)
 			vm.updateFlags(rd = value);
@@ -437,12 +439,12 @@ namespace WVM::Operations {
 	}
 
 	void lxnorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		setReg(vm, rd, !(rs ^ rt));
+		setReg(vm, rd, !(!!rs ^ !!rt));
 		vm.increment();
 	}
 
 	void lxorOp(VM &vm, Word &rs, Word &rt, Word &rd, Conditions, int) {
-		setReg(vm, rd, !!(rs ^ rt));
+		setReg(vm, rd, !!(!!rs ^ !!rt));
 		vm.increment();
 	}
 
@@ -669,8 +671,10 @@ namespace WVM::Operations {
 		if (vm.checkConditions(conditions)) {
 			const auto reg_id = vm.registerID(rd);
 			// Reenable interrupts if jumping to $e0.
-			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
 				vm.hardwareInterruptsEnabled = true;
+				vm.wakeRest();
+			}
 			vm.jump(rd, false, reg_id == Why::returnAddressOffset);
 		} else
 			vm.increment();
@@ -1469,8 +1473,10 @@ namespace WVM::Operations {
 			if (rt != 0) {
 				const auto reg_id = vm.registerID(rt);
 				// Reenable interrupts if jumping to $e0.
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
 					vm.hardwareInterruptsEnabled = true;
+					vm.wakeRest();
+				}
 				vm.jump(rt, false);
 			} else
 				vm.increment();
@@ -1504,8 +1510,10 @@ namespace WVM::Operations {
 			if (rs != 0) {
 				const auto reg_id = vm.registerID(rs);
 				// Reenable interrupts if jumping to $e0.
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero))
+				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
 					vm.hardwareInterruptsEnabled = true;
+					vm.wakeRest();
+				}
 				vm.jump(rs, false);
 			} else
 				vm.increment();

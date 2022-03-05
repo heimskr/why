@@ -3,8 +3,9 @@ COMPILER		?= clang++
 OPTIMIZATION	?= -Ofast -march=native
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
-TESTFILE		?= ~/src/thurisaz/Thurisaz.why
+# TESTFILE		?= ~/src/thurisaz/Thurisaz.why
 # TESTFILE		?= ../wasmc/compiled/benchmark.why
+TESTFILE		?= ../wasmc/compiled/c--.why
 # TESTFILE		?= ~/csmith/7.full.why
 
 SOURCES_WVM		:= $(shell find -L src -name '*.cpp' | sed -nE '/(Tests?|Test_.+)\.cpp$$/!p')

@@ -105,6 +105,9 @@ namespace WVM::Mode {
 		} else if (verb == "AddedBP") {
 			if (split.size() == 1)
 				*textbox += std::string(infoPrefix) + "Added breakpoint at " + split[0] + ".";
+		} else if (verb == "LogMemoryWrites") {
+			if (split.size() == 1)
+				*textbox += std::string(infoPrefix) + "Memory write logging turned " + split[0] + ".";
 		} else if (verb == "InvalidMessage") {
 			*textbox += std::string(errorPrefix) + "Invalid message.";
 		}
@@ -269,6 +272,8 @@ namespace WVM::Mode {
 				*socket << ":PrintOps " << count << "\n";
 		} else if (first == "stack" || first == "stacktrace" || first == "trace") {
 			*socket << ":Stacktrace\n";
+		} else if (first == "lmw") {
+			*socket << ":LogMemoryWrites\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

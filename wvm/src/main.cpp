@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 		}
 
 		srand(time(NULL));
-		server.emplace(rand() % 65535);
+		server.emplace(rand() % 65536);
 		signal(SIGINT, +[](int) { server->stop(); });
 		const std::vector<std::string> files(argv + 3, argv + argc);
 
