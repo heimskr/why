@@ -35,6 +35,7 @@ WASM_INCLUDE_HEADER     ("#includes"|"#include")
 WASM_DEBUG_HEADER       ("#debug"|"#dbg")
 WASM_TEXT_HEADER        ("#text"|"#t")
 WASM_INT_TYPE           ("#i"[0-9]+)
+WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 
 %%
 
@@ -49,6 +50,7 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 {WASM_FLOAT}				{ WASMRTOKEN(FLOAT) }
 
 {WASM_INT_TYPE}				{ WASMRTOKEN(INT_TYPE) }
+{WASM_TYPE}					{ WASMRTOKEN(TYPE) }
 
 {WASM_META_HEADER}			{ WASMRTOKEN(META_HEADER) }
 {WASM_INCLUDE_HEADER}		{ WASMRTOKEN(INCLUDE_HEADER) }
@@ -70,9 +72,7 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "instruction"				{ WASMRTOKEN(INSTRUCTION) }
 "%data"						{ WASMRTOKEN(DATA) }
 "%code"						{ WASMRTOKEN(CODE) }
-"sext32"					{ WASMRTOKEN(SEXT32) }
-"sext16"					{ WASMRTOKEN(SEXT16) }
-"sext8"						{ WASMRTOKEN(SEXT8) }
+"sext"						{ WASMRTOKEN(SEXT) }
 
 "translate"					{ WASMRTOKEN(TRANSLATE) }
 "version"					{ WASMRTOKEN(VERSION) }

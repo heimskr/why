@@ -52,7 +52,7 @@ using AN = Wasmc::ASTNode;
     Wasmc::wasmParser.root = new Wasmc::ASTNode(Wasmc::wasmParser, WASMTOK_ROOT, {0, 0}, "");
 }
 
-%token WASMTOK_ROOT WASMTOK_IDENT
+%token WASMTOK_ROOT WASMTOK_IDENT WASMTOK_INT_TYPE WASMTOK_TYPE
 
 %token WASMTOK_BANG "!"
 %token WASMTOK_EQUALS "="
@@ -146,7 +146,6 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_FUNCTION_TYPE "#fn"
 %token WASMTOK_DI "%di"
 %token WASMTOK_EI "%ei"
-%token WASMTOK_INT_TYPE
 %token WASMTOK_DIR_TYPE "%type"
 %token WASMTOK_DIR_SIZE "%size"
 %token WASMTOK_DIR_STRING "%string"
@@ -162,10 +161,9 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_DATA "%data"
 %token WASMTOK_CODE "%code"
 %token WASMTOK_INSTRUCTION "instruction"
-%token WASMTOK_SEXT32 "sext32"
-%token WASMTOK_SEXT16 "sext16"
-%token WASMTOK_SEXT8 "sext8"
+%token WASMTOK_SEXT "sext"
 %token WASMTOK_TRANSLATE "translate"
+%token WASMTOK_BC "bc"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -222,6 +220,9 @@ dir_type: "%type" ident          symbol_type { $$ = (new TypeDirective($2, $3))-
         | "%type" WASMTOK_STRING symbol_type { $$ = (new TypeDirective($2, $3))->locate($1); D($1); };
 symbol_type: "object" | "function" | "instruction";
 
+type: WASMTOK_TYPE;
+typed_reg: reg type { $$ = $2->adopt($1); };
+
 expression: expression "+" term { $$ = $2->adopt({$1, $3}); }
           | expression "-" term { $$ = $2->adopt({$1, $3}); }
           | term;
@@ -271,13 +272,11 @@ operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c      | o
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
 
-op_r: reg basic_oper_r reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
-    | reg shorthandable_r "=" reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
-    | "~" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "!" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "sext32" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "sext16" reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "sext8"  reg "->" reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
+op_r: typed_reg basic_oper_r typed_reg "->" typed_reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
+    | typed_reg shorthandable_r "=" typed_reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
+    | "~" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
+    | "!" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
+    | "sext" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
 basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
 logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
 shorthandable_r: logical | shorthandable_i;

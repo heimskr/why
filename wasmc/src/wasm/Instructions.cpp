@@ -91,9 +91,7 @@ namespace Wasmc {
 		{"div",    OP_DIV   },
 		{"divu",   OP_DIVU  },
 		{"modu",   OP_MODU  },
-		{"sext32", OP_SEXT32},
-		{"sext16", OP_SEXT16},
-		{"sext8",  OP_SEXT8 },
+		{"sext",   OP_SEXT  },
 		{"and",    OP_AND   },
 		{"nand",   OP_NAND  },
 		{"nor",    OP_NOR   },
@@ -227,9 +225,7 @@ namespace Wasmc {
 		{WASMTOK_DEQ,     "seq"   },
 		{WASMTOK_BANG,    "lnot"  },
 		{WASMTOK_MEMSET,  "ms"    },
-		{WASMTOK_SEXT32,  "sext32"},
-		{WASMTOK_SEXT16,  "sext16"},
-		{WASMTOK_SEXT8,   "sext8" },
+		{WASMTOK_SEXT,    "sext"  },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_I {
@@ -341,13 +337,12 @@ namespace Wasmc {
 		{"cs",     0b000000001100},
 		{"lor",    0b000000001100},
 		{"modu",   0b000000001100},
-		{"sext32", 0b000000001101},
+		{"sext",   0b000000001101},
 		{"lxnor",  0b000000001101},
 		{"ls",     0b000000001101},
 		{"lxor",   0b000000001110},
 		{"ss",     0b000000001110},
-		{"sext16", 0b000000001110},
-		{"sext8",  0b000000001111},
+		{"bc",     0b000000001110},
 	};
 
 	std::unordered_map<int, Funct> TOKEN_FUNCTS {
