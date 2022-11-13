@@ -193,12 +193,8 @@ namespace WVM::Operations {
 #define FN_DIVU 11
 #define OP_MODU OP_RMATH
 #define FN_MODU 12
-#define OP_SEXT32 OP_RMATH
-#define FN_SEXT32 13
-#define OP_SEXT16 OP_RMATH
-#define FN_SEXT16 14
-#define OP_SEXT8 OP_RMATH
-#define FN_SEXT8 15
+#define OP_SEXT OP_RMATH
+#define FN_SEXT 13
 
 #define OP_AND OP_RLOGIC
 #define FN_AND 0
