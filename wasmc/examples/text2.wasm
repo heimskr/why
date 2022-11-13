@@ -18,10 +18,10 @@ orcid: "0000-0001-7405-6654"
 %code
 
 @text2_code
-	[ $rt
-	&text2_string -> $a0
+	[ $rt{v*}
+	&text2_string -> $a0{uc*}
 	:: strprint
-	] $rt
-	: $rt
+	] $rt{v*}
+	: $rt{v*}
 
-%type strprint function
+// %type strprint function

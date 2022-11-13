@@ -499,7 +499,7 @@ namespace Wasmc {
 	}
 
 	WASMJrNode::WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_):
-	WASMInstructionNode(WASM_JRNODE), RType(nullptr, nullptr, TypedReg(OperandType::VOID_PTR, rd_->lexerInfo)),
+	WASMInstructionNode(WASM_JRNODE), RType({}, {}, TypedReg(rd_)),
 	HasCondition(cond), HasLink(colons) {
 		delete colons;
 		delete rd_;

@@ -3,6 +3,7 @@
 
 namespace Wasmc {
 	std::map<const std::string *, uint64_t> registerMap {
+		{nullptr, 0},
 		{StringSet::intern("$0"),    0},
 		{StringSet::intern("$g"),    1},
 		{StringSet::intern("$sp"),   2},

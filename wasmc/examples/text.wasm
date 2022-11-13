@@ -44,14 +44,14 @@ orcid: "0000-0001-7405-6654"
 @strprint
 	[$a0{uc*}] -> $ma{uc}
 	: _strprint_print if $ma{uc}
-	: $rt
+	: $rt{v*}
 	@_strprint_print
-	<prc $ma>
-	$a0++
+	<prc $ma{uc}>
+	$a0{uc*}++
 	: strprint
 
 %type strprint function
 %size main strprint-main
 %size strprint .-strprint
-%type text2_code function
-%type text2_data object
+// %type text2_code function
+// %type text2_data object

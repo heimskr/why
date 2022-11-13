@@ -331,17 +331,17 @@ _jcond: jcond | { $$ = nullptr; };
 jcond: zero | "+" | "-" | "*";
 colons: ":" ":" { $$ = $1->adopt($2); } | ":";
 
-op_jc: op_j "if" reg { $$ = new WASMJcNode(dynamic_cast<WASMJNode *>($1), $3); D($2); };
+op_jc: op_j "if" typed_reg { $$ = new WASMJcNode(dynamic_cast<WASMJNode *>($1), $3); D($2); };
 
-op_jr: _jcond colons reg { $$ = new WASMJrNode($1, $2, $3); };
+op_jr: _jcond colons typed_reg { $$ = new WASMJrNode($1, $2, $3); };
 
-op_jrc: op_jr "if" reg { $$ = new WASMJrcNode(dynamic_cast<WASMJrNode *>($1), $3); D($2); };
+op_jrc: op_jr "if" typed_reg { $$ = new WASMJrcNode(dynamic_cast<WASMJrNode *>($1), $3); D($2); };
 
-op_mv: reg "->" reg { $$ = new WASMMvNode($1, $3); D($2); };
+op_mv: typed_reg "->" typed_reg { $$ = new WASMMvNode($1, $3); D($2); };
 
-op_spush: "[" reg { $$ = new WASMStackNode($2, true); D($1); };
+op_spush: "[" typed_reg { $$ = new WASMStackNode($2, true); D($1); };
 
-op_spop: "]" reg { $$ = new WASMStackNode($2, false); D($1); };
+op_spop: "]" typed_reg { $$ = new WASMStackNode($2, false); D($1); };
 
 op_nop: "<>" { $$ = new WASMNopNode(); D($1); };
 
@@ -349,15 +349,15 @@ op_int: "%int" immediate { $$ = new WASMIntINode($2); D($1); };
 
 op_rit: "%rit" immediate { $$ = new WASMRitINode($2); D($1); };
 
-op_time: "%time" reg { $$ = new WASMTimeRNode($2); D($1); };
+op_time: "%time" typed_reg { $$ = new WASMTimeRNode($2); D($1); };
 
 op_timei: "%time" immediate { $$ = new WASMTimeINode($2); D($1); };
 
-op_svtime: "%time" "->" reg { $$ = new WASMSvtimeNode($3); D($1, $2); };
+op_svtime: "%time" "->" typed_reg { $$ = new WASMSvtimeNode($3); D($1, $2); };
 
-op_ring: "%ring" reg { $$ = new WASMRingRNode($2); D($1); };
+op_ring: "%ring" typed_reg { $$ = new WASMRingRNode($2); D($1); };
 
-op_svring: "%ring" "->" reg { $$ = new WASMSvringNode($3); D($1, $2); };
+op_svring: "%ring" "->" typed_reg { $$ = new WASMSvringNode($3); D($1, $2); };
 
 op_ringi: "%ring" immediate { $$ = new WASMRingINode($2); D($1); };
 
@@ -365,19 +365,19 @@ op_di: "%di" { $$ = new WASMInterruptsNode(false); D($1); };
 
 op_ei: "%ei" { $$ = new WASMInterruptsNode(true); D($1); };
 
-op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
+op_sspush: "[" ":" number typed_reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
 
-op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
+op_sspop:  "]" ":" number typed_reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
 
 op_ext: op_print | op_pprint | op_sleep | op_halt | op_rest | op_io;
 
-op_sleep: "<" "sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
+op_sleep: "<" "sleep" typed_reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
 
 op_rest: "<" "rest" ">" { $$ = new WASMRestNode; D($1, $2, $3); };
 
 op_io: "<" "io" ident ">" { $$ = new WASMIONode($3->lexerInfo); D($1, $2, $3, $4); };
 
-op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
+op_print: "<" printop typed_reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
 printop: "print" | "prx" | "prd" | "prc" | "prb" | "p";
 
 op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
@@ -390,17 +390,17 @@ op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 op_page: "%page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
        | "%page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
-op_setpt: "%setpt" reg         { $$ = new WASMSetptRNode($2); D($1); }
-        | ":" "%setpt" reg reg { $$ = new WASMSetptRNode($3, $4); D($1, $2); };
+op_setpt: "%setpt" typed_reg               { $$ = new WASMSetptRNode($2); D($1); }
+        | ":" "%setpt" typed_reg typed_reg { $$ = new WASMSetptRNode($3, $4); D($1, $2); };
 
-op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
+op_svpg: "%page" "->" typed_reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 
 op_ppush: "[" "%page" { $$ = new WASMPageStackNode(true); D($1, $2); };
 
-op_ppop:     "]" "%page"     { $$ = new WASMPageStackNode(false);     D($1, $2);     }
-       | ":" "]" "%page" reg { $$ = new WASMPageStackNode(false, $4); D($1, $2, $3); };
+op_ppop:     "]" "%page"           { $$ = new WASMPageStackNode(false);     D($1, $2);     }
+       | ":" "]" "%page" typed_reg { $$ = new WASMPageStackNode(false, $4); D($1, $2, $3); };
 
-op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
+op_qmem: "?" "mem" "->" typed_reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: "&" ident { $$ = $2; D($1); }
