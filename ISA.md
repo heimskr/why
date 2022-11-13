@@ -2,6 +2,7 @@
 <blockquote>
 	<ol>
 		<li><a href="#intro">Introduction</a>
+		<li><a href="#types">Types</a>
 		<li><a href="#registers">Registers</a>
 			<ol>
 				<li><a href="#reg-st">Status Register</a></li>
@@ -40,6 +41,7 @@
 				<li><a href="#int-inexec"><code>INEXEC</code></a>
 				<li><a href="#int-bwrite"><code>BWRITE</code></a>
 				<li><a href="#int-keybrd"><code>KEYBRD</code></a>
+				<li><a href="#int-badtyp"><code>BADTYP</code></a>
 			</ol>
 		</li>
 		<li><a href="#paging">Paging</a></li>
@@ -249,7 +251,33 @@
 
 # <a name="intro"></a>Introduction
 
-The VM emulates Why, a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware. This instruction set has 64-bit word length, and memory addressability is also 64 bits.
+Why is a custom RISC instruction set that may or may not actually be theoretically implementable as real hardware.
+This instruction set has 64-bit word length, and memory addressability is also 64 bits.
+
+# <a name="types"></a>Types
+
+Why has a typechecking system at the hardware level. Registers are tagged with a type and instructions embed the types
+of their operands. If a register used in an instruction has a different type from the corresponding operand in an
+instruction, <a href="#int-badtyp">an interrupt</a> is raised. Types are encoded in a single byte. The lowest three bits
+indicate the length of the type. `000` for `void`, `001` for `char`, `010` for `short`, `011` for `int` and `100` for
+`long`. Bit 3 is `1` if the type is signed and `0` if it's unsigned. The upper 4 bits indicate the pointer level. `0000`
+for a non-pointer, `0001` for a pointer to a non-pointer, `0010` for a pointer to a pointer to a non-pointer and so on.
+Examples: `00010000` is `void *`, `00101010` is `unsigned short **`, `00001011` is `signed int`.
+
+The syntactical representation of types is like in C, except the words are abbreviated to one letter and the spaces are
+removed. Signedness/unsignedness has to be explicitly specified. The examples in the above paragraph would be `v*`,
+`us**` and `si`. Types are added within curly braces after the operand they're for. For example, to sign-extend an 8-bit
+register into a register tagged as a signed 32-bit value:
+
+<pre>
+sext $t0{sc} -> $t1{si}
+</pre>
+
+Or to set a register to a constant:
+
+<pre>
+42{uc} -> $s0{uc}
+</pre>
 
 # <a name="registers"></a>Registers
 There are 128 registers. Their purposes are pretty much stolen from MIPS:
@@ -274,13 +302,16 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | 122–127  | `$e0`–`$e5`  | Contains data about exceptions.                   |
 
 ## <a name="reg-st"></a>Status Register
-The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order of significance, these are:
+The `$st` register stores flag bits. Currently, this includes the results of arithmetic instructions. In ascending order
+of significance, these are:
 <ol>
 	<li><code>Z</code> (zero):
-		Whether the last arithmetic result was zero (for <code>cmp</code>/<code>cmpi</code>, whether the compared values are equal)
+		Whether the last arithmetic result was zero (for <code>cmp</code>/<code>cmpi</code>, whether the compared values
+		are equal)
 	</li>
 	<li><code>N</code> (negative):
-		Whether the result of the last arithmetic result was negative (for <code>cmp</code>/<code>cmpi</code>, whether the left value was less than the right value)
+		Whether the result of the last arithmetic result was negative (for <code>cmp</code>/<code>cmpi</code>, whether
+		the left value was less than the right value)
 	</li>
 	<li><code>C</code> (carry):
 		Whether the result of an addition was truncated. (Currently not implemented for subtraction.)
@@ -290,16 +321,25 @@ The `$st` register stores flag bits. Currently, this includes the results of ari
 	</li>
 </ol>
 
-These status numbers are used in conditional branches, but they can also be accessed by programs. Writing to the `$st` register is possible, but strange behavior may occur as a result.
+These status numbers are used in conditional branches, but they can also be accessed by programs. Writing to the `$st`
+register is possible, but strange behavior may occur as a result.
 
 # <a name="prog"></a>Programs
 
-Programs are divided into five sections: metadata, code, data, symbol table and debug data. The <a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-code">code section</a> consists of executable code. The <a href="#prog-data">data section</a> consists of read/write data. The <a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The <a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source files for higher-level languages like C.
+Programs are divided into five sections: metadata, code, data, symbol table and debug data. The
+<a href="#prog-meta">metadata section</a> contains information about the program. The <a href="#prog-code">code
+section</a> consists of executable code. The <a href="#prog-data">data section</a> consists of read/write data. The
+<a href="#prog-symtab">symbol table</a> contains the names, locations and types of all visible symbols. The
+<a href="#prog-debug">debug data section</a> contains data that correlates assembly instructions to locations in source
+files for higher-level languages like C.
 
-Note that the code section and data section are combined into the `#text` section in assembly. Code and data sections can be switched between using the [`%code`](#dir-code) and [`%data`](#dir-data) directives.
+Note that the code section and data section are combined into the `#text` section in assembly. Code and data sections
+can be switched between using the [`%code`](#dir-code) and [`%data`](#dir-data) directives.
 
 ## <a name="prog-meta"></a>Metadata Section
-The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the other sections. The first value in this section represents the beginning address of the code section and is therefore equivalent to the size of the metadata section.
+The metadata section is a block of data at the beginning of the program that contains the beginning addresses of the
+other sections. The first value in this section represents the beginning address of the code section and is therefore
+equivalent to the size of the metadata section.
 
 * `0x00`: Address of the beginning of the [code section](#prog-code).
 * `0x08`: Address of the beginning of the [data section](#prog-data).
@@ -309,7 +349,8 @@ The metadata section is a block of data at the beginning of the program that con
 * `0x28`: Total size of the program.
 * `0x30`–`0x38`: ORCID of the author (represented in ASCII without hyphens).
 * `0x40`–`...`: Program name, version string and author name of the program (represented with null-terminated ASCII).
-	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
+	* Example: given a program name `"Example"`, version string `"4"` and author name `"Kai Tamkun"`, this will be
+	  `0x4578616d706c6500` `0x34004b6169205461` `0x6d6b756e00000000`.
 
 ### Assembly syntax
 <pre>
@@ -321,26 +362,49 @@ version: "4"
 </pre>
 
 ## <a name="prog-code"></a>Code Section
-The code section consists of executable code. This is the only section of the code that the program counter is expected to point to. Code is represented using the syntax described by entries in the <a href="#operations">Operations</a> section.
+The code section consists of executable code. This is the only section of the code that the program counter is expected
+to point to. Code is represented using the syntax described by entries in the <a href="#operations">Operations</a>
+section.
 
 ## <a name="prog-data"></a>Data Section
 The data section contains read/write data. Data is added using directives.
 
 ## <a name="prog-symtab"></a>Symbol Table Section
-The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the SHA256 hash of its name. (See [/wasmc/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc/src/wasm/Assembler.cpp) for the precise transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the numeric ID. The next 16 bits comprise the symbol type, while the lowest 16 bits comprise the length (in words) of the symbol's name. The second word represents the symbol's offset (its position relative to the start of the section containing it). The third word is the length of what the symbol points to (for functions, this will generally be eight times the number of instructions in the function). The remaining words encode the symbol's name. The length of the name in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are null.
+The symbol table contains a list of debug symbols. Each debug symbol is assigned a numeric ID equal to part of the
+SHA256 hash of its name. (See
+[/wasmc/src/wasm/Assembler.cpp](https://github.com/heimskr/why/blob/master/wasmc/src/wasm/Assembler.cpp) for the precise
+transformation.) Each symbol is encoded in the table as a variable number of words. The upper half of the first is the
+numeric ID. The next 16 bits comprise the symbol type, while the lowest 16 bits comprise the length (in words) of the
+symbol's name. The second word represents the symbol's offset (its position relative to the start of the section
+containing it). The third word is the length of what the symbol points to (for functions, this will generally be 12
+times the number of instructions in the function). The remaining words encode the symbol's name. The length of the name
+in words is equal to the ceiling of 1/8 of the symbol name's length in characters. Any extra bytes in the last word are
+null.
 
 ## <a name="prog-debug"></a>Debug Data Section
-The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All multibyte items in an entry are encoded as little-endian.
+The debug data section contains data mapping instructions to their positions in source files. It's stored as a list of
+entries whose order is important and must be maintained. The first byte of each entry determines the entry's type. All
+multibyte items in an entry are encoded as little-endian.
 
 An entry with type `0` is invalid.
 
-An entry with type `1` declares the filename of a source file and can be referenced by other entries. After the first byte in a type `1` entry, the next three bytes indicate the length of the filename. The filename then follows, plus padding until the total length of the entry is divisible by eight bytes.
+An entry with type `1` declares the filename of a source file and can be referenced by other entries. After the first
+byte in a type `1` entry, the next three bytes indicate the length of the filename. The filename then follows, plus
+padding until the total length of the entry is divisible by eight bytes.
 
-An entry with type `2` declares a function name. It uses the same format as a type `1` entry, but instead of a filename, a function name is stored instead.
+An entry with type `2` declares a function name. It uses the same format as a type `1` entry, but instead of a filename,
+a function name is stored instead.
 
-An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type `3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2` entry. The final eight bytes indicate the address of an instruction.
+An entry with type `3` references a line on a source file defined by a type `1` entry. After the first byte in a type
+`3` entry, the next three bytes indicate the index of the referenced type `1` entry. The four bytes after that indicate
+the line number in the referenced file and the next three bytes indicate the column number. The next byte indicates how
+many contiguous instructions the entry applies to. The next four bytes indicate the index of the referenced type `2`
+entry. The final eight bytes indicate the address of an instruction.
 
-The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3` instruction, two type `3` entries would be generated for the template with index 2.
+The assembly syntax for type `3` entries defines a template. Multiple type `3` entries will be generated per template
+depending on how many instructions reference the type `3` entry. In the example below, only one entry is generated per
+template because each template occurs in a single continuous span. If a `!2` instruction were added after the last `!3`
+instruction, two type `3` entries would be generated for the template with index 2.
 
 ### Assembly syntax
 <pre>
@@ -363,19 +427,30 @@ The assembly syntax for type `3` entries defines a template. Multiple type `3` e
 </pre>
 
 ## <a name="prog-reloc"></a>Relocation Data Section
-Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common example.
+Relocation data allows the linker to combine multiple binaries. Some instructions have immediate values that contain not
+an absolute value but instead an address or an address plus a constant offset. Jumps to labels are the most common
+example.
 
-The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table, while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` is invalid. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final word is the address of the value relative to the start of the code section.
+The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table,
+while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's
+address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` indicates the value to relocate is 12
+bytes wide. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's
+in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final
+word is the address of the value relative to the start of the code section.
 
 # <a name="directives"></a>Directives
 
 Directives are instructions to the assembler. They control the assembly process.
 
 ## <a name="dir-code"></a><code>%code</code>
-Switches the current section to the code section. After using this, anything emitted using `%8b`, `%string` and other such directives will be placed in the code section. (Note that inserting 8-byte values directly in the code section is discouraged and that inserting strings is absolutely pointless.)
+Switches the current section to the code section. After using this, anything emitted using `%8b`, `%string` and other
+such directives will be placed in the code section. (Note that inserting 8-byte values directly in the code section is
+discouraged and that inserting strings is absolutely pointless.)
 
 ## <a name="dir-data"></a><code>%data</code>
-Switches the current section to the data section. After using this, anything emitted using `%8b`, `%string` and other such directives will be placed in the data section. (Note that putting instructions in the data section causes unspecified behavior.)
+Switches the current section to the data section. After using this, anything emitted using `%8b`, `%string` and other
+such directives will be placed in the data section. (Note that putting instructions in the data section causes
+unspecified behavior.)
 
 ## <a name="dir-type"></a><code>%type</code>
 <!-- TODO: explain whether it's necessary to specify the type, and if so, why -->
@@ -395,7 +470,9 @@ Tells the assembler the type of a symbol. The type can be either `object` (for d
 </pre>
 
 ## <a name="dir-size"></a><code>%size</code>
-Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location counter. An expression is valid if any of the following is true:
+Tells the assembler the size (in bytes) of a symbol. The value supports expressions. Expressions are mathematical
+expressions whose operands are numeric constants, symbol names or `.`, which represents the value of the location
+counter. An expression is valid if any of the following is true:
 
 * None of its children contain any label references (that is, all leaves are numeric or `.`)
 * It's the difference of two labels
@@ -403,7 +480,8 @@ Tells the assembler the size (in bytes) of a symbol. The value supports expressi
 * It's the difference of a label and a number
 * It's the sum of a label and a number
 
-These restrictions are in place because relocation data supports constant offsets only. All other information has to be known at compile time.
+These restrictions are in place because relocation data supports constant offsets only. All other information has to be
+known at compile time.
 
 ### Example
 <pre>
@@ -443,7 +521,8 @@ Emits a string (terminated with a null byte).
 </pre>
 
 ## <a name="dir-value"></a><code>%8b</code>, <code>%4b</code>, <code>%2b</code>, <code>%1b</code>
-Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). The values can be expressions (see [`%size`](#dir-size)).
+Emits a value of the specified width (1 byte for `%1b`, 2 bytes for `%2b` and so on). The values can be expressions (see
+[`%size`](#dir-size)).
 
 ### Example
 <pre>
@@ -466,7 +545,8 @@ Inserts zero until the location counter reaches a given alignment (in bytes).
 </pre>
 
 ## <a name="dir-fill"></a><code>%fill</code>
-Adds a given number of bytes with a given value. The number of bytes is the first operand and the value is the second operand.
+Adds a given number of bytes with a given value. The number of bytes is the first operand and the value is the second
+operand.
 
 ### Example
 <pre>
@@ -475,66 +555,90 @@ Adds a given number of bytes with a given value. The number of bytes is the firs
 </pre>
 
 # <a name="rings"></a>Rings
-Why has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode; rings 1 and 2 are currently unused. 
+Why has support for four protection rings, just like x86. Ring 0 is called kernel mode and ring 3 is called user mode;
+rings 1 and 2 are currently unused.
 
 # <a name="interrupts"></a>Interrupts
-Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, `$e0` is set to the program counter right before the interrupt was raised and `$e1` is set to the current <a href="#rings">ring</a> at the time the interrupt occurred. Interrupt handlers are expected to deal with properly resuming normal program execution after finishing up. The VM stores an address to a table containing pointers to interrupt handlers. The table is 32 words long.
+Interrupts can be triggered by software or by the VM itself. Whenever an interrupt is triggered, `$e0` is set to the
+program counter right before the interrupt was raised and `$e1` is set to the current <a href="#rings">ring</a> at the
+time the interrupt occurred. Interrupt handlers are expected to deal with properly resuming normal program execution
+after finishing up. The VM stores an address to a table containing pointers to interrupt handlers. The table is 32 words
+long.
 
 ## <a name="int-system"></a>1: `SYSTEM`
-The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring and causes a switch to kernel mode.
+The `SYSTEM` interrupt is a software-triggered interrupt handled by the operating system. It can be called from any ring
+and causes a switch to kernel mode.
 
 ## <a name="int-timer"></a>2: `TIMER`
-The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. Usable by ring zero only. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own mechanisms to expose timer functionality to lower-privileged code. This interrupt causes a switch to kernel mode.
+The `TIMER` interrupt is a hardware-triggered interrupt caused when the hardware timer expires. Usable by ring zero
+only. This is to prevent unprivileged code from interfering with schedulers; operating systems can implement their own
+mechanisms to expose timer functionality to lower-privileged code. This interrupt causes a switch to kernel mode.
 
 ## <a name="int-protec"></a>3: `PROTEC`
-The `PROTEC` interrupt is a hardware-triggered interrupt caused when a called instruction attempts to do something not possible within the current <a href="#rings">ring</a>. This causes a switch to kernel mode.
+The `PROTEC` interrupt is a hardware-triggered interrupt caused when a called instruction attempts to do something not
+possible within the current <a href="#rings">ring</a>. This causes a switch to kernel mode.
 
 ## <a name="int-pfault"></a>4: `PFAULT`
-The `PFAULT` interrupt is raised if paging is enabled and an access to a non-present page is attempted. This causes a switch to kernel mode.
+The `PFAULT` interrupt is raised if paging is enabled and an access to a non-present page is attempted. This causes a
+switch to kernel mode.
 
 ## <a name="int-inexec"></a>5: `INEXEC`
-The `INEXEC` interrupt is raised if program control flows to an address whose page is not marked as executable. This causes a switch to kernel mode.
+The `INEXEC` interrupt is raised if program control flows to an address whose page is not marked as executable. This
+causes a switch to kernel mode.
 
 ## <a name="int-bwrite"></a>6: `BWRITE`
-The `BWRITE` (bad write) interrupt is raised if paging is enabled and an instruction attempts to write to a nonwritable page.
+The `BWRITE` (bad write) interrupt is raised if paging is enabled and an instruction attempts to write to a nonwritable
+page.
 
 ## <a name="int-keybrd"></a>7: `KEYBRD`
-The `KEYBRD` interrupt is raised when a key is pressed. The value of the key will be stored in `$e2` according to the format below. If this interrupt isn't set in the interrupt table, key presses will be ignored. This interrupt causes a switch to kernel mode.
+The `KEYBRD` interrupt is raised when a key is pressed. The value of the key will be stored in `$e2` according to the
+format below. If this interrupt isn't set in the interrupt table, key presses will be ignored. This interrupt causes a
+switch to kernel mode.
 
 | Range       | 63–35 (29) | 34   | 33  | 32    | 31–0 (32)         |
 |------------:|:----------:|:----:|:---:|:-----:|:-----------------:|
 | **Purpose** | Unused     | Ctrl | Alt | Shift | Key value (UTF-8) |
 
+## <a name="int-badtyp"></a>8: `BADTYP`
+The `BADTYP` interrupt is raised when typechecking fails. For example, if a negate instruction is called that expects
+`rs` to be a 16-bit value but `rs` is tagged as a 64-bit value, the `BADTYP` interrupt will be raised.
+
 # <a name="format"></a>Instruction Format
-Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for example, instructions are 64 bits long in this instruction set, as opposed to 32 for MIPS64).
+Like much of this instruction set, the formatting for instructions is copied from MIPS with a few modifications (for
+example, instructions are 96 bits long in this instruction set, as opposed to 32 for MIPS64).
 
 ## <a name="format-r"></a>R-Type Instructions
 R-type instructions perform computations with multiple registers.
 
-| Range       | 63–52 (12)  | 51–45 (7) | 44–38 (7) | 37–31 (7) | 30–18 (13) | 17–14 (4)  | 13-12 (2)    | 11–0 (12) |
-|------------:|:-----------:|:---------:|:---------:|:---------:|:----------:|:----------:|:------------:|:---------:|
-| **Purpose** | Opcode      | rt        | rs        | rd        | Unused     | Conditions | Linker flags | Function  |
+| Range       | 95–84 (12)  | 83–77 (7) | 76–70 (7) | 69–63 (7) | 62–50 (13) | 49–46 (4)  | 45-44 (2)    | 43–32 (12) | 31–24 (8) | 23–16 (8) | 15–8 (8) | 7–0 (8) |
+|------------:|:-----------:|:---------:|:---------:|:---------:|:----------:|:----------:|:------------:|:----------:|:---------:|:---------:|:--------:|:-------:|
+| **Purpose** | Opcode      | rt        | rs        | rd        | Unused     | Conditions | Linker flags | Function   | Unused    | rt type   | rs type  | rd type |
 
 ## <a name="format-i"></a>I-Type Instructions
 I-type instructions perform computations with registers and an immediate value.
 
-| Range       | 63–52 (12) | 51–48 (4)  | 47–46 (2)    | 45–39 (7) | 38–32 (7) | 31–0 (32)       |
-|------------:|:----------:|:----------:|:------------:|:---------:|:---------:|:---------------:|
-| **Purpose** | Opcode     | Conditions | Linker flags | rs        | rd        | Immediate Value |
+| Range       | 95–84 (12) | 83–80 (4)  | 79–78 (2)    | 77–71 (7) | 70–64 (7) | 63–32 (32)       | 31–24 (8) | 23–16 (8) | 15–8 (8) | 7–0 (8) |
+|------------:|:----------:|:----------:|:------------:|:---------:|:---------:|:----------------:|:---------:|:---------:|:--------:|:-------:|
+| **Purpose** | Opcode     | Conditions | Linker flags | rs        | rd        | Immediate Value  | Unused    | imm type  | rs type  | rd type |
 
 ## <a name="format-j"></a>J-Type Instructions
 J-type instructions point the program counter to a given address under certain circumstances.
 
-|   Range | 63–52 (12) | 51–45 (7) | 44   | 43–38 (6) | 37–34 (4)  | 33–32 (2)    | 31–0 (32) |
-|--------:|:----------:|:---------:|:----:|:---------:|:----------:|:------------:|:---------:|
-| Purpose | Opcode     | rs        | Link | Unused    | Conditions | Linker flags | Address   |
+|   Range | 95–84 (12) | 83–77 (7) | 76   | 75–70 (6) | 69–66 (4)  | 65–64 (2)    | 63–32 (32) | 31–8 (24) | 7–0 (8) |
+|--------:|:----------:|:---------:|:----:|:---------:|:----------:|:------------:|:----------:|:---------:|:-------:|
+| Purpose | Opcode     | rs        | Link | Unused    | Conditions | Linker flags | Address    | Unused    | rs type |
 
 If the link bit is set, the current value of the program counter will be stored in `$rt`, the return address register.
 
 ## <a name="linkerflags"></a>Linker Flags
-Before the relocation overhaul, linker flags were used to give the linker clues about relocation. There were four possible values. Back then, as now, linker flag values other than `0` are valid for I-type and J-type instructions only.
+Before the relocation overhaul, linker flags were used to give the linker clues about relocation. There were four
+possible values. Back then, as now, linker flag values other than `0` were valid for I-type and J-type instructions
+only.
 
-Now, the linker flags have three possible values. `0` indicates that the immediate value of the instruction isn't affected by relocation, whereas `1` indicates that the symbol needs to be relocated at link time. `2` is the same as `1`, but indicates that the current immediate value is invalid because the symbol is currently unknown. Executing an instruction whose linker flag is `2` will cause an error. Other values are invalid.
+Now, the linker flags have three possible values. `0` indicates that the immediate value of the instruction isn't
+affected by relocation, whereas `1` indicates that the symbol needs to be relocated at link time. `2` is the same as
+`1`, but indicates that the current immediate value is invalid because the symbol is currently unknown. Executing an
+instruction whose linker flag is `2` will cause an error. Other values are invalid.
 
 ## <a name="condbits"></a>Condition Bits
 For operations that support conditions, the condition bits indicate what combination of [ALU flags](#reg-st)
@@ -550,7 +654,15 @@ are required for the operation to occur.
 
 # <a name="paging"></a>Paging
 
-Why.js supports paging. It's disabled by default and must be enabled with the [`pgon` instruction](#op-pgon). It uses a six-level system with a similar philosophy to x86_64's four-level system, but page sizes are 65,536 bytes large. The tables are named `P0` through and `P5` and each table contains 256 entries. To translate a virtual address to a physical one, `P0` is inspected at the address set with [`setpt`](#op-setpt). The most significant eight bits in the virtual address are used as an offset into `P0` to find the address of `P1`. If the `P0` entry isn't present, a [`PFAULT` interrupt](#int-pfault) is raised. Otherwise, the `P1` entry is inspected to find the `P2` address, and so on, until the address for the `P5` table is found and the entry specified by bits 23–16 in the virtual address is read. If the present bit isn't set, `PFAULT` is raised as usual. Otherwise, the low 16 bits of the virtual address are added to the page table entry with the low 16 bits set to zero and this result is used as the physical address.
+Why.js supports paging. It's disabled by default and must be enabled with the [`pgon` instruction](#op-pgon). It uses a
+six-level system with a similar philosophy to x86_64's four-level system, but page sizes are 65,536 bytes large. The
+tables are named `P0` through and `P5` and each table contains 256 entries. To translate a virtual address to a physical
+one, `P0` is inspected at the address set with [`setpt`](#op-setpt). The most significant eight bits in the virtual
+address are used as an offset into `P0` to find the address of `P1`. If the `P0` entry isn't present, a
+[`PFAULT` interrupt](#int-pfault) is raised. Otherwise, the `P1` entry is inspected to find the `P2` address, and so on,
+until the address for the `P5` table is found and the entry specified by bits 23–16 in the virtual address is read. If
+the present bit isn't set, `PFAULT` is raised as usual. Otherwise, the low 16 bits of the virtual address are added to
+the page table entry with the low 16 bits set to zero and this result is used as the physical address.
 
 ## Address Format
 
@@ -600,25 +712,29 @@ Multiplies the value in `rs` by the value in `rt` and stores the upper half in `
 > `$rs * $rt /u`  
 > `000000000001` `ttttttt` `sssssss` `0000000` `0000000000000` `......` `000000000101`
 
-Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in `$hi` and the lower half in `$lo`.
+Multiplies the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the upper half in `$hi`
+and the lower half in `$lo`.
 
 ### <a name="op-sll"></a>Shift Left Logical (`sll`)
 > `$rs << $rt -> $rd` or `$rd <<= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000110`
 
-Logically shifts the value in `rs` to the left by a number of bits equal to the value in `rt` and stores the result in `rd`.
+Logically shifts the value in `rs` to the left by a number of bits equal to the value in `rt` and stores the result in
+`rd`.
 
 ### <a name="op-srl"></a>Shift Right Logical (`srl`)
 > `$rs >>> $rt -> $rd` or `$rd >>>= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000111`
 
-Logically shifts the value in `rs` to the right by a number of bits equal to the value in `rt` and stores the result in `rd`.
+Logically shifts the value in `rs` to the right by a number of bits equal to the value in `rt` and stores the result in
+`rd`.
 
 ### <a name="op-sra"></a>Shift Right Arithmetic (`sra`)
 > `$rs >> $rt -> $rd` or `$rd >>= $rt`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001000`
 
-Arithmetically shifts the value in `rs` to the left by a number of bits equal to the value in `rt` and stores the result in `rd`.
+Arithmetically shifts the value in `rs` to the left by a number of bits equal to the value in `rt` and stores the result
+in `rd`.
 
 ### <a name="op-mod"></a>Modulo (`mod`)
 > `$rs % $rt -> $rd` or `$rs %= $rt`  
@@ -636,7 +752,8 @@ Divides the value in `rs` by the value in `rt` and stores the result in `rd`, di
 > `$rs / $rt -> $rd /u`  
 > `000000000001` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000001011`
 
-Divides the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
+Divides the value in `rs` by the value in `rt` (treating both as unsigned values) and stores the result in `rd`,
+discarding the remainder.
 
 ### <a name="op-modu"></a>Modulo Unsigned (`modu`)
 > `$rs % $rt -> $rd /u` or `$rs %= $rt /u`  
@@ -775,7 +892,8 @@ Multiplies the value in `rs` by a constant and stores the upper half in `$hi` an
 > `$rs * imm /u`  
 > `000000011000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in `$hi` and the lower half in `$lo`.
+Multiplies the value in `rs` by a constant (treating both as unsigned values) and stores the upper half in `$hi` and the
+lower half in `$lo`.
 
 ### <a name="op-slli"></a>Shift Left Logical Immediate (`slli`)
 > `$rs << imm -> $rd` or `$rd <<= imm`  
@@ -845,7 +963,8 @@ Computes the unsigned `imm`-modulo of `rs` and stores the result in `rd`.
 > `imm / $rs -> $rd /u`  
 > `000000110111` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Divides a constant by the value in `rs` (treating both as unsigned values) and stores the result in `rd`, discarding the remainder.
+Divides a constant by the value in `rs` (treating both as unsigned values) and stores the result in `rd`, discarding the
+remainder.
 
 ## <a name="ops-logic-i"></a>Logic (I-Types)
 
@@ -891,7 +1010,8 @@ Computes the bitwise XOR of `rs` and a constant and stores the result in `rd`.
 > `$rs ~ $rt`  
 > `000000001110` `ttttttt` `sssssss` `.......` `0000000000000` `......` `000000000101`
 
-Compares the value in `rs` to the value in `rt` (treating both as signed values) and updates the [status register](#reg-st).
+Compares the value in `rs` to the value in `rt` (treating both as signed values) and updates the
+[status register](#reg-st).
 
 ### <a name="op-sl"></a>Set on Less Than (`sl`)
 > `$rs < $rt -> $rd`  
@@ -919,13 +1039,15 @@ If the value in `rs` is equal to the value in `rt`, `rd` is set to 1; otherwise,
 > `$rs < $rt -> $rd /u`  
 > `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000011`
 
-If the value in `rs` is less than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is less than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise,
+`rd` is set to 0.
 
 ### <a name="op-sleu"></a>Set on Less Than or Equal Unsigned (`sleu`)
 > `$rs <= $rt -> $rd /u`  
 > `000000001110` `ttttttt` `sssssss` `ddddddd` `0000000000000` `......` `000000000100`
 
-If the value in `rs` is less than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is less than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1;
+otherwise, `rd` is set to 0.
 
 ## <a name="ops-comp-i"></a>Comparisons (I-Types)
 
@@ -973,25 +1095,29 @@ If the value in `rs` is greater than or equal to `imm`, `rd` is set to 1; otherw
 > `$rs < imm -> $rd /u`  
 > `000000011100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-If the value in `rs` is less than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is less than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to
+0.
 
 ### <a name="op-sleui"></a>Set on Less Than or Equal Unsigned Immediate (`sleui`)
 > `$rs <= imm -> $rd /u`  
 > `000000011101` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-If the value in `rs` is less than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is less than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise,
+`rd` is set to 0.
 
 ### <a name="op-sgeui"></a>Set on Greater Than or Equal Unsigned Immediate (`sgeui`)
 > `$rs >= imm -> $rd /u`  
 > `000000111011` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-If the value in `rs` is greater than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than or equal to `imm` (treating both as unsigned values), `rd` is set to 1; otherwise,
+`rd` is set to 0.
 
 ### <a name="op-sgui"></a>Set on Greater Than Unsigned Immediate (`sgui`)
 > `$rs > imm -> $rd /u`  
 > `000000111100` `......` `sssssss` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-If the value in `rs` is greater than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than `imm` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set
+to 0.
 
 ## <a name="ops-jump-j"></a>Jumps (J-Types)
 
@@ -1041,7 +1167,8 @@ Stores the address of the next instruction in `$rt` and jumps to the address sto
 > `:: $rd if $rs`  
 > `000000010001` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000011`
 
-Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`, provided the value in `rs` is nonzero.
+Stores the address of the next instruction in `$rt` and jumps to the address stored in `rd`, provided the value in `rs`
+is nonzero.
 
 ## <a name="ops-mem-r"></a>Memory (R-Types)
 
@@ -1049,7 +1176,8 @@ Stores the address of the next instruction in `$rt` and jumps to the address sto
 > `[$rs] -> [$rd]`  
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000000`
 
-Copies the word beginning at the memory address pointed to by `rs` into memory beginning at the address pointed to by `rd`.
+Copies the word beginning at the memory address pointed to by `rs` into memory beginning at the address pointed to by
+`rd`.
 
 ### <a name="op-l"></a>Load (`l`)
 > `[$rs] -> $rd`  
@@ -1222,7 +1350,8 @@ Performs a special instruction, typically for interaction with the world outside
 > `[$rs != $rt] -> $rd`  
 > `000000111000` `ttttttt` `sssssss` `ddddddd` `0000000000000` `cond` `..` `xxxxxxxxxxxx`
 
-Checks the [status register](#reg-st) and the [condition bits](#condbits). If the condition matches the status register, `rd` is set to `rs`; otherwise, it's set to `rt`.
+Checks the [status register](#reg-st) and the [condition bits](#condbits). If the condition matches the status register,
+`rd` is set to `rs`; otherwise, it's set to `rt`.
 
 ### <a name="op-int"></a>Interrupt (`int`)
 > `%int imm`  
@@ -1234,31 +1363,38 @@ Performs an interrupt. If no interrupt table has been registered, nothing intere
 > `%rit imm`  
 > `000000100001` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode; will cause the machine to halt if called in user mode.
+Registers the interrupt table. Takes a pointer to a table in the data section. Valid only in kernel mode; will cause the
+machine to halt if called in user mode.
 
 ### <a name="op-time"></a>Set Timer (`time`)
 > `%time $rs`  
 > `000000110000` `.......` `sssssss` `.......` `0000000000000` `......` `000000000000`
 
-Sets the hardware timer to the number stored in `rs` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+Sets the hardware timer to the number stored in `rs` (in microseconds), canceling any previous timer. Requires kernel
+mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer
+interrupt</a> occurs.
 
 ### <a name="op-timei"></a>Set Timer Immediate (`timei`)
 > `%time imm`  
 > `000000110001` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Sets the hardware timer to the number stored in `imm` (in microseconds), canceling any previous timer. Requires kernel mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer interrupt</a> occurs.
+Sets the hardware timer to the number stored in `imm` (in microseconds), canceling any previous timer. Requires kernel
+mode. Sub-millisecond precision may be unsupported or inaccurate. Once the timer expires, a <a href="#int-timer">timer
+interrupt</a> occurs.
 
 ### <a name="op-svtime"></a>Save Timer (`svtime`)
 > `%time -> $rd`  
 > `000000110000` `.......` `sssssss` `.......` `0000000000000` `......` `000000000001`
 
-Saves the number of microseconds until the hardware timer expires in `rd`. If no hardware timer is active, this instruction sets `rd` to 0.
+Saves the number of microseconds until the hardware timer expires in `rd`. If no hardware timer is active, this
+instruction sets `rd` to 0.
 
 ### <a name="op-ring"></a>Change Ring (`ring`)
 > `%ring $rs`  
 > `000000110010` `.......` `sssssss` `.......` `0000000000000` `......` `000000000000`
 
-Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
+Sets the <a href="#rings">protection ring</a> to the value stored in `rs`. A <a href="#int-protec">protection
+interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
 
 ### <a name="op-svring"></a>Save Ring (`svring`)
 > `%ring -> $rd`  
@@ -1270,7 +1406,8 @@ Stores the current <a href="#rings">protection ring</a> in `rd`.
 > `%ring imm`  
 > `000000110011` `......` `.......` `.......` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
-Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">protection interrupt</a> will occur if the indicated ring is lower than the current ring to prevent privilege escalation.
+Sets the <a href="#rings">protection ring</a> to `imm`. A <a href="#int-protec">protection interrupt</a> will occur if
+the indicated ring is lower than the current ring to prevent privilege escalation.
 
 ### <a name="op-pgoff"></a>Disable Paging (`pgoff`)
 > `%page off`  
@@ -1321,14 +1458,18 @@ Enables hardware interrupts. This currently includes `TIMER` and `KEYBRD`.
 > `[ %page`  
 > `000000111101` `.......` `.......` `.......` `0000000000000` `......` `000000000100`
 
-Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of the stack will be removed before the current paging state is pushed. Requires ring zero.
+Pushes the current paging state (whether paging is enabled, plus the physical address of P0) to a special stack that's
+not part of the accessible memory. If the implementation's stack size is limited and the stack is full, the bottom of
+the stack will be removed before the current paging state is pushed. Requires ring zero.
 
 ### <a name="op-ppop"></a>Pop Paging (`ppop`)
 > `] %page`  
 > `: ] %page $rs`  
 > `000000111101` `.......` `sssssss` `.......` `0000000000000` `......` `000000000101`
 
-Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of the accessible memory. Does nothing if the stack is empty. If `rs` is specified (i.e., if it's any register other than `$0`), it will be jumped to, even if the paging stack was empty. Requires ring zero.
+Pops a paging state (whether paging is enabled, plus the physical address of P0) from a special stack that's not part of
+the accessible memory. Does nothing if the stack is empty. If `rs` is specified (i.e., if it's any register other than
+`$0`), it will be jumped to, even if the paging stack was empty. Requires ring zero.
 
 ## <a name="ops-pseudo"></a>Pseudoinstructions
 
@@ -1398,7 +1539,8 @@ Translation:
 ### <a name="op-sgeu"></a>Set on Greater Than or Equal Unsigned (`sgeu`)
 > `$rs >= $rt -> $rd /u`
 
-If the value in `rs` is greater than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than or equal to the value in `rt` (treating both as unsigned values), `rd` is set to 1;
+otherwise, `rd` is set to 0.
 
 Translation:  
 <code>$rt [<=](#op-sleu) $rs -> $rd</code>
@@ -1406,7 +1548,8 @@ Translation:
 ### <a name="op-sgu"></a>Set on Greater Than Unsigned (`sgu`)
 > `$rs > $rt -> $rd /u`
 
-If the value in `rs` is greater than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise, `rd` is set to 0.
+If the value in `rs` is greater than the value in `rt` (treating both as unsigned values), `rd` is set to 1; otherwise,
+`rd` is set to 0.
 
 Translation:  
 <code>$rt [<](#op-slu) $rs -> $rd /u</code>
