@@ -1171,87 +1171,36 @@ is nonzero.
 > `[$rs] -> [$rd]`  
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000000` + types
 
-Copies the word beginning at the memory address pointed to by `rs` into memory beginning at the address pointed to by
-`rd`.
+Copies the data (size varies depending on the type) beginning at the memory address pointed to by `rs` into memory
+beginning at the address pointed to by `rd`. `rs` and `rd` must have the same type or else
+<a href="#int-badtyp">BADTYP</a> will be raised.
 
 ### <a name="op-l"></a>Load (`l`)
 > `[$rs] -> $rd`  
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000001` + types
 
-Loads the word beginning at the memory address pointed to by `rs` into `rd`.
+Loads the data (size varies depending on the type) beginning at the memory address pointed to by `rs` into `rd`.
+`rs` must be a pointer to `rd`'s type or else <a href="#int-badtyp">BADTYP</a> will be raised.
 
 ### <a name="op-s"></a>Store (`s`)
 > `$rs -> [$rd]`  
 > `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000010` + types
 
-Stores the value of `rs` into memory beginning at the address pointed to by `rd`.
-
-### <a name="op-cb"></a>Copy Byte (`cb`)
-> `[$rs] -> [$rd] /b`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000011` + types
-
-Copies the byte stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
-
-### <a name="op-lb"></a>Load Byte (`lb`)
-> `[$rs] -> $rd /b`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000100` + types
-
-Loads the byte stored at the memory address pointed to by `rs` into `rd`.
-
-### <a name="op-sb"></a>Store Byte (`sb`)
-> `$rs -> [$rd] /b`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000000101` + types
-
-Stores the lowest 8 bits of `rs` into the memory address pointed to by `rd`.
-
-### <a name="op-ch"></a>Copy Halfword (`ch`)
-> `[$rs] -> [$rd] /h`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001000` + types
-
-Copies the halfword stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
-
-### <a name="op-lh"></a>Load Halfword (`lh`)
-> `[$rs] -> $rd /h`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001001` + types
-
-Loads the halfword stored at the memory address pointed to by `rs` into `rd`.
-
-### <a name="op-sh"></a>Store Halfword (`sh`)
-> `$rs -> [$rd] /h`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001010` + types
-
-Stores the lowest 32 bits of `rs` into the memory address pointed to by `rd`.
-
-### <a name="op-cs"></a>Copy Short (`cs`)
-> `[$rs] -> [$rd] /s`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001100` + types
-
-Copies the short stored at the memory address pointed to by `rs` into the memory address pointed to by `rd`.
-
-### <a name="op-ls"></a>Load Short (`ls`)
-> `[$rs] -> $rd /s`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001101` + types
-
-Loads the short stored at the memory address pointed to by `rs` into `rd`.
-
-### <a name="op-ss"></a>Store Short (`ss`)
-> `$rs -> [$rd] /s`  
-> `000000010010` `0000000` `sssssss` `ddddddd` `0000000000000` `......` `000000001110` + types
-
-Stores the lowest 16 bits of `rs` into the memory address pointed to by `rd`.
+Stores the data in `rs` (size varies depending on the type) into memory beginning at the address pointed to by `rd`.
+`rd` must be a pointer to `rs`'s type or else <a href="#int-badtyp">BADTYP</a> will be raised.
 
 ### <a name="op-spush"></a>Stack Push (`spush`)
 > `[ $rs`  
 > `000000010010` `0000000` `sssssss` `0000000` `0000000000000` `......` `000000000110` + types
 
-Copies the word at `rs` into the stack and adjusts the stack pointer.  
+Copies the data at `rs` (size varies depending on the type) into the stack and adjusts the stack pointer.  
 See also: <a href="#op-push">push pseudoinstruction</a>
 
 ### <a name="op-spop"></a>Stack Pop (`spop`)
 > `] $rd`  
 > `000000010010` `0000000` `ddddddd` `0000000` `0000000000000` `......` `000000000111` + types
 
-Adjusts the stack pointer and copies the word at the stack pointer into `rd`.  
+Adjusts the stack pointer and copies the data (size varies depending on `rd`'s type) at the stack pointer into `rd`.  
 See also: <a href="#op-pop">pop pseudoinstruction</a>
 
 ### <a name="op-ms"></a>Memset (`ms`)
@@ -1298,13 +1247,8 @@ Stores the lowest 8 bits of `rs` into memory at address `imm`.
 > `[imm] -> [$rd]`  
 > `000000100111` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
 
-Copies the word stored in memory at address `imm` into the memory beginning at the address pointed to by `rd`.
-
-### <a name="op-lbni"></a>Load Byte Indirect Immediate (`lbni`)
-> `[imm] -> [$rd] /b`  
-> `000000101000` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
-
-Copies the byte stored in memory at address `imm` into the memory address pointed to by `rd`.
+Copies the data (size varies depending on `rd`'s type) stored in memory at address `imm` into the memory beginning at
+the address pointed to by `rd`.
 
 ### <a name="op-set"></a>Set (`set`)
 > `imm -> $rd`  
@@ -1317,6 +1261,7 @@ Sets a register to the given immediate value.
 > `000000001101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
 
 Loads an immediate value into the upper half of the word at `rd`. The lower half is not affected.
+`rd`'s type must be 64 bits wide.
 
 ### <a name="op-sspush"></a>Sized Stack Push (`sspush`)
 > `[:imm $rs`  

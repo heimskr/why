@@ -6,8 +6,6 @@
 #include "wasm/Nodes.h"
 
 namespace Wasmc {
-	Register::Register(const ASTNode *node): reg(node->lexerInfo) {}
-
 	std::string colorize(const Immediate &imm, bool ampersand) {
 		if (std::holds_alternative<int>(imm))
 			return green(std::to_string(std::get<int>(imm)));
@@ -21,7 +19,7 @@ namespace Wasmc {
 	std::string colorize(const Either &either, bool ampersand) {
 		if (std::holds_alternative<Immediate>(either))
 			return colorize(std::get<Immediate>(either), ampersand);
-		return cyan(*std::get<Register>(either));
+		return cyan(std::get<TypedReg>(either));
 	}
 
 	std::string toString(const Immediate &imm, bool ampersand) {
@@ -46,7 +44,7 @@ namespace Wasmc {
 	std::string toString(const Either &either, bool ampersand) {
 		if (std::holds_alternative<Immediate>(either))
 			return toString(std::get<Immediate>(either), ampersand);
-		return *std::get<Register>(either);
+		return std::get<TypedReg>(either);
 	}
 
 	Immediate getImmediate(const ASTNode *node) {
@@ -85,6 +83,6 @@ namespace Wasmc {
 	}
 
 	Either getEither(const ASTNode *node) {
-		return node->symbol == WASMTOK_REG? Register(node->lexerInfo) : getImmediate(node);
+		return node->symbol == WASMTOK_TYPE? TypedReg(node) : getImmediate(node);
 	}
 }

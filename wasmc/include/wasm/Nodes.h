@@ -36,21 +36,21 @@ namespace Wasmc {
 	};
 
 	struct HasRS {
-		const std::string *rs;
-		HasRS(const ASTNode *node): HasRS(node? node->lexerInfo : nullptr) {}
-		HasRS(const std::string *rs_): rs(rs_? rs_ : StringSet::intern("$0")) {}
+		TypedReg rs;
+		HasRS(const ASTNode *node): HasRS(TypedReg(node)) {}
+		HasRS(const TypedReg &rs_): rs(rs_) {}
 	};
 
 	struct HasRT {
-		const std::string *rt;
-		HasRT(const ASTNode *node): HasRT(node? node->lexerInfo : nullptr) {}
-		HasRT(const std::string *rt_): rt(rt_? rt_ : StringSet::intern("$0")) {}
+		TypedReg rt;
+		HasRT(const ASTNode *node): HasRT(TypedReg(node)) {}
+		HasRT(const TypedReg &rt_): rt(rt_) {}
 	};
 
 	struct HasRD {
-		const std::string *rd;
-		HasRD(const ASTNode *node): HasRD(node? node->lexerInfo : nullptr) {}
-		HasRD(const std::string *rd_): rd(rd_? rd_ : StringSet::intern("$0")) {}
+		TypedReg rd;
+		HasRD(const ASTNode *node): HasRD(TypedReg(node)) {}
+		HasRD(const TypedReg &rd_): rd(rd_) {}
 	};
 
 	struct HasOper {
@@ -59,12 +59,6 @@ namespace Wasmc {
 		HasOper(): HasOper(0, nullptr) {}
 		HasOper(const ASTNode *node): HasOper(node->symbol, node->lexerInfo) {}
 		HasOper(int oper_token, const std::string *oper_ = nullptr): oper(oper_), operToken(oper_token) {}
-	};
-
-	struct HasUnsigned {
-		bool isUnsigned;
-		HasUnsigned(const ASTNode *node): HasUnsigned(!!node) {}
-		HasUnsigned(bool is_unsigned): isUnsigned(is_unsigned) {}
 	};
 
 	struct HasCondition {
@@ -81,16 +75,16 @@ namespace Wasmc {
 
 	struct ThreeRegs: HasRS, HasRT, HasRD {
 		ThreeRegs():
-			HasRS((const std::string *) nullptr), HasRT((const std::string *) nullptr),
-			HasRD((const std::string *) nullptr) {}
-		ThreeRegs(const ASTNode *rs_, const ASTNode *rt_, const ASTNode *rd_): HasRS(rs_), HasRT(rt_), HasRD(rd_) {}
-		ThreeRegs(const std::string *rs_, const std::string *rt_, const std::string *rd_):
+			HasRS(TypedReg()), HasRT(TypedReg()), HasRD(TypedReg()) {}
+		ThreeRegs(const ASTNode *rs_, const ASTNode *rt_, const ASTNode *rd_):
+			HasRS(rs_), HasRT(rt_), HasRD(rd_) {}
+		ThreeRegs(const TypedReg &rs_, const TypedReg &rt_, const TypedReg &rd_):
 			HasRS(rs_), HasRT(rt_), HasRD(rd_) {}
 	};
 
 	struct TwoRegs: HasRS, HasRD {
 		TwoRegs(const ASTNode *rs_, const ASTNode *rd_): HasRS(rs_), HasRD(rd_) {}
-		TwoRegs(const std::string *rs_, const std::string *rd_): HasRS(rs_), HasRD(rd_) {}
+		TwoRegs(const TypedReg &rs_, const TypedReg &rd_): HasRS(rs_), HasRD(rd_) {}
 	};
 
 	struct WASMInstructionNode: WASMBaseNode {
@@ -141,8 +135,10 @@ namespace Wasmc {
 
 	struct RType: HasOpcode, ThreeRegs {
 		RType(): ThreeRegs() {}
-		RType(const ASTNode *rs_, const ASTNode *rt_, const ASTNode *rd_): ThreeRegs(rs_, rt_, rd_) {}
-		RType(const std::string *rs_, const std::string *rt_, const std::string *rd_): ThreeRegs(rs_, rt_, rd_) {}
+		RType(const ASTNode *rs_, const ASTNode *rt_, const ASTNode *rd_):
+			ThreeRegs(rs_, rt_, rd_) {}
+		RType(const TypedReg &rs_, const TypedReg &rt_, const TypedReg &rd_):
+			ThreeRegs(rs_, rt_, rd_) {}
 		virtual Funct getFunct() const = 0;
 	};
 
@@ -150,25 +146,24 @@ namespace Wasmc {
 		IType(const ASTNode *rs_, const ASTNode *rd_, const ASTNode *imm_):
 			HasImmediate(imm_), TwoRegs(rs_, rd_) {}
 		IType(const ASTNode *imm_):
-			HasImmediate(imm_), TwoRegs((const std::string *) nullptr, (const std::string *) nullptr) {}
-		IType(const std::string *rs_, const std::string *rd_, const Immediate &imm_):
+			HasImmediate(imm_), TwoRegs(TypedReg(), TypedReg()) {}
+		IType(const TypedReg &rs_, const TypedReg &rd_, const Immediate &imm_):
 			HasImmediate(imm_), TwoRegs(rs_, rd_) {}
 		IType(const Immediate &imm_):
-			HasImmediate(imm_), TwoRegs((const std::string *) nullptr, (const std::string *) nullptr) {}
+			HasImmediate(imm_), TwoRegs(TypedReg(), TypedReg()) {}
 	};
 
 	struct JType: HasOpcode, HasImmediate, HasRS, HasCondition, HasLink {
 		JType(const ASTNode *cond, const ASTNode *colons, const ASTNode *addr, const ASTNode *rs_):
 			HasImmediate(getImmediate(addr)), HasRS(rs_), HasCondition(cond), HasLink(colons) {}
-		JType(Condition cond, bool link_, const Immediate &addr, const std::string *rs_):
+		JType(Condition cond, bool link_, const Immediate &addr, const TypedReg &rs_):
 			HasImmediate(addr), HasRS(rs_), HasCondition(cond), HasLink(link_) {}
 	};
 
 	/** For math and logical operations. */
-	struct RNode: WASMInstructionNode, RType, HasOper, HasUnsigned {
-		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_);
-		RNode(const std::string *rs_, const std::string *oper_, const std::string *rt_, const std::string *rd_,
-		      int oper_token, bool is_unsigned);
+	struct RNode: WASMInstructionNode, RType, HasOper {
+		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
+		RNode(const TypedReg &rs_, const std::string *oper_, const TypedReg &rt_, const TypedReg &rd_, int oper_token);
 		WASMInstructionNode * copy() const override;
 		Opcode getOpcode() const override;
 		Funct getFunct() const override;
@@ -178,10 +173,10 @@ namespace Wasmc {
 	};
 
 	/** For math and logical operations. */
-	struct INode: WASMInstructionNode, IType, HasOper, HasUnsigned {
-		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
-		INode(const std::string *rs_, const std::string *oper_, const Immediate &imm_, const std::string *rd_,
-		      int oper_token, bool is_unsigned);
+	struct INode: WASMInstructionNode, IType, HasOper {
+		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_);
+		INode(const TypedReg &rs_, const std::string *oper_, const Immediate &imm_, const TypedReg &rd_,
+		      int oper_token);
 		Opcode getOpcode() const override;
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
@@ -190,16 +185,15 @@ namespace Wasmc {
 	};
 
 	struct WASMMemoryNode: WASMInstructionNode, RType {
-		bool isByte;
-		WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
-		WASMMemoryNode(int sym, const std::string *rs_, const std::string *rd_, bool is_byte);
+		WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
+		WASMMemoryNode(int sym, const TypedReg &rs_, const TypedReg &rd_);
 	};
 
 	struct WASMCopyNode: WASMMemoryNode {
-		WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
-		WASMCopyNode(const std::string *rs_, const std::string *rd_, bool is_byte);
-		Opcode getOpcode() const override { return OPCODES.at(isByte? "cb" : "c"); }
-		Funct getFunct() const override { return FUNCTS.at(isByte? "cb" : "c"); }
+		WASMCopyNode(ASTNode *rs_, ASTNode *rd_);
+		WASMCopyNode(const TypedReg &rs_, const TypedReg &PTHREAD_RWLOCK_DEFAULT_NP);
+		Opcode getOpcode() const override { return OPCODES.at("c"); }
+		Funct getFunct() const override { return FUNCTS.at("c"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
 		std::string debugExtra() const override;
@@ -207,10 +201,10 @@ namespace Wasmc {
 	};
 
 	struct WASMLoadNode: WASMMemoryNode {
-		WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
-		WASMLoadNode(const std::string *rs_, const std::string *rd_, bool is_byte);
-		Opcode getOpcode() const override { return OPCODES.at(isByte? "lb" : "l"); }
-		Funct getFunct() const override { return FUNCTS.at(isByte? "lb" : "l"); }
+		WASMLoadNode(ASTNode *rs_, ASTNode *rd_);
+		WASMLoadNode(const TypedReg &rs_, const TypedReg &rd_);
+		Opcode getOpcode() const override { return OPCODES.at("l"); }
+		Funct getFunct() const override { return FUNCTS.at("l"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Load; }
 		std::string debugExtra() const override;
@@ -218,10 +212,10 @@ namespace Wasmc {
 	};
 
 	struct WASMStoreNode: WASMMemoryNode {
-		WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
-		WASMStoreNode(const std::string *rs_, const std::string *rd_, bool is_byte);
-		Opcode getOpcode() const override { return OPCODES.at(isByte? "sb" : "s"); }
-		Funct getFunct() const override { return FUNCTS.at(isByte? "sb" : "s"); }
+		WASMStoreNode(ASTNode *rs_, ASTNode *rd_);
+		WASMStoreNode(const TypedReg &rs_, const TypedReg &rd_);
+		Opcode getOpcode() const override { return OPCODES.at("s"); }
+		Funct getFunct() const override { return FUNCTS.at("s"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
 		std::string debugExtra() const override;
@@ -230,7 +224,7 @@ namespace Wasmc {
 
 	struct WASMSetNode: WASMInstructionNode, IType {
 		WASMSetNode(ASTNode *imm_, ASTNode *rd_);
-		WASMSetNode(const Immediate &imm_, const std::string *rd_);
+		WASMSetNode(const Immediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("set"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
@@ -241,8 +235,8 @@ namespace Wasmc {
 	struct WASMLiNode: WASMInstructionNode, IType {
 		bool isByte;
 
-		WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
-		WASMLiNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
+		WASMLiNode(ASTNode *imm_, ASTNode *rd_);
+		WASMLiNode(const Immediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "lbi" : "li"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
@@ -253,8 +247,8 @@ namespace Wasmc {
 	struct WASMSiNode: WASMInstructionNode, IType {
 		bool isByte;
 
-		WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_);
-		WASMSiNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
+		WASMSiNode(ASTNode *rs_, ASTNode *imm_);
+		WASMSiNode(const Immediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "sbi" : "si"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Si; }
@@ -263,8 +257,8 @@ namespace Wasmc {
 	};
 
 	struct WASMLniNode: WASMLiNode {
-		WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
-		WASMLniNode(const Immediate &imm_, const std::string *rd_, bool is_byte);
+		WASMLniNode(ASTNode *imm_, ASTNode *rd_);
+		WASMLniNode(const Immediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "lbni" : "lni"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
@@ -272,85 +266,9 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	struct WASMHalfMemoryNode: WASMInstructionNode, RType {
-		WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
-		WASMHalfMemoryNode(int sym, const std::string *rs_, const std::string *rd_);
-	};
-
-	struct WASMChNode: WASMHalfMemoryNode {
-		WASMChNode(ASTNode *rs_, ASTNode *rd_);
-		WASMChNode(const std::string *rs_, const std::string *rd_);
-		Opcode getOpcode() const override { return OPCODES.at("ch"); }
-		Funct getFunct() const override { return FUNCTS.at("ch"); }
-		WASMInstructionNode * copy() const override { return (new WASMChNode(rs, rd))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Ch; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
-	struct WASMLhNode: WASMHalfMemoryNode {
-		WASMLhNode(ASTNode *rs_, ASTNode *rd_);
-		WASMLhNode(const std::string *rs_, const std::string *rd_);
-		Opcode getOpcode() const override { return OPCODES.at("lh"); }
-		Funct getFunct() const override { return FUNCTS.at("lh"); }
-		WASMInstructionNode * copy() const override { return (new WASMLhNode(rs, rd))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Lh; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
-	struct WASMShNode: WASMHalfMemoryNode {
-		WASMShNode(ASTNode *rs_, ASTNode *rd_);
-		WASMShNode(const std::string *rs_, const std::string *rd_);
-		Opcode getOpcode() const override { return OPCODES.at("sh"); }
-		Funct getFunct() const override { return FUNCTS.at("sh"); }
-		WASMInstructionNode * copy() const override { return (new WASMShNode(rs, rd))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
-	struct WASMShortMemoryNode: WASMInstructionNode, RType {
-		WASMShortMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
-		WASMShortMemoryNode(int sym, const std::string *rs_, const std::string *rd_);
-	};
-
-	struct WASMCsNode: WASMShortMemoryNode {
-		WASMCsNode(ASTNode *rs_, ASTNode *rd_);
-		WASMCsNode(const std::string *rs_, const std::string *rd_);
-		Opcode getOpcode() const override { return OPCODES.at("cs"); }
-		Funct getFunct() const override { return FUNCTS.at("cs"); }
-		WASMInstructionNode * copy() const override { return (new WASMCsNode(rs, rd))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Cs; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
-	struct WASMLsNode: WASMShortMemoryNode {
-		WASMLsNode(ASTNode *rs_, ASTNode *rd_);
-		WASMLsNode(const std::string *rs_, const std::string *rd_);
-		Opcode getOpcode() const override { return OPCODES.at("ls"); }
-		Funct getFunct() const override { return FUNCTS.at("ls"); }
-		WASMInstructionNode * copy() const override { return (new WASMLsNode(rs, rd))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Ls; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
-	struct WASMSsNode: WASMShortMemoryNode {
-		WASMSsNode(ASTNode *rs_, ASTNode *rd_);
-		WASMSsNode(const std::string *rs_, const std::string *rd_);
-		Opcode getOpcode() const override { return OPCODES.at("ss"); }
-		Funct getFunct() const override { return FUNCTS.at("ss"); }
-		WASMInstructionNode * copy() const override { return (new WASMSsNode(rs, rd))->absorb(*this); }
-		WASMNodeType nodeType() const override { return WASMNodeType::Ss; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
 	struct WASMCmpNode: WASMInstructionNode, RType {
 		WASMCmpNode(ASTNode *rs_, ASTNode *rt_);
-		WASMCmpNode(const std::string *rs_, const std::string *rt_);
+		WASMCmpNode(const TypedReg &rs_, const TypedReg &rt_);
 		WASMInstructionNode * copy() const override { return (new WASMCmpNode(rs, rt))->absorb(*this); }
 		Opcode getOpcode() const override { return OPCODES.at("cmp"); }
 		Funct getFunct() const override { return FUNCTS.at("cmp"); }
@@ -361,7 +279,7 @@ namespace Wasmc {
 
 	struct WASMCmpiNode: WASMInstructionNode, IType {
 		WASMCmpiNode(ASTNode *rs_, ASTNode *imm_);
-		WASMCmpiNode(const std::string *rs_, const Immediate &imm_);
+		WASMCmpiNode(const TypedReg &rs_, const Immediate &imm_);
 		WASMInstructionNode * copy() const override { return (new WASMCmpiNode(rs, imm))->absorb(*this); }
 		Opcode getOpcode() const override { return OPCODES.at("cmpi"); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
@@ -371,7 +289,7 @@ namespace Wasmc {
 
 	struct WASMSelNode: WASMInstructionNode, RType, HasCondition {
 		WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
-		WASMSelNode(const std::string *rs_, Condition cond, const std::string *rt_, const std::string *rd_);
+		WASMSelNode(const TypedReg &rs_, Condition cond, const TypedReg &rt_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("sel"); }
 		Funct getFunct() const override { return FUNCTS.at("sel"); }
 		WASMInstructionNode * copy() const override { return (new WASMSelNode(rs, condition, rt, rd))->absorb(*this); }
@@ -392,7 +310,7 @@ namespace Wasmc {
 
 	struct WASMJcNode: WASMInstructionNode, JType {
 		WASMJcNode(WASMJNode *, ASTNode *rs_);
-		WASMJcNode(const Immediate &imm_, bool link_, const std::string *rs_);
+		WASMJcNode(const Immediate &imm_, bool link_, const TypedReg &rs_);
 		Opcode getOpcode() const override { return OPCODES.at("jc"); }
 		WASMInstructionNode * copy() const override { return (new WASMJcNode(imm, link, rs))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jc; }
@@ -403,8 +321,7 @@ namespace Wasmc {
 	// Used for both jr and jrl.
 	struct WASMJrNode: WASMInstructionNode, RType, HasCondition, HasLink {
 		WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_);
-		WASMJrNode(Condition condition_, bool link_, const std::string &rd_);
-		WASMJrNode(Condition condition_, bool link_, const std::string *rd_);
+		WASMJrNode(Condition condition_, bool link_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(link? "jrl" : "jr"); }
 		Funct getFunct() const override { return FUNCTS.at(link? "jrl" : "jr"); }
 		WASMInstructionNode * copy() const override { return (new WASMJrNode(condition, link, rd))->absorb(*this); }
@@ -416,7 +333,7 @@ namespace Wasmc {
 	// Used for both jrc and jrlc.
 	struct WASMJrcNode: WASMInstructionNode, RType, HasLink {
 		WASMJrcNode(WASMJrNode *, ASTNode *rs_);
-		WASMJrcNode(bool link_, const std::string *rs_, const std::string *rd_);
+		WASMJrcNode(bool link_, const TypedReg &rs_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(link? "jrlc" : "jrc"); }
 		Funct getFunct() const override { return FUNCTS.at(link? "jrlc" : "jrc"); }
 		WASMInstructionNode * copy() const override { return (new WASMJrcNode(link, rs, rd))->absorb(*this); }
@@ -428,11 +345,11 @@ namespace Wasmc {
 	struct WASMJeqNode: WASMInstructionNode { // Pseudoinstruction; not handled by Assembler::compileInstruction
 		bool link;
 		Either addr, rt;
-		const std::string *rs;
+		TypedReg rs;
 
 		WASMJeqNode(WASMJNode *, ASTNode *rs_, ASTNode *rt_);
 		WASMJeqNode(WASMJrNode *, ASTNode *rs_, ASTNode *rt_);
-		WASMJeqNode(const Either &addr_, bool link_, const std::string *rs_, const Either &rt_);
+		WASMJeqNode(const Either &addr_, bool link_, const TypedReg &rs_, const Either &rt_);
 		WASMInstructionNode * copy() const override { return (new WASMJeqNode(addr, link, rs, rt))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jeq; }
 		size_t expandedSize() const override;
@@ -444,7 +361,7 @@ namespace Wasmc {
 	struct WASMSizedStackNode: WASMInstructionNode, IType {
 		bool isPush;
 		WASMSizedStackNode(ASTNode *size, ASTNode *rs_, bool is_push);
-		WASMSizedStackNode(int size, const std::string *rs_, bool is_push);
+		WASMSizedStackNode(int size, const TypedReg &rs_, bool is_push);
 		Opcode getOpcode() const override { return OPCODES.at(isPush? "sspush" : "sspop"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::SizedStack; }
@@ -452,31 +369,31 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	struct WASMMultRNode: WASMInstructionNode, RType, HasUnsigned {
-		WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_ = nullptr);
-		WASMMultRNode(const std::string *rs_, const std::string *rt_, bool is_unsigned);
-		Opcode getOpcode() const override { return OPCODES.at(isUnsigned? "multu" : "mult"); }
-		Funct getFunct() const override { return FUNCTS.at(isUnsigned? "multu" : "mult"); }
-		WASMInstructionNode * copy() const override { return (new WASMMultRNode(rs, rt, isUnsigned))->absorb(*this); }
+	struct WASMMultRNode: WASMInstructionNode, RType {
+		WASMMultRNode(ASTNode *rs_, ASTNode *rt_);
+		WASMMultRNode(const TypedReg &rs_, const TypedReg &rt_);
+		Opcode getOpcode() const override { return OPCODES.at("mult"); }
+		Funct getFunct() const override { return FUNCTS.at("mult"); }
+		WASMInstructionNode * copy() const override { return (new WASMMultRNode(rs, rt))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::MultR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
 
-	struct WASMMultINode: WASMInstructionNode, IType, HasUnsigned {
-		WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_ = nullptr);
-		WASMMultINode(const std::string *rs_, const Immediate &imm_, bool is_unsigned);
-		Opcode getOpcode() const override { return OPCODES.at(isUnsigned? "multui" : "multi"); }
-		WASMInstructionNode * copy() const override { return (new WASMMultINode(rs, imm, isUnsigned))->absorb(*this); }
+	struct WASMMultINode: WASMInstructionNode, IType {
+		WASMMultINode(ASTNode *rs_, ASTNode *imm_);
+		WASMMultINode(const TypedReg &rs_, const Immediate &imm_);
+		Opcode getOpcode() const override { return OPCODES.at("multi"); }
+		WASMInstructionNode * copy() const override { return (new WASMMultINode(rs, imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::MultI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
 
-	struct WASMDiviINode: WASMInstructionNode, IType, HasUnsigned {
-		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_ = nullptr);
-		WASMDiviINode(const Immediate &imm_, const std::string *rs_, const std::string *rd_, bool is_unsigned);
-		Opcode getOpcode() const override { return OPCODES.at(isUnsigned? "divuii" : "divii"); }
+	struct WASMDiviINode: WASMInstructionNode, IType {
+		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_);
+		WASMDiviINode(const Immediate &imm_, const TypedReg &rs_, const TypedReg &rd_);
+		Opcode getOpcode() const override { return OPCODES.at("divii"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::DiviI; }
 		std::string debugExtra() const override;
@@ -485,7 +402,7 @@ namespace Wasmc {
 
 	struct WASMLuiNode: WASMInstructionNode, IType {
 		WASMLuiNode(ASTNode *imm_, ASTNode *rd_);
-		WASMLuiNode(const Immediate &imm_, const std::string *rd_);
+		WASMLuiNode(const Immediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("lui"); }
 		WASMInstructionNode * copy() const override { return (new WASMLuiNode(imm, rd))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Lui; }
@@ -497,7 +414,7 @@ namespace Wasmc {
 	struct WASMStackNode: WASMInstructionNode, RType {
 		bool isPush;
 		WASMStackNode(ASTNode *reg, bool is_push);
-		WASMStackNode(const std::string *reg, bool is_push);
+		WASMStackNode(const TypedReg &reg, bool is_push);
 		Opcode getOpcode() const override { return OPCODES.at(isPush? "spush" : "spop"); }
 		Funct getFunct() const override { return FUNCTS.at(isPush? "spush" : "spop"); }
 		WASMInstructionNode * copy() const override { return (new WASMStackNode(rs, isPush))->absorb(*this); }
@@ -547,7 +464,7 @@ namespace Wasmc {
 
 	struct WASMTimeRNode: WASMInstructionNode, RType {
 		WASMTimeRNode(ASTNode *rs_);
-		WASMTimeRNode(const std::string *rs_);
+		WASMTimeRNode(const TypedReg &rs_);
 		Opcode getOpcode() const override { return OPCODES.at("time"); }
 		Funct getFunct() const override { return FUNCTS.at("time"); }
 		WASMInstructionNode * copy() const override { return (new WASMTimeRNode(rs))->absorb(*this); }
@@ -558,7 +475,7 @@ namespace Wasmc {
 
 	struct WASMSvtimeNode: WASMInstructionNode, RType {
 		WASMSvtimeNode(ASTNode *rd_);
-		WASMSvtimeNode(const std::string *rd_);
+		WASMSvtimeNode(const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("time"); }
 		Funct getFunct() const override { return FUNCTS.at("svtime"); }
 		WASMInstructionNode * copy() const override { return (new WASMSvtimeNode(rd))->absorb(*this); }
@@ -579,7 +496,7 @@ namespace Wasmc {
 
 	struct WASMRingRNode: WASMInstructionNode, RType {
 		WASMRingRNode(ASTNode *rs_);
-		WASMRingRNode(const std::string *rs_);
+		WASMRingRNode(const TypedReg &rs_);
 		Opcode getOpcode() const override { return OPCODES.at("ring"); }
 		Funct getFunct() const override { return FUNCTS.at("ring"); }
 		WASMInstructionNode * copy() const override { return (new WASMRingRNode(rs))->absorb(*this); }
@@ -590,7 +507,7 @@ namespace Wasmc {
 
 	struct WASMSvringNode: WASMInstructionNode, RType {
 		WASMSvringNode(ASTNode *rd_);
-		WASMSvringNode(const std::string *rd_);
+		WASMSvringNode(const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("ring"); }
 		Funct getFunct() const override { return FUNCTS.at("svring"); }
 		WASMInstructionNode * copy() const override { return (new WASMSvringNode(rd))->absorb(*this); }
@@ -603,7 +520,7 @@ namespace Wasmc {
 		PrintType type;
 
 		WASMPrintNode(ASTNode *rs_, ASTNode *type_);
-		WASMPrintNode(const std::string *rs_, PrintType type_);
+		WASMPrintNode(const TypedReg &rs_, PrintType type_);
 		Opcode getOpcode() const override { return OPCODES.at("ext"); }
 		Funct getFunct() const override;
 		WASMInstructionNode * copy() const override { return (new WASMPrintNode(rs, type))->absorb(*this); }
@@ -624,7 +541,7 @@ namespace Wasmc {
 
 	struct WASMSleepRNode: WASMInstructionNode, RType {
 		WASMSleepRNode(ASTNode *rs_);
-		WASMSleepRNode(const std::string *rs_);
+		WASMSleepRNode(const TypedReg &rs_);
 		Opcode getOpcode() const override { return OPCODES.at("ext"); }
 		Funct getFunct() const override { return FUNCTS.at("sleep"); }
 		WASMInstructionNode * copy() const override { return (new WASMSleepRNode(rs))->absorb(*this); }
@@ -647,7 +564,7 @@ namespace Wasmc {
 
 	struct WASMSetptRNode: WASMInstructionNode, RType {
 		WASMSetptRNode(ASTNode *rs_, ASTNode *rt_ = nullptr);
-		WASMSetptRNode(const std::string *rs_, const std::string *rt_ = nullptr);
+		WASMSetptRNode(const TypedReg &rs_, const TypedReg &rt_ = {});
 		Opcode getOpcode() const override { return OPCODES.at("setpt"); }
 		Funct getFunct() const override { return FUNCTS.at("setpt"); }
 		WASMInstructionNode * copy() const override { return (new WASMSetptRNode(rs, rt))->absorb(*this); }
@@ -658,9 +575,10 @@ namespace Wasmc {
 
 	// Pseudoinstruction; not handled by Assembler::compileInstruction
 	struct WASMMvNode: WASMInstructionNode {
-		const std::string *rs, *rd;
+		TypedReg rs;
+		TypedReg rd;
 		WASMMvNode(ASTNode *rs_, ASTNode *rd_);
-		WASMMvNode(const std::string *rs_, const std::string *rd_);
+		WASMMvNode(const TypedReg &rs_, const TypedReg &rd_);
 		WASMInstructionNode * copy() const override { return (new WASMMvNode(rs, rd))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Mv; }
 		std::string debugExtra() const override;
@@ -669,7 +587,7 @@ namespace Wasmc {
 
 	struct WASMSvpgNode: WASMInstructionNode, RType {
 		WASMSvpgNode(ASTNode *rd_);
-		WASMSvpgNode(const std::string *rd_);
+		WASMSvpgNode(const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("svpg"); }
 		Funct getFunct() const override { return FUNCTS.at("svpg"); }
 		WASMInstructionNode * copy() const override { return (new WASMSvpgNode(rd))->absorb(*this); }
@@ -682,7 +600,7 @@ namespace Wasmc {
 		QueryType type;
 
 		WASMQueryNode(QueryType, ASTNode *rd_);
-		WASMQueryNode(QueryType, const std::string *rd_);
+		WASMQueryNode(QueryType, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("qm"); } // All query types share the same opcode
 		Funct getFunct() const override;
 		WASMInstructionNode * copy() const override { return (new WASMQueryNode(type, rd))->absorb(*this); }
@@ -759,7 +677,7 @@ namespace Wasmc {
 			Type type;
 
 			WASMInverseNode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, Type);
-			WASMInverseNode(const Immediate &imm_, const std::string *rs_, const std::string *rd_, Type);
+			WASMInverseNode(const Immediate &imm_, const TypedReg &rs_, const TypedReg &rd_, Type);
 			Opcode getOpcode() const override;
 			WASMInstructionNode * copy() const override { return (new WASMInverseNode(imm, rs, rd, type))->absorb(*this); }
 			WASMNodeType nodeType() const override { return WASMNodeType::Inverse; }
@@ -769,7 +687,7 @@ namespace Wasmc {
 
 	struct WASMTransNode: WASMInstructionNode, RType {
 		WASMTransNode(const ASTNode *rs_, const ASTNode *rd_);
-		WASMTransNode(const std::string *rs_, const std::string *rd_);
+		WASMTransNode(const TypedReg &rs_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("trans"); }
 		Funct getFunct() const override { return FUNCTS.at("trans"); }
 		WASMInstructionNode * copy() const override { return new WASMTransNode(rs, rd); }
@@ -780,7 +698,7 @@ namespace Wasmc {
 	struct WASMPageStackNode: WASMInstructionNode, RType {
 		bool isPush;
 		WASMPageStackNode(bool is_push, const ASTNode *rs_ = nullptr);
-		WASMPageStackNode(bool is_push, const std::string *rs_);
+		WASMPageStackNode(bool is_push, const TypedReg &rs_);
 		Opcode getOpcode() const override { return OPCODES.at("ppush"); }
 		Funct getFunct() const override { return FUNCTS.at(isPush? "ppush" : "ppop"); }
 		WASMInstructionNode * copy() const override { return new WASMPageStackNode(isPush, rs); }
@@ -788,5 +706,5 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	RNode * makeSeq(const std::string *rs, const std::string *rt, const std::string *rd, int bang = -1);
+	RNode * makeSeq(const TypedReg &rs, const TypedReg &rt, const TypedReg &rd, int bang = -1);
 }

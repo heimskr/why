@@ -11,6 +11,8 @@
 #include "wasm/Instructions.h"
 
 namespace Wasmc {
+	class ASTNode;
+
 	using Long = uint64_t;
 	struct Section;
 
@@ -116,6 +118,33 @@ namespace Wasmc {
 		AnyJ(Opcode opcode_, uint8_t rs_, bool link_, uint32_t immediate_, uint8_t condition_, uint8_t flags_):
 			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, Type::J), link(link_) {}
 		Long encode() const override;
+	};
+
+	enum class Primitive: char {Void = 'v', Char = 'c', Short = 's', Int = 'i', Long = 'l'};
+
+	struct OperandType {
+		bool isSigned = true;
+		Primitive primitive = Primitive::Void;
+		int pointerLevel = -1;
+		OperandType(): isSigned(true), primitive(Primitive::Void), pointerLevel(-1) {}
+		OperandType(bool is_signed, Primitive primitive_, int pointer_level = 0):
+			isSigned(is_signed), primitive(primitive_), pointerLevel(pointer_level) {}
+		OperandType(const ASTNode *);
+		operator std::string() const;
+
+		const static OperandType VOID_PTR;
+	};
+
+	struct TypedReg {
+		OperandType type;
+		const std::string *reg = nullptr;
+		bool valid = true;
+		TypedReg(): valid(false) {}
+		TypedReg(const OperandType &type_, const std::string *reg_):
+			type(type_), reg(reg_) {}
+		TypedReg(const ASTNode *node);
+		operator std::string() const;
+		operator bool() const;
 	};
 }
 

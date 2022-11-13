@@ -113,7 +113,6 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "~&"						{ WASMRTOKEN(NAND) }
 "~|"						{ WASMRTOKEN(NOR) }
 "~x"						{ WASMRTOKEN(XNOR) }
-"/u"						{ WASMRTOKEN(UNSIGNED) }
 "<="						{ WASMRTOKEN(LEQ) }
 "=="						{ WASMRTOKEN(DEQ) }
 ">="						{ WASMRTOKEN(GEQ) }

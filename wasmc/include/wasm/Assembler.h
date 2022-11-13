@@ -165,7 +165,7 @@ namespace Wasmc {
 			WASMInstructionNode * flipSigns(WASMInstructionNode *) const;
 
 			void addJeq(size_t offset, const WASMInstructionNode *);
-			void addJeqImmediateRHS(size_t &offset, const WASMJeqNode *, const std::string *m7);
+			void addJeqImmediateRHS(size_t &offset, const WASMJeqNode *, const TypedReg &m7);
 
 			void addMove(size_t offset, const WASMInstructionNode *);
 

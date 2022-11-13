@@ -93,7 +93,6 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_LXNOR "!xx"
 %token WASMTOK_LXOR "xx"
 %token WASMTOK_SEMICOLON ";"
-%token WASMTOK_UNSIGNED "/u"
 %token WASMTOK_LEQ "<="
 %token WASMTOK_DEQ "=="
 %token WASMTOK_GEQ ">="
@@ -262,93 +261,75 @@ endop: "\n" | ";";
 // newlines: "\n" | newlines "\n" { $$ = $1->adopt($2); };
 // _newlines: newlines | { $$ = nullptr; };
 
-operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c      | op_l      | op_s    | op_set   | op_divii
-         | op_li   | op_si    | op_ms    | op_lni    | op_ch     | op_lh     | op_sh     | op_cmp  | op_cmpi  | op_sel
-         | op_j    | op_jc    | op_jr    | op_jrc    | op_mv     | op_spush  | op_spop   | op_nop  | op_int   | op_rit
-         | op_time | op_timei | op_ext   | op_ringi  | op_sspush | op_sspop  | op_ring   | op_page | op_setpt | op_svpg
-         | op_qmem | op_ret   | op_jeq   | op_sprint | op_inc    | op_dec    | op_cs     | op_ls   | op_ss    | op_di
-         | op_ei   | op_inv   | op_trans | op_ppush  | op_ppop   | op_svring | op_svtime;
+operation: op_r     | op_mult   | op_multi | op_lui  | op_i     | op_c     | op_l    | op_s      | op_set    | op_divii
+         | op_li    | op_si     | op_ms    | op_lni  | op_cmp   | op_cmpi  | op_sel  | op_j      | op_jc     | op_jr
+         | op_jrc   | op_mv     | op_spush | op_spop | op_nop   | op_int   | op_rit  | op_time   | op_timei  | op_ext
+         | op_ringi | op_sspush | op_sspop | op_ring | op_page  | op_setpt | op_svpg | op_qmem   | op_sprint | op_inc
+         | op_dec   | op_di     | op_ei    | op_inv  | op_trans | op_ppush | op_ppop | op_svring | op_svtime;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
 
-op_r: typed_reg basic_oper_r typed_reg "->" typed_reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
-    | typed_reg shorthandable_r "=" typed_reg _unsigned   { $$ = new RNode($1, $2, $4, $1, $5); D($3); }
-    | "~" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "!" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); }
-    | "sext" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4, nullptr); D($3); };
+op_r: typed_reg basic_oper_r typed_reg "->" typed_reg { $$ = new RNode($1, $2, $3, $5); D($4); }
+    | typed_reg shorthandable_r "=" typed_reg         { $$ = new RNode($1, $2, $4, $1); D($3); }
+    | "~" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); }
+    | "!" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); }
+    | "sext" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); };
 basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
 logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
 shorthandable_r: logical | shorthandable_i;
-_unsigned: "/u" | { $$ = nullptr; };
 
-op_mult: reg "*" reg _unsigned { $$ = new WASMMultRNode($1, $3, $4); D($2); };
+op_mult: typed_reg "*" typed_reg { $$ = new WASMMultRNode($1, $3); D($2); };
 
-op_multi: reg "*" immediate _unsigned { $$ = new WASMMultINode($1, $3, $4); D($2); };
+op_multi: typed_reg "*" immediate { $$ = new WASMMultINode($1, $3); D($2); };
 
-op_lui: "lui" ":" immediate "->" reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
+op_lui: "lui" ":" immediate "->" typed_reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
 
-op_i: reg basic_oper_i immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); }
-    | reg shorthandable_i "=" immediate _unsigned   { $$ = new INode($1, $2, $4, $1, $5); D($3); };
+op_i: typed_reg basic_oper_i immediate "->" typed_reg { $$ = new INode($1, $2, $3, $5); D($4); }
+    | typed_reg shorthandable_i "=" immediate         { $$ = new INode($1, $2, $4, $1); D($3); };
 basic_oper_i: shorthandable_i | "<" | "<=" | "==" | ">" | ">=" | "!";
 shorthandable_i: "+" | "-" | "&" | "|" | "x" | "~x" | "~&" | "~|" | "/" | "%" | "<<" | ">>>" | ">>";
 
 op_inv: op_sllii | op_srlii | op_sraii;
-op_sllii: immediate "<<"  reg "->" reg { $$ = new WASMInverseNode($1, $3, $5, WASMInverseNode::Type::Sllii); D($2, $4); };
-op_srlii: immediate ">>>" reg "->" reg { $$ = new WASMInverseNode($1, $3, $5, WASMInverseNode::Type::Srlii); D($2, $4); };
-op_sraii: immediate ">>"  reg "->" reg { $$ = new WASMInverseNode($1, $3, $5, WASMInverseNode::Type::Sraii); D($2, $4); };
+op_sllii: immediate "<<"  typed_reg "->" typed_reg { $$ = new WASMInverseNode($1, $3, $5, WASMInverseNode::Type::Sllii); D($2, $4); };
+op_srlii: immediate ">>>" typed_reg "->" typed_reg { $$ = new WASMInverseNode($1, $3, $5, WASMInverseNode::Type::Srlii); D($2, $4); };
+op_sraii: immediate ">>"  typed_reg "->" typed_reg { $$ = new WASMInverseNode($1, $3, $5, WASMInverseNode::Type::Sraii); D($2, $4); };
 
-op_inc: reg "++" { $$ = new INode($1->lexerInfo, StringSet::intern("+"), 1, $1->lexerInfo, WASMTOK_PLUS, false); D($2); };
+op_inc: typed_reg "++" { $$ = new INode($1, StringSet::intern("+"), 1, $1, WASMTOK_PLUS); D($2); };
 
-op_dec: reg "--" { $$ = new INode($1->lexerInfo, StringSet::intern("-"), 1, $1->lexerInfo, WASMTOK_MINUS, false); D($2); };
+op_dec: typed_reg "--" { $$ = new INode($1, StringSet::intern("-"), 1, $1, WASMTOK_MINUS); D($2); };
 
-op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
-_byte: "/b" | { $$ = nullptr; };
+op_c: "[" typed_reg "]" "->" "[" typed_reg "]" { $$ = new WASMCopyNode($2, $6); D($1, $3, $4, $5, $7); };
 
-op_l: "[" reg "]" "->" reg _byte { $$ = new WASMLoadNode($2, $5, $6); D($1, $3, $4); };
+op_l: "[" typed_reg "]" "->" typed_reg { $$ = new WASMLoadNode($2, $5); D($1, $3, $4); };
 
-op_s: reg "->" "[" reg "]" _byte { $$ = new WASMStoreNode($1, $4, $6); D($2, $3, $5); };
+op_s: typed_reg "->" "[" typed_reg "]" { $$ = new WASMStoreNode($1, $4); D($2, $3, $5); };
 
-op_set: immediate "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
+op_set: immediate "->" typed_reg { $$ = new WASMSetNode($1, $3); D($2); };
 
-op_divii: immediate "/" reg "->" reg _unsigned { $$ = new WASMDiviINode($1, $3, $5, $6); D($2, $4); };
+op_divii: immediate "/" typed_reg "->" typed_reg { $$ = new WASMDiviINode($1, $3, $5); D($2, $4); };
 
-op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
+op_li: "[" immediate "]" "->" typed_reg { $$ = new WASMLiNode($2, $5); D($1, $3, $4); };
 
-op_si: reg "->" "[" immediate "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
+op_si: typed_reg "->" "[" immediate "]" { $$ = new WASMSiNode($1, $4); D($2, $3, $5); };
 
-op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6, nullptr); D($5); };
+op_ms: "memset" typed_reg "x" typed_reg "->" typed_reg { $$ = new RNode($2, $1, $4, $6); D($5); };
 
-op_lni: "[" immediate "]" "->" "[" reg "]" _byte { $$ = new WASMLniNode($2, $6, $8); D($1, $3, $4, $5, $7); };
+op_lni: "[" immediate "]" "->" "[" typed_reg "]" { $$ = new WASMLniNode($2, $6); D($1, $3, $4, $5, $7); };
 
-op_ch: "[" reg "]" "->" "[" reg "]" "/h" { $$ = new WASMChNode($2, $6); D($1, $3, $4, $5, $7, $8); };
+op_trans: "translate" typed_reg "->" typed_reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
 
-op_lh: "[" reg "]" "->" reg "/h" { $$ = new WASMLhNode($2, $5); D($1, $3, $4, $6); };
+op_cmp: typed_reg "~" typed_reg { $$ = new WASMCmpNode($1, $3); D($2); };
 
-op_sh: reg "->" "[" reg "]" "/h" { $$ = new WASMShNode($1, $4); D($2, $3, $5, $6); };
+op_cmpi: typed_reg "~" immediate { $$ = new WASMCmpiNode($1, $3); D($2); };
 
-op_cs: "[" reg "]" "->" "[" reg "]" "/s" { $$ = new WASMCsNode($2, $6); D($1, $3, $4, $5, $7, $8); };
-
-op_ls: "[" reg "]" "->" reg "/s" { $$ = new WASMLsNode($2, $5); D($1, $3, $4, $6); };
-
-op_ss: reg "->" "[" reg "]" "/s" { $$ = new WASMSsNode($1, $4); D($2, $3, $5, $6); };
-
-op_trans: "translate" reg "->" reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
-
-op_cmp: reg "~" reg { $$ = new WASMCmpNode($1, $3); D($2); };
-
-op_cmpi: reg "~" immediate { $$ = new WASMCmpiNode($1, $3); D($2); };
-
-op_sel: "[" reg selop reg "]" "->" reg { $$ = new WASMSelNode($2, $3, $4, $7); D($1, $5, $6); };
+op_sel: "[" typed_reg selop typed_reg "]" "->" typed_reg { $$ = new WASMSelNode($2, $3, $4, $7); D($1, $5, $6); };
 selop: "=" | "<" | ">" | "!=";
 
 op_j: _jcond colons immediate { $$ = new WASMJNode($1, $2, $3); };
 _jcond: jcond | { $$ = nullptr; };
 jcond: zero | "+" | "-" | "*";
 colons: ":" ":" { $$ = $1->adopt($2); } | ":";
-
-op_jeq: op_j "if" reg "==" either { $$ = new WASMJeqNode(dynamic_cast<WASMJNode *>($1), $3, $5); D($2, $4); }
-      | op_jr "if" reg "==" either { $$ = new WASMJeqNode(dynamic_cast<WASMJrNode *>($1), $3, $5); D($2, $4); };
 
 op_jc: op_j "if" reg { $$ = new WASMJcNode(dynamic_cast<WASMJNode *>($1), $3); D($2); };
 
@@ -421,8 +402,6 @@ op_ppop:     "]" "%page"     { $$ = new WASMPageStackNode(false);     D($1, $2);
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
-op_ret: "!ret" { $$ = new WASMJrNode(Condition::None, false, "$rt"); D($1); };
-
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: "&" ident { $$ = $2; D($1); }
           | "&" WASMTOK_STRING { $$ = $2; D($1); }
@@ -441,12 +420,11 @@ reg: WASMTOK_REG;
 number: WASMTOK_NUMBER | "-" WASMTOK_NUMBER { $$ = $2; $$->lexerInfo = StringSet::intern("-" + *$$->lexerInfo); D($1); };
 character: WASMTOK_CHAR;
 string: WASMTOK_STRING;
-either: reg | immediate;
 
 %%
 
 #pragma GCC diagnostic pop
-
+
 const char * Wasmc::Parser::getNameWASM(int symbol) {
     return yytname[YYTRANSLATE(symbol)];
 }

@@ -18,10 +18,10 @@ SOURCES         := $(filter-out src/DebugSearch.cpp src/DumpSymbols.cpp src/Dump
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 TESTFILE        ?= examples/text.wasm
 OUTFILE         ?= compiled/text.why
-# TESTARGS        ?= $(TESTFILE) $(OUTFILE)
+TESTARGS        ?= $(TESTFILE) $(OUTFILE)
 # TESTARGS        ?= -l ../wasm/compiled/debug.why ../wasm/examples/debug.wasm
 # TESTARGS        ?= -l ../wasm/compiled/a.why ../wasm/examples/a.wasm
-TESTARGS        ?= -l compiled/text_linked.why compiled/text.why compiled/text2.why
+# TESTARGS        ?= -l compiled/text_linked.why compiled/text.why compiled/text2.why
 # TESTARGS        ?= --test
 
 .PHONY: all counter test clean count countbf

@@ -26,7 +26,7 @@ orcid: "0000-0001-7405-6654"
 %code
 
 @main
-	&message -> $a0
+	&message -> $a0{uc*}
 	// Insert some nops
 	%4b 0
 	%align 8
@@ -34,16 +34,16 @@ orcid: "0000-0001-7405-6654"
 	%1b 0
 	%align 8
 	:: strprint
-	[from_text2] -> $t0
-	<prx $t0>
+	[from_text2] -> $t0{ul}
+	<prx $t0{ul}>
 	:: text2_code
 	<halt>
 
 %type main function
 
 @strprint
-	[$a0] -> $ma /b
-	: _strprint_print if $ma
+	[$a0{uc*}] -> $ma{uc}
+	: _strprint_print if $ma{uc}
 	: $rt
 	@_strprint_print
 	<prc $ma>

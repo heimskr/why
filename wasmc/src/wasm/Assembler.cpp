@@ -228,12 +228,12 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileR(const WASMInstructionNode &node, const RType &rtype) const {
-		if (registerMap.count(rtype.rs) == 0)
-			throw std::runtime_error("Invalid rs in R-type: " + (rtype.rs? *rtype.rs : "null"));
-		if (registerMap.count(rtype.rt) == 0)
-			throw std::runtime_error("Invalid rt in R-type: " + (rtype.rt? *rtype.rt : "null"));
-		if (registerMap.count(rtype.rd) == 0)
-			throw std::runtime_error("Invalid rd in R-type: " + (rtype.rd? *rtype.rd : "null"));
+		if (registerMap.count(rtype.rs.reg) == 0)
+			throw std::runtime_error("Invalid rs in R-type: " + (rtype.rs.reg? *rtype.rs.reg : "null"));
+		if (registerMap.count(rtype.rt.reg) == 0)
+			throw std::runtime_error("Invalid rt in R-type: " + (rtype.rt.reg? *rtype.rt.reg : "null"));
+		if (registerMap.count(rtype.rd.reg) == 0)
+			throw std::runtime_error("Invalid rd in R-type: " + (rtype.rd.reg? *rtype.rd.reg : "null"));
 
 		const Funct funct = rtype.getFunct();
 		if (FUNCT_MAX < funct)
@@ -243,8 +243,8 @@ namespace Wasmc {
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&rtype))
 			condition = static_cast<uint8_t>(has_condition->condition);
 
-		return compileR(rtype.getOpcode(), registerMap.at(rtype.rs), registerMap.at(rtype.rt), registerMap.at(rtype.rd),
-			funct, static_cast<uint8_t>(node.flags), condition);
+		return compileR(rtype.getOpcode(), registerMap.at(rtype.rs.reg), registerMap.at(rtype.rt.reg),
+		                registerMap.at(rtype.rd.reg), funct, static_cast<uint8_t>(node.flags), condition);
 	}
 
 	Long Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
@@ -259,10 +259,10 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
-		if (registerMap.count(itype.rs) == 0)
-			throw std::runtime_error("Invalid rs in I-type: " + (itype.rs? *itype.rs : "null"));
-		if (registerMap.count(itype.rd) == 0)
-			throw std::runtime_error("Invalid rd in I-type: " + (itype.rd? *itype.rd : "null"));
+		if (registerMap.count(itype.rs.reg) == 0)
+			throw std::runtime_error("Invalid rs in I-type: " + (itype.rs.reg? *itype.rs.reg : "null"));
+		if (registerMap.count(itype.rd.reg) == 0)
+			throw std::runtime_error("Invalid rd in I-type: " + (itype.rd.reg? *itype.rd.reg : "null"));
 		if (std::holds_alternative<const std::string *>(itype.imm))
 			throw std::runtime_error("Can't compile an I-type with a label immediate");
 
@@ -273,7 +273,7 @@ namespace Wasmc {
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&itype))
 			condition = static_cast<uint8_t>(has_condition->condition);
 
-		return compileI(itype.getOpcode(), registerMap.at(itype.rs), registerMap.at(itype.rd), imm,
+		return compileI(itype.getOpcode(), registerMap.at(itype.rs.reg), registerMap.at(itype.rd.reg), imm,
 			static_cast<uint8_t>(node.flags), static_cast<uint8_t>(condition));
 	}
 
@@ -288,8 +288,8 @@ namespace Wasmc {
 	}
 
 	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
-		if (registerMap.count(jtype.rs) == 0)
-			throw std::runtime_error("Invalid rs in J-type: " + (jtype.rs? *jtype.rs : "null"));
+		if (registerMap.count(jtype.rs.reg) == 0)
+			throw std::runtime_error("Invalid rs in J-type: " + (jtype.rs.reg? *jtype.rs.reg : "null"));
 		if (!std::holds_alternative<int>(jtype.imm))
 			throw std::runtime_error("Can't compile a J-type with a label or character immediate");
 
@@ -297,7 +297,7 @@ namespace Wasmc {
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&jtype))
 			condition = static_cast<uint64_t>(has_condition->condition);
 
-		return compileJ(jtype.getOpcode(), registerMap.at(jtype.rs), std::get<int>(jtype.imm), jtype.link,
+		return compileJ(jtype.getOpcode(), registerMap.at(jtype.rs.reg), std::get<int>(jtype.imm), jtype.link,
 			static_cast<uint8_t>(node.flags), condition);
 	}
 
@@ -663,14 +663,14 @@ namespace Wasmc {
 
 	void Assembler::addJeq(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *jeq = dynamic_cast<const WASMJeqNode *>(instruction);
-		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+		const TypedReg m7({}, registerArray[Why::assemblerOffset + 7]); // TODO: fixme?
 		const int bang = instruction->bang;
-		if (std::holds_alternative<Register>(jeq->addr)) {
+		if (std::holds_alternative<TypedReg>(jeq->addr)) {
 			// Address is a register
-			if (std::holds_alternative<Register>(jeq->rt)) {
+			if (std::holds_alternative<TypedReg>(jeq->rt)) {
 				// RHS is a register
 				// rs == rt -> $m7
-				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<TypedReg>(jeq->rt), m7, bang));
 				code.insert(offset, compileInstruction(*seq));
 				extraInstructions.emplace(offset, std::move(seq));
 				offset += 8;
@@ -683,14 +683,14 @@ namespace Wasmc {
 				offset += 8;
 			}
 			// : rd if $m7
-			auto jrc = std::make_unique<WASMJrcNode>(jeq->link, m7, std::get<Register>(jeq->addr));
+			auto jrc = std::make_unique<WASMJrcNode>(jeq->link, m7, std::get<TypedReg>(jeq->addr));
 			code.insert(offset, compileInstruction(*jrc));
 			extraInstructions.emplace(offset, std::move(jrc));
 			offset += 8;
-		} else if (std::holds_alternative<Register>(jeq->rt)) {
+		} else if (std::holds_alternative<TypedReg>(jeq->rt)) {
 			// Address is an immediate, RHS is a register
 			// rs == rt -> $m7
-			auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<Register>(jeq->rt), m7, bang));
+			auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<TypedReg>(jeq->rt), m7, bang));
 			code.insert(offset, compileInstruction(*seq));
 			extraInstructions.emplace(offset, std::move(seq));
 			offset += 8;
@@ -712,13 +712,13 @@ namespace Wasmc {
 		}
 	}
 
-	void Assembler::addJeqImmediateRHS(size_t &offset, const WASMJeqNode *jeq, const std::string *m7) {
+	void Assembler::addJeqImmediateRHS(size_t &offset, const WASMJeqNode *jeq, const TypedReg &m7) {
 		const Immediate &rhs = std::get<Immediate>(jeq->rt);
 		std::unique_ptr<WASMInstructionNode> new_node;
 		if (std::holds_alternative<const std::string *>(rhs)) {
 			// RHS is a label
 			// [label] -> $m7
-			new_node = std::make_unique<WASMLiNode>(rhs, m7, false);
+			new_node = std::make_unique<WASMLiNode>(rhs, m7);
 		} else if (std::holds_alternative<int>(rhs)) {
 			// RHS is a number
 			// imm -> $m7
@@ -737,8 +737,10 @@ namespace Wasmc {
 	void Assembler::addMove(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *move = dynamic_cast<const WASMMvNode *>(instruction);
 
-		auto rnode = std::make_unique<RNode>(move->rs, StringSet::intern("|"), registerArray[Why::zeroOffset], move->rd,
-			WASMTOK_OR, false);
+		TypedReg zero = move->rs;
+		zero.reg = registerArray[Why::zeroOffset];
+
+		auto rnode = std::make_unique<RNode>(move->rs, StringSet::intern("|"), zero, move->rd, WASMTOK_OR);
 		code.insert(offset, compileInstruction(*rnode));
 		extraInstructions.emplace(offset, std::move(rnode));
 	}
@@ -746,7 +748,7 @@ namespace Wasmc {
 	void Assembler::addPseudoPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
 		if (std::holds_alternative<char>(print->imm)) {
-			const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+			const TypedReg m7({}, registerArray[Why::assemblerOffset + 7]); // TODO: fixme?
 
 			auto set = std::make_unique<WASMSetNode>(print->imm, m7);
 			set->setBang(instruction->bang);
@@ -773,7 +775,7 @@ namespace Wasmc {
 		if (Why::ioIDs.count(*io->ident) == 0)
 			throw std::runtime_error("Unknown IO ident: \"" + *io->ident + "\"");
 
-		const std::string *a0 = registerArray[Why::argumentOffset];
+		const TypedReg a0({}, registerArray[Why::argumentOffset]); // TODO: fixme?
 		auto set = std::make_unique<WASMSetNode>(Why::ioIDs.at(*io->ident), a0);
 		set->setBang(instruction->bang);
 		code.insert(offset, compileInstruction(*set));
@@ -788,7 +790,7 @@ namespace Wasmc {
 
 	void Assembler::addStringPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMStringPrintNode *>(instruction);
-		const std::string *m7 = registerArray[Why::assemblerOffset + 7];
+		const TypedReg m7({}, registerArray[Why::assemblerOffset + 7]); // TODO: fixme?
 		const std::string &str = *print->string;
 		if (str.empty())
 			return;
