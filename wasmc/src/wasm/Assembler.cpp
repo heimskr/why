@@ -157,8 +157,10 @@ namespace Wasmc {
 						// we stash it in a map and append one or more zeros.
 						instructionMap[currentSection->counter] = instruction;
 						const size_t count = instruction->expandedSize();
-						for (size_t i = 0; i < count; ++i)
+						for (size_t i = 0; i < count; ++i) {
 							currentSection->append<Long>(0);
+							currentSection->append<TypeInfo>(0);
+						}
 					} else
 						node->debug();
 				}
@@ -212,7 +214,7 @@ namespace Wasmc {
 		return ss.str();
 	}
 
-	Long Assembler::compileInstruction(const WASMInstructionNode &node) {
+	TypedInstruction Assembler::compileInstruction(const WASMInstructionNode &node) {
 		if (const RType *rtype = dynamic_cast<const RType *>(&node)) {
 			return compileR(node, *rtype);
 		} else if (const IType *itype = dynamic_cast<const IType *>(&node)) {
@@ -227,7 +229,7 @@ namespace Wasmc {
 		}
 	}
 
-	Long Assembler::compileR(const WASMInstructionNode &node, const RType &rtype) const {
+	TypedInstruction Assembler::compileR(const WASMInstructionNode &node, const RType &rtype) const {
 		if (registerMap.count(rtype.rs.reg) == 0)
 			throw std::runtime_error("Invalid rs in R-type: " + (rtype.rs.reg? *rtype.rs.reg : "null"));
 		if (registerMap.count(rtype.rt.reg) == 0)
@@ -244,21 +246,29 @@ namespace Wasmc {
 			condition = static_cast<uint8_t>(has_condition->condition);
 
 		return compileR(rtype.getOpcode(), registerMap.at(rtype.rs.reg), registerMap.at(rtype.rt.reg),
-		                registerMap.at(rtype.rd.reg), funct, static_cast<uint8_t>(node.flags), condition);
+		                registerMap.at(rtype.rd.reg), funct, static_cast<uint8_t>(node.flags), condition,
+		                static_cast<uint8_t>(rtype.rt.type), static_cast<uint8_t>(rtype.rs.type),
+		                static_cast<uint8_t>(rtype.rd.type));
 	}
 
-	Long Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
-	                         uint8_t condition) {
-		return static_cast<uint64_t>(function)
+	TypedInstruction Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function,
+	                                     uint8_t flags, uint8_t condition, uint8_t rt_type, uint8_t rs_type,
+	                                     uint8_t rd_type) {
+		return {
+			static_cast<uint64_t>(function)
 			| (static_cast<uint64_t>(flags) << 12)
 			| (static_cast<uint64_t>(condition) << 14)
 			| (static_cast<uint64_t>(rd) << 31)
 			| (static_cast<uint64_t>(rs) << 38)
 			| (static_cast<uint64_t>(rt) << 45)
-			| (static_cast<uint64_t>(opcode) << 52);
+			| (static_cast<uint64_t>(opcode) << 52),
+			static_cast<uint32_t>(rd_type)
+			| (static_cast<uint32_t>(rs_type) << 8)
+			| (static_cast<uint32_t>(rt_type) << 16)
+		};
 	}
 
-	Long Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
+	TypedInstruction Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
 		if (registerMap.count(itype.rs.reg) == 0)
 			throw std::runtime_error("Invalid rs in I-type: " + (itype.rs.reg? *itype.rs.reg : "null"));
 		if (registerMap.count(itype.rd.reg) == 0)
@@ -274,20 +284,26 @@ namespace Wasmc {
 			condition = static_cast<uint8_t>(has_condition->condition);
 
 		return compileI(itype.getOpcode(), registerMap.at(itype.rs.reg), registerMap.at(itype.rd.reg), imm,
-			static_cast<uint8_t>(node.flags), static_cast<uint8_t>(condition));
+			static_cast<uint8_t>(node.flags), static_cast<uint8_t>(condition), static_cast<uint8_t>(0b00000100),
+			static_cast<uint8_t>(itype.rs.type), static_cast<uint8_t>(itype.rd.type)); // TODO: actual imm types
 	}
 
-	Long Assembler::compileI(Opcode opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
-	                         uint8_t condition) {
-		return static_cast<uint64_t>(immediate)
+	TypedInstruction Assembler::compileI(Opcode opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
+	                                     uint8_t condition, uint8_t imm_type, uint8_t rs_type, uint8_t rd_type) {
+		return {
+			static_cast<uint64_t>(immediate)
 			| (static_cast<uint64_t>(rd) << 32)
 			| (static_cast<uint64_t>(rs) << 39)
 			| (static_cast<uint64_t>(flags) << 46)
 			| (static_cast<uint64_t>(condition) << 48)
-			| (static_cast<uint64_t>(opcode) << 52);
+			| (static_cast<uint64_t>(opcode) << 52),
+			static_cast<uint32_t>(rd_type)
+			| (static_cast<uint32_t>(rs_type) << 8)
+			| (static_cast<uint32_t>(imm_type) << 16)
+		};
 	}
 
-	Long Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
+	TypedInstruction Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
 		if (registerMap.count(jtype.rs.reg) == 0)
 			throw std::runtime_error("Invalid rs in J-type: " + (jtype.rs.reg? *jtype.rs.reg : "null"));
 		if (!std::holds_alternative<int>(jtype.imm))
@@ -298,16 +314,20 @@ namespace Wasmc {
 			condition = static_cast<uint64_t>(has_condition->condition);
 
 		return compileJ(jtype.getOpcode(), registerMap.at(jtype.rs.reg), std::get<int>(jtype.imm), jtype.link,
-			static_cast<uint8_t>(node.flags), condition);
+			static_cast<uint8_t>(node.flags), condition, static_cast<uint8_t>(jtype.rs.type));
 	}
 
-	Long Assembler::compileJ(Opcode opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition) {
-		return static_cast<uint64_t>(address)
+	TypedInstruction Assembler::compileJ(Opcode opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags,
+	                                     uint8_t condition, uint8_t rs_type) {
+		return {
+			static_cast<uint64_t>(address)
 			| (static_cast<uint64_t>(flags) << 32)
 			| (static_cast<uint64_t>(condition) << 34)
 			| (static_cast<uint64_t>(link? 1 : 0) << 44)
 			| (static_cast<uint64_t>(rs) << 45)
-			| (static_cast<uint64_t>(opcode) << 52);
+			| (static_cast<uint64_t>(opcode) << 52),
+			rs_type
+		};
 	}
 
 	void Assembler::expandLabels() {
@@ -639,7 +659,7 @@ namespace Wasmc {
 					break;
 
 				default:
-					code.insert(offset, compileInstruction(*flipSigns(instruction)));
+					code.insertAll(offset, compileInstruction(*flipSigns(instruction)).toBytes());
 					break;
 			}
 		}

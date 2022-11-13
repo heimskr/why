@@ -78,12 +78,13 @@ namespace Wasmc {
 			*reinterpret_cast<T *>(&bytes[offset]) = item;
 		}
 
-		template <typename T, template <typename...> typename C>
-		void insertAll(size_t offset, const C<T> &container) {
+		template <typename C>
+		void insertAll(size_t offset, const C &container) {
+			using T = typename C::value_type;
 			if (size() < offset + container.size() * sizeof(T))
 				throw std::out_of_range("Can't insert " + std::to_string(container.size()) + " * " +
-					std::to_string(sizeof(T)) + " bytes into a Section of size " + std::to_string(size()) +
-					" at offset " + std::to_string(offset));
+					std::to_string(sizeof(T)) + " bytes into a Section of size " +
+					std::to_string(size()) + " at offset " + std::to_string(offset));
 			T *pointer = reinterpret_cast<T *>(&bytes[offset]);
 			for (const T &item: container)
 				*pointer++ = item;

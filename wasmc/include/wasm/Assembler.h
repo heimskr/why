@@ -45,12 +45,14 @@ namespace Wasmc {
 			/** Assembles the program and returns the compiled .why data. */
 			std::string assemble(bool can_warn = true);
 
-			static Long compileR(Opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
-			                     uint8_t condition);
+			static TypedInstruction compileR(Opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function, uint8_t flags,
+			                                 uint8_t condition, uint8_t rt_type, uint8_t rs_type, uint8_t rd_type);
 
-			static Long compileI(Opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags, uint8_t condition);
+			static TypedInstruction compileI(Opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
+			                                 uint8_t condition, uint8_t imm_type, uint8_t rs_type, uint8_t rd_type);
 
-			static Long compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags, uint8_t condition);
+			static TypedInstruction compileJ(Opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags,
+			                                 uint8_t condition, uint8_t rs_type);
 
 			static uint32_t encodeSymbol(const std::string &);
 
@@ -112,13 +114,13 @@ namespace Wasmc {
 
 			static std::string stringify(const std::vector<Long> &);
 
-			Long compileInstruction(const WASMInstructionNode &);
+			TypedInstruction compileInstruction(const WASMInstructionNode &);
 
-			Long compileR(const WASMInstructionNode &, const RType &) const;
+			TypedInstruction compileR(const WASMInstructionNode &, const RType &) const;
 
-			Long compileI(const WASMInstructionNode &, const IType &) const;
+			TypedInstruction compileI(const WASMInstructionNode &, const IType &) const;
 
-			Long compileJ(const WASMInstructionNode &, const JType &) const;
+			TypedInstruction compileJ(const WASMInstructionNode &, const JType &) const;
 
 			void addCode(const WASMInstructionNode &);
 

@@ -30,7 +30,7 @@ namespace Wasmc {
 			BinaryParser & operator=(const BinaryParser &) = default;
 			BinaryParser & operator=(BinaryParser &&) = default;
 
-			static AnyBase * parse(Long);
+			static AnyBase * parse(const TypedInstruction &);
 
 			void parse();
 

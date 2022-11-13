@@ -30,16 +30,16 @@ namespace Wasmc {
 			(label? *label : "nullptr") + "], section[" + (section? section->name : "nullptr") + "])";
 	}
 
-	Long AnyR::encode() const {
-		return Assembler::compileR(opcode, rs, rt, rd, function, flags, condition);
+	TypedInstruction AnyR::encode() const {
+		return Assembler::compileR(opcode, rs, rt, rd, function, flags, condition, rtType, rsType, rdType);
 	}
 
-	Long AnyI::encode() const {
-		return Assembler::compileI(opcode, rs, rd, immediate, flags, condition);
+	TypedInstruction AnyI::encode() const {
+		return Assembler::compileI(opcode, rs, rd, immediate, flags, condition, immType, rsType, rdType);
 	}
 
-	Long AnyJ::encode() const {
-		return Assembler::compileJ(opcode, rs, immediate, link, flags, condition);
+	TypedInstruction AnyJ::encode() const {
+		return Assembler::compileJ(opcode, rs, immediate, link, flags, condition, rsType);
 	}
 
 	OperandType::OperandType(const ASTNode *node) {
@@ -77,6 +77,28 @@ namespace Wasmc {
 		return oss.str();
 	}
 
+	OperandType::operator uint8_t() const {
+		uint8_t out = ((pointerLevel & 0xf) << 4) | (isSigned? 0b1000 : 0b0000);
+		switch (primitive) {
+			case Primitive::Void: break;
+			case Primitive::Char:
+				out |= 0b001;
+				break;
+			case Primitive::Short:
+				out |= 0b010;
+				break;
+			case Primitive::Int:
+				out |= 0b011;
+				break;
+			case Primitive::Long:
+				out |= 0b100;
+				break;
+			default:
+				throw std::invalid_argument("Invalid primitive: " + std::to_string(static_cast<int>(primitive)));
+		}
+		return out;
+	}
+
 	TypedReg::TypedReg(const ASTNode *node):
 		type(node), reg(node? node->front()->lexerInfo : nullptr) {}
 
@@ -88,5 +110,22 @@ namespace Wasmc {
 
 	TypedReg::operator bool() const {
 		return valid;
+	}
+
+	std::array<uint8_t, 12> TypedInstruction::toBytes() const {
+		return {
+			static_cast<uint8_t>(typeInfo & 0xff),
+			static_cast<uint8_t>((typeInfo >> 8) & 0xff),
+			static_cast<uint8_t>((typeInfo >> 16) & 0xff),
+			static_cast<uint8_t>((typeInfo >> 24) & 0xff),
+			static_cast<uint8_t>(instruction & 0xff),
+			static_cast<uint8_t>((instruction >> 8) & 0xff),
+			static_cast<uint8_t>((instruction >> 16) & 0xff),
+			static_cast<uint8_t>((instruction >> 24) & 0xff),
+			static_cast<uint8_t>((instruction >> 32) & 0xff),
+			static_cast<uint8_t>((instruction >> 40) & 0xff),
+			static_cast<uint8_t>((instruction >> 48) & 0xff),
+			static_cast<uint8_t>((instruction >> 56) & 0xff),
+		};
 	}
 }

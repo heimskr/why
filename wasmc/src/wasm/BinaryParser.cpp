@@ -22,46 +22,58 @@ namespace Wasmc {
 			raw.push_back(Util::swapEndian(Util::parseUlong(line, 16)));
 	}
 
-	AnyBase * BinaryParser::parse(const Long instruction) {
-		auto get = [&](int offset, int length) -> Long {
-			return (instruction >> (64 - offset - length)) & ((1 << length) - 1);
+	AnyBase * BinaryParser::parse(const TypedInstruction &typed) {
+		auto getI = [&](int offset, int length) -> Long {
+			return (typed.instruction >> (64 - offset - length)) & ((1 << length) - 1);
 		};
 
-		const auto opcode = static_cast<Opcode>(get(0, 12));
+		auto getT = [&](int offset, int length) -> Long {
+			// getI is weird. Let's do offset + 1 - length because it's better.
+			return (typed.typeInfo >> (offset + 1 - length)) & ((1 << length) - 1);
+		};
+
+		const auto opcode = static_cast<Opcode>(getI(0, 12));
 
 		if (opcode == 0)
-			return new AnyBase(0, 0, 0, 0);
+			return new AnyBase(0, 0, 0, 0, 0);
 
 		if (RTYPES.count(opcode) != 0) {
-			const auto rs = get(19, 7);
-			const auto rt = get(12, 7);
-			const auto rd = get(26, 7);
-			const auto function = get(52, 12);
-			const auto condition = get(46, 4);
-			const auto flags = get(50, 2);
-			return new AnyR(opcode, rs, rt, rd, function, condition, flags);
+			const auto rs = getI(19, 7);
+			const auto rt = getI(12, 7);
+			const auto rd = getI(26, 7);
+			const auto function = getI(52, 12);
+			const auto condition = getI(46, 4);
+			const auto flags = getI(50, 2);
+			const auto rd_type = getT(7, 8);
+			const auto rs_type = getT(15, 8);
+			const auto rt_type = getT(23, 8);
+			return new AnyR(opcode, rs, rt, rd, function, condition, flags, rs_type, rd_type, rt_type);
 		}
 		
 		if (ITYPES.count(opcode) != 0) {
-			const auto rs = get(18, 7);
-			const auto rd = get(25, 7);
-			const auto immediate = instruction & 0xffffffff;
-			const auto condition = get(12, 4);
-			const auto flags = get(16, 2);
-			return new AnyI(opcode, rs, rd, immediate, condition, flags);
+			const auto rs = getI(18, 7);
+			const auto rd = getI(25, 7);
+			const auto immediate = typed.instruction & 0xffffffff;
+			const auto condition = getI(12, 4);
+			const auto flags = getI(16, 2);
+			const auto rs_type = getT(15, 8);
+			const auto rd_type = getT(7, 8);
+			const auto imm_type = getT(23, 8);
+			return new AnyI(opcode, rs, rd, immediate, condition, flags, rs_type, rd_type, imm_type);
 		}
 
 		if (JTYPES.count(opcode) != 0) {
-			const auto rs = get(12, 7);
-			const auto link = get(19, 1);
-			const auto address = instruction & 0xffffffff;
-			const auto condition = get(26, 4);
-			const auto flags = get(30, 2);
-			return new AnyJ(opcode, rs, link, address, condition, flags);
+			const auto rs = getI(12, 7);
+			const auto link = getI(19, 1);
+			const auto address = typed.instruction & 0xffffffff;
+			const auto condition = getI(26, 4);
+			const auto flags = getI(30, 2);
+			const auto rs_type = getT(7, 8);
+			return new AnyJ(opcode, rs, link, address, condition, flags, rs_type, 0b00010000);
 		}
 
 		throw std::runtime_error("Invalid instruction (opcode " + Util::toHex(opcode) + "): "
-			+ Util::toHex(instruction, 16));
+			+ Util::toHex(typed.instruction, 16) + "/" + Util::toHex(typed.typeInfo, 8));
 	}
 
 	void BinaryParser::parse() {

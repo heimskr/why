@@ -14,6 +14,7 @@ namespace Wasmc {
 	class ASTNode;
 
 	using Long = uint64_t;
+	using TypeInfo = uint32_t;
 	struct Section;
 
 	enum class SymbolEnum: unsigned {Unknown = 0, UnknownData, UnknownCode, Data, Code};
@@ -73,6 +74,14 @@ namespace Wasmc {
 			code(code_), data(data_), symbolTable(symbol_table), debug(debug_), relocation(relocation_), end(end_) {}
 	};
 
+	struct TypedInstruction {
+		Long instruction;
+		TypeInfo typeInfo;
+		TypedInstruction(Long instruction_ = 0, TypeInfo type_info = 0):
+			instruction(instruction_), typeInfo(type_info) {}
+		std::array<uint8_t, 12> toBytes() const;
+	};
+
 	struct AnyBase {
 		enum class Type {Other, R, I, J};
 
@@ -81,43 +90,54 @@ namespace Wasmc {
 		uint8_t rs;
 		uint8_t condition;
 		uint8_t flags;
+		uint8_t rsType;
 
-		AnyBase(Opcode opcode_, uint8_t rs_, uint8_t condition_, uint8_t flags_, Type type_ = Type::Other):
-			type(type_), opcode(opcode_), rs(rs_), condition(condition_), flags(flags_) {}
+		AnyBase(Opcode opcode_, uint8_t rs_, uint8_t condition_, uint8_t flags_, uint8_t rs_type,
+		        Type type_ = Type::Other):
+			type(type_), opcode(opcode_), rs(rs_), condition(condition_), flags(flags_), rsType(rs_type) {}
 
 		virtual ~AnyBase() {}
 
-		virtual Long encode() const { return 0; }
+		virtual TypedInstruction encode() const { return {}; }
 	};
 
 	struct AnyImmediate: AnyBase {
 		uint32_t immediate;
+		uint8_t immType;
 		AnyImmediate(Opcode opcode_, uint8_t rs_, uint32_t immediate_, uint8_t condition_, uint8_t flags_,
-		Type type_):
-			AnyBase(opcode_, rs_, condition_, flags_, type_), immediate(immediate_) {}
+		             uint8_t rs_type, uint8_t imm_type, Type type_):
+			AnyBase(opcode_, rs_, condition_, flags_, rs_type, type_), immediate(immediate_), immType(imm_type) {}
 	};
 
 	struct AnyR: AnyBase {
-		uint8_t rd, rt;
+		uint8_t rd;
+		uint8_t rt;
 		const Funct function;
+		uint8_t rdType;
+		uint8_t rtType;
 		AnyR(Opcode opcode_, uint8_t rs_, uint8_t rt_, uint8_t rd_, Funct function_, uint8_t condition_,
-		uint8_t flags_):
-			AnyBase(opcode_, rs_, condition_, flags_, Type::R), rd(rd_), rt(rt_), function(function_) {}
-		Long encode() const override;
+		     uint8_t flags_, uint8_t rs_type, uint8_t rd_type, uint8_t rt_type):
+			AnyBase(opcode_, rs_, condition_, flags_, rs_type, Type::R), rd(rd_), rt(rt_), function(function_),
+			rdType(rd_type), rtType(rt_type) {}
+		TypedInstruction encode() const override;
 	};
 
 	struct AnyI: AnyImmediate {
 		uint8_t rd;
-		AnyI(Opcode opcode_, uint8_t rs_, uint8_t rd_, uint32_t immediate_, uint8_t condition_, uint8_t flags_):
-			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, Type::I), rd(rd_) {}
-		Long encode() const override;
+		uint8_t rdType;
+		AnyI(Opcode opcode_, uint8_t rs_, uint8_t rd_, uint32_t immediate_, uint8_t condition_, uint8_t flags_,
+		     uint8_t rs_type, uint8_t rd_type, uint8_t imm_type):
+			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, rs_type, imm_type, Type::I), rd(rd_),
+			rdType(rd_type) {}
+		TypedInstruction encode() const override;
 	};
 
 	struct AnyJ: AnyImmediate {
 		bool link;
-		AnyJ(Opcode opcode_, uint8_t rs_, bool link_, uint32_t immediate_, uint8_t condition_, uint8_t flags_):
-			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, Type::J), link(link_) {}
-		Long encode() const override;
+		AnyJ(Opcode opcode_, uint8_t rs_, bool link_, uint32_t immediate_, uint8_t condition_, uint8_t flags_,
+		     uint8_t rs_type, uint8_t imm_type):
+			AnyImmediate(opcode_, rs_, immediate_, condition_, flags_, rs_type, imm_type, Type::J), link(link_) {}
+		TypedInstruction encode() const override;
 	};
 
 	enum class Primitive: char {Void = 'v', Char = 'c', Short = 's', Int = 'i', Long = 'l'};
@@ -131,6 +151,7 @@ namespace Wasmc {
 			isSigned(is_signed), primitive(primitive_), pointerLevel(pointer_level) {}
 		OperandType(const ASTNode *);
 		operator std::string() const;
+		explicit operator uint8_t() const;
 
 		const static OperandType VOID_PTR;
 	};

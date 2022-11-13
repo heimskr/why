@@ -168,15 +168,6 @@
 						<li><a href="#op-c">Copy</a>                  (<code>c</code>)</li>
 						<li><a href="#op-l">Load</a>                  (<code>l</code>)</li>
 						<li><a href="#op-s">Store</a>                 (<code>s</code>)</li>
-						<li><a href="#op-cb">Copy Byte</a>            (<code>cb</code>)</li>
-						<li><a href="#op-lb">Load Byte</a>            (<code>lb</code>)</li>
-						<li><a href="#op-sb">Store Byte</a>           (<code>sb</code>)</li>
-						<li><a href="#op-ch">Copy Halfword</a>        (<code>ch</code>)</li>
-						<li><a href="#op-lh">Load Halfword</a>        (<code>lh</code>)</li>
-						<li><a href="#op-sh">Store Halfword</a>       (<code>sh</code>)</li>
-						<li><a href="#op-cs">Copy Short</a>           (<code>cs</code>)</li>
-						<li><a href="#op-ls">Load Short</a>           (<code>ls</code>)</li>
-						<li><a href="#op-ss">Store Short</a>          (<code>ss</code>)</li>
 						<li><a href="#op-spush">Stack Push</a>        (<code>spush</code>)</li>
 						<li><a href="#op-spop">Stack Pop</a>          (<code>spop</code>)</li>
 						<li><a href="#op-ms">Memset</a>               (<code>ms</code>)</li>
@@ -188,9 +179,6 @@
 						<li><a href="#op-li">Load Immediate</a> (<code>li</code>)</li>
 						<li><a href="#op-si">Store Immediate</a> (<code>si</code>)</li>
 						<li><a href="#op-lni">Load Indirect Immediate</a> (<code>lni</code>)</li>
-						<li><a href="#op-lbi">Load Byte Immediate</a> (<code>lbi</code>)</li>
-						<li><a href="#op-sbi">Store Byte Immediate</a> (<code>sbi</code>)</li>
-						<li><a href="#op-lbni">Load Byte Indirect Immediate</a> (<code>lbni</code>)</li>
 						<li><a href="#op-set">Set</a> (<code>set</code>)</li>
 						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
 						<li><a href="#op-sspush">Sized Stack Push</a> (<code>sspush</code>)</li>
@@ -1230,18 +1218,6 @@ Loads the word beginning at address `imm` into `rd`.
 > `000000010100` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
 
 Stores the value of `rs` into memory beginning at address `imm`.
-
-### <a name="op-lbi"></a>Load Byte Immediate (`lbi`)
-> `[imm] -> $rd /b`  
-> `000000100101` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
-
-Loads the byte at address `imm` into `rd`.
-
-### <a name="op-sbi"></a>Store Byte Immediate (`sbi`)
-> `$rs -> [imm] /b`  
-> `000000100110` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
-
-Stores the lowest 8 bits of `rs` into memory at address `imm`.
 
 ### <a name="op-lni"></a>Load Indirect Immediate (`lni`)
 > `[imm] -> [$rd]`  
