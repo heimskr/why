@@ -352,15 +352,13 @@ namespace Wasmc {
 				const auto &second = two_table.at(two_indices.at(key));
 				const bool first_unknown = isUnknown(first.type);
 				const bool second_unknown = isUnknown(second.type);
-				if (first_unknown || second_unknown) {
+				if (first_unknown || second_unknown)
 					// Not a collision if one of the symbol tables includes it only for relocation purposes.
 					continue;
-				}
-				std::cerr << "key[" << key << "], type1[" << int(first.type) << "], type2[" << int(second.type) << ":" << second.label << "]\n";
-				std::cerr << "Second {\n";
-				for (const auto &[key2, index2]: two_indices) {
+				std::cerr << "key[" << key << "], type1[" << int(first.type) << "], type2[" << int(second.type) << ":"
+				          << second.label << "]\nSecond {\n";
+				for (const auto &[key2, index2]: two_indices)
 					std::cerr << "\t" << key2 << " => " << int(two_table.at(index2).type) << "\n";
-				}
 				std::cerr << "}\n";
 				throw std::runtime_error("Encountered a symbol collision: \"" + key + "\"");
 			}

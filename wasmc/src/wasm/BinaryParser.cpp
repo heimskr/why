@@ -109,8 +109,18 @@ namespace Wasmc {
 		extractSymbols();
 
 		rawCode = slice(offsets.code / 8, offsets.data / 8);
-		for (const Long instruction: rawCode)
-			code.emplace_back(parse(instruction));
+		// Do nothing if there isn't at least one instruction in the code section.
+		if (12 <= offsets.data - offsets.code) {
+			for (size_t i = 0; i < offsets.data - offsets.code; i += 12) {
+				const Long current = rawCode.at(i / 8);
+				const Long next = rawCode.at(i / 8 + 1);
+				if (i % 8 == 0) // 8-byte aligned
+					code.emplace_back(parse({current, static_cast<TypeInfo>(next >> 32)}));
+				else
+					code.emplace_back(parse({(current << 32) | (next >> 32),
+						static_cast<TypeInfo>(next & 0xffffffff)}));
+			}
+		}
 
 		rawData = slice(offsets.data / 8, offsets.symbolTable / 8);
 
