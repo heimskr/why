@@ -114,4 +114,30 @@ namespace WVM {
 			default:  return -1;
 		}
 	}
+
+	// OperandType::OperandType(uint8_t packed): isSigned( {
+
+	// }
+
+	Primitive OperandType::getPrimitive(uint8_t packed) {
+		switch (packed & 0b111) {
+			case 0b000: return Primitive::Void;
+			case 0b001: return Primitive::Char;
+			case 0b010: return Primitive::Short;
+			case 0b011: return Primitive::Int;
+			case 0b100: return Primitive::Long;
+			default: throw std::invalid_argument("Unknown primitive type: " + std::to_string(packed & 0b111));
+		}
+	}
+
+	OperandType::operator std::string() const {
+		std::ostringstream oss;
+		oss << '{';
+		if (primitive != Primitive::Void)
+			oss << (isSigned? 's' : 'u');
+		oss << static_cast<char>(primitive);
+		oss << std::string(static_cast<size_t>(pointerLevel < 0? 0 : pointerLevel), '*');
+		oss << '}';
+		return oss.str();
+	}
 }

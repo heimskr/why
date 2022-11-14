@@ -103,33 +103,6 @@ namespace Wasmc {
 	TypedReg::TypedReg(const ASTNode *node):
 		type(node), reg(node? node->front()->lexerInfo : nullptr) {}
 
-	TypedReg::operator std::string() const {
-		if (!valid)
-			return "$?";
-		return (reg? *reg : "$?") + std::string(type);
-	}
-
-	TypedReg::operator bool() const {
-		return valid;
-	}
-
-	std::array<uint8_t, 12> TypedInstruction::toBytes() const {
-		return {
-			static_cast<uint8_t>(instruction & 0xff),
-			static_cast<uint8_t>((instruction >> 8) & 0xff),
-			static_cast<uint8_t>((instruction >> 16) & 0xff),
-			static_cast<uint8_t>((instruction >> 24) & 0xff),
-			static_cast<uint8_t>((instruction >> 32) & 0xff),
-			static_cast<uint8_t>((instruction >> 40) & 0xff),
-			static_cast<uint8_t>((instruction >> 48) & 0xff),
-			static_cast<uint8_t>((instruction >> 56) & 0xff),
-			static_cast<uint8_t>(typeInfo & 0xff),
-			static_cast<uint8_t>((typeInfo >> 8) & 0xff),
-			static_cast<uint8_t>((typeInfo >> 16) & 0xff),
-			static_cast<uint8_t>((typeInfo >> 24) & 0xff),
-		};
-	}
-
 	TypedInstruction::operator std::string() const {
 		return Util::toHex(instruction, 16) + "/" + Util::toHex(typeInfo, 8);
 	}

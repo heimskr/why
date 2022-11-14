@@ -337,6 +337,8 @@ namespace Wasmc {
 				// 		") must be divisible by 12 after subtracting 4");
 				// }
 
+				// TODO!: verify correctness, something's probably amiss
+
 				Long &instruction = code.at(entry.sectionOffset / 12).instruction;
 
 				if (entry.type == RelocationType::Lower4) {

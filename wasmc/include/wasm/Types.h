@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <map>
 #include <set>
@@ -79,7 +80,23 @@ namespace Wasmc {
 		TypeInfo typeInfo;
 		TypedInstruction(Long instruction_ = 0, TypeInfo type_info = 0):
 			instruction(instruction_), typeInfo(type_info) {}
-		std::array<uint8_t, 12> toBytes() const;
+		std::array<uint8_t, 12> toBytes() const {
+			return {
+				static_cast<uint8_t>(instruction & 0xff),
+				static_cast<uint8_t>((instruction >> 8) & 0xff),
+				static_cast<uint8_t>((instruction >> 16) & 0xff),
+				static_cast<uint8_t>((instruction >> 24) & 0xff),
+				static_cast<uint8_t>((instruction >> 32) & 0xff),
+				static_cast<uint8_t>((instruction >> 40) & 0xff),
+				static_cast<uint8_t>((instruction >> 48) & 0xff),
+				static_cast<uint8_t>((instruction >> 56) & 0xff),
+				static_cast<uint8_t>(typeInfo & 0xff),
+				static_cast<uint8_t>((typeInfo >> 8) & 0xff),
+				static_cast<uint8_t>((typeInfo >> 16) & 0xff),
+				static_cast<uint8_t>((typeInfo >> 24) & 0xff),
+			};
+		}
+
 		explicit operator std::string() const;
 	};
 
@@ -165,8 +182,12 @@ namespace Wasmc {
 		TypedReg(const OperandType &type_, const std::string *reg_):
 			type(type_), reg(reg_) {}
 		TypedReg(const ASTNode *node);
-		operator std::string() const;
-		operator bool() const;
+		operator std::string() const {
+			if (!valid)
+				return "$?";
+			return (reg? *reg : "$?") + std::string(type);
+		}
+		operator bool() const { return valid; }
 	};
 }
 

@@ -7,17 +7,19 @@
 namespace WVM::Unparser {
 	std::string stringify(UWord instruction, const VM *vm = nullptr);
 
-	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions, int funct);
-	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate,
-		const VM * = nullptr);
-	std::string stringifyJType(int opcode, int rs, bool link, Conditions, int flags, HWord address,
-		const VM * = nullptr);
+	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions, int funct, int st, int tt, int dt);
+	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, int st, int dt,
+	                           int it, const VM * = nullptr);
+	std::string stringifyJType(int opcode, int rs, bool link, Conditions, int flags, HWord address, int st,
+	                           const VM * = nullptr);
 
-	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix = "");
-	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper);
-	std::string iAltOpInv(int rs, int rd, const std::string &immediate, const std::string &oper);
-	std::string iMath(int rs, int rd, const std::string &immediate, const std::string &oper);
-	std::string iComp(int rs, int rd, const std::string &immediate, const std::string &oper);
+	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, int st, int tt, int dt,
+	                   const std::string &suffix = "");
+	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper, int st, int dt, int it);
+	std::string iAltOpInv(int rs, int rd, const std::string &immediate, const std::string &oper, int st, int dt,
+	                      int it);
+	std::string iMath(int rs, int rd, const std::string &immediate, const std::string &oper, int st, int dt, int it);
+	std::string iComp(int rs, int rd, const std::string &immediate, const std::string &oper, int st, int dt, int it);
 
 	std::string jumpConditions(Conditions);
 	std::string color(int reg);

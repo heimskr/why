@@ -1,15 +1,32 @@
-#ifndef WVM_WHY_H_
-#define WVM_WHY_H_
+#pragma once
 
 #include <string>
 
 namespace WVM {
 	enum class Endianness: char {Big='B', Little='L'};
 
-	/** Contains constants pertaining to the Why.js architecture. */
+	enum class Primitive: char {Void = 'v', Char = 'c', Short = 's', Int = 'i', Long = 'l'};
+
+	class OperandType {
+		public:
+			bool isSigned = true;
+			Primitive primitive = Primitive::Void;
+			int pointerLevel = -1;
+			OperandType(): isSigned(true), primitive(Primitive::Void), pointerLevel(-1) {}
+			OperandType(bool is_signed, Primitive primitive_, int pointer_level = 0):
+				isSigned(is_signed), primitive(primitive_), pointerLevel(pointer_level) {}
+			OperandType(uint8_t);
+			operator std::string() const;
+
+		private:
+			static Primitive getPrimitive(uint8_t);
+	};
+
+	/** Contains constants pertaining to the Why architecture. */
 	struct Why {
 		constexpr static int wordSize = 8; // in bytes
 		constexpr static int totalRegisters = 128;
+		constexpr static int instructionSize = 12;
 
 		constexpr static int returnValueOffset = 7, returnValueCount = 16;
 		constexpr static int    argumentOffset = 23,   argumentCount = 16;
@@ -38,7 +55,6 @@ namespace WVM {
 		static std::string registerName(int);
 		static std::string coloredRegister(int);
 		static int registerID(std::string);
+		static std::string stringifyType(int);
 	};
 }
-
-#endif

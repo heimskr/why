@@ -13,22 +13,25 @@ namespace WVM::Unparser {
 			int rs, rt, rd;
 			Conditions conditions;
 			int flags, funct;
-			Operations::decodeRType(instruction, rs, rt, rd, conditions, flags, funct);
-			return stringifyRType(opcode, rs, rt, rd, conditions, funct);
+			int st, tt, dt;
+			Operations::decodeRType(instruction, rs, rt, rd, conditions, flags, funct, st, tt, dt);
+			return stringifyRType(opcode, rs, rt, rd, conditions, funct, st, tt, dt);
 		} else if (Operations::ISet.count(opcode) == 1) {
 			int rs, rd;
 			Conditions conditions;
 			int flags;
 			HWord immediate;
-			Operations::decodeIType(instruction, rs, rd, conditions, flags, immediate);
-			return stringifyIType(opcode, rs, rd, conditions, flags, immediate, vm);
+			int st, dt, it;
+			Operations::decodeIType(instruction, rs, rd, conditions, flags, immediate, st, dt, it);
+			return stringifyIType(opcode, rs, rd, conditions, flags, immediate, st, dt, it, vm);
 		} else if (Operations::JSet.count(opcode) == 1) {
 			int rs;
 			bool link;
 			Conditions conditions;
 			int flags;
 			HWord address;
-			Operations::decodeJType(instruction, rs, link, conditions, flags, address);
+			int st;
+			Operations::decodeJType(instruction, rs, link, conditions, flags, address, st);
 			return stringifyJType(opcode, rs, link, conditions, flags, address, vm);
 		} else {
 			DBG(std::hex << instruction << std::dec);
@@ -37,7 +40,8 @@ namespace WVM::Unparser {
 		}
 	}
 
-	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions conditions, int funct) {
+	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions conditions, int funct, int st, int tt,
+	                           int dt) {
 		switch (opcode) {
 			case OP_RMATH: {
 				std::string oper, suffix;
@@ -45,19 +49,14 @@ namespace WVM::Unparser {
 					case FN_ADD:    oper = "+"; break;
 					case FN_SUB:    oper = "-"; break;
 					case FN_MULT:   return color(rs) + " " + colorOper("*") + " " + color(rd);
-					case FN_MULTU:  return color(rs) + " " + colorOper("*") + " " + color(rd) + " /u";
 					case FN_SLL:    oper = "<<"; break;
 					case FN_SRL:    oper = ">>>"; break;
 					case FN_SRA:    oper = ">>"; break;
 					case FN_MOD:    oper = "%"; break;
 					case FN_DIV:    oper = "/"; break;
-					case FN_DIVU:   oper = "/"; suffix = "/u"; break;
-					case FN_MODU:   oper = "%"; suffix = "/u"; break;
-					case FN_SEXT32: return "\e[1msext32\e[22m " + color(rs) + into + color(rd);
-					case FN_SEXT16: return "\e[1msext16\e[22m " + color(rs) + into + color(rd);
-					case FN_SEXT8:  return "\e[1msext8\e[22m "  + color(rs) + into + color(rd);
+					case FN_SEXT:   return "\e[1msext32\e[22m " + color(rs) + into + color(rd);
 				}
-				return rAltOp(rs, rt, rd, oper, suffix);
+				return rAltOp(rs, rt, rd, oper, suffix, st, tt, dt);
 			}
 			case OP_RLOGIC: {
 				std::string oper;
@@ -87,7 +86,7 @@ namespace WVM::Unparser {
 					case FN_LXNOR: oper = "~xx"; break;
 					case FN_LXOR:  oper = "xx";  break;
 				}
-				return rAltOp(rs, rt, rd, oper);
+				return rAltOp(rs, rt, rd, oper, st, tt, dt);
 			}
 			case OP_RCOMP: {
 				if (funct == FN_CMP)
@@ -271,10 +270,11 @@ namespace WVM::Unparser {
 		return opcode == OP_JC? base + " \e[38;5;90mif\e[39m " + color(rs) : base;
 	}
 
-	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, const std::string &suffix) {
+	std::string rAltOp(int rs, int rt, int rd, const std::string &oper, int st, int tt, int dt,
+	                   const std::string &suffix) {
 		if (rs == rd || rt == rd) {
-			const std::string source      = color(rs == rd? rs : rt);
-			const std::string destination = color(rs == rd? rt : rs);
+			const std::string source      = color(rs == rd? rs : rt, rs == rd? st : tt);
+			const std::string destination = color(rs == rd? rt : rs, rs == rd? tt : st);
 			return source + " " + colorOper(oper + "=") + " " + destination + suffix;
 		}
 
@@ -314,7 +314,7 @@ namespace WVM::Unparser {
 		throw std::runtime_error("Invalid conditions: " + std::to_string(static_cast<int>(conditions)));
 	}
 
-	std::string color(int reg) {
+	std::string color(int reg, int type) {
 		return Why::coloredRegister(reg);
 	}
 

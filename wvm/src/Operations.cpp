@@ -41,241 +41,246 @@ namespace WVM::Operations {
 			int rs, rt, rd;
 			Conditions conditions;
 			int flags, funct;
-			decodeRType(instruction, rs, rt, rd, conditions, flags, funct);
-			executeRType(opcode, vm, vm.registers[rs], vm.registers[rt], vm.registers[rd], conditions, flags, funct);
+			int st, tt, dt;
+			decodeRType(instruction, rs, rt, rd, conditions, flags, funct, st, tt, dt);
+			RArgs args(vm, vm.registers[rs], vm.registers[rt], vm.registers[rd], conditions, flags, funct, st, tt, dt);
+			executeRType(opcode, args);
 		} else if (ISet.count(opcode) == 1) {
 			int rs, rd;
 			Conditions conditions;
 			int flags;
 			HWord immediate;
-			decodeIType(instruction, rs, rd, conditions, flags, immediate);
-			executeIType(opcode, vm, vm.registers[rs], vm.registers[rd], conditions, flags, immediate);
+			int st, dt, it;
+			decodeIType(instruction, rs, rd, conditions, flags, immediate, st, dt, it);
+			IArgs args(vm, vm.registers[rs], vm.registers[rd], conditions, flags, immediate, st, dt, it);
+			executeIType(opcode, args);
 		} else if (JSet.count(opcode) == 1) {
 			int rs;
 			bool link;
 			Conditions conditions;
 			int flags;
 			HWord address;
-			decodeJType(instruction, rs, link, conditions, flags, address);
-			executeJType(opcode, vm, vm.registers[rs], link, conditions, flags, address);
+			int st;
+			decodeJType(instruction, rs, link, conditions, flags, address, st);
+			JArgs args(vm, vm.registers[rs], link, conditions, flags, address, st);
+			executeJType(opcode, args);
 		} else
 			throw std::runtime_error("Unknown opcode at " + std::to_string(vm.programCounter) + ": " +
 				std::to_string(opcode));
 	}
 
-	void executeRType(int opcode, VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags, int funct) {
+	void executeRType(int opcode, RArgs &args) {
 		switch (opcode) {
 			case OP_RMATH:
-				switch (funct) {
-					case FN_ADD:       addOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SUB:       subOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MULT:     multOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MULTU:   multuOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SLL:       sllOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SRL:       srlOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SRA:       sraOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MOD:       modOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_DIV:       divOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_DIVU:     divuOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MODU:     moduOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SEXT32: sext32Op(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SEXT16: sext16Op(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SEXT8:   sext8Op(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_ADD:       addOp(args); return;
+					case FN_SUB:       subOp(args); return;
+					case FN_MULT:     multOp(args); return;
+					case FN_MULTU:   multuOp(args); return;
+					case FN_SLL:       sllOp(args); return;
+					case FN_SRL:       srlOp(args); return;
+					case FN_SRA:       sraOp(args); return;
+					case FN_MOD:       modOp(args); return;
+					case FN_DIV:       divOp(args); return;
+					case FN_SEXT:     sextOp(args); return;
 				}
 				break;
 			case OP_RLOGIC:
-				switch (funct) {
-					case FN_AND:     andOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_NAND:   nandOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_NOR:     norOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_NOT:     notOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_OR:       orOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_XNOR:   xnorOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_XOR:     xorOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LAND:   landOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LNAND: lnandOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LNOR:   lnorOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LNOT:   lnotOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LOR:     lorOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LXNOR: lxnorOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LXOR:   lxorOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_AND:     andOp(args); return;
+					case FN_NAND:   nandOp(args); return;
+					case FN_NOR:     norOp(args); return;
+					case FN_NOT:     notOp(args); return;
+					case FN_OR:       orOp(args); return;
+					case FN_XNOR:   xnorOp(args); return;
+					case FN_XOR:     xorOp(args); return;
+					case FN_LAND:   landOp(args); return;
+					case FN_LNAND: lnandOp(args); return;
+					case FN_LNOR:   lnorOp(args); return;
+					case FN_LNOT:   lnotOp(args); return;
+					case FN_LOR:     lorOp(args); return;
+					case FN_LXNOR: lxnorOp(args); return;
+					case FN_LXOR:   lxorOp(args); return;
 				}
 				break;
 			case OP_RCOMP:
-				switch (funct) {
-					case FN_SL:     slOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SLE:   sleOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SEQ:   seqOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SLU:   sluOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SLEU: sleuOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_SL:     slOp(args); return;
+					case FN_SLE:   sleOp(args); return;
+					case FN_SEQ:   seqOp(args); return;
+					case FN_SLU:   sluOp(args); return;
+					case FN_SLEU: sleuOp(args); return;
 				}
 				break;
 			case OP_RJUMP:
-				switch (funct) {
-					case FN_JR:     jrOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_JRC:   jrcOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_JRL:   jrlOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_JRLC: jrlcOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_JR:     jrOp(args); return;
+					case FN_JRC:   jrcOp(args); return;
+					case FN_JRL:   jrlOp(args); return;
+					case FN_JRLC: jrlcOp(args); return;
 				}
 				break;
 			case OP_RMEM:
-				switch (funct) {
-					case FN_C:         cOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_L:         lOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_S:         sOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_CB:       cbOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LB:       lbOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SB:       sbOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SPUSH: spushOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SPOP:   spopOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_CH:       chOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LH:       lhOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SH:       shOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_MS:       msOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_CS:       csOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_LS:       lsOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SS:       ssOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_C:         cOp(args); return;
+					case FN_L:         lOp(args); return;
+					case FN_S:         sOp(args); return;
+					case FN_CB:       cbOp(args); return;
+					case FN_LB:       lbOp(args); return;
+					case FN_SB:       sbOp(args); return;
+					case FN_SPUSH: spushOp(args); return;
+					case FN_SPOP:   spopOp(args); return;
+					case FN_CH:       chOp(args); return;
+					case FN_LH:       lhOp(args); return;
+					case FN_SH:       shOp(args); return;
+					case FN_MS:       msOp(args); return;
+					case FN_CS:       csOp(args); return;
+					case FN_LS:       lsOp(args); return;
+					case FN_SS:       ssOp(args); return;
 				}
 				break;
 			case OP_REXT:
-				switch (funct) {
-					case FN_PR:       prOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_HALT:   haltOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_EVAL:   evalOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PRC:     prcOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PRD:     prdOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PRX:     prxOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SLEEP: sleepOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PRB:     prbOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_REST:   restOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_IO:       ioOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_PR:       prOp(args); return;
+					case FN_HALT:   haltOp(args); return;
+					case FN_EVAL:   evalOp(args); return;
+					case FN_PRC:     prcOp(args); return;
+					case FN_PRD:     prdOp(args); return;
+					case FN_PRX:     prxOp(args); return;
+					case FN_SLEEP: sleepOp(args); return;
+					case FN_PRB:     prbOp(args); return;
+					case FN_REST:   restOp(args); return;
+					case FN_IO:       ioOp(args); return;
 				}
 				break;
 			case OP_TIME:
-				switch (funct) {
-					case FN_TIME:     timeOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SVTIME: svtimeOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_TIME:     timeOp(args); return;
+					case FN_SVTIME: svtimeOp(args); return;
 				}
 				break;
 			case OP_RING:
-				switch (funct) {
-					case FN_RING:     ringOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SVRING: svringOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_RING:     ringOp(args); return;
+					case FN_SVRING: svringOp(args); return;
 				}
 				break;
-			case OP_SEL:   selOp(vm, rs, rt, rd, conditions, flags); return;
+			case OP_SEL:   selOp(args); return;
 			case OP_PAGE:
-				switch (funct) {
-					case FN_PGOFF: pgoffOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PGON:   pgonOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SETPT: setptOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_SVPG:   svpgOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PPUSH: ppushOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_PPOP:   ppopOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_PGOFF: pgoffOp(args); return;
+					case FN_PGON:   pgonOp(args); return;
+					case FN_SETPT: setptOp(args); return;
+					case FN_SVPG:   svpgOp(args); return;
+					case FN_PPUSH: ppushOp(args); return;
+					case FN_PPOP:   ppopOp(args); return;
 				}
 				break;
 			case OP_QUERY:
-				switch (funct) {
-					case FN_QM: qmOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_QM: qmOp(args); return;
 				}
 				break;
 			case OP_INTERRUPTS:
-				switch (funct) {
-					case FN_DI: diOp(vm, rs, rt, rd, conditions, flags); return;
-					case FN_EI: eiOp(vm, rs, rt, rd, conditions, flags); return;
+				switch (args.function) {
+					case FN_DI: diOp(args); return;
+					case FN_EI: eiOp(args); return;
 				}
 				break;
-			case OP_TRANS: transOp(vm, rs, rt, rd, conditions, flags); return;
+			case OP_TRANS: transOp(args); return;
 		}
 
-		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(funct));
+		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(args.function));
 	}
 
-	void executeIType(int opcode, VM &vm, Word &rs, Word &rd, Conditions conditions, int flags, HWord immediate) {
+	void executeIType(int opcode, IArgs &args) {
 		switch (opcode) {
-			case OP_ADDI:     addiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SUBI:     subiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_MULTI:   multiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_MULTUI: multuiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SLLI:     slliOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SRLI:     srliOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SRAI:     sraiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_MODI:     modiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_DIVI:     diviOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_DIVUI:   divuiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_MODUI:   moduiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_DIVII:   diviiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_DIVUII: divuiiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_ANDI:     andiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_NANDI:   nandiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_NORI:     noriOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_ORI:       oriOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_XNORI:   xnoriOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_XORI:     xoriOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_LUI:       luiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SLI:       sliOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SLEI:     sleiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SEQI:     seqiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SLUI:     sluiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SLEUI:   sleuiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SGI:       sgiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SGEI:     sgeiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SGEUI:   sgeuiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SGUI:     sguiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_LI:         liOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SI:         siOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SET:       setOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_LBI:       lbiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SBI:       sbiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_LNI:       lniOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_LBNI:     lbniOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_INT:       intOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_RIT:       ritOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_TIMEI:   timeiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_RINGI:   ringiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_CMPI:     cmpiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SSPUSH: sspushOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SSPOP:   sspopOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SLLII:   slliiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SRLII:   srliiOp(vm, rs, rd, conditions, flags, immediate); break;
-			case OP_SRAII:   sraiiOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_ADDI:     addiOp(args); break;
+			case OP_SUBI:     subiOp(args); break;
+			case OP_MULTI:   multiOp(args); break;
+			case OP_SLLI:     slliOp(args); break;
+			case OP_SRLI:     srliOp(args); break;
+			case OP_SRAI:     sraiOp(args); break;
+			case OP_MODI:     modiOp(args); break;
+			case OP_DIVI:     diviOp(args); break;
+			case OP_DIVII:   diviiOp(args); break;
+			case OP_ANDI:     andiOp(args); break;
+			case OP_NANDI:   nandiOp(args); break;
+			case OP_NORI:     noriOp(args); break;
+			case OP_ORI:       oriOp(args); break;
+			case OP_XNORI:   xnoriOp(args); break;
+			case OP_XORI:     xoriOp(args); break;
+			case OP_LUI:       luiOp(args); break;
+			case OP_SLI:       sliOp(args); break;
+			case OP_SLEI:     sleiOp(args); break;
+			case OP_SEQI:     seqiOp(args); break;
+			case OP_SGI:       sgiOp(args); break;
+			case OP_SGEI:     sgeiOp(args); break;
+			case OP_LI:         liOp(args); break;
+			case OP_SI:         siOp(args); break;
+			case OP_SET:       setOp(args); break;
+			case OP_LBI:       lbiOp(args); break;
+			case OP_SBI:       sbiOp(args); break;
+			case OP_LNI:       lniOp(args); break;
+			case OP_LBNI:     lbniOp(args); break;
+			case OP_INT:       intOp(args); break;
+			case OP_RIT:       ritOp(args); break;
+			case OP_TIMEI:   timeiOp(args); break;
+			case OP_RINGI:   ringiOp(args); break;
+			case OP_CMPI:     cmpiOp(args); break;
+			case OP_SSPUSH: sspushOp(args); break;
+			case OP_SSPOP:   sspopOp(args); break;
+			case OP_SLLII:   slliiOp(args); break;
+			case OP_SRLII:   srliiOp(args); break;
+			case OP_SRAII:   sraiiOp(args); break;
 			default:
 				throw std::runtime_error("Unknown I-type: " + std::to_string(opcode));
 		}
 	}
 
-	void executeJType(int opcode, VM &vm, Word &rs, bool link, Conditions conditions, int flags, HWord address) {
+	void executeJType(int opcode, JArgs &args) {
 		switch (opcode) {
-			case OP_J:   jOp(vm, rs, link, conditions, flags, address); break;
-			case OP_JC: jcOp(vm, rs, link, conditions, flags, address); break;
+			case OP_J:   jOp(args); break;
+			case OP_JC: jcOp(args); break;
 			default:
 				throw std::runtime_error("Unknown J-type: " + std::to_string(opcode));
 		}
 	}
 
-	void decodeRType(UWord instr, int &rs, int &rt, int &rd, Conditions &conds, int &flags, int &funct) {
-		rd = (instr >> 31) & 0b1111111;
-		rs = (instr >> 38) & 0b1111111;
-		rt = (instr >> 45) & 0b1111111;
-		conds = static_cast<Conditions>((instr >> 14) & 0b1111);
-		flags = (instr >> 12) & 0b11;
-		funct = instr & 0xfff;
+	void decodeRType(Wasmc::TypedInstruction typed, int &rs, int &rt, int &rd, Conditions &conds, int &flags,
+	                 int &funct, int &st, int &tt, int &dt) {
+		auto [instruction, types] = typed;
+		rd = (instruction >> 31) & 0b1111111;
+		rs = (instruction >> 38) & 0b1111111;
+		rt = (instruction >> 45) & 0b1111111;
+		conds = static_cast<Conditions>((instruction >> 14) & 0b1111);
+		flags = (instruction >> 12) & 0b11;
+		funct = instruction & 0xfff;
+		st = (types >>  8) & 0xff;
+		tt = (types >> 16) & 0xff;
+		dt = types & 0xff;
 	}
 
-	void decodeIType(UWord instr, int &rs, int &rd,  Conditions &conds, int &flags, HWord &immediate) {
-		rs = (instr >> 39) & 0b1111111;
-		rd = (instr >> 32) & 0b1111111;
-		conds = static_cast<Conditions>((instr >> 48) & 0b1111);
-		flags = (instr >> 46) & 0b11;
-		immediate = instr & 0xffffffff;
+	void decodeIType(Wasmc::TypedInstruction typed, int &rs, int &rd,  Conditions &conds, int &flags, HWord &immediate,
+	                 int &st, int &dt, int &it) {
+		auto [instruction, types] = typed;
+		rs = (instruction >> 39) & 0b1111111;
+		rd = (instruction >> 32) & 0b1111111;
+		conds = static_cast<Conditions>((instruction >> 48) & 0b1111);
+		flags = (instruction >> 46) & 0b11;
+		immediate = instruction & 0xffffffff;
+		st = (types >>  8) & 0xff;
+		it = (types >> 16) & 0xff; 
 	}
 
-	void decodeJType(UWord instr, int &rs, bool &link, Conditions &conds, int &flags, HWord &address) {
-		rs = (instr >> 45) & 0b1111111;
-		link = (instr >> 44) & 1;
-		conds = static_cast<Conditions>((instr >> 34) & 0b1111);
-		flags = (instr >> 32) & 0b11;
-		address = instr & 0xffffffff;
+	void decodeJType(Wasmc::TypedInstruction typed, int &rs, bool &link, Conditions &conds, int &flags,
+	                 HWord &address) {
+		auto [instruction, types] = typed;
+		rs = (instruction >> 45) & 0b1111111;
+		link = (instruction >> 44) & 1;
+		conds = static_cast<Conditions>((instruction >> 34) & 0b1111);
+		flags = (instruction >> 32) & 0b11;
+		address = instruction & 0xffffffff;
 	}
 
 	void setReg(VM &vm, Word &rd, Word value, bool update_flags = true) {

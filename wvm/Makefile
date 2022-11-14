@@ -1,6 +1,7 @@
 CHECK			:= none
 COMPILER		?= clang++
-OPTIMIZATION	?= -Ofast -march=native
+# OPTIMIZATION	?= -Ofast -march=native
+OPTIMIZATION	?= -O0 -ggdb3
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 # TESTFILE		?= ~/src/thurisaz/Thurisaz.why
@@ -18,7 +19,7 @@ OBJECTS_HN		:= $(patsubst haunted/src/%.cpp,haunted/build/%.o,$(SOURCES_HN))
 CFLAGS_HN		:= -DDISABLE_PERFORMANCE
 
 SOURCES			:= $(SOURCES_WVM) $(SOURCES_HN)
-INCLUDE			:= -Iinclude -Ihaunted/formicine $(INCLUDE_HN)
+INCLUDE			:= -Iinclude -I../wasmc/include -Ihaunted/formicine $(INCLUDE_HN)
 OBJECTS			:= $(OBJECTS_WVM) $(OBJECTS_HN)
 LDFLAGS			+= $(strip -pthread $(LDFLAGS_EXTRA))
 
