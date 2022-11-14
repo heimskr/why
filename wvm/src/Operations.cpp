@@ -30,8 +30,8 @@ namespace WVM::Operations {
 
 	std::set<int> JSet {OP_J, OP_JC};
 
-	void execute(VM &vm, UWord instruction) {
-		instruction = Util::swapEndian(instruction);
+	void execute(VM &vm, Wasmc::TypedInstruction typed) {
+		auto [instruction, types] = typed;
 		auto lock = vm.lockVM();
 		int opcode = (instruction >> 52) & 0xfff;
 		if (opcode == OP_NOP) {
@@ -41,7 +41,7 @@ namespace WVM::Operations {
 			Conditions conditions;
 			int flags, funct;
 			int st, tt, dt;
-			decodeRType(instruction, rs, rt, rd, conditions, flags, funct, st, tt, dt);
+			decodeRType(typed, rs, rt, rd, conditions, flags, funct, st, tt, dt);
 			RArgs args(vm, vm.registers[rs], vm.registers[rt], vm.registers[rd], conditions, flags, funct, st, tt, dt);
 			executeRType(opcode, args);
 		} else if (ISet.count(opcode) == 1) {
@@ -50,7 +50,7 @@ namespace WVM::Operations {
 			int flags;
 			HWord immediate;
 			int st, dt, it;
-			decodeIType(instruction, rs, rd, conditions, flags, immediate, st, dt, it);
+			decodeIType(typed, rs, rd, conditions, flags, immediate, st, dt, it);
 			IArgs args(vm, vm.registers[rs], vm.registers[rd], conditions, flags, immediate, st, dt, it);
 			executeIType(opcode, args);
 		} else if (JSet.count(opcode) == 1) {
@@ -60,7 +60,7 @@ namespace WVM::Operations {
 			int flags;
 			HWord address;
 			int st;
-			decodeJType(instruction, rs, link, conditions, flags, address, st);
+			decodeJType(typed, rs, link, conditions, flags, address, st);
 			JArgs args(vm, vm.registers[rs], link, conditions, flags, address, st);
 			executeJType(opcode, args);
 		} else
@@ -266,6 +266,15 @@ namespace WVM::Operations {
 		flags = (instruction >> 32) & 0b11;
 		address = instruction & 0xffffffff;
 		st = types & 0xff;
+
+		DBG("======================");
+		DBG("opcode[" << ((typed.instruction >> 52) & 0xfff) << "]");
+		DBG("rs[" << Why::coloredRegister(rs) << "]");
+		DBG("link[" << std::boolalpha << link << "]");
+		DBG("conds[" << static_cast<int>(conds) << "]");
+		DBG("flags[" << flags << "]");
+		DBG("address[" << Util::toHex(address, 8) << "]");
+		DBG("st[" << Util::toHex(uint8_t(st), 1) << "]");
 	}
 
 	void setReg(VM &vm, Word &rd, Word value, bool update_flags = true) {

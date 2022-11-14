@@ -166,7 +166,7 @@ namespace Wasmc {
 				}
 			}
 
-		code.alignUp(8);
+		code.alignUp(24);
 		data.alignUp(8);
 	}
 

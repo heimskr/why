@@ -233,7 +233,6 @@ namespace Wasmc {
 		meta.at(5) = meta.at(4) + encoded_relocation.size() * 8;
 
 		linked.clear();
-		linked.insert(linked.end(), meta.cbegin(), meta.cend());
 
 		std::vector<uint8_t> code_bytes;
 		code_bytes.reserve(combined_code.size() * 12);
@@ -245,7 +244,7 @@ namespace Wasmc {
 
 		const auto code_longs = Util::getLongs(code_bytes);
 
-		for (const auto &longs: {code_longs, combined_data, encoded_combined_symbols, encoded_debug,
+		for (const auto &longs: {meta, code_longs, combined_data, encoded_combined_symbols, encoded_debug,
 		                         encoded_relocation})
 			linked.insert(linked.end(), longs.cbegin(), longs.cend());
 

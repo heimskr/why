@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include "Util.h"
+#include "wasm/Types.h"
 
 namespace WVM::Util {
 	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense) {
@@ -82,4 +83,8 @@ namespace WVM::Util {
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
 			.count();
 	}
+}
+
+Wasmc::TypedInstruction::operator std::string() const {
+	return WVM::Util::toHex(instruction, 16) + "/" + WVM::Util::toHex(typeInfo, 8);
 }

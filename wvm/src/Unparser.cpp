@@ -5,39 +5,46 @@
 #include "Why.h"
 
 namespace WVM::Unparser {
-	std::string stringify(UWord instruction, const VM *vm) {
-		int opcode = (instruction >> 52) & 0xfff;
-		if (opcode == OP_NOP) {
+	std::string stringify(Wasmc::TypedInstruction typed, const VM *vm) {
+		DBG("Typed[" << std::string(typed) << ']');
+		const int opcode = (typed.instruction >> 52) & 0xfff;
+
+		if (opcode == OP_NOP)
 			return "<>";
-		} else if (Operations::RSet.count(opcode) == 1) {
+
+		if (Operations::RSet.count(opcode) == 1) {
 			int rs, rt, rd;
 			Conditions conditions;
 			int flags, funct;
 			int st, tt, dt;
-			Operations::decodeRType(instruction, rs, rt, rd, conditions, flags, funct, st, tt, dt);
+			Operations::decodeRType(typed, rs, rt, rd, conditions, flags, funct, st, tt, dt);
 			return stringifyRType(opcode, rs, rt, rd, conditions, funct, st, tt, dt);
-		} else if (Operations::ISet.count(opcode) == 1) {
+		}
+
+		if (Operations::ISet.count(opcode) == 1) {
 			int rs, rd;
 			Conditions conditions;
 			int flags;
 			HWord immediate;
 			int st, dt, it;
-			Operations::decodeIType(instruction, rs, rd, conditions, flags, immediate, st, dt, it);
+			Operations::decodeIType(typed, rs, rd, conditions, flags, immediate, st, dt, it);
 			return stringifyIType(opcode, rs, rd, conditions, flags, immediate, st, dt, it, vm);
-		} else if (Operations::JSet.count(opcode) == 1) {
+		}
+
+		if (Operations::JSet.count(opcode) == 1) {
 			int rs;
 			bool link;
 			Conditions conditions;
 			int flags;
 			HWord address;
 			int st;
-			Operations::decodeJType(instruction, rs, link, conditions, flags, address, st);
+			Operations::decodeJType(typed, rs, link, conditions, flags, address, st);
 			return stringifyJType(opcode, rs, link, conditions, flags, address, st, vm);
-		} else {
-			DBG(std::hex << instruction << std::dec);
-			return "???";
-			throw std::runtime_error("[U] Unknown opcode: " + std::to_string(opcode));
 		}
+
+		DBG(std::hex << std::string(typed) << std::dec);
+		return "???";
+		// throw std::runtime_error("[U] Unknown opcode: " + std::to_string(opcode));
 	}
 
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions conditions, int funct, int st, int tt,

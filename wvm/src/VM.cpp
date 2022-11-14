@@ -166,10 +166,10 @@ namespace WVM {
 				std::to_string(programCounter));
 
 		if (endianness == Endianness::Little)
-			for (char i = 0; i < 8; i++)
+			for (char i = 0; i < 8; ++i)
 				memory[address + i] = (value >> (8*i)) & 0xff;
 		else
-			for (char i = 0; i < 8; i++)
+			for (char i = 0; i < 8; ++i)
 				memory[address + 7 - i] = (value >> (8*i)) & 0xff;
 		onUpdateMemory(programCounter, address - (address % 8), address, Size::Word);
 		if (address % 8 != 0)
@@ -182,10 +182,10 @@ namespace WVM {
 				std::to_string(programCounter));
 
 		if (endianness == Endianness::Little) {
-			for (char i = 0; i < 4; i++)
+			for (char i = 0; i < 4; ++i)
 				memory[address + i] = (value >> (8*i)) & 0xff;
 		} else {
-			for (char i = 0; i < 4; i++)
+			for (char i = 0; i < 4; ++i)
 				memory[address + 3 - i] = (value >> (8*i)) & 0xff;
 		}
 
@@ -221,6 +221,18 @@ namespace WVM {
 		onUpdateMemory(programCounter, address - (address % 8), address, Size::Byte);
 	}
 
+	Wasmc::TypedInstruction VM::getInstruction(Word address) const {
+		Wasmc::TypedInstruction out;
+
+		for (char i = 0; i < 8; ++i)
+			out.instruction |= UWord(memory[address + i]) << (i * 8);
+
+		for (char i = 0; i < 4; ++i)
+			out.typeInfo |= UWord(memory[address + 8 + i]) << (i * 8);
+
+		return out;
+	}
+
 	UWord VM::getWord(Word address, Endianness endianness) const {
 		if (Word(memorySize) <= address - 7 || address < 0)
 			throw VMError("Out-of-bounds memory access in VM::getWord (" + std::to_string(address - 7) + ") at " +
@@ -228,10 +240,10 @@ namespace WVM {
 
 		UWord out = 0;
 		if (endianness == Endianness::Little)
-			for (char i = 0; i < 8; i++)
+			for (char i = 0; i < 8; ++i)
 				out |= Word(memory[address + i]) << (i * 8);
 		else
-			for (char i = 0; i < 8; i++)
+			for (char i = 0; i < 8; ++i)
 				out |= Word(memory[address + i]) << ((7 - i) * 8);
 
 		return out;
@@ -244,10 +256,10 @@ namespace WVM {
 
 		UHWord out = 0;
 		if (endianness == Endianness::Little)
-			for (char i = 0; i < 4; i++)
+			for (char i = 0; i < 4; ++i)
 				out |= HWord(memory[address + i]) << (8*i);
 		else
-			for (char i = 0; i < 4; i++)
+			for (char i = 0; i < 4; ++i)
 				out |= HWord(memory[address + 3 - i]) << (8*i);
 
 		return out;
@@ -301,10 +313,6 @@ namespace WVM {
 			out.push_back(memory[i]);
 		}
 		return out;
-	}
-
-	Word VM::getInstruction(Word address) const {
-		return getWord(address, Endianness::Little);
 	}
 
 	unsigned char VM::registerID(Word &word) const {
@@ -582,11 +590,11 @@ namespace WVM {
 			return false;
 		}
 
-		UWord instruction = getWord(translated, Endianness::Big);
+		auto typed = getInstruction(translated);
 #ifdef CATCH_TICK
 		try {
 #endif
-			Operations::execute(*this, instruction);
+			Operations::execute(*this, typed);
 #ifdef CATCH_TICK
 		} catch (const std::exception &err) {
 			error() << "Error while ticking: " << err.what() << '\n';

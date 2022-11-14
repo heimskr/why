@@ -3,9 +3,10 @@
 #include <string>
 
 #include "Defs.h"
+#include "wasm/Types.h"
 
 namespace WVM::Unparser {
-	std::string stringify(UWord instruction, const VM *vm = nullptr);
+	std::string stringify(Wasmc::TypedInstruction, const VM *vm = nullptr);
 
 	std::string stringifyRType(int opcode, int rs, int rt, int rd, Conditions, int funct, int st, int tt, int dt);
 	std::string stringifyIType(int opcode, int rs, int rd, Conditions, int flags, HWord immediate, int st, int dt,

@@ -57,7 +57,7 @@ namespace WVM::Operations {
 			vm(vm_), rs(rs_), link(link_), conditions(conditions_), flags(flags_), address(address_), rsType(rs_type) {}
 	};
 
-	void execute(VM &, UWord);
+	void execute(VM &, Wasmc::TypedInstruction);
 	void executeRType(int opcode, RArgs &);
 	void executeIType(int opcode, IArgs &);
 	void executeJType(int opcode, JArgs &);

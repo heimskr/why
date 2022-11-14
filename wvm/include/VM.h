@@ -20,6 +20,7 @@
 #include "Paging.h"
 #include "Symbol.h"
 #include "Why.h"
+#include "wasm/Types.h"
 
 namespace WVM {
 	struct Drive {
@@ -118,6 +119,7 @@ namespace WVM {
 			void setHalfword(Word address, UHWord value, Endianness = Endianness::Little);
 			void setQuarterword(Word address, UQWord value, Endianness = Endianness::Little);
 			void setByte(Word address, UByte value);
+			Wasmc::TypedInstruction getInstruction(Word address) const;
 			UWord getWord(Word address, Endianness = Endianness::Little) const;
 			UHWord getHalfword(Word address, Endianness = Endianness::Little) const;
 			UQWord getQuarterword(Word address, Endianness = Endianness::Little) const;
@@ -125,7 +127,6 @@ namespace WVM {
 			UWord get(Word address, Size, Endianness = Endianness::Little) const;
 			void set(Word address, Word value, Size, Endianness = Endianness::Little);
 			std::string getString(Word address, int max = -1) const;
-			Word getInstruction(Word address) const;
 			unsigned char registerID(Word &) const;
 			void resize(size_t);
 

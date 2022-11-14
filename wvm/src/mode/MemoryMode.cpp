@@ -155,6 +155,8 @@ namespace WVM::Mode {
 		// textbox->draw();
 		textbox->suppressDraw = true;
 
+		DBG("Code[" << vm.codeOffset << "], Data[" << vm.dataOffset << "], Symbols[" << vm.symbolsOffset << "], Debug[" << vm.debugOffset << "], Relocation[" << vm.relocationOffset << "], End[" << vm.endOffset << "]");
+
 		std::thread loops = std::thread([this, on_complete]() {
 			const std::string hyphens(42 + padding, '-');
 			const std::string spaces(24 + padding, ' ');
@@ -166,18 +168,30 @@ namespace WVM::Mode {
 				for (const std::pair<const std::string, Symbol> &pair: vm.symbolTable)
 					labeled.insert(pair.second.location);
 
-			for (Word address = min, i = 0; address < max + 128 * 8; address += 8, ++i) {
-				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
-				    || address == vm.debugOffset || address == vm.relocationOffset || address == vm.endOffset) {
-					*textbox += "\e[2m" + hyphens + "\e[22m";
-				}
+			Word address;
 
+			auto show_symbol = [&] {
 				if (showSymbols && 0 < labeled.count(address))
 					for (const std::pair<const std::string, Symbol> &pair: vm.symbolTable)
 						if (pair.second.location == address)
 							*textbox += spaces + "\e[36m@\e[39;1;4m" + pair.first + "\e[22;24m";
+			};
 
+			auto show_line = [&] {
+				if (address == vm.symbolsOffset || address == vm.codeOffset || address == vm.dataOffset
+				    || address == vm.debugOffset || address == vm.relocationOffset || address == vm.endOffset) {
+					*textbox += "\e[2m" + hyphens + "\e[22m";
+				}
+			};
+
+			for (address = min; address < max + 128 * Why::wordSize;) {
+				show_line();
+				show_symbol();
 				addLine(address);
+				if (vm.codeOffset <= address && address < vm.dataOffset)
+					address += Why::instructionSize;
+				else
+					address += Why::wordSize;
 			}
 
 			Word size = vm.getMemorySize();
@@ -243,10 +257,42 @@ namespace WVM::Mode {
 				   << "\e[39m";
 			}
 		} else if (vm.codeOffset <= address && address < vm.dataOffset) {
-			ss << Unparser::stringify(word, &vm);
+			ss << "<code?>";
 		} else {
 			ss << "?";
 		}
+
+		ss << "\e[49m";
+		return ss.str();
+	}
+
+	std::string MemoryMode::stringifyCode(Word address) const {
+		std::stringstream ss;
+		auto typed = vm.getInstruction(address);
+
+		if (vm.hasBreakpoint(address))
+			ss << (vm.programCounter == address? "\e[48;5;22;31m" : "\e[38;5;202m");
+		else if (vm.programCounter == address)
+			ss << "\e[48;5;22;2m";
+		else
+			ss << "\e[2m";
+
+		ss << "[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
+
+		std::stringstream hex;
+		for (int i = 0; i < 8; ++i)
+			hex << std::right << std::setw(2) << std::setfill('0') << std::hex
+			       << ((typed.instruction >> (8 * i)) & 0xff);
+		for (int i = 0; i < 4; ++i)
+			hex << std::right << std::setw(2) << std::setfill('0') << std::hex
+			       << ((typed.typeInfo >> (8 * i)) & 0xff);
+
+		ss << hex.str() << "  ";
+
+		if (vm.codeOffset <= address && address < vm.dataOffset)
+			ss << Unparser::stringify(typed, &vm);
+		else
+			ss << "?";
 
 		ss << "\e[49m";
 		return ss.str();
@@ -476,7 +522,10 @@ namespace WVM::Mode {
 	}
 
 	Haunted::UI::SimpleLine<MemoryMode::Container> & MemoryMode::addLine(Word address) {
-		*textbox += stringify(address);
+		if (vm.codeOffset <= address && address < vm.dataOffset)
+			*textbox += stringifyCode(address);
+		else
+			*textbox += stringify(address);
 		auto ptr = textbox->getLines().back();
 		lines.emplace(address, ptr);
 		ptr->mouseFunction = [this, address](const Haunted::MouseReport &report) {

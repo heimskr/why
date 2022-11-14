@@ -78,7 +78,8 @@ namespace Wasmc {
 	struct TypedInstruction {
 		Long instruction;
 		TypeInfo typeInfo;
-		TypedInstruction(Long instruction_ = 0, TypeInfo type_info = 0):
+		TypedInstruction(): TypedInstruction(0, 0) {}
+		explicit TypedInstruction(Long instruction_, TypeInfo type_info = 0):
 			instruction(instruction_), typeInfo(type_info) {}
 		std::array<uint8_t, 12> toBytes() const {
 			return {

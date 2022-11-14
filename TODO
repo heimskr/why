@@ -8,3 +8,4 @@
 [2021/10/16 02:06:00] Add an instruction to break in the debugger.
 [2021/10/16 04:33:22] Sort out the mess with unsigned and signed immediates and sign extension.
 [2021/11/03 21:24:42] Add an `%include` directive.
+[2022/11/14 13:05:32] Move TypedInstruction into a common module shared by wasm and wvm.
