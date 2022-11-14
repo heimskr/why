@@ -28,6 +28,8 @@ namespace WVM {
 		constexpr static int totalRegisters = 128;
 		constexpr static int instructionSize = 12;
 
+		constexpr static uint8_t instructionType = 0b00010000;
+
 		constexpr static int returnValueOffset = 7, returnValueCount = 16;
 		constexpr static int    argumentOffset = 23,   argumentCount = 16;
 		constexpr static int   temporaryOffset = 39,  temporaryCount = 23;

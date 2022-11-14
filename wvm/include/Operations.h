@@ -73,7 +73,6 @@ namespace WVM::Operations {
 	void multOp(RArgs &);   // 1   R 2
 	// 1.3
 	// 1.4
-	void multuOp(RArgs &);  // 1   R 5
 	void sllOp(RArgs &);    // 1   R 6
 	void srlOp(RArgs &);    // 1   R 7
 	void sraOp(RArgs &);    // 1   R 8
@@ -122,19 +121,13 @@ namespace WVM::Operations {
 	void slOp(RArgs &);     // 14  R 0
 	void sleOp(RArgs &);    // 14  R 1
 	void seqOp(RArgs &);    // 14  R 2
-	void sluOp(RArgs &);    // 14  R 3
-	void sleuOp(RArgs &);   // 14  R 4
 	void cmpOp(RArgs &);    // 14  R 5
 
 	void sliOp(IArgs &);    // 25  I
 	void sleiOp(IArgs &);   // 26  I
 	void seqiOp(IArgs &);   // 27  I
-	void sluiOp(IArgs &);   // 28  I
-	void sleuiOp(IArgs &);  // 29  I
 	void sgiOp(IArgs &);    // 41  I
 	void sgeiOp(IArgs &);   // 42  I
-	void sgeuiOp(IArgs &);  // 59  I
-	void sguiOp(IArgs &);   // 60  I
 	void cmpiOp(IArgs &);   // 43  I
 
 	void jOp(JArgs &);      // 15  J
@@ -148,29 +141,16 @@ namespace WVM::Operations {
 	void cOp(RArgs &);      // 18  R 0
 	void lOp(RArgs &);      // 18  R 1
 	void sOp(RArgs &);      // 18  R 2
-	void cbOp(RArgs &);     // 18  R 3
-	void lbOp(RArgs &);     // 18  R 4
-	void sbOp(RArgs &);     // 18  R 5
 	void spushOp(RArgs &);  // 18  R 6
 	void spopOp(RArgs &);   // 18  R 7
 	void sspushOp(IArgs &); // 57  I
 	void sspopOp(IArgs &);  // 58  I
-	void chOp(RArgs &);     // 18  R 8
-	void lhOp(RArgs &);     // 18  R 9
-	void shOp(RArgs &);     // 18  R 10
-	void msOp(RArgs &);     // 18  R 11
-	void csOp(RArgs &);     // 18  R 12
-	void lsOp(RArgs &);     // 18  R 13
-	void ssOp(RArgs &);     // 18  R 14
 	void transOp(RArgs &);  // 68  R 0
 
 	void liOp(IArgs &);     // 19  I
 	void siOp(IArgs &);     // 20  I
 	void setOp(IArgs &);    // 21  I
-	void lbiOp(IArgs &);    // 37  I
-	void sbiOp(IArgs &);    // 38  I
 	void lniOp(IArgs &);    // 39  I
-	void lbniOp(IArgs &);   // 40  I
 
 	void intOp(IArgs &);    // 32  I
 	void ritOp(IArgs &);    // 33  I
@@ -217,8 +197,6 @@ namespace WVM::Operations {
 #define FN_SUB 1
 #define OP_MULT OP_RMATH
 #define FN_MULT 2
-#define OP_MULTU OP_RMATH
-#define FN_MULTU 5
 #define OP_SLL OP_RMATH
 #define FN_SLL 6
 #define OP_SRL OP_RMATH
@@ -229,10 +207,6 @@ namespace WVM::Operations {
 #define FN_MOD 9
 #define OP_DIV OP_RMATH
 #define FN_DIV 10
-#define OP_DIVU OP_RMATH
-#define FN_DIVU 11
-#define OP_MODU OP_RMATH
-#define FN_MODU 12
 #define OP_SEXT OP_RMATH
 #define FN_SEXT 13
 
@@ -284,10 +258,6 @@ namespace WVM::Operations {
 #define FN_SLE 1
 #define OP_SEQ OP_RCOMP
 #define FN_SEQ 2
-#define OP_SLU OP_RCOMP
-#define FN_SLU 3
-#define OP_SLEU OP_RCOMP
-#define FN_SLEU 4
 #define OP_CMP OP_RCOMP
 #define FN_CMP 5
 
@@ -338,12 +308,9 @@ namespace WVM::Operations {
 #define OP_SI 20
 #define OP_SET 21
 
-#define OP_MULTUI 24
 #define OP_SLI 25
 #define OP_SLEI 26
 #define OP_SEQI 27
-#define OP_SLUI 28
-#define OP_SLEUI 29
 #define OP_MODI 30
 
 #define OP_PR OP_REXT
@@ -372,10 +339,7 @@ namespace WVM::Operations {
 #define OP_SLLI 34
 #define OP_SRLI 35
 #define OP_SRAI 36
-#define OP_LBI 37
-#define OP_SBI 38
 #define OP_LNI 39
-#define OP_LBNI 40
 #define OP_SGI 41
 #define OP_SGEI 42
 #define OP_CMPI 43
@@ -388,14 +352,10 @@ namespace WVM::Operations {
 #define FN_SVRING 1
 #define OP_RINGI 51
 #define OP_DIVI 52
-#define OP_DIVUI 53
 #define OP_DIVII 54
-#define OP_DIVUII 55
 #define OP_SEL 56
 #define OP_SSPUSH 57
 #define OP_SSPOP 58
-#define OP_SGEUI 59
-#define OP_SGUI 60
 #define OP_SLLII 62
 #define OP_SRLII 63
 #define OP_SRAII 64
@@ -416,7 +376,6 @@ namespace WVM::Operations {
 #define FN_DI 0
 #define FN_EI 1
 
-#define OP_MODUI 67
 #define OP_TRANS 68
 
 #define INTERRUPT_MAX	3

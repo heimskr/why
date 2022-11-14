@@ -22,8 +22,8 @@ namespace WVM::Unparser {
 	std::string iComp(int rs, int rd, const std::string &immediate, const std::string &oper, int st, int dt, int it);
 
 	std::string jumpConditions(Conditions);
-	std::string color(int reg);
-	std::string colorNum(int reg);
+	std::string color(int reg, int type);
+	std::string colorNum(int reg, int type);
 	std::string colorOper(const std::string &oper);
 
 	std::string getSymbol(Word location, const VM &);

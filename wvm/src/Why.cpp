@@ -115,9 +115,8 @@ namespace WVM {
 		}
 	}
 
-	// OperandType::OperandType(uint8_t packed): isSigned( {
-
-	// }
+	OperandType::OperandType(uint8_t packed):
+		isSigned((packed >> 3) & 1), primitive(getPrimitive(packed)), pointerLevel(packed >> 4) {}
 
 	Primitive OperandType::getPrimitive(uint8_t packed) {
 		switch (packed & 0b111) {
