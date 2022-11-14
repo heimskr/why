@@ -12,8 +12,7 @@ namespace WVM {
 			vm.recordChange<HaltChange>();
 			vm.stop();
 		} else {
-			const Word destination = vm.getWord(vm.interruptTableAddress + Word(type) * 8,
-				Endianness::Little);
+			const Word destination = vm.getWord(vm.interruptTableAddress + Word(type) * 8, Endianness::Little);
 			if (destination == 0) {
 				vm.recordChange<HaltChange>();
 				vm.stop();

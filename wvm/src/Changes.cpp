@@ -46,7 +46,8 @@ namespace WVM {
 	}
 
 	JumpChange::JumpChange(const VM &vm, Word to_, bool link_):
-		from(vm.programCounter), to(to_), returnFrom(vm.rt()), returnTo(vm.programCounter + 8), link(link_) {}
+		from(vm.programCounter), to(to_), returnFrom(vm.rt()), returnTo(vm.programCounter + Why::instructionSize),
+		link(link_) {}
 
 	void JumpChange::apply(VM &vm, bool strict) {
 		auto lock = vm.lockVM();

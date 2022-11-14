@@ -341,14 +341,14 @@ namespace WVM {
 
 	void VM::link(bool record) {
 		if (record)
-			recordChange<RegisterChange>(*this, Why::returnAddressOffset, programCounter + 8);
-		registers[Why::returnAddressOffset] = programCounter + 8;
+			recordChange<RegisterChange>(*this, Why::returnAddressOffset, programCounter + Why::instructionSize);
+		registers[Why::returnAddressOffset] = programCounter + Why::instructionSize;
 	}
 
 	void VM::increment() {
-		recordChange<JumpChange>(*this, programCounter + 8, false);
-		programCounter += 8;
-		onJump(programCounter - 8, programCounter);
+		recordChange<JumpChange>(*this, programCounter + Why::instructionSize, false);
+		programCounter += Why::instructionSize;
+		onJump(programCounter - Why::instructionSize, programCounter);
 	}
 
 	bool VM::changeRing(Ring new_ring) {
@@ -606,7 +606,7 @@ namespace WVM {
 	}
 
 	Word VM::nextInstructionAddress() const {
-		return programCounter + 8;
+		return programCounter + Why::instructionSize;
 	}
 
 	bool VM::checkWritable() {
@@ -789,7 +789,7 @@ namespace WVM {
 					for (unsigned j = 0; j < count; ++j) {
 						debugMap.try_emplace(address, debugFiles.at(file), debugFunctions.at(function), line, column,
 							count, address);
-						address += 8;
+						address += Why::instructionSize;
 					}
 					i += 8;
 					++index;
