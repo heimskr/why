@@ -1,0 +1,21 @@
+#meta
+name: "Example4"
+author: "Kai Tamkun"
+orcid: "0000-0001-7405-6654"
+version: "1"
+
+#text
+
+%data
+
+@another_str
+%stringz "Hello, World!\n"
+%type anotherstr object
+%size anotherstr .-anotherstr
+
+%code
+
+@ex4
+	&another_str -> $a0{uc*}
+	:: strprint
+	: $rt{v*}

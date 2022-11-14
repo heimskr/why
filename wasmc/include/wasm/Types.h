@@ -80,6 +80,7 @@ namespace Wasmc {
 		TypedInstruction(Long instruction_ = 0, TypeInfo type_info = 0):
 			instruction(instruction_), typeInfo(type_info) {}
 		std::array<uint8_t, 12> toBytes() const;
+		explicit operator std::string() const;
 	};
 
 	struct AnyBase {

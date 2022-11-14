@@ -659,14 +659,19 @@ namespace Wasmc {
 					break;
 
 				default:
-					code.insertAll(offset, compileInstruction(*flipSigns(instruction)).toBytes());
+					instruction->debug();
+					flipSigns(instruction);
+					auto compiled = compileInstruction(*instruction);
+
+					std::cerr << std::string(compiled) << " Opcode[" << dynamic_cast<HasOpcode *>(instruction)->getOpcode() << "]\n";
+					code.insertAll(offset, compiled.toBytes());
 					break;
 			}
 		}
 	}
 
 	WASMInstructionNode * Assembler::flipSigns(WASMInstructionNode *node) const {
-		if (RNode *rnode = dynamic_cast<RNode *>(node)) {
+		if (auto *rnode = dynamic_cast<RNode *>(node)) {
 			if (*rnode->oper == ">=") {
 				rnode->oper = StringSet::intern("<=");
 				rnode->operToken = WASMTOK_LEQ;

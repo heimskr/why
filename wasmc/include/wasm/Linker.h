@@ -31,7 +31,7 @@ namespace Wasmc {
 			void applyRelocation(std::vector<RelocationData> &relocation,
 			                     const std::vector<SymbolTableEntry> &symbols,
 			                     const std::map<std::string, size_t> &symbol_indices,
-			                     std::vector<Long> &data, std::vector<Long> &code,
+			                     std::vector<Long> &data, std::vector<TypedInstruction> &code,
 			                     Long data_offset, Long code_offset);
 
 			static std::string findSymbolFromAddress(Long address, const SymbolTable &, Long end_offset);

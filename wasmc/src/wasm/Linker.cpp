@@ -93,7 +93,7 @@ namespace Wasmc {
 		const std::vector<SymbolTableEntry> &main_symbols = main_parser.symbols;
 		std::vector<SymbolTableEntry> combined_symbols = main_symbols;
 		std::map<std::string, size_t> combined_symbol_indices = main_parser.symbolIndices;
-		std::vector<Long> combined_code = main_parser.rawCode;
+		auto combined_code = main_parser.instructions;
 		std::vector<Long> combined_data = main_parser.rawData;
 		std::vector<std::shared_ptr<Wasmc::DebugEntry>> combined_debug = main_parser.copyDebugData();
 		std::vector<RelocationData> combined_relocation = main_parser.relocationData;
@@ -111,7 +111,7 @@ namespace Wasmc {
 			BinaryParser subparser(unit);
 			subparser.parse();
 
-			std::vector<Long> &subcode = subparser.rawCode;
+			auto &subcode = subparser.instructions;
 			std::vector<Long> &subdata = subparser.rawData;
 			std::vector<SymbolTableEntry> &subtable = subparser.symbols;
 			std::map<std::string, size_t> &subindices = subparser.symbolIndices;
@@ -221,7 +221,7 @@ namespace Wasmc {
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
 
 		std::vector<Long> &meta = main_parser.rawMeta;
-		meta.at(1) = meta.at(0) + combined_code.size() * 8;
+		meta.at(1) = meta.at(0) + combined_code.size() * 12;
 		meta.at(2) = meta.at(1) + combined_data.size() * 8;
 		meta.at(3) = meta.at(2) + encoded_combined_symbols.size() * 8;
 		meta.at(4) = meta.at(3) + encoded_debug.size() * 8;
@@ -233,7 +233,19 @@ namespace Wasmc {
 		meta.at(5) = meta.at(4) + encoded_relocation.size() * 8;
 
 		linked.clear();
-		for (const auto &longs: {meta, combined_code, combined_data, encoded_combined_symbols, encoded_debug,
+		linked.insert(linked.end(), meta.cbegin(), meta.cend());
+
+		std::vector<uint8_t> code_bytes;
+		code_bytes.reserve(combined_code.size() * 12);
+
+		for (const auto &instruction: combined_code) {
+			const auto instruction_bytes = instruction.toBytes();
+			code_bytes.insert(code_bytes.end(), instruction_bytes.cbegin(), instruction_bytes.cend());
+		}
+
+		const auto code_longs = Util::getLongs(code_bytes);
+
+		for (const auto &longs: {code_longs, combined_data, encoded_combined_symbols, encoded_debug,
 		                         encoded_relocation})
 			linked.insert(linked.end(), longs.cbegin(), longs.cend());
 
@@ -243,7 +255,7 @@ namespace Wasmc {
 	void Linker::applyRelocation(std::vector<RelocationData> &relocation,
 	                             const std::vector<SymbolTableEntry> &symbols,
 	                             const std::map<std::string, size_t> &symbol_indices,
-	                             std::vector<Long> &data, std::vector<Long> &code,
+	                             std::vector<Long> &data, std::vector<TypedInstruction> &code,
 	                             Long data_offset, Long code_offset) {
 		for (auto &entry: relocation) {
 			if (!entry.label) {
@@ -271,49 +283,76 @@ namespace Wasmc {
 					throw std::runtime_error("Unhandled SymbolEnum encountered in Linker::applyRelocation: " +
 						std::to_string(int(symbol.type)));
 			}
-			auto &longs = entry.isData? data : code;
-			if (entry.sectionOffset % 8) {
-				Long &first = longs[entry.sectionOffset / 8], &second = longs[entry.sectionOffset / 8 + 1];
-				auto bytes = Util::getBytes(first), second_bytes = Util::getBytes(second);
-				bytes.reserve(16);
-				bytes.insert(bytes.end(), second_bytes.cbegin(), second_bytes.cend());
-				if (entry.type == RelocationType::Full)
-					for (int i = 0; i < 8; ++i)
-						bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
-				else if (entry.type == RelocationType::Lower4)
-					for (int i = 0; i < 4; ++i)
-						bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
-				else if (entry.type == RelocationType::Upper4)
-					for (int i = 0; i < 4; ++i)
-						bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (32 + (8 * i)));
-				else
-					throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
-				auto adjusted = Util::getLongs(bytes);
-				assert(adjusted.size() == 2);
-				first = adjusted[0];
-				second = adjusted[1];
-			} else {
-				Long &value = longs[entry.sectionOffset / 8];
-				if (entry.type == RelocationType::Full) {
-					value = new_value;
-				} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
-					auto bytes = Util::getBytes(value);
-					if (entry.type == RelocationType::Lower4) {
-						bytes[0] = uint8_t(new_value);
-						bytes[1] = uint8_t(new_value >>  8);
-						bytes[2] = uint8_t(new_value >> 16);
-						bytes[3] = uint8_t(new_value >> 24);
-					} else {
-						bytes[0] = uint8_t(new_value >> 32);
-						bytes[1] = uint8_t(new_value >> 40);
-						bytes[2] = uint8_t(new_value >> 48);
-						bytes[3] = uint8_t(new_value >> 56);
-					}
+
+			if (entry.isData) {
+				if (entry.sectionOffset % 8 != 0) {
+					Long &first  = data[entry.sectionOffset / 8];
+					Long &second = data[entry.sectionOffset / 8 + 1];
+					auto bytes = Util::getBytes(first);
+					const auto second_bytes = Util::getBytes(second);
+					bytes.reserve(16);
+					bytes.insert(bytes.end(), second_bytes.cbegin(), second_bytes.cend());
+					if (entry.type == RelocationType::Full)
+						for (int i = 0; i < 8; ++i)
+							bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
+					else if (entry.type == RelocationType::Lower4)
+						for (int i = 0; i < 4; ++i)
+							bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (8 * i));
+					else if (entry.type == RelocationType::Upper4)
+						for (int i = 0; i < 4; ++i)
+							bytes[i + entry.sectionOffset % 8] = uint8_t(new_value >> (32 + (8 * i)));
+					else
+						throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
 					auto adjusted = Util::getLongs(bytes);
-					assert(adjusted.size() == 1);
-					value = adjusted.front();
-				} else
-					throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
+					assert(adjusted.size() == 2);
+					first = adjusted[0];
+					second = adjusted[1];
+				} else {
+					Long &value = data[entry.sectionOffset / 8];
+					if (entry.type == RelocationType::Full) {
+						value = new_value;
+					} else if (entry.type == RelocationType::Lower4 || entry.type == RelocationType::Upper4) {
+						auto bytes = Util::getBytes(value);
+						if (entry.type == RelocationType::Lower4) {
+							bytes[0] = uint8_t(new_value);
+							bytes[1] = uint8_t(new_value >>  8);
+							bytes[2] = uint8_t(new_value >> 16);
+							bytes[3] = uint8_t(new_value >> 24);
+						} else {
+							bytes[0] = uint8_t(new_value >> 32);
+							bytes[1] = uint8_t(new_value >> 40);
+							bytes[2] = uint8_t(new_value >> 48);
+							bytes[3] = uint8_t(new_value >> 56);
+						}
+						auto adjusted = Util::getLongs(bytes);
+						assert(adjusted.size() == 1);
+						value = adjusted.front();
+					} else
+						throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
+				}
+			} else {
+				// if ((entry.sectionOffset - 4) % 12 != 0) {
+				// 	error() << std::string(entry) << '\n';
+				// 	throw std::runtime_error("Code symbol section offset (" + std::to_string(entry.sectionOffset) +
+				// 		") must be divisible by 12 after subtracting 4");
+				// }
+
+				Long &instruction = code.at((entry.sectionOffset - 0) / 12).instruction;
+
+				if (entry.type == RelocationType::Lower4) {
+					if (0xffffffff < new_value)
+						throw std::runtime_error("New value too high: 0x" + Util::hex(new_value));
+					info() << Util::toHex(instruction & 0xffffffff, 8) << " -> " << new_value << " (lower4)\n";
+					instruction &= ~0xffffffff;
+					instruction |= new_value;
+				} else if (entry.type == RelocationType::Upper4) {
+					info() << Util::toHex(instruction & 0xffffffff, 8) << " -> " << (new_value >> 32) << " (upper4)\n";
+					instruction &= ~0xffffffff;
+					instruction |= new_value >> 32;
+				} else {
+					throw std::runtime_error("Code relocation has invalid type: " +
+						std::to_string(static_cast<int>(entry.type)));
+				}
 			}
 		}
 	}

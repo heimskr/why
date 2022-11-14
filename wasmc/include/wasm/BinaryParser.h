@@ -12,6 +12,7 @@ namespace Wasmc {
 	class BinaryParser {
 		public:
 			std::vector<Long> raw, rawMeta, rawCode, rawData, rawSymbols, rawDebugData, rawRelocation;
+			std::vector<TypedInstruction> instructions;
 			std::string name, version, author, orcid;
 			std::vector<SymbolTableEntry> symbols;
 			std::map<std::string, size_t> symbolIndices;

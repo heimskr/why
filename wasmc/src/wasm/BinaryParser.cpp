@@ -111,15 +111,64 @@ namespace Wasmc {
 		rawCode = slice(offsets.code / 8, offsets.data / 8);
 		// Do nothing if there isn't at least one instruction in the code section.
 		if (12 <= offsets.data - offsets.code) {
-			for (size_t i = 0; i < offsets.data - offsets.code; i += 12) {
+			std::vector<uint8_t> code_bytes;
+			for (const Long chunk: rawCode) {
+				auto bytes = Util::getBytes(chunk);
+				code_bytes.insert(code_bytes.end(), bytes.cbegin(), bytes.cend());
+			}
+
+			for (size_t i = 0; i < code_bytes.size(); i += 12) {
+				TypedInstruction instruction {
+					static_cast<Long>(code_bytes[i])
+					| (static_cast<Long>(code_bytes[i + 1]) << 8)
+					| (static_cast<Long>(code_bytes[i + 2]) << 16)
+					| (static_cast<Long>(code_bytes[i + 3]) << 24)
+					| (static_cast<Long>(code_bytes[i + 4]) << 32)
+					| (static_cast<Long>(code_bytes[i + 5]) << 40)
+					| (static_cast<Long>(code_bytes[i + 6]) << 48)
+					| (static_cast<Long>(code_bytes[i + 7]) << 56),
+					static_cast<TypeInfo>(code_bytes[i + 8])
+					| (static_cast<TypeInfo>(code_bytes[i + 9])  << 8)
+					| (static_cast<TypeInfo>(code_bytes[i + 10]) << 16)
+					| (static_cast<TypeInfo>(code_bytes[i + 11]) << 24)
+				};
+
+				std::cerr << i << " -> " << std::string(instruction) << ' ';
+				code.emplace_back(parse(instruction));
+				auto &inst = *code.back();
+				std::cerr << typeid(inst).name() << ' ';
+				std::cerr << "Opcode[" << inst.opcode << "]";
+				if (auto *r = dynamic_cast<AnyR *>(&inst)) {
+					std::cerr << ", Funct[" << r->function << ']';
+				}
+				std::cerr << '\n';
+				instructions.emplace_back(instruction);
+			}
+
+
+
+			/*
+			for (size_t i = 0; i <= offsets.data - offsets.code - 12; i += 12) {
 				const Long current = rawCode.at(i / 8);
 				const Long next = rawCode.at(i / 8 + 1);
+				info() << i << " -> " << Util::toHex(current, 16) << '\n';
+				TypedInstruction instruction;
 				if (i % 8 == 0) // 8-byte aligned
-					code.emplace_back(parse({current, static_cast<TypeInfo>(next >> 32)}));
+					instruction = {current, static_cast<TypeInfo>(next >> 32)};
 				else
-					code.emplace_back(parse({(current << 32) | (next >> 32),
-						static_cast<TypeInfo>(next & 0xffffffff)}));
+					instruction = {(current << 32) | (next >> 32), static_cast<TypeInfo>(next & 0xffffffff)};
+				info() << i << " % 8 == " << (i % 8) << " -> " << std::string(instruction) << '\n';
+				code.emplace_back(parse(instruction));
+				auto &inst = *code.back();
+				// std::cerr << typeid(*code.back()).name() << '\n';
+				std::cerr << "Opcode[" << inst.opcode << "]";
+				if (auto *r = dynamic_cast<AnyR *>(&inst)) {
+					std::cerr << ", Funct[" << r->function << ']';
+				}
+				std::cerr << '\n';
+				instructions.emplace_back(instruction);
 			}
+			//*/
 		}
 
 		rawData = slice(offsets.data / 8, offsets.symbolTable / 8);
@@ -209,16 +258,19 @@ namespace Wasmc {
 		const size_t end = getDebugOffset() / 8;
 
 		for (size_t i = getSymbolTableOffset() / 8, j = 0; i < end && j < MAX_SYMBOLS; ++j) {
+			std::cerr << "[i=" << i << "]\n";
 			const uint32_t id = raw[i] >> 32;
 			const short length = raw[i] & 0xffff;
 			const SymbolEnum type = static_cast<SymbolEnum>((raw[i] >> 16) & 0xffff);
 			const Long address = raw[i + 1];
 
+			std::cerr << "id[" << id << "], length[" << length << "], type[" << static_cast<int>(type) << "], address[" << address << "]\n";
+
 			std::string symbol_name;
 			symbol_name.reserve(8ul * length);
 
 			for (size_t index = i + 2; index < i + 2 + length; ++index) {
-				Long piece = raw[index];
+				Long piece = raw.at(index);
 				size_t removed = 0;
 				// Take the next long and ignore any null bytes at the least significant end.
 				while (piece && (piece & 0xff) == 0) {

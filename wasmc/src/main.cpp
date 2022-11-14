@@ -90,8 +90,10 @@ int link(int argc, char **argv) {
 
 	Wasmc::Linker linker;
 
-	for (int i = 3; i < argc; ++i)
+	for (int i = 3; i < argc; ++i) {
+		Wasmc::info() << "Adding " << argv[i] << '\n';
 		linker.addFile(argv[i]);
+	}
 
 	std::ofstream outfile(argv[2]);
 	if (!outfile.is_open())

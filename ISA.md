@@ -420,10 +420,10 @@ example.
 
 The upper 61 bits of the first word of a relocation data entry represent the index of the symbol in the symbol table,
 while the next two bits are `0` if the value to relocate is 8 bytes wide, `2` if it's the lower 4 bytes of the symbol's
-address or `3` if it's the upper 4 bytes of the symbol's address. A value of `1` indicates the value to relocate is 12
-bytes wide. The lowest bit of the first word is `1` if the value to be relocated is in the data section or `0` if it's
-in the code section. The second word is the signed offset to be applied to the symbol's location. The third and final
-word is the address of the value relative to the start of the code section.
+address or `3` if it's the upper 4 bytes of the symbol's address. The lowest bit of the first word is `1` if the value
+to be relocated is in the data section or `0` if it's in the code section. The second word is the signed offset to be
+applied to the symbol's location. The third and final word is the address of the value relative to the start of the code
+section.
 
 # <a name="directives"></a>Directives
 
