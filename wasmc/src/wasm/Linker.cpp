@@ -337,16 +337,14 @@ namespace Wasmc {
 				// 		") must be divisible by 12 after subtracting 4");
 				// }
 
-				Long &instruction = code.at((entry.sectionOffset - 0) / 12).instruction;
+				Long &instruction = code.at(entry.sectionOffset / 12).instruction;
 
 				if (entry.type == RelocationType::Lower4) {
 					if (0xffffffff < new_value)
 						throw std::runtime_error("New value too high: 0x" + Util::hex(new_value));
-					info() << Util::toHex(instruction & 0xffffffff, 8) << " -> " << new_value << " (lower4)\n";
 					instruction &= ~0xffffffff;
 					instruction |= new_value;
 				} else if (entry.type == RelocationType::Upper4) {
-					info() << Util::toHex(instruction & 0xffffffff, 8) << " -> " << (new_value >> 32) << " (upper4)\n";
 					instruction &= ~0xffffffff;
 					instruction |= new_value >> 32;
 				} else {

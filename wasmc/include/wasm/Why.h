@@ -6,6 +6,7 @@
 namespace Wasmc::Why {
 	constexpr int wordSize = 8; // in bytes
 	constexpr int totalRegisters = 128;
+	constexpr int instructionSize = 12;
 
 	constexpr int returnValueOffset = 7, returnValueCount = 16;
 	constexpr int    argumentOffset = 23,   argumentCount = 16;

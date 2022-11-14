@@ -698,33 +698,33 @@ namespace Wasmc {
 				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<TypedReg>(jeq->rt), m7, bang));
 				code.insert(offset, compileInstruction(*seq));
 				extraInstructions.emplace(offset, std::move(seq));
-				offset += 8;
+				offset += Why::instructionSize;
 			} else {
 				addJeqImmediateRHS(offset, jeq, m7);
 				// rs == $m7 -> $m7
 				auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, m7, m7, bang));
 				code.insert(offset, compileInstruction(*seq));
 				extraInstructions.emplace(offset, std::move(seq));
-				offset += 8;
+				offset += Why::instructionSize;
 			}
 			// : rd if $m7
 			auto jrc = std::make_unique<WASMJrcNode>(jeq->link, m7, std::get<TypedReg>(jeq->addr));
 			code.insert(offset, compileInstruction(*jrc));
 			extraInstructions.emplace(offset, std::move(jrc));
-			offset += 8;
+			offset += Why::instructionSize;
 		} else if (std::holds_alternative<TypedReg>(jeq->rt)) {
 			// Address is an immediate, RHS is a register
 			// rs == rt -> $m7
 			auto seq = std::unique_ptr<RNode>(makeSeq(jeq->rs, std::get<TypedReg>(jeq->rt), m7, bang));
 			code.insert(offset, compileInstruction(*seq));
 			extraInstructions.emplace(offset, std::move(seq));
-			offset += 8;
+			offset += Why::instructionSize;
 			// : addr if $m7
 			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
 			jc->setBang(bang);
 			code.insert(offset, compileInstruction(*jc));
 			extraInstructions.emplace(offset, std::move(jc));
-			offset += 8;
+			offset += Why::instructionSize;
 		} else {
 			// Address is an immediate, RHS is an immediate
 			addJeqImmediateRHS(offset, jeq, m7);
@@ -733,7 +733,7 @@ namespace Wasmc {
 			jc->setBang(bang);
 			code.insert(offset, compileInstruction(*jc));
 			extraInstructions.emplace(offset, std::move(jc));
-			offset += 8;
+			offset += Why::instructionSize;
 		}
 	}
 
@@ -756,7 +756,7 @@ namespace Wasmc {
 		new_node->setBang(jeq->bang);
 		code.insert(offset, compileInstruction(*new_node));
 		extraInstructions.emplace(offset, std::move(new_node));
-		offset += 8;
+		offset += Why::instructionSize;
 	}
 
 	void Assembler::addMove(size_t offset, const WASMInstructionNode *instruction) {
@@ -779,7 +779,7 @@ namespace Wasmc {
 			set->setBang(instruction->bang);
 			code.insert(offset, compileInstruction(*set));
 			extraInstructions.emplace(offset, std::move(set));
-			offset += 8;
+			offset += Why::instructionSize;
 
 			auto new_print = std::make_unique<WASMPrintNode>(m7, PrintType::Char);
 			new_print->setBang(instruction->bang);
@@ -805,7 +805,7 @@ namespace Wasmc {
 		set->setBang(instruction->bang);
 		code.insert(offset, compileInstruction(*set));
 		extraInstructions.emplace(offset, std::move(set));
-		offset += 8;
+		offset += Why::instructionSize;
 
 		auto new_io = std::make_unique<WASMIONode>(nullptr);
 		new_io->setBang(instruction->bang);
@@ -830,7 +830,7 @@ namespace Wasmc {
 				first = false;
 				code.insert(offset, compileInstruction(*set));
 				extraInstructions.emplace(offset, std::move(set));
-				offset += 8;
+				offset += Why::instructionSize;
 				last_char = ch;
 			}
 
@@ -838,7 +838,7 @@ namespace Wasmc {
 			new_print->setBang(print->bang);
 			code.insert(offset, compileInstruction(*new_print));
 			extraInstructions.emplace(offset, std::move(new_print));
-			offset += 8;
+			offset += Why::instructionSize;
 		}
 	}
 
@@ -915,7 +915,7 @@ namespace Wasmc {
 			}
 			const size_t address = metaOffsetCode() + offset;
 			size_t count = 1;
-			for (size_t j = address + 8; j < code.size(); j += 8) {
+			for (size_t j = address + Why::instructionSize; j < code.size(); j += Why::instructionSize) {
 				int subbang;
 				if (instructionMap.count(j) != 0) {
 					subbang = instructionMap.at(j)->bang;
@@ -958,7 +958,7 @@ namespace Wasmc {
 			add(location->functionIndex, 4);
 			add(address, 8);
 
-			while (to_add.size() % 8)
+			while (to_add.size() % 8 != 0)
 				to_add.push_back(0);
 
 			debug.appendAll(to_add);
