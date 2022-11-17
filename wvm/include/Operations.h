@@ -162,7 +162,6 @@ namespace WVM::Operations {
 
 	void prOp(RArgs &);     // 31 ?R 1
 	void haltOp(RArgs &);   // 31 ?R 2
-	void evalOp(RArgs &);   // 31 ?R 3
 	void prcOp(RArgs &);    // 31 ?R 4
 	void prdOp(RArgs &);    // 31 ?R 5
 	void prxOp(RArgs &);    // 31 ?R 6
@@ -316,8 +315,6 @@ namespace WVM::Operations {
 #define FN_PR 1
 #define OP_HALT OP_REXT
 #define FN_HALT 2
-#define OP_EVAL OP_REXT
-#define FN_EVAL 3
 #define OP_PRC OP_REXT
 #define FN_PRC 4
 #define OP_PRD OP_REXT

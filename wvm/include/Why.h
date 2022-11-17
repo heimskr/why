@@ -77,9 +77,8 @@ namespace WVM {
 			return primitive != Primitive::Void && pointerLevel == 0;
 		}
 
-		static OperandType VoidPtr() {
-			return {false, Primitive::Void, 1};
-		}
+		static OperandType VOID_PTR;
+		static OperandType ULONG;
 	};
 
 	/** Contains constants pertaining to the Why architecture. */

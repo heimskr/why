@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "wasm/Types.h"
 #include "Changes.h"
 #include "DebugData.h"
 #include "Defs.h"

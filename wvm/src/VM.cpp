@@ -441,7 +441,7 @@ namespace WVM {
 	bool VM::intPfault() {
 		auto lock = lockVM();
 		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, lastVirtual);
-		registers[Why::exceptionOffset + 2] = {lastVirtual, Wasmc::OperandType::VoidPtr()};
+		registers[Why::exceptionOffset + 2] = {lastVirtual, OperandType::VOID_PTR};
 		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Pfault, true);
 	}
@@ -449,7 +449,7 @@ namespace WVM {
 	bool VM::intBwrite(Word address) {
 		auto lock = lockVM();
 		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, address);
-		registers[Why::exceptionOffset + 2] = {address, Wasmc::OperandType::VoidPtr()};
+		registers[Why::exceptionOffset + 2] = {address, OperandType::VOID_PTR};
 		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Bwrite, true);
 	}
@@ -470,7 +470,7 @@ namespace WVM {
 		if (hardwareInterruptsEnabled) {
 			auto lock = lockVM();
 			bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, key);
-			registers[Why::exceptionOffset + 2] = {key, Wasmc::OperandType(false, Wasmc::Primitive::Long, 0)};
+			registers[Why::exceptionOffset + 2] = {key, OperandType(false, Primitive::Long, 0)};
 			onRegisterChange(Why::exceptionOffset + 2);
 			return interrupt(InterruptType::Keybrd, true);
 		}
@@ -482,7 +482,7 @@ namespace WVM {
 	bool VM::intPfault() {
 		auto lock = lockVM();
 		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, lastVirtual);
-		registers[Why::exceptionOffset + 2] = {lastVirtual, Wasmc::OperandType::VoidPtr()};
+		registers[Why::exceptionOffset + 2] = {lastVirtual, OperandType::VOID_PTR};
 		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Badtyp, true);
 	}
@@ -737,8 +737,8 @@ namespace WVM {
 			relocationOffset = getWord(32, Endianness::Little);
 		if (endOffset == -1)
 			endOffset = getWord(40, Endianness::Little);
-		registers[Why::globalAreaPointerOffset] = {endOffset, Wasmc::OperandType::VoidPtr()};
-		sp() = {memorySize, Wasmc::OperandType::VoidPtr()};
+		registers[Why::globalAreaPointerOffset] = {endOffset, OperandType::VOID_PTR};
+		sp() = {memorySize, OperandType::VOID_PTR};
 		onRegisterChange(Why::globalAreaPointerOffset);
 		onRegisterChange(Why::stackPointerOffset);
 		loadSymbols();

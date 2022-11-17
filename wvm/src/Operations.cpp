@@ -130,7 +130,6 @@ namespace WVM::Operations {
 				switch (args.function) {
 					case FN_PR:       prOp(args); return;
 					case FN_HALT:   haltOp(args); return;
-					case FN_EVAL:   evalOp(args); return;
 					case FN_PRC:     prcOp(args); return;
 					case FN_PRD:     prdOp(args); return;
 					case FN_PRX:     prxOp(args); return;
@@ -279,7 +278,7 @@ namespace WVM::Operations {
 	static void setReg(VM &vm, Register &rd, Register new_value, bool update_flags = true) {
 		if (vm.registerID(rd) == Why::zeroOffset)
 			std::cerr << "Set register $0 at " << vm.programCounter << "!\n";
-		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), new_value);
+		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), new_value.value, new_value.type);
 		if (update_flags)
 			vm.updateFlags(rd = new_value);
 		else
@@ -287,15 +286,15 @@ namespace WVM::Operations {
 		vm.onRegisterChange(vm.registerID(rd));
 	}
 
-	static bool typeCheck(Register &one, Register &two, int level_difference = 0) {
-		return typeCheck(one.type, two.type, level_difference);
-	}
-
 	static bool typeCheck(const OperandType &one, const OperandType &two, int level_difference = 0) {
 		if (level_difference == 0)
 			return one == two;
 		return one.isSigned == two.isSigned && one.primitive == two.primitive &&
 			one.pointerLevel - level_difference == two.pointerLevel;
+	}
+
+	static bool typeCheck(Register &one, Register &two, int level_difference = 0) {
+		return typeCheck(one.type, two.type, level_difference);
 	}
 
 	static bool typeCheck(Register &one, int two) {
@@ -363,8 +362,8 @@ namespace WVM::Operations {
 		vm.onRegisterChange(Why::loOffset);
 		vm.onRegisterChange(Why::hiOffset);
 		const OperandType new_type(args.rs.type.isSigned, Primitive::Long);
-		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi(), vm.hi().type, new_type);
-		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo(), vm.lo().type, new_type);
+		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi().value, vm.hi().type, new_type);
+		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo().value, vm.lo().type, new_type);
 		vm.increment();
 	}
 
@@ -630,8 +629,8 @@ namespace WVM::Operations {
 		vm.onRegisterChange(Why::hiOffset);
 		vm.onRegisterChange(Why::loOffset);
 		const OperandType new_type(args.rs.type.isSigned, Primitive::Long);
-		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi(), vm.hi().type, new_type);
-		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo(), vm.lo().type, new_type);
+		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi().value, vm.hi().type, new_type);
+		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo().value, vm.lo().type, new_type);
 		args.vm.increment();
 	}
 
@@ -931,7 +930,7 @@ namespace WVM::Operations {
 	}
 
 	void jrOp(RArgs &args) {
-		if (args.rd.type != OperandType::VoidPtr()) {
+		if (args.rd.type != OperandType::VOID_PTR) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -949,7 +948,7 @@ namespace WVM::Operations {
 	}
 
 	void jrcOp(RArgs &args) {
-		if (!typeCheck(args.rs, args.rsType) || args.rd.type != OperandType::VoidPtr()) {
+		if (!typeCheck(args.rs, args.rsType) || args.rd.type != OperandType::VOID_PTR) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -964,7 +963,7 @@ namespace WVM::Operations {
 	}
 
 	void jrlOp(RArgs &args) {
-		if (args.rd.type != OperandType::VoidPtr()) {
+		if (args.rd.type != OperandType::VOID_PTR) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -976,7 +975,7 @@ namespace WVM::Operations {
 	}
 
 	void jrlcOp(RArgs &args) {
-		if (!typeCheck(args.rs, args.rsType) || args.rd.type != OperandType::VoidPtr()) {
+		if (!typeCheck(args.rs, args.rsType) || args.rd.type != OperandType::VOID_PTR) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1129,20 +1128,28 @@ namespace WVM::Operations {
 	}
 
 	void msOp(RArgs &args) {
+		// Requirement: all operands' types must match the corresponding encoded types.
+		if (!typeCheck(args.rd, args.rdType) || !typeCheck(args.rs, args.rsType) || !typeCheck(args.rt, args.rtType)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		// This is awfully slow.
 		bool success;
 		for (Word i = 0; i < args.rs.value; ++i) {
-			const Word translated = args.vm.translateAddress(args.rd + i, &success);
+			const Word translated = args.vm.translateAddress(args.rd.value + i, &success);
 			if (!success) {
 				args.vm.intPfault();
 				return;
-			} else if (args.vm.checkWritable()) {
-				args.vm.bufferChange<MemoryChange>(args.vm, translated, args.rt & 0xff, Size::Byte);
-				args.vm.setByte(translated, args.rt & 0xff);
-			} else {
+			}
+			
+			if (!args.vm.checkWritable()) {
 				args.vm.intBwrite(translated);
 				return;
 			}
+
+			args.vm.bufferChange<MemoryChange>(args.vm, translated, args.rt.value & 0xff, Size::Byte);
+			args.vm.setByte(translated, args.rt.value & 0xff);
 		}
 
 		args.vm.increment();
@@ -1150,140 +1157,269 @@ namespace WVM::Operations {
 
 	void transOp(RArgs &args) {
 		VM &vm = args.vm;
+
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a pointer
+		if (args.rs.type.pointerLevel < 1 || !typeCheck(args.rs, args.rsType)) {
+			vm.intBadtyp();
+			return;
+		}
+
 		if (vm.pagingOn) {
 			bool success;
-			const Word translated = vm.translateAddress(args.rs, &success);
+			const Word translated = vm.translateAddress(args.rs.value, &success);
 			if (!success) {
 				vm.intPfault();
-			} else {
-				setReg(vm, args.rd, translated, false);
-				vm.increment();
+				return;
 			}
-		} else {
-			setReg(vm, args.rd, args.rs, false);
+
+			setReg(vm, args.rd, Register(translated, OperandType::VOID_PTR), false);
 			vm.increment();
+			return;
 		}
+
+		setReg(vm, args.rd, args.rs, false);
+		vm.increment();
 	}
 
 	void liOp(IArgs &args) {
-		// TODO!: typechecking and sizes
 		VM &vm = args.vm;
+
+		// Requirements:
+		// - Encoded immediate type must be a pointer
+		// - Encoded rd type must be equivalent to encoded immediate type minus one pointer level
+		const OperandType imm_type(args.immType);
+		const OperandType rd_type(args.rdType);
+		if (imm_type.pointerLevel < 1 || !typeCheck(imm_type, rd_type, 1)) {
+			vm.intBadtyp();
+			return;
+		}
+		
 		bool success;
 		const Word translated = vm.translateAddress(args.immediate, &success);
 		if (!success) {
 			vm.intPfault();
-		} else {
-			setReg(args.vm, args.rd, vm.getWord(translated), false);
-			args.vm.increment();
+			return;
 		}
+
+		setReg(vm, args.rd, Register(vm.get(translated, getSize(rd_type)), rd_type), false);
+		vm.increment();
 	}
 
 	void siOp(IArgs &args) {
-		// TODO!: typechecking and sizes
 		VM &vm = args.vm;
+
+		// Requirements:
+		// - Encoded immediate type must be a pointer
+		// - Encoded rs type must be equivalent to encoded immediate type minus one pointer level
+		const OperandType imm_type(args.immType);
+		const OperandType rs_type(args.rsType);
+		if (imm_type.pointerLevel < 1 || !typeCheck(imm_type, rs_type, 1)) {
+			vm.intBadtyp();
+			return;
+		}
+
 		bool success;
 		const Word translated = vm.translateAddress(args.immediate, &success);
 		if (!success) {
 			vm.intPfault();
-		} else if (vm.checkWritable()) {
-			vm.bufferChange<MemoryChange>(vm, translated, args.rs, Size::Word);
-			vm.setWord(translated, args.rs);
-			args.vm.increment();
-		} else
+			return;
+		}
+		
+		if (!vm.checkWritable()) {
 			vm.intBwrite(translated);
+			return;
+		}
+
+		const Size size = getSize(rs_type);
+		vm.bufferChange<MemoryChange>(vm, translated, args.rs.value, size);
+		vm.set(translated, args.rs.value, size);
+		vm.increment();
 	}
 
 	void setOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.immediate, false);
+		setReg(args.vm, args.rd, Register(args.immediate, args.immType), false);
 		args.vm.increment();
 	}
 
 	void lniOp(IArgs &args) {
-		// TODO!: typechecking and sizes
 		VM &vm = args.vm;
+
+		// Requirements:
+		// - Encoded immediate type and encoded rd type must be pointers
+		// - Encoded immediate type must match encoded rd type
+		const OperandType imm_type(args.immType);
+		const OperandType rd_type(args.rdType);
+		if (!typeCheck(imm_type, rd_type) || imm_type.pointerLevel < 1) {
+			vm.intBadtyp();
+			return;
+		}
+
 		bool success;
 		const Word translated = vm.translateAddress(args.immediate, &success);
+
 		if (!success) {
 			vm.intPfault();
-		} else {
-			const Word value = vm.getWord(translated);
-			vm.bufferChange<MemoryChange>(vm, args.rd, value, Size::Word);
-			vm.setWord(args.rd, value);
-			args.vm.increment();
+			return;
 		}
+
+		if (!vm.checkWritable()) {
+			vm.intBwrite(translated);
+			return;
+		}
+
+		const Size size = getSize(rd_type);
+		const Word value = vm.get(translated, size);
+		vm.bufferChange<MemoryChange>(vm, args.rd.value, value, size);
+		vm.set(args.rd.value, value, size);
+		vm.increment();
 	}
 
 	void intOp(IArgs &args) {
+		// Requirements:
+		// - Encoded immediate type must be a number and not a pointer
+		const OperandType imm_type(args.immType);
+		if (!imm_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		args.vm.interrupt(args.immediate, false);
 	}
 
 	void ritOp(IArgs &args) {
 		VM &vm = args.vm;
-		if (vm.checkRing(Ring::Zero)) {
-			bool success;
-			const Word translated = vm.translateAddress(args.immediate, &success);
-			if (!success) {
-				vm.intPfault();
-			} else {
-				vm.bufferChange<InterruptTableChange>(vm, translated);
-				vm.interruptTableAddress = translated;
-				vm.onInterruptTableChange();
-				vm.increment();
-			}
-		} else
+		if (!vm.checkRing(Ring::Zero)) {
 			vm.intProtec();
+			return;
+		}
+
+		// Requirements:
+		// - Encoded immediate type must be uv**
+		if (OperandType(args.immType) != OperandType(false, Primitive::Void, 2)) {
+			vm.intBadtyp();
+			return;
+		}
+
+		bool success;
+		const Word translated = vm.translateAddress(args.immediate, &success);
+		if (!success) {
+			vm.intPfault();
+			return;
+		}
+
+		vm.bufferChange<InterruptTableChange>(vm, translated);
+		vm.interruptTableAddress = translated;
+		vm.onInterruptTableChange();
+		vm.increment();
 	}
 
 	void timeOp(RArgs &args) {
-		if (args.vm.checkRing(Ring::Zero)) {
-			args.vm.setTimer(static_cast<UWord>(args.rs));
-			args.vm.increment();
-		} else
+		if (!args.vm.checkRing(Ring::Zero)) {
 			args.vm.intProtec();
+			return;
+		}
+
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a number
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		args.vm.setTimer(static_cast<UWord>(args.rs.value));
+		args.vm.increment();
 	}
 
 	void svtimeOp(RArgs &args) {
-		if (args.vm.checkRing(Ring::Zero)) {
-			setReg(args.vm, args.rd, args.vm.timerTicks);
-			args.vm.increment();
-		} else
+		if (!args.vm.checkRing(Ring::Zero)) {
 			args.vm.intProtec();
+			return;
+		}
+
+		// Requirements:
+		// - Encoded rd type must be a number
+		const OperandType rd_type(args.rdType);
+		if (!rd_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.vm.timerTicks, rd_type), false);
+		args.vm.increment();
 	}
 
 	void timeiOp(IArgs &args) {
-		if (args.vm.checkRing(Ring::Zero)) {
-			args.vm.setTimer(static_cast<UWord>(args.immediate));
-			args.vm.increment();
-		} else
+		if (!args.vm.checkRing(Ring::Zero)) {
 			args.vm.intProtec();
+			return;
+		}
+
+		// Requirements:
+		// - Encoded immediate type must be a number
+		if (!OperandType(args.immType).isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		args.vm.setTimer(static_cast<UWord>(args.immediate));
+		args.vm.increment();
 	}
 
 	void ringOp(RArgs &args) {
-		if (args.vm.changeRing(static_cast<Ring>(args.rs)))
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a number
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.vm.changeRing(static_cast<Ring>(args.rs.value)))
 			args.vm.increment();
 	}
 
 	void svringOp(RArgs &args) {
-		setReg(args.vm, args.rd, Word(args.vm.ring), false);
+		// Requirements:
+		// - Encoded rd type must be a number
+		const OperandType rd_type(args.rdType);
+		if (!rd_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(static_cast<Word>(args.vm.ring), rd_type), false);
 		args.vm.increment();
 	}
 
 	void ringiOp(IArgs &args) {
+		// Requirements:
+		// - Encoded immediate type must be a number
+		if (!OperandType(args.immType).isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		if (args.vm.changeRing(static_cast<Ring>(args.immediate)))
 			args.vm.increment();
 	}
 
 	void prOp(RArgs &args) {
+		// Requirements:
+		// - None. Go wild.
 		VM &vm = args.vm;
 		auto &rs = args.rs;
 		std::stringstream ss;
-		if (rs < 0) {
-			ss << Why::coloredRegister(vm.registerID(rs)) << ": " << rs << " / " << UWord(rs) << " / " << std::hex
-			   << rs;
-		} else {
+		if (rs.value < 0)
+			ss << Why::coloredRegister(vm.registerID(rs)) << ": " << rs.value << " / " << static_cast<UWord>(rs.value)
+			   << " / " << std::hex << rs.value;
+		else
 			ss << Why::coloredRegister(vm.registerID(rs)) << ": " // << "0x" << std::hex << rs << " \e[2m/\e[22m " << std::dec
-			<< rs << " / " << std::hex << rs;
-		}
+			   << rs.value << " / " << std::hex << rs.value;
 		// vm.onPrint(ss.str() + "\n");
 		// DBG(ss.str());
 		std::cerr << ss.str() << '\n';
@@ -1295,36 +1431,76 @@ namespace WVM::Operations {
 		args.vm.stop();
 	}
 
-	void evalOp(RArgs &args) {
-		warn() << "<eval> not implemented\n";
-		args.vm.increment();
-	}
-
 	void prcOp(RArgs &args) {
-		args.vm.onPrint(std::string(1, static_cast<char>(args.rs)));
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be uc
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || rs_type != OperandType(false, Primitive::Char, 0)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		args.vm.onPrint(std::string(1, static_cast<char>(args.rs.value)));
 		args.vm.increment();
 	}
 
 	void prdOp(RArgs &args) {
-		args.vm.onPrint(std::to_string(args.rs));
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a number
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		args.vm.onPrint(std::to_string(args.rs.value));
 		args.vm.increment();
 	}
 
 	void prxOp(RArgs &args) {
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a number
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		std::stringstream ss;
-		ss << std::hex << args.rs;
+		ss << std::hex << args.rs.value;
 		args.vm.onPrint(ss.str());
 		args.vm.increment();
 	}
 
 	void sleepOp(RArgs &args) {
-		usleep(args.rs);
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a number
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		usleep(args.rs.value);
 		args.vm.increment();
 	}
 
 	void prbOp(RArgs &args) {
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be a number
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		std::stringstream ss;
-		ss << std::bitset<64>(args.rs);
+		ss << std::bitset<64>(args.rs.value);
 		args.vm.onPrint(ss.str());
 		args.vm.increment();
 	}
@@ -1334,43 +1510,49 @@ namespace WVM::Operations {
 		args.vm.rest();
 	}
 
+	// TODO: typechecking
 	void ioOp(RArgs &args) {
 		VM &vm = args.vm;
 		if (vm.checkRing(Ring::Two)) {
-			const Word &a0 = vm.registers[Why::argumentOffset],
-			           &a1 = vm.registers[Why::argumentOffset + 1],
-			           &a2 = vm.registers[Why::argumentOffset + 2],
-			           &a3 = vm.registers[Why::argumentOffset + 3];
-			Word &r0 = vm.registers[Why::returnValueOffset], &e0 = vm.registers[Why::exceptionOffset];
+			const Register &a0 = vm.registers[Why::argumentOffset + 0];
+			const Register &a1 = vm.registers[Why::argumentOffset + 1];
+			const Register &a2 = vm.registers[Why::argumentOffset + 2];
+			const Register &a3 = vm.registers[Why::argumentOffset + 3];
+			Register &r0 = vm.registers[Why::returnValueOffset];
+			Register &e0 = vm.registers[Why::exceptionOffset];
 
-			const size_t device_id = size_t(a1);
+			const size_t device_id = static_cast<size_t>(a1.value);
 			const bool valid_id = device_id < vm.drives.size();
 
-			switch (a0) {
+			auto ulong = [](auto &&value) {
+				return Register(value, OperandType::ULONG);
+			};
+
+			switch (a0.value) {
 				case IO_DEVCOUNT:
-					setReg(vm, e0, 0, false);
-					setReg(vm, r0, vm.drives.size(), false);
+					setReg(vm, e0, ulong(0), false);
+					setReg(vm, r0, ulong(vm.drives.size()), false);
 					break;
 
 				case IO_SEEKABS:
 					if (!valid_id)
-						setReg(vm, e0, 1, false);
-					else if (lseek(vm.drives.at(device_id).fd, a2, SEEK_SET) == -1)
-						setReg(vm, e0, 2, false);
+						setReg(vm, e0, ulong(1), false);
+					else if (lseek(vm.drives.at(device_id).fd, a2.value, SEEK_SET) == -1)
+						setReg(vm, e0, ulong(2), false);
 					else
-						setReg(vm, e0, 0, false);
+						setReg(vm, e0, ulong(0), false);
 					break;
 
 				case IO_SEEKREL:
 					if (!valid_id) {
-						setReg(vm, e0, 1, false);
+						setReg(vm, e0, ulong(1), false);
 					} else {
-						const ssize_t result = lseek(vm.drives.at(device_id).fd, a2, SEEK_CUR);
+						const ssize_t result = lseek(vm.drives.at(device_id).fd, a2.value, SEEK_CUR);
 						if (result == -1) {
-							setReg(vm, e0, 2, false);
+							setReg(vm, e0, ulong(2), false);
 						} else {
-							setReg(vm, e0, 0, false);
-							setReg(vm, r0, result, false);
+							setReg(vm, e0, ulong(0), false);
+							setReg(vm, r0, ulong(result), false);
 						}
 					}
 
@@ -1378,12 +1560,14 @@ namespace WVM::Operations {
 
 				case IO_READ: { // TODO: verify. This code is suspicious.
 					if (!valid_id) {
-						setReg(vm, e0, 1, false);
+						setReg(vm, e0, ulong(1), false);
 					} else {
-						size_t address = a2, remaining = a3, total_bytes_read = 0;
+						size_t address = a2.value;
+						size_t remaining = a3.value;
+						size_t total_bytes_read = 0;
 						const int fd = vm.drives.at(device_id).fd;
 						const size_t memsize = vm.getMemorySize();
-						setReg(vm, e0, 0, false);
+						setReg(vm, e0, ulong(0), false);
 
 						while (0 < remaining) {
 							const size_t mod = address % VM::PAGE_SIZE; // Especially this.
@@ -1391,38 +1575,39 @@ namespace WVM::Operations {
 							bool translate_success;
 							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
 							if (!translate_success) {
-								setReg(vm, e0, 2, false);
+								setReg(vm, e0, ulong(2), false);
 								vm.intPfault();
 								return;
 							}
 
 							if (!vm.checkWritable()) {
-								setReg(vm, e0, 3, false);
+								setReg(vm, e0, ulong(3), false);
 								vm.intBwrite(translated);
 								return;
 							}
 
-							if (memsize <= translated) {
+							if (memsize <= translated)
 								break;
-							} else {
-								const size_t diff = memsize - translated;
-								if (diff < remaining)
-									remaining = diff;
-							}
+							
+							const size_t diff = memsize - translated;
+							if (diff < remaining)
+								remaining = diff;
 
 							const size_t to_read = std::min(mod? mod : VM::PAGE_SIZE, remaining); // And this.
 							const ssize_t bytes_read = ::read(fd, &vm.memory[translated], to_read);
 
 							if (bytes_read < 0)
-								setReg(vm, e0, errno + 3, false);
+								setReg(vm, e0, ulong(errno + 3), false);
+
 							if (bytes_read <= 0)
 								break;
+
 							remaining -= size_t(bytes_read);
 							address += size_t(bytes_read);
 							total_bytes_read += size_t(bytes_read);
 						}
 
-						setReg(vm, r0, total_bytes_read, false);
+						setReg(vm, r0, ulong(total_bytes_read), false);
 					}
 
 					break;
@@ -1430,12 +1615,14 @@ namespace WVM::Operations {
 
 				case IO_WRITE: { // TODO: verify this too.
 					if (!valid_id) {
-						setReg(vm, e0, 1, false);
+						setReg(vm, e0, ulong(1), false);
 					} else {
-						size_t address = a2, remaining = a3, total_bytes_written = 0;
+						size_t address = a2.value;
+						size_t remaining = a3.value;
+						size_t total_bytes_written = 0;
 						const int fd = vm.drives.at(device_id).fd;
 						const size_t memsize = vm.getMemorySize();
-						setReg(vm, e0, 0, false);
+						setReg(vm, e0, ulong(0), false);
 
 						while (0 < remaining) {
 							const size_t mod = address % VM::PAGE_SIZE;
@@ -1443,7 +1630,7 @@ namespace WVM::Operations {
 							bool translate_success;
 							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
 							if (!translate_success) {
-								setReg(vm, e0, 2, false);
+								setReg(vm, e0, ulong(2), false);
 								vm.intPfault();
 								return;
 							}
@@ -1460,7 +1647,7 @@ namespace WVM::Operations {
 							const ssize_t bytes_written = ::write(fd, &vm.memory[translated], to_write);
 
 							if (bytes_written < 0)
-								setReg(vm, e0, errno + 2, false);
+								setReg(vm, e0, ulong(errno + 2), false);
 							if (bytes_written <= 0)
 								break;
 							remaining -= size_t(bytes_written);
@@ -1468,7 +1655,7 @@ namespace WVM::Operations {
 							total_bytes_written += size_t(bytes_written);
 						}
 
-						setReg(vm, r0, total_bytes_written, false);
+						setReg(vm, r0, ulong(total_bytes_written), false);
 					}
 
 					break;
@@ -1476,76 +1663,78 @@ namespace WVM::Operations {
 
 				case IO_GETSIZE: {
 					if (!valid_id) {
-						setReg(vm, e0, 1, false);
-					} else {
-						const int fd = vm.drives.at(device_id).fd;
-						const off_t old_cursor = lseek(fd, 0, SEEK_CUR);
-						if (old_cursor == -1) {
-							setReg(vm, e0, errno + 1, false);
-							break;
-						}
-
-						const off_t end_cursor = lseek(fd, 0, SEEK_END);
-						if (end_cursor == -1) {
-							setReg(vm, e0, errno + 1, false);
-							break;
-						}
-
-						setReg(vm, r0, Word(end_cursor), false);
-	
-						const off_t result = lseek(fd, old_cursor, SEEK_SET);
-						setReg(vm, e0, result == -1? errno + 1 : 0, false);
+						setReg(vm, e0, ulong(1), false);
+						break;
 					}
 
+					const int fd = vm.drives.at(device_id).fd;
+					const off_t old_cursor = lseek(fd, 0, SEEK_CUR);
+					if (old_cursor == -1) {
+						setReg(vm, e0, ulong(errno + 1), false);
+						break;
+					}
+
+					const off_t end_cursor = lseek(fd, 0, SEEK_END);
+					if (end_cursor == -1) {
+						setReg(vm, e0, ulong(errno + 1), false);
+						break;
+					}
+
+					setReg(vm, r0, ulong(static_cast<Word>(end_cursor)), false);
+
+					const off_t result = lseek(fd, old_cursor, SEEK_SET);
+					setReg(vm, e0, ulong(result == -1? errno + 1 : 0), false);
 					break;
 				}
 
 				case IO_GETCURSOR: {
 					if (!valid_id) {
-						setReg(vm, e0, 1, false);
-					} else {
-						const off_t cursor = lseek(vm.drives.at(device_id).fd, 0, SEEK_CUR);
-						setReg(vm, e0, cursor == -1? errno + 1 : 0, false);
-						if (cursor != -1)
-							setReg(vm, r0, cursor, false);
+						setReg(vm, e0, ulong(1), false);
+						break;
 					}
+
+					const off_t cursor = lseek(vm.drives.at(device_id).fd, 0, SEEK_CUR);
+					setReg(vm, e0, ulong(cursor == -1? errno + 1 : 0), false);
+					if (cursor != -1)
+						setReg(vm, r0, ulong(cursor), false);
 					break;
 				}
 
 				case IO_GETNAME: {
 					if (!valid_id) {
-						setReg(vm, e0, 1, false);
+						setReg(vm, e0, ulong(1), false);
 					} else {
-						const std::string &name = vm.drives.at(a1).name;
+						const std::string &name = vm.drives.at(a1.value).name;
 						const char *c_str = name.c_str();
-						size_t address = a2, remaining = std::min(size_t(a2), name.size() + 1), total_bytes_read = 0;
+						size_t address = a2.value;
+						size_t remaining = std::min(static_cast<size_t>(a2.value), name.size() + 1);
+						size_t total_bytes_read = 0;
 						const size_t memsize = vm.getMemorySize();
-						setReg(vm, e0, 0, false);
+						setReg(vm, e0, ulong(0), false);
 
 						while (0 < remaining) {
 							const size_t mod = address % VM::PAGE_SIZE;
-
 							bool translate_success;
-							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
+							const size_t translated = size_t(vm.translateAddress(address, &translate_success));\
+
 							if (!translate_success) {
-								setReg(vm, e0, 2, false);
+								setReg(vm, e0, ulong(2), false);
 								vm.intPfault();
 								return;
 							}
 
 							if (!vm.checkWritable()) {
-								setReg(vm, e0, 3, false);
+								setReg(vm, e0, ulong(3), false);
 								vm.intBwrite(translated);
 								return;
 							}
 
-							if (memsize <= translated) {
+							if (memsize <= translated)
 								break;
-							} else {
-								const size_t diff = memsize - translated;
-								if (diff < remaining)
-									remaining = diff;
-							}
+
+							const size_t diff = memsize - translated;
+							if (diff < remaining)
+								remaining = diff;
 
 							const size_t to_read = std::min(mod? mod : VM::PAGE_SIZE, remaining);
 							std::memcpy(&vm.memory[translated], c_str + total_bytes_read, to_read);
@@ -1556,14 +1745,14 @@ namespace WVM::Operations {
 						}
 
 						// Don't include the null terminator in the byte count
-						setReg(vm, r0, 0 < total_bytes_read? total_bytes_read - 1 : 0, false);
+						setReg(vm, r0, ulong(0 < total_bytes_read? total_bytes_read - 1 : 0), false);
 					}
 
 					break;
 				}
 
 				default:
-					setReg(vm, e0, 666, false);
+					setReg(vm, e0, ulong(666), false);
 			}
 
 			args.vm.increment();
@@ -1602,65 +1791,123 @@ namespace WVM::Operations {
 
 	void setptOp(RArgs &args) {
 		VM &vm = args.vm;
-		if (vm.checkRing(Ring::Zero)) {
-			vm.bufferChange<P0Change>(vm.p0, args.rs);
-			vm.p0 = args.rs;
-			std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
-			vm.onP0Change(args.rs);
-			if (args.rt != 0) {
-				const auto reg_id = vm.registerID(args.rt);
-				// Reenable interrupts if jumping to $e0.
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
-					vm.hardwareInterruptsEnabled = true;
-					vm.wakeRest();
-				}
-				vm.jump(args.rt, false);
-			} else
-				args.vm.increment();
-		} else
+
+		// Requirements:
+		// - Current rs type must match encoded rs type
+		// - rs type must be uv*
+		// - If rt is nonzero, it must be uv*
+		const OperandType rs_type(args.rsType);
+		if (!typeCheck(args.rs.type, rs_type) || rs_type != OperandType::VOID_PTR) {
+			vm.intBadtyp();
+			return;
+		}
+
+		if (args.rt.value != 0) {
+			const OperandType rt_type(args.rtType);
+			if (!typeCheck(args.rt.type, rt_type) || rt_type != OperandType::VOID_PTR) {
+				vm.intBadtyp();
+				return;
+			}
+		}
+
+		if (!vm.checkRing(Ring::Zero)) {
 			vm.intProtec();
+			return;
+		}
+
+		vm.bufferChange<P0Change>(vm.p0, args.rs.value);
+		vm.p0 = args.rs.value;
+		std::cerr << "Page table address set to " << vm.p0 << " (PC: " << vm.programCounter << ").\n";
+		vm.onP0Change(args.rs.value);
+		if (args.rt.value != 0) {
+			const auto reg_id = vm.registerID(args.rt);
+			// Reenable interrupts if jumping to $e0.
+			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
+				vm.hardwareInterruptsEnabled = true;
+				vm.wakeRest();
+			}
+			vm.jump(args.rt.value, false);
+			return;
+		}
+
+		args.vm.increment();
 	}
 
 	void svpgOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.vm.pagingOn? 1 : 0, false);
+		// Requirements:
+		// - Encoded rd type must be a number
+		const OperandType rd_type(args.rdType);
+		if (!rd_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.vm.pagingOn? 1 : 0, rd_type), false);
 		args.vm.increment();
 	}
 
 	void ppushOp(RArgs &args) {
-		if (args.vm.checkRing(Ring::Zero)) {
-			args.vm.pagingStack.emplace_back(args.vm);
-			args.vm.increment();
-		} else
+		if (!args.vm.checkRing(Ring::Zero)) {
 			args.vm.intProtec();
+			return;
+		}
+
+		args.vm.pagingStack.emplace_back(args.vm);
+		args.vm.increment();
 	}
 
 	void ppopOp(RArgs &args) {
 		VM &vm = args.vm;
-		if (vm.checkRing(Ring::Zero)) {
-			if (!vm.pagingStack.empty()) {
-				const auto &back = vm.pagingStack.back();
-				vm.bufferChange<PagingChange>(vm.pagingOn, back.enabled);
-				vm.bufferChange<P0Change>(vm.p0, back.p0);
-				vm.pagingOn = back.enabled;
-				vm.p0 = back.p0;
-				vm.pagingStack.pop_back();
-			}
-			if (args.rs != 0) {
-				const auto reg_id = vm.registerID(args.rs);
-				// Reenable interrupts if jumping to $e0.
-				if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
-					vm.hardwareInterruptsEnabled = true;
-					vm.wakeRest();
-				}
-				vm.jump(args.rs, false);
-			} else
-				args.vm.increment();
-		} else
+		if (!vm.checkRing(Ring::Zero)) {
 			vm.intProtec();
+			return;
+		}
+
+		// Requirements:
+		// - If rs is nonzero, it must be uv*
+		if (args.rs.value != 0) {
+			const OperandType rs_type(args.rsType);
+			if (!typeCheck(args.rs.type, rs_type) || rs_type != OperandType::VOID_PTR) {
+				vm.intBadtyp();
+				return;
+			}
+		}
+
+		if (!vm.pagingStack.empty()) {
+			const auto &back = vm.pagingStack.back();
+			vm.bufferChange<PagingChange>(vm.pagingOn, back.enabled);
+			vm.bufferChange<P0Change>(vm.p0, back.p0);
+			vm.pagingOn = back.enabled;
+			vm.p0 = back.p0;
+			vm.pagingStack.pop_back();
+		}
+
+		if (args.rs.value != 0) {
+			const auto reg_id = vm.registerID(args.rs);
+
+			// Reenable interrupts if jumping to $e0.
+			if (reg_id == Why::exceptionOffset && vm.checkRing(Ring::Zero)) {
+				vm.hardwareInterruptsEnabled = true;
+				vm.wakeRest();
+			}
+
+			vm.jump(args.rs.value, false);
+			return;
+		}
+
+		args.vm.increment();
 	}
 
 	void qmOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.vm.getMemorySize(), false);
+		// Requirements:
+		// - Encoded rd type must be a number
+		const OperandType rd_type(args.rdType);
+		if (!rd_type.isNumber()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.vm.getMemorySize(), rd_type), false);
 		args.vm.increment();
 	}
 

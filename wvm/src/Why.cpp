@@ -6,6 +6,9 @@
 #include "Why.h"
 
 namespace WVM {
+	OperandType OperandType::VOID_PTR = OperandType(false, Primitive::Void, 1);
+	OperandType OperandType::ULONG    = OperandType(false, Primitive::Long, 0);
+
 	bool Why::isSpecialPurpose(int reg) {
 		return 0 <= reg && reg < 128 && (reg < temporaryOffset || savedOffset + savedCount <= reg);
 	}
