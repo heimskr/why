@@ -4,6 +4,7 @@
 #include <set>
 
 #include "Defs.h"
+#include "Register.h"
 #include "wasm/Types.h"
 
 namespace WVM::Operations {
@@ -14,32 +15,32 @@ namespace WVM::Operations {
 
 	struct RArgs {
 		VM &vm;
-		Word &rs;
-		Word &rt;
-		Word &rd;
+		Register &rs;
+		Register &rt;
+		Register &rd;
 		Conditions conditions;
 		int flags;
 		int function;
 		int rsType;
 		int rtType;
 		int rdType;
-		RArgs(VM &vm_, Word &rs_, Word &rt_, Word &rd_, Conditions conditions_, int flags_, int function_, int rs_type,
-		int rt_type, int rd_type):
+		RArgs(VM &vm_, Register &rs_, Register &rt_, Register &rd_, Conditions conditions_, int flags_, int function_,
+		int rs_type, int rt_type, int rd_type):
 			vm(vm_), rs(rs_), rt(rt_), rd(rd_), conditions(conditions_), flags(flags_), function(function_),
 			rsType(rs_type), rtType(rt_type), rdType(rd_type) {}
 	};
 
 	struct IArgs {
 		VM &vm;
-		Word &rs;
-		Word &rd;
+		Register &rs;
+		Register &rd;
 		Conditions conditions;
 		int flags;
 		HWord immediate;
 		int rsType;
 		int rdType;
 		int immType;
-		IArgs(VM &vm_, Word &rs_, Word &rd_, Conditions conditions_, int flags_, HWord immediate_, int rs_type,
+		IArgs(VM &vm_, Register &rs_, Register &rd_, Conditions conditions_, int flags_, HWord immediate_, int rs_type,
 		      int rd_type, int imm_type):
 			vm(vm_), rs(rs_), rd(rd_), conditions(conditions_), flags(flags_), immediate(immediate_),
 			rsType(rs_type), rdType(rd_type), immType(imm_type) {}
@@ -47,13 +48,13 @@ namespace WVM::Operations {
 
 	struct JArgs {
 		VM &vm;
-		Word &rs;
+		Register &rs;
 		bool link;
 		Conditions conditions;
 		int flags;
 		HWord address;
 		int rsType;
-		JArgs(VM &vm_, Word &rs_, bool link_, Conditions conditions_, int flags_, HWord address_, int rs_type):
+		JArgs(VM &vm_, Register &rs_, bool link_, Conditions conditions_, int flags_, HWord address_, int rs_type):
 			vm(vm_), rs(rs_), link(link_), conditions(conditions_), flags(flags_), address(address_), rsType(rs_type) {}
 	};
 
@@ -143,8 +144,6 @@ namespace WVM::Operations {
 	void sOp(RArgs &);      // 18  R 2
 	void spushOp(RArgs &);  // 18  R 6
 	void spopOp(RArgs &);   // 18  R 7
-	void sspushOp(IArgs &); // 57  I
-	void sspopOp(IArgs &);  // 58  I
 	void transOp(RArgs &);  // 68  R 0
 
 	void liOp(IArgs &);     // 19  I
@@ -354,8 +353,6 @@ namespace WVM::Operations {
 #define OP_DIVI 52
 #define OP_DIVII 54
 #define OP_SEL 56
-#define OP_SSPUSH 57
-#define OP_SSPOP 58
 #define OP_SLLII 62
 #define OP_SRLII 63
 #define OP_SRAII 64

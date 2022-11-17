@@ -22,26 +22,30 @@ namespace WVM {
 		vm.set(address, from, size);
 	}
 
-	RegisterChange::RegisterChange(const VM &vm, UByte reg_, Word to_):
-		reg(reg_), from(vm.registers[reg_]), to(to_) {}
+	RegisterChange::RegisterChange(UByte reg_, Word from_, Word to_, Wasmc::OperandType from_type,
+	Wasmc::OperandType to_type):
+		reg(reg_), from(from_), to(to_), fromType(std::move(from_type)), toType(std::move(to_type)) {}
+
+	RegisterChange::RegisterChange(const VM &vm, UByte reg_, Word to_, Wasmc::OperandType to_type):
+		reg(reg_), from(vm.registers[reg_]), to(to_), fromType(vm.registers[reg_].type), toType(std::move(to_type)) {}
 
 	void RegisterChange::apply(VM &vm, bool strict) {
 		auto lock = vm.lockVM();
-		if (strict && vm.registers[reg] != from)
+		if (strict && vm.registers[reg] != Register(from, fromType))
 			throw VMError("Unable to apply RegisterChange: data in register isn't the expected from-value");
-		vm.registers[reg] = to;
+		vm.registers[reg] = {to, toType};
 		vm.onRegisterChange(reg);
 	}
 
 	void RegisterChange::undo(VM &vm, bool strict) {
 		auto lock = vm.lockVM();
-		if (strict && vm.registers[reg] != to) {
+		if (strict && vm.registers[reg] != Register(to, toType)) {
 			error() << "Register: " << Why::registerName(reg) << "\n";
 			error() << "Expected: " << to << "\n";
-			error() << "Actual:   " << vm.registers[reg] << "\n";
+			error() << "Actual:   " << vm.registers[reg].value << "\n";
 			throw VMError("Unable to undo RegisterChange: data in register isn't the expected to-value");
 		}
-		vm.registers[reg] = from;
+		vm.registers[reg] = {from, fromType};
 		vm.onRegisterChange(reg);
 	}
 
@@ -58,9 +62,9 @@ namespace WVM {
 					" isn't the expected from-value (" + std::to_string(from) + ")");
 			}
 
-			if (link && vm.rt() != returnFrom) {
-				throw VMError("Unable to apply JumpChange: return address (" + std::to_string(vm.rt()) + ") isn't the"
-					" expected from-value (" + std::to_string(returnFrom) + ")");
+			if (link && vm.rt().value != returnFrom) {
+				throw VMError("Unable to apply JumpChange: return address (" + std::to_string(vm.rt().value) +
+					") isn't the expected from-value (" + std::to_string(returnFrom) + ")");
 			}
 		}
 
@@ -68,7 +72,7 @@ namespace WVM {
 		vm.programCounter = to;
 		vm.onJump(from, to);
 		if (link) {
-			vm.rt() = returnTo;
+			vm.rt().value = returnTo;
 			vm.onRegisterChange(Why::returnAddressOffset);
 		}
 	}
@@ -77,21 +81,19 @@ namespace WVM {
 		auto lock = vm.lockVM();
 
 		if (strict) {
-			if (vm.programCounter != to) {
+			if (vm.programCounter != to)
 				throw VMError("Unable to undo JumpChange: program counter (" + std::to_string(vm.programCounter) +
 					") isn't the expected to-value (" + std::to_string(to) + ")");
-			}
 
-			if (link && vm.rt() != returnTo) {
-				throw VMError("Unable to undo JumpChange: return address (" + std::to_string(vm.rt()) + ") isn't the "
-					"expected to-value (" + std::to_string(returnTo) + ")");
-			}
+			if (link && vm.rt().value != returnTo)
+				throw VMError("Unable to undo JumpChange: return address (" + std::to_string(vm.rt().value) +
+					") isn't the expected to-value (" + std::to_string(returnTo) + ")");
 		}
 
 		vm.programCounter = from;
 		vm.onJump(to, from);
 		if (link) {
-			vm.rt() = returnFrom;
+			vm.rt().value = returnFrom;
 			vm.onRegisterChange(Why::returnAddressOffset);
 		}
 	}

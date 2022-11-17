@@ -36,14 +36,14 @@ namespace WVM {
 				std::cerr << "Couldn't close " << drive.name << " (" << drive.fd << "): " << strerror(errno) << "\n";
 	}
 
-	bool VM::getZ() { return (st() & 0b0001) != 0; }
-	bool VM::getN() { return (st() & 0b0010) != 0; }
-	bool VM::getC() { return (st() & 0b0100) != 0; }
-	bool VM::getO() { return (st() & 0b1000) != 0; }
-	void VM::setZ(bool on) { st() = (st() & ~0b0001) |  on;       }
-	void VM::setN(bool on) { st() = (st() & ~0b0010) | (on << 1); }
-	void VM::setC(bool on) { st() = (st() & ~0b0100) | (on << 2); }
-	void VM::setO(bool on) { st() = (st() & ~0b1000) | (on << 3); }
+	bool VM::getZ() { return (st().value & 0b0001) != 0; }
+	bool VM::getN() { return (st().value & 0b0010) != 0; }
+	bool VM::getC() { return (st().value & 0b0100) != 0; }
+	bool VM::getO() { return (st().value & 0b1000) != 0; }
+	void VM::setZ(bool on) { st().value = (st().value & ~0b0001) |  on;       }
+	void VM::setN(bool on) { st().value = (st().value & ~0b0010) | (on << 1); }
+	void VM::setC(bool on) { st().value = (st().value & ~0b0100) | (on << 2); }
+	void VM::setO(bool on) { st().value = (st().value & ~0b1000) | (on << 3); }
 
 	std::chrono::milliseconds VM::getMilliseconds() {
 		return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -315,8 +315,8 @@ namespace WVM {
 		return out;
 	}
 
-	unsigned char VM::registerID(Word &word) const {
-		return &word - registers;
+	unsigned char VM::registerID(const Register &reg) const {
+		return &reg - registers.begin();
 	}
 
 	void VM::resize(size_t new_size) {
@@ -350,7 +350,7 @@ namespace WVM {
 	void VM::link(bool record) {
 		if (record)
 			recordChange<RegisterChange>(*this, Why::returnAddressOffset, programCounter + Why::instructionSize);
-		registers[Why::returnAddressOffset] = programCounter + Why::instructionSize;
+		registers[Why::returnAddressOffset].value = programCounter + Why::instructionSize;
 	}
 
 	void VM::increment() {
@@ -374,14 +374,18 @@ namespace WVM {
 	}
 
 	void VM::updateFlags(Word result) {
-		Word old_value = st();
-		st() = 0;
+		Word old_value = st().value;
+		st().value = 0;
 		if (result == 0)
 			setZ(true);
 		else if (result < 0)
 			setN(true);
-		if (old_value != st())
+		if (old_value != st().value)
 			onRegisterChange(Why::statusOffset);
+	}
+
+	void VM::updateFlags(const Register &reg) {
+		updateFlags(reg.value);
 	}
 
 	bool VM::checkConditions(Conditions conditions) {
@@ -437,7 +441,7 @@ namespace WVM {
 	bool VM::intPfault() {
 		auto lock = lockVM();
 		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, lastVirtual);
-		registers[Why::exceptionOffset + 2] = lastVirtual;
+		registers[Why::exceptionOffset + 2] = {lastVirtual, Wasmc::OperandType::VoidPtr()};
 		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Pfault, true);
 	}
@@ -445,7 +449,7 @@ namespace WVM {
 	bool VM::intBwrite(Word address) {
 		auto lock = lockVM();
 		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, address);
-		registers[Why::exceptionOffset + 2] = address;
+		registers[Why::exceptionOffset + 2] = {address, Wasmc::OperandType::VoidPtr()};
 		onRegisterChange(Why::exceptionOffset + 2);
 		return interrupt(InterruptType::Bwrite, true);
 	}
@@ -466,13 +470,21 @@ namespace WVM {
 		if (hardwareInterruptsEnabled) {
 			auto lock = lockVM();
 			bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, key);
-			registers[Why::exceptionOffset + 2] = key;
+			registers[Why::exceptionOffset + 2] = {key, Wasmc::OperandType(false, Wasmc::Primitive::Long, 0)};
 			onRegisterChange(Why::exceptionOffset + 2);
 			return interrupt(InterruptType::Keybrd, true);
 		}
 
 		std::cerr << "Skipping keyboard input (" << diff << " μs)\n";
 		return false;
+	}
+
+	bool VM::intPfault() {
+		auto lock = lockVM();
+		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, lastVirtual);
+		registers[Why::exceptionOffset + 2] = {lastVirtual, Wasmc::OperandType::VoidPtr()};
+		onRegisterChange(Why::exceptionOffset + 2);
+		return interrupt(InterruptType::Badtyp, true);
 	}
 
 	void VM::start() {
@@ -725,8 +737,8 @@ namespace WVM {
 			relocationOffset = getWord(32, Endianness::Little);
 		if (endOffset == -1)
 			endOffset = getWord(40, Endianness::Little);
-		registers[Why::globalAreaPointerOffset] = endOffset;
-		sp() = memorySize;
+		registers[Why::globalAreaPointerOffset] = {endOffset, Wasmc::OperandType::VoidPtr()};
+		sp() = {memorySize, Wasmc::OperandType::VoidPtr()};
 		onRegisterChange(Why::globalAreaPointerOffset);
 		onRegisterChange(Why::stackPointerOffset);
 		loadSymbols();
@@ -823,51 +835,56 @@ namespace WVM {
 		changeBuffer.clear();
 	}
 
-	Word & VM::hi() {
+	void VM::mathError() {
+		recordChange<HaltChange>();
+		stop();
+	}
+
+	Register & VM::hi() {
 		return registers[Why::hiOffset];
 	}
 
-	Word & VM::lo() {
+	Register & VM::lo() {
 		return registers[Why::loOffset];
 	}
 
-	Word & VM::st() {
+	Register & VM::st() {
 		return registers[Why::statusOffset];
 	}
 
-	Word & VM::sp() {
+	Register & VM::sp() {
 		return registers[Why::stackPointerOffset];
 	}
 
-	Word & VM::fp() {
+	Register & VM::fp() {
 		return registers[Why::framePointerOffset];
 	}
 
-	Word & VM::rt() {
+	Register & VM::rt() {
 		return registers[Why::returnAddressOffset];
 	}
 
-	const Word & VM::hi() const {
+	const Register & VM::hi() const {
 		return registers[Why::hiOffset];
 	}
 
-	const Word & VM::lo() const {
+	const Register & VM::lo() const {
 		return registers[Why::loOffset];
 	}
 
-	const Word & VM::st() const {
+	const Register & VM::st() const {
 		return registers[Why::statusOffset];
 	}
 
-	const Word & VM::sp() const {
+	const Register & VM::sp() const {
 		return registers[Why::stackPointerOffset];
 	}
 
-	const Word & VM::fp() const {
+	const Register & VM::fp() const {
 		return registers[Why::framePointerOffset];
 	}
 
-	const Word & VM::rt() const {
+	const Register & VM::rt() const {
 		return registers[Why::returnAddressOffset];
 	}
 }

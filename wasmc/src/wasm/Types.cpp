@@ -5,8 +5,6 @@
 #include "wasm/Types.h"
 
 namespace Wasmc {
-	const OperandType OperandType::VOID_PTR {false, Primitive::Void, 1};
-
 	bool isUnknown(SymbolEnum type) {
 		return type == SymbolEnum::Unknown || type == SymbolEnum::UnknownCode || type == SymbolEnum::UnknownData;
 	}
@@ -65,39 +63,6 @@ namespace Wasmc {
 		}
 
 		pointerLevel = static_cast<int>(inner.size()) - 1; // Inner matches /^\**\}$/ at this point.
-	}
-
-	OperandType::operator std::string() const {
-		std::ostringstream oss;
-		oss << '{';
-		if (primitive != Primitive::Void)
-			oss << (isSigned? 's' : 'u');
-		oss << static_cast<char>(primitive);
-		oss << std::string(static_cast<size_t>(pointerLevel < 0? 0 : pointerLevel), '*');
-		oss << '}';
-		return oss.str();
-	}
-
-	OperandType::operator uint8_t() const {
-		uint8_t out = ((pointerLevel & 0xf) << 4) | (isSigned? 0b1000 : 0b0000);
-		switch (primitive) {
-			case Primitive::Void: break;
-			case Primitive::Char:
-				out |= 0b001;
-				break;
-			case Primitive::Short:
-				out |= 0b010;
-				break;
-			case Primitive::Int:
-				out |= 0b011;
-				break;
-			case Primitive::Long:
-				out |= 0b100;
-				break;
-			default:
-				throw std::invalid_argument("Invalid primitive: " + std::to_string(static_cast<int>(primitive)));
-		}
-		return out;
 	}
 
 	TypedReg::TypedReg(const ASTNode *node):

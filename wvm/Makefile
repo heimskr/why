@@ -5,7 +5,7 @@ OPTIMIZATION	?= -O0 -ggdb3
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
 # TESTFILE		?= ~/src/thurisaz/Thurisaz.why
-TESTFILE		?= ../wasmc/compiled/benchmark.why
+TESTFILE		?= ../wasmc/compiled/text_linked.why
 # TESTFILE		?= ../wasmc/compiled/c--.why
 # TESTFILE		?= ~/csmith/7.full.why
 

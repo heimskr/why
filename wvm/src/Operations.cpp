@@ -1,4 +1,5 @@
 #include <bitset>
+#include <cassert>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -25,7 +26,7 @@ namespace WVM::Operations {
 	std::set<int> ISet {
 		OP_ADDI, OP_SUBI, OP_MULTI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVII, OP_ANDI, OP_NANDI, OP_NORI,
 		OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET,
-		OP_LNI, OP_INT, OP_RIT, OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SLLII, OP_SRLII, OP_SRAII,
+		OP_LNI, OP_INT, OP_RIT, OP_TIMEI, OP_RINGI, OP_SLLII, OP_SRLII, OP_SRAII,
 	};
 
 	std::set<int> JSet {OP_J, OP_JC};
@@ -211,8 +212,6 @@ namespace WVM::Operations {
 			case OP_TIMEI:   timeiOp(args); break;
 			case OP_RINGI:   ringiOp(args); break;
 			case OP_CMPI:     cmpiOp(args); break;
-			case OP_SSPUSH: sspushOp(args); break;
-			case OP_SSPOP:   sspopOp(args); break;
 			case OP_SLLII:   slliiOp(args); break;
 			case OP_SRLII:   srliiOp(args); break;
 			case OP_SRAII:   sraiiOp(args); break;
@@ -277,73 +276,156 @@ namespace WVM::Operations {
 		DBG("st[" << Util::toHex(uint8_t(st), 1) << "]");
 	}
 
-	void setReg(VM &vm, Word &rd, Word value, bool update_flags = true) {
+	static void setReg(VM &vm, Register &rd, Register new_value, bool update_flags = true) {
 		if (vm.registerID(rd) == Why::zeroOffset)
 			std::cerr << "Set register $0 at " << vm.programCounter << "!\n";
-		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), value);
+		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), new_value);
 		if (update_flags)
-			vm.updateFlags(rd = value);
+			vm.updateFlags(rd = new_value);
 		else
-			rd = value;
+			rd = new_value;
 		vm.onRegisterChange(vm.registerID(rd));
 	}
 
+	static bool typeCheck(Register &one, Register &two, int level_difference = 0) {
+		return typeCheck(one.type, two.type, level_difference);
+	}
+
+	static bool typeCheck(const OperandType &one, const OperandType &two, int level_difference = 0) {
+		if (level_difference == 0)
+			return one == two;
+		return one.isSigned == two.isSigned && one.primitive == two.primitive &&
+			one.pointerLevel - level_difference == two.pointerLevel;
+	}
+
+	static bool typeCheck(Register &one, int two) {
+		assert(0 <= two && two <= 0xff);
+		return one.type == OperandType(static_cast<uint8_t>(two));
+	}
+
+	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types. */
+	static bool typeCheckOne(RArgs &args, bool check_number = false) {
+		const OperandType dt(args.rdType), st(args.rsType);
+		if (args.rs.type == st && args.rs.type == dt)
+			return check_number? args.rs.type.isNumber() : true;
+		return false;
+	}
+
+	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types and whether the current
+	 *  type of rt matches the instruction's encoded rt type. */
+	static bool typeCheckTwo(RArgs &args, bool check_number = false) {
+		const OperandType dt(args.rdType), st(args.rsType), tt(args.rtType);
+		if (args.rs.type == st && args.rs.type == dt && args.rt.type == tt)
+			return check_number? args.rs.type.isNumber() : true;
+		return false;
+	}
+
+	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types. */
+	static bool typeCheck(IArgs &args, bool check_number = false) {
+		const OperandType dt(args.rdType), st(args.rsType);
+		if (args.rs.type == st && args.rs.type == dt)
+			return check_number? args.rs.type.isNumber() : true;
+		return false;
+	}
+
 	void addOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs + args.rt);
+		if (!typeCheck(args.rs, args.rt)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value + args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void subOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs - args.rt);
+		if (!typeCheck(args.rs, args.rt)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value - args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void multOp(RArgs &args) {
 		// TODO: handle unsigned
 		VM &vm = args.vm;
-		Word old_hi = vm.hi(), old_lo = vm.lo();
-		CAT_MUL128(vm.hi(), vm.lo(), args.rs, args.rt);
+
+		if (!typeCheckTwo(args, true)) {
+			vm.intBadtyp();
+			return;
+		}
+
+		Word old_hi = vm.hi().value;
+		Word old_lo = vm.lo().value;
+		CAT_MUL128(vm.hi().value, vm.lo().value, args.rs.value, args.rt.value);
 		vm.onRegisterChange(Why::loOffset);
 		vm.onRegisterChange(Why::hiOffset);
-		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi());
-		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo());
+		const OperandType new_type(args.rs.type.isSigned, Primitive::Long);
+		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi(), vm.hi().type, new_type);
+		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo(), vm.lo().type, new_type);
 		vm.increment();
 	}
 
 	void sllOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs << args.rt);
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value << args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void srlOp(RArgs &args) {
-		setReg(args.vm, args.rd, static_cast<UWord>(args.rs) >> static_cast<UWord>(args.rt));
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(static_cast<UWord>(args.rs.value) >> static_cast<UWord>(args.rt.value),
+			args.rdType));
 		args.vm.increment();
 	}
 
 	void sraOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs >> args.rt);
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value >> args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void modOp(RArgs &args) {
-		if (args.rt == 0) {
-			args.vm.recordChange<HaltChange>();
-			args.vm.stop();
-		} else {
-			setReg(args.vm, args.rd, args.rs % args.rt);
-			args.vm.increment();
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
 		}
+
+		if (args.rt.value == 0) {
+			args.vm.mathError();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value % args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void divOp(RArgs &args) {
-		if (args.rt == 0) {
-			args.vm.recordChange<HaltChange>();
-			args.vm.stop();
-		} else {
-			setReg(args.vm, args.rd, args.rs / args.rt);
-			args.vm.increment();
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
 		}
+
+		if (args.rt.value == 0) {
+			args.vm.mathError();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value / args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
@@ -374,224 +456,458 @@ namespace WVM::Operations {
 	// }
 
 	void andOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs & args.rt);
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value & args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void nandOp(RArgs &args) {
-		setReg(args.vm, args.rd, ~(args.rs & args.rt));
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~(args.rs.value & args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void norOp(RArgs &args) {
-		setReg(args.vm, args.rd, ~(args.rs | args.rt));
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~(args.rs.value | args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void notOp(RArgs &args) {
-		setReg(args.vm, args.rd, ~args.rs);
+		if (!typeCheckOne(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~args.rs.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void orOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs | args.rt);
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value | args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void xnorOp(RArgs &args) {
-		setReg(args.vm, args.rd, ~(args.rs ^ args.rt));
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~(args.rs.value ^ args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void xorOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs ^ args.rt);
+		if (!typeCheckTwo(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value ^ args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void landOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs && args.rt);
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value && args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void lnandOp(RArgs &args) {
-		setReg(args.vm, args.rd, !(args.rs && args.rt));
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(!(args.rs.value && args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void lnorOp(RArgs &args) {
-		setReg(args.vm, args.rd, !(args.rs || args.rt));
+		if (!typeCheckOne(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(!(args.rs.value || args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void lnotOp(RArgs &args) {
-		setReg(args.vm, args.rd, !args.rs);
+		if (!typeCheckOne(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(!args.rs.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void lorOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs || args.rt);
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value || args.rt.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void lxnorOp(RArgs &args) {
-		setReg(args.vm, args.rd, !(!!args.rs ^ !!args.rt));
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(!(!!args.rs.value ^ !!args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void lxorOp(RArgs &args) {
-		setReg(args.vm, args.rd, !!(!!args.rs ^ !!args.rt));
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(!!(!!args.rs.value ^ !!args.rt.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void addiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs + args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value + args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void subiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs - args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value - args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void multiOp(IArgs &args) {
 		// TODO: handle unsigned
 		VM &vm = args.vm;
-		Word old_hi = vm.hi(), old_lo = vm.lo();
-		CAT_MUL128(vm.hi(), vm.lo(), args.rs, args.immediate);
+
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		Word old_hi = vm.hi().value;
+		Word old_lo = vm.lo().value;
+		CAT_MUL128(vm.hi().value, vm.lo().value, args.rs.value, args.immediate);
 		vm.onRegisterChange(Why::hiOffset);
 		vm.onRegisterChange(Why::loOffset);
-		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi());
-		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo());
+		const OperandType new_type(args.rs.type.isSigned, Primitive::Long);
+		vm.bufferChange<RegisterChange>(Why::hiOffset, old_hi, vm.hi(), vm.hi().type, new_type);
+		vm.bufferChange<RegisterChange>(Why::loOffset, old_lo, vm.lo(), vm.lo().type, new_type);
 		args.vm.increment();
 	}
 
 	void slliOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs << args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value << args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void srliOp(IArgs &args) {
-		setReg(args.vm, args.rd, UWord(args.rs) >> UWord(args.immediate));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(UWord(args.rs.value) >> UWord(args.immediate), args.rdType));
 		args.vm.increment();
 	}
 
 	void sraiOp(IArgs &args) {
-		setReg(args.vm, args.rd, Word(args.rs) >> Word(args.immediate));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(Word(args.rs.value) >> Word(args.immediate), args.rdType));
 		args.vm.increment();
 	}
 
 	void modiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs % args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.immediate == 0) {
+			args.vm.mathError();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value % args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void diviOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs / args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.immediate == 0) {
+			args.vm.mathError();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value / args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void slliiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.immediate << args.rs);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.immediate << args.rs.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void srliiOp(IArgs &args) {
-		setReg(args.vm, args.rd, UWord(args.immediate) >> UWord(args.rs));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(UWord(args.immediate) >> UWord(args.rs.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void sraiiOp(IArgs &args) {
-		setReg(args.vm, args.rd, Word(args.immediate) >> Word(args.rs));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(Word(args.immediate) >> Word(args.rs.value), args.rdType));
 		args.vm.increment();
 	}
 
 	void diviiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.immediate / args.rs);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.rs.value == 0) {
+			args.vm.mathError();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.immediate / args.rs.value, args.rdType));
 		args.vm.increment();
 	}
 
 	void andiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs & args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value & args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void nandiOp(IArgs &args) {
-		setReg(args.vm, args.rd, ~(args.rs & args.immediate));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~(args.rs.value & args.immediate), args.rdType));
 		args.vm.increment();
 	}
 
 	void noriOp(IArgs &args) {
-		setReg(args.vm, args.rd, ~(args.rs | args.immediate));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~(args.rs.value | args.immediate), args.rdType));
 		args.vm.increment();
 	}
 
 	void oriOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs | args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value | args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void xnoriOp(IArgs &args) {
-		setReg(args.vm, args.rd, ~(args.rs ^ args.immediate));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(~(args.rs.value ^ args.immediate), args.rdType));
 		args.vm.increment();
 	}
 
 	void xoriOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs ^ args.immediate);
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value ^ args.immediate, args.rdType));
 		args.vm.increment();
 	}
 
 	void luiOp(IArgs &args) {
-		setReg(args.vm, args.rd, (args.rd & 0xffffffff) | (static_cast<UWord>(args.immediate) << 32));
+		if (!typeCheck(args, true)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register((args.rd.value & 0xffffffff) | (static_cast<UWord>(args.immediate) << 32),
+			args.rdType));
 		args.vm.increment();
 	}
 
 	void slOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs < args.rt, false);
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value < args.rt.value, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void sleOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs <= args.rt, false);
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value <= args.rt.value, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void seqOp(RArgs &args) {
-		setReg(args.vm, args.rd, args.rs == args.rt, false);
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value == args.rt.value, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void cmpOp(RArgs &args) {
-		args.vm.updateFlags(args.rs - args.rt);
+		if (!typeCheckTwo(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		args.vm.updateFlags(args.rs.value - args.rt.value);
 		args.vm.increment();
 	}
 
 	void sliOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs < args.immediate, false);
+		if (!typeCheck(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value < args.immediate, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void sleiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs <= args.immediate, false);
+		if (!typeCheck(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value <= args.immediate, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void seqiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs == args.immediate, false);
+		if (!typeCheck(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value == args.immediate, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void sgiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs > args.immediate, false);
+		if (!typeCheck(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value > args.immediate, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void sgeiOp(IArgs &args) {
-		setReg(args.vm, args.rd, args.rs >= args.immediate, false);
+		if (!typeCheck(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		setReg(args.vm, args.rd, Register(args.rs.value >= args.immediate, args.rdType), false);
 		args.vm.increment();
 	}
 
 	void cmpiOp(IArgs &args) {
-		args.vm.updateFlags(args.rs - args.immediate);
+		if (!typeCheck(args, false)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		args.vm.updateFlags(args.rs.value - args.immediate);
 		args.vm.increment();
 	}
 
@@ -603,13 +919,23 @@ namespace WVM::Operations {
 	}
 
 	void jcOp(JArgs &args) {
-		if (args.rs != 0)
+		if (!typeCheck(args.rs, args.rsType)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.rs.value != 0)
 			args.vm.jump(args.address, args.link);
 		else
 			args.vm.increment();
 	}
 
 	void jrOp(RArgs &args) {
+		if (args.rd.type != OperandType::VoidPtr()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		if (args.vm.checkConditions(args.conditions)) {
 			const auto reg_id = args.vm.registerID(args.rd);
 			// Reenable interrupts if jumping to $e0.
@@ -617,32 +943,47 @@ namespace WVM::Operations {
 				args.vm.hardwareInterruptsEnabled = true;
 				args.vm.wakeRest();
 			}
-			args.vm.jump(args.rd, false, reg_id == Why::returnAddressOffset);
+			args.vm.jump(args.rd.value, false, reg_id == Why::returnAddressOffset);
 		} else
 			args.vm.increment();
 	}
 
 	void jrcOp(RArgs &args) {
-		if (args.rs) {
+		if (!typeCheck(args.rs, args.rsType) || args.rd.type != OperandType::VoidPtr()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.rs.value != 0) {
 			const auto reg_id = args.vm.registerID(args.rd);
 			if (reg_id == Why::exceptionOffset && args.vm.checkRing(Ring::Zero))
 				args.vm.hardwareInterruptsEnabled = true;
-			args.vm.jump(args.rd, false, reg_id == Why::returnAddressOffset);
+			args.vm.jump(args.rd.value, false, reg_id == Why::returnAddressOffset);
 		} else
 			args.vm.increment();
 	}
 
 	void jrlOp(RArgs &args) {
+		if (args.rd.type != OperandType::VoidPtr()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		if (args.vm.checkConditions(args.conditions))
-			args.vm.jump(args.rd, true);
+			args.vm.jump(args.rd.value, true);
 		else
 			args.vm.increment();
 	}
 
 	void jrlcOp(RArgs &args) {
-		if (args.rs) {
+		if (!typeCheck(args.rs, args.rsType) || args.rd.type != OperandType::VoidPtr()) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		if (args.rs.value != 0) {
 			bool success;
-			const Word translated = args.vm.translateAddress(args.rd, &success);
+			const Word translated = args.vm.translateAddress(args.rd.value, &success);
 			if (!success)
 				args.vm.intPfault();
 			else
@@ -651,153 +992,146 @@ namespace WVM::Operations {
 			args.vm.increment();
 	}
 
+	static Size getSize(const OperandType &type) {
+		switch (type.primitive) {
+			case Primitive::Char:  return Size::Byte;
+			case Primitive::Short: return Size::QWord;
+			case Primitive::Int:   return Size::HWord;
+			case Primitive::Long:  return Size::Word;
+			default: throw std::invalid_argument("Can't get size of primitive " +
+				std::to_string(static_cast<int>(type.primitive)));
+		}
+	}
+
+	static Size getSize(int type) {
+		switch (type & 0b111) {
+			case 0b001: return Size::Byte;
+			case 0b010: return Size::QWord;
+			case 0b011: return Size::HWord;
+			case 0b100: return Size::Word;
+			default: throw std::invalid_argument("Can't get size of primitive " + std::to_string(type));
+		}
+	}
+
 	void cOp(RArgs &args) {
-		// TODO!: typechecking and sizes
+		if (args.rs.type != args.rd.type || args.rs.type != args.rsType || args.rsType != args.rdType) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		bool success;
-		const Word translated_source = args.vm.translateAddress(args.rs, &success);
+		const Word translated_source = args.vm.translateAddress(args.rs.value, &success);
 		if (!success) {
 			args.vm.intPfault();
-		} else {
-			const Word value = args.vm.getWord(translated_source);
-			const Word translated_destination = args.vm.translateAddress(args.rd, &success);
-			if (!success) {
-				args.vm.intPfault();
-			} else if (args.vm.checkWritable()) {
-				args.vm.bufferChange<MemoryChange>(args.vm, translated_destination, value, Size::Word);
-				args.vm.setWord(translated_destination, value);
-				args.vm.increment();
-			} else
-				args.vm.intBwrite(translated_destination);
+			return;
 		}
+
+		const Size size = getSize(args.rs.type);
+		const UWord value = args.vm.get(translated_source, size);
+		const Word translated_destination = args.vm.translateAddress(args.rd.value, &success);
+		if (!success) {
+			args.vm.intPfault();
+			return;
+		}
+
+		if (!args.vm.checkWritable()) {
+			args.vm.intBwrite(translated_destination);
+			return;
+		}
+
+		args.vm.bufferChange<MemoryChange>(args.vm, translated_destination, value, size);
+		args.vm.setWord(translated_destination, value);
+		args.vm.increment();
 	}
 
 	void lOp(RArgs &args) {
-		// TODO!: typechecking and sizes
+		if (!typeCheck(args.rsType, args.rdType, 1) || args.rs.type != args.rsType) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		bool success;
-		const Word translated = args.vm.translateAddress(args.rs, &success);
+		const Word translated = args.vm.translateAddress(args.rs.value, &success);
 		if (!success) {
 			args.vm.intPfault();
-		} else {
-			setReg(args.vm, args.rd, args.vm.getWord(translated), false);
-			args.vm.increment();
+			return;
 		}
+
+		const Size size = getSize(args.rdType);
+		setReg(args.vm, args.rd, Register(args.vm.get(translated, size), args.rdType), false);
+		args.vm.increment();
 	}
 
 	void sOp(RArgs &args) {
-		// TODO!: typechecking and sizes
+		if (!typeCheck(args.rsType, args.rdType, -1) || args.rs.type != args.rsType || args.rd.type != args.rdType) {
+			args.vm.intBadtyp();
+			return;
+		}
+
 		bool success;
-		const Word translated = args.vm.translateAddress(args.rd, &success);
+		const Word translated = args.vm.translateAddress(args.rd.value, &success);
 		if (!success) {
 			args.vm.intPfault();
-		} else if (args.vm.checkWritable()) {
-			args.vm.bufferChange<MemoryChange>(args.vm, translated, args.rs, Size::Word);
-			args.vm.setWord(translated, args.rs);
-			args.vm.increment();
-		} else
+			return;
+		}
+
+		if (!args.vm.checkWritable()) {
 			args.vm.intBwrite(translated);
+			return;
+		}
+
+		const Size size = getSize(args.rsType);
+		args.vm.bufferChange<MemoryChange>(args.vm, translated, args.rs.value, size);
+		args.vm.set(translated, args.rs.value, size);
+		args.vm.increment();
 	}
 
 	void spushOp(RArgs &args) {
-		VM &vm = args.vm;
-		setReg(vm, vm.sp(), vm.sp() - 8, false);
-		bool success;
-		const Word translated = vm.translateAddress(vm.sp(), &success);
-		if (!success) {
-			vm.intPfault();
-		} else if (vm.checkWritable()) {
-			vm.bufferChange<MemoryChange>(vm, translated,args.rs, Size::Word);
-			vm.setWord(translated, args.rs);
-			vm.increment();
-		} else
-			vm.intBwrite(translated);
-	}
-
-	void spopOp(RArgs &args) {
-		bool success;
-		const Word translated = args.vm.translateAddress(args.vm.sp(), &success);
-		if (!success) {
-			args.vm.intPfault();
-		} else {
-			setReg(args.vm, args.rd, args.vm.getWord(translated), false);
-			setReg(args.vm, args.vm.sp(), args.vm.sp() + 8, false);
-			args.vm.increment();
+		if (!typeCheck(args.rs, args.rsType)) {
+			args.vm.intBadtyp();
+			return;
 		}
-	}
 
-	void sspushOp(IArgs &args) {
 		VM &vm = args.vm;
-		setReg(vm, vm.sp(), vm.sp() - args.immediate, false);
+		setReg(vm, vm.sp(), Register(vm.sp().value - 8, vm.sp().type), false);
 		bool success;
-		const Word translated = vm.translateAddress(vm.sp(), &success);
+		const Word translated = vm.translateAddress(vm.sp().value, &success);
 
 		if (!success) {
 			vm.intPfault();
 			return;
 		}
 		
-		if (vm.checkWritable()) {
-			switch (args.immediate) {
-				case 1:
-					vm.bufferChange<MemoryChange>(vm, translated, args.rs, Size::Byte);
-					vm.setByte(translated, args.rs);
-					break;
-				case 2:
-					vm.bufferChange<MemoryChange>(vm, translated, args.rs, Size::QWord);
-					vm.setQuarterword(translated, args.rs);
-					break;
-				case 4:
-					vm.bufferChange<MemoryChange>(vm, translated, args.rs, Size::HWord);
-					vm.setHalfword(translated, args.rs);
-					break;
-				case 8:
-					vm.bufferChange<MemoryChange>(vm, translated, args.rs, Size::Word);
-					vm.setWord(translated, args.rs);
-					break;
-				default:
-					throw std::runtime_error("Invalid push size: " + std::to_string(args.immediate));
-			}
-
-			vm.increment();
+		if (!vm.checkWritable()) {
+			vm.intBwrite(translated);
 			return;
 		}
 
-		vm.intBwrite(translated);
+		const Size size = getSize(args.rsType);
+		vm.bufferChange<MemoryChange>(vm, translated, args.rs.value, size);
+		vm.set(translated, args.rs.value, size);
+		vm.increment();
 	}
 
-	void sspopOp(IArgs &args) {
-		VM &vm = args.vm;
+	void spopOp(RArgs &args) {
 		bool success;
-		const Word translated = vm.translateAddress(vm.sp(), &success);
+		const Word translated = args.vm.translateAddress(args.vm.sp().value, &success);
 		if (!success) {
-			vm.intPfault();
+			args.vm.intPfault();
 			return;
 		}
 
-		switch (args.immediate) {
-			case 1:
-				setReg(vm, args.rd, vm.getByte(translated), false);
-				break;
-			case 2:
-				setReg(vm, args.rd, vm.getQuarterword(translated), false);
-				break;
-			case 4:
-				setReg(vm, args.rd, vm.getHalfword(translated), false);
-				break;
-			case 8:
-				setReg(vm, args.rd, vm.getWord(translated), false);
-				break;
-			default:
-				throw std::runtime_error("Invalid pop size: " + std::to_string(args.immediate));
-		}
-
-		setReg(vm, vm.sp(), vm.sp() + args.immediate, false);
-		vm.increment();
+		const Size size = getSize(args.rdType);
+		setReg(args.vm, args.rd, Register(args.vm.get(translated, size), OperandType(args.rdType)), false);
+		setReg(args.vm, args.vm.sp(), Register(args.vm.sp().value + static_cast<char>(size) / 8, args.vm.sp().type),
+			false);
+		args.vm.increment();
 	}
 
 	void msOp(RArgs &args) {
 		// This is awfully slow.
 		bool success;
-		for (Word i = 0; i < args.rs; ++i) {
+		for (Word i = 0; i < args.rs.value; ++i) {
 			const Word translated = args.vm.translateAddress(args.rd + i, &success);
 			if (!success) {
 				args.vm.intPfault();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <filesystem>
@@ -18,9 +19,9 @@
 #include "Defs.h"
 #include "Interrupts.h"
 #include "Paging.h"
+#include "Register.h"
 #include "Symbol.h"
 #include "Why.h"
-#include "wasm/Types.h"
 
 namespace WVM {
 	struct Drive {
@@ -72,7 +73,7 @@ namespace WVM {
 			Ring ring = Ring::Zero;
 			Word programCounter = -1;
 			Word interruptTableAddress = 0;
-			Word registers[Why::totalRegisters];
+			std::array<Register, Why::totalRegisters> registers;
 			std::map<std::string, Symbol> symbolTable;
 			std::multimap<Word, std::string> symbolsByPosition;
 			std::map<Word, DebugData> debugMap;
@@ -127,7 +128,7 @@ namespace WVM {
 			UWord get(Word address, Size, Endianness = Endianness::Little) const;
 			void set(Word address, Word value, Size, Endianness = Endianness::Little);
 			std::string getString(Word address, int max = -1) const;
-			unsigned char registerID(Word &) const;
+			unsigned char registerID(const Register &) const;
 			void resize(size_t);
 
 			void jump(Word, bool should_link = false, bool from_rt = false);
@@ -135,6 +136,7 @@ namespace WVM {
 			void increment();
 			bool changeRing(Ring);
 			void updateFlags(Word);
+			void updateFlags(const Register &);
 			bool checkConditions(Conditions);
 			bool interrupt(int, bool force);
 			bool interrupt(InterruptType, bool force);
@@ -144,6 +146,7 @@ namespace WVM {
 			bool intBwrite(Word);
 			bool intTimer();
 			bool intKeybrd(UWord);
+			bool intBadtyp();
 			void start();
 			void stop();
 			bool play(size_t microdelay = 0);
@@ -175,6 +178,7 @@ namespace WVM {
 			std::unique_lock<std::recursive_mutex> lockVM() { return std::unique_lock(mutex); }
 
 			void finishChange();
+			void mathError();
 
 			template <typename T, typename... Args>
 			void recordChange(Args && ...args) {
@@ -193,17 +197,17 @@ namespace WVM {
 				}
 			}
 
-			Word & hi();
-			Word & lo();
-			Word & st();
-			Word & sp();
-			Word & fp();
-			Word & rt();
-			const Word & hi() const;
-			const Word & lo() const;
-			const Word & st() const;
-			const Word & sp() const;
-			const Word & fp() const;
-			const Word & rt() const;
+			Register & hi();
+			Register & lo();
+			Register & st();
+			Register & sp();
+			Register & fp();
+			Register & rt();
+			const Register & hi() const;
+			const Register & lo() const;
+			const Register & st() const;
+			const Register & sp() const;
+			const Register & fp() const;
+			const Register & rt() const;
 	};
 }

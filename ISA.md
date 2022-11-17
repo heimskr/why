@@ -181,8 +181,6 @@
 						<li><a href="#op-lni">Load Indirect Immediate</a> (<code>lni</code>)</li>
 						<li><a href="#op-set">Set</a> (<code>set</code>)</li>
 						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
-						<li><a href="#op-sspush">Sized Stack Push</a> (<code>sspush</code>)</li>
-						<li><a href="#op-sspop">Sized Stack Pop</a> (<code>sspop</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-special">Special Instructions</a>
@@ -1238,18 +1236,6 @@ Sets a register to the given immediate value.
 
 Loads an immediate value into the upper half of the word at `rd`. The lower half is not affected.
 `rd`'s type must be 64 bits wide.
-
-### <a name="op-sspush"></a>Sized Stack Push (`sspush`)
-> `[:imm $rs`  
-> `000000111001` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
-
-Writes `rs` to the stack and decrements the stack pointer by `imm` bytes.
-
-### <a name="op-sspop"></a>Sized Stack Pop (`sspop`)
-> `]:imm $rd`  
-> `000000111010` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii` + types
-
-Increments the stack pointer by `imm` bytes and reads into `rd` from the stack.
 
 ## <a name="ops-special"></a>Special Instructions
 

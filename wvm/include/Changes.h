@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Defs.h"
+#include "wasm/Types.h"
 
 namespace WVM {
 	class VM;
@@ -26,9 +27,10 @@ namespace WVM {
 	struct RegisterChange: public Change {
 		UByte reg;
 		Word from, to;
+		Wasmc::OperandType fromType, toType;
 
-		RegisterChange(UByte reg_, Word from_, Word to_): reg(reg_), from(from_), to(to_) {}
-		RegisterChange(const VM &, UByte reg_, Word to_);
+		RegisterChange(UByte reg_, Word from_, Word to_, Wasmc::OperandType from_type, Wasmc::OperandType to_type);
+		RegisterChange(const VM &, UByte reg_, Word to_, Wasmc::OperandType to_type);
 
 		void apply(VM &, bool strict = false) override;
 		void undo(VM &, bool strict = false) override;
