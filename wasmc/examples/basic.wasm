@@ -1,0 +1,37 @@
+#meta
+name: "Text Section Test"
+author: "Kai Tamkun"
+version: "1.1"
+orcid: "0000-0001-7405-6654"
+
+#text
+
+%data
+
+@message
+%stringz "Hello, World!\n"
+
+%type message object
+%size message .-message
+
+%code
+
+@main
+	&message -> $a0{uc*}
+	:: strprint
+	<prx $t0{ul}>
+	<halt>
+
+@strprint
+	[$a0{uc*}] -> $ma{uc}
+	: _strprint_print if $ma{uc}
+	: $rt{v*}
+	@_strprint_print
+	<prc $ma{uc}>
+	$a0{uc*}++
+	: strprint
+
+%type main function
+%type strprint function
+%size main strprint-main
+%size strprint .-strprint

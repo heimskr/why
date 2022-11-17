@@ -481,10 +481,7 @@ namespace WVM {
 	}
 
 	bool VM::intBadtyp() {
-		auto lock = lockVM();
-		bufferChange<RegisterChange>(*this, Why::exceptionOffset + 2, lastVirtual, OperandType::VOID_PTR);
-		registers[Why::exceptionOffset + 2] = {lastVirtual, OperandType::VOID_PTR};
-		onRegisterChange(Why::exceptionOffset + 2);
+		error() << "Typechecking failed at " << programCounter << '\n';
 		return interrupt(InterruptType::Badtyp, true);
 	}
 

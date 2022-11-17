@@ -9,6 +9,7 @@ namespace WVM {
 		auto lock = vm.lockVM();
 
 		if (vm.interruptTableAddress == 0) {
+			std::cerr << "Interrupt " << static_cast<int>(type) << " occurred without an interrupt table registered!\n";
 			vm.recordChange<HaltChange>();
 			vm.stop();
 		} else {
@@ -38,5 +39,6 @@ namespace WVM {
 		{InterruptType::Inexec, {InterruptType::Inexec, Ring::Zero,    Ring::Two,     false}},
 		{InterruptType::Bwrite, {InterruptType::Bwrite, Ring::Zero,    Ring::Invalid, false}},
 		{InterruptType::Keybrd, {InterruptType::Keybrd, Ring::Zero,    Ring::Two,     true}},
+		{InterruptType::Badtyp, {InterruptType::Badtyp, Ring::Zero,    Ring::Invalid, false}},
 	};
 }

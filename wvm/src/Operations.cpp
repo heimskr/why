@@ -1239,7 +1239,7 @@ namespace WVM::Operations {
 	}
 
 	void setOp(IArgs &args) {
-		setReg(args.vm, args.rd, Register(args.immediate, args.immType), false);
+		setReg(args.vm, args.rd, Register(args.immediate, args.rdType), false);
 		args.vm.increment();
 	}
 
