@@ -18,10 +18,10 @@ namespace WVM {
 				vm.stop();
 			} else {
 				const Word ring = Word(vm.ring);
-				vm.bufferChange<RegisterChange>(vm, REG_E + 0, vm.programCounter);
-				vm.bufferChange<RegisterChange>(vm, REG_E + 1, ring);
-				vm.registers[REG_E + 0] = vm.programCounter;
-				vm.registers[REG_E + 1] = ring;
+				vm.bufferChange<RegisterChange>(vm, REG_E + 0, vm.programCounter, OperandType::VOID_PTR);
+				vm.bufferChange<RegisterChange>(vm, REG_E + 1, ring, OperandType::ULONG);
+				vm.registers[REG_E + 0].value = vm.programCounter;
+				vm.registers[REG_E + 1].value = ring;
 				vm.onRegisterChange(REG_E + 0);
 				vm.onRegisterChange(REG_E + 1);
 				extra();

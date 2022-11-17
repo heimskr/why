@@ -77,8 +77,9 @@ namespace WVM::Mode {
 
 		vm.onRegisterChange = [this](unsigned char id) {
 			if (logRegisters)
-				DBG(Why::coloredRegister(id) << " <- " << vm.registers[id]);
-			const std::string message = ":Register " + std::to_string(id) + " " + std::to_string(vm.registers[id]);
+				DBG(Why::coloredRegister(id) << " <- " << vm.registers[id].value);
+			const std::string message = ":Register " + std::to_string(id) + " " +
+				std::to_string(vm.registers[id].value);
 			auto lock = lockSubscribers();
 			for (int client: registerSubscribers)
 				server.send(client, message);
@@ -318,10 +319,10 @@ namespace WVM::Mode {
 					return;
 				}
 
-				vm.registers[reg] = new_value;
+				vm.registers[reg].value = new_value;
 			}
 
-			server.send(client, ":Register " + std::to_string(reg) + " " + std::to_string(vm.registers[reg]));
+			server.send(client, ":Register " + std::to_string(reg) + " " + std::to_string(vm.registers[reg].value));
 		} else if (verb == "PrintOps") {
 			if (size != 2) {
 				invalid();
@@ -424,10 +425,11 @@ namespace WVM::Mode {
 		} else if (verb == "Registers") {
 			if (size == 2 && split[1] == "raw")
 				for (int i = 0; i < Why::totalRegisters; ++i)
-					server.send(client, ":Register " + std::to_string(i) + " " + std::to_string(vm.registers[i]));
+					server.send(client, ":Register " + std::to_string(i) + " " + std::to_string(vm.registers[i].value));
 			else
 				for (int i = 0; i < Why::totalRegisters; ++i)
-					server.send(client, ":Register $" + Why::registerName(i) + " " + std::to_string(vm.registers[i]));
+					server.send(client, ":Register $" + Why::registerName(i) + " " +
+						std::to_string(vm.registers[i].value));
 		} else if (verb == "Reset") {
 			vm.reset(false);
 			sendMemory(client);
@@ -548,8 +550,8 @@ namespace WVM::Mode {
 				return;
 			}
 
-			vm.bufferChange<RegisterChange>(vm, reg, new_value);
-			vm.registers[reg] = new_value;
+			vm.bufferChange<RegisterChange>(vm, reg, new_value, vm.registers.at(reg).type);
+			vm.registers[reg].value = new_value;
 			vm.onRegisterChange(reg);
 			server.send(client, ":SetReg " + std::to_string(reg) + " " + std::to_string(new_value));
 		} else if (verb == "History") {
@@ -611,8 +613,8 @@ namespace WVM::Mode {
 			try {
 				size_t i = 0;
 				std::cerr << "Stacktrace:\n";
-				Word m5 = vm.registers[Why::assemblerOffset + 5];
-				std::cerr << "    " << i << ": " << vm.registers[Why::returnAddressOffset] << '\n';
+				Word m5 = vm.registers[Why::assemblerOffset + 5].value;
+				std::cerr << "    " << i << ": " << vm.registers[Why::returnAddressOffset].value << '\n';
 				while (m5 != 0) {
 					bool success;
 					const Word rt_addr = vm.translateAddress(m5 + 16, &success);

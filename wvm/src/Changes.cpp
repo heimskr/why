@@ -22,11 +22,11 @@ namespace WVM {
 		vm.set(address, from, size);
 	}
 
-	RegisterChange::RegisterChange(UByte reg_, Word from_, Word to_, Wasmc::OperandType from_type,
-	Wasmc::OperandType to_type):
+	RegisterChange::RegisterChange(UByte reg_, Word from_, Word to_, OperandType from_type,
+	OperandType to_type):
 		reg(reg_), from(from_), to(to_), fromType(std::move(from_type)), toType(std::move(to_type)) {}
 
-	RegisterChange::RegisterChange(const VM &vm, UByte reg_, Word to_, Wasmc::OperandType to_type):
+	RegisterChange::RegisterChange(const VM &vm, UByte reg_, Word to_, OperandType to_type):
 		reg(reg_), from(vm.registers[reg_]), to(to_), fromType(vm.registers[reg_].type), toType(std::move(to_type)) {}
 
 	void RegisterChange::apply(VM &vm, bool strict) {

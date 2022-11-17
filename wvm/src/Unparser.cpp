@@ -138,7 +138,6 @@ namespace WVM::Unparser {
 				switch (funct) {
 					case FN_PR:    return "<\e[36mprint\e[39m " + color(rs, st) + ">";
 					case FN_HALT:  return "<\e[36mhalt\e[39m>";
-					case FN_EVAL:  return "<\e[36meval\e[39m "  + color(rs, st) + ">";
 					case FN_PRC:   return "<\e[36mprc\e[39m "   + color(rs, st) + ">";
 					case FN_PRD:   return "<\e[36mprd\e[39m "   + color(rs, st) + ">";
 					case FN_PRX:   return "<\e[36mprx\e[39m "   + color(rs, st) + ">";
@@ -230,8 +229,6 @@ namespace WVM::Unparser {
 			case OP_TIMEI:  return "\e[36mtime\e[39m " + coloredImm;
 			case OP_RINGI:  return "\e[36mring\e[39m " + coloredImm;
 			case OP_CMPI:   return color(rs, st) + " " + colorOper("~") + " " + coloredImm;
-			case OP_SSPUSH: return "[:" + coloredImm + " " + color(rs, st);
-			case OP_SSPOP:  return "]:" + coloredImm + " " + color(rd, dt);
 			case OP_DIVI:   return iAltOp(rs, rd, coloredImm, "/", st, dt, it);
 			case OP_DIVII:  return iAltOpInv(rs, rd, coloredImm, "/", st, dt, it);
 			case OP_SLLII:  return iAltOpInv(rs, rd, coloredImm, "<<", st, dt, it);

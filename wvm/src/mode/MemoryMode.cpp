@@ -211,7 +211,7 @@ namespace WVM::Mode {
 		std::stringstream ss;
 		UWord word = vm.getWord(address, Endianness::Little);
 
-		bool at_sp = vm.sp() - (vm.sp() % 8) == address;
+		bool at_sp = vm.sp().value - (vm.sp().value % 8) == address;
 		if (at_sp)
 			ss << "\e[48;5;236m";
 
@@ -229,7 +229,7 @@ namespace WVM::Mode {
 			hex_ss << std::right << std::setw(2) << std::setfill('0') << std::hex << ((word >> (8 * i)) & 0xff);
 		std::string hex = hex_ss.str();
 		if (at_sp) {
-			int offset = vm.sp() % 8;
+			int offset = vm.sp().value % 8;
 			hex.replace(offset * 2, 2, "\e[48;5;240;1m" + hex.substr(offset * 2, 2) + "\e[48;5;236;22m");
 		}
 
@@ -447,13 +447,12 @@ namespace WVM::Mode {
 			}
 
 			if (reg == Why::stackPointerOffset) {
-				Word old_sp = vm.sp() - (vm.sp() % 8);
-				vm.registers[reg] = value;
+				Word old_sp = vm.sp().value - (vm.sp().value % 8);
+				vm.registers[reg].value = value;
 				updateLine(old_sp);
-				updateLine(vm.sp() - (vm.sp() % 8));
-			} else {
-				vm.registers[reg] = value;
-			}
+				updateLine(vm.sp().value - (vm.sp().value % 8));
+			} else
+				vm.registers[reg].value = value;
 		} else if (verb == "Unpaused") {
 			vm.paused = false;
 		} else if (verb == "Paused") {
