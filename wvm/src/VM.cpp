@@ -744,8 +744,11 @@ namespace WVM {
 
 		registers[Why::globalAreaPointerOffset] = {endOffset, OperandType::VOID_PTR};
 		sp() = {static_cast<Word>(memorySize), OperandType::VOID_PTR};
+		rt().type = OperandType::VOID_PTR;
+
 		onRegisterChange(Why::globalAreaPointerOffset);
 		onRegisterChange(Why::stackPointerOffset);
+		onRegisterChange(Why::returnAddressOffset);
 		loadSymbols();
 		loadDebugData();
 	}
