@@ -301,7 +301,10 @@ namespace WVM::Mode {
 	void MemoryMode::updateLine(Word address, bool careless) {
 		if (careless || 0 < lines.count(address)) {
 			auto &simple = getLine(address);
-			simple.text = stringify(address);
+			if (vm.codeOffset <= address && address < vm.dataOffset)
+				simple.text = stringifyCode(address);
+			else
+				simple.text = stringify(address);
 			textbox->redrawLine(simple);
 		}
 	}
