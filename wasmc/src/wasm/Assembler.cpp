@@ -153,7 +153,7 @@ namespace Wasmc {
 				}
 				default: {
 					if (auto *instruction = dynamic_cast<WASMInstructionNode *>(node)) {
-						// Because we can't yet convert the instruction to a Long (probably),
+						// Because we can't yet convert the instruction to a TypedInstruction (probably),
 						// we stash it in a map and append one or more zeros.
 						instructionMap[currentSection->counter] = instruction;
 						const size_t count = instruction->expandedSize();
@@ -632,7 +632,7 @@ namespace Wasmc {
 
 		meta.append(nva);
 
-		metaOffsetCode() = meta.alignUp(8);
+		metaOffsetCode() = meta.alignUp(24);
 	}
 
 	void Assembler::expandCode() {

@@ -8,6 +8,7 @@
 #include "wasm/Assembler.h"
 #include "wasm/BinaryParser.h"
 #include "wasm/Linker.h"
+#include "wasm/Why.h"
 
 namespace Wasmc {
 	void Linker::addFile(const std::filesystem::path &path) {
@@ -160,7 +161,9 @@ namespace Wasmc {
 				}
 
 			for (auto &entry: subrelocation) {
+				warn() << "[[" << std::string(entry) << "]]: " << entry.sectionOffset << " -> ";
 				entry.sectionOffset += entry.isData? extra_data_length : extra_code_length;
+				std::cerr << entry.sectionOffset << '\n';
 				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
 				combined_relocation.emplace_back(std::move(entry));
 			}
@@ -216,12 +219,12 @@ namespace Wasmc {
 
 		const std::vector<Long> encoded_debug = encodeDebugData(combined_debug);
 		combined_symbols.at(combined_symbol_indices.at(".end")).address = 8 * (main_parser.rawMeta.size()
-			+ encodeSymbolTable(combined_symbols).size() + combined_code.size() + combined_data.size()
-			+ encoded_debug.size());
+			+ encodeSymbolTable(combined_symbols).size() + combined_data.size() + encoded_debug.size())
+			+ Why::instructionSize * combined_code.size();
 		const std::vector<Long> encoded_combined_symbols = encodeSymbolTable(combined_symbols);
 
 		std::vector<Long> &meta = main_parser.rawMeta;
-		meta.at(1) = meta.at(0) + combined_code.size() * 12;
+		meta.at(1) = meta.at(0) + combined_code.size() * Why::instructionSize;
 		meta.at(2) = meta.at(1) + combined_data.size() * 8;
 		meta.at(3) = meta.at(2) + encoded_combined_symbols.size() * 8;
 		meta.at(4) = meta.at(3) + encoded_debug.size() * 8;
@@ -235,7 +238,7 @@ namespace Wasmc {
 		linked.clear();
 
 		std::vector<uint8_t> code_bytes;
-		code_bytes.reserve(combined_code.size() * 12);
+		code_bytes.reserve(combined_code.size() * Why::instructionSize);
 
 		for (const auto &instruction: combined_code) {
 			const auto instruction_bytes = instruction.toBytes();
@@ -330,15 +333,15 @@ namespace Wasmc {
 						throw std::runtime_error("Invalid RelocationType: " + std::to_string(int(entry.type)));
 				}
 			} else {
-				// if ((entry.sectionOffset - 4) % 12 != 0) {
-				// 	error() << std::string(entry) << '\n';
-				// 	throw std::runtime_error("Code symbol section offset (" + std::to_string(entry.sectionOffset) +
-				// 		") must be divisible by 12 after subtracting 4");
-				// }
+				if (entry.sectionOffset % 12 != 0) {
+					error() << std::string(entry) << '\n';
+					throw std::runtime_error("Code symbol section offset (" + std::to_string(entry.sectionOffset) +
+						") must be divisible by 12");
+				}
 
 				// TODO!: verify correctness, something's probably amiss
 
-				Long &instruction = code.at(entry.sectionOffset / 12).instruction;
+				Long &instruction = code.at(entry.sectionOffset / Why::instructionSize).instruction;
 
 				if (entry.type == RelocationType::Lower4) {
 					if (0xffffffff < new_value)
