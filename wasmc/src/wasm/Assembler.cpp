@@ -222,7 +222,7 @@ namespace Wasmc {
 		} else if (const JType *jtype = dynamic_cast<const JType *>(&node)) {
 			return compileJ(node, *jtype);
 		} else if (node.nodeType() == WASMNodeType::Nop) {
-			return 0;
+			return TypedInstruction(0, 0);
 		} else {
 			node.debug();
 			throw std::runtime_error("Node isn't an R-, I- or J-type");
@@ -254,7 +254,7 @@ namespace Wasmc {
 	TypedInstruction Assembler::compileR(Opcode opcode, uint8_t rs, uint8_t rt, uint8_t rd, Funct function,
 	                                     uint8_t flags, uint8_t condition, uint8_t rt_type, uint8_t rs_type,
 	                                     uint8_t rd_type) {
-		return {
+		return TypedInstruction(
 			static_cast<uint64_t>(function)
 			| (static_cast<uint64_t>(flags) << 12)
 			| (static_cast<uint64_t>(condition) << 14)
@@ -265,7 +265,7 @@ namespace Wasmc {
 			static_cast<uint32_t>(rd_type)
 			| (static_cast<uint32_t>(rs_type) << 8)
 			| (static_cast<uint32_t>(rt_type) << 16)
-		};
+		);
 	}
 
 	TypedInstruction Assembler::compileI(const WASMInstructionNode &node, const IType &itype) const {
@@ -290,7 +290,7 @@ namespace Wasmc {
 
 	TypedInstruction Assembler::compileI(Opcode opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
 	                                     uint8_t condition, uint8_t imm_type, uint8_t rs_type, uint8_t rd_type) {
-		return {
+		return TypedInstruction(
 			static_cast<uint64_t>(immediate)
 			| (static_cast<uint64_t>(rd) << 32)
 			| (static_cast<uint64_t>(rs) << 39)
@@ -300,7 +300,7 @@ namespace Wasmc {
 			static_cast<uint32_t>(rd_type)
 			| (static_cast<uint32_t>(rs_type) << 8)
 			| (static_cast<uint32_t>(imm_type) << 16)
-		};
+		);
 	}
 
 	TypedInstruction Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
@@ -319,7 +319,7 @@ namespace Wasmc {
 
 	TypedInstruction Assembler::compileJ(Opcode opcode, uint8_t rs, uint32_t address, bool link, uint8_t flags,
 	                                     uint8_t condition, uint8_t rs_type) {
-		return {
+		return TypedInstruction(
 			static_cast<uint64_t>(address)
 			| (static_cast<uint64_t>(flags) << 32)
 			| (static_cast<uint64_t>(condition) << 34)
@@ -327,7 +327,7 @@ namespace Wasmc {
 			| (static_cast<uint64_t>(rs) << 45)
 			| (static_cast<uint64_t>(opcode) << 52),
 			rs_type
-		};
+		);
 	}
 
 	void Assembler::expandLabels() {

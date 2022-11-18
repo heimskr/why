@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 

@@ -1,5 +1,5 @@
 #meta
-name: "Text Section Test"
+name: "Basic Test"
 author: "Kai Tamkun"
 version: "1.1"
 orcid: "0000-0001-7405-6654"
@@ -31,7 +31,7 @@ orcid: "0000-0001-7405-6654"
 	$a0{uc*}++
 	: strprint
 
-%type main function
-%type strprint function
-%size main strprint-main
-%size strprint .-strprint
+// %type main function
+// %type strprint function
+// %size main strprint-main
+// %size strprint .-strprint
