@@ -23,7 +23,7 @@ namespace WVM::Mode {
 			std::thread networkThread;
 			Haunted::UI::Boxes::ExpandoBox *expando;
 			Haunted::UI::VectorBox *textbox;
-			std::array<Word, Why::totalRegisters> registers;
+			std::array<Register, Why::totalRegisters> registers;
 			bool fastForward = false, ready = false;
 
 			Haunted::UI::SimpleLine<std::vector> & getLine(int reg);

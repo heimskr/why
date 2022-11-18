@@ -1,3 +1,4 @@
+#include <charconv>
 #include <chrono>
 #include <cstdlib>
 #include <iomanip>
@@ -32,15 +33,13 @@ namespace WVM::Util {
 		return out;
 	}
 
-	bool parseUL(const std::string &str, uint64_t &out, int base) {
-		char *endptr;
+	bool parseUL(std::string_view str, uint64_t &out, int base) {
 		if (str.substr(0, 2) == "0x") {
-			const std::string hex = str.substr(2);
-			out = strtoull(hex.c_str(), &endptr, 16);
-			return static_cast<unsigned long>(endptr - hex.c_str()) == hex.size();
+			str.remove_prefix(2);
+			base = 16;
 		}
-		out = strtoull(str.c_str(), &endptr, base);
-		return static_cast<unsigned long>(endptr - str.c_str()) == str.size();
+		auto [ptr, ec] = std::from_chars(str.begin(), str.end(), out, base);
+		return ec == std::errc();
 	}
 
 	bool parseLong(const std::string &str, int64_t &out, int base) {

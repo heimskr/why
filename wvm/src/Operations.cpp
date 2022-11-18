@@ -278,7 +278,7 @@ namespace WVM::Operations {
 	static void setReg(VM &vm, Register &rd, Register new_value, bool update_flags = true) {
 		if (vm.registerID(rd) == Why::zeroOffset)
 			std::cerr << "Set register $0 at " << vm.programCounter << "!\n";
-		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), new_value.value, new_value.type);
+		vm.bufferChange<RegisterChange>(vm, rd.index, new_value.value, new_value.type);
 		if (update_flags)
 			vm.updateFlags(rd = new_value);
 		else

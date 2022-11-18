@@ -52,6 +52,8 @@ namespace WVM::Mode {
 			return;
 		}
 
+		DBG(message);
+
 		const size_t space = message.find(' ');
 		const std::string verb = message.substr(1, space - 1);
 		const std::string rest = space == std::string::npos? "" : message.substr(space + 1);
@@ -62,13 +64,14 @@ namespace WVM::Mode {
 		} else if (verb == "Subscribed") {
 			*textbox += std::string(infoPrefix) + "Subscribed to " + rest + ".";
 		} else if (verb == "Register") {
-			Word registerID, newValue;
-			if (split.size() != 2 || !Util::parseLong(split[0], registerID) || !Util::parseLong(split[1], newValue)) {
+			Word register_id, new_value, new_type;
+			if (split.size() != 3 || !Util::parseLong(split[0], register_id) || !Util::parseLong(split[1], new_value)
+				|| !Util::parseLong(split[2], new_type)) {
 				*textbox += std::string(errorPrefix) + "Invalid response from server.";
 				DBG("Bad Register response [" << rest << "]");
 			} else
-				*textbox += infoPrefix + Why::coloredRegister(registerID) + " \e[2m<-\e[22m " +
-					std::to_string(newValue);
+				*textbox += infoPrefix + Why::coloredRegister(register_id) + " \e[2m<-\e[22m " +
+					std::to_string(new_value) + std::string(OperandType(static_cast<uint8_t>(new_type)));
 		} else if (verb == "MemoryWord") {
 			UWord pc, address;
 			if (!Util::parseUL(split[2], pc) || !Util::parseUL(split[0], address))
@@ -274,6 +277,11 @@ namespace WVM::Mode {
 			*socket << ":Stacktrace\n";
 		} else if (first == "lmw") {
 			*socket << ":LogMemoryWrites\n";
+		} else if (first == "reg") {
+			if (size != 1)
+				badInput();
+			else
+				*socket << ":Reg " << split[0] << "\n";
 		} else if (text.front() == ':') {
 			*socket << text << "\n";
 		} else {

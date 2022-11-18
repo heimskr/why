@@ -81,12 +81,12 @@ namespace WVM {
 		return "$[" + std::to_string(reg) + "?]";
 	}
 
-	int Why::registerID(std::string name) {
+	int Why::registerID(std::string_view name) {
 		if (name.empty() || name == "$")
 			return -1;
 
 		if (name.front() == '$')
-			name.erase(0, 1);
+			name.remove_prefix(1);
 
 		if (name == "0")  return zeroOffset;
 		if (name == "g")  return globalAreaPointerOffset;

@@ -27,7 +27,10 @@ namespace WVM {
 		reg(reg_), from(from_), to(to_), fromType(std::move(from_type)), toType(std::move(to_type)) {}
 
 	RegisterChange::RegisterChange(const VM &vm, UByte reg_, Word to_, OperandType to_type):
-		reg(reg_), from(vm.registers[reg_]), to(to_), fromType(vm.registers[reg_].type), toType(std::move(to_type)) {}
+	reg(reg_), from(vm.registers[reg_]), to(to_), fromType(vm.registers[reg_].type), toType(std::move(to_type)) {
+		if (Why::totalRegisters <= reg_)
+			throw std::out_of_range("Invalid register index: " + std::to_string(reg_));
+	}
 
 	void RegisterChange::apply(VM &vm, bool strict) {
 		auto lock = vm.lockVM();

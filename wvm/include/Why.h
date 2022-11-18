@@ -115,7 +115,7 @@ namespace WVM {
 		static bool isSpecialPurpose(int);
 		static std::string registerName(int);
 		static std::string coloredRegister(int);
-		static int registerID(std::string);
+		static int registerID(std::string_view);
 		static std::string stringifyType(int);
 	};
 }

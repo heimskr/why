@@ -8,8 +8,8 @@
 namespace WVM {
 	namespace Util {
 		std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
-		bool parseUL(const std::string &str, uint64_t &out, int base = 10);
-		bool parseLong(const std::string &str, int64_t &out, int base = 10);
+		bool parseUL(std::string_view, uint64_t &out, int base = 10);
+		bool parseLong(const std::string &, int64_t &out, int base = 10);
 
 		std::string toHex(size_t);
 		std::string toHex(const void *);

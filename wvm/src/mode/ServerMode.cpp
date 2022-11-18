@@ -78,8 +78,7 @@ namespace WVM::Mode {
 		vm.onRegisterChange = [this](unsigned char id) {
 			if (logRegisters)
 				DBG(Why::coloredRegister(id) << " <- " << vm.registers[id].value);
-			const std::string message = ":Register " + std::to_string(id) + " " +
-				std::to_string(vm.registers[id].value);
+			const std::string message = registerString(vm.registers[id]);
 			auto lock = lockSubscribers();
 			for (int client: registerSubscribers)
 				server.send(client, message);
@@ -322,7 +321,7 @@ namespace WVM::Mode {
 				vm.registers[reg].value = new_value;
 			}
 
-			server.send(client, ":Register " + std::to_string(reg) + " " + std::to_string(vm.registers[reg].value));
+			sendRegister(client, vm.registers[reg]);
 		} else if (verb == "PrintOps") {
 			if (size != 2) {
 				invalid();
@@ -425,11 +424,12 @@ namespace WVM::Mode {
 		} else if (verb == "Registers") {
 			if (size == 2 && split[1] == "raw")
 				for (int i = 0; i < Why::totalRegisters; ++i)
-					server.send(client, ":Register " + std::to_string(i) + " " + std::to_string(vm.registers[i].value));
+					sendRegister(client, vm.registers.at(i));
 			else
 				for (int i = 0; i < Why::totalRegisters; ++i)
 					server.send(client, ":Register $" + Why::registerName(i) + " " +
-						std::to_string(vm.registers[i].value));
+						std::to_string(vm.registers.at(i).value) + " " +
+						std::to_string(static_cast<uint8_t>(vm.registers.at(i).type)));
 		} else if (verb == "Reset") {
 			vm.reset(false);
 			sendMemory(client);
@@ -695,5 +695,14 @@ namespace WVM::Mode {
 			throw;
 		}
 #endif
+	}
+
+	void ServerMode::sendRegister(int client, const Register &reg) {
+		server.send(client, registerString(reg));
+	}
+
+	std::string ServerMode::registerString(const Register &reg) {
+		return ":Register " + std::to_string(reg.index) + " " + std::to_string(reg.value) + " " +
+			std::to_string(static_cast<uint8_t>(reg.type));
 	}
 }

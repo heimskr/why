@@ -736,8 +736,11 @@ namespace WVM {
 		if (endOffset == -1)
 			endOffset = getWord(40, Endianness::Little);
 
-		for (Register &reg: registers)
+		Word index = 0;
+		for (Register &reg: registers) {
 			reg = {0, OperandType::ULONG};
+			reg.index = index++;
+		}
 
 		registers[Why::globalAreaPointerOffset] = {endOffset, OperandType::VOID_PTR};
 		sp() = {static_cast<Word>(memorySize), OperandType::VOID_PTR};

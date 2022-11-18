@@ -57,8 +57,10 @@ namespace WVM::Mode {
 			return true;
 		};
 
-		for (int reg = 0; reg < Why::totalRegisters; ++reg)
-			registers[reg] = 0;
+		for (int reg = 0; reg < Why::totalRegisters; ++reg) {
+			registers.at(reg) = Register(0, OperandType::ULONG);
+			registers.at(reg).index = reg;
+		}
 
 		terminal.startInput();
 		terminal.setRoot(&*expando);
@@ -93,13 +95,13 @@ namespace WVM::Mode {
 	void RegistersMode::stringify(int reg, std::stringstream &ss) {
 		ss << Why::coloredRegister(reg) << std::string(5 - Why::registerName(reg).size(), ' ');
 		if (base == Base::Binary) {
-			ss << std::bitset<64>(registers[reg]);
+			ss << std::bitset<64>(registers.at(reg).value);
 		} else if (base == Base::Octal) {
-			ss << std::oct << registers[reg];
+			ss << std::oct << registers.at(reg).value;
 		} else if (base == Base::Decimal) {
-			ss << std::dec << registers[reg];
+			ss << std::dec << registers.at(reg).value;
 		} else if (base == Base::Hex) {
-			ss << std::hex << registers[reg];
+			ss << std::hex << registers.at(reg).value;
 		} else throw std::runtime_error("Invalid base: " + std::to_string(static_cast<int>(base)));
 	}
 
@@ -138,14 +140,14 @@ namespace WVM::Mode {
 		const size_t size = split.size();
 
 		if (verb == "Register") {
-			Word reg, value;
-			if (size != 2 || !Util::parseLong(split[0], reg) || !Util::parseLong(split[1], value) || reg < 0
-			    || 128 <= reg) {
+			Word reg, value, type;
+			if (size != 3 || !Util::parseLong(split[0], reg) || !Util::parseLong(split[1], value) || reg < 0
+			    || 128 <= reg || !Util::parseLong(split[2], type)) {
 				DBG("Invalid: Registers[" << rest << "]");
 				return;
 			}
-			
-			registers[reg] = value;
+
+			registers[reg] = Register(value, OperandType(static_cast<uint8_t>(type)));
 
 			if (!ready && reg == 127) {
 				ready = true;

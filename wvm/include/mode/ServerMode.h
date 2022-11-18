@@ -30,7 +30,8 @@ namespace WVM::Mode {
 			void broadcast(const std::string &);
 			void sendMemory(int);
 			bool tick();
-
+			void sendRegister(int client, const Register &);
+			std::string registerString(const Register &);
 
 		public:
 			static ServerMode *instance;
