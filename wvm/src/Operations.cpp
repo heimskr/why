@@ -992,6 +992,9 @@ namespace WVM::Operations {
 	}
 
 	static Size getSize(const OperandType &type) {
+		if (0 < type.pointerLevel)
+			return Size::Word;
+
 		switch (type.primitive) {
 			case Primitive::Char:  return Size::Byte;
 			case Primitive::Short: return Size::QWord;
@@ -1003,12 +1006,15 @@ namespace WVM::Operations {
 	}
 
 	static Size getSize(int type) {
+		if ((type >> 4) != 0)
+			return Size::Word;
+
 		switch (type & 0b111) {
 			case 0b001: return Size::Byte;
 			case 0b010: return Size::QWord;
 			case 0b011: return Size::HWord;
 			case 0b100: return Size::Word;
-			default: throw std::invalid_argument("Can't get size of primitive " + std::to_string(type));
+			default: throw std::invalid_argument("Can't get size of type " + std::to_string(type));
 		}
 	}
 
