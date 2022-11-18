@@ -265,14 +265,14 @@ namespace WVM::Operations {
 		address = instruction & 0xffffffff;
 		st = types & 0xff;
 
-		DBG("======================");
-		DBG("opcode[" << ((typed.instruction >> 52) & 0xfff) << "]");
-		DBG("rs[" << Why::coloredRegister(rs) << "]");
-		DBG("link[" << std::boolalpha << link << "]");
-		DBG("conds[" << static_cast<int>(conds) << "]");
-		DBG("flags[" << flags << "]");
-		DBG("address[" << Util::toHex(address, 8) << "]");
-		DBG("st[" << Util::toHex(uint8_t(st), 1) << "]");
+		// DBG("======================");
+		// DBG("opcode[" << ((typed.instruction >> 52) & 0xfff) << "]");
+		// DBG("rs[" << Why::coloredRegister(rs) << "]");
+		// DBG("link[" << std::boolalpha << link << "]");
+		// DBG("conds[" << static_cast<int>(conds) << "]");
+		// DBG("flags[" << flags << "]");
+		// DBG("address[" << Util::toHex(address, 8) << "]");
+		// DBG("st[" << Util::toHex(uint8_t(st), 1) << "]");
 	}
 
 	static void setReg(VM &vm, Register &rd, Register new_value, bool update_flags = true) {
@@ -595,7 +595,7 @@ namespace WVM::Operations {
 	}
 
 	void addiOp(IArgs &args) {
-		if (!typeCheck(args, true)) {
+		if (!typeCheck(args, false)) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -605,7 +605,7 @@ namespace WVM::Operations {
 	}
 
 	void subiOp(IArgs &args) {
-		if (!typeCheck(args, true)) {
+		if (!typeCheck(args, false)) {
 			args.vm.intBadtyp();
 			return;
 		}

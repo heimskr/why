@@ -439,16 +439,16 @@ namespace WVM::Mode {
 
 			removeBreakpoint(breakpoint);
 		} else if (verb == "Register") {
-			Word reg, value;
-			if (size != 2 || !Util::parseLong(split[0], reg) || !Util::parseLong(split[1], value) || reg < 0
-			    || 128 <= reg) {
+			Word reg, value, type;
+			if (size != 3 || !Util::parseLong(split[0], reg) || !Util::parseLong(split[1], value) || reg < 0
+			    || 128 <= reg || !Util::parseLong(split[2], type)) {
 				DBG("Invalid: Registers[" << rest << "]");
 				return;
 			}
 
 			if (reg == Why::stackPointerOffset) {
 				Word old_sp = vm.sp().value - (vm.sp().value % 8);
-				vm.registers[reg].value = value;
+				vm.registers[reg] = {value, OperandType(static_cast<uint8_t>(type))};
 				updateLine(old_sp);
 				updateLine(vm.sp().value - (vm.sp().value % 8));
 			} else

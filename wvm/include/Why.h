@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <string>
 
 namespace WVM {
@@ -118,4 +119,6 @@ namespace WVM {
 		static int registerID(std::string_view);
 		static std::string stringifyType(int);
 	};
+
+	std::ostream & operator<<(std::ostream &, const WVM::OperandType &);
 }

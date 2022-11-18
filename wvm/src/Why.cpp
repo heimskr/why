@@ -117,4 +117,8 @@ namespace WVM {
 			default:  return -1;
 		}
 	}
+
+	std::ostream & operator<<(std::ostream &os, const WVM::OperandType &type) {
+		return os << std::string(type);
+	}
 }
