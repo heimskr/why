@@ -351,7 +351,7 @@ namespace WVM {
 		if (record)
 			recordChange<RegisterChange>(*this, Why::returnAddressOffset, programCounter + Why::instructionSize,
 				OperandType::VOID_PTR);
-		registers[Why::returnAddressOffset].value = programCounter + Why::instructionSize;
+		registers[Why::returnAddressOffset] = {programCounter + Why::instructionSize, OperandType::VOID_PTR};
 	}
 
 	void VM::increment() {
