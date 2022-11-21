@@ -26,7 +26,7 @@ orcid: "0000-0001-7405-6654"
 %code
 
 @main
-	&message -> $a0{uc*}
+	&message{uc*} -> $a0{uc*}
 	// Insert some nops
 	%4b 0
 	%align 12
@@ -34,7 +34,7 @@ orcid: "0000-0001-7405-6654"
 	%1b 0
 	%align 12
 	:: strprint
-	[from_text2] -> $t0{ul}
+	[from_text2{ul*}] -> $t0{ul}
 	<prx $t0{ul}>
 	:: text2_code
 	<halt>

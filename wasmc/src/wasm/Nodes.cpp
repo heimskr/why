@@ -97,7 +97,7 @@ namespace Wasmc {
 		delete node;
 	}
 
-	WASMImmediateNode::WASMImmediateNode(const Immediate &imm_): WASMBaseNode(WASM_IMMEDIATE), HasImmediate(imm_) {}
+	WASMImmediateNode::WASMImmediateNode(const TypedImmediate &imm_): WASMBaseNode(WASM_IMMEDIATE), HasImmediate(imm_) {}
 
 	std::string WASMImmediateNode::debugExtra() const {
 		return colorize(imm);
@@ -194,7 +194,7 @@ namespace Wasmc {
 		delete rd_;
 	}
 
-	INode::INode(const TypedReg &rs_, const std::string *oper_, const Immediate &imm_, const TypedReg &rd_,
+	INode::INode(const TypedReg &rs_, const std::string *oper_, const TypedImmediate &imm_, const TypedReg &rd_,
 	             int oper_token):
 		WASMInstructionNode(WASM_INODE), IType(rs_, rd_, imm_), HasOper(oper_token, oper_) {}
 
@@ -291,7 +291,7 @@ namespace Wasmc {
 		delete rd_;
 	}
 
-	WASMSetNode::WASMSetNode(const Immediate &imm_, const TypedReg &rd_):
+	WASMSetNode::WASMSetNode(const TypedImmediate &imm_, const TypedReg &rd_):
 		WASMInstructionNode(WASM_SETNODE), IType({}, rd_, imm_) {}
 
 	WASMInstructionNode * WASMSetNode::copy() const {
@@ -312,7 +312,7 @@ namespace Wasmc {
 		delete rd_;
 	}
 
-	WASMLiNode::WASMLiNode(const Immediate &imm_, const TypedReg &rd_):
+	WASMLiNode::WASMLiNode(const TypedImmediate &imm_, const TypedReg &rd_):
 		WASMInstructionNode(WASM_LINODE), IType({}, rd_, imm_) {}
 
 	WASMInstructionNode * WASMLiNode::copy() const {
@@ -333,7 +333,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMSiNode::WASMSiNode(const Immediate &imm_, const TypedReg &rs_):
+	WASMSiNode::WASMSiNode(const TypedImmediate &imm_, const TypedReg &rs_):
 		WASMInstructionNode(WASM_SINODE), IType(rs_, {}, imm_) {}
 
 	WASMInstructionNode * WASMSiNode::copy() const {
@@ -352,7 +352,7 @@ namespace Wasmc {
 		symbol = WASM_LNINODE;
 	}
 
-	WASMLniNode::WASMLniNode(const Immediate &imm_, const TypedReg &rd_):
+	WASMLniNode::WASMLniNode(const TypedImmediate &imm_, const TypedReg &rd_):
 	WASMLiNode(imm_, rd_) {
 		symbol = WASM_LNINODE;
 	}
@@ -391,7 +391,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMCmpiNode::WASMCmpiNode(const TypedReg &rs_, const Immediate &imm_):
+	WASMCmpiNode::WASMCmpiNode(const TypedReg &rs_, const TypedImmediate &imm_):
 		WASMInstructionNode(WASM_CMPINODE), IType(rs_, {}, imm_) {}
 
 	std::string WASMCmpiNode::debugExtra() const {
@@ -460,7 +460,7 @@ namespace Wasmc {
 		delete cond;
 	}
 
-	WASMJNode::WASMJNode(const Immediate &addr, bool link_, Condition cond):
+	WASMJNode::WASMJNode(const TypedImmediate &addr, bool link_, Condition cond):
 		WASMInstructionNode(WASM_JNODE), JType(cond, link_, addr, nullptr) {}
 
 	std::string WASMJNode::debugExtra() const {
@@ -474,7 +474,8 @@ namespace Wasmc {
 	}
 
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_): WASMInstructionNode(WASM_JCNODE),
-	JType(j? j->condition : Condition::None, j? j->link : false, j? j->imm : 0, TypedReg(rs_)) {
+	JType(j? j->condition : Condition::None, j? j->link : false, j? j->imm : TypedImmediate(OperandType::VOID_PTR, 0),
+	TypedReg(rs_)) {
 		if (j == nullptr) {
 			wasmerror("No WASMJNode found in jc instruction");
 		} else {
@@ -485,7 +486,7 @@ namespace Wasmc {
 		delete rs_;
 	}
 
-	WASMJcNode::WASMJcNode(const Immediate &imm_, bool link_, const TypedReg &rs_):
+	WASMJcNode::WASMJcNode(const TypedImmediate &imm_, bool link_, const TypedReg &rs_):
 		WASMInstructionNode(WASM_JCNODE), JType(Condition::None, link_, imm_, rs_) {}
 
 	std::string WASMJcNode::debugExtra() const {
@@ -545,7 +546,8 @@ namespace Wasmc {
 	}
 
 	WASMJeqNode::WASMJeqNode(WASMJNode *j, ASTNode *rs_, ASTNode *rt_):
-	WASMInstructionNode(WASM_JEQNODE), link(j? j->link : false), addr(j? j->imm : 0), rt(getEither(rt_)), rs(rs_) {
+	WASMInstructionNode(WASM_JEQNODE), link(j? j->link : false), addr(j? j->imm : TypedImmediate(OperandType::VOID_PTR,
+	0)), rt(getEither(rt_)), rs(rs_) {
 		if (j == nullptr) {
 			wasmerror("No WASMJNode found in jeq instruction");
 		} else {
@@ -593,20 +595,21 @@ namespace Wasmc {
 	}
 
 	WASMSizedStackNode::WASMSizedStackNode(int size, const TypedReg &rs_, bool is_push):
-		WASMInstructionNode(WASM_SIZEDSTACKNODE), IType(rs_, {}, size), isPush(is_push) {}
+		WASMInstructionNode(WASM_SIZEDSTACKNODE), IType(rs_, {}, TypedImmediate(OperandType::ULONG, size)),
+		isPush(is_push) {}
 
 	WASMInstructionNode * WASMSizedStackNode::copy() const {
-		return (new WASMSizedStackNode(std::get<int>(imm), rs, isPush))->absorb(*this);
+		return (new WASMSizedStackNode(imm.get<int>(), rs, isPush))->absorb(*this);
 	}
 
 	std::string WASMSizedStackNode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + dim(std::string(isPush? "[" : "]") + ":"
-			+ std::to_string(std::get<int>(imm))) + " " + cyan(rs);
+			+ std::to_string(imm.get<int>())) + " " + cyan(rs);
 	}
 
 	WASMSizedStackNode::operator std::string() const {
 		return WASMInstructionNode::operator std::string() + std::string(isPush? "[" : "]") + ":"
-			+ std::to_string(std::get<int>(imm)) + " " + std::string(rs);
+			+ std::to_string(imm.get<int>()) + " " + std::string(rs);
 	}
 
 	WASMMultRNode::WASMMultRNode(ASTNode *rs_, ASTNode *rt_):
@@ -632,7 +635,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMMultINode::WASMMultINode(const TypedReg &rs_, const Immediate &imm_):
+	WASMMultINode::WASMMultINode(const TypedReg &rs_, const TypedImmediate &imm_):
 		WASMInstructionNode(WASM_MULTINODE), IType(rs_, {}, imm_) {}
 
 	std::string WASMMultINode::debugExtra() const {
@@ -650,7 +653,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMDiviINode::WASMDiviINode(const Immediate &imm_, const TypedReg &rs_, const TypedReg &rd_):
+	WASMDiviINode::WASMDiviINode(const TypedImmediate &imm_, const TypedReg &rs_, const TypedReg &rd_):
 		WASMInstructionNode(WASM_DIVIINODE), IType(rs_, rd_, imm_) {}
 
 	WASMInstructionNode * WASMDiviINode::copy() const {
@@ -672,7 +675,7 @@ namespace Wasmc {
 		delete rd_;
 	}
 
-	WASMLuiNode::WASMLuiNode(const Immediate &imm_, const TypedReg &rd_):
+	WASMLuiNode::WASMLuiNode(const TypedImmediate &imm_, const TypedReg &rd_):
 		WASMInstructionNode(WASM_LUINODE), IType({}, rd_, imm_) {}
 
 	std::string WASMLuiNode::debugExtra() const {
@@ -713,7 +716,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMIntINode::WASMIntINode(const Immediate &imm_): WASMInstructionNode(WASM_INTINODE), IType(imm_) {}
+	WASMIntINode::WASMIntINode(const TypedImmediate &imm_): WASMInstructionNode(WASM_INTINODE), IType(imm_) {}
 
 	std::string WASMIntINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%int") + " " + colorize(imm);
@@ -727,7 +730,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMRitINode::WASMRitINode(const Immediate &imm_):
+	WASMRitINode::WASMRitINode(const TypedImmediate &imm_):
 		WASMInstructionNode(WASM_RITINODE), IType(nullptr, nullptr, imm_) {}
 
 	std::string WASMRitINode::debugExtra() const {
@@ -742,7 +745,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMTimeINode::WASMTimeINode(const Immediate &imm_): WASMInstructionNode(WASM_TIMEINODE), IType(imm_) {}
+	WASMTimeINode::WASMTimeINode(const TypedImmediate &imm_): WASMInstructionNode(WASM_TIMEINODE), IType(imm_) {}
 
 	std::string WASMTimeINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%time") + " " + colorize(imm);
@@ -771,7 +774,7 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMRingINode::WASMRingINode(const Immediate &imm_): WASMInstructionNode(WASM_RINGINODE), IType(imm_) {}
+	WASMRingINode::WASMRingINode(const TypedImmediate &imm_): WASMInstructionNode(WASM_RINGINODE), IType(imm_) {}
 
 	std::string WASMRingINode::debugExtra() const {
 		return WASMInstructionNode::debugExtra() + blue("%ring") + " " + colorize(imm);
@@ -1002,11 +1005,11 @@ namespace Wasmc {
 		delete imm_;
 	}
 
-	WASMPseudoPrintNode::WASMPseudoPrintNode(const Immediate &imm_):
+	WASMPseudoPrintNode::WASMPseudoPrintNode(const TypedImmediate &imm_):
 		WASMInstructionNode(WASM_PSEUDOPRINTNODE), HasImmediate(imm_) {}
 
 	size_t WASMPseudoPrintNode::expandedSize() const {
-		if (std::holds_alternative<char>(imm))
+		if (imm.is<char>())
 			return 2;
 		throw std::runtime_error("Invalid WASMPseudoPrintNode immediate type: expected char");
 	}
@@ -1083,7 +1086,7 @@ namespace Wasmc {
 	WASMInverseNode::WASMInverseNode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, Type type_):
 		WASMInstructionNode(WASM_INVERSENODE), IType(rs_, rd_, imm_), type(type_) {}
 
-	WASMInverseNode::WASMInverseNode(const Immediate &imm_, const TypedReg &rs_, const TypedReg &rd_, Type type_):
+	WASMInverseNode::WASMInverseNode(const TypedImmediate &imm_, const TypedReg &rs_, const TypedReg &rd_, Type type_):
 		WASMInstructionNode(WASM_INVERSENODE), IType(rs_, rd_, imm_), type(type_) {}
 
 	std::string WASMInverseNode::getOper() const {

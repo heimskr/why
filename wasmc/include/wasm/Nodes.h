@@ -30,9 +30,9 @@ namespace Wasmc {
 	};
 
 	struct HasImmediate {
-		Immediate imm;
+		TypedImmediate imm;
 		HasImmediate(const ASTNode *imm_): imm(getImmediate(imm_)) {}
-		HasImmediate(const Immediate &imm_): imm(imm_) {}
+		HasImmediate(const TypedImmediate &imm_): imm(imm_) {}
 	};
 
 	struct HasRS {
@@ -111,7 +111,7 @@ namespace Wasmc {
 
 	struct WASMImmediateNode: WASMBaseNode, HasImmediate {
 		WASMImmediateNode(ASTNode *);
-		WASMImmediateNode(const Immediate &);
+		WASMImmediateNode(const TypedImmediate &);
 		WASMNodeType nodeType() const override { return WASMNodeType::Immediate; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -147,16 +147,16 @@ namespace Wasmc {
 			HasImmediate(imm_), TwoRegs(rs_, rd_) {}
 		IType(const ASTNode *imm_):
 			HasImmediate(imm_), TwoRegs(TypedReg(), TypedReg()) {}
-		IType(const TypedReg &rs_, const TypedReg &rd_, const Immediate &imm_):
+		IType(const TypedReg &rs_, const TypedReg &rd_, const TypedImmediate &imm_):
 			HasImmediate(imm_), TwoRegs(rs_, rd_) {}
-		IType(const Immediate &imm_):
+		IType(const TypedImmediate &imm_):
 			HasImmediate(imm_), TwoRegs(TypedReg(), TypedReg()) {}
 	};
 
 	struct JType: HasOpcode, HasImmediate, HasRS, HasCondition, HasLink {
 		JType(const ASTNode *cond, const ASTNode *colons, const ASTNode *addr, const ASTNode *rs_):
 			HasImmediate(getImmediate(addr)), HasRS(rs_), HasCondition(cond), HasLink(colons) {}
-		JType(Condition cond, bool link_, const Immediate &addr, const TypedReg &rs_):
+		JType(Condition cond, bool link_, const TypedImmediate &addr, const TypedReg &rs_):
 			HasImmediate(addr), HasRS(rs_), HasCondition(cond), HasLink(link_) {}
 	};
 
@@ -175,7 +175,7 @@ namespace Wasmc {
 	/** For math and logical operations. */
 	struct INode: WASMInstructionNode, IType, HasOper {
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_);
-		INode(const TypedReg &rs_, const std::string *oper_, const Immediate &imm_, const TypedReg &rd_,
+		INode(const TypedReg &rs_, const std::string *oper_, const TypedImmediate &imm_, const TypedReg &rd_,
 		      int oper_token);
 		Opcode getOpcode() const override;
 		WASMInstructionNode * copy() const override;
@@ -224,7 +224,7 @@ namespace Wasmc {
 
 	struct WASMSetNode: WASMInstructionNode, IType {
 		WASMSetNode(ASTNode *imm_, ASTNode *rd_);
-		WASMSetNode(const Immediate &imm_, const TypedReg &rd_);
+		WASMSetNode(const TypedImmediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("set"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
@@ -236,7 +236,7 @@ namespace Wasmc {
 		bool isByte;
 
 		WASMLiNode(ASTNode *imm_, ASTNode *rd_);
-		WASMLiNode(const Immediate &imm_, const TypedReg &rd_);
+		WASMLiNode(const TypedImmediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "lbi" : "li"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
@@ -248,7 +248,7 @@ namespace Wasmc {
 		bool isByte;
 
 		WASMSiNode(ASTNode *rs_, ASTNode *imm_);
-		WASMSiNode(const Immediate &imm_, const TypedReg &rd_);
+		WASMSiNode(const TypedImmediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "sbi" : "si"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Si; }
@@ -258,7 +258,7 @@ namespace Wasmc {
 
 	struct WASMLniNode: WASMLiNode {
 		WASMLniNode(ASTNode *imm_, ASTNode *rd_);
-		WASMLniNode(const Immediate &imm_, const TypedReg &rd_);
+		WASMLniNode(const TypedImmediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "lbni" : "lni"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
@@ -279,7 +279,7 @@ namespace Wasmc {
 
 	struct WASMCmpiNode: WASMInstructionNode, IType {
 		WASMCmpiNode(ASTNode *rs_, ASTNode *imm_);
-		WASMCmpiNode(const TypedReg &rs_, const Immediate &imm_);
+		WASMCmpiNode(const TypedReg &rs_, const TypedImmediate &imm_);
 		WASMInstructionNode * copy() const override { return (new WASMCmpiNode(rs, imm))->absorb(*this); }
 		Opcode getOpcode() const override { return OPCODES.at("cmpi"); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
@@ -300,7 +300,7 @@ namespace Wasmc {
 
 	struct WASMJNode: WASMInstructionNode, JType {
 		WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_);
-		WASMJNode(const Immediate &addr, bool link_ = false, Condition cond = Condition::None);
+		WASMJNode(const TypedImmediate &addr, bool link_ = false, Condition cond = Condition::None);
 		Opcode getOpcode() const override { return OPCODES.at("j"); }
 		WASMInstructionNode * copy() const override { return (new WASMJNode(imm, link, condition))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::J; }
@@ -310,7 +310,7 @@ namespace Wasmc {
 
 	struct WASMJcNode: WASMInstructionNode, JType {
 		WASMJcNode(WASMJNode *, ASTNode *rs_);
-		WASMJcNode(const Immediate &imm_, bool link_, const TypedReg &rs_);
+		WASMJcNode(const TypedImmediate &imm_, bool link_, const TypedReg &rs_);
 		Opcode getOpcode() const override { return OPCODES.at("jc"); }
 		WASMInstructionNode * copy() const override { return (new WASMJcNode(imm, link, rs))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Jc; }
@@ -382,7 +382,7 @@ namespace Wasmc {
 
 	struct WASMMultINode: WASMInstructionNode, IType {
 		WASMMultINode(ASTNode *rs_, ASTNode *imm_);
-		WASMMultINode(const TypedReg &rs_, const Immediate &imm_);
+		WASMMultINode(const TypedReg &rs_, const TypedImmediate &imm_);
 		Opcode getOpcode() const override { return OPCODES.at("multi"); }
 		WASMInstructionNode * copy() const override { return (new WASMMultINode(rs, imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::MultI; }
@@ -392,7 +392,7 @@ namespace Wasmc {
 
 	struct WASMDiviINode: WASMInstructionNode, IType {
 		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_);
-		WASMDiviINode(const Immediate &imm_, const TypedReg &rs_, const TypedReg &rd_);
+		WASMDiviINode(const TypedImmediate &imm_, const TypedReg &rs_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("divii"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::DiviI; }
@@ -402,7 +402,7 @@ namespace Wasmc {
 
 	struct WASMLuiNode: WASMInstructionNode, IType {
 		WASMLuiNode(ASTNode *imm_, ASTNode *rd_);
-		WASMLuiNode(const Immediate &imm_, const TypedReg &rd_);
+		WASMLuiNode(const TypedImmediate &imm_, const TypedReg &rd_);
 		Opcode getOpcode() const override { return OPCODES.at("lui"); }
 		WASMInstructionNode * copy() const override { return (new WASMLuiNode(imm, rd))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::Lui; }
@@ -434,7 +434,7 @@ namespace Wasmc {
 
 	struct WASMIntINode: WASMInstructionNode, IType {
 		WASMIntINode(ASTNode *imm_);
-		WASMIntINode(const Immediate &imm_);
+		WASMIntINode(const TypedImmediate &imm_);
 		Opcode getOpcode() const override { return OPCODES.at("int"); }
 		WASMInstructionNode * copy() const override { return (new WASMIntINode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::IntI; }
@@ -444,7 +444,7 @@ namespace Wasmc {
 
 	struct WASMRitINode: WASMInstructionNode, IType {
 		WASMRitINode(ASTNode *imm_);
-		WASMRitINode(const Immediate &imm_);
+		WASMRitINode(const TypedImmediate &imm_);
 		Opcode getOpcode() const override { return OPCODES.at("rit"); }
 		WASMInstructionNode * copy() const override { return (new WASMRitINode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::RitI; }
@@ -454,7 +454,7 @@ namespace Wasmc {
 
 	struct WASMTimeINode: WASMInstructionNode, IType {
 		WASMTimeINode(ASTNode *imm_);
-		WASMTimeINode(const Immediate &imm_);
+		WASMTimeINode(const TypedImmediate &imm_);
 		Opcode getOpcode() const override { return OPCODES.at("timei"); }
 		WASMInstructionNode * copy() const override { return (new WASMTimeINode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeI; }
@@ -486,7 +486,7 @@ namespace Wasmc {
 
 	struct WASMRingINode: WASMInstructionNode, IType {
 		WASMRingINode(ASTNode *imm_);
-		WASMRingINode(const Immediate &imm_);
+		WASMRingINode(const TypedImmediate &imm_);
 		Opcode getOpcode() const override { return OPCODES.at("ringi"); }
 		WASMInstructionNode * copy() const override { return (new WASMRingINode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::RingI; }
@@ -612,7 +612,7 @@ namespace Wasmc {
 	// Pseudoinstruction; not handled by Assembler::compileInstruction
 	struct WASMPseudoPrintNode: WASMInstructionNode, HasImmediate {
 		WASMPseudoPrintNode(ASTNode *imm_);
-		WASMPseudoPrintNode(const Immediate &imm_);
+		WASMPseudoPrintNode(const TypedImmediate &imm_);
 		WASMInstructionNode * copy() const override { return (new WASMPseudoPrintNode(imm))->absorb(*this); }
 		WASMNodeType nodeType() const override { return WASMNodeType::PseudoPrint; }
 		size_t expandedSize() const override;
@@ -677,7 +677,7 @@ namespace Wasmc {
 			Type type;
 
 			WASMInverseNode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, Type);
-			WASMInverseNode(const Immediate &imm_, const TypedReg &rs_, const TypedReg &rd_, Type);
+			WASMInverseNode(const TypedImmediate &imm_, const TypedReg &rs_, const TypedReg &rd_, Type);
 			Opcode getOpcode() const override;
 			WASMInstructionNode * copy() const override { return (new WASMInverseNode(imm, rs, rd, type))->absorb(*this); }
 			WASMNodeType nodeType() const override { return WASMNodeType::Inverse; }

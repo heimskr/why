@@ -273,11 +273,10 @@ namespace Wasmc {
 			throw std::runtime_error("Invalid rs in I-type: " + (itype.rs.reg? *itype.rs.reg : "null"));
 		if (registerMap.count(itype.rd.reg) == 0)
 			throw std::runtime_error("Invalid rd in I-type: " + (itype.rd.reg? *itype.rd.reg : "null"));
-		if (std::holds_alternative<const std::string *>(itype.imm))
+		if (itype.imm.is<const std::string *>())
 			throw std::runtime_error("Can't compile an I-type with a label immediate");
 
-		uint32_t imm = static_cast<uint32_t>(std::holds_alternative<int>(itype.imm)? std::get<int>(itype.imm)
-			: std::get<char>(itype.imm));
+		const uint32_t imm = static_cast<uint32_t>(itype.imm.is<int>()? itype.imm.get<int>() : itype.imm.get<char>());
 
 		uint8_t condition = 0;
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&itype))
@@ -306,14 +305,14 @@ namespace Wasmc {
 	TypedInstruction Assembler::compileJ(const WASMInstructionNode &node, const JType &jtype) const {
 		if (registerMap.count(jtype.rs.reg) == 0)
 			throw std::runtime_error("Invalid rs in J-type: " + (jtype.rs.reg? *jtype.rs.reg : "null"));
-		if (!std::holds_alternative<int>(jtype.imm))
+		if (!jtype.imm.is<int>())
 			throw std::runtime_error("Can't compile a J-type with a label or character immediate");
 
 		uint8_t condition = 0;
 		if (const auto *has_condition = dynamic_cast<const HasCondition *>(&jtype))
 			condition = static_cast<uint64_t>(has_condition->condition);
 
-		return compileJ(jtype.getOpcode(), registerMap.at(jtype.rs.reg), std::get<int>(jtype.imm), jtype.link,
+		return compileJ(jtype.getOpcode(), registerMap.at(jtype.rs.reg), jtype.imm.get<int>(), jtype.link,
 			static_cast<uint8_t>(node.flags), condition, static_cast<uint8_t>(jtype.rs.type));
 	}
 
@@ -334,18 +333,18 @@ namespace Wasmc {
 		for (auto &[offset, statement]: instructionMap) {
 			statement->labels.clear();
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
-				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
-					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+				if (has_immediate->imm.is<const std::string *>()) {
+					const std::string *label = has_immediate->imm.get<const std::string *>();
 					if (offsets.count(label) == 0) {
 						const auto encoded = encodeSymbol(label);
-						has_immediate->imm = static_cast<int>(encoded);
+						has_immediate->imm.value = static_cast<int>(encoded);
 						statement->flags = LinkerFlags::UnknownSymbol;
 						unknownSymbols.insert(label);
 					} else {
 						const Long offset = offsets.at(label);
 						if (INT_MAX < offset)
 							warn() << "Offset for label " << *label << " exceeds INT_MAX\n";
-						has_immediate->imm = static_cast<int>(offset);
+						has_immediate->imm.value = static_cast<int>(offset);
 						statement->flags = LinkerFlags::KnownSymbol;
 					}
 				}
@@ -356,8 +355,8 @@ namespace Wasmc {
 	void Assembler::processRelocation() {
 		for (const auto &[offset, statement]: instructionMap) {
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement)) {
-				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
-					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+				if (has_immediate->imm.is<const std::string *>()) {
+					const std::string *label = has_immediate->imm.get<const std::string *>();
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
 					RelocationData relocation_data(false, type, symbolTableIndices.at(label), 0, offset, &code, label);
@@ -370,8 +369,8 @@ namespace Wasmc {
 
 		for (const auto &[offset, statement]: extraInstructions) {
 			if (auto *has_immediate = dynamic_cast<HasImmediate *>(statement.get())) {
-				if (std::holds_alternative<const std::string *>(has_immediate->imm)) {
-					const std::string *label = std::get<const std::string *>(has_immediate->imm);
+				if (has_immediate->imm.is<const std::string *>()) {
+					const std::string *label = has_immediate->imm.get<const std::string *>();
 					const RelocationType type = statement->nodeType() == WASMNodeType::Lui?
 						RelocationType::Upper4 : RelocationType::Lower4;
 					RelocationData relocation_data(false, type, symbolTableIndices.at(label), 0, offset, &code, label);
@@ -505,8 +504,8 @@ namespace Wasmc {
 					const auto found = directive->expression->findLabels();
 					allLabels.insert(found.cbegin(), found.cend());
 				} else if (auto *imm_node = dynamic_cast<const HasImmediate *>(node)) {
-					if (std::holds_alternative<const std::string *>(imm_node->imm))
-						allLabels.insert(std::get<const std::string *>(imm_node->imm));
+					if (imm_node->imm.is<const std::string *>())
+						allLabels.insert(imm_node->imm.get<const std::string *>());
 				}
 		}
 	}
@@ -720,7 +719,7 @@ namespace Wasmc {
 			extraInstructions.emplace(offset, std::move(seq));
 			offset += Why::instructionSize;
 			// : addr if $m7
-			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
+			auto jc = std::make_unique<WASMJcNode>(std::get<TypedImmediate>(jeq->addr), jeq->link, m7);
 			jc->setBang(bang);
 			code.insert(offset, compileInstruction(*jc));
 			extraInstructions.emplace(offset, std::move(jc));
@@ -729,7 +728,7 @@ namespace Wasmc {
 			// Address is an immediate, RHS is an immediate
 			addJeqImmediateRHS(offset, jeq, m7);
 			// : addr if $m7
-			auto jc = std::make_unique<WASMJcNode>(std::get<Immediate>(jeq->addr), jeq->link, m7);
+			auto jc = std::make_unique<WASMJcNode>(std::get<TypedImmediate>(jeq->addr), jeq->link, m7);
 			jc->setBang(bang);
 			code.insert(offset, compileInstruction(*jc));
 			extraInstructions.emplace(offset, std::move(jc));
@@ -738,13 +737,13 @@ namespace Wasmc {
 	}
 
 	void Assembler::addJeqImmediateRHS(size_t &offset, const WASMJeqNode *jeq, const TypedReg &m7) {
-		const Immediate &rhs = std::get<Immediate>(jeq->rt);
+		const auto &rhs = std::get<TypedImmediate>(jeq->rt);
 		std::unique_ptr<WASMInstructionNode> new_node;
-		if (std::holds_alternative<const std::string *>(rhs)) {
+		if (rhs.is<const std::string *>()) {
 			// RHS is a label
 			// [label] -> $m7
 			new_node = std::make_unique<WASMLiNode>(rhs, m7);
-		} else if (std::holds_alternative<int>(rhs)) {
+		} else if (rhs.is<int>()) {
 			// RHS is a number
 			// imm -> $m7
 			new_node = std::make_unique<WASMSetNode>(rhs, m7);
@@ -772,7 +771,7 @@ namespace Wasmc {
 
 	void Assembler::addPseudoPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
-		if (std::holds_alternative<char>(print->imm)) {
+		if (print->imm.is<char>()) {
 			const TypedReg m7({}, registerArray[Why::assemblerOffset + 7]); // TODO: fixme?
 
 			auto set = std::make_unique<WASMSetNode>(print->imm, m7);
@@ -800,8 +799,9 @@ namespace Wasmc {
 		if (Why::ioIDs.count(*io->ident) == 0)
 			throw std::runtime_error("Unknown IO ident: \"" + *io->ident + "\"");
 
-		const TypedReg a0({}, registerArray[Why::argumentOffset]); // TODO: fixme?
-		auto set = std::make_unique<WASMSetNode>(Why::ioIDs.at(*io->ident), a0);
+		const OperandType &type = OperandType::ULONG;
+		const TypedReg a0(type, registerArray[Why::argumentOffset]); // TODO: fixme?
+		auto set = std::make_unique<WASMSetNode>(TypedImmediate(type, Why::ioIDs.at(*io->ident)), a0);
 		set->setBang(instruction->bang);
 		code.insert(offset, compileInstruction(*set));
 		extraInstructions.emplace(offset, std::move(set));
@@ -823,7 +823,7 @@ namespace Wasmc {
 		bool first = true;
 		for (char ch: str) {
 			if (ch != last_char) {
-				auto set = std::make_unique<WASMSetNode>(ch, m7);
+				auto set = std::make_unique<WASMSetNode>(TypedImmediate(OperandType::UCHAR, ch), m7);
 				set->setBang(print->bang);
 				if (first)
 					set->labels = print->labels;

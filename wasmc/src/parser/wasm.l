@@ -47,7 +47,6 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 {WASM_REG}					{ WASMRTOKEN(REG) }
 {WASM_CHAR}					{ WASMRTOKEN(CHAR) }
 {WASM_STRING}				{ WASMRTOKEN(STRING) }
-{WASM_FLOAT}				{ WASMRTOKEN(FLOAT) }
 
 {WASM_INT_TYPE}				{ WASMRTOKEN(INT_TYPE) }
 {WASM_TYPE}					{ WASMRTOKEN(TYPE) }
@@ -93,7 +92,6 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "%rit"						{ WASMRTOKEN(RIT) }
 "%di"						{ WASMRTOKEN(DI) }
 "%ei"						{ WASMRTOKEN(EI) }
-"!ret"						{ WASMRTOKEN(RET) }
 "prc"						{ WASMRTOKEN(PRC) }
 "prx"						{ WASMRTOKEN(PRX) }
 "prd"						{ WASMRTOKEN(PRD) }
@@ -104,6 +102,7 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "!&&"						{ WASMRTOKEN(LNAND) }
 "!||"						{ WASMRTOKEN(LNOR) }
 "!xx"						{ WASMRTOKEN(LXNOR) }
+"#fn"						{ WASMRTOKEN(FUNCTION_TYPE) }
 "if"						{ WASMRTOKEN(IF) }
 "on"						{ WASMRTOKEN(ON) }
 "->"						{ WASMRTOKEN(INTO) }
@@ -116,9 +115,6 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "<="						{ WASMRTOKEN(LEQ) }
 "=="						{ WASMRTOKEN(DEQ) }
 ">="						{ WASMRTOKEN(GEQ) }
-"/b"						{ WASMRTOKEN(BYTE) }
-"/h"						{ WASMRTOKEN(HALF) }
-"/s"						{ WASMRTOKEN(SHORT) }
 "!="						{ WASMRTOKEN(NOTEQUAL) }
 "<>"						{ WASMRTOKEN(NOP) }
 "<<"						{ WASMRTOKEN(LL) }
@@ -126,7 +122,6 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "++"						{ WASMRTOKEN(INC) }
 "--"						{ WASMRTOKEN(DEC) }
 "io"						{ WASMRTOKEN(IO) }
-"#fn"						{ WASMRTOKEN(FUNCTION_TYPE) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
@@ -136,9 +131,6 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "!"							{ WASMRTOKEN(BANG) }
 "="							{ WASMRTOKEN(EQUALS) }
 "."							{ WASMRTOKEN(DOT) }
-"{"							{ WASMRTOKEN(LCURLY) }
-"}"							{ WASMRTOKEN(RCURLY) }
-","							{ WASMRTOKEN(COMMA) }
 "%"							{ WASMRTOKEN(PERCENT) }
 "@"							{ WASMRTOKEN(AT) }
 "("							{ WASMRTOKEN(LPAR) }
@@ -149,12 +141,12 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "<"							{ WASMRTOKEN(LANGLE) }
 ">"							{ WASMRTOKEN(RANGLE) }
 "*"							{ WASMRTOKEN(ASTERISK) }
-"#"							{ WASMRTOKEN(HASH) }
 ":"							{ WASMRTOKEN(COLON) }
 "+"							{ WASMRTOKEN(PLUS) }
 "-"							{ WASMRTOKEN(MINUS) }
 "?"							{ WASMRTOKEN(QUESTION) }
 "p"							{ WASMRTOKEN(P) }
+"{"							{ WASMRTOKEN(LCURLY) }
 
 {WASM_NUMBER}				{ WASMRTOKEN(NUMBER) }
 {WASM_IDENT}				{ WASMRTOKEN(IDENT) }

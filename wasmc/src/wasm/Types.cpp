@@ -5,6 +5,10 @@
 #include "wasm/Types.h"
 
 namespace Wasmc {
+	OperandType OperandType::VOID_PTR {false, Primitive::Void, 1};
+	OperandType OperandType::ULONG {false, Primitive::Long, 0};
+	OperandType OperandType::UCHAR {false, Primitive::Char, 0};
+
 	bool isUnknown(SymbolEnum type) {
 		return type == SymbolEnum::Unknown || type == SymbolEnum::UnknownCode || type == SymbolEnum::UnknownData;
 	}

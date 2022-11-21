@@ -1198,6 +1198,7 @@ namespace WVM::Operations {
 		const OperandType imm_type(args.immType);
 		const OperandType rd_type(args.rdType);
 		if (imm_type.pointerLevel < 1 || !typeCheck(imm_type, rd_type, 1)) {
+			warn() << imm_type.pointerLevel << " < 1 || " << !typeCheck(imm_type, rd_type, 1) << "\n    " << imm_type << ", " << rd_type << '\n';
 			vm.intBadtyp();
 			return;
 		}

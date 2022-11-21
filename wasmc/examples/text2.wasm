@@ -19,7 +19,7 @@ orcid: "0000-0001-7405-6654"
 
 @text2_code
 	[ $rt{v*}
-	&text2_string -> $a0{uc*}
+	&text2_string{uc*} -> $a0{uc*}
 	:: strprint
 	] $rt{v*}
 	: $rt{v*}

@@ -230,9 +230,9 @@ namespace Wasmc {
 			return primitive != Primitive::Void && pointerLevel == 0;
 		}
 
-		static OperandType VoidPtr() {
-			return {false, Primitive::Void, 1};
-		}
+		static OperandType VOID_PTR;
+		static OperandType ULONG;
+		static OperandType UCHAR;
 	};
 
 	struct TypedReg {

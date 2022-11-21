@@ -6,27 +6,27 @@
 #include "wasm/Nodes.h"
 
 namespace Wasmc {
-	std::string colorize(const Immediate &imm, bool ampersand) {
-		if (std::holds_alternative<int>(imm))
-			return green(std::to_string(std::get<int>(imm)));
-		if (std::holds_alternative<char>(imm))
+	std::string colorize(const TypedImmediate &imm, bool ampersand) {
+		if (std::holds_alternative<int>(imm.value))
+			return green(std::to_string(imm.get<int>()));
+		if (std::holds_alternative<char>(imm.value))
 			return yellow(toString(imm, ampersand));
 		if (ampersand)
-			return orange("&" + *std::get<const std::string *>(imm));
-		return orange(*std::get<const std::string *>(imm));
+			return orange("&" + *imm.get<const std::string *>());
+		return orange(*imm.get<const std::string *>());
 	}
 
 	std::string colorize(const Either &either, bool ampersand) {
-		if (std::holds_alternative<Immediate>(either))
-			return colorize(std::get<Immediate>(either), ampersand);
+		if (std::holds_alternative<TypedImmediate>(either))
+			return colorize(std::get<TypedImmediate>(either), ampersand);
 		return cyan(std::get<TypedReg>(either));
 	}
 
-	std::string toString(const Immediate &imm, bool ampersand) {
-		if (std::holds_alternative<int>(imm))
-			return std::to_string(std::get<int>(imm));
-		if (std::holds_alternative<char>(imm)) {
-			char ch = std::get<char>(imm);
+	std::string toString(const TypedImmediate &imm, bool ampersand) {
+		if (std::holds_alternative<int>(imm.value))
+			return std::to_string(imm.get<int>());
+		if (std::holds_alternative<char>(imm.value)) {
+			const char ch = imm.get<char>();
 			switch (ch) {
 				case '\n': return "'\\n'";
 				case '\r': return "'\\r'";
@@ -37,23 +37,30 @@ namespace Wasmc {
 			}
 		}
 		if (ampersand)
-			return "&" + *std::get<const std::string *>(imm);
-		return *std::get<const std::string *>(imm);
+			return "&" + *imm.get<const std::string *>();
+		return *imm.get<const std::string *>();
 	}
 
 	std::string toString(const Either &either, bool ampersand) {
-		if (std::holds_alternative<Immediate>(either))
-			return toString(std::get<Immediate>(either), ampersand);
+		if (std::holds_alternative<TypedImmediate>(either))
+			return toString(std::get<TypedImmediate>(either), ampersand);
 		return std::get<TypedReg>(either);
 	}
 
-	Immediate getImmediate(const ASTNode *node) {
+	TypedImmediate getImmediate(const ASTNode *node) {
+		return {OperandType(node), getUntypedImmediate(node->front())};
+	}
+
+	Immediate getUntypedImmediate(const ASTNode *node) {
 		if (!node)
 			throw std::invalid_argument("getImmediate requires its argument not to be null");
+
 		if (node->symbol == WASM_IMMEDIATE)
-			return dynamic_cast<const WASMImmediateNode *>(node)->imm;
+			return dynamic_cast<const WASMImmediateNode *>(node)->imm.value;
+
 		if (node->symbol == WASMTOK_NUMBER)
 			return static_cast<int>(node->atoi());
+
 		if (node->symbol == WASMTOK_CHAR) {
 			const std::string middle = node->lexerInfo->substr(1, node->lexerInfo->size() - 2);
 			if (middle.size() == 1)
@@ -64,25 +71,29 @@ namespace Wasmc {
 			if (pos == std::string::npos)
 				return '\\';
 			switch (middle[pos]) {
-				case 'n': return '\n';
-				case 'r': return '\r';
-				case 'a': return '\a';
-				case 't': return '\t';
-				case 'b': return '\b';
+				case 'n':  return '\n';
+				case 'r':  return '\r';
+				case 'a':  return '\a';
+				case 't':  return '\t';
+				case 'b':  return '\b';
 				case '\'': return '\'';
-				case 'x': return char(Util::parseUlong(middle.substr(pos + 1, 2), 16));
-				default:  throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
+				case 'x':  return static_cast<char>(Util::parseUlong(middle.substr(pos + 1, 2), 16));
+				default:   throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
 			}
 		}
+
 		if (node->symbol == WASMTOK_STRING) {
 			if (node->lexerInfo->size() < 2)
 				throw std::runtime_error("Encountered WASMTOK_STRING with a lexerInfo shorter than 2 characters");
 			return StringSet::intern(node->lexerInfo->substr(1, node->lexerInfo->size() - 2));
 		}
+
 		return node->lexerInfo;
 	}
 
 	Either getEither(const ASTNode *node) {
-		return node->symbol == WASMTOK_TYPE? TypedReg(node) : getImmediate(node);
+		if (node->symbol == WASMTOK_TYPE)
+			return TypedReg(node);
+		return getImmediate(node);
 	}
 }
