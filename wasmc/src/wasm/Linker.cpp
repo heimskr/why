@@ -161,7 +161,6 @@ namespace Wasmc {
 				}
 
 			for (auto &entry: subrelocation) {
-				warn() << "[[" << std::string(entry) << "]]: " << entry.sectionOffset << " -> ";
 				entry.sectionOffset += entry.isData? extra_data_length : extra_code_length;
 				std::cerr << entry.sectionOffset << '\n';
 				entry.label = StringSet::intern(subtable.at(entry.symbolIndex).label);
@@ -273,6 +272,7 @@ namespace Wasmc {
 
 			const SymbolTableEntry &symbol = symbols.at(entry.symbolIndex);
 			long new_value = symbol.address + entry.offset;
+
 			switch (symbol.type) {
 				case SymbolEnum::Code: new_value += code_offset; break;
 				case SymbolEnum::Data: new_value += data_offset; break;
@@ -346,15 +346,14 @@ namespace Wasmc {
 				if (entry.type == RelocationType::Lower4) {
 					if (0xffffffff < new_value)
 						throw std::runtime_error("New value too high: 0x" + Util::hex(new_value));
-					instruction &= ~0xffffffff;
+					instruction &= ~0xfffffffful;
 					instruction |= new_value;
 				} else if (entry.type == RelocationType::Upper4) {
-					instruction &= ~0xffffffff;
+					instruction &= ~0xfffffffful;
 					instruction |= new_value >> 32;
-				} else {
+				} else
 					throw std::runtime_error("Code relocation has invalid type: " +
 						std::to_string(static_cast<int>(entry.type)));
-				}
 			}
 		}
 	}
