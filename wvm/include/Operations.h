@@ -80,6 +80,7 @@ namespace WVM::Operations {
 	void modOp(RArgs &);    // 1   R 9
 	void divOp(RArgs &);    // 1   R 10
 	void sextOp(RArgs &);   // 1   R 13
+	void bcOp(RArgs &);     // 1   R 14
 
 	void andOp(RArgs &);    // 2   R 0
 	void nandOp(RArgs &);   // 2   R 1
@@ -207,6 +208,8 @@ namespace WVM::Operations {
 #define FN_DIV 10
 #define OP_SEXT OP_RMATH
 #define FN_SEXT 13
+#define OP_BC OP_RMATH
+#define FN_BC 14
 
 #define OP_AND OP_RLOGIC
 #define FN_AND 0

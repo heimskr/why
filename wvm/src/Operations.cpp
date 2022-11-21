@@ -82,6 +82,7 @@ namespace WVM::Operations {
 					case FN_MOD:       modOp(args); return;
 					case FN_DIV:       divOp(args); return;
 					case FN_SEXT:     sextOp(args); return;
+					case FN_BC:         bcOp(args); return;
 				}
 				break;
 			case OP_RLOGIC:
@@ -453,6 +454,11 @@ namespace WVM::Operations {
 	// 		setReg(args.vm, args.rd, 0x00000000000000fful & rs);
 	// 	args.vm.increment();
 	// }
+
+	void bcOp(RArgs &args) {
+		setReg(args.vm, args.rd, Register(args.rs.value, args.rdType));
+		args.vm.increment();
+	}
 
 	void andOp(RArgs &args) {
 		if (!typeCheckTwo(args, true)) {
