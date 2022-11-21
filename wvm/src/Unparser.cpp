@@ -197,7 +197,7 @@ namespace WVM::Unparser {
 		if (vm) {
 			const std::string symbol = getSymbol(immediate, *vm);
 			if (!symbol.empty())
-				coloredImm = immColor + symbol + "\e[39m";
+				coloredImm = immColor + symbol + "\e[39;2m" + std::string(OperandType(it)) + "\e[22m";
 		}
 		if (coloredImm.empty())
 			coloredImm = colorNum(immediate, it);
@@ -318,7 +318,7 @@ namespace WVM::Unparser {
 	}
 
 	std::string colorNum(HWord immediate, int it) {
-		return immColor + std::to_string(immediate) + "\e[39m";
+		return immColor + std::to_string(immediate) + std::string(OperandType(it)) + "\e[39m";
 	}
 
 	std::string colorOper(const std::string &oper) {

@@ -283,8 +283,8 @@ namespace Wasmc {
 			condition = static_cast<uint8_t>(has_condition->condition);
 
 		return compileI(itype.getOpcode(), registerMap.at(itype.rs.reg), registerMap.at(itype.rd.reg), imm,
-			static_cast<uint8_t>(node.flags), static_cast<uint8_t>(condition), static_cast<uint8_t>(0b00000100),
-			static_cast<uint8_t>(itype.rs.type), static_cast<uint8_t>(itype.rd.type)); // TODO: actual imm types
+			static_cast<uint8_t>(node.flags), static_cast<uint8_t>(condition), static_cast<uint8_t>(itype.imm.type),
+			static_cast<uint8_t>(itype.rs.type), static_cast<uint8_t>(itype.rd.type));
 	}
 
 	TypedInstruction Assembler::compileI(Opcode opcode, uint8_t rs, uint8_t rd, uint32_t immediate, uint8_t flags,
