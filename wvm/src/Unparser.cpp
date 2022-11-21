@@ -61,7 +61,8 @@ namespace WVM::Unparser {
 					case FN_SRA:    oper = ">>"; break;
 					case FN_MOD:    oper = "%"; break;
 					case FN_DIV:    oper = "/"; break;
-					case FN_SEXT:   return "\e[1msext32\e[22m " + color(rs, st) + into + color(rd, dt);
+					case FN_SEXT:   return "\e[1msext\e[22m " + color(rs, st) + into + color(rd, dt);
+					case FN_BC:     return "\e[1mbc\e[22m " + color(rs, st) + into + color(rd, dt);
 				}
 				return rAltOp(rs, rt, rd, oper, st, tt, dt, suffix);
 			}

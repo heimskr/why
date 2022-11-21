@@ -122,6 +122,7 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "++"						{ WASMRTOKEN(INC) }
 "--"						{ WASMRTOKEN(DEC) }
 "io"						{ WASMRTOKEN(IO) }
+"bc"						{ WASMRTOKEN(BC) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }

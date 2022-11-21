@@ -268,7 +268,8 @@ op_r: typed_reg basic_oper_r typed_reg "->" typed_reg { $$ = new RNode($1, $2, $
     | typed_reg shorthandable_r "=" typed_reg         { $$ = new RNode($1, $2, $4, $1); D($3); }
     | "~" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); }
     | "!" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); }
-    | "sext" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); };
+    | "sext" typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); }
+    | "bc"   typed_reg "->" typed_reg { $$ = new RNode($2, $1, nullptr, $4); D($3); };
 basic_oper_r: shorthandable_r | "<" | "<=" | "==" | ">" | ">=" | "!";
 logical: "&&" | "||" | "!&&" | "!||" | "!xx" | "xx";
 shorthandable_r: logical | shorthandable_i;

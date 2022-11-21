@@ -89,9 +89,8 @@ namespace Wasmc {
 		{"multu",  OP_MULTU },
 		{"mod",    OP_MOD   },
 		{"div",    OP_DIV   },
-		{"divu",   OP_DIVU  },
-		{"modu",   OP_MODU  },
 		{"sext",   OP_SEXT  },
+		{"bc",     OP_BC    },
 		{"and",    OP_AND   },
 		{"nand",   OP_NAND  },
 		{"nor",    OP_NOR   },
@@ -175,9 +174,7 @@ namespace Wasmc {
 		{"ring",   OP_RING  },
 		{"ringi",  OP_RINGI },
 		{"divi",   OP_DIVI  },
-		{"divui",  OP_DIVUI },
 		{"divii",  OP_DIVII },
-		{"divuii", OP_DIVUII},
 		{"sel",    OP_SEL   },
 		{"sspush", OP_SSPUSH},
 		{"sspop",  OP_SSPOP },
@@ -195,7 +192,6 @@ namespace Wasmc {
 		{"qm",     OP_QM    },
 		{"ei",     OP_EI    },
 		{"di",     OP_DI    },
-		{"modui",  OP_MODUI },
 		{"trans",  OP_TRANS },
 	};
 
@@ -226,6 +222,7 @@ namespace Wasmc {
 		{WASMTOK_BANG,    "lnot"  },
 		{WASMTOK_MEMSET,  "ms"    },
 		{WASMTOK_SEXT,    "sext"  },
+		{WASMTOK_BC,      "bc"    },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_I {

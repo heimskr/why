@@ -29,9 +29,8 @@ namespace Wasmc {
 	constexpr Opcode OP_MULTU  = 0b000000000001;
 	constexpr Opcode OP_MOD    = 0b000000000001;
 	constexpr Opcode OP_DIV    = 0b000000000001;
-	constexpr Opcode OP_DIVU   = 0b000000000001;
 	constexpr Opcode OP_SEXT   = 0b000000000001;
-	constexpr Opcode OP_MODU   = 0b000000000001;
+	constexpr Opcode OP_BC     = 0b000000000001;
 	constexpr Opcode OP_RLOGIC = 0b000000000010;
 	constexpr Opcode OP_AND    = 0b000000000010;
 	constexpr Opcode OP_NAND   = 0b000000000010;
@@ -119,9 +118,7 @@ namespace Wasmc {
 	constexpr Opcode OP_RING   = 0b000000110010;
 	constexpr Opcode OP_RINGI  = 0b000000110011;
 	constexpr Opcode OP_DIVI   = 0b000000110100;
-	constexpr Opcode OP_DIVUI  = 0b000000110101;
 	constexpr Opcode OP_DIVII  = 0b000000110110;
-	constexpr Opcode OP_DIVUII = 0b000000110111;
 	constexpr Opcode OP_SEL    = 0b000000111000;
 	constexpr Opcode OP_SSPUSH = 0b000000111001;
 	constexpr Opcode OP_SSPOP  = 0b000000111010;
@@ -139,6 +136,5 @@ namespace Wasmc {
 	constexpr Opcode OP_QM     = 0b000001000001;
 	constexpr Opcode OP_DI     = 0b000001000010;
 	constexpr Opcode OP_EI     = 0b000001000010;
-	constexpr Opcode OP_MODUI  = 0b000001000011;
 	constexpr Opcode OP_TRANS  = 0b000001000100;
 }
