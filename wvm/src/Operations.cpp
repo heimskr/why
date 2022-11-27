@@ -288,8 +288,10 @@ namespace WVM::Operations {
 	}
 
 	static bool typeCheck(const OperandType &one, const OperandType &two, int level_difference = 0) {
+		if (one.isVoid() || two.isVoid())
+			return true;
 		if (level_difference == 0)
-			return one == two;
+			return one.check(two);
 		return one.isSigned == two.isSigned && one.primitive == two.primitive &&
 			one.pointerLevel - level_difference == two.pointerLevel;
 	}
@@ -300,14 +302,14 @@ namespace WVM::Operations {
 
 	static bool typeCheck(Register &one, int two) {
 		assert(0 <= two && two <= 0xff);
-		return one.type == OperandType(static_cast<uint8_t>(two));
+		return one.type == OperandType(static_cast<uint8_t>(two)) || one.type.isVoid();
 	}
 
 	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types. */
 	static bool typeCheckOne(RArgs &args, bool check_number = false) {
 		const OperandType dt(args.rdType), st(args.rsType);
-		if (args.rs.type == st && args.rs.type == dt)
-			return check_number? args.rs.type.isNumber() : true;
+		if (args.rs.type.check(st) && args.rs.type.check(dt))
+			return !check_number || args.rs.type.isNumberOrVoid();
 		return false;
 	}
 
@@ -315,16 +317,16 @@ namespace WVM::Operations {
 	 *  type of rt matches the instruction's encoded rt type. */
 	static bool typeCheckTwo(RArgs &args, bool check_number = false) {
 		const OperandType dt(args.rdType), st(args.rsType), tt(args.rtType);
-		if (args.rs.type == st && args.rs.type == dt && args.rt.type == tt)
-			return check_number? args.rs.type.isNumber() : true;
+		if (args.rs.type.check(st) && args.rs.type.check(dt) && args.rt.type.check(tt))
+			return !check_number || args.rs.type.isNumberOrVoid();
 		return false;
 	}
 
 	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types. */
 	static bool typeCheck(IArgs &args, bool check_number = false) {
 		const OperandType dt(args.rdType), st(args.rsType);
-		if (args.rs.type == st && args.rs.type == dt)
-			return check_number? args.rs.type.isNumber() : true;
+		if (args.rs.type.check(st) && args.rs.type.check(dt))
+			return !check_number || args.rs.type.isNumberOrVoid();
 		return false;
 	}
 
@@ -1025,7 +1027,7 @@ namespace WVM::Operations {
 	}
 
 	void cOp(RArgs &args) {
-		if (args.rs.type != args.rd.type || args.rs.type != args.rsType || args.rsType != args.rdType) {
+		if (!args.rs.type.check(args.rd.type) || !args.rs.type.check(args.rsType) || args.rsType != args.rdType) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1056,7 +1058,7 @@ namespace WVM::Operations {
 	}
 
 	void lOp(RArgs &args) {
-		if (!typeCheck(args.rsType, args.rdType, 1) || args.rs.type != args.rsType) {
+		if (!typeCheck(OperandType(args.rsType), OperandType(args.rdType), 1) || args.rs.type.check(args.rsType)) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1074,7 +1076,13 @@ namespace WVM::Operations {
 	}
 
 	void sOp(RArgs &args) {
-		if (!typeCheck(args.rsType, args.rdType, -1) || args.rs.type != args.rsType || args.rd.type != args.rdType) {
+		bool failed = false;
+		if (!typeCheck(OperandType(args.rsType), OperandType(args.rdType), -1))
+			failed = true;
+		else if (args.rs.type != args.rsType || args.rd.type != args.rdType)
+			failed = true;
+
+		if (failed) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1204,7 +1212,8 @@ namespace WVM::Operations {
 		const OperandType imm_type(args.immType);
 		const OperandType rd_type(args.rdType);
 		if (imm_type.pointerLevel < 1 || !typeCheck(imm_type, rd_type, 1)) {
-			warn() << imm_type.pointerLevel << " < 1 || " << !typeCheck(imm_type, rd_type, 1) << "\n    " << imm_type << ", " << rd_type << '\n';
+			warn() << imm_type.pointerLevel << " < 1 || " << !typeCheck(imm_type, rd_type, 1) << "\n    " << imm_type
+			       << ", " << rd_type << '\n';
 			vm.intBadtyp();
 			return;
 		}
@@ -1336,9 +1345,9 @@ namespace WVM::Operations {
 
 		// Requirements:
 		// - Current rs type must match encoded rs type
-		// - rs type must be a number
+		// - rs type must be a number or void
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1354,9 +1363,9 @@ namespace WVM::Operations {
 		}
 
 		// Requirements:
-		// - Encoded rd type must be a number
+		// - Encoded rd type must be a number or void
 		const OperandType rd_type(args.rdType);
-		if (!rd_type.isNumber()) {
+		if (!rd_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1385,9 +1394,9 @@ namespace WVM::Operations {
 	void ringOp(RArgs &args) {
 		// Requirements:
 		// - Current rs type must match encoded rs type
-		// - rs type must be a number
+		// - rs type must be a number or void
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1398,9 +1407,9 @@ namespace WVM::Operations {
 
 	void svringOp(RArgs &args) {
 		// Requirements:
-		// - Encoded rd type must be a number
+		// - Encoded rd type must be a number or void
 		const OperandType rd_type(args.rdType);
-		if (!rd_type.isNumber()) {
+		if (!rd_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1411,8 +1420,8 @@ namespace WVM::Operations {
 
 	void ringiOp(IArgs &args) {
 		// Requirements:
-		// - Encoded immediate type must be a number
-		if (!OperandType(args.immType).isNumber()) {
+		// - Encoded immediate type must be a number or void
+		if (!OperandType(args.immType).isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1449,7 +1458,7 @@ namespace WVM::Operations {
 		// - Current rs type must match encoded rs type
 		// - rs type must be uc
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || rs_type != OperandType(false, Primitive::Char, 0)) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.check(OperandType(false, Primitive::Char, 0))) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1463,7 +1472,7 @@ namespace WVM::Operations {
 		// - Current rs type must match encoded rs type
 		// - rs type must be a number
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1477,7 +1486,7 @@ namespace WVM::Operations {
 		// - Current rs type must match encoded rs type
 		// - rs type must be a number
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1491,9 +1500,9 @@ namespace WVM::Operations {
 	void sleepOp(RArgs &args) {
 		// Requirements:
 		// - Current rs type must match encoded rs type
-		// - rs type must be a number
+		// - rs type must be a number or void
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1505,9 +1514,9 @@ namespace WVM::Operations {
 	void prbOp(RArgs &args) {
 		// Requirements:
 		// - Current rs type must match encoded rs type
-		// - rs type must be a number
+		// - rs type must be a number or void
 		const OperandType rs_type(args.rsType);
-		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumber()) {
+		if (!typeCheck(args.rs.type, rs_type) || !rs_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1848,9 +1857,9 @@ namespace WVM::Operations {
 
 	void svpgOp(RArgs &args) {
 		// Requirements:
-		// - Encoded rd type must be a number
+		// - Encoded rd type must be a number or void
 		const OperandType rd_type(args.rdType);
-		if (!rd_type.isNumber()) {
+		if (!rd_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}
@@ -1913,9 +1922,9 @@ namespace WVM::Operations {
 
 	void qmOp(RArgs &args) {
 		// Requirements:
-		// - Encoded rd type must be a number
+		// - Encoded rd type must be a number or void
 		const OperandType rd_type(args.rdType);
-		if (!rd_type.isNumber()) {
+		if (!rd_type.isNumberOrVoid()) {
 			args.vm.intBadtyp();
 			return;
 		}

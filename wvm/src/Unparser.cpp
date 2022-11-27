@@ -281,7 +281,7 @@ namespace WVM::Unparser {
 	}
 
 	std::string iAltOp(int rs, int rd, const std::string &immediate, const std::string &oper, int st, int dt, int it) {
-		std::string out = color(rs, st) + " \e[1m" + oper + (rs == rd? "=" : "") + "\e[22m " + immediate;
+		const std::string out = color(rs, st) + " \e[1m" + oper + (rs == rd? "=" : "") + "\e[22m " + immediate;
 		return rs == rd? out : out + into + color(rd, dt);
 	}
 

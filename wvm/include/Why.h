@@ -26,7 +26,7 @@ namespace WVM {
 
 		OperandType(): isSigned(true), primitive(Primitive::Void), pointerLevel(-1) {}
 
-		OperandType(uint8_t type):
+		explicit OperandType(uint8_t type):
 			isSigned(((type >> 3) & 1) == 1), primitive(getPrimitive(type)), pointerLevel((type >> 4) & 0b1111) {}
 
 		OperandType(bool is_signed, Primitive primitive_, int pointer_level = 0):
@@ -76,6 +76,25 @@ namespace WVM {
 
 		bool isNumber() const {
 			return primitive != Primitive::Void && pointerLevel == 0;
+		}
+
+		bool isVoid() const {
+			return primitive == Primitive::Void && !isSigned && pointerLevel == 0;
+		}
+
+		bool isNumberOrVoid() const {
+			return isNumber() || isVoid();
+		}
+
+		/** Returns true if either type is void or if this type is the same as the other type. */
+		bool check(const OperandType &other) const {
+			return *this == other || isVoid() || other.isVoid();
+		}
+
+		/** Returns true if either type is void or if this type is the same as the other type. */
+		bool check(uint8_t other) const {
+			const OperandType other_ot(other);
+			return *this == other_ot || isVoid() || other_ot.isVoid();
 		}
 
 		static OperandType VOID_PTR;
