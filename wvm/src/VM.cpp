@@ -738,7 +738,7 @@ namespace WVM {
 
 		Word index = 0;
 		for (Register &reg: registers) {
-			reg = {0, OperandType::ULONG};
+			reg = {0, OperandType::VOID};
 			reg.index = index++;
 		}
 
@@ -821,7 +821,8 @@ namespace WVM {
 					}
 					i += 8;
 					++index;
-				} else throw VMError("Unrecognized debug data entry type: " + std::to_string(type));
+				} else
+					throw VMError("Unrecognized debug data entry type: " + std::to_string(type));
 			}
 #ifdef CATCH_DEBUG
 		} catch (std::exception &err) {

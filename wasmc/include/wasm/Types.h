@@ -230,6 +230,10 @@ namespace Wasmc {
 			return primitive != Primitive::Void && pointerLevel == 0;
 		}
 
+		bool isVoid() const {
+			return primitive == Primitive::Void && !isSigned && pointerLevel == 0;
+		}
+
 		static OperandType VOID_PTR;
 		static OperandType ULONG;
 		static OperandType UCHAR;

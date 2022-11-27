@@ -99,6 +99,7 @@ namespace WVM {
 
 		static OperandType VOID_PTR;
 		static OperandType ULONG;
+		static OperandType VOID;
 	};
 
 	/** Contains constants pertaining to the Why architecture. */
