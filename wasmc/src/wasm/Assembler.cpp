@@ -768,7 +768,7 @@ namespace Wasmc {
 	void Assembler::addPseudoPrint(size_t offset, const WASMInstructionNode *instruction) {
 		const auto *print = dynamic_cast<const WASMPseudoPrintNode *>(instruction);
 		if (print->imm.is<char>()) {
-			const TypedReg m7({}, registerArray[Why::assemblerOffset + 7]); // TODO: fixme?
+			const TypedReg m7(OperandType::UCHAR, registerArray[Why::assemblerOffset + 7]); // TODO: fixme?
 
 			auto set = std::make_unique<WASMSetNode>(print->imm, m7);
 			set->setBang(instruction->bang);
