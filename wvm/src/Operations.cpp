@@ -302,7 +302,8 @@ namespace WVM::Operations {
 
 	static bool typeCheck(Register &one, int two) {
 		assert(0 <= two && two <= 0xff);
-		return one.type == OperandType(static_cast<uint8_t>(two)) || one.type.isVoid();
+		const OperandType two_type(static_cast<uint8_t>(two));
+		return one.type.isVoid() || two_type.isVoid() || one.type == two_type;
 	}
 
 	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types. */
@@ -315,9 +316,9 @@ namespace WVM::Operations {
 
 	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types and whether the current
 	 *  type of rt matches the instruction's encoded rt type. */
-	static bool typeCheckTwo(RArgs &args, bool check_number = false) {
+	static bool typeCheckTwo(RArgs &args, bool check_number = false, bool skip_dt = false) {
 		const OperandType dt(args.rdType), st(args.rsType), tt(args.rtType);
-		if (args.rs.type.check(st) && args.rs.type.check(dt) && args.rt.type.check(tt))
+		if (args.rs.type.check(st) && (skip_dt || args.rs.type.check(dt)) && args.rt.type.check(tt))
 			return !check_number || args.rs.type.isNumberOrVoid();
 		return false;
 	}
@@ -354,7 +355,7 @@ namespace WVM::Operations {
 		// TODO: handle unsigned
 		VM &vm = args.vm;
 
-		if (!typeCheckTwo(args, true)) {
+		if (!typeCheckTwo(args, true, true)) {
 			vm.intBadtyp();
 			return;
 		}
@@ -1126,7 +1127,8 @@ namespace WVM::Operations {
 			return;
 		}
 
-		const Size size = getSize(args.rsType);
+		const OperandType rs_type(args.rsType);
+		const Size size = rs_type.isVoid()? Size::Word : getSize(rs_type);
 		vm.bufferChange<MemoryChange>(vm, translated, args.rs.value, size);
 		vm.set(translated, args.rs.value, size);
 		vm.increment();
@@ -1235,7 +1237,7 @@ namespace WVM::Operations {
 		// Requirements:
 		// - Encoded immediate type must be a pointer
 		// - Encoded rs type must be equivalent to encoded immediate type minus one pointer level
-		const OperandType imm_type(args.immType);
+		OperandType imm_type(args.immType);
 		const OperandType rs_type(args.rsType);
 		if (imm_type.pointerLevel < 1 || !typeCheck(imm_type, rs_type, 1)) {
 			vm.intBadtyp();
@@ -1254,7 +1256,8 @@ namespace WVM::Operations {
 			return;
 		}
 
-		const Size size = getSize(rs_type);
+		--imm_type.pointerLevel;
+		const Size size = getSize(imm_type);
 		vm.bufferChange<MemoryChange>(vm, translated, args.rs.value, size);
 		vm.set(translated, args.rs.value, size);
 		vm.increment();

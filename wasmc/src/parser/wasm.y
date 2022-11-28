@@ -199,7 +199,7 @@ debug_line: number string { if (*$1->lexerInfo != "1" && *$1->lexerInfo != "2") 
 
 text_section: "#text" "\n" { D($2); };
             | text_section operation endop { $$ = $1->adopt($2); D($3); }
-            | text_section operation intbang endop { $$ = $1->adopt(dynamic_cast<WASMInstructionNode *>($2)->absorbIntbang($3)); D($4); }
+            | text_section operation intbang endop { $$ = $1->adopt(dynamic_cast<WASMInstructionNode &>(*$2).absorbIntbang($3)); D($4); }
             | text_section directive endop { $$ = $1->adopt($2); D($3); }
             | text_section label { $$ = $1->adopt($2); }
             | text_section endop { D($2); };
