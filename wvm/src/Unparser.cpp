@@ -55,7 +55,7 @@ namespace WVM::Unparser {
 				switch (funct) {
 					case FN_ADD:    oper = "+"; break;
 					case FN_SUB:    oper = "-"; break;
-					case FN_MULT:   return color(rs, st) + " " + colorOper("*") + " " + color(rd, dt);
+					case FN_MULT:   return color(rs, st) + " " + colorOper("*") + " " + color(rt, tt);
 					case FN_SLL:    oper = "<<"; break;
 					case FN_SRL:    oper = ">>>"; break;
 					case FN_SRA:    oper = ">>"; break;
