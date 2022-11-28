@@ -627,7 +627,8 @@ namespace WVM::Operations {
 		// TODO: handle unsigned
 		VM &vm = args.vm;
 
-		if (!typeCheck(args, true)) {
+		const OperandType st(args.rsType);
+		if (!args.rs.type.check(st) || !(st.isVoid() || args.rs.type.isNumberOrVoid())) {
 			args.vm.intBadtyp();
 			return;
 		}
