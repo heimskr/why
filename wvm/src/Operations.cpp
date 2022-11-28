@@ -310,7 +310,7 @@ namespace WVM::Operations {
 	static bool typeCheckOne(RArgs &args, bool check_number = false) {
 		const OperandType dt(args.rdType), st(args.rsType);
 		if (args.rs.type.check(st) && args.rs.type.check(dt))
-			return !check_number || args.rs.type.isNumberOrVoid();
+			return !check_number || st.isVoid() || args.rs.type.isNumberOrVoid();
 		return false;
 	}
 
@@ -319,7 +319,7 @@ namespace WVM::Operations {
 	static bool typeCheckTwo(RArgs &args, bool check_number = false, bool skip_dt = false) {
 		const OperandType dt(args.rdType), st(args.rsType), tt(args.rtType);
 		if (args.rs.type.check(st) && (skip_dt || args.rs.type.check(dt)) && args.rt.type.check(tt))
-			return !check_number || args.rs.type.isNumberOrVoid();
+			return !check_number || st.isVoid() || args.rs.type.isNumberOrVoid();
 		return false;
 	}
 
@@ -327,7 +327,7 @@ namespace WVM::Operations {
 	static bool typeCheck(IArgs &args, bool check_number = false) {
 		const OperandType dt(args.rdType), st(args.rsType);
 		if (args.rs.type.check(st) && args.rs.type.check(dt))
-			return !check_number || args.rs.type.isNumberOrVoid();
+			return !check_number || st.isVoid() || args.rs.type.isNumberOrVoid();
 		return false;
 	}
 
@@ -1142,7 +1142,8 @@ namespace WVM::Operations {
 			return;
 		}
 
-		const Size size = getSize(args.rdType);
+		const OperandType rd_type(args.rdType);
+		const Size size = rd_type.isVoid()? Size::Word : getSize(rd_type);
 		setReg(args.vm, args.rd, Register(args.vm.get(translated, size), OperandType(args.rdType)), false);
 		setReg(args.vm, args.vm.sp(), Register(args.vm.sp().value + static_cast<char>(size) / 8, args.vm.sp().type),
 			false);
