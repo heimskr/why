@@ -1059,7 +1059,7 @@ namespace WVM::Operations {
 	}
 
 	void lOp(RArgs &args) {
-		if (!typeCheck(OperandType(args.rsType), OperandType(args.rdType), 1) || args.rs.type.check(args.rsType)) {
+		if (!typeCheck(OperandType(args.rsType), OperandType(args.rdType), 1) || !args.rs.type.check(args.rsType)) {
 			args.vm.intBadtyp();
 			return;
 		}
