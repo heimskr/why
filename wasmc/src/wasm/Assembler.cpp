@@ -658,12 +658,8 @@ namespace Wasmc {
 					break;
 
 				default:
-					instruction->debug();
 					flipSigns(instruction);
-					auto compiled = compileInstruction(*instruction);
-
-					std::cerr << std::string(compiled) << " Opcode[" << dynamic_cast<HasOpcode *>(instruction)->getOpcode() << "]\n";
-					code.insertAll(offset, compiled.toBytes());
+					code.insertAll(offset, compileInstruction(*instruction).toBytes());
 					break;
 			}
 		}
@@ -921,6 +917,9 @@ namespace Wasmc {
 					subbang = instructionMap.at(j)->bang;
 				} else if (extraInstructions.count(j) != 0) {
 					subbang = extraInstructions.at(j)->bang;
+				} else if (j + 12 <= code.size()) {
+					// No instructions in the up-to-24 padding zone.
+					break;
 				} else
 					throw std::runtime_error("Couldn't find instruction at offset " + std::to_string(j));
 				if (bang == subbang)

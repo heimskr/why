@@ -16,11 +16,11 @@ CLOC_OPTIONS    := --exclude-dir=.vscode,PicoSHA2,tools --not-match-f='^(yy|wasm
 BISON_OPTIONS   := --color=always
 SOURCES         := $(filter-out src/DebugSearch.cpp src/DumpSymbols.cpp src/DumpRelocation.cpp src/main.cpp,$(shell find src/**/*.cpp src/*.cpp))
 OBJECTS         := $(SOURCES:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
-TESTBASE		?= example4
+TESTBASE		?= example+-
 TESTFILE        ?= examples/$(TESTBASE).wasm
 OUTFILE         ?= compiled/$(TESTBASE).why
-# TESTARGS        ?= $(TESTFILE) $(OUTFILE)
-TESTARGS        ?= -l compiled/text_linked.why compiled/text.why compiled/text2.why
+TESTARGS        ?= $(TESTFILE) $(OUTFILE)
+# TESTARGS        ?= -l compiled/text_linked.why compiled/text.why compiled/text2.why
 # TESTARGS        ?= -l compiled/text_linked2.why compiled/text_linked.why compiled/example4.why
 # TESTARGS        ?= -l ../wasm/compiled/debug.why ../wasm/examples/debug.wasm
 # TESTARGS        ?= -l ../wasm/compiled/a.why ../wasm/examples/a.wasm
