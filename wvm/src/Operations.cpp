@@ -309,7 +309,7 @@ namespace WVM::Operations {
 	/** Returns whether the current type of rs matches the instruction's encoded rs and rd types. */
 	static bool typeCheckOne(RArgs &args, bool check_number = false) {
 		const OperandType dt(args.rdType), st(args.rsType);
-		if (args.rs.type.check(st) && args.rs.type.check(dt))
+		if (args.rs.type.check(st) && (st.isVoid() || args.rs.type.check(dt)))
 			return !check_number || st.isVoid() || args.rs.type.isNumberOrVoid();
 		return false;
 	}
