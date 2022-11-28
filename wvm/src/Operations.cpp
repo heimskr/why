@@ -332,7 +332,23 @@ namespace WVM::Operations {
 	}
 
 	void addOp(RArgs &args) {
-		if (!typeCheck(args.rs, args.rt)) {
+		bool check = true;
+		const OperandType &st = args.rs.type;
+		const OperandType &tt = args.rt.type;
+		if (!st.isVoid() && !tt.isVoid()) {
+			if (0 < st.pointerLevel && 0 < tt.pointerLevel && st.pointerLevel != tt.pointerLevel) {
+				// Typechecking fails if both operands are pointers but of different levels.
+				check = false;
+			} else if (0 < tt.pointerLevel && !st.check(tt)) {
+				// Typechecking fails if tt is a pointer and doesn't match st.
+				check = false;
+			} else if (st.pointerLevel == 0 && tt.pointerLevel == 0 && !st.check(tt)) {
+				// Typechecking fails is neither operand is a pointer and they don't match.
+				check = false;
+			}
+		}
+
+		if (!check) {
 			args.vm.intBadtyp();
 			return;
 		}
