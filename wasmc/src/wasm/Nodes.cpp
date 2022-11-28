@@ -92,21 +92,6 @@ namespace Wasmc {
 		return out;
 	}
 
-	WASMImmediateNode::WASMImmediateNode(ASTNode *node):
-	WASMBaseNode(WASM_IMMEDIATE), HasImmediate(getImmediate(node)) {
-		delete node;
-	}
-
-	WASMImmediateNode::WASMImmediateNode(const TypedImmediate &imm_): WASMBaseNode(WASM_IMMEDIATE), HasImmediate(imm_) {}
-
-	std::string WASMImmediateNode::debugExtra() const {
-		return colorize(imm);
-	}
-
-	WASMImmediateNode::operator std::string() const {
-		return toString(imm);
-	}
-
 	WASMLabelNode::WASMLabelNode(ASTNode *label_): WASMInstructionNode(WASM_LABEL), label(label_->lexerInfo) {
 		delete label_;
 	}
@@ -1001,7 +986,7 @@ namespace Wasmc {
 	}
 
 	WASMPseudoPrintNode::WASMPseudoPrintNode(ASTNode *imm_):
-	WASMInstructionNode(WASM_PSEUDOPRINTNODE), HasImmediate(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_PSEUDOPRINTNODE), HasImmediate({OperandType::UCHAR, getUntypedImmediate(imm_)}) {
 		delete imm_;
 	}
 

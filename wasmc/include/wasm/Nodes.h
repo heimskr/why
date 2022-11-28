@@ -109,14 +109,6 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
-	struct WASMImmediateNode: WASMBaseNode, HasImmediate {
-		WASMImmediateNode(ASTNode *);
-		WASMImmediateNode(const TypedImmediate &);
-		WASMNodeType nodeType() const override { return WASMNodeType::Immediate; }
-		std::string debugExtra() const override;
-		operator std::string() const override;
-	};
-
 	struct WASMLabelNode: WASMInstructionNode { // Not technically an instruction, but still.
 		const std::string *label;
 
