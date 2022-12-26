@@ -194,6 +194,7 @@ namespace Wasmc {
 		{"ei",     OP_EI    },
 		{"di",     OP_DI    },
 		{"trans",  OP_TRANS },
+		{"ctlb",   OP_CTLB  },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {
@@ -276,6 +277,7 @@ namespace Wasmc {
 		{"qm",     0b000000000000},
 		{"di",     0b000000000000},
 		{"trans",  0b000000000000},
+		{"ctlb",   0b000000000000},
 		{"jrc",    0b000000000001},
 		{"l",      0b000000000001},
 		{"nand",   0b000000000001},

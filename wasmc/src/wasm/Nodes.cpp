@@ -1144,4 +1144,15 @@ namespace Wasmc {
 			return WASMInstructionNode::operator std::string() + (isPush? "[" : "]") + " %page";
 		return WASMInstructionNode::operator std::string() + (isPush? ": [" : ": ]") + " %page " + std::string(rs);
 	}
+
+	WASMCtlbNode::WASMCtlbNode():
+		WASMInstructionNode(WASM_CTLBNODE), RType(nullptr, nullptr, nullptr) {}
+
+	std::string WASMCtlbNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + blue("ctlb");
+	}
+
+	WASMCtlbNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "ctlb";
+	}
 }

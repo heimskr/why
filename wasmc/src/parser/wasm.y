@@ -149,6 +149,7 @@ using AN = Wasmc::ASTNode;
 %token WASMTOK_TRANSLATE "translate"
 %token WASMTOK_BC "bc"
 %token WASMTOK_FUNCTION_TYPE "#fn"
+%token WASMTOK_CTLB "ctlb"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -160,7 +161,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
 %token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR WASM_EXPRESSION
-%token WASM_INVERSENODE WASM_TRANSNODE WASM_PAGESTACKNODE WASM_SVRINGNODE WASM_SVTIMENODE
+%token WASM_INVERSENODE WASM_TRANSNODE WASM_PAGESTACKNODE WASM_SVRINGNODE WASM_SVTIMENODE WASM_CTLBNODE
 
 %start start
 
@@ -259,7 +260,7 @@ operation: op_r     | op_mult   | op_multi | op_lui  | op_i     | op_c     | op_
          | op_li    | op_si     | op_ms    | op_lni  | op_cmp   | op_cmpi  | op_sel  | op_j      | op_jc     | op_jr
          | op_jrc   | op_mv     | op_spush | op_spop | op_nop   | op_int   | op_rit  | op_time   | op_timei  | op_ext
          | op_ringi | op_sspush | op_sspop | op_ring | op_page  | op_setpt | op_svpg | op_qmem   | op_sprint | op_inc
-         | op_dec   | op_di     | op_ei    | op_inv  | op_trans | op_ppush | op_ppop | op_svring | op_svtime;
+         | op_dec   | op_di     | op_ei    | op_inv  | op_trans | op_ppush | op_ppop | op_svring | op_svtime | op_ctlb;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
@@ -313,6 +314,8 @@ op_ms: "memset" typed_reg "x" typed_reg "->" typed_reg { $$ = new RNode($2, $1, 
 op_lni: "[" typed_imm "]" "->" "[" typed_reg "]" { $$ = new WASMLniNode($2, $6); D($1, $3, $4, $5, $7); };
 
 op_trans: "translate" typed_reg "->" typed_reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
+
+op_ctlb: "ctlb" { $$ = (new WASMCtlbNode)->locate($1); D($1); };
 
 op_cmp: typed_reg "~" typed_reg { $$ = new WASMCmpNode($1, $3); D($2); };
 

@@ -72,6 +72,7 @@ WASM_TYPE               ("{"(v|[us][csil])"*"{0,15}"}")
 "%data"						{ WASMRTOKEN(DATA) }
 "%code"						{ WASMRTOKEN(CODE) }
 "sext"						{ WASMRTOKEN(SEXT) }
+"ctlb"						{ WASMRTOKEN(CTLB) }
 
 "translate"					{ WASMRTOKEN(TRANSLATE) }
 "version"					{ WASMRTOKEN(VERSION) }

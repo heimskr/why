@@ -680,9 +680,9 @@ namespace Wasmc {
 	struct WASMTransNode: WASMInstructionNode, RType {
 		WASMTransNode(const ASTNode *rs_, const ASTNode *rd_);
 		WASMTransNode(const TypedReg &rs_, const TypedReg &rd_);
-		Opcode getOpcode() const override { return OPCODES.at("trans"); }
+		Opcode getOpcode() const override { return OP_TRANS; }
 		Funct getFunct() const override { return FUNCTS.at("trans"); }
-		WASMInstructionNode * copy() const override { return new WASMTransNode(rs, rd); }
+		WASMInstructionNode * copy() const override { return (new WASMTransNode(rs, rd))->absorb(*this); }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
@@ -691,9 +691,18 @@ namespace Wasmc {
 		bool isPush;
 		WASMPageStackNode(bool is_push, const ASTNode *rs_ = nullptr);
 		WASMPageStackNode(bool is_push, const TypedReg &rs_);
-		Opcode getOpcode() const override { return OPCODES.at("ppush"); }
+		Opcode getOpcode() const override { return OP_PPUSH; }
 		Funct getFunct() const override { return FUNCTS.at(isPush? "ppush" : "ppop"); }
-		WASMInstructionNode * copy() const override { return new WASMPageStackNode(isPush, rs); }
+		WASMInstructionNode * copy() const override { return (new WASMPageStackNode(isPush, rs))->absorb(*this); }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMCtlbNode: WASMInstructionNode, RType {
+		WASMCtlbNode();
+		Opcode getOpcode() const override { return OP_CTLB; }
+		Funct getFunct() const override { return FUNCTS.at("ctlb"); }
+		WASMInstructionNode * copy() const override { return (new WASMCtlbNode)->absorb(*this); }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};
