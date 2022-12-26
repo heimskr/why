@@ -16,6 +16,7 @@ namespace Wasmc {
 		OP_QM,     // Query
 		OP_EI,     // Disable/Enable Interrupts
 		OP_TRANS,  // Translate Address
+		OP_CTLB,   // Clear TLB
 	};
 
 	std::unordered_set<Opcode> ITYPES {

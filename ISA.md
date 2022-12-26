@@ -45,6 +45,7 @@
 			</ol>
 		</li>
 		<li><a href="#paging">Paging</a></li>
+		<li><a href="#tlb">Translation Lookaside Buffer (TLB)</a></li>
 		<li><a href="#format">Instruction Format</a>
 			<ol>
 				<li><a href="#format-r">R-Type Instructions</a></li>
@@ -172,6 +173,7 @@
 						<li><a href="#op-spop">Stack Pop</a>          (<code>spop</code>)</li>
 						<li><a href="#op-ms">Memset</a>               (<code>ms</code>)</li>
 						<li><a href="#op-trans">Translate Address</a> (<code>trans</code>)</li>
+						<li><a href="#op-ctlb">Clear TLB</a> (<code>ctlb</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-mem-i">Memory (I-Types)</a>
@@ -670,6 +672,12 @@ the page table entry with the low 16 bits set to zero and this result is used as
 | Address of page start | Unused    | Modified | Accessed | User Page | Executable | Writable | Present |
 
 User Page: Whether the page can be accessed in Ring 3. If zero, only rings 2 and lower can access it.
+
+# <a name="tlb"></a>Translation Lookaside Buffer
+
+The translation lookaside buffer (TLB) is an internal data structure that maps recently accessed virtual addresses to the corresponding physical addresses. It's used to speed up memory accesses with paging enabled. It has page-level granularity; that is, it stores an address minus the address modulo the page size, instead of storing addresses that point somewhere within a page. When a new address is added to the TLB but the TLB has reached its maximum size, an existing entry will be randomly selected to be replaced.
+
+After changing the page tables, it's important to invalidate the TLB with <a href="#op-ctlb"><code>ctlb</code></a>.
 
 # <a name="operations"></a>Operations
 
@@ -1202,6 +1210,12 @@ Sets `rs` bytes to `rt` starting at address `rd`. The value in `rt` will be trun
 Translates the virtual address stored in `rs` and stores the resulting physical address in `rd`.  
 If paging is disabled, this instruction simply copies `rs` into `rd`.  
 A page fault will occur if paging is enabled and the virtual address has no corresponding physical address.
+
+### <a name="op-ctlb"></a>Clear TLB (`ctlb`)
+> `ctlb`  
+> `000000001100` `0000000` `0000000` `0000000` `0000000000000` `......` `000000000000`
+
+Clears the <a href="#tlb">TLB</a>.
 
 ## <a name="ops-mem-i"></a>Memory (I-Types)
 

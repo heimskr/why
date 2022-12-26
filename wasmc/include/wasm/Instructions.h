@@ -55,6 +55,7 @@ namespace Wasmc {
 	constexpr Opcode OP_ORI    = 0b000000001001;
 	constexpr Opcode OP_XNORI  = 0b000000001010;
 	constexpr Opcode OP_XORI   = 0b000000001011;
+	constexpr Opcode OP_CTLB   = 0b000000001100;
 	constexpr Opcode OP_LUI    = 0b000000001101;
 	constexpr Opcode OP_RCOMP  = 0b000000001110;
 	constexpr Opcode OP_SL     = 0b000000001110;
