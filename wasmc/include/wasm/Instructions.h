@@ -86,6 +86,8 @@ namespace Wasmc {
 	constexpr Opcode OP_SS     = 0b000000010010;
 	constexpr Opcode OP_SPUSH  = 0b000000010010;
 	constexpr Opcode OP_SPOP   = 0b000000010010;
+	constexpr Opcode OP_TPUSH  = 0b000000010010;
+	constexpr Opcode OP_TPOP   = 0b000000010010;
 	constexpr Opcode OP_MS     = 0b000000010010;
 	constexpr Opcode OP_LI     = 0b000000010011;
 	constexpr Opcode OP_SI     = 0b000000010100;

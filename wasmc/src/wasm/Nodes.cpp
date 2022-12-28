@@ -687,6 +687,22 @@ namespace Wasmc {
 		return WASMInstructionNode::operator std::string() + std::string(isPush? "[" : "]") + " " + std::string(rs);
 	}
 
+	WASMTypedStackNode::WASMTypedStackNode(ASTNode *reg, bool is_push):
+	WASMInstructionNode(WASM_TYPEDSTACKNODE), RType(reg, nullptr, reg), isPush(is_push) {
+		delete reg;
+	}
+
+	WASMTypedStackNode::WASMTypedStackNode(const TypedReg &reg, bool is_push):
+		WASMInstructionNode(WASM_TYPEDSTACKNODE), RType(reg, {}, reg), isPush(is_push) {}
+
+	std::string WASMTypedStackNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim(isPush? "#[" : "#]") + " " + cyan(rs);
+	}
+
+	WASMTypedStackNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + std::string(isPush? "#[" : "#]") + " " + std::string(rs);
+	}
+
 	WASMNopNode::WASMNopNode(): WASMInstructionNode(WASM_NOPNODE) {}
 
 	std::string WASMNopNode::debugExtra() const {

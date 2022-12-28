@@ -195,6 +195,8 @@ namespace Wasmc {
 		{"di",     OP_DI    },
 		{"trans",  OP_TRANS },
 		{"ctlb",   OP_CTLB  },
+		{"tpush",  OP_TPUSH },
+		{"tpop",   OP_TPOP  },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {
@@ -323,10 +325,12 @@ namespace Wasmc {
 		{"land",   0b000000001000},
 		{"sra",    0b000000001000},
 		{"prb",    0b000000001000},
+		{"tpush",  0b000000001000},
 		{"lh",     0b000000001001},
 		{"lnand",  0b000000001001},
 		{"mod",    0b000000001001},
 		{"rest",   0b000000001001},
+		{"tpop",   0b000000001001},
 		{"div",    0b000000001010},
 		{"lnor",   0b000000001010},
 		{"sh",     0b000000001010},

@@ -273,7 +273,7 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 |----------|--------------|---------------------------------------------------|
 | 0        | `$0`         | Always contains zero.                             |
 | 1        | `$g`         | Global area pointer (right after end of program). |
-| 2        | `$sp`        | Stack pointer.                                    |
+| 2        | `$sp`        | Data stack pointer.                               |
 | 3        | `$fp`        | Frame pointer.                                    |
 | 4        | `$rt`        | Return address.                                   |
 | 5        | `$lo`        | Stores the lower half of a mult result.           |
@@ -285,7 +285,8 @@ There are 128 registers. Their purposes are pretty much stolen from MIPS:
 | 85–100   | `$k0`–`$kf`  | Kernel registers.                                 |
 | 101      | `$st`        | Status register.                                  |
 | 102–117  | `$m0`–`$mf`  | Reserved for use by the assembler.                |
-| 118–121  | `$f0`–`$f3`  | Floating point return values.                     |
+| 118      | `$ts`        | Type stack pointer.                               |
+| 119–121  | `$f0`–`$f2`  | Floating point return values.                     |
 | 122–127  | `$e0`–`$e5`  | Contains data about exceptions.                   |
 
 ## <a name="reg-st"></a>Status Register
@@ -1196,6 +1197,20 @@ See also: <a href="#op-push">push pseudoinstruction</a>
 
 Adjusts the stack pointer and copies the data (size varies depending on `rd`'s type) at the stack pointer into `rd`.  
 See also: <a href="#op-pop">pop pseudoinstruction</a>
+
+### <a name="op-tpush"></a>Typed Stack Push (`tpush`)
+> `#[ $rs`  
+> `000000010010` `0000000` `sssssss` `0000000` `0000000000000` `......` `000000001000` + types
+
+Has the same effect as <a href="#op-spush"><code>spush</code></a>, but also pushes the type of `rs` to the type stack
+and adjusts the type stack pointer.
+
+### <a name="op-tpop"></a>Typed Stack Pop (`tpop`)
+> `#] $rd`  
+> `000000010010` `0000000` `ddddddd` `0000000` `0000000000000` `......` `000000001001` + types
+
+Has the same effect as <a href="#op-spop"><code>spop</code></a>, but also pops the type stack into `rd`'s type and
+adjusts the type stack pointer.
 
 ### <a name="op-ms"></a>Memset (`ms`)
 > `memset $rs x $rt -> $rd`  

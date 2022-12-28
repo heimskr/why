@@ -415,6 +415,19 @@ namespace Wasmc {
 		operator std::string() const override;
 	};
 
+	/** Used for both tpush and tpop. Because I'm lazy, rs and rd are set to the same register. */
+	struct WASMTypedStackNode: WASMInstructionNode, RType {
+		bool isPush;
+		WASMTypedStackNode(ASTNode *reg, bool is_push);
+		WASMTypedStackNode(const TypedReg &reg, bool is_push);
+		Opcode getOpcode() const override { return OPCODES.at(isPush? "tpush" : "tpop"); }
+		Funct getFunct() const override { return FUNCTS.at(isPush? "tpush" : "tpop"); }
+		WASMInstructionNode * copy() const override { return (new WASMTypedStackNode(rs, isPush))->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Stack; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
 	struct WASMNopNode: WASMInstructionNode, HasOpcode {
 		WASMNopNode();
 		Opcode getOpcode() const override { return OPCODES.at("nop"); }
