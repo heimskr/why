@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
@@ -28,7 +29,10 @@
 #define CATCH_TICK_IN_PLAY
 
 namespace WVM {
-	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial), tlb(TLB_SIZE) {}
+	VM::VM(size_t memory_size, bool keep_initial):
+		memorySize(memory_size),
+		keepInitial(keep_initial),
+		tlb(TLB_SIZE) {}
 
 	VM::~VM() {
 		for (Drive &drive: drives)
@@ -762,11 +766,15 @@ namespace WVM {
 			reg.index = index++;
 		}
 
+		assert((1 << 24) <= memorySize);
+
 		registers[Why::globalAreaPointerOffset] = {endOffset, OperandType::VOID_PTR};
-		sp() = {static_cast<Word>(memorySize), OperandType::VOID_PTR};
+		ts() = {static_cast<Word>(memorySize), OperandType::UCHAR_PTR};
+		sp() = {static_cast<Word>(memorySize - (1 << 20)), OperandType::VOID_PTR};
 		rt().type = OperandType::VOID_PTR;
 
 		onRegisterChange(Why::globalAreaPointerOffset);
+		onRegisterChange(Why::typeStackOffset);
 		onRegisterChange(Why::stackPointerOffset);
 		onRegisterChange(Why::returnAddressOffset);
 		loadSymbols();
@@ -893,6 +901,10 @@ namespace WVM {
 		return registers[Why::returnAddressOffset];
 	}
 
+	Register & VM::ts() {
+		return registers[Why::typeStackOffset];
+	}
+
 	const Register & VM::hi() const {
 		return registers[Why::hiOffset];
 	}
@@ -915,5 +927,9 @@ namespace WVM {
 
 	const Register & VM::rt() const {
 		return registers[Why::returnAddressOffset];
+	}
+
+	const Register & VM::ts() const {
+		return registers[Why::typeStackOffset];
 	}
 }

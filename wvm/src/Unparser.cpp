@@ -121,18 +121,11 @@ namespace WVM::Unparser {
 					case FN_C:     return left + color(rs, st) + right + into + left + color(rd, dt) + right;
 					case FN_L:     return left + color(rs, st) + right + into + color(rd, dt);
 					case FN_S:     return color(rs, st) + into + left + color(rd, dt) + right;
-					case FN_CB:    return left + color(rs, st) + right + into + left + color(rd, dt) + right + " /b";
-					case FN_LB:    return left + color(rs, st) + right + into + color(rd, dt) + " /b";
-					case FN_SB:    return color(rs, st) + into + left + color(rd, dt) + right + " /b";
 					case FN_SPUSH: return "\e[2m[\e[22m " + color(rs, st);
 					case FN_SPOP:  return "\e[2m]\e[22m " + color(rd, dt);
-					case FN_CH:    return left + color(rs, st) + right + into + left + color(rd, dt) + "] /h";
-					case FN_LH:    return left + color(rs, st) + right + into + color(rd, dt) + " /h";
-					case FN_SH:    return color(rs, st) + into + left + color(rd, dt) + right + " /h";
 					case FN_MS:    return "\e[36mmemset\e[39m " + color(rs, st) + " x " + color(rt, tt) + into + color(rd, dt);
-					case FN_CS:    return left + color(rs, st) + right + into + left + color(rd, dt) + "] /s";
-					case FN_LS:    return left + color(rs, st) + right + into + color(rd, dt) + " /s";
-					case FN_SS:    return color(rs, st) + into + left + color(rd, dt) + right + " /s";
+					case FN_TPUSH: return "\e[2m#[\e[22m " + color(rs, st);
+					case FN_TPOP:  return "\e[2m#]\e[22m " + color(rd, dt);
 				}
 				break;
 			case OP_REXT:
@@ -186,6 +179,7 @@ namespace WVM::Unparser {
 					case FN_EI: return "\e[36m%ei\e[39m";
 				}
 				break;
+			case OP_CTLB: return "\e[36mctlb\e[39m";
 		}
 
 		return "R: Opcode[" + std::to_string(opcode) + "], " + Why::coloredRegister(rs) + " "

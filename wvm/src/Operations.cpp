@@ -125,6 +125,9 @@ namespace WVM::Operations {
 					case FN_S:         sOp(args); return;
 					case FN_SPUSH: spushOp(args); return;
 					case FN_SPOP:   spopOp(args); return;
+					case FN_MS:       msOp(args); return;
+					case FN_TPUSH: tpushOp(args); return;
+					case FN_TPOP:   tpopOp(args); return;
 				}
 				break;
 			case OP_REXT:
@@ -1171,6 +1174,79 @@ namespace WVM::Operations {
 		setReg(args.vm, args.rd, Register(args.vm.get(translated, size), OperandType(args.rdType)), false);
 		setReg(args.vm, args.vm.sp(), Register(args.vm.sp().value + static_cast<char>(size) / 8, args.vm.sp().type),
 			false);
+		args.vm.increment();
+	}
+
+	void tpushOp(RArgs &args) {
+		if (!typeCheck(args.rs, args.rsType)) {
+			args.vm.intBadtyp();
+			return;
+		}
+
+		VM &vm = args.vm;
+		setReg(vm, vm.sp(), Register(vm.sp().value - 8, vm.sp().type), false);
+		setReg(vm, vm.ts(), Register(vm.ts().value - 1, vm.ts().type), false);
+
+		bool success;
+		const Word translated = vm.translateAddress(vm.sp().value, &success);
+
+		if (!success) {
+			vm.intPfault();
+			return;
+		}
+
+		if (!vm.checkWritable()) {
+			vm.intBwrite(translated);
+			return;
+		}
+
+		const Word ts_translated = vm.translateAddress(vm.ts().value, &success);
+
+		if (!success) {
+			vm.intPfault();
+			return;
+		}
+
+		if (!vm.checkWritable()) {
+			vm.intBwrite(translated);
+			return;
+		}
+
+		const OperandType rs_type(args.rsType);
+		const Size size = rs_type.isVoid()? Size::Word : getSize(rs_type);
+		vm.bufferChange<MemoryChange>(vm, translated, args.rs.value, size);
+		vm.set(translated, args.rs.value, size);
+
+		vm.bufferChange<MemoryChange>(vm, ts_translated, static_cast<uint8_t>(args.rs.type), Size::Byte);
+		vm.set(translated, static_cast<uint8_t>(args.rs.type), Size::Byte);
+
+		vm.increment();
+	}
+
+	void tpopOp(RArgs &args) {
+		bool success;
+		const Word translated = args.vm.translateAddress(args.vm.sp().value, &success);
+
+		if (!success) {
+			args.vm.intPfault();
+			return;
+		}
+
+		const Word ts_translated = args.vm.translateAddress(args.vm.ts().value, &success);
+
+		if (!success) {
+			args.vm.intPfault();
+			return;
+		}
+
+		const OperandType rd_type(args.rdType);
+		const Size size = rd_type.isVoid()? Size::Word : getSize(rd_type);
+		const OperandType popped_type(args.vm.get(ts_translated, Size::Byte));
+		setReg(args.vm, args.rd, Register(args.vm.get(translated, size), popped_type), false);
+		setReg(args.vm, args.vm.sp(), Register(args.vm.sp().value + static_cast<char>(size) / 8, args.vm.sp().type),
+			false);
+		setReg(args.vm, args.vm.ts(), Register(args.vm.ts().value + 1, args.vm.ts().type), false);
+
 		args.vm.increment();
 	}
 

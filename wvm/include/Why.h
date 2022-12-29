@@ -98,6 +98,7 @@ namespace WVM {
 		}
 
 		static OperandType VOID_PTR;
+		static OperandType UCHAR_PTR;
 		static OperandType ULONG;
 		static OperandType VOID;
 	};
@@ -116,7 +117,7 @@ namespace WVM {
 		constexpr static int       savedOffset = 62,      savedCount = 23;
 		constexpr static int      kernelOffset = 85,     kernelCount = 16;
 		constexpr static int   assemblerOffset = 102, assemblerCount = 16;
-		constexpr static int    floatingOffset = 118,  floatingCount = 4;
+		constexpr static int    floatingOffset = 119,  floatingCount = 3;
 		constexpr static int   exceptionOffset = 122, exceptionCount = 6;
 
 		constexpr static int zeroOffset = 0,
@@ -126,7 +127,8 @@ namespace WVM {
 		            returnAddressOffset = 4,
 		                       loOffset = 5,
 		                       hiOffset = 6,
-		                   statusOffset = 101;
+		                   statusOffset = 101,
+		                typeStackOffset = 118;
 
 		constexpr static int ringMin = 0, ringMax = 3;
 

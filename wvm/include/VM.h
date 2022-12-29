@@ -221,11 +221,13 @@ namespace WVM {
 			Register & sp();
 			Register & fp();
 			Register & rt();
+			Register & ts();
 			const Register & hi() const;
 			const Register & lo() const;
 			const Register & st() const;
 			const Register & sp() const;
 			const Register & fp() const;
 			const Register & rt() const;
+			const Register & ts() const;
 	};
 }

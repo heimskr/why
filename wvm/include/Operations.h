@@ -147,6 +147,9 @@ namespace WVM::Operations {
 	void sOp(RArgs &);      // 18  R 2
 	void spushOp(RArgs &);  // 18  R 6
 	void spopOp(RArgs &);   // 18  R 7
+	void tpushOp(RArgs &);  // 18  R 8
+	void tpopOp(RArgs &);   // 18  R 9
+	void msOp(RArgs &);     // 18  R 11
 	void transOp(RArgs &);  // 68  R 0
 
 	void liOp(IArgs &);     // 19  I
@@ -284,30 +287,16 @@ namespace WVM::Operations {
 #define FN_L 1
 #define OP_S OP_RMEM
 #define FN_S 2
-#define OP_CB OP_RMEM
-#define FN_CB 3
-#define OP_LB OP_RMEM
-#define FN_LB 4
-#define OP_SB OP_RMEM
-#define FN_SB 5
 #define OP_SPUSH OP_RMEM
 #define FN_SPUSH 6
 #define OP_SPOP OP_RMEM
 #define FN_SPOP 7
-#define OP_CH OP_RMEM
-#define FN_CH 8
-#define OP_LH OP_RMEM
-#define FN_LH 9
-#define OP_SH OP_RMEM
-#define FN_SH 10
 #define OP_MS OP_RMEM
 #define FN_MS 11
-#define OP_CS OP_RMEM
-#define FN_CS 12
-#define OP_LS OP_RMEM
-#define FN_LS 13
-#define OP_SS OP_RMEM
-#define FN_SS 14
+#define OP_TPUSH OP_RMEM
+#define FN_TPUSH 8
+#define OP_TPOP OP_RMEM
+#define FN_TPOP 9
 
 #define OP_LI 19
 #define OP_SI 20
