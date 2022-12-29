@@ -4,8 +4,8 @@ COMPILER		?= clang++
 OPTIMIZATION	?= -O0 -ggdb3
 CFLAGS			+= $(strip $(OPTIMIZATION) -Wall -Wextra -std=c++2a)
 OUT				:= wvm
-# TESTFILE		?= ~/src/thurisaz/Thurisaz.why
-TESTFILE		?= ../wasmc/compiled/example+-.why
+TESTFILE		?= ~/src/thurisaz/Thurisaz.why
+# TESTFILE		?= ../wasmc/compiled/example+-.why
 # TESTFILE		?= ../wasmc/compiled/text_linked.why
 # TESTFILE		?= ../wasmc/compiled/text2.why
 # TESTFILE		?= ../wasmc/compiled/basic.why

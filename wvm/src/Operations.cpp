@@ -175,6 +175,7 @@ namespace WVM::Operations {
 				}
 				break;
 			case OP_TRANS: transOp(args); return;
+			case OP_CTLB:   ctlbOp(args); return;
 		}
 
 		throw std::runtime_error("Unknown R-type: " + std::to_string(opcode) + ":" + std::to_string(args.function));
@@ -822,6 +823,12 @@ namespace WVM::Operations {
 		}
 
 		setReg(args.vm, args.rd, Register(args.rs.value ^ args.immediate, args.rdType));
+		args.vm.increment();
+	}
+
+	void ctlbOp(RArgs &args) {
+		if (args.vm.pagingOn)
+			args.vm.tlb.clear();
 		args.vm.increment();
 	}
 
@@ -1758,7 +1765,7 @@ namespace WVM::Operations {
 						while (0 < remaining) {
 							const size_t mod = address % VM::PAGE_SIZE;
 							bool translate_success;
-							const size_t translated = size_t(vm.translateAddress(address, &translate_success));\
+							const size_t translated = size_t(vm.translateAddress(address, &translate_success));
 
 							if (!translate_success) {
 								setReg(vm, e0, ulong(2), false);

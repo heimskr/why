@@ -119,6 +119,8 @@ namespace WVM::Operations {
 	void xnoriOp(IArgs &);  // 10  I
 	void xoriOp(IArgs &);   // 11  I
 
+	void ctlbOp(RArgs &);   // 12  R
+
 	void luiOp(IArgs &);    // 13  I
 	void slOp(RArgs &);     // 14  R 0
 	void sleOp(RArgs &);    // 14  R 1
@@ -210,6 +212,8 @@ namespace WVM::Operations {
 #define FN_SEXT 13
 #define OP_BC OP_RMATH
 #define FN_BC 14
+
+#define OP_CTLB 12
 
 #define OP_AND OP_RLOGIC
 #define FN_AND 0

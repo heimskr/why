@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <unordered_set>
 #include <vector>
@@ -22,13 +23,22 @@
 #include "Paging.h"
 #include "Register.h"
 #include "Symbol.h"
+#include "TLB.h"
 #include "Why.h"
 
 namespace WVM {
 	struct Drive {
-		const std::string name;
-		const int fd;
-		Drive(const std::string &name_, int fd_): name(name_), fd(fd_) {}
+		std::string name;
+		int fd;
+		Drive(std::string name_, int fd_): name(std::move(name_)), fd(fd_) {}
+		std::optional<int> close() {
+			if (::close(fd) != -1) {
+				fd = -1;
+				return std::nullopt;
+			}
+
+			return errno;
+		}
 	};
 
 	class VM {
@@ -69,6 +79,8 @@ namespace WVM {
 
 		public:
 			static constexpr size_t PAGE_SIZE = 65536;
+			static constexpr size_t TLB_SIZE  = 1 << 20;
+			static constexpr bool   USE_TLB   = true;
 
 			std::vector<UByte> memory;
 			Ring ring = Ring::Zero;
@@ -87,6 +99,7 @@ namespace WVM {
 			Word relocationOffset = -1;
 			Word        endOffset = -1;
 			Word p0 = 0;
+			TLB tlb;
 			std::atomic_bool paused = false;
 			bool strict = false;
 			bool pagingOn = false;
@@ -115,7 +128,11 @@ namespace WVM {
 			VM(size_t memory_size, bool keep_initial = true);
 			~VM();
 
-			Word translateAddress(Word virtual_address, bool *success = nullptr, PageMeta *meta_out = nullptr);
+			/** Translates a virtual address by going through the TLB. */
+			Word translateAddress(Word virtual_address, bool *success = nullptr);
+
+			/** Translates a virtual address without accessing the TLB. */
+			Word walkTables(Word virtual_address, bool *success = nullptr, PageMeta *meta_out = nullptr);
 
 			void setWord(Word address, UWord value, Endianness = Endianness::Little);
 			void setHalfword(Word address, UHWord value, Endianness = Endianness::Little);

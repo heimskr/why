@@ -28,11 +28,11 @@
 #define CATCH_TICK_IN_PLAY
 
 namespace WVM {
-	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial) {}
+	VM::VM(size_t memory_size, bool keep_initial): memorySize(memory_size), keepInitial(keep_initial), tlb(TLB_SIZE) {}
 
 	VM::~VM() {
-		for (const Drive &drive: drives)
-			if (::close(drive.fd) == -1)
+		for (Drive &drive: drives)
+			if (!drive.close())
 				std::cerr << "Couldn't close " << drive.name << " (" << drive.fd << "): " << strerror(errno) << "\n";
 	}
 
@@ -51,15 +51,35 @@ namespace WVM {
 	}
 
 	std::string VM::demangleLabel(const std::string &str) {
-		std::regex why_label_regex("^__(.+)_label\\d+$");
+		static std::regex why_label_regex("^__(.+)_label\\d+$");
 		if (std::regex_match(str, why_label_regex))
 			return Haunted::Util::demangle(std::regex_replace(str, why_label_regex, "$1"));
 		return Haunted::Util::demangle(str);
 	}
 
-	Word VM::translateAddress(Word virtual_address, bool *success, PageMeta *meta_out) {
+	Word VM::translateAddress(Word virtual_address, bool *success) {
+		if constexpr (!USE_TLB) {
+			return walkTables(virtual_address, success, nullptr);
+		}
+
 		if (!pagingOn) {
-			if (success)
+			if (success != nullptr)
+				*success = true;
+			return virtual_address;
+		}
+
+		Word physical_address = 0;
+		bool tlb_success = tlb.translate(*this, virtual_address, physical_address);
+
+		if (success != nullptr)
+			*success = tlb_success;
+
+		return physical_address;
+	}
+
+	Word VM::walkTables(Word virtual_address, bool *success, PageMeta *meta_out) {
+		if (!pagingOn) {
+			if (success != nullptr)
 				*success = true;
 			return virtual_address;
 		}
