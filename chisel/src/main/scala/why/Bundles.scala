@@ -2,18 +2,6 @@ package why
 
 import chisel3._
 
-case class Type() extends Bundle {
-	val length       = UInt(3.W)
-	val signed       = Bool()
-	val pointerLevel = UInt(4.W)
-
-	def :=(linkTo: UInt): Unit = {
-		length := linkTo(2, 0)
-		signed := linkTo(3)
-		pointerLevel := linkTo(7, 4)
-	}
-}
-
 case class IDBundle() extends Bundle {
 	val opcode = UInt(12.W)
 	val imm    = UInt(32.W)
@@ -31,11 +19,6 @@ case class IDBundle() extends Bundle {
 	val jRs   = UInt(7.W)
 	val jCond = UInt(4.W)
 	val jLink = Bool()
-
-	val rsType  = Type()
-	val rtType  = Type()
-	val rdType  = Type()
-	val immType = Type()
 }
 
 case class RegisterBankIO(idSize: Int, registerWidth: Int) extends Bundle {
@@ -49,24 +32,17 @@ case class RegisterBankIO(idSize: Int, registerWidth: Int) extends Bundle {
 }
 
 case class MemoryIO() extends Bundle {
-	val inputByte       = Input(UInt(8.W))
-	val inputHWord      = Input(UInt(32.W))
-	val inputWord       = Input(UInt(64.W))
-	val readAddress     = Input(UInt(64.W))
-	val writeAddress    = Input(UInt(64.W))
-	val writeByte       = Input(Bool())
-	val writeHWord      = Input(Bool())
-	val writeWord       = Input(Bool())
-	val outputSWord     = Output(UInt(96.W)) // SWord = superword, 12 bytes
-	val outputWordLE    = Output(UInt(64.W))
-	val outputWordBE    = Output(UInt(64.W))
-	val outputHWord     = Output(UInt(32.W))
-	val outputByte      = Output(UInt(8.W))
+	val writeIn = Flipped(Valid(UInt(64.W)))
+	val readOut = Decoupled(UInt(64.W))
+	val address = Input(UInt(64.W))
+	/** 0 -> byte, 1 -> quarterword, 2 -> halfword, 3 -> word */
+	val width   = Input(UInt(2.W))
+	val busy    = Output(Bool())
 }
 
 case class ALUInput() extends Bundle {
-	val a  = SInt(64.W)
-	val b  = SInt(64.W)
+	val a  = UInt(64.W)
+	val b  = UInt(64.W)
 	val op = UInt(8.W)
 }
 
