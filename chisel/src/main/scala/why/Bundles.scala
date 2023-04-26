@@ -1,6 +1,7 @@
 package why
 
 import chisel3._
+import chisel3.util._
 
 case class IDBundle() extends Bundle {
 	val opcode = UInt(12.W)
@@ -35,8 +36,7 @@ case class MemoryIO() extends Bundle {
 	val writeIn = Flipped(Valid(UInt(64.W)))
 	val readOut = Decoupled(UInt(64.W))
 	val address = Input(UInt(64.W))
-	/** 0 -> byte, 1 -> quarterword, 2 -> halfword, 3 -> word */
-	val width   = Input(UInt(2.W))
+	val size    = Input(UInt(2.W)) // 0 -> byte, 1 -> quarterword, 2 -> halfword, 3 -> word
 	val busy    = Output(Bool())
 }
 

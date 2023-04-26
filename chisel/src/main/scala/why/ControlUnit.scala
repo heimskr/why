@@ -11,7 +11,7 @@ class ControlUnit(memorySize: Int) extends Module {
 		val instructionAddr = Input(UInt(64.W))
 		val aluOut          = Input(SInt(64.W))
 		val decoded         = Input(IDBundle())
-		val state           = Output(ControlState.chiselType())
+		val state           = Output(ControlState.chiselType)
 		val mar             = Output(UInt(64.W))
 		val pcInput         = Output(UInt(64.W)) // Written to the program counter whenever pcWrite is true
 		val pcWrite         = Output(Bool())

@@ -14,7 +14,7 @@ object ControlState {
 
 	def count: Int = log2Ceil(all.size)
 	def width = count.W
-	def chiselType() = UInt(width)
+	def chiselType = UInt(width)
 }
 
 // case object sStartup0 extends ControlState(0)

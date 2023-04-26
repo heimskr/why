@@ -38,6 +38,7 @@ class BoothMultiplier extends Module {
 		t := 0.U
 
 		state := sBusy
+		step  := 0.U
 
 		out.bits  := 0.U
 		out.valid := false.B
@@ -53,6 +54,9 @@ class BoothMultiplier extends Module {
 
 		} .elsewhen (step === 1.U) {
 
+			t    := p
+			step := 2.U
+
 			switch (p(1, 0)) {
 				is ("b01".U) {
 					t := p + a
@@ -60,15 +64,7 @@ class BoothMultiplier extends Module {
 				is ("b10".U) {
 					t := p + s
 				}
-				is ("b00".U) {
-					t := p
-				}
-				is ("b11".U) {
-					t := p
-				}
 			}
-
-			step := 2.U
 
 		} .elsewhen (step === 2.U) {
 
