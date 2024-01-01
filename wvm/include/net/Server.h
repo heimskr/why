@@ -1,9 +1,10 @@
-#ifndef WVM_NET_SERVER_H_
-#define WVM_NET_SERVER_H_
+#pragma once
 
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <set>
+#include <string>
 
 #include <sys/types.h>
 
@@ -51,12 +52,10 @@ namespace WVM::Net {
 			void stop();
 			const std::set<int> & getClients() const { return allClients; }
 
-			/** Given a buffer, this function returns {-1, *} if the message is still incomplete or the {i, l} if the
+			/** Given a buffer, this function returns {-1, *} if the message is still incomplete or {i, l} if the
 			 *  buffer contains a complete message, where i is the index at which the message ends and l is the size of
 			 *  the delimiter that ended the message. By default, a message is considered complete after the first
 			 *  newline. */
 			virtual std::pair<ssize_t, size_t> isMessageComplete(const std::string &);
 	};
 }
-
-#endif
