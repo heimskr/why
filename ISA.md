@@ -194,6 +194,8 @@
 						<li><a href="#op-lui">Load Upper Immediate</a> (<code>lui</code>)</li>
 						<li><a href="#op-sspush">Sized Stack Push</a> (<code>sspush</code>)</li>
 						<li><a href="#op-sspop">Sized Stack Pop</a> (<code>sspop</code>)</li>
+						<li><a href="#op-sps">Spill Store</a> (<code>sps</code>)</li>
+						<li><a href="#op-spl">Spill Load</a> (<code>spl</code>)</li>
 					</ol>
 				</li>
 				<li><a href="#ops-special">Special Instructions</a>
@@ -1206,6 +1208,18 @@ Writes `rs` to the stack and decrements the stack pointer by `imm` bytes.
 > `000000111010` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
 
 Increments the stack pointer by `imm` bytes and reads into `rd` from the stack.
+
+### <a name="op-sps"></a>Spill Store (`sps`)
+> `$rs -> [$fp - imm]`  
+> `000000010110` `......` `sssssss` `0000000` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Stores `rs` at the address derived by subtracting `imm` from the current value of `$fp`.
+
+### <a name="op-spl"></a>Spill Load (`spl`)
+> `[$fp - imm] -> $rd`  
+> `000000010111` `......` `0000000` `ddddddd` `iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii`
+
+Loads `rd` from the address derived by subtracting `imm` from the current value of `$fp`.
 
 ## <a name="ops-special"></a>Special Instructions
 
