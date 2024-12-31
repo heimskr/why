@@ -219,6 +219,8 @@ namespace WVM::Unparser {
 			case OP_SI:     return color(rs) + into + left + coloredImm + right;
 			case OP_SBI:    return color(rs) + into + left + coloredImm + right + " /b";
 			case OP_SET:    return coloredImm + into + color(rd);
+			case OP_SPS:    return color(rs) + into + left + color(Why::framePointerOffset) + ' ' + colorOper("-") + ' ' + coloredImm + right;
+			case OP_SPL:    return left + color(Why::framePointerOffset) + ' ' + colorOper("-") + ' ' + coloredImm + right + into + color(rd);
 			case OP_SLI:    return iComp(rs, rd, coloredImm, "<");
 			case OP_SLUI:   return iComp(rs, rd, coloredImm, "<") + " /u";
 			case OP_SLEI:   return iComp(rs, rd, coloredImm, "<=");

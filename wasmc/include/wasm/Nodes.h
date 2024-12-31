@@ -17,7 +17,7 @@ namespace Wasmc {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, StringPrint, Jeq, JeqI, Cs, Ls, Ss, IO, Rest,
-		Interrupts, Inverse, Svring, Svtime, Ctlb,
+		Interrupts, Inverse, Svring, Svtime, Ctlb, Sps, Spl,
 	};
 
 	Condition getCondition(const std::string &);
@@ -246,6 +246,26 @@ namespace Wasmc {
 		Opcode getOpcode() const override { return OPCODES.at(isByte? "lbi" : "li"); }
 		WASMInstructionNode * copy() const override;
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMSpsNode: WASMInstructionNode, IType {
+		WASMSpsNode(ASTNode *rs, ASTNode *minuend, ASTNode *imm);
+		WASMSpsNode(const Immediate &imm, const std::string *rs);
+		Opcode getOpcode() const override { return OPCODES.at("sps"); }
+		WASMInstructionNode * copy() const override;
+		WASMNodeType nodeType() const override { return WASMNodeType::Sps; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMSplNode: WASMInstructionNode, IType {
+		WASMSplNode(ASTNode *minuend, ASTNode *imm, ASTNode *rd);
+		WASMSplNode(const Immediate &imm, const std::string *rd);
+		Opcode getOpcode() const override { return OPCODES.at("spl"); }
+		WASMInstructionNode * copy() const override;
+		WASMNodeType nodeType() const override { return WASMNodeType::Spl; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

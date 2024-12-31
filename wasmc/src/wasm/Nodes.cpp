@@ -1,6 +1,3 @@
-#include <iostream>
-#include <sstream>
-
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
@@ -8,6 +5,10 @@
 #include "util/Util.h"
 #include "wasm/Nodes.h"
 #include "wasm/Registers.h"
+
+#include <cassert>
+#include <iostream>
+#include <sstream>
 
 namespace Wasmc {
 	Condition getCondition(const std::string &str) {
@@ -327,12 +328,11 @@ namespace Wasmc {
 	}
 
 	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
-	WASMLiNode(getImmediate(imm_), rd_->lexerInfo, !!byte_) {
-		delete imm_;
-		delete rd_;
-		if (byte_)
+		WASMLiNode(getImmediate(imm_), rd_->lexerInfo, !!byte_) {
+			delete imm_;
+			delete rd_;
 			delete byte_;
-	}
+		}
 
 	WASMLiNode::WASMLiNode(const Immediate &imm_, const std::string *rd_, bool is_byte):
 		WASMInstructionNode(WASM_LINODE), IType(nullptr, rd_, imm_), isByte(is_byte) {}
@@ -342,12 +342,55 @@ namespace Wasmc {
 	}
 
 	std::string WASMLiNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + dim("[") + colorize(imm) + dim("] -> ") + cyan(*rd)
-			+ (isByte? " /b" : "");
+		return WASMInstructionNode::debugExtra() + dim("[") + colorize(imm) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
 	}
 
 	WASMLiNode::operator std::string() const {
 		return WASMInstructionNode::operator std::string() + "[" + toString(imm) + "] -> " + *rd + (isByte? " /b" : "");
+	}
+
+	WASMSpsNode::WASMSpsNode(ASTNode *rs, ASTNode *minuend, ASTNode *imm):
+		WASMSpsNode(getImmediate(imm), rs->lexerInfo) {
+			assert(*minuend->lexerInfo == "$fp");
+			delete imm;
+			delete rs;
+		}
+
+	WASMSpsNode::WASMSpsNode(const Immediate &imm, const std::string *rs):
+		WASMInstructionNode(WASM_SPSNODE), IType(rs, nullptr, imm) {}
+
+	WASMInstructionNode * WASMSpsNode::copy() const {
+		return (new WASMSpsNode(imm, rs))->absorb(*this);
+	}
+
+	std::string WASMSpsNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + cyan(*rs) + dim(" -> [") + cyan("$fp") + dim(" - ") + toString(imm) + dim("]");
+	}
+
+	WASMSpsNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + cyan(*rs) + " -> [$fp - " + toString(imm) + ']';
+	}
+
+	WASMSplNode::WASMSplNode(ASTNode *minuend, ASTNode *imm, ASTNode *rd):
+		WASMSplNode(getImmediate(imm), rd->lexerInfo) {
+			assert(*minuend->lexerInfo == "$fp");
+			delete imm;
+			delete rd;
+		}
+
+	WASMSplNode::WASMSplNode(const Immediate &imm, const std::string *rd):
+		WASMInstructionNode(WASM_SPLNODE), IType(nullptr, rd, imm) {}
+
+	WASMInstructionNode * WASMSplNode::copy() const {
+		return (new WASMSplNode(imm, rd))->absorb(*this);
+	}
+
+	std::string WASMSplNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + dim("[") + cyan("$fp") + dim(" - ") + colorize(imm) + dim("] -> ") + cyan(*rd);
+	}
+
+	WASMSplNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "[$fp - " + toString(imm) + "] -> " + *rd;
 	}
 
 	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):

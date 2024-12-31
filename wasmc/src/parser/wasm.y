@@ -178,7 +178,7 @@ using AN = Wasmc::ASTNode;
 %token WASM_IONODE WASM_ARRAYVALUE WASM_INTVALUE WASM_STRUCTVALUE WASM_POINTERVALUE WASM_AGGREGATEVALUE WASM_ARRAYTYPE
 %token WASM_STRUCTTYPE WASM_POINTERTYPE WASM_TYPELIST WASM_AGGREGATELIST WASM_INTERRUPTSNODE WASM_TYPEDIR WASM_SIZEDIR
 %token WASM_STRINGDIR WASM_VALUEDIR WASM_ALIGNDIR WASM_FILLDIR WASM_CODEDIR WASM_DATADIR WASM_EXPRESSION
-%token WASM_INVERSENODE WASM_TRANSNODE WASM_PAGESTACKNODE WASM_SVRINGNODE WASM_SVTIMENODE WASM_CTLBNODE
+%token WASM_INVERSENODE WASM_TRANSNODE WASM_PAGESTACKNODE WASM_SVRINGNODE WASM_SVTIMENODE WASM_CTLBNODE WASM_SPSNODE WASM_SPLNODE
 
 %start start
 
@@ -267,7 +267,7 @@ operation: op_r    | op_mult  | op_multi | op_lui    | op_i      | op_c      | o
          | op_j    | op_jc    | op_jr    | op_jrc    | op_mv     | op_spush  | op_spop   | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi  | op_sspush | op_sspop  | op_ring   | op_page | op_setpt | op_svpg
          | op_qmem | op_ret   | op_jeq   | op_sprint | op_inc    | op_dec    | op_cs     | op_ls   | op_ss    | op_di
-         | op_ei   | op_inv   | op_trans | op_ppush  | op_ppop   | op_svring | op_svtime | op_ctlb;
+         | op_ei   | op_inv   | op_trans | op_ppush  | op_ppop   | op_svring | op_svtime | op_ctlb | op_sps   | op_spl;
 
 label: "@" ident          { $$ = new WASMLabelNode($2); D($1); }
      | "@" WASMTOK_STRING { $$ = new WASMLabelNode($2->extracted()); D($1); };
@@ -316,6 +316,10 @@ op_set: immediate "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
 op_divii: immediate "/" reg "->" reg _unsigned { $$ = new WASMDiviINode($1, $3, $5, $6); D($2, $4); };
 
 op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
+
+op_sps: reg "->" "[" reg "-" immediate "]" { $$ = new WASMSpsNode($1, $4, $6); D($2, $3, $5, $7); };
+
+op_spl: "[" reg "-" immediate "]" "->" reg { $$ = new WASMSplNode($2, $4, $7); D($1, $3, $5, $6); };
 
 op_si: reg "->" "[" immediate "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
 

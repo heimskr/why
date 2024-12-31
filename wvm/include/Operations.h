@@ -91,8 +91,8 @@ namespace WVM::Operations {
 	void liOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 19  I
 	void siOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);     // 20  I
 	void setOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 21  I
-	void sps(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);      // 22
-	void spl(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);      // 23
+	void spsOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 22  I
+	void splOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 23  I
 	void multuiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate); // 24  I
 	void sliOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);    // 25  I
 	void sleiOp(VM &, Word &rs, Word &rd, Conditions, int flags, HWord immediate);   // 26  I
@@ -293,6 +293,8 @@ namespace WVM::Operations {
 #define OP_LI 19
 #define OP_SI 20
 #define OP_SET 21
+#define OP_SPS 22
+#define OP_SPL 23
 
 #define OP_MULTUI 24
 #define OP_SLI 25

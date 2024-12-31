@@ -17,19 +17,17 @@
 #define DEBUG_PAGING
 
 namespace WVM::Operations {
-	std::set<int> RSet {
-		OP_RMATH, OP_AND, OP_RLOGIC, OP_RCOMP, OP_RJUMP, OP_RMEM, OP_TIME, OP_RING, OP_SEL, OP_PAGE, OP_QUERY, OP_REXT,
-		OP_INTERRUPTS, OP_TRANS,
+	std::set<int> RSet{
+		OP_RMATH, OP_AND, OP_RLOGIC, OP_RCOMP, OP_RJUMP, OP_RMEM, OP_TIME, OP_RING, OP_SEL, OP_PAGE, OP_QUERY, OP_REXT, OP_INTERRUPTS, OP_TRANS,
 	};
 
-	std::set<int> ISet {
-		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII,
-		OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI, OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI,
-		OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI, OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT,
-		OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI, OP_MODUI, OP_SLLII, OP_SRLII, OP_SRAII,
+	std::set<int> ISet{
+		OP_ADDI, OP_SUBI, OP_MULTI, OP_MULTUI, OP_SLLI, OP_SRLI, OP_SRAI, OP_MODI, OP_DIVI, OP_DIVUI, OP_DIVII, OP_DIVUII, OP_ANDI, OP_NANDI, OP_NORI,
+		OP_ORI, OP_XNORI, OP_XORI, OP_LUI, OP_SLI, OP_SLEI, OP_CMPI, OP_SEQI, OP_SLUI, OP_SLEUI, OP_SGI, OP_SGEI, OP_LI, OP_SI, OP_SET, OP_LBI,
+		OP_SBI, OP_LNI, OP_LBNI, OP_INT, OP_RIT, OP_TIMEI, OP_RINGI, OP_SSPUSH, OP_SSPOP, OP_SGEUI, OP_SGUI, OP_MODUI, OP_SLLII, OP_SRLII, OP_SRAII,
 	};
 
-	std::set<int> JSet {OP_J, OP_JC};
+	std::set<int> JSet{OP_J, OP_JC};
 
 	void execute(VM &vm, UWord instruction) {
 		instruction = Util::swapEndian(instruction);
@@ -58,9 +56,9 @@ namespace WVM::Operations {
 			HWord address;
 			decodeJType(instruction, rs, link, conditions, flags, address);
 			executeJType(opcode, vm, vm.registers[rs], link, conditions, flags, address);
-		} else
-			throw std::runtime_error("Unknown opcode at " + std::to_string(vm.programCounter) + ": " +
-				std::to_string(opcode));
+		} else {
+			throw std::runtime_error("Unknown opcode at " + std::to_string(vm.programCounter) + ": " + std::to_string(opcode));
+		}
 	}
 
 	void executeRType(int opcode, VM &vm, Word &rs, Word &rt, Word &rd, Conditions conditions, int flags, int funct) {
@@ -226,6 +224,8 @@ namespace WVM::Operations {
 			case OP_LI:         liOp(vm, rs, rd, conditions, flags, immediate); break;
 			case OP_SI:         siOp(vm, rs, rd, conditions, flags, immediate); break;
 			case OP_SET:       setOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SPS:       spsOp(vm, rs, rd, conditions, flags, immediate); break;
+			case OP_SPL:       splOp(vm, rs, rd, conditions, flags, immediate); break;
 			case OP_LBI:       lbiOp(vm, rs, rd, conditions, flags, immediate); break;
 			case OP_SBI:       sbiOp(vm, rs, rd, conditions, flags, immediate); break;
 			case OP_LNI:       lniOp(vm, rs, rd, conditions, flags, immediate); break;
@@ -280,13 +280,15 @@ namespace WVM::Operations {
 	}
 
 	void setReg(VM &vm, Word &rd, Word value, bool update_flags = true) {
-		if (vm.registerID(rd) == Why::zeroOffset)
+		if (vm.registerID(rd) == Why::zeroOffset) {
 			std::cerr << "Set register $0 at " << vm.programCounter << "!\n";
+		}
 		vm.bufferChange<RegisterChange>(vm, vm.registerID(rd), value);
-		if (update_flags)
+		if (update_flags) {
 			vm.updateFlags(rd = value);
-		else
+		} else {
 			rd = value;
+		}
 		vm.onRegisterChange(vm.registerID(rd));
 	}
 
@@ -1032,6 +1034,30 @@ namespace WVM::Operations {
 	void setOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
 		setReg(vm, rd, immediate, false);
 		vm.increment();
+	}
+
+	void spsOp(VM &vm, Word &rs, Word &, Conditions, int, HWord immediate) {
+		bool success;
+		const Word translated = vm.translateAddress(vm.fp() - immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else if (vm.checkWritable()) {
+			vm.bufferChange<MemoryChange>(vm, translated, rs, Size::Word);
+			vm.setWord(translated, rs);
+			vm.increment();
+		} else
+			vm.intBwrite(translated);
+	}
+
+	void splOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
+		bool success;
+		const Word translated = vm.translateAddress(vm.fp() - immediate, &success);
+		if (!success) {
+			vm.intPfault();
+		} else {
+			setReg(vm, rd, vm.getWord(translated), false);
+			vm.increment();
+		}
 	}
 
 	void lbiOp(VM &vm, Word &, Word &rd, Conditions, int, HWord immediate) {
