@@ -4,7 +4,7 @@ author: "Kai Tamkun"
 orcid: "0000-0001-7405-6654"
 version: "1"
 
-#code
+#text
 @set
 2   -> $s0
 3   -> $s1
@@ -298,9 +298,9 @@ $t0 -> $t1
 ] $t1
 ] $t0
 
-@jeq
-&nop -> $t2
-: $t2 if $0 == $0
+// @jeq
+// &nop -> $t2
+// : $t2 if $0 == $0
 
 @nop
 <>
@@ -325,3 +325,5 @@ $t0 -> $t1
 0:: jl
 *:  jl
 *:: jl
+
+ctlb

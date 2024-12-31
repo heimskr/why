@@ -89,6 +89,7 @@ WASM_INT_TYPE           ("#i"[0-9]+)
 "halt"						{ WASMRTOKEN(HALT) }
 "%page"						{ WASMRTOKEN(PAGE) }
 "lui"						{ WASMRTOKEN(LUI) }
+"ctlb"						{ WASMRTOKEN(CTLB) }
 "%int"						{ WASMRTOKEN(INT) }
 "%rit"						{ WASMRTOKEN(RIT) }
 "%di"						{ WASMRTOKEN(DI) }

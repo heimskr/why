@@ -79,16 +79,16 @@ namespace Wasmc {
 	}
 
 	std::string WASMInstructionNode::debugExtra() const {
-		std::string out = "";
+		std::string out;
 		for (const std::string *label: labels)
-			out += blue("@") + orange(*label) + " ";
+			out += blue("@") + orange(*label) + ' ';
 		return out;
 	}
 
 	WASMInstructionNode::operator std::string() const {
 		std::string out;
 		for (const std::string *label: labels)
-			out += "@" + *label + " ";
+			out += '@' + *label + ' ';
 		return out;
 	}
 
@@ -122,7 +122,7 @@ namespace Wasmc {
 	}
 
 	WASMLabelNode::operator std::string() const {
-		return "@" + *label;
+		return '@' + *label;
 	}
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
@@ -260,8 +260,7 @@ namespace Wasmc {
 	}
 
 	std::string WASMCopyNode::debugExtra() const {
-		return WASMInstructionNode::debugExtra() + dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]")
-			+ (isByte? " /b" : "");
+		return WASMInstructionNode::debugExtra() + dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMCopyNode::operator std::string() const {
@@ -1295,5 +1294,16 @@ namespace Wasmc {
 		if (!rs)
 			return WASMInstructionNode::operator std::string() + (isPush? "[" : "]") + " %page";
 		return WASMInstructionNode::operator std::string() + (isPush? ": [" : ": ]") + " %page " + *rs;
+	}
+
+	WASMCtlbNode::WASMCtlbNode():
+		WASMInstructionNode(WASM_CTLBNODE) {}
+
+	std::string WASMCtlbNode::debugExtra() const {
+		return WASMInstructionNode::debugExtra() + blue("ctlb");
+	}
+
+	WASMCtlbNode::operator std::string() const {
+		return WASMInstructionNode::operator std::string() + "ctlb";
 	}
 }

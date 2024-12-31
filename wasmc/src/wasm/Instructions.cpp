@@ -16,6 +16,7 @@ namespace Wasmc {
 		OP_QM,     // Query
 		OP_EI,     // Disable/Enable Interrupts
 		OP_TRANS,  // Translate Address
+		OP_CTLB,   // Clear TLB
 	};
 
 	std::unordered_set<Opcode> ITYPES {
@@ -199,6 +200,7 @@ namespace Wasmc {
 		{"di",     OP_DI    },
 		{"modui",  OP_MODUI },
 		{"trans",  OP_TRANS },
+		{"ctlb",   OP_CTLB  },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {
@@ -282,6 +284,7 @@ namespace Wasmc {
 		{"qm",     0b000000000000},
 		{"di",     0b000000000000},
 		{"trans",  0b000000000000},
+		{"ctlb",   0b000000000000},
 		{"jrc",    0b000000000001},
 		{"l",      0b000000000001},
 		{"nand",   0b000000000001},

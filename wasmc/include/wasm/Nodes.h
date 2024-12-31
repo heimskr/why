@@ -17,7 +17,7 @@ namespace Wasmc {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Statement, StringPrint, Jeq, JeqI, Cs, Ls, Ss, IO, Rest,
-		Interrupts, Inverse, Svring, Svtime,
+		Interrupts, Inverse, Svring, Svtime, Ctlb,
 	};
 
 	Condition getCondition(const std::string &);
@@ -784,6 +784,16 @@ namespace Wasmc {
 		Opcode getOpcode() const override { return OPCODES.at("ppush"); }
 		Funct getFunct() const override { return FUNCTS.at(isPush? "ppush" : "ppop"); }
 		WASMInstructionNode * copy() const override { return new WASMPageStackNode(isPush, rs); }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+	};
+
+	struct WASMCtlbNode: WASMInstructionNode, RType {
+		WASMCtlbNode();
+		Opcode getOpcode() const override { return OPCODES.at("ctlb"); }
+		Funct getFunct() const override { return FUNCTS.at("ctlb"); }
+		WASMInstructionNode * copy() const override { return (new WASMCtlbNode)->absorb(*this); }
+		WASMNodeType nodeType() const override { return WASMNodeType::Ctlb; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 	};

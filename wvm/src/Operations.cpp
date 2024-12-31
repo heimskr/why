@@ -108,6 +108,7 @@ namespace WVM::Operations {
 					case FN_SEQ:   seqOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SLU:   sluOp(vm, rs, rt, rd, conditions, flags); return;
 					case FN_SLEU: sleuOp(vm, rs, rt, rd, conditions, flags); return;
+					case FN_CMP:   cmpOp(vm, rs, rt, rd, conditions, flags); return;
 				}
 				break;
 			case OP_RJUMP:
@@ -1358,7 +1359,7 @@ namespace WVM::Operations {
 						}
 
 						setReg(vm, r0, Word(end_cursor), false);
-	
+
 						const off_t result = lseek(fd, old_cursor, SEEK_SET);
 						setReg(vm, e0, result == -1? errno + 1 : 0, false);
 					}

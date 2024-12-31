@@ -1,12 +1,12 @@
-#include <algorithm>
-#include <sstream>
-
-#include <unistd.h>
-
 #include "lib/ansi.h"
 #include "mode/MemoryMode.h"
 #include "Unparser.h"
 #include "Util.h"
+
+#include <algorithm>
+#include <format>
+#include <sstream>
+#include <unistd.h>
 
 namespace WVM::Mode {
 	MemoryMode::~MemoryMode() {
@@ -91,7 +91,7 @@ namespace WVM::Mode {
 			} else if (key == '<') {
 				DBG("autotick = " << (autotick *= 1.1));
 			} else if (key == '>') {
-				DBG("autotick = " << (autotick /= 1.1));
+				DBG("autotick = " << (autotick = std::max(autotick / 1.1, 9.091)));
 			} else if (key == Haunted::KeyType::PageDown) {
 				textbox->vscroll(textbox->getPosition().height);
 			} else if (key == Haunted::KeyType::PageUp) {
@@ -119,7 +119,6 @@ namespace WVM::Mode {
 		terminal.watchSize();
 		send(":Subscribe memory\n" ":GetMain\n" ":Subscribe pc\n" ":Subscribe breakpoints\n" ":Subscribe registers");
 		send(":Reg " + std::to_string(Why::stackPointerOffset));
-		alive = false;
 		autotickReady = true;
 		autotickMutex.unlock();
 		autotickVariable.notify_all();
@@ -209,7 +208,7 @@ namespace WVM::Mode {
 			ss << "\e[2m";
 
 		ss << "[" << std::setw(padding) << std::setfill(' ') << address << "]\e[22;90m  0x\e[39m";
-		
+
 		std::stringstream hex_ss;
 		for (int i = 0; i < 8; ++i)
 			hex_ss << std::right << std::setw(2) << std::setfill('0') << std::hex << ((word >> (8 * i)) & 0xff);

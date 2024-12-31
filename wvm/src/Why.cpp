@@ -1,9 +1,10 @@
+#include "Util.h"
+#include "Why.h"
+
+#include <cstdint>
 #include <iomanip>
 #include <sstream>
 #include <tuple>
-
-#include "Util.h"
-#include "Why.h"
 
 namespace WVM {
 	bool Why::isSpecialPurpose(int reg) {
