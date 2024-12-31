@@ -33,8 +33,8 @@ namespace Wasmc {
 		0b000000010011, // Load Immediate
 		0b000000010100, // Store Immediate
 		0b000000010101, // Set
-		0b000000010110, // Add Immediate Unsigned
-		0b000000010111, // Subtract Immediate Unsigned
+		0b000000010110, // Spill Store
+		0b000000010111, // Spill Load
 		0b000000011000, // Multiply Immediate Unsigned
 		0b000000011001, // Set on Less Than Immediate
 		0b000000011010, // Set on Less Than or Equal Immediate
@@ -201,6 +201,8 @@ namespace Wasmc {
 		{"modui",  OP_MODUI },
 		{"trans",  OP_TRANS },
 		{"ctlb",   OP_CTLB  },
+		{"sps",    OP_SPS   },
+		{"spl",    OP_SPL   },
 	};
 
 	std::unordered_map<int, std::string> TOKEN_INSTRUCTIONS_R {

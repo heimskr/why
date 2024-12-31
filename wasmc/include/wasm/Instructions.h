@@ -93,6 +93,8 @@ namespace Wasmc {
 	constexpr Opcode OP_LI     = 0b000000010011;
 	constexpr Opcode OP_SI     = 0b000000010100;
 	constexpr Opcode OP_SET    = 0b000000010101;
+	constexpr Opcode OP_SPS    = 0b000000010110;
+	constexpr Opcode OP_SPL    = 0b000000010111;
 	constexpr Opcode OP_MULTUI = 0b000000011000;
 	constexpr Opcode OP_SLI    = 0b000000011001;
 	constexpr Opcode OP_SLEI   = 0b000000011010;
